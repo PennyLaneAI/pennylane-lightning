@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,10 +84,50 @@ def n_subsystems(request):
     return request.param
 
 
+# Looking for the device for testing.
+default_device = "lightning.qubit"
+supported_devices = {"lightning.kokkos", "lightning.qubit"}
+supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
+
+
+def get_device():
+    """Return the pennylane lightning device.
+
+    The device is ``lightning.qubit`` by default.
+    Allowed values are: "lightning.kokkos" and "lightning.qubit".
+    An underscore can also be used instead of a dot.
+    If the environment variable ``PL_DEVICE`` is defined, its value is used.
+    Underscores are replaced by dots upon exiting.
+    """
+    device = None
+    if "PL_DEVICE" in os.environ:
+        device = os.environ.get("PL_DEVICE", default_device)
+        device = device.replace("_", ".")
+    if device is None:
+        device = default_device
+    if device not in supported_devices:
+        raise ValueError(f"Invalid backend {device}.")
+    return device
+
+
+device_name = get_device()
+
+if device_name not in qml.plugin_devices:
+    raise qml.DeviceError(
+        f"Device {device_name} does not exist. Make sure the required plugin is installed."
+    )
+
+# Device specification
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
+else:
+    from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
+
+
 # General qubit_device fixture, for any number of wires.
 @pytest.fixture(scope="function", params=[np.complex64, np.complex128])
 def qubit_device(request):
     def _device(wires):
-        return qml.device("lightning.qubit", wires=wires, c_dtype=request.param)
+        return qml.device(device_name, wires=wires, c_dtype=request.param)
 
     return _device

@@ -15,24 +15,21 @@
 Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` device.
 """
 import pytest
+from conftest import THETA, PHI, VARPHI
 
 import numpy as np
 import pennylane as qml
 
 np.random.seed(42)
 
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
-VARPHI = np.linspace(0.02, 1, 3)
-
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestVar:
     """Tests for the variance"""
 
-    def test_var(self, theta, phi, tol):
+    def test_var(self, theta, phi, qubit_device, tol):
         """Tests for variance calculation"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device(wires=3)
 
         # test correct variance for <Z> of a rotated state
         observable = qml.PauliZ(wires=[0])
@@ -55,9 +52,9 @@ class TestVar:
 class TestTensorVar:
     """Tests for variance of tensor observables"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device(wires=3)
         obs = qml.PauliX(0) @ qml.PauliY(2)
 
         dev.apply(
@@ -84,9 +81,9 @@ class TestTensorVar:
 
         assert np.allclose(res, expected, tol)
 
-    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, tol):
+    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
-        dev = qml.device("lightning.qubit", wires=3)
+        dev = qubit_device(wires=3)
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.apply(

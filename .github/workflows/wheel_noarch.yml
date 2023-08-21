@@ -1,7 +1,7 @@
 name: Wheel::Any::None
 
 # **What it does**: Builds a pure python wheel for Linux (ubuntu-latest) and store it as an artifact.
-#                   Python version: 3.8.
+#                   Python version: 3.9.
 # **Why we have it**: To test the wheel build in the python layer, with no compilation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -13,9 +13,20 @@ on:
   release:
     types: [published]
 
+concurrency:
+  group: wheel_noarch-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-pure-python-wheel:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+
+    name: ${{ matrix.os }} - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
+    runs-on: ${{ matrix.os }}
+
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -24,7 +35,7 @@ jobs:
 
       - uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Upgrade pip
         run: |
@@ -47,20 +58,24 @@ jobs:
           python -m pip install twine
           python -m twine check main/dist/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
-          name: pure-python-wheels.zip
+          name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
 
   upload-pypi:
     needs: build-pure-python-wheel
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pl_backend: ["lightning_qubit"]
+    runs-on: ${{ matrix.os }}
+
     if: ${{ github.event_name == 'release' }}
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
-          name: pure-python-wheels.zip
+          name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

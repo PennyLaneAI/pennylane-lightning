@@ -1,18 +1,18 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 
 set(LOGO [=[
-░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░░░░▄▀▄░█░█░█▀▄░▀█▀░▀█▀
-░█░░░░█░░█░█░█▀█░░█░░█░█░░█░░█░█░█░█░░░░█\█░█░█░█▀▄░░█░░░█░
-░▀▀▀░▀▀▀░▀▀▀░▀░▀░░▀░░▀░▀░▀▀▀░▀░▀░▀▀▀░▀░░░▀\░▀▀▀░▀▀░░▀▀▀░░▀░
+░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░
+░█░░░░█░░█░█░█▀█░░█░░█░█░░█░░█░█░█░█░
+░▀▀▀░▀▀▀░▀▀▀░▀░▀░░▀░░▀░▀░▀▀▀░▀░▀░▀▀▀░
 ]=])
 message(${LOGO})
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum OS X deployment version")
 
 set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-    DESCRIPTION "C++ state-vector simulator bindings for PennyLane. "
+    DESCRIPTION "C++ suite of state-vector simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
 
@@ -29,7 +29,7 @@ function(set_pennylane_lightning_version VERSION_FILE_PATH)
     set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
 endfunction()
 
-set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/_version.py)
+set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/core/_version.py)
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
@@ -45,20 +45,22 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
+option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+
+# OpenMP
 find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
     option(ENABLE_OPENMP "Enable OpenMP" ON)
 else()
     option(ENABLE_OPENMP "Enable OpenMP" OFF)
 endif()
-option(ENABLE_KOKKOS "Enable Kokkos" OFF)
-option(ENABLE_BLAS "Enable BLAS" OFF)
-option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
 
 # Other build options
 option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
+
+# Backend
+set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
 
 # Process compile options
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -80,33 +82,38 @@ endif()
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
-add_subdirectory(pennylane_lightning/src)
+add_subdirectory(pennylane_lightning/core/src)
 
 #####################################################
 # Maintain for dependent external package development
 #####################################################
 add_library(pennylane_lightning INTERFACE)
 
-target_link_libraries(pennylane_lightning INTERFACE     lightning_utils
-                                                        lightning_simulator
-                                                        lightning_algorithms
-                                                        lightning_gates
-)
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/src;include>")
 
-#####################################################
 if(ENABLE_PYTHON)
-    pybind11_add_module(lightning_qubit_ops "pennylane_lightning/src/bindings/Bindings.cpp")
-    target_link_libraries(lightning_qubit_ops PRIVATE lightning_algorithms
-                                                      lightning_gates
-                                                      lightning_simulator
-                                                      lightning_utils)
+    message(STATUS "ENABLE_PYTHON is ON.")
+    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
-    target_link_libraries(lightning_qubit_ops PRIVATE lightning_compile_options
-                                                      lightning_external_libs)
-    set_target_properties(lightning_qubit_ops PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
+                                                        lightning_external_libs
+                                                        )
 
-    target_compile_definitions(lightning_qubit_ops PRIVATE VERSION_INFO=${VERSION_STRING})
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
+                                                        lightning_utils
+                                                        lightning_algorithms
+                                                        )
+
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
+                                                        "${PL_BACKEND}_algorithms"
+                                                        "${PL_BACKEND}_observables"
+                                                        "${PL_BACKEND}_bindings"
+                                                        "${PL_BACKEND}_measurements"
+                                                        )
+
+    set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
+
+    target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
 
 install(TARGETS pennylane_lightning
@@ -117,9 +124,9 @@ install(TARGETS pennylane_lightning
         PUBLIC_HEADER DESTINATION include
 )
 
-install(DIRECTORY 
-    ${PROJECT_SOURCE_DIR}/pennylane_lightning/src
-    DESTINATION include/pennylane_lightning
+install(DIRECTORY
+    ${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src
+    DESTINATION include/pennylane_lightning/core/
 )
 
 if (BUILD_TESTS)

@@ -1,4 +1,4 @@
-# Copyright 2020 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the expval method of the :mod:`pennylane_lightning.LightningQubit` device.
+Unit tests for the expval method of Lightning devices.
 """
 import pytest
+from conftest import THETA, PHI, VARPHI
 
 import numpy as np
 import pennylane as qml
-
-from conftest import THETA, PHI, VARPHI
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -107,12 +106,12 @@ class TestExpval:
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
 
-    dev = qml.device("lightning.qubit", wires=2)
-
-    def test_sprod(self, diff_method):
+    def test_sprod(self, diff_method, qubit_device):
         """Test the `SProd` class with lightning qubit."""
 
-        @qml.qnode(self.dev, diff_method=diff_method)
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
             qml.RX(x, wires=0)
             return qml.expval(qml.s_prod(0.5, qml.PauliZ(0)))
@@ -125,10 +124,12 @@ class TestExpOperatorArithmetic:
         expected_grad = -0.5 * np.sin(x)
         assert qml.math.allclose(g, expected_grad)
 
-    def test_prod(self, diff_method):
+    def test_prod(self, diff_method, qubit_device):
         """Test the `Prod` class with lightning qubit."""
 
-        @qml.qnode(self.dev, diff_method=diff_method)
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
             qml.RX(x, wires=0)
             qml.Hadamard(1)
@@ -143,10 +144,12 @@ class TestExpOperatorArithmetic:
         expected_grad = np.sin(x)
         assert qml.math.allclose(g, expected_grad)
 
-    def test_sum(self, diff_method):
+    def test_sum(self, diff_method, qubit_device):
         """Test the `Sum` class with lightning qubit."""
 
-        @qml.qnode(self.dev, diff_method=diff_method)
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
             qml.RX(x, wires=0)
             qml.RY(y, wires=1)
@@ -161,12 +164,14 @@ class TestExpOperatorArithmetic:
         expected = (-np.sin(x), np.cos(y))
         assert qml.math.allclose(g, expected)
 
-    def test_integration(self, diff_method):
+    def test_integration(self, diff_method, qubit_device):
         """Test a Combination of `Sum`, `SProd`, and `Prod`."""
 
         obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
-        @qml.qnode(self.dev, diff_method=diff_method)
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
             qml.RX(x, wires=0)
             qml.RY(y, wires=1)

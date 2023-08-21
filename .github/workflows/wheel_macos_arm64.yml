@@ -1,7 +1,7 @@
 name: Wheel::MacOS::ARM
 
 # **What it does**: Builds python wheels for MacOS (11) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.8, 3.9, 3.10, 3.11.
+#                   Python versions: 3.9, 3.10, 3.11.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -15,8 +15,12 @@ on:
 
 env:
   ARCHS: 'arm64'
-  PYTHON3_MIN_VERSION: "8"
+  PYTHON3_MIN_VERSION: "9"
   PYTHON3_MAX_VERSION: "11"
+
+concurrency:
+  group: wheel_macos_arm64-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   mac-set-matrix-arm:
@@ -24,11 +28,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -55,24 +54,20 @@ jobs:
       matrix:
         os: [macos-11]
         arch: [arm64]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
 
-    name: macos-latest::arm64 (Python ${{ fromJson('{ "cp38-*":"3.8","cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
+    name: macos-latest::arm64 - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
         name: Install Python
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.11.0
@@ -87,20 +82,24 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            pip install pybind11 ninja cmake~=3.24.0 setuptools
+            python -m pip install pybind11 ninja cmake~=3.24.0 setuptools
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF" \
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           # Testing of built wheels
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
-          CIBW_BEFORE_TEST: pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+          CIBW_BEFORE_TEST: |
+            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
           CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD_VERBOSITY: 3
 
           CIBW_ARCHS_MACOS: ${{ matrix.arch }}
 
@@ -112,20 +111,26 @@ jobs:
           python -m pip install twine
           python -m twine check ./wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
 
   upload-pypi:
     needs: mac-wheels-arm64
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [macos-11]
+        arch: [arm64]
+        pl_backend: ["lightning_qubit"]
+    runs-on: ${{ matrix.os }}
+
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
-          name: macOS-wheels-arm64.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

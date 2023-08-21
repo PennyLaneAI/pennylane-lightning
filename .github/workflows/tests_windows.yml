@@ -5,6 +5,10 @@ on:
       - master
   pull_request:
 
+concurrency:
+  group: tests_windows-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   cpptests:
     name: C++ tests (Windows)
@@ -12,12 +16,10 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest]
+        pl_backend: ["lightning_qubit"]
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-      - uses: actions/checkout@v3
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
@@ -33,25 +35,39 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF
-            cmake --build ./Build --config Debug
-            mkdir -p ./Build/tests/results
-            .\Build\tests\Debug\pennylane_lightning_test_runner.exe --order lex --reporter junit --out .\Build\tests\results\report_cpptests.xml
-            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\pennylane_lightning_test_runner.exe
-            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
+            cmake -BBuild `
+              -DBUILD_TESTS=ON `
+              -DENABLE_OPENMP=OFF `
+              -DENABLE_PYTHON=OFF `
+              -DENABLE_GATE_DISPATCHER=OFF `
+              -DPL_BACKEND=${{ matrix.pl_backend }} `
+              -DENABLE_WARNINGS=OFF
+            cmake --build .\Build --config Debug
+            mkdir -p .\Build\tests\results
+            $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
+            foreach ($file in $test_bins)
+            {
+              $filename = $file.ToString() -replace '.{4}$'
+              $filename = $filename.Substring($filename.LastIndexOf("\")+1)
+              $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
+              Invoke-Expression $test_call
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
+              Invoke-Expression $cov_call
+            }
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: windows-test-report
-          path: .\Build\tests\results\report_${{ github.job }}.xml
+          name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
+          path: .\Build\tests\results\
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
-          path: .\coverage-${{ github.job }}.xml
+          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
 
   win-set-matrix-x86:
@@ -59,11 +75,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -84,19 +95,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        os: [windows-latest]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
-    name: Kokkos core & kernels (${{ matrix.exec_model }})
+    name: Kokkos core (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Cache installation directories
         id: kokkos-cache
         uses: actions/cache@v3
@@ -110,10 +116,6 @@ jobs:
           cd D:\a
           git clone https://github.com/kokkos/kokkos.git
           cd D:\a\kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd D:\a\
-          git clone https://github.com/kokkos/kokkos-kernels.git
-          cd D:\a\kokkos-kernels
           git checkout ${{ matrix.kokkos_version }}
           cd ..
 
@@ -134,23 +136,10 @@ jobs:
           cd D:\a\kokkos
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF `
+                          -DKokkos_ENABLE_SERIAL=ON `
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF `
                           -DCMAKE_CXX_STANDARD=20 `
-                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
-                          -DCMAKE_BUILD_TYPE=Debug `
-                          -T clangcl
-          cmake --build ./Build --config Debug --verbose
-          cmake --install ./Build --config Debug --verbose
-
-      - name: Build Kokkos kernels library
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          cd D:\a\kokkos-kernels
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
-                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON `
-                          -DCMAKE_CXX_STANDARD=20 `
-                          -DCMAKE_PREFIX_PATH=D:\a\install_dir\${{ matrix.exec_model }} `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
                           -DCMAKE_BUILD_TYPE=Debug `
                           -T clangcl
@@ -161,19 +150,15 @@ jobs:
     needs: [build_dependencies, win-set-matrix-x86]
     strategy:
       matrix:
-        os: [windows-2019]
+        os: [windows-latest]
+        pl_backend: ["lightning_qubit"]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
-    name: C++ tests (Windows, Kokkos and Kokkos Kernels)
+    name: C++ tests (Windows, Kokkos)
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.10.0
-        with:
-          access_token: ${{ github.token }}
-
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v3
@@ -181,7 +166,8 @@ jobs:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
 
-      - uses: actions/checkout@v3
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -207,25 +193,40 @@ jobs:
         run: |
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
-            cmake ./pennylane_lightning/src -BBuild  -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos -DENABLE_OPENMP=OFF -DENABLE_WARNINGS=OFF -T clangcl
-            cmake --build ./Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
-            mkdir -p ./Build/tests/results
-            .\Build\tests\Debug\pennylane_lightning_test_runner.exe --order lex --reporter junit --out .\Build\tests\results\report_${{ github.job }}.xml
-            OpenCppCoverage --sources pennylane_lightning\src --export_type cobertura:coverage.xml Build\tests\Debug\pennylane_lightning_test_runner.exe
-            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}.xml
+            cmake -BBuild `
+              -DBUILD_TESTS=ON `
+              -DENABLE_PYTHON=OFF `
+              -DENABLE_GATE_DISPATCHER=OFF `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DENABLE_OPENMP=OFF `
+              -DPL_BACKEND=${{ matrix.pl_backend }} `
+              -DENABLE_WARNINGS=OFF -T clangcl
+            cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
+            mkdir -p .\Build\tests\results
+            $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
+            foreach ($file in $test_bins)
+            {
+              $filename = $file.ToString() -replace '.{4}$'
+              $filename = $filename.Substring($filename.LastIndexOf("\")+1)
+              $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
+              Invoke-Expression $test_call
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
+              Invoke-Expression $cov_call
+            }
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: windows-test-report
-          path: .\Build\tests\results\report_${{ github.job }}.xml
+          name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
+          path: .\Build\tests\results\
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
-          path: .\coverage-${{ github.job }}.xml
+          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithKokkos]

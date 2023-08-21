@@ -1,6 +1,10 @@
 venv/
+kokkos/
+prototypes/
 doc/_build/
+doc/code/api/
 PennyLane_Lightning.egg-info/
+PennyLane_Lightning_Kokkos.egg-info/
 build/
 Build/
 BuildCov/
@@ -16,13 +20,12 @@ __pycache__
 .pytest_cache/
 coverage_html_report/
 .coverage
-doc/code/
 *.so
 cpptests
 *.o
 .DS_Store
 .cache/*
-.vscode/*
+.vscode/
 .ycm_extra_conf.py
 /.vs
 /pennylane_lightning/.vs

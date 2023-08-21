@@ -12,26 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Integration tests that compare the output states of ``lightning.qubit`` with ``default.qubit``.
+Integration tests that compare the output states of the
+compiled Lightning device with the ``default.qubit``.
 """
-import itertools
-
-import numpy as np
 import pytest
+from conftest import device_name, LightningDevice as ld
+
+import itertools
+import numpy as np
 import os
-
 import pennylane as qml
-from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
 
 
-def lightning_qubit_dev(wires):
-    """Loads ``lightning.qubit``"""
-    return qml.device("lightning.qubit", wires=wires)
+def lightning_backend_dev(wires):
+    """Loads the lightning backend"""
+    return qml.device(device_name, wires=wires)
 
 
-def lightning_qubit_batch_obs_dev(wires):
-    """Loads ``lightning.qubit``"""
-    return qml.device("lightning.qubit", wires=wires, batch_obs=True)
+def lightning_backend_batch_obs_dev(wires):
+    """Loads the lightning backend"""
+    return qml.device(device_name, wires=wires, batch_obs=True)
 
 
 def default_qubit_dev(wires):
@@ -40,7 +40,7 @@ def default_qubit_dev(wires):
 
 
 def one_qubit_block(wires=None):
-    """A block containing all of the supported gates in ``lightning.qubit``"""
+    """A block containing all supported gates"""
     qml.PauliX(wires=wires)
     qml.PauliY(wires=wires)
     qml.S(wires=wires)
@@ -56,16 +56,15 @@ def one_qubit_block(wires=None):
 
 
 class TestComparison:
-    """A test that compares the output states of ``lightning.qubit`` and ``default.qubit`` for a
-    variety of different circuits. This uses ``default.qubit`` as a gold standard to compare
-    against."""
+    """A test that compares the output states of the lightning device and ``default.qubit`` for a
+    variety of different circuits. This uses ``default.qubit`` as a reference."""
 
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
-    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_one_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
@@ -99,10 +98,10 @@ class TestComparison:
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_two_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
@@ -143,10 +142,10 @@ class TestComparison:
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_three_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
@@ -195,10 +194,10 @@ class TestComparison:
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_four_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
@@ -250,11 +249,11 @@ class TestComparison:
         assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_qubit_dev, lightning_qubit_batch_obs_dev]
+        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
         """Test an n-qubit circuit"""
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))

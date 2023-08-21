@@ -1,4 +1,4 @@
-# Copyright 2022 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for operation decomposition.
+Unit tests for operation decomposition with Lightning devices.
 """
 import pytest
+from conftest import LightningDevice as ld
+
 import numpy as np
 import pennylane as qml
-from pennylane_lightning import LightningQubit
 
-from pennylane_lightning.lightning_qubit import CPP_BINARY_AVAILABLE
-
-if not CPP_BINARY_AVAILABLE:
+if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
@@ -40,4 +39,4 @@ class TestDenseMatrixDecompositionThreshold:
     def test_threshold(self, op, n_wires, condition):
         wires = np.linspace(0, n_wires - 1, n_wires, dtype=int)
         op = op(wires=wires)
-        assert LightningQubit.stopping_condition.__get__(op)(op) == condition
+        assert ld.stopping_condition.__get__(op)(op) == condition

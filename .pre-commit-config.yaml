@@ -1,0 +1,21 @@
+repos:
+-   repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+    - id: black
+      args: [--line-length=100]
+      exclude: ^(bin/|doc/|scripts/)
+- repo: local
+  hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
+      types: [python]
+      args:
+        [
+          "-rn", # Only display messages
+          "-sn", # Don't display the score
+          "--rcfile=.pylintrc", # Link to your config file
+        ]
+      exclude: ^(bin/|doc/|scripts/|setup.py|tests/)
