@@ -1,9 +1,6 @@
 Lightning
 #########
 
-About
------
-
 :Release: |release|
 
 .. image:: _static/pennylane_lightning.png
