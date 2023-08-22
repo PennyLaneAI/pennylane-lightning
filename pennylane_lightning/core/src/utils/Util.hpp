@@ -20,7 +20,6 @@
 
 #include <cmath>
 #include <complex>
-#include <numbers> // sqrt2_v
 #include <numeric> // transform_reduce
 #include <set>
 #include <type_traits> // is_same_v
@@ -175,7 +174,7 @@ inline static constexpr auto IMAG() -> ComplexT<T> {
  * @return constexpr T sqrt(2)
  */
 template <class T> inline static constexpr auto SQRT2() -> T {
-    return std::numbers::sqrt2_v<T>;
+    return std::sqrt(static_cast<T>(2.0));
 }
 
 /**
@@ -187,7 +186,7 @@ template <class T> inline static constexpr auto SQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto SQRT2() -> ComplexT<T> {
-    return std::numbers::sqrt2_v<T>;
+    return std::sqrt(static_cast<T>(2.0));
 }
 
 /**
