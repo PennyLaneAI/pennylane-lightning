@@ -23,7 +23,10 @@
 
 * Modify `registerAdjointJacobian` and LKokkos' `applyMatrix` method to support device execution (with CUDA-12)
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
-
+  
+* Update the CMake internal references to enable sub-project compilation with affecting the parent package.
+  [(#478)](https://github.com/PennyLaneAI/pennylane-lightning/pull/478)
+  
 * `apply` no longer mutates the inputted list of operations.
   [(#474)](https://github.com/PennyLaneAI/pennylane-lightning/pull/474)
 

@@ -7,7 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
 endif()
 
-include("${CMAKE_SOURCE_DIR}/cmake/support_tests.cmake")
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_tests.cmake")
 FetchAndIncludeCatch()
 
 ################################################################################
