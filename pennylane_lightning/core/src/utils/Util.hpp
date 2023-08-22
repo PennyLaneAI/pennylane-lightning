@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <complex>
+#include <numbers>
 #include <numeric> // transform_reduce
 #include <set>
 #include <type_traits> // is_same_v
@@ -174,7 +175,15 @@ inline static constexpr auto IMAG() -> ComplexT<T> {
  * @return constexpr T sqrt(2)
  */
 template <class T> inline static constexpr auto SQRT2() -> T {
-    return static_cast<T>(1.414213562373095048801688724209698079L);
+#if __cpp_lib_math_constants >= 201907L
+    return std::numbers::sqrt2_v<T>;
+#else
+    if constexpr (std::is_same_v<T, float>) {
+        return 0x1.6a09e6p+0F; // NOLINT: To be replaced in C++20
+    } else {
+        return 0x1.6a09e667f3bcdp+0; // NOLINT: To be replaced in C++20
+    }
+#endif
 }
 
 /**
@@ -186,7 +195,15 @@ template <class T> inline static constexpr auto SQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto SQRT2() -> ComplexT<T> {
-    return static_cast<T>(1.414213562373095048801688724209698079L);
+#if __cpp_lib_math_constants >= 201907L
+    return std::numbers::sqrt2_v<T>;
+#else
+    if constexpr (std::is_same_v<T, float>) {
+        return 0x1.6a09e6p+0F; // NOLINT: To be replaced in C++20
+    } else {
+        return 0x1.6a09e667f3bcdp+0; // NOLINT: To be replaced in C++20
+    }
+#endif
 }
 
 /**
@@ -196,7 +213,7 @@ inline static constexpr auto SQRT2() -> ComplexT<T> {
  * @return constexpr T 1/sqrt(2)
  */
 template <class T> inline static constexpr auto INVSQRT2() -> T {
-    return static_cast<T>(0.707106781186547461715008466853760182L);
+    return {1 / SQRT2<T>()};
 }
 
 /**
@@ -208,7 +225,7 @@ template <class T> inline static constexpr auto INVSQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto INVSQRT2() -> ComplexT<T> {
-    return static_cast<T>(0.707106781186547461715008466853760182L);
+    return static_cast<ComplexT<T>>(INVSQRT2<T>());
 }
 
 /**
