@@ -196,7 +196,7 @@ inline static constexpr auto SQRT2() -> ComplexT<T> {
  * @return constexpr T 1/sqrt(2)
  */
 template <class T> inline static constexpr auto INVSQRT2() -> T {
-    return {1 / SQRT2<T>()};
+    return std::sqrt(static_cast<T>(0.5));
 }
 
 /**
@@ -208,7 +208,7 @@ template <class T> inline static constexpr auto INVSQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto INVSQRT2() -> ComplexT<T> {
-    return {1 / SQRT2<T>()};
+    return std::sqrt(static_cast<T>(0.5));
 }
 
 /**
