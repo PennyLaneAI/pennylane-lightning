@@ -263,12 +263,12 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=3)
             >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
             >>> obs1 = qml.Identity(1)
             >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
-            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j,
-                0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64,)
+            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
             >>> dev.sync_h2d(state_vector)
             >>> res = dev.expval(H)
             >>> print(res)
@@ -285,6 +285,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
@@ -317,6 +318,7 @@ if LK_CPP_BINARY_AVAILABLE:
             the data.
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> print(dev.state)
