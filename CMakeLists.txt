@@ -89,8 +89,21 @@ add_subdirectory(pennylane_lightning/core/src)
 #####################################################
 add_library(pennylane_lightning INTERFACE)
 
+target_link_libraries(pennylane_lightning INTERFACE lightning_observables
+                                                    lightning_utils
+                                                    lightning_algorithms
+                                                    )
+
+target_link_libraries(pennylane_lightning INTERFACE  ${PL_BACKEND} #simulator
+                                                    "${PL_BACKEND}_algorithms"
+                                                    "${PL_BACKEND}_observables"
+                                                    "${PL_BACKEND}_bindings"
+                                                    "${PL_BACKEND}_measurements"
+)
+                                                
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/src;include>")
 
+#####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
