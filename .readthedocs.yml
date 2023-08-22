@@ -25,3 +25,5 @@ build:
   jobs:
     pre_install:
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
+    post_install:
+      - PL_BACKEND="lightning_kokkos" pip install -e . -vv
