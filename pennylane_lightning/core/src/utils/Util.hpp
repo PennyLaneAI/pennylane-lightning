@@ -174,7 +174,7 @@ inline static constexpr auto IMAG() -> ComplexT<T> {
  * @return constexpr T sqrt(2)
  */
 template <class T> inline static constexpr auto SQRT2() -> T {
-    return std::sqrt(static_cast<T>(2.0));
+    return static_cast<T>(1.414213562373095048801688724209698079L);
 }
 
 /**
@@ -186,7 +186,7 @@ template <class T> inline static constexpr auto SQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto SQRT2() -> ComplexT<T> {
-    return std::sqrt(static_cast<T>(2.0));
+    return static_cast<T>(1.414213562373095048801688724209698079L);
 }
 
 /**
@@ -196,7 +196,7 @@ inline static constexpr auto SQRT2() -> ComplexT<T> {
  * @return constexpr T 1/sqrt(2)
  */
 template <class T> inline static constexpr auto INVSQRT2() -> T {
-    return std::sqrt(static_cast<T>(0.5));
+    return static_cast<T>(0.707106781186547461715008466853760182L);
 }
 
 /**
@@ -208,7 +208,7 @@ template <class T> inline static constexpr auto INVSQRT2() -> T {
  */
 template <template <class> class ComplexT, class T>
 inline static constexpr auto INVSQRT2() -> ComplexT<T> {
-    return std::sqrt(static_cast<T>(0.5));
+    return static_cast<T>(0.707106781186547461715008466853760182L);
 }
 
 /**
