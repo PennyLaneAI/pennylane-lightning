@@ -5,4 +5,5 @@ graphviz
 pybind11
 sphinx
 sphinx-automodapi
+git+https://github.com/PennyLaneAI/pennylane.git@master
 pennylane-sphinx-theme
