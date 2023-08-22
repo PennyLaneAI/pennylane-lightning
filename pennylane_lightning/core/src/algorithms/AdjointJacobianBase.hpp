@@ -157,8 +157,9 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      */
     inline void adjointJacobian(std::span<PrecisionT> jac,
                                 const JacobianData<StateVectorT> &jd,
+                                const StateVectorT &ref_data = {0},
                                 bool apply_operations = false) {
-        return static_cast<Derived *>(this)->adjointJacobian(jac, jd,
+        return static_cast<Derived *>(this)->adjointJacobian(jac, jd, ref_data, 
                                                              apply_operations);
     }
 

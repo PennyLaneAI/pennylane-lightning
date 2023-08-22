@@ -83,7 +83,9 @@ class AdjointJacobian final
      */
     void adjointJacobian(std::span<PrecisionT> jac,
                          const JacobianData<StateVectorT> &jd,
-                         bool apply_operations = false) {
+                         const StateVectorT &ref_data,
+                         bool apply_operations = false
+) {
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -111,8 +113,6 @@ class AdjointJacobian final
             num_param_ops - 1; // total number of parametric ops
         auto tp_it = tp.rbegin();
         const auto tp_rend = tp.rend();
-
-        StateVectorT ref_data(jd.getPtrStateVec(), jd.getSizeStateVec());
 
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorT lambda{ref_data};
