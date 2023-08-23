@@ -1,8 +1,7 @@
 Lightning Qubit device
 ======================
 
-The ``lightning.qubit`` device is an extension of PennyLane's built-in ``default.qubit`` device.
-It uses a custom-built backend to
+The ``lightning.qubit`` device uses a custom-built backend to
 perform fast linear algebra calculations for simulating quantum state-vector evolution.
 
 A ``lightning.qubit`` device can be loaded using:
@@ -11,6 +10,8 @@ A ``lightning.qubit`` device can be loaded using:
 
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2)
+
+Check out the :doc:`/lightning_kokkos/installation` guide for more information.
 
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,7 +113,7 @@ The ``lightning.qubit`` device allows users to use the Markov Chain Monte Carlo 
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True)
 
-By default, the ``kernel_name`` is ``"Local"`` and ``num_burnin`` is ``100``. The local kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site. 
+By default, the ``kernel_name`` is ``"Local"`` and ``num_burnin`` is ``100``. The local kernel conducts a bit-flip local transition between states. The local kernel generates a random qubit site and then generates a random number to determine  the new bit at that qubit site.
 
 The ``lightning.qubit`` device also supports a ``"NonZeroRandom"`` kernel. This kernel randomly transits between states that have nonzero probability. It can be enabled by initializing the device as:
 

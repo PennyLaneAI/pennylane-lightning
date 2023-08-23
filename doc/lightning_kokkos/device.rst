@@ -1,8 +1,8 @@
 Lightning Kokkos device
 =======================
 
-The ``lightning.kokkos`` device is an extension of PennyLane's built-in ``lightning.qubit`` device.
-It extends the CPU-focused Lightning simulator to run using a variety of HPC focused backends, enabling accelerated simulation of quantum state-vector evolution.
+The `lightning.kokkos` device can run using a variety of HPC-focused backends, including GPUs,
+enabling accelerated simulation of quantum state-vector evolution.
 
 A ``lightning.kokkos`` device can be loaded using:
 
@@ -19,6 +19,7 @@ The ``lightning.kokkos`` device also directly supports quantum circuit gradients
     def circuit(params):
         ...
 
+Check out the :doc:`/lightning_kokkos/installation` guide for more information.
 
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

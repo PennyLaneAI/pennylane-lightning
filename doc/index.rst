@@ -1,11 +1,11 @@
-Lightning
-#########
+Lightning plugins
+#################
 
 :Release: |release|
 
 .. image:: _static/pennylane_lightning.png
     :align: left
-    :width: 200px
+    :width: 210px
     :target: javascript:void(0);
 
 .. include:: ../README.rst
@@ -16,7 +16,7 @@ Lightning
 Devices
 -------
 
-Lightning provides the following devices:
+The Lightning ecosystem provides the following devices:
 
 .. title-card::
     :name: 'lightning.qubit'

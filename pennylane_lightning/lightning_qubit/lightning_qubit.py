@@ -156,7 +156,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         A device that interfaces with C++ to perform fast linear algebra calculations.
 
         Use of this device requires pre-built binaries or compilation from source. Check out the
-        :doc:`/installation` guide for more details.
+        :doc:`/lightning_qubit/installation` guide for more details.
 
         Args:
             wires (int): the number of wires to initialize the device with

@@ -1,7 +1,7 @@
 pennylane_lightning
 ===================
 
-This section contains the API documentation for the Lightning plugins.
+This section contains the API documentation for the Lightning packages.
 
 .. warning::
 
@@ -13,10 +13,24 @@ This section contains the API documentation for the Lightning plugins.
 
 .. currentmodule:: pennylane_lightning
 
-.. automodapi:: pennylane_lightning.lightning_qubit
-    :no-heading:
-    :include-all-objects:
+.. title-card::
+   :name: lightning_qubit
+   :description: API documentation for the lightning_qubit package
+   :link: ../lightning_qubit/package.html
 
-.. automodapi:: pennylane_lightning.lightning_kokkos
-    :no-heading:
-    :include-all-objects:
+
+.. title-card::
+   :name: lightning_kokkos
+   :description: API documentation for the lightning_kokkos package
+   :link: ../lightning_kokkos/package.html
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        </br>
+
+.. toctree::
+   :hidden:
+
+   ../lightning_qubit/package
+   ../lightning_kokkos/package
