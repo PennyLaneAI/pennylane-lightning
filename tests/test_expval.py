@@ -107,7 +107,7 @@ class TestExpval:
         dev_def = qml.device("default.qubit", wires=3)
         dev = qubit_device(wires=3)
         m = 2**n_wires
-        U = np.random.rand(m, m)
+        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
         obs = qml.Hermitian(U, wires=range(n_wires))
 

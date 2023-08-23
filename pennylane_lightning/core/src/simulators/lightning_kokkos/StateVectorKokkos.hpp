@@ -65,7 +65,6 @@ class StateVectorKokkos final
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosVector = Kokkos::View<ComplexT *>;
     using KokkosSizeTVector = Kokkos::View<size_t *>;
-    using KokkosRangePolicy = Kokkos::RangePolicy<KokkosExecSpace>;
     using UnmanagedComplexHostView =
         Kokkos::View<ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
