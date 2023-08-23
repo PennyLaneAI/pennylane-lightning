@@ -198,19 +198,19 @@ The simplest way to install PennyLane-Lightning-Kokkos (OpenMP backend) is using
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install .
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install .
 
 or for an editable ``pip`` installation with:
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e .
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install -e .
 
 Alternatively, you can install the Python interface with:
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python setup.py build_ext
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python setup.py build_ext
    python setup.py bdist_wheel
    pip install ./dist/PennyLane*.whl --force-reinstall
 
@@ -218,7 +218,7 @@ To build the plugin directly with CMake:
 
 .. code-block:: console
 
-   cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPLKOKKOS_BUILD_TESTS=ON -G Ninja
+   cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPLKOKKOS_BUILD_TESTS=ON -DPL_BACKEND=lightning_kokkos -G Ninja
    cmake --build build
 
 Supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build switches are ``-DKokkos_ENABLE_BACKEND=ON``, where one needs to replace ``BACKEND``.
@@ -262,7 +262,7 @@ For a system with access to the ROCm stack outside of a manylinux container, an 
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_VEGA90A=ON" python -m pip install -e .
+   CMAKE_ARGS="-DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_VEGA90A=ON" PL_BACKEND="lightning_kokkos" python -m pip install -e .
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
 
