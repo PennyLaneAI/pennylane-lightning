@@ -72,40 +72,7 @@ class Measurements final
     };
 
     /**
-     * @brief Calculate the expectation value of a named observable.
-     *
-     * @param obsName observable name
-     * @param wires wires the observable acts on
-     * @param params parameters for the observable
-     * @param gate_matrix optional matrix
-     */
-    // PrecisionT getExpectationValue(
-    //     const std::string &obsName, const std::vector<size_t> &wires,
-    //     [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0},
-    //     const std::vector<ComplexT> &gate_matrix = {}) {
-    //     auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} :
-    //     params; auto &&local_wires =
-    //         (gate_matrix.empty())
-    //             ? wires
-    //             : std::vector<size_t>{
-    //                   wires.rbegin(),
-    //                   wires.rend()}; // ensure wire indexing correctly
-    //                   preserved
-    //                                  // for tensor-observables
-
-    //     if (expval_funcs.find(obsName) != expval_funcs.end()) {
-    //         return expval_funcs.at(obsName)(local_wires, par);
-    //     }
-
-    //     KokkosVector matrix("gate_matrix", gate_matrix.size());
-    //     Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
-    //                                   gate_matrix.data(),
-    //                                   gate_matrix.size()));
-    //     return getExpectationValueMultiQubitOp(matrix, wires, par);
-    // }
-
-    /**
-     * @brief Templated method that obtains the expectation value of named
+     * @brief Templated method that returns the expectation value of named
      * observables.
      *
      * @tparam functor_t Expectation value functor class for Kokkos dispatcher.
@@ -113,7 +80,10 @@ class Measurements final
      * @param wires Wires to apply the observable to.
      */
     template <template <class> class functor_t, int num_wires>
-    PrecisionT applyExpectationValueFunctor(const std::vector<size_t> &wires) {
+    PrecisionT applyExpValNamedFunctor(const std::vector<size_t> &wires) {
+        if constexpr (num_wires > 0)
+            PL_ASSERT(wires.size() == num_wires);
+
         const size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
@@ -123,50 +93,24 @@ class Measurements final
     }
 
     /**
-     * @brief Calculate expectation value with respect to single qubit
-     * observable on specified wire.
+     * @brief Templated method that returns the expectation value of a
+     * matrix-valued operator.
      *
-     * @param matrix Hermitian matrix representing observable to be used.
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to observable applied to specified
-     * wire.
+     * @tparam functor_t Expectation value functor class for Kokkos dispatcher.
+     * @tparam nqubits Number of wires.
+     * @param matrix Matrix (linearized into a KokkosVector).
+     * @param wires Wires to apply the observable to.
      */
-    auto getExpectationValueSingleQubitOp(
-        const KokkosVector &matrix, const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
+    template <template <class> class functor_t, int num_wires>
+    PrecisionT applyExpValFunctor(const KokkosVector &matrix,
+                                  const std::vector<size_t> &wires) {
+        PL_ASSERT(wires.size() == num_wires);
         const size_t num_qubits = this->_statevector.getNumQubits();
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
+        PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(
-            exp2(num_qubits - 1),
-            getExpectationValueSingleQubitOpFunctor<PrecisionT>(
-                arr_data, num_qubits, matrix, wires),
-            expval);
-        return expval;
-    }
-
-    /**
-     * @brief Calculate expectation value with respect to two qubit observable
-     * on specified wires.
-     *
-     * @param matrix Hermitian matrix representing observable to be used.
-     * @param wires Wires to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to observable applied to specified
-     * wires.
-     */
-    auto getExpectationValueTwoQubitOp(
-        const KokkosVector &matrix, const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits - 2),
-            getExpectationValueTwoQubitOpFunctor<PrecisionT>(
-                arr_data, num_qubits, matrix, wires),
-            expval);
+            exp2(num_qubits - num_wires),
+            functor_t<PrecisionT>(arr_data, num_qubits, matrix, wires), expval);
         return expval;
     }
 
@@ -180,15 +124,19 @@ class Measurements final
      * @return Expectation value with respect to observable applied to specified
      * wires.
      */
-    auto getExpectationValueMultiQubitOp(
-        const KokkosVector &matrix, const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
+    auto getExpValMatrix(const KokkosVector &matrix,
+                         const std::vector<size_t> &wires) {
         if (wires.size() == 1) {
-            return getExpectationValueSingleQubitOp(matrix, wires, params);
+            return applyExpValFunctor<getExpectationValueSingleQubitOpFunctor,
+                                      1>(matrix, wires);
         } else if (wires.size() == 2) {
-            return getExpectationValueTwoQubitOp(matrix, wires, params);
+            return applyExpValFunctor<getExpectationValueTwoQubitOpFunctor, 2>(
+                matrix, wires);
         } else {
-            return expval(matrix, wires);
+            StateVectorT ob_sv{this->_statevector};
+            ob_sv.applyMultiQubitOp(matrix, wires);
+            return getRealOfComplexInnerProduct(this->_statevector.getView(),
+                                                ob_sv.getView());
         }
     }
 
@@ -212,12 +160,15 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    PrecisionT expval(const std::vector<ComplexT> &matrix,
+    PrecisionT expval(const std::vector<ComplexT> &matrix_,
                       const std::vector<size_t> &wires) {
-        StateVectorT ob_sv{this->_statevector};
-        ob_sv.applyMatrix(matrix, wires);
-        return getRealOfComplexInnerProduct(this->_statevector.getView(),
-                                            ob_sv.getView());
+        PL_ABORT_IF(matrix_.size() != exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        KokkosVector matrix("matrix_", matrix_.size());
+        Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
+                                      matrix_.data(), matrix_.size()));
+        return getExpValMatrix(matrix, wires);
     };
 
     /**
@@ -229,35 +180,28 @@ class Measurements final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
-        if (expval_funcs_.contains(operation)) {
-            printf("\nCall expval_funcs_\n");
-        }
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return applyExpectationValueFunctor<
-                getExpectationValueIdentityFunctor, 0>(wires);
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+                                           0>(wires);
         case ExpValFunc::PauliX:
-            return applyExpectationValueFunctor<
-                getExpectationValuePauliXFunctor, 1>(wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
+                wires);
         case ExpValFunc::PauliY:
-            return applyExpectationValueFunctor<
-                getExpectationValuePauliYFunctor, 1>(wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
+                wires);
         case ExpValFunc::PauliZ:
-            return applyExpectationValueFunctor<
-                getExpectationValuePauliZFunctor, 1>(wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
+                wires);
         case ExpValFunc::Hadamard:
-            return applyExpectationValueFunctor<
-                getExpectationValueHadamardFunctor, 1>(wires);
+            return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
+                                           1>(wires);
         default:
-            PL_ABORT(
-                std::string("Expval does not exist for named observable ") +
-                operation);
+            break;
+            // PL_ABORT(
+            //     std::string("Expval does not exist for named observable ") +
+            //     operation);
         }
-
-        // if (expval_funcs.find(operation) != expval_funcs.end()) {
-        //     return expval_funcs.at(operation)(wires, {0.0});
-        // }
-        printf("\nCall applyOperation/getRealOfComplexInnerProduct\n");
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),

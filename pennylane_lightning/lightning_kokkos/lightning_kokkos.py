@@ -484,6 +484,12 @@ if LK_CPP_BINARY_AVAILABLE:
                     csr_hamiltonian.data,
                 )
 
+            # use specialized functors to compute expval(Hermitian)
+            if observable.name == "Hermitian":
+                observable_wires = self.map_wires(observable.wires)
+                matrix = observable.matrix()
+                return measure.expval(matrix, observable_wires)
+
             if (
                 observable.name in ["Hamiltonian", "Hermitian"]
                 or (observable.arithmetic_depth > 0)
