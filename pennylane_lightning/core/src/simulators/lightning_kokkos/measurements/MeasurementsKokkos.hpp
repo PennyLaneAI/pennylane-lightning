@@ -197,15 +197,10 @@ class Measurements final
             return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
                                            1>(wires);
         default:
-            break;
-            // PL_ABORT(
-            //     std::string("Expval does not exist for named observable ") +
-            //     operation);
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
         }
-        StateVectorT ob_sv{this->_statevector};
-        ob_sv.applyOperation(operation, wires);
-        return getRealOfComplexInnerProduct(this->_statevector.getView(),
-                                            ob_sv.getView());
     };
 
     /**
