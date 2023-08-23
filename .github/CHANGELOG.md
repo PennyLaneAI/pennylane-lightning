@@ -20,6 +20,10 @@
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 ### Improvements
+
+* Refactor LKokkos `Measurements` class to use (fast) specialized functors whenever possible.
+  [(#481)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
+
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
