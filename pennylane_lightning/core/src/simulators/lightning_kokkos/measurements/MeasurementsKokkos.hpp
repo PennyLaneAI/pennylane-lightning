@@ -32,6 +32,15 @@ using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;
+enum class ExpValFunc : uint32_t {
+    BEGIN = 0,
+    Identity,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    END
+};
 } // namespace
 /// @endcond
 
@@ -56,44 +65,11 @@ class Measurements final
     using UnmanagedPrecisionHostView =
         typename StateVectorT::UnmanagedPrecisionHostView;
 
-    using ExpValFunc = std::function<PrecisionT(
-        const std::vector<size_t> &, const std::vector<PrecisionT> &)>;
-    using ExpValMap = std::unordered_map<std::string, ExpValFunc>;
-
-    ExpValMap expval_funcs;
-
   public:
     explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector},
-          expval_funcs{{"Identity",
-                        [&](auto &&wires, auto &&params) {
-                            return getExpectationValueIdentity(
-                                std::forward<decltype(wires)>(wires),
-                                std::forward<decltype(params)>(params));
-                        }},
-                       {"PauliX",
-                        [&](auto &&wires, auto &&params) {
-                            return getExpectationValuePauliX(
-                                std::forward<decltype(wires)>(wires),
-                                std::forward<decltype(params)>(params));
-                        }},
-                       {"PauliY",
-                        [&](auto &&wires, auto &&params) {
-                            return getExpectationValuePauliY(
-                                std::forward<decltype(wires)>(wires),
-                                std::forward<decltype(params)>(params));
-                        }},
-                       {"PauliZ",
-                        [&](auto &&wires, auto &&params) {
-                            return getExpectationValuePauliZ(
-                                std::forward<decltype(wires)>(wires),
-                                std::forward<decltype(params)>(params));
-                        }},
-                       {"Hadamard", [&](auto &&wires, auto &&params) {
-                            return getExpectationValueHadamard(
-                                std::forward<decltype(wires)>(wires),
-                                std::forward<decltype(params)>(params));
-                        }}} {};
+        : BaseType{statevector} {
+        init_expval_funcs_();
+    };
 
     /**
      * @brief Calculate the expectation value of a named observable.
@@ -103,28 +79,30 @@ class Measurements final
      * @param params parameters for the observable
      * @param gate_matrix optional matrix
      */
-    PrecisionT getExpectationValue(
-        const std::string &obsName, const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0},
-        const std::vector<ComplexT> &gate_matrix = {}) {
-        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{
-                      wires.rbegin(),
-                      wires.rend()}; // ensure wire indexing correctly preserved
-                                     // for tensor-observables
+    // PrecisionT getExpectationValue(
+    //     const std::string &obsName, const std::vector<size_t> &wires,
+    //     [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0},
+    //     const std::vector<ComplexT> &gate_matrix = {}) {
+    //     auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} :
+    //     params; auto &&local_wires =
+    //         (gate_matrix.empty())
+    //             ? wires
+    //             : std::vector<size_t>{
+    //                   wires.rbegin(),
+    //                   wires.rend()}; // ensure wire indexing correctly
+    //                   preserved
+    //                                  // for tensor-observables
 
-        if (expval_funcs.find(obsName) != expval_funcs.end()) {
-            return expval_funcs.at(obsName)(local_wires, par);
-        }
+    //     if (expval_funcs.find(obsName) != expval_funcs.end()) {
+    //         return expval_funcs.at(obsName)(local_wires, par);
+    //     }
 
-        KokkosVector matrix("gate_matrix", gate_matrix.size());
-        Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
-                                      gate_matrix.data(), gate_matrix.size()));
-        return getExpectationValueMultiQubitOp(matrix, wires, par);
-    }
+    //     KokkosVector matrix("gate_matrix", gate_matrix.size());
+    //     Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
+    //                                   gate_matrix.data(),
+    //                                   gate_matrix.size()));
+    //     return getExpectationValueMultiQubitOp(matrix, wires, par);
+    // }
 
     /**
      * @brief Calculate expectation value with respect to identity observable on
@@ -342,6 +320,30 @@ class Measurements final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
+        if (expval_funcs_.contains(operation)) {
+            printf("\nCall expval_funcs_\n");
+        }
+        switch (expval_funcs_[operation]) {
+        case ExpValFunc::Identity:
+            return getExpectationValueIdentity(wires);
+        case ExpValFunc::PauliX:
+            return getExpectationValuePauliX(wires);
+        case ExpValFunc::PauliY:
+            return getExpectationValuePauliY(wires);
+        case ExpValFunc::PauliZ:
+            return getExpectationValuePauliZ(wires);
+        case ExpValFunc::Hadamard:
+            return getExpectationValueHadamard(wires);
+        default:
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
+        }
+
+        // if (expval_funcs.find(operation) != expval_funcs.end()) {
+        //     return expval_funcs.at(operation)(wires, {0.0});
+        // }
+        printf("\nCall applyOperation/getRealOfComplexInnerProduct\n");
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
@@ -731,6 +733,23 @@ class Measurements final
 
         return samples_h;
     }
+
+  private:
+    std::unordered_map<std::string, ExpValFunc> expval_funcs_;
+
+    // clang-format off
+    /**
+    * @brief Register generator operations in the generators_indices_ attribute:
+    *        an unordered_map mapping strings to GateOperation enumeration keywords.
+    */
+    void init_expval_funcs_() {
+        expval_funcs_["Identity"] = ExpValFunc::Identity;
+        expval_funcs_["PauliX"]   = ExpValFunc::PauliX;
+        expval_funcs_["PauliY"]   = ExpValFunc::PauliY;
+        expval_funcs_["PauliZ"]   = ExpValFunc::PauliZ;
+        expval_funcs_["Hadamard"] = ExpValFunc::Hadamard;
+    }
+    // clang-format on
 };
 
 } // namespace Pennylane::LightningKokkos::Measures
