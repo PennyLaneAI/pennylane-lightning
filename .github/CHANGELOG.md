@@ -13,6 +13,9 @@
 
 ### Breaking changes
 
+* Enable pre-commit hooks to format all Python files and linting of all Python source files.
+  [(#480)](https://github.com/PennyLaneAI/pennylane/pull/480)
+
 ### Improvements
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
