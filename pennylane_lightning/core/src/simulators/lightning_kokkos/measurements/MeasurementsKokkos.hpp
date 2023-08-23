@@ -105,111 +105,20 @@ class Measurements final
     // }
 
     /**
-     * @brief Calculate expectation value with respect to identity observable on
-     * specified wire. For normalised states this function will always return 1.
+     * @brief Templated method that obtains the expectation value of named
+     * observables.
      *
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Squared norm of state.
+     * @tparam functor_t Expectation value functor class for Kokkos dispatcher.
+     * @tparam nqubits Number of wires.
+     * @param wires Wires to apply the observable to.
      */
-    auto getExpectationValueIdentity(
-        const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
+    template <template <class> class functor_t, int num_wires>
+    PrecisionT applyExpectationValueFunctor(const std::vector<size_t> &wires) {
         const size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits),
-            getExpectationValueIdentityFunctor(arr_data, num_qubits, wires),
-            expval);
-        return expval;
-    }
-
-    /**
-     * @brief Calculate expectation value with respect to Pauli X observable on
-     * specified wire.
-     *
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to Pauli X applied to specified
-     * wire.
-     */
-    auto getExpectationValuePauliX(
-        const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits - 1),
-            getExpectationValuePauliXFunctor(arr_data, num_qubits, wires),
-            expval);
-        return expval;
-    }
-
-    /**
-     * @brief Calculate expectation value with respect to Pauli Y observable on
-     * specified wire.
-     *
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to Pauli Y applied to specified
-     * wire.
-     */
-    auto getExpectationValuePauliY(
-        const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits - 1),
-            getExpectationValuePauliYFunctor(arr_data, num_qubits, wires),
-            expval);
-        return expval;
-    }
-
-    /**
-     * @brief Calculate expectation value with respect to Pauli Z observable on
-     * specified wire.
-     *
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to Pauli Z applied to specified
-     * wire.
-     */
-    auto getExpectationValuePauliZ(
-        const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits - 1),
-            getExpectationValuePauliZFunctor(arr_data, num_qubits, wires),
-            expval);
-        return expval;
-    }
-
-    /**
-     * @brief Calculate expectation value with respect to Hadamard observable on
-     * specified wire.
-     *
-     * @param wires Wire to apply observable to.
-     * @param params Not used.
-     * @return Expectation value with respect to Hadamard applied to specified
-     * wire.
-     */
-    auto getExpectationValueHadamard(
-        const std::vector<size_t> &wires,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {0.0}) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        PrecisionT expval = 0;
-        Kokkos::parallel_reduce(
-            exp2(num_qubits - 1),
-            getExpectationValueHadamardFunctor(arr_data, num_qubits, wires),
-            expval);
+        PrecisionT expval = 0.0;
+        Kokkos::parallel_reduce(exp2(num_qubits - num_wires),
+                                functor_t(arr_data, num_qubits, wires), expval);
         return expval;
     }
 
@@ -325,15 +234,20 @@ class Measurements final
         }
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return getExpectationValueIdentity(wires);
+            return applyExpectationValueFunctor<
+                getExpectationValueIdentityFunctor, 0>(wires);
         case ExpValFunc::PauliX:
-            return getExpectationValuePauliX(wires);
+            return applyExpectationValueFunctor<
+                getExpectationValuePauliXFunctor, 1>(wires);
         case ExpValFunc::PauliY:
-            return getExpectationValuePauliY(wires);
+            return applyExpectationValueFunctor<
+                getExpectationValuePauliYFunctor, 1>(wires);
         case ExpValFunc::PauliZ:
-            return getExpectationValuePauliZ(wires);
+            return applyExpectationValueFunctor<
+                getExpectationValuePauliZFunctor, 1>(wires);
         case ExpValFunc::Hadamard:
-            return getExpectationValueHadamard(wires);
+            return applyExpectationValueFunctor<
+                getExpectationValueHadamardFunctor, 1>(wires);
         default:
             PL_ABORT(
                 std::string("Expval does not exist for named observable ") +
