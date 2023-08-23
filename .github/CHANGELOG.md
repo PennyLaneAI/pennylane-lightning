@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12). 
+  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
+
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
@@ -12,6 +15,9 @@
   [(#465)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
 
 ### Breaking changes
+
+* Modify `adjointJacobian` methods to accept a (maybe unused) reference `StateVectorT`, allowing device-backed simulators to directly access state vector data for adjoint differentiation instead of copying it back-and-forth into `JacobianData` (host memory).
+  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 ### Improvements
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
@@ -26,10 +32,7 @@
 
 * Update the CMake internal references to enable sub-project compilation with affecting the parent package.
   [(#478)](https://github.com/PennyLaneAI/pennylane-lightning/pull/478)
-  
-* Modify `registerAdjointJacobian` and LKokkos' `applyMatrix` method to support device execution (with CUDA-12)
-  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
-  
+
 * `apply` no longer mutates the inputted list of operations.
   [(#474)](https://github.com/PennyLaneAI/pennylane-lightning/pull/474)
 
