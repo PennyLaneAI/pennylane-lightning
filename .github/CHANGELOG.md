@@ -21,6 +21,9 @@
 
 ### Bug fixes
 
+* Do no import `sqrt2_v` from `<numbers>` in `Util.hpp` to resolve issue with Lightning-GPU builds.
+  [(#479)](https://github.com/PennyLaneAI/pennylane-lightning/pull/479)
+
 * Update the CMake internal references to enable sub-project compilation with affecting the parent package.
   [(#478)](https://github.com/PennyLaneAI/pennylane-lightning/pull/478)
 
