@@ -255,10 +255,11 @@ template <class PrecisionT> struct getExpectationValueTwoQubitOpFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueMultiQubitOpFunctor {
-    using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
     using ScratchViewComplex =
-        Kokkos::View<Kokkos::complex<PrecisionT> *,
+        Kokkos::View<ComplexT *,
                      Kokkos::DefaultExecutionSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using MemberType = Kokkos::TeamPolicy<>::member_type;
@@ -307,10 +308,14 @@ template <class PrecisionT> struct getExpectationValueMultiQubitOpFunctor {
             Kokkos::TeamThreadRange(teamMember, dim),
             [&](const std::size_t i, PrecisionT &innerExpVal) {
                 const std::size_t base_idx = i * dim;
-                for (std::size_t j = 0; j < dim; j++) {
-                    innerExpVal += real(conj(coeffs_in(i)) *
-                                        matrix(base_idx + j) * coeffs_in(j));
-                }
+                ComplexT tmp{0.0};
+                Kokkos::parallel_reduce(
+                    Kokkos::ThreadVectorRange(teamMember, dim),
+                    [&](const std::size_t j, ComplexT &isum) {
+                        isum = isum + matrix(base_idx + j) * coeffs_in(j);
+                    },
+                    tmp);
+                innerExpVal += real(conj(coeffs_in(i)) * tmp);
             },
             tempExpVal);
         if (teamMember.team_rank() == 0) {

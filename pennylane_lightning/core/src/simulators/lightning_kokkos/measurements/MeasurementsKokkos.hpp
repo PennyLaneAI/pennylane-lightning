@@ -64,7 +64,6 @@ class Measurements final
         typename StateVectorT::UnmanagedConstSizeTHostView;
     using UnmanagedPrecisionHostView =
         typename StateVectorT::UnmanagedPrecisionHostView;
-    using HostExecSpace = typename StateVectorT::HostExecSpace;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
