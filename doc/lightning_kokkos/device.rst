@@ -35,23 +35,55 @@ Supported operations and observables
 
     ~pennylane.BasisState
     ~pennylane.CNOT
+    ~pennylane.ControlledPhaseShift
+    ~pennylane.ControlledQubitUnitary
+    ~pennylane.CPhase
     ~pennylane.CRot
     ~pennylane.CRX
     ~pennylane.CRY
     ~pennylane.CRZ
+    ~pennylane.CSWAP
+    ~pennylane.CY
+    ~pennylane.CZ
+    ~pennylane.DiagonalQubitUnitary
+    ~pennylane.DoubleExcitation
+    ~pennylane.DoubleExcitationMinus
+    ~pennylane.DoubleExcitationPlus
+    ~pennylane.ECR
     ~pennylane.Hadamard
+    ~pennylane.Identity
+    ~pennylane.IsingXX
+    ~pennylane.IsingXY
+    ~pennylane.IsingYY
+    ~pennylane.IsingZZ
+    ~pennylane.ISWAP
+    ~pennylane.MultiControlledX
+    ~pennylane.MultiRZ
+    ~pennylane.OrbitalRotation
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
     ~pennylane.PhaseShift
-    ~pennylane.ControlledPhaseShift
+    ~pennylane.PSWAP
+    ~pennylane.QFT
+    ~pennylane.QubitCarry
     ~pennylane.QubitStateVector
+    ~pennylane.QubitSum
+    ~pennylane.QubitUnitary
     ~pennylane.Rot
     ~pennylane.RX
     ~pennylane.RY
     ~pennylane.RZ
     ~pennylane.S
+    ~pennylane.SingleExcitation
+    ~pennylane.SingleExcitationMinus
+    ~pennylane.SingleExcitationPlus
+    ~pennylane.SISWAP
+    ~pennylane.SQISW
+    ~pennylane.SWAP
+    ~pennylane.SX
     ~pennylane.T
+    ~pennylane.Toffoli
 
 .. raw:: html
 
@@ -66,11 +98,18 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
+    ~pennylane.Exp
     ~pennylane.Hadamard
+    ~pennylane.Hamiltonian
+    ~pennylane.Hermitian
     ~pennylane.Identity
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
+    ~pennylane.Prod
+    ~pennylane.SparseHamiltonian
+    ~pennylane.SProd
+    ~pennylane.Sum
 
 .. raw:: html
 
