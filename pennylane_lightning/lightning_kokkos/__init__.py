@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""PennyLane lightning kokkos module."""
+"""PennyLane lightning_kokkos package."""
 
 from pennylane_lightning.core import __version__
 from .lightning_kokkos import LightningKokkos

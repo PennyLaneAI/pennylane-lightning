@@ -3,7 +3,9 @@
 Adding a gate implementation
 ############################
 
-We discuss how one can add another gate implementation in this document. Assume that you want to add a custom ``PauliX`` gate implementation in Pennylane-Lightning. In this case, you may first create a file and add a class:
+We discuss how one can add another gate implementation in this document.
+Assume that you want to add a custom ``PauliX`` gate implementation in Lightning Qubit.
+In this case, you may first create a file and add a class:
 
 .. code-block:: cpp
 
@@ -16,7 +18,7 @@ We discuss how one can add another gate implementation in this document. Assume 
         constexpr static kernel_id = KernelType::MyKernel; // Will be discussed below
         constexpr static std::string_view = "MyGateImpl"; // Name of your kernel
 
-        /* This defines the required alignment for this kernel. If there is no special requirement, 
+        /* This defines the required alignment for this kernel. If there is no special requirement,
            using std::alignment_of_v is sufficient. */
         template <typename PrecisionT>
         constexpr static size_t required_alignment = std::alignment_of_v<PrecisionT>;
@@ -31,7 +33,8 @@ We discuss how one can add another gate implementation in this document. Assume 
         }
     };
 
-Then you can add your gate implementation to Pennylane-Lightning. This can be done by modifying two files as:
+Then you can add your gate implementation to Lightning Qubit.
+This can be done by modifying two files:
 
 .. code-block:: cpp
 
@@ -43,7 +46,7 @@ Then you can add your gate implementation to Pennylane-Lightning. This can be do
 
     } // namespace Pennylane
 
-and 
+and
 
 .. code-block:: cpp
 
@@ -97,7 +100,7 @@ to
 
 will make your implementation as default kernel for ``PauliX`` gate (for all C++ calls as well as for the Python binding).
 
-Gate generators can also be handled in the same way. Note that it is possible to assign the kernel only for specific memory model or
+Gate generators can also be handled in the same way. Note that it is possible to assign the kernel only for specific memory models or
 threading operations. Check overloaded functions :cpp:func:`Pennylane::KernelMap::OperationKernelMap::assignKernelForOp` for details.
 
 Test your gate implementation

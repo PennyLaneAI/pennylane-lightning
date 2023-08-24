@@ -1,21 +1,32 @@
-PennyLane-Lightning Plugin
-##########################
+Lightning plugins
+#################
 
 :Release: |release|
+
+.. image:: _static/pennylane_lightning.png
+    :align: left
+    :width: 210px
+    :target: javascript:void(0);
 
 .. include:: ../README.rst
   :start-after:   header-start-inclusion-marker-do-not-remove
   :end-before: header-end-inclusion-marker-do-not-remove
 
-Devices
-=======
 
-PennyLane-Lightning provides the following device:
+Devices
+-------
+
+The Lightning ecosystem provides the following devices:
 
 .. title-card::
     :name: 'lightning.qubit'
     :description: A fast state-vector qubit simulator written in C++
-    :link: devices.html
+    :link: lightning_qubit/device.html
+
+.. title-card::
+    :name: 'lightning.kokkos'
+    :description: A heterogeneous backend state-vector simulator with Kokkos library support.
+    :link: lightning_kokkos/device.html
 
 .. raw:: html
 
@@ -29,23 +40,21 @@ PennyLane-Lightning provides the following device:
 
    installation
    support
-   Architecture <arch/arch_overview>
 
 .. toctree::
    :maxdepth: 2
    :caption: Usage
    :hidden:
 
-   devices
+   lightning_qubit/device
+   lightning_kokkos/device
 
 .. toctree::
    :maxdepth: 2
    :caption: Development
    :hidden:
 
-   add_kernel
-   benchmark
-   avx_kernels/index
+   lightning_qubit/development/index
 
 .. toctree::
    :maxdepth: 1
