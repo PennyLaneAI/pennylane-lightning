@@ -221,7 +221,7 @@ To build the plugin directly with CMake:
    cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPLKOKKOS_BUILD_TESTS=ON -DPL_BACKEND=lightning_kokkos -G Ninja
    cmake --build build
 
-Supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build switches are ``-DKokkos_ENABLE_BACKEND=ON``, where one needs to replace ``BACKEND``.
+Supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 One can activate simultaneously one serial, one parallel CPU host (e.g. "OPENMP", "THREADS") and one parallel GPU device backend (e.g. "HIP", "CUDA"), but not two of any category at the same time.
 For "HIP" and "CUDA", the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
@@ -270,8 +270,21 @@ Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/li
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
 
+GPU support
+-----------
+
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
+can be installed by providing the optional ``[gpu]`` tag:
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning[gpu]
+
+For more information, please refer to the PennyLane Lightning GPU `documentation <https://docs.pennylane.ai/projects/lightning-gpu>`_.
+
 Docker Support
 --------------
+
 One can also build the Lightning image using Docker:
 
 .. code-block:: console

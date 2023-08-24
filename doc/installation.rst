@@ -1,6 +1,8 @@
 Installation
 ############
 
+Each device in the Lightning ecosystem is a separate Python package. Select the device below for installation instructions:
+
 .. title-card::
    :name: Lightning Qubit
    :description: Guidelines to installing and testing the Lightning Qubit device.

@@ -1,17 +1,17 @@
 Lightning Qubit device
 ======================
 
-The ``lightning.qubit`` device uses a custom-built backend to
+The `lightning.qubit` device uses a custom-built backend to
 perform fast linear algebra calculations for simulating quantum state-vector evolution.
 
-A ``lightning.qubit`` device can be loaded using:
+A `lightning.qubit` device can be loaded using:
 
 .. code-block:: python
 
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2)
 
-Check out the :doc:`/lightning_kokkos/installation` guide for more information.
+Check out the :doc:`/lightning_qubit/installation` guide for more information.
 
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
