@@ -689,7 +689,9 @@ if LQ_CPP_BINARY_AVAILABLE:
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
             jac_r[:, processed_data["record_tp_rows"]] = jac
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if hasattr(qml, "active_return"):  # pragma: no cover
+                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=line-too-long, inconsistent-return-statements
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
