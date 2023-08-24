@@ -1,10 +1,10 @@
 Lightning Qubit device
 ======================
 
-The `lightning.qubit` device uses a custom-built backend to
+The ``lightning.qubit`` device uses a custom-built backend to
 perform fast linear algebra calculations for simulating quantum state-vector evolution.
 
-A `lightning.qubit` device can be loaded using:
+A ``lightning.qubit`` device can be loaded using:
 
 .. code-block:: python
 

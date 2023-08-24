@@ -4,7 +4,7 @@ Lightning Kokkos device
 The ``lightning.kokkos`` device can run using a variety of HPC-focused backends, including GPUs,
 enabling accelerated simulation of quantum state-vector evolution.
 
-A `lightning.kokkos` device can be loaded using:
+A ``lightning.kokkos`` device can be loaded using:
 
 .. code-block:: python
 
