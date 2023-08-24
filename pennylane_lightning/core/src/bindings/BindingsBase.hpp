@@ -24,10 +24,6 @@
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
 
-/// @cond DEV
-namespace {} // namespace
-/// @endcond
-
 namespace py = pybind11;
 
 namespace Pennylane::Bindings {

@@ -3,11 +3,11 @@ AVX2/512 kernel implementation
 
 AVX2 and AVX512 are extensions to the x86 instruction set providing multiple data processing within a single instruction (SIMD; single instruction, multiple data), supported by modern Intel and AMD CPUs.
 AVX2 (AVX512) works with 256-bit (512-bit) registers and naturally supports different integer types (4 or 8 bytes) as well as floating point types (single or double precision).
-Those instructions are accessible within C++ using intrinsic functions provided by compilers (Intel/GCC/Clang) [#f1]_. 
+Those instructions are accessible within C++ using intrinsic functions provided by compilers (Intel/GCC/Clang) [#f1]_.
 As an introduction to AVX2/512 intrinsic is out of the scope of this document, we recommend e.g. `this website <https://chryswoods.com/vector_c++/immintrin.html>`_ for an introduction and `Intel intrinsics guide <https://www.intel.com/content/www/us/en/docs/intrinsics-guide/index.html>`_ for a reference.
 
-We now discuss how we use SIMD to implement quantum gate operations in PennyLane-Lightning.
-When using SIMD, it is natural to consider data as a list of packed arrays, i.e. two dimensional array where each row has ``packed_size`` numbers.
+We now discuss how we use SIMD to implement quantum gate operations in Lightning Qubit.
+When using SIMD, it is natural to consider data as a list of packed arrays, i.e. two-dimensional array where each row has ``packed_size`` numbers.
 For example, let us consider a four-qubit quantum state :math:`C` (which has 16 complex numbers) and ``packed_size=8`` (when we use AVX512 with a double precision floating point or AVX2 with a single precision floating point). In this case, we can write down the statevector (coefficients in the computational basis) as
 
 +----------------+----------------+----------------+----------------+----------------+----------------+----------------+----------------+
@@ -34,11 +34,11 @@ We now consider an implementation of a single qubit gate. For simplicity, we use
 
 where :math:`\neg 0 = 1` and :math:`\neg 1 = 0` is the bit negation operator.
 
-We see that the gates (1) on the second and the last wires (:math:`X_2` and :math:`X_3`) act within a row (internally in a packed array) but (2) on the zeroth and the first wires (:math:`X_0` and :math:`X_1`) act between rows (externally). 
-Specifically, the Pauli-X gate just permute the elements within a row in the former case (1) whereas it swaps the whole two rows in the latter case (2).
+We see that the gates (1) on the second and the last wires (:math:`X_2` and :math:`X_3`) act within a row (internally in a packed array) but (2) on the zeroth and the first wires (:math:`X_0` and :math:`X_1`) act between rows (externally).
+Specifically, the Pauli-X gate just permutes the elements within a row in the former case (1) whereas it swaps the whole two rows in the latter case (2).
 This implies that we need two independent implementations of the same gate depending on where the gate applies to.
 
-Following simple (C++ style) pseudocode shows how the algorithm is implemented.
+The following simple (C++ style) pseudocode shows how the algorithm is implemented.
 
 .. code-block::
 
@@ -47,7 +47,7 @@ Following simple (C++ style) pseudocode shows how the algorithm is implemented.
       template<size_t wire>
       void applyInternal(...) {
          // Within a row
-         permtation = compute a permutation within a row for a given wire
+         permutation = compute a permutation within a row for a given wire
          for every row index {
             row = load a row from the memory
             permute elements in row using permutation
@@ -65,10 +65,12 @@ Following simple (C++ style) pseudocode shows how the algorithm is implemented.
       }
    }
 
-Note that this is a general high level code and does not care details such as how many elements in a row.
-However, one can translate it to C++ code without runtime overhead with modern techniques (``constexpr`` and ``template`` classes/functions). One tricky part is how we implement permutations efficiently, which can be found in :ref:`namespace_Pennylane__Gates__AVXCommon__Permutation`.
-As some AVX2/512 permutation functions require its permutation data to be a compile-time constant, we require `wire` to be a compile-time parameter for ``applyInternal``.
-The full implementation of the functions can be found in :cpp:class:`Pennylane::Gates::AVXCommon::ApplyPauliX`.
+Note that this is a general high-level code and does not care about details such as how many elements are in a row.
+However, one can translate it to C++ code without runtime overhead with modern techniques (``constexpr`` and ``template`` classes/functions). One tricky part is how we implement permutations efficiently,
+which can be found in :ref:`namespace_Pennylane__LightningQubit__Gates__AVXCommon__Permutation`.
+As some AVX2/512 permutation functions require its permutation data to be a compile-time constant, we require ``wire`` to be a compile-time parameter for ``applyInternal``.
+The full implementation of the functions can be found in
+:cpp:class:`Pennylane::LightningQubit::Gates::AVXCommon::ApplyPauliX`.
 
 
 Choosing an appropriate function
@@ -77,7 +79,7 @@ Choosing an appropriate function
 When such a function is given, we can choose a proper function to call for a given statevector and a wire. For example, we can simply write as follows.
 
 .. code-block:: cpp
-   
+
    void applyPauliX(num_qubits, wire, ...) {
       if (2**num_qubits < packed_size / 2) {
          // data size is smaller than the size of a row
@@ -100,15 +102,18 @@ When such a function is given, we can choose a proper function to call for a giv
 Note that we used a switch-case statement for calling internal functions as the wire index must be a compile-time template parameter for ``applyInternal``.
 Since all single-qubit gate functions share the same structure,
 it might be beneficial to make a simple helper function that automatically finds a target function depending on the given information.
-Two classes :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithParamHelper` and :cpp:class:`Pennylane::Gates::AVXCommon::SingleQubitGateWithoutParamHelper` provide such functionality for a single-qubit gate with and without parameters, respectively.
+Two classes :cpp:class:`Pennylane::LightningQubit::Gates::AVXCommon::SingleQubitGateWithParamHelper` and :cpp:class:`Pennylane::LightningQubit::Gates::AVXCommon::SingleQubitGateWithoutParamHelper` provide such functionality for a single-qubit gate with and without parameters, respectively.
 
 
 Two-qubit gates
 ---------------
 
-Two qubit gates are also implemented in the same way. It is slightly more involved as there are four different cases depending on the wires. So we implement 4 (or 3 when the gate acts symmetrically on the wires) functions. See :cpp:class:`Pennylane::Gates::AVXCommon::ApplyCNOT` for example.
+Two qubit gates are also implemented in the same way.
+It is slightly more involved as there are four different cases depending on the wires.
+So we implement 4 (or 3 when the gate acts symmetrically on the wires) functions.
+See :cpp:class:`Pennylane::LightningQubit::Gates::AVXCommon::ApplyCNOT` for example.
 
 
 .. rubric:: Footnotes
 
-.. [#f1] Still, note that each intrinsic function does not necceassary be a single instruction after compiliation as the number of SIMD registers are limited. Thus compilers handle these optimizations.
+.. [#f1] Still, note that each intrinsic function will not necessarily be a single instruction after compilation, as the number of SIMD registers is limited. Thus compilers handle these optimizations.

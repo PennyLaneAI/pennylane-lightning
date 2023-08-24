@@ -20,8 +20,12 @@
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 ### Improvements
+
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
+
+* Integrated new unified docs for Lightning Kokkos and Lightning Qubit packages.
+  [(#473)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/473)
 
 ### Documentation
 

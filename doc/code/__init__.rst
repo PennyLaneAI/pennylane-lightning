@@ -1,7 +1,7 @@
 pennylane_lightning
 ===================
 
-This section contains the API documentation for the PennyLane-Lightning plugin.
+This section contains the API documentation for the Lightning packages.
 
 .. warning::
 
@@ -9,10 +9,28 @@ This section contains the API documentation for the PennyLane-Lightning plugin.
     to use these classes and functions directly.
 
     See the :doc:`overview </index>` page for more
-    details on using PennyLane-Lightning.
+    details on using Lightning.
 
 .. currentmodule:: pennylane_lightning
 
-.. automodapi:: pennylane_lightning
-    :no-heading:
-    :include-all-objects:
+.. title-card::
+   :name: lightning_qubit
+   :description: API documentation for the lightning_qubit package
+   :link: ../lightning_qubit/package.html
+
+
+.. title-card::
+   :name: lightning_kokkos
+   :description: API documentation for the lightning_kokkos package
+   :link: ../lightning_kokkos/package.html
+
+.. raw:: html
+
+        <div style='clear:both'></div>
+        </br>
+
+.. toctree::
+   :hidden:
+
+   ../lightning_qubit/package
+   ../lightning_kokkos/package

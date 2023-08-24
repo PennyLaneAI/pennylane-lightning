@@ -1,5 +1,5 @@
-PennyLane-Lightning Plugin
-##########################
+Lightning Plugins
+#################
 
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux.yml?branch=master&label=Test%20%28Linux%29&style=flat-square
     :alt: Linux x86_64 tests (branch)
@@ -35,10 +35,11 @@ PennyLane-Lightning Plugin
 
 .. header-start-inclusion-marker-do-not-remove
 
-The PennyLane-Lightning plugin provides fast state-vector simulators written in C++.
+The Lightning plugin ecosystem provides fast state-vector simulators written in C++.
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
+PennyLane supports Python 3.9 and above.
 
 .. header-end-inclusion-marker-do-not-remove
 
@@ -46,22 +47,22 @@ learning, automatic differentiation, and optimization of hybrid quantum-classica
 Features
 ========
 
-* Combine PennyLane-Lightning's high performance simulators with PennyLane's
+* Combine Lightning's high performance simulators with PennyLane's
   automatic differentiation and optimization.
 
-.. installation-start-inclusion-marker-do-not-remove
+.. installation_LQubit-start-inclusion-marker-do-not-remove
 
 
-Installation
-============
+Lightning Qubit installation
+============================
 
-PennyLane-Lightning requires Python version 3.9 and above. It can be installed using ``pip``:
+Lightning Qubit can be installed using ``pip``:
 
 .. code-block:: console
 
     $ pip install pennylane-lightning
 
-To build PennyLane-Lightning from source you can run
+To build Lightning from source you can run
 
 .. code-block:: console
 
@@ -108,18 +109,6 @@ or with ``build_ext`` and the ``--define`` flag as follows:
     $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF;ENABLE_KOKKOS=OFF"
     $ python3 setup.py develop
 
-
-GPU support
------------
-
-For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
-can be installed by providing the optional ``[gpu]`` tag:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[gpu]
-
-For more information, please refer to the PennyLane Lightning GPU `documentation <https://docs.pennylane.ai/projects/lightning-gpu>`_.
 
 Testing
 -------
@@ -168,7 +157,7 @@ Other supported options are
 Compile on Windows with MSVC
 ----------------------------
 
-You can also compile Pennylane-Lightning on Windows using
+You can also compile Lightning on Windows using
 `Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler.
 You need `cmake <https://cmake.org/download/>`_ and appropriate Python environment
 (e.g. using `Anaconda <https://www.anaconda.com/>`_).
@@ -193,16 +182,110 @@ Then a common command will work.
 Note that OpenMP and BLAS are disabled in this setting.
 
 
-.. installation-end-inclusion-marker-do-not-remove
+.. installation_LQubit-end-inclusion-marker-do-not-remove
 
+
+.. installation_LKokkos-start-inclusion-marker-do-not-remove
+
+Lightning Kokkos installation
+=============================
+
+We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
+Next, append the install location to ``CMAKE_PREFIX_PATH``.
+If an installation is not found, our builder will install it from scratch nevertheless.
+
+The simplest way to install PennyLane-Lightning-Kokkos (OpenMP backend) is using ``pip``.
+
+.. code-block:: console
+
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install .
+
+or for an editable ``pip`` installation with:
+
+.. code-block:: console
+
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install -e .
+
+Alternatively, you can install the Python interface with:
+
+.. code-block:: console
+
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python setup.py build_ext
+   python setup.py bdist_wheel
+   pip install ./dist/PennyLane*.whl --force-reinstall
+
+To build the plugin directly with CMake:
+
+.. code-block:: console
+
+   cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPLKOKKOS_BUILD_TESTS=ON -DPL_BACKEND=lightning_kokkos -G Ninja
+   cmake --build build
+
+Supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
+One can activate simultaneously one serial, one parallel CPU host (e.g. "OPENMP", "THREADS") and one parallel GPU device backend (e.g. "HIP", "CUDA"), but not two of any category at the same time.
+For "HIP" and "CUDA", the appropriate software stacks are required to enable compilation and subsequent use.
+Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
+A list of the architectures is found on the `Kokkos wiki <https://github.com/kokkos/kokkos/wiki/Macros#architectures>`_.
+Note that "THREADS" backend is not recommended since `Kokkos <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_ does not guarantee its safety.
+
+
+Testing
+=======
+
+To test with the ROCm stack using a manylinux2014 container we must first mount the repository into the container:
+
+.. code-block:: console
+
+    docker run -v `pwd`:/io -it quay.io/pypa/manylinux2014_x86_64 bash
+
+Next, within the container, we install the ROCm software stack:
+
+.. code-block:: console
+
+    yum install -y https://repo.radeon.com/amdgpu-install/21.40.2/rhel/7.9/amdgpu-install-21.40.2.40502-1.el7.noarch.rpm
+    amdgpu-install --usecase=hiplibsdk,rocm --no-dkms
+
+We next build the test suite, with a given AMD GPU target in mind, as listed `here <https://github.com/kokkos/kokkos/blob/master/Makefile.kokkos>`_.
+
+.. code-block:: console
+
+    cd /io
+    export PATH=$PATH:/opt/rocm/bin/
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib
+    export CXX=/opt/rocm/hip/bin/hipcc
+    cmake -B build -DCMAKE_CXX_COMPILER=/opt/rocm/hip/bin/hipcc -DKokkos_ENABLE_HIP=ON -DPLKOKKOS_BUILD_TESTS=ON -DKokkos_ARCH_VEGA90A=ON
+    cmake --build build --verbose
+
+We may now leave the container, and run the built test suite on a machine with access to the targeted GPU.
+
+For a system with access to the ROCm stack outside of a manylinux container, an editable ``pip`` installation can be built and installed as:
+
+.. code-block:: console
+
+   CMAKE_ARGS="-DKokkos_ENABLE_HIP=ON -DKokkos_ARCH_VEGA90A=ON" PL_BACKEND="lightning_kokkos" python -m pip install -e .
+
+.. installation_LKokkos-end-inclusion-marker-do-not-remove
 
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
 
+GPU support
+-----------
+
+For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
+can be installed by providing the optional ``[gpu]`` tag:
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning[gpu]
+
+For more information, please refer to the PennyLane Lightning GPU `documentation <https://docs.pennylane.ai/projects/lightning-gpu>`_.
+
 Docker Support
 --------------
-One can also build the Pennylane-Lightning image using Docker:
+
+One can also build the Lightning image using Docker:
 
 .. code-block:: console
 
@@ -237,9 +320,9 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 =======
 
-PennyLane-Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
+Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and PennyLane-Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
 
     Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
     Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,

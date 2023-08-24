@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# PennyLane-Lightning documentation build configuration file.
+# Lightning documentation build configuration file.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -24,11 +24,10 @@ sys.path.insert(0, os.path.abspath(""))
 sys.path.insert(0, os.path.abspath("_ext"))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 
-
 # For obtaining all relevant C++ source files
 currdir = Path(__file__).resolve().parent  # PROJECT_SOURCE_DIR/docs
 PROJECT_SOURCE_DIR = currdir.parent
-CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/src")
+CPP_SOURCE_DIR = PROJECT_SOURCE_DIR.joinpath("pennylane_lightning/core/src")
 CPP_EXCLUDE_DIRS = ["tests", "benchmarks"]  # relative to CPP_SOURCE_DIR
 
 
@@ -63,7 +62,8 @@ class Mock(MagicMock):
         return MagicMock()
 
 
-MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops"]
+MOCK_MODULES = ["pennylane_lightning.lightning_qubit_ops",
+                "pennylane_lightning.lightning_qubit_ops.algorithms"]
 
 mock = Mock()
 for mod_name in MOCK_MODULES:
@@ -143,7 +143,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "PennyLane-Lightning"
+project = "Lightning"
 copyright = "2023, Xanadu Quantum Technologies"
 author = "Xanadu Inc."
 
@@ -153,10 +153,10 @@ add_module_names = False
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-import pennylane_lightning
+from pennylane_lightning import lightning_qubit
 
 # The full version, including alpha/beta/rc tags.
-release = pennylane_lightning.__version__
+release = lightning_qubit.__version__
 
 # The short X.Y version.
 version = re.match(r"^(\d+\.\d+)", release).expand(r"\1")
@@ -208,7 +208,7 @@ html_theme = "pennylane"
 
 # html theme options (see theme.conf for more information)
 html_theme_options = {
-    "navbar_name": "PennyLane-Lightning",
+    "navbar_name": "Lightning",
     "navbar_active_link": 3,
     "google_analytics_tracking_id": "G-C480Z9JL0D",
     "extra_copyrights": [
