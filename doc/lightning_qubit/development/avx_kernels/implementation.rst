@@ -68,7 +68,7 @@ The following simple (C++ style) pseudocode shows how the algorithm is implement
 Note that this is a general high-level code and does not care about details such as how many elements are in a row.
 However, one can translate it to C++ code without runtime overhead with modern techniques (``constexpr`` and ``template`` classes/functions). One tricky part is how we implement permutations efficiently,
 which can be found in :ref:`namespace_Pennylane__LightningQubit__Gates__AVXCommon__Permutation`.
-As some AVX2/512 permutation functions require its permutation data to be a compile-time constant, we require `wire` to be a compile-time parameter for ``applyInternal``.
+As some AVX2/512 permutation functions require its permutation data to be a compile-time constant, we require ``wire`` to be a compile-time parameter for ``applyInternal``.
 The full implementation of the functions can be found in
 :cpp:class:`Pennylane::LightningQubit::Gates::AVXCommon::ApplyPauliX`.
 
