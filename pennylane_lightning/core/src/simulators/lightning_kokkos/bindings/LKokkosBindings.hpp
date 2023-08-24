@@ -170,10 +170,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
                const std::vector<size_t> &wires) {
+                const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
                     static_cast<ComplexT *>(matrix.request().ptr);
-                std::vector<ComplexT> matrix_v{
-                    matrix_data, matrix_data + exp2(2 * wires.size())};
+                std::vector<ComplexT> matrix_v{matrix_data,
+                                               matrix_data + matrix_size};
                 return M.expval(matrix_v, wires);
             },
             "Expected value of a Hermitian observable.")
