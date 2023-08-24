@@ -18,11 +18,13 @@
 
 #include "BitUtil.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
 using std::size_t;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
 template <class PrecisionT, bool inverse = false> struct singleQubitOpFunctor {

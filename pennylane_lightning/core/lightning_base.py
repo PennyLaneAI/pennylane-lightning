@@ -48,9 +48,6 @@ class LightningBase(QubitDevice):
 
     This intermediate base class provides device-agnostic functionalities.
 
-    Use of this device requires pre-built binaries or compilation from source. Check out the
-    :doc:`/installation` guide for more details.
-
     Args:
         wires (int): the number of wires to initialize the device with
         c_dtype: Datatypes for statevector representation. Must be one of
