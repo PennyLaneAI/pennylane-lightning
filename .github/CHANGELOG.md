@@ -25,6 +25,9 @@
 
 ### Bug fixes
 
+* Ensure PennyLane has an `active_return` attribute before calling it.
+ [(#483)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/483)
+
 * Do no import `sqrt2_v` from `<numbers>` in `Util.hpp` to resolve issue with Lightning-GPU builds.
   [(#479)](https://github.com/PennyLaneAI/pennylane-lightning/pull/479)
 
