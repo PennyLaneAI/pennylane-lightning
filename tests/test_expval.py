@@ -101,6 +101,26 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
+    @pytest.mark.parametrize("n_wires", range(1, 5))
+    def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):
+        """Test that Hadamard expectation value is correct"""
+        dev_def = qml.device("default.qubit", wires=6)
+        dev = qubit_device(wires=6)
+        m = 2**n_wires
+        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+        U = U + np.conj(U.T)
+        obs = qml.Hermitian(U, wires=range(n_wires))
+
+        def circuit():
+            qml.RY(theta, wires=[0])
+            qml.RY(phi, wires=[1])
+            qml.CNOT(wires=[0, 1])
+            return qml.expval(obs)
+
+        circ = qml.QNode(circuit, dev)
+        circ_def = qml.QNode(circuit, dev_def)
+        assert np.allclose(circ(), circ_def(), tol)
+
 
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
 class TestExpOperatorArithmetic:

@@ -173,7 +173,8 @@ template <class PrecisionT, bool inverse = false> struct sFunctor {
         rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
-        shift = (inverse) ? -Kokkos::complex(0, 1) : Kokkos::complex(0, 1);
+        shift =
+            (inverse) ? -Kokkos::complex{0.0, 1.0} : Kokkos::complex{0.0, 1.0};
     }
 
     KOKKOS_INLINE_FUNCTION
