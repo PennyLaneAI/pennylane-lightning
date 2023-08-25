@@ -536,7 +536,7 @@ class StateVectorKokkos final
             applyGateFunctor<toffoliFunctor, 3>(wires, inverse, params);
             return;
         default:
-            PL_ABORT(std::string("Generator does not exist for ") + opName);
+            PL_ABORT(std::string("Operation does not exist for ") + opName);
         }
     }
 

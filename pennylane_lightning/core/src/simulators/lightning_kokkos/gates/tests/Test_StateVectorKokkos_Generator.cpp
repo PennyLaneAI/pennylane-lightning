@@ -695,6 +695,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorCRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorMultiRZ",
                    "[StateVectorKokkosManaged_Generator]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -736,9 +737,14 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorMultiRZ",
             kokkos_gate_svp.HostToDevice(ini_st.data(), ini_st.size());
             kokkos_gate_svm.HostToDevice(ini_st.data(), ini_st.size());
 
-            auto scale = kokkos_gntr_sv.applyGenerator("MultiRZ", {0}, false);
-            kokkos_gate_svp.applyOperation("MultiRZ", {0}, false, {ep});
-            kokkos_gate_svm.applyOperation("MultiRZ", {0}, false, {-ep});
+            auto scale = kokkos_gntr_sv.applyGenerator("MultiRZ", {0}, inverse);
+            if (inverse) {
+                kokkos_gate_svp.applyOperation("MultiRZ", {0}, inverse, {-ep});
+                kokkos_gate_svm.applyOperation("MultiRZ", {0}, inverse, {ep});
+            } else {
+                kokkos_gate_svp.applyOperation("MultiRZ", {0}, inverse, {ep});
+                kokkos_gate_svm.applyOperation("MultiRZ", {0}, inverse, {-ep});
+            }
 
             kokkos_gntr_sv.DeviceToHost(result_gntr_sv.data(),
                                         result_gntr_sv.size());
