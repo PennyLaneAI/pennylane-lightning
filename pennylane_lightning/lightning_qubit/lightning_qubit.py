@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 from warnings import warn
 import numpy as np
 
@@ -156,7 +157,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         A device that interfaces with C++ to perform fast linear algebra calculations.
 
         Use of this device requires pre-built binaries or compilation from source. Check out the
-        :doc:`/installation` guide for more details.
+        :doc:`/lightning_qubit/installation` guide for more details.
 
         Args:
             wires (int): the number of wires to initialize the device with
@@ -688,7 +689,9 @@ if LQ_CPP_BINARY_AVAILABLE:
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
             jac_r[:, processed_data["record_tp_rows"]] = jac
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if hasattr(qml, "active_return"):  # pragma: no cover
+                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=line-too-long, inconsistent-return-statements
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):

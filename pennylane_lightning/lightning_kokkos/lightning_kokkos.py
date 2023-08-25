@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 from warnings import warn
 import numpy as np
 
@@ -164,7 +165,7 @@ if LK_CPP_BINARY_AVAILABLE:
         A device that interfaces with C++ to perform fast linear algebra calculations.
 
         Use of this device requires pre-built binaries or compilation from source. Check out the
-        :doc:`/installation` guide for more details.
+        :doc:`/lightning_kokkos/installation` guide for more details.
 
         Args:
             wires (int): the number of wires to initialize the device with
@@ -263,12 +264,12 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=3)
             >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
             >>> obs1 = qml.Identity(1)
             >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
-            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j,
-                0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64,)
+            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
             >>> dev.sync_h2d(state_vector)
             >>> res = dev.expval(H)
             >>> print(res)
@@ -285,6 +286,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
@@ -317,6 +319,7 @@ if LK_CPP_BINARY_AVAILABLE:
             the data.
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> print(dev.state)
@@ -718,7 +721,9 @@ if LK_CPP_BINARY_AVAILABLE:
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
             jac_r[:, processed_data["record_tp_rows"]] = jac
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if hasattr(qml, "active_return"):  # pragma: no cover
+                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):

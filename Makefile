@@ -117,6 +117,13 @@ else
 	cmake --build ./BuildTidy $(VERBOSE)
 endif
 
+docs:
+	$(MAKE) -C doc html
+
+.PHONY : clean-docs
+clean-docs:
+	$(MAKE) -C doc clean
+
 .PHONY: gbenchmark
 gbenchmark:
 	rm -rf ./BuildGBench

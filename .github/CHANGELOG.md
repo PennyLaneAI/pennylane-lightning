@@ -14,12 +14,22 @@
 ### Breaking changes
 
 ### Improvements
+
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
+
+* Integrated new unified docs for Lightning Kokkos and Lightning Qubit packages.
+  [(#473)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/473)
 
 ### Documentation
 
 ### Bug fixes
+
+* Ensure PennyLane has an `active_return` attribute before calling it.
+ [(#483)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/483)
+
+* Do no import `sqrt2_v` from `<numbers>` in `Util.hpp` to resolve issue with Lightning-GPU builds.
+  [(#479)](https://github.com/PennyLaneAI/pennylane-lightning/pull/479)
 
 * Update the CMake internal references to enable sub-project compilation with affecting the parent package.
   [(#478)](https://github.com/PennyLaneAI/pennylane-lightning/pull/478)
