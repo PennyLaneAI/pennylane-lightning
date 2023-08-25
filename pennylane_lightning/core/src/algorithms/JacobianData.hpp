@@ -246,7 +246,7 @@ template <class StateVectorT> class JacobianData {
      * we want to take a derivative respect to the :math:`i`-th operation.
      *
      * Further note that ``ops`` does not contain state preparation operations
-     * (e.g. QubitStateVector) or Hamiltonian coefficients.
+     * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
     JacobianData(size_t num_params, size_t num_elem, const ComplexT *sv_ptr,

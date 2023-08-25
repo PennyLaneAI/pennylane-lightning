@@ -291,7 +291,8 @@ class TestVectorJacobianProduct:
         device_name == device_name,
         reason="Adjoint differentiation does not support State measurements.",
     )
-    def test_statevector_complex_circuit(self, dev, tol):
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_statevector_complex_circuit(self, stateprep, dev, tol):
         dy = np.array(
             [
                 [1.0, 0.0, 0.0, 0.0],
@@ -308,7 +309,7 @@ class TestVectorJacobianProduct:
         params = [math.pi / 7, 6 * math.pi / 7]
 
         with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0] * 4) / 2, wires=range(2))
+            stateprep(np.array([1.0] * 4) / 2, wires=range(2))
             qml.RY(params[0], wires=0)
             qml.RZ(params[1], wires=1)
             qml.CZ(wires=[0, 1])
