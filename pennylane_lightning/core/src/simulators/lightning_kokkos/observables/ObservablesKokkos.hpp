@@ -186,11 +186,10 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
      * @param sv The statevector to update
      */
     void applyInPlace(StateVectorT &sv) const override {
-        StateVectorT buffer(sv.getNumQubits());
+        StateVectorT buffer{sv.getNumQubits()};
         buffer.initZeros();
-
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
-            StateVectorT tmp(sv);
+            StateVectorT tmp{sv};
             this->obs_[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
                 ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
@@ -215,8 +214,7 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
         KokkosVector res("results", sv.getLength());
         Kokkos::deep_copy(res, ComplexT{0.0, 0.0});
         for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-            StateVectorT tmp(sv.getNumQubits());
-            tmp.DeviceToDevice(sv.getView());
+            StateVectorT tmp{sv};
             terms[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
                 ComplexT{coeffs[term_idx], 0.0}, tmp.getView(), res,

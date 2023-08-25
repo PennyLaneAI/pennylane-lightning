@@ -83,6 +83,7 @@ class AdjointJacobian final
      */
     void adjointJacobian(std::span<PrecisionT> jac,
                          const JacobianData<StateVectorT> &jd,
+                         const StateVectorT &ref_data,
                          bool apply_operations = false) {
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -112,12 +113,8 @@ class AdjointJacobian final
         auto tp_it = tp.rbegin();
         const auto tp_rend = tp.rend();
 
-        StateVectorKokkos<PrecisionT> ref_data(jd.getPtrStateVec(),
-                                               jd.getSizeStateVec());
-
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorT lambda(ref_data.getNumQubits());
-        lambda.DeviceToDevice(ref_data.getView());
+        StateVectorT lambda{ref_data};
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -129,7 +126,7 @@ class AdjointJacobian final
                                            StateVectorT(lambda.getNumQubits()));
         this->applyObservables(H_lambda, lambda, obs);
 
-        StateVectorT mu(lambda.getNumQubits());
+        StateVectorT mu{lambda.getNumQubits()};
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {

@@ -210,6 +210,7 @@ class AdjointJacobian final
      */
     void adjointJacobian(std::span<PrecisionT> jac,
                          const JacobianData<StateVectorT> &jd,
+                         [[maybe_unused]] const StateVectorT &ref_data = {0},
                          bool apply_operations = false) {
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
