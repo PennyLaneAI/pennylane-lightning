@@ -135,28 +135,10 @@ class Measurements final
             return applyExpValFunctor<getExpectationValueTwoQubitOpFunctor, 2>(
                 matrix, wires);
         } else {
-
-            std::size_t num_qubits = this->_statevector.getNumQubits();
-            Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-                wires_host(wires.data(), wires.size());
-            KokkosSizeTVector wires_view("wires_view", wires.size());
-            Kokkos::deep_copy(wires_view, wires_host);
-
-            std::size_t two2N = std::exp2(num_qubits - wires.size());
-            std::size_t dim = std::exp2(wires.size());
-            std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
-            const KokkosVector arr_data = this->_statevector.getView();
-
-            PrecisionT expval = 0.0;
-            Kokkos::parallel_reduce(
-                "getExpectationValueMultiQubitOpFunctor",
-                TeamPolicy(two2N, Kokkos::AUTO, dim)
-                    .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
-                getExpectationValueMultiQubitOpFunctor<PrecisionT>(
-                    arr_data, num_qubits, matrix, wires_view),
-                expval);
-            return expval;
+            StateVectorT ob_sv{this->_statevector};
+            ob_sv.applyMultiQubitOp(matrix, wires);
+            return getRealOfComplexInnerProduct(this->_statevector.getView(),
+                                                ob_sv.getView());
         }
     }
 
