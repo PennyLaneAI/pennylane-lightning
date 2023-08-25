@@ -355,4 +355,155 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
     }
 };
 
+template <class PrecisionT> struct getExpValThreeQubitOpFunctor {
+
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    std::size_t dim;
+    std::size_t num_qubits;
+
+    getExpValThreeQubitOpFunctor(const KokkosComplexVector &arr_,
+                                 std::size_t num_qubits_,
+                                 const KokkosComplexVector &matrix_,
+                                 KokkosIntVector &wires_) {
+        dim = 1U << wires_.size();
+        num_qubits = num_qubits_;
+        wires = wires_;
+        arr = arr_;
+        matrix = matrix_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, PrecisionT &expval) const {
+        const std::size_t n_wires = wires.size();
+        const std::size_t kdim = k * dim;
+
+        std::size_t i000 = kdim | 0;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i000 >> (n_wires - pos - 1)) ^
+                             (i000 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i000 = i000 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i001 = kdim | 1;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i001 >> (n_wires - pos - 1)) ^
+                             (i001 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i001 = i001 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i010 = kdim | 2;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i010 >> (n_wires - pos - 1)) ^
+                             (i010 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i010 = i010 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i011 = kdim | 3;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i011 >> (n_wires - pos - 1)) ^
+                             (i011 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i011 = i011 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i100 = kdim | 4;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i100 >> (n_wires - pos - 1)) ^
+                             (i100 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i100 = i100 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i101 = kdim | 5;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i101 >> (n_wires - pos - 1)) ^
+                             (i101 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i101 = i101 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i110 = kdim | 6;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i110 >> (n_wires - pos - 1)) ^
+                             (i110 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i110 = i110 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        std::size_t i111 = kdim | 7;
+        for (std::size_t pos = 0; pos < n_wires; pos++) {
+            std::size_t x = ((i111 >> (n_wires - pos - 1)) ^
+                             (i111 >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+            i111 = i111 ^ ((x << (n_wires - pos - 1)) |
+                           (x << (num_qubits - wires(pos) - 1)));
+        }
+
+        expval +=
+            real(conj(arr(i000)) *
+                 (matrix(0B000000) * arr(i000) + matrix(0B000001) * arr(i001) +
+                  matrix(0B000010) * arr(i010) + matrix(0B000011) * arr(i011) +
+                  matrix(0B000100) * arr(i100) + matrix(0B000101) * arr(i101) +
+                  matrix(0B000110) * arr(i110) + matrix(0B000111) * arr(i111)));
+        expval +=
+            real(conj(arr(i001)) *
+                 (matrix(0B001000) * arr(i000) + matrix(0B001001) * arr(i001) +
+                  matrix(0B001010) * arr(i010) + matrix(0B001011) * arr(i011) +
+                  matrix(0B001100) * arr(i100) + matrix(0B001101) * arr(i101) +
+                  matrix(0B001110) * arr(i110) + matrix(0B001111) * arr(i111)));
+        expval +=
+            real(conj(arr(i010)) *
+                 (matrix(0B010000) * arr(i000) + matrix(0B010001) * arr(i001) +
+                  matrix(0B010010) * arr(i010) + matrix(0B010011) * arr(i011) +
+                  matrix(0B010100) * arr(i100) + matrix(0B010101) * arr(i101) +
+                  matrix(0B010110) * arr(i110) + matrix(0B010111) * arr(i111)));
+        expval +=
+            real(conj(arr(i011)) *
+                 (matrix(0B011000) * arr(i000) + matrix(0B011001) * arr(i001) +
+                  matrix(0B011010) * arr(i010) + matrix(0B011011) * arr(i011) +
+                  matrix(0B011100) * arr(i100) + matrix(0B011101) * arr(i101) +
+                  matrix(0B011110) * arr(i110) + matrix(0B011111) * arr(i111)));
+        expval +=
+            real(conj(arr(i100)) *
+                 (matrix(0B100000) * arr(i000) + matrix(0B100001) * arr(i001) +
+                  matrix(0B100010) * arr(i010) + matrix(0B100011) * arr(i011) +
+                  matrix(0B100100) * arr(i100) + matrix(0B100101) * arr(i101) +
+                  matrix(0B100110) * arr(i110) + matrix(0B100111) * arr(i111)));
+        expval +=
+            real(conj(arr(i101)) *
+                 (matrix(0B101000) * arr(i000) + matrix(0B101001) * arr(i001) +
+                  matrix(0B101010) * arr(i010) + matrix(0B101011) * arr(i011) +
+                  matrix(0B101100) * arr(i100) + matrix(0B101101) * arr(i101) +
+                  matrix(0B101110) * arr(i110) + matrix(0B101111) * arr(i111)));
+        expval +=
+            real(conj(arr(i110)) *
+                 (matrix(0B110000) * arr(i000) + matrix(0B110001) * arr(i001) +
+                  matrix(0B110010) * arr(i010) + matrix(0B110011) * arr(i011) +
+                  matrix(0B110100) * arr(i100) + matrix(0B110101) * arr(i101) +
+                  matrix(0B110110) * arr(i110) + matrix(0B110111) * arr(i111)));
+        expval +=
+            real(conj(arr(i111)) *
+                 (matrix(0B111000) * arr(i000) + matrix(0B111001) * arr(i001) +
+                  matrix(0B111010) * arr(i010) + matrix(0B111011) * arr(i011) +
+                  matrix(0B111100) * arr(i100) + matrix(0B111101) * arr(i101) +
+                  matrix(0B111110) * arr(i110) + matrix(0B111111) * arr(i111)));
+    }
+};
+
 } // namespace Pennylane::LightningKokkos::Functors

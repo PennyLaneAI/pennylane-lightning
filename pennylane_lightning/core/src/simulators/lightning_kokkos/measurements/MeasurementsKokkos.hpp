@@ -135,7 +135,6 @@ class Measurements final
             return applyExpValFunctor<getExpectationValueTwoQubitOpFunctor, 2>(
                 matrix, wires);
         } else {
-
             std::size_t num_qubits = this->_statevector.getNumQubits();
             Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                          Kokkos::MemoryTraits<Kokkos::Unmanaged>>
@@ -149,6 +148,14 @@ class Measurements final
             const KokkosVector arr_data = this->_statevector.getView();
 
             PrecisionT expval = 0.0;
+            if (wires.size() == 3) {
+                Kokkos::parallel_reduce(
+                    two2N,
+                    getExpValThreeQubitOpFunctor<PrecisionT>(
+                        arr_data, num_qubits, matrix, wires_view),
+                    expval);
+                return expval;
+            }
             Kokkos::parallel_reduce(
                 "getExpectationValueMultiQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
