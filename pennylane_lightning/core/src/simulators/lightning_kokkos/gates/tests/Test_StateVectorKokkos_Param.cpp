@@ -293,10 +293,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
+    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 2.4};
+    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -315,8 +317,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
         StateVectorKokkos<TestType> kokkos_sv{num_qubits};
         kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
-        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, false,
-                                 {angles[1]});
+        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, inverse,
+                                 {sign * angles[1]});
         std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
         kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -878,6 +880,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -903,10 +906,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -919,6 +923,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -944,10 +949,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -960,6 +966,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -985,10 +992,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
