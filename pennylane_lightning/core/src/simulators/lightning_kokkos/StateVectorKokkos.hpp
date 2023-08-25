@@ -239,10 +239,10 @@ class StateVectorKokkos final
      * @param params Optional parameter list for parametric gates.
      * @param params Optional std gate matrix if opName doesn't exist.
      */
-    void applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool inverse = false, const std::vector<fp_t> &params = {},
-        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
         if (opName == "Identity") {
             // No op
         } else if (gates_indices_.contains(opName)) {

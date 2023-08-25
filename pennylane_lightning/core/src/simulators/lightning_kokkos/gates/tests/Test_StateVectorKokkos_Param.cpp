@@ -367,13 +367,17 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRot",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
+
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     std::vector<ComplexT> expected_results(8);
-    const auto rot_mat =
-        getRot<Kokkos::complex, TestType>(angles[0], angles[1], angles[2]);
+    const auto rot_mat = (inverse) ? getRot<Kokkos::complex, TestType>(
+                                         -angles[2], -angles[1], -angles[0])
+                                   : getRot<Kokkos::complex, TestType>(
+                                         angles[0], angles[1], angles[2]);
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
@@ -381,7 +385,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             kokkos_sv.applyOperation("PauliX", {0}, false);
-            kokkos_sv.applyOperation("CRot", {0, 1}, false, angles);
+            kokkos_sv.applyOperation("CRot", {0, 1}, inverse, angles);
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
