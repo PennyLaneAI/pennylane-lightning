@@ -178,18 +178,18 @@ class TestApply:
         "operation,expected_output,par",
         [
             (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-            (qml.BasisState, [0, 0, 1, 0], [1, 0]),
             (qml.BasisState, [0, 0, 0, 1], [1, 1]),
             (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
-            (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
             (qml.QubitStateVector, [0, 0, 0, 1], [0, 0, 0, 1]),
+            (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
+            (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
             (
-                qml.QubitStateVector,
+                qml.StatePrep,
                 [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
                 [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
             ),
             (
-                qml.QubitStateVector,
+                qml.StatePrep,
                 [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
                 [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
             ),
@@ -454,20 +454,19 @@ class TestApply:
 
         assert pointer_before == pointer_after
 
-    def test_apply_errors_qubit_state_vector(self, qubit_device):
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
         dev = qubit_device(wires=2)
         with pytest.raises(ValueError, match="Sum of amplitudes-squared does not equal one."):
-            dev.apply([qml.QubitStateVector(np.array([1, -1]), wires=[0])])
+            dev.apply([stateprep(np.array([1, -1]), wires=[0])])
 
         with pytest.raises(
             DeviceError,
-            match="Operation QubitStateVector cannot be used after other Operations have already been applied ",
+            match=f"Operation {stateprep(np.array([1, 0]), wires=[0]).name} cannot be used after other Operations have already been applied ",
         ):
             dev.reset()
-            dev.apply(
-                [qml.RZ(0.5, wires=[0]), qml.QubitStateVector(np.array([0, 1, 0, 0]), wires=[0, 1])]
-            )
+            dev.apply([qml.RZ(0.5, wires=[0]), stateprep(np.array([0, 1, 0, 0]), wires=[0, 1])])
 
     def test_apply_errors_basis_state(self, qubit_device):
         dev = qubit_device(wires=2)
@@ -512,15 +511,16 @@ class TestExpval:
             (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
         ],
     )
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_expval_single_wire_no_parameters(
-        self, qubit_device, tol, operation, input, expected_output
+        self, qubit_device, tol, stateprep, operation, input, expected_output
     ):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
 
         dev.reset()
-        dev.apply([qml.QubitStateVector(np.array(input), wires=[0])], obs.diagonalizing_gates())
+        dev.apply([stateprep(np.array(input), wires=[0])], obs.diagonalizing_gates())
         res = dev.expval(obs)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
@@ -563,15 +563,16 @@ class TestVar:
             (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
         ],
     )
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_var_single_wire_no_parameters(
-        self, qubit_device, tol, operation, input, expected_output
+        self, qubit_device, tol, stateprep, operation, input, expected_output
     ):
         """Tests that variances are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
 
         dev.reset()
-        dev.apply([qml.QubitStateVector(np.array(input), wires=[0])], obs.diagonalizing_gates())
+        dev.apply([stateprep(np.array(input), wires=[0])], obs.diagonalizing_gates())
         res = dev.var(obs)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
@@ -780,7 +781,10 @@ class TestLightningDeviceIntegration:
             ("CZ", [-1 / 2, -1 / 2]),
         ],
     )
-    def test_supported_gate_two_wires_no_parameters(self, qubit_device, tol, name, expected_output):
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_supported_gate_two_wires_no_parameters(
+        self, qubit_device, tol, stateprep, name, expected_output
+    ):
         """Tests supported gates that act on two wires that are not parameterized"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
@@ -789,7 +793,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            qml.QubitStateVector(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            stateprep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(wires=[0, 1])
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
 
@@ -987,8 +991,9 @@ class TestLightningDeviceIntegration:
             ("ControlledPhaseShift", [math.pi], [-1 / 2, -1 / 2]),
         ],
     )
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_gate_two_wires_with_parameters(
-        self, qubit_device, tol, name, par, expected_output
+        self, qubit_device, tol, stateprep, name, par, expected_output
     ):
         """Tests supported gates that act on two wires that are parameterized"""
         dev = qubit_device(wires=2)
@@ -998,7 +1003,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            qml.QubitStateVector(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            stateprep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(*par, wires=[0, 1])
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
 
@@ -1021,8 +1026,9 @@ class TestLightningDeviceIntegration:
             ("Hadamard", [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
         ],
     )
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_observable_single_wire_no_parameters(
-        self, qubit_device, tol, name, state, expected_output
+        self, qubit_device, tol, stateprep, name, state, expected_output
     ):
         """Tests supported observables on single wires without parameters."""
         dev = qubit_device(wires=1)
@@ -1032,7 +1038,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            qml.QubitStateVector(np.array(state), wires=[0])
+            stateprep(np.array(state), wires=[0])
             return qml.expval(obs(wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
@@ -1045,8 +1051,9 @@ class TestLightningDeviceIntegration:
             ("Identity", [1 / math.sqrt(2), -1 / math.sqrt(2)], 1, []),
         ],
     )
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_observable_single_wire_with_parameters(
-        self, qubit_device, tol, name, state, expected_output, par
+        self, qubit_device, tol, stateprep, name, state, expected_output, par
     ):
         """Tests supported observables on single wires with parameters."""
         dev = qubit_device(wires=1)
@@ -1056,7 +1063,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            qml.QubitStateVector(np.array(state), wires=[0])
+            stateprep(np.array(state), wires=[0])
             return qml.expval(obs(*par, wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)

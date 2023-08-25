@@ -25,7 +25,7 @@ import pennylane as qml
 from pennylane import (
     BasisState,
     QubitDevice,
-    QubitStateVector,
+    StatePrep,
 )
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import MeasurementProcess
@@ -277,7 +277,7 @@ class LightningBase(QubitDevice):
             # get op_idx-th operator among differentiable operators
             operation, _, _ = tape.get_operation(op_idx)
             if isinstance(operation, Operation) and not isinstance(
-                operation, (BasisState, QubitStateVector)
+                operation, (BasisState, StatePrep)
             ):
                 # We now just ignore non-op or state preps
                 tp_shift.append(trainable_param)
