@@ -78,7 +78,7 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
     def _kokkos_dtype(dtype):
-        if dtype not in [np.complex128, np.complex64]:
+        if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
@@ -614,7 +614,9 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if len(measurements) == 1 and measurements[0].return_type is State:
                 # return State
-                raise QuantumFunctionError("Not supported")
+                raise QuantumFunctionError(
+                    "Adjoint differentiation does not support State measurements."
+                )
 
             # Now the return_type of measurement processes must be expectation
             if any(m.return_type is not Expectation for m in measurements):
@@ -681,7 +683,7 @@ if LK_CPP_BINARY_AVAILABLE:
             if not tape_return_type:  # the tape does not have measurements
                 return np.array([], dtype=self.state.dtype)
 
-            if tape_return_type is State:
+            if tape_return_type is State:  # pragma: no cover
                 raise QuantumFunctionError(
                     "This method does not support statevector return type. "
                     "Use vjp method instead for this purpose."
@@ -703,7 +705,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
-            if self._batch_obs and requested_threads > 1:
+            if self._batch_obs and requested_threads > 1:  # pragma: no cover
                 obs_partitions = _chunk_iterable(
                     processed_data["obs_serialized"], requested_threads
                 )
