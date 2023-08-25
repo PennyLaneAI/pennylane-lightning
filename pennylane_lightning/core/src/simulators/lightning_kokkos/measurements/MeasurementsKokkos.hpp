@@ -198,10 +198,12 @@ class Measurements final
         case ExpValFunc::Hadamard:
             return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
                                            1>(wires);
+            // LCOV_EXCL_START
         default:
             PL_ABORT(
                 std::string("Expval does not exist for named observable ") +
                 operation);
+            // LCOV_EXCL_END
         }
     };
 

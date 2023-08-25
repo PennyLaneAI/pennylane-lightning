@@ -239,10 +239,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
+    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
+    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -273,8 +275,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
             kokkos_sv.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            kokkos_sv.applyOperation("PhaseShift", {index}, false,
-                                     {angles[index]});
+
+            kokkos_sv.applyOperation("PhaseShift", {index}, inverse,
+                                     {sign * angles[index]});
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 

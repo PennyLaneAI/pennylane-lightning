@@ -535,8 +535,10 @@ class StateVectorKokkos final
         case GateOperation::Toffoli:
             applyGateFunctor<toffoliFunctor, 3>(wires, inverse, params);
             return;
+            // LCOV_EXCL_START
         default:
             PL_ABORT(std::string("Operation does not exist for ") + opName);
+            // LCOV_EXCL_END
         }
     }
 
@@ -622,7 +624,9 @@ class StateVectorKokkos final
         case GeneratorOperation::MultiRZ:
             return applyGeneratorMultiRZ(wires, inverse, params);
         default:
+            // LCOV_EXCL_START
             PL_ABORT(std::string("Generator does not exist for ") + opName);
+            // LCOV_EXCL_END
         }
     }
 
