@@ -156,6 +156,22 @@ class Measurements final
                     expval);
                 return expval;
             }
+            if (wires.size() == 4) {
+                Kokkos::parallel_reduce(
+                    two2N,
+                    getExpValFourQubitOpFunctor<PrecisionT>(
+                        arr_data, num_qubits, matrix, wires_view),
+                    expval);
+                return expval;
+            }
+            if (wires.size() == 5) {
+                Kokkos::parallel_reduce(
+                    two2N,
+                    getExpValFiveQubitOpFunctor<PrecisionT>(
+                        arr_data, num_qubits, matrix, wires_view),
+                    expval);
+                return expval;
+            }
             Kokkos::parallel_reduce(
                 "getExpectationValueMultiQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
