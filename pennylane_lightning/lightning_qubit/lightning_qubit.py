@@ -50,7 +50,7 @@ if LQ_CPP_BINARY_AVAILABLE:
     from pennylane import (
         math,
         BasisState,
-        QubitStateVector,
+        StatePrep,
         Projector,
         Rot,
         DeviceError,
@@ -80,6 +80,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "Identity",
         "BasisState",
         "QubitStateVector",
+        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -372,7 +373,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         def apply(self, operations, rotations=None, **kwargs):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
-                if isinstance(operations[0], QubitStateVector):
+                if isinstance(operations[0], StatePrep):
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
@@ -382,7 +383,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     operations = operations[1:]
 
             for operation in operations:
-                if isinstance(operation, (QubitStateVector, BasisState)):
+                if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
                         f"Operation {operation.name} cannot be used after other "
                         f"Operations have already been applied on a {self.short_name} device."
