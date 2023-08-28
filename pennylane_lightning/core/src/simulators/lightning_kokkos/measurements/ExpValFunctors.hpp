@@ -262,7 +262,6 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
 
 template <class PrecisionT, std::size_t n_wires>
 struct getExpVal1QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -314,7 +313,6 @@ struct getExpVal1QubitOpFunctor {
 };
 template <class PrecisionT, std::size_t n_wires>
 struct getExpVal2QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -392,7 +390,6 @@ struct getExpVal2QubitOpFunctor {
 };
 template <class PrecisionT, std::size_t n_wires>
 struct getExpVal3QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -542,7 +539,6 @@ struct getExpVal3QubitOpFunctor {
 };
 template <class PrecisionT, std::size_t n_wires>
 struct getExpVal4QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -892,7 +888,6 @@ struct getExpVal4QubitOpFunctor {
 };
 template <class PrecisionT, std::size_t n_wires>
 struct getExpVal5QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
