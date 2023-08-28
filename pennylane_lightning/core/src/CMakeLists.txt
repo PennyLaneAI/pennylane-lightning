@@ -24,3 +24,7 @@ if (BUILD_TESTS)
 
     include(CTest)
 endif()
+
+if (BUILD_BENCHMARKS)
+    add_subdirectory("benchmarks" "benchmarks")
+endif()

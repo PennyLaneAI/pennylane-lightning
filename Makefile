@@ -123,3 +123,9 @@ docs:
 .PHONY : clean-docs
 clean-docs:
 	$(MAKE) -C doc clean
+
+.PHONY: gbenchmark
+gbenchmark:
+	rm -rf ./BuildGBench
+	cmake -BBuildGBench -DBUILD_BENCHMARKS=ON -DENABLE_OPENMP=ON -DENABLE_BLAS=ON -DCMAKE_BUILD_TYPE=Release
+	cmake --build ./BuildGBench
