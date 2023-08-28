@@ -6,13 +6,13 @@
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
-  [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
+  [(#472)](https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
 * Wheels are built with native support for sparse Hamiltonians.
-  [(#470)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/470)
+  [(#470)](https://github.com/PennyLaneAI/pennylane-lightning/pull/470)
 
 * Add native support to sparse Hamiltonians in the absence of Kokkos & Kokkos-kernels.
-  [(#465)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
+  [(#465)](https://github.com/PennyLaneAI/pennylane-lightning/pull/465)
 
 ### Breaking changes
 
@@ -25,20 +25,20 @@
 ### Improvements
 
 * Refactor LKokkos `Measurements` class to use (fast) specialized functors whenever possible.
-  [(#481)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
+  [(#481)](https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
 
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
-  [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
+  [(#472)](https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
 
 ### Documentation
 
 * Integrated new unified docs for Lightning Kokkos and Lightning Qubit packages.
-  [(#473)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/473)
+  [(#473)](https://github.com/PennyLaneAI/pennylane-lightning/pull/473)
 
 ### Bug fixes
 
 * Ensure PennyLane has an `active_return` attribute before calling it.
- [(#483)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/483)
+ [(#483)](https://github.com/PennyLaneAI/pennylane-lightning/pull/483)
 
 * Do no import `sqrt2_v` from `<numbers>` in `Util.hpp` to resolve issue with Lightning-GPU builds.
   [(#479)](https://github.com/PennyLaneAI/pennylane-lightning/pull/479)
