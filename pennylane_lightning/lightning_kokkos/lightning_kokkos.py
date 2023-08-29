@@ -195,7 +195,7 @@ if LK_CPP_BINARY_AVAILABLE:
             shots=None,
             batch_obs=False,
             kokkos_args=None,
-        ):
+        ):  # pylint: disable=unused-argument
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             if kokkos_args is None:
@@ -426,6 +426,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
+            """Applies a list of operations to the state tensor."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -588,7 +589,9 @@ if LK_CPP_BINARY_AVAILABLE:
             """
             return self.measurements.probs(wires)
 
+        # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
+            """Return samples of an observable."""
             if observable.name != "PauliZ":
                 self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
@@ -669,6 +672,12 @@ if LK_CPP_BINARY_AVAILABLE:
             return self.state_vector
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+            """Implements the adjoint method outlined in
+            `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
+
+            After a forward pass, the circuit is reversed by iteratively applying adjoint
+            gates to scan backwards through the circuit.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -818,7 +827,7 @@ if LK_CPP_BINARY_AVAILABLE:
 else:
 
     class LightningKokkos(LightningBaseFallBack):  # pragma: no cover
-        # pylint: disable=missing-class-docstring
+        # pylint: disable=missing-class-docstring, too-few-public-methods
         name = "Lightning Kokkos PennyLane plugin [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.kokkos"
 
