@@ -180,10 +180,15 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
     getExpValMultiQubitOpFunctor(const KokkosComplexVector &arr_,
                                  std::size_t num_qubits_,
                                  const KokkosComplexVector &matrix_,
-                                 KokkosIntVector &wires_) {
+                                 const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_.size());
+        Kokkos::deep_copy(wires, wires_host);
+
         dim = 1U << wires_.size();
         num_qubits = num_qubits_;
-        wires = wires_;
         arr = arr_;
         matrix = matrix_;
     }
@@ -268,42 +273,32 @@ struct getExpVal1QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
     std::size_t dim;
     std::size_t num_qubits;
+    std::size_t rev_wire;
+    std::size_t rev_wire_shift;
+    std::size_t wire_parity;
+    std::size_t wire_parity_inv;
 
-    getExpVal1QubitOpFunctor(const KokkosComplexVector &arr_,
-                             const std::size_t num_qubits_,
-                             const KokkosComplexVector &matrix_,
-                             const KokkosIntVector &wires_) {
-        wires = wires_;
+    getExpVal1QubitOpFunctor(
+        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
+        const KokkosComplexVector &matrix_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << wires.size();
+        dim = 1U << wires_.size();
+        rev_wire = num_qubits - wires_[0] - 1;
+        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        wire_parity = fillTrailingOnes(rev_wire);
+        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        const std::size_t kdim = k * dim;
-
-        std::size_t i0 = kdim | 0;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0 >> (n_wires - pos - 1)) ^
-                             (i0 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0 = i0 ^ ((x << (n_wires - pos - 1)) |
-                       (x << (num_qubits - wires(pos) - 1)));
-        }
-
-        std::size_t i1 = kdim | 1;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1 >> (n_wires - pos - 1)) ^
-                             (i1 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1 = i1 ^ ((x << (n_wires - pos - 1)) |
-                       (x << (num_qubits - wires(pos) - 1)));
-        }
+        const std::size_t i0 =
+            ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        const std::size_t i1 = i0 | rev_wire_shift;
 
         expval += real(conj(arr(i0)) *
                        (matrix(0B00) * arr(i0) + matrix(0B01) * arr(i1)));
@@ -319,60 +314,46 @@ struct getExpVal2QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
     std::size_t dim;
     std::size_t num_qubits;
+    std::size_t rev_wire0;
+    std::size_t rev_wire1;
+    std::size_t rev_wire0_shift;
+    std::size_t rev_wire1_shift;
+    std::size_t rev_wire_min;
+    std::size_t rev_wire_max;
+    std::size_t parity_low;
+    std::size_t parity_high;
+    std::size_t parity_middle;
 
-    getExpVal2QubitOpFunctor(const KokkosComplexVector &arr_,
-                             const std::size_t num_qubits_,
-                             const KokkosComplexVector &matrix_,
-                             const KokkosIntVector &wires_) {
-        wires = wires_;
+    getExpVal2QubitOpFunctor(
+        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
+        const KokkosComplexVector &matrix_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << wires.size();
+        dim = 1U << wires_.size();
+
+        rev_wire0 = num_qubits - wires_[1] - 1;
+        rev_wire1 = num_qubits - wires_[0] - 1;
+        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire_min = std::min(rev_wire0, rev_wire1);
+        rev_wire_max = std::max(rev_wire0, rev_wire1);
+        parity_low = fillTrailingOnes(rev_wire_min);
+        parity_high = fillLeadingOnes(rev_wire_max + 1);
+        parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        const std::size_t kdim = k * dim;
-
-        std::size_t i00 = kdim | 0;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00 >> (n_wires - pos - 1)) ^
-                             (i00 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00 = i00 ^ ((x << (n_wires - pos - 1)) |
-                         (x << (num_qubits - wires(pos) - 1)));
-        }
-
-        std::size_t i01 = kdim | 1;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01 >> (n_wires - pos - 1)) ^
-                             (i01 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01 = i01 ^ ((x << (n_wires - pos - 1)) |
-                         (x << (num_qubits - wires(pos) - 1)));
-        }
-
-        std::size_t i10 = kdim | 2;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10 >> (n_wires - pos - 1)) ^
-                             (i10 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10 = i10 ^ ((x << (n_wires - pos - 1)) |
-                         (x << (num_qubits - wires(pos) - 1)));
-        }
-
-        std::size_t i11 = kdim | 3;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11 >> (n_wires - pos - 1)) ^
-                             (i11 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11 = i11 ^ ((x << (n_wires - pos - 1)) |
-                         (x << (num_qubits - wires(pos) - 1)));
-        }
+        const std::size_t i00 = ((k << 2U) & parity_high) |
+                                ((k << 1U) & parity_middle) | (k & parity_low);
+        const std::size_t i10 = i00 | rev_wire1_shift;
+        const std::size_t i01 = i00 | rev_wire0_shift;
+        const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
         expval += real(conj(arr(i00)) *
                        (matrix(0B0000) * arr(i00) + matrix(0B0001) * arr(i01) +
@@ -403,8 +384,13 @@ struct getExpVal3QubitOpFunctor {
     getExpVal3QubitOpFunctor(const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
-                             const KokkosIntVector &wires_) {
-        wires = wires_;
+                             const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_.size());
+        Kokkos::deep_copy(wires, wires_host);
+
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -552,8 +538,12 @@ struct getExpVal4QubitOpFunctor {
     getExpVal4QubitOpFunctor(const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
-                             const KokkosIntVector &wires_) {
-        wires = wires_;
+                             const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_.size());
+        Kokkos::deep_copy(wires, wires_host);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -901,8 +891,12 @@ struct getExpVal5QubitOpFunctor {
     getExpVal5QubitOpFunctor(const KokkosComplexVector &arr_,
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
-                             const KokkosIntVector &wires_) {
-        wires = wires_;
+                             const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_.size());
+        Kokkos::deep_copy(wires, wires_host);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

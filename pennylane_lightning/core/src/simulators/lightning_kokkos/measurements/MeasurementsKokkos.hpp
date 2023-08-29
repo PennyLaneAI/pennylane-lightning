@@ -129,12 +129,6 @@ class Measurements final
     auto getExpValMatrix(const KokkosVector &matrix,
                          const std::vector<std::size_t> &wires) {
         std::size_t num_qubits = this->_statevector.getNumQubits();
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires.data(), wires.size());
-        KokkosSizeTVector wires_view("wires_view", wires.size());
-        Kokkos::deep_copy(wires_view, wires_host);
-
         std::size_t two2N = std::exp2(num_qubits - wires.size());
         std::size_t dim = std::exp2(wires.size());
         const KokkosVector arr_data = this->_statevector.getView();
@@ -142,32 +136,28 @@ class Measurements final
         PrecisionT expval = 0.0;
         switch (wires.size()) {
         case 1:
-            Kokkos::parallel_reduce(
-                two2N,
-                getExpVal1QubitOpFunctor<PrecisionT, 1>(arr_data, num_qubits,
-                                                        matrix, wires_view),
-                expval);
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal1QubitOpFunctor<PrecisionT, 1>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
             break;
         case 2:
-            Kokkos::parallel_reduce(
-                two2N,
-                getExpVal2QubitOpFunctor<PrecisionT, 2>(arr_data, num_qubits,
-                                                        matrix, wires_view),
-                expval);
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal2QubitOpFunctor<PrecisionT, 2>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
             break;
         case 3:
-            Kokkos::parallel_reduce(
-                two2N,
-                getExpVal3QubitOpFunctor<PrecisionT, 3>(arr_data, num_qubits,
-                                                        matrix, wires_view),
-                expval);
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal3QubitOpFunctor<PrecisionT, 3>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
             break;
         case 4:
-            Kokkos::parallel_reduce(
-                two2N,
-                getExpVal4QubitOpFunctor<PrecisionT, 4>(arr_data, num_qubits,
-                                                        matrix, wires_view),
-                expval);
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal4QubitOpFunctor<PrecisionT, 4>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
             break;
         default:
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
@@ -176,7 +166,7 @@ class Measurements final
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
                     .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
                 getExpValMultiQubitOpFunctor<PrecisionT>(arr_data, num_qubits,
-                                                         matrix, wires_view),
+                                                         matrix, wires),
                 expval);
             break;
         }
