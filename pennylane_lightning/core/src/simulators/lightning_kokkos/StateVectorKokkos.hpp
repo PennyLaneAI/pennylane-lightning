@@ -257,54 +257,6 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Apply a single qubit operator to the state vector using a matrix
-     *
-     * @param matrix Kokkos gate matrix in the device space
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     */
-    void applySingleQubitOp(const KokkosVector &matrix,
-                            const std::vector<size_t> &wires,
-                            bool inverse = false) {
-        auto &&num_qubits = this->getNumQubits();
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 1)),
-                singleQubitOpFunctor<fp_t, false>(*data_, num_qubits, matrix,
-                                                  wires));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 1)),
-                singleQubitOpFunctor<fp_t, true>(*data_, num_qubits, matrix,
-                                                 wires));
-        }
-    }
-
-    /**
-     * @brief Apply a two qubit operator to the state vector using a matrix
-     *
-     * @param matrix Kokkos gate matrix in the device space
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     */
-    void applyTwoQubitOp(const KokkosVector &matrix,
-                         const std::vector<size_t> &wires,
-                         bool inverse = false) {
-        auto &&num_qubits = this->getNumQubits();
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 2)),
-                twoQubitOpFunctor<fp_t, false>(*data_, num_qubits, matrix,
-                                               wires));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 2)),
-                twoQubitOpFunctor<fp_t, true>(*data_, num_qubits, matrix,
-                                              wires));
-        }
-    }
-
-    /**
      * @brief Apply a multi qubit operator to the state vector using a matrix
      *
      * @param matrix Kokkos gate matrix in the device space
@@ -312,90 +264,87 @@ class StateVectorKokkos final
      * @param inverse Indicates whether to use adjoint of gate.
      */
     void applyMultiQubitOp(const KokkosVector &matrix,
-                           const std::vector<size_t> &wires,
+                           const std::vector<std::size_t> &wires,
                            bool inverse = false) {
         auto &&num_qubits = this->getNumQubits();
-        if (wires.size() == 1) {
-            applySingleQubitOp(matrix, wires, inverse);
-        } else if (wires.size() == 2) {
-            applyTwoQubitOp(matrix, wires, inverse);
-        } else {
-            Kokkos::View<const size_t *, Kokkos::HostSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-                wires_host(wires.data(), wires.size());
+        std::size_t two2N = std::exp2(num_qubits - wires.size());
+        std::size_t dim = std::exp2(wires.size());
 
-            Kokkos::View<size_t *> wires_view("wires_view", wires.size());
-            Kokkos::deep_copy(wires_view, wires_host);
-
-            std::size_t two2N = std::exp2(num_qubits_ - wires.size());
-            std::size_t dim = std::exp2(wires.size());
+        switch (wires.size()) {
+        case 1:
+            if (!inverse) {
+                Kokkos::parallel_for(two2N,
+                                     apply1QubitOpFunctor<fp_t, 1, false>(
+                                         *data_, num_qubits, matrix, wires));
+            } else {
+                Kokkos::parallel_for(two2N,
+                                     apply1QubitOpFunctor<fp_t, 1, true>(
+                                         *data_, num_qubits, matrix, wires));
+            }
+            break;
+        case 2:
+            if (!inverse) {
+                Kokkos::parallel_for(two2N,
+                                     apply2QubitOpFunctor<fp_t, 2, false>(
+                                         *data_, num_qubits, matrix, wires));
+            } else {
+                Kokkos::parallel_for(two2N,
+                                     apply2QubitOpFunctor<fp_t, 2, true>(
+                                         *data_, num_qubits, matrix, wires));
+            }
+            break;
+        case 3:
+            if (!inverse) {
+                Kokkos::parallel_for(two2N,
+                                     apply3QubitOpFunctor<fp_t, 3, false>(
+                                         *data_, num_qubits, matrix, wires));
+            } else {
+                Kokkos::parallel_for(two2N,
+                                     apply3QubitOpFunctor<fp_t, 3, true>(
+                                         *data_, num_qubits, matrix, wires));
+            }
+            break;
+        case 4:
+            if (!inverse) {
+                Kokkos::parallel_for(two2N,
+                                     apply4QubitOpFunctor<fp_t, 4, false>(
+                                         *data_, num_qubits, matrix, wires));
+            } else {
+                Kokkos::parallel_for(two2N,
+                                     apply4QubitOpFunctor<fp_t, 4, true>(
+                                         *data_, num_qubits, matrix, wires));
+            }
+            break;
+        case 5:
+            if (!inverse) {
+                Kokkos::parallel_for(two2N,
+                                     apply5QubitOpFunctor<fp_t, 5, false>(
+                                         *data_, num_qubits, matrix, wires));
+            } else {
+                Kokkos::parallel_for(two2N,
+                                     apply5QubitOpFunctor<fp_t, 5, true>(
+                                         *data_, num_qubits, matrix, wires));
+            }
+            break;
+        default:
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
                                        ScratchViewSizeT::shmem_size(dim);
-
-            if (wires.size() <= 5) {
-                printf("\n specialQubitOpFunctor \n");
-                KokkosVector matrix_tmp("matrix_tmp", matrix.size());
-                if (inverse) {
-                    Kokkos::MDRangePolicy<Kokkos::Rank<2>> policy_2d(
-                        {0, 0}, {dim, dim});
-                    Kokkos::parallel_for(
-                        "transpose matrix", policy_2d,
-                        KOKKOS_LAMBDA(const std::size_t i,
-                                      const std::size_t j) {
-                            matrix_tmp(i + j * dim) = conj(matrix(i * dim + j));
-                        });
-                } else {
-                    Kokkos::deep_copy(matrix_tmp, matrix);
-                }
-
-                if (wires.size() == 2) {
-                    Kokkos::parallel_for(
-                        "tooQubitOpFunctor", two2N,
-                        tooQubitOpFunctor<PrecisionT, 2>(
-                            *data_, num_qubits, matrix_tmp, wires_view));
-                    return;
-                }
-
-                if (wires.size() == 3) {
-                    Kokkos::parallel_for(
-                        "threeQubitOpFunctor", two2N,
-                        threeQubitOpFunctor<PrecisionT, 3>(
-                            *data_, num_qubits, matrix_tmp, wires_view));
-                    return;
-                }
-
-                if (wires.size() == 4) {
-                    Kokkos::parallel_for(
-                        "fourQubitOpFunctor", two2N,
-                        fourQubitOpFunctor<PrecisionT, 4>(
-                            *data_, num_qubits, matrix_tmp, wires_view));
-                    return;
-                }
-
-                if (wires.size() == 5) {
-                    Kokkos::parallel_for(
-                        "fiveQubitOpFunctor", two2N,
-                        fiveQubitOpFunctor<PrecisionT, 5>(
-                            *data_, num_qubits, matrix_tmp, wires_view));
-                    return;
-                }
-            }
-            printf("\n multiQubitOpFunctor \n");
             if (!inverse) {
                 Kokkos::parallel_for(
                     "multiQubitOpFunctor",
                     TeamPolicy(two2N, Kokkos::AUTO, dim)
                         .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
                     multiQubitOpFunctor<PrecisionT, false>(*data_, num_qubits,
-                                                           matrix, wires_view));
+                                                           matrix, wires));
             } else {
                 Kokkos::parallel_for(
                     "multiQubitOpFunctor",
                     TeamPolicy(two2N, Kokkos::AUTO, dim)
                         .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
                     multiQubitOpFunctor<PrecisionT, true>(*data_, num_qubits,
-                                                          matrix, wires_view));
+                                                          matrix, wires));
             }
+            break;
         }
     }
 
@@ -447,12 +396,7 @@ class StateVectorKokkos final
         size_t n = 1U << wires.size();
         size_t n2 = n * n;
         KokkosVector matrix_("matrix_", n2);
-        typename KokkosVector::HostMirror matrix_h =
-            Kokkos::create_mirror_view(matrix_);
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<HostExecSpace>(0, n2),
-            KOKKOS_LAMBDA(const size_t i) { matrix_h(i) = matrix[i]; });
-        Kokkos::deep_copy(matrix_, matrix_h);
+        Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 

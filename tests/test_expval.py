@@ -104,14 +104,18 @@ class TestExpval:
     @pytest.mark.parametrize("n_wires", range(1, 7))
     def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
-        dev_def = qml.device("default.qubit", wires=10)
-        dev = qubit_device(wires=6)
+        n_qubits = 7
+        dev_def = qml.device("default.qubit", wires=n_qubits)
+        dev = qubit_device(wires=n_qubits)
         m = 2**n_wires
         U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
         obs = qml.Hermitian(U, wires=range(n_wires))
+        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
         def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
             qml.RY(theta, wires=[0])
             qml.RY(phi, wires=[1])
             qml.CNOT(wires=[0, 1])
