@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Enable pre-commit hooks to format all Python files and linting of all Python source files.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
 ### Improvements
 
 * Add tests to increase LKokkos coverage.
