@@ -101,11 +101,13 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        message = (
-            "Adjoint differentiation does not support State measurements."
-            if device_name == "lightning.kokkos"
-            else "This method does not support statevector return type."
-        )
+        
+        if device_name == "lightning.kokkos":
+            message = "Adjoint differentiation does not support State measurements."
+        elif ld._CPP_BINARY_AVAILABLE:
+            message = "This method does not support statevector return type."
+        else:
+            message = "Adjoint differentiation method does not support measurement StateMP"
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
