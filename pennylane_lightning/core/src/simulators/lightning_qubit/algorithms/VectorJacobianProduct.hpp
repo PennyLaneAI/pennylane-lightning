@@ -121,6 +121,7 @@ class VectorJacobianProduct final
                         "The operation is not supported using the adjoint "
                         "differentiation method");
             if ((ops_name[op_idx] == "QubitStateVector") ||
+                (ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue; // ignore them
             }

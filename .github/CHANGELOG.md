@@ -16,6 +16,9 @@
 
 ### Breaking changes
 
+* Rename `QubitStateVector` to `StatePrep` in the `LightningQubit` and `LightningKokkos` classes.
+  [(#486)](https://github.com/PennyLaneAI/pennylane-lightning/pull/486)
+
 * Modify `adjointJacobian` methods to accept a (maybe unused) reference `StateVectorT`, allowing device-backed simulators to directly access state vector data for adjoint differentiation instead of copying it back-and-forth into `JacobianData` (host memory).
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 

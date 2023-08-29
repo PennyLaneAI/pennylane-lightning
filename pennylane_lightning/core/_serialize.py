@@ -23,7 +23,7 @@ from pennylane import (
     PauliY,
     PauliZ,
     Identity,
-    QubitStateVector,
+    StatePrep,
     Rot,
 )
 from pennylane.operation import Tensor
@@ -206,7 +206,7 @@ class QuantumScriptSerializer:
         uses_stateprep = False
 
         for operation in tape.operations:
-            if isinstance(operation, (BasisState, QubitStateVector)):
+            if isinstance(operation, (BasisState, StatePrep)):
                 uses_stateprep = True
                 continue
             if isinstance(operation, Rot):
