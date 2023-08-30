@@ -1590,13 +1590,13 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     }
 };
 
-#define ENTRY3(xx, yy) xx << 3 | yy
-#define TERM3(xx, yy, vyy) matrix(ENTRY3(xx, yy)) * vyy
-#define VECSUM3(xx)                                                            \
-    TERM3(xx, 0B000, v000) + TERM3(xx, 0B001, v001) + TERM3(xx, 0B010, v010) + \
-        TERM3(xx, 0B011, v011) + TERM3(xx, 0B100, v100) +                      \
-        TERM3(xx, 0B101, v101) + TERM3(xx, 0B110, v110) +                      \
-        TERM3(xx, 0B111, v111)
+#define GATEENTRY3(xx, yy) xx << 3 | yy
+#define GATETERM3(xx, yy, vyy) matrix(GATEENTRY3(xx, yy)) * vyy
+#define GATESUM3(xx)                                                           \
+    GATETERM3(xx, 0B000, v000) + GATETERM3(xx, 0B001, v001) +                  \
+        GATETERM3(xx, 0B010, v010) + GATETERM3(xx, 0B011, v011) +              \
+        GATETERM3(xx, 0B100, v100) + GATETERM3(xx, 0B101, v101) +              \
+        GATETERM3(xx, 0B110, v110) + GATETERM3(xx, 0B111, v111)
 #define INDEX(ivar, xx)                                                        \
     std::size_t ivar = kdim | xx;                                              \
     for (std::size_t pos = 0; pos < n_wires; pos++) {                          \
@@ -1653,28 +1653,28 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
         INDEX(i111, 0B111);
         ComplexT v111 = arr(i111);
 
-        arr(i000) = VECSUM3(0B000);
-        arr(i001) = VECSUM3(0B001);
-        arr(i010) = VECSUM3(0B010);
-        arr(i011) = VECSUM3(0B011);
-        arr(i100) = VECSUM3(0B100);
-        arr(i101) = VECSUM3(0B101);
-        arr(i110) = VECSUM3(0B110);
-        arr(i111) = VECSUM3(0B111);
+        arr(i000) = GATESUM3(0B000);
+        arr(i001) = GATESUM3(0B001);
+        arr(i010) = GATESUM3(0B010);
+        arr(i011) = GATESUM3(0B011);
+        arr(i100) = GATESUM3(0B100);
+        arr(i101) = GATESUM3(0B101);
+        arr(i110) = GATESUM3(0B110);
+        arr(i111) = GATESUM3(0B111);
     }
 };
 
-#define ENTRY4(xx, yy) xx << 4 | yy
-#define TERM4(xx, yy, vyy) matrix(ENTRY4(xx, yy)) * vyy
-#define VECSUM4(xx)                                                            \
-    TERM4(xx, 0B0000, v0000) + TERM4(xx, 0B0001, v0001) +                      \
-        TERM4(xx, 0B0010, v0010) + TERM4(xx, 0B0011, v0011) +                  \
-        TERM4(xx, 0B0100, v0100) + TERM4(xx, 0B0101, v0101) +                  \
-        TERM4(xx, 0B0110, v0110) + TERM4(xx, 0B0111, v0111) +                  \
-        TERM4(xx, 0B1000, v1000) + TERM4(xx, 0B1001, v1001) +                  \
-        TERM4(xx, 0B1010, v1010) + TERM4(xx, 0B1011, v1011) +                  \
-        TERM4(xx, 0B1100, v1100) + TERM4(xx, 0B1101, v1101) +                  \
-        TERM4(xx, 0B1110, v1110) + TERM4(xx, 0B1111, v1111)
+#define GATEENTRY4(xx, yy) xx << 4 | yy
+#define GATETERM4(xx, yy, vyy) matrix(GATEENTRY4(xx, yy)) * vyy
+#define GATESUM4(xx)                                                           \
+    GATETERM4(xx, 0B0000, v0000) + GATETERM4(xx, 0B0001, v0001) +              \
+        GATETERM4(xx, 0B0010, v0010) + GATETERM4(xx, 0B0011, v0011) +          \
+        GATETERM4(xx, 0B0100, v0100) + GATETERM4(xx, 0B0101, v0101) +          \
+        GATETERM4(xx, 0B0110, v0110) + GATETERM4(xx, 0B0111, v0111) +          \
+        GATETERM4(xx, 0B1000, v1000) + GATETERM4(xx, 0B1001, v1001) +          \
+        GATETERM4(xx, 0B1010, v1010) + GATETERM4(xx, 0B1011, v1011) +          \
+        GATETERM4(xx, 0B1100, v1100) + GATETERM4(xx, 0B1101, v1101) +          \
+        GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
 
 template <class PrecisionT> struct apply4QubitOpFunctor {
 
@@ -1738,44 +1738,44 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
         INDEX(i1111, 0B1111);
         ComplexT v1111 = arr(i1111);
 
-        arr(i0000) = VECSUM4(0B0000);
-        arr(i0001) = VECSUM4(0B0001);
-        arr(i0010) = VECSUM4(0B0010);
-        arr(i0011) = VECSUM4(0B0011);
-        arr(i0100) = VECSUM4(0B0100);
-        arr(i0101) = VECSUM4(0B0101);
-        arr(i0110) = VECSUM4(0B0110);
-        arr(i0111) = VECSUM4(0B0111);
-        arr(i1000) = VECSUM4(0B1000);
-        arr(i1001) = VECSUM4(0B1001);
-        arr(i1010) = VECSUM4(0B1010);
-        arr(i1011) = VECSUM4(0B1011);
-        arr(i1100) = VECSUM4(0B1100);
-        arr(i1101) = VECSUM4(0B1101);
-        arr(i1110) = VECSUM4(0B1110);
-        arr(i1111) = VECSUM4(0B1111);
+        arr(i0000) = GATESUM4(0B0000);
+        arr(i0001) = GATESUM4(0B0001);
+        arr(i0010) = GATESUM4(0B0010);
+        arr(i0011) = GATESUM4(0B0011);
+        arr(i0100) = GATESUM4(0B0100);
+        arr(i0101) = GATESUM4(0B0101);
+        arr(i0110) = GATESUM4(0B0110);
+        arr(i0111) = GATESUM4(0B0111);
+        arr(i1000) = GATESUM4(0B1000);
+        arr(i1001) = GATESUM4(0B1001);
+        arr(i1010) = GATESUM4(0B1010);
+        arr(i1011) = GATESUM4(0B1011);
+        arr(i1100) = GATESUM4(0B1100);
+        arr(i1101) = GATESUM4(0B1101);
+        arr(i1110) = GATESUM4(0B1110);
+        arr(i1111) = GATESUM4(0B1111);
     }
 };
 
-#define ENTRY5(xx, yy) xx << 5 | yy
-#define TERM5(xx, yy, vyy) matrix(ENTRY5(xx, yy)) * vyy
-#define VECSUM5(xx)                                                            \
-    TERM5(xx, 0B00000, v00000) + TERM5(xx, 0B00001, v00001) +                  \
-        TERM5(xx, 0B00010, v00010) + TERM5(xx, 0B00011, v00011) +              \
-        TERM5(xx, 0B00100, v00100) + TERM5(xx, 0B00101, v00101) +              \
-        TERM5(xx, 0B00110, v00110) + TERM5(xx, 0B00111, v00111) +              \
-        TERM5(xx, 0B01000, v01000) + TERM5(xx, 0B01001, v01001) +              \
-        TERM5(xx, 0B01010, v01010) + TERM5(xx, 0B01011, v01011) +              \
-        TERM5(xx, 0B01100, v01100) + TERM5(xx, 0B01101, v01101) +              \
-        TERM5(xx, 0B01110, v01110) + TERM5(xx, 0B01111, v01111) +              \
-        TERM5(xx, 0B10000, v10000) + TERM5(xx, 0B10001, v10001) +              \
-        TERM5(xx, 0B10010, v10010) + TERM5(xx, 0B10011, v10011) +              \
-        TERM5(xx, 0B10100, v10100) + TERM5(xx, 0B10101, v10101) +              \
-        TERM5(xx, 0B10110, v10110) + TERM5(xx, 0B10111, v10111) +              \
-        TERM5(xx, 0B11000, v11000) + TERM5(xx, 0B11001, v11001) +              \
-        TERM5(xx, 0B11010, v11010) + TERM5(xx, 0B11011, v11011) +              \
-        TERM5(xx, 0B11100, v11100) + TERM5(xx, 0B11101, v11101) +              \
-        TERM5(xx, 0B11110, v11110) + TERM5(xx, 0B11111, v11111)
+#define GATEENTRY5(xx, yy) xx << 5 | yy
+#define GATETERM5(xx, yy, vyy) matrix(GATEENTRY5(xx, yy)) * vyy
+#define GATESUM5(xx)                                                           \
+    GATETERM5(xx, 0B00000, v00000) + GATETERM5(xx, 0B00001, v00001) +          \
+        GATETERM5(xx, 0B00010, v00010) + GATETERM5(xx, 0B00011, v00011) +      \
+        GATETERM5(xx, 0B00100, v00100) + GATETERM5(xx, 0B00101, v00101) +      \
+        GATETERM5(xx, 0B00110, v00110) + GATETERM5(xx, 0B00111, v00111) +      \
+        GATETERM5(xx, 0B01000, v01000) + GATETERM5(xx, 0B01001, v01001) +      \
+        GATETERM5(xx, 0B01010, v01010) + GATETERM5(xx, 0B01011, v01011) +      \
+        GATETERM5(xx, 0B01100, v01100) + GATETERM5(xx, 0B01101, v01101) +      \
+        GATETERM5(xx, 0B01110, v01110) + GATETERM5(xx, 0B01111, v01111) +      \
+        GATETERM5(xx, 0B10000, v10000) + GATETERM5(xx, 0B10001, v10001) +      \
+        GATETERM5(xx, 0B10010, v10010) + GATETERM5(xx, 0B10011, v10011) +      \
+        GATETERM5(xx, 0B10100, v10100) + GATETERM5(xx, 0B10101, v10101) +      \
+        GATETERM5(xx, 0B10110, v10110) + GATETERM5(xx, 0B10111, v10111) +      \
+        GATETERM5(xx, 0B11000, v11000) + GATETERM5(xx, 0B11001, v11001) +      \
+        GATETERM5(xx, 0B11010, v11010) + GATETERM5(xx, 0B11011, v11011) +      \
+        GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
+        GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
 template <class PrecisionT> struct apply5QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -1870,38 +1870,38 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
         INDEX(i11111, 0B11111);
         ComplexT v11111 = arr(i11111);
 
-        arr(i00000) = VECSUM5(0B00000);
-        arr(i00001) = VECSUM5(0B00001);
-        arr(i00010) = VECSUM5(0B00010);
-        arr(i00011) = VECSUM5(0B00011);
-        arr(i00100) = VECSUM5(0B00100);
-        arr(i00101) = VECSUM5(0B00101);
-        arr(i00110) = VECSUM5(0B00110);
-        arr(i00111) = VECSUM5(0B00111);
-        arr(i01000) = VECSUM5(0B01000);
-        arr(i01001) = VECSUM5(0B01001);
-        arr(i01010) = VECSUM5(0B01010);
-        arr(i01011) = VECSUM5(0B01011);
-        arr(i01100) = VECSUM5(0B01100);
-        arr(i01101) = VECSUM5(0B01101);
-        arr(i01110) = VECSUM5(0B01110);
-        arr(i01111) = VECSUM5(0B01111);
-        arr(i10000) = VECSUM5(0B10000);
-        arr(i10001) = VECSUM5(0B10001);
-        arr(i10010) = VECSUM5(0B10010);
-        arr(i10011) = VECSUM5(0B10011);
-        arr(i10100) = VECSUM5(0B10100);
-        arr(i10101) = VECSUM5(0B10101);
-        arr(i10110) = VECSUM5(0B10110);
-        arr(i10111) = VECSUM5(0B10111);
-        arr(i11000) = VECSUM5(0B11000);
-        arr(i11001) = VECSUM5(0B11001);
-        arr(i11010) = VECSUM5(0B11010);
-        arr(i11011) = VECSUM5(0B11011);
-        arr(i11100) = VECSUM5(0B11100);
-        arr(i11101) = VECSUM5(0B11101);
-        arr(i11110) = VECSUM5(0B11110);
-        arr(i11111) = VECSUM5(0B11111);
+        arr(i00000) = GATESUM5(0B00000);
+        arr(i00001) = GATESUM5(0B00001);
+        arr(i00010) = GATESUM5(0B00010);
+        arr(i00011) = GATESUM5(0B00011);
+        arr(i00100) = GATESUM5(0B00100);
+        arr(i00101) = GATESUM5(0B00101);
+        arr(i00110) = GATESUM5(0B00110);
+        arr(i00111) = GATESUM5(0B00111);
+        arr(i01000) = GATESUM5(0B01000);
+        arr(i01001) = GATESUM5(0B01001);
+        arr(i01010) = GATESUM5(0B01010);
+        arr(i01011) = GATESUM5(0B01011);
+        arr(i01100) = GATESUM5(0B01100);
+        arr(i01101) = GATESUM5(0B01101);
+        arr(i01110) = GATESUM5(0B01110);
+        arr(i01111) = GATESUM5(0B01111);
+        arr(i10000) = GATESUM5(0B10000);
+        arr(i10001) = GATESUM5(0B10001);
+        arr(i10010) = GATESUM5(0B10010);
+        arr(i10011) = GATESUM5(0B10011);
+        arr(i10100) = GATESUM5(0B10100);
+        arr(i10101) = GATESUM5(0B10101);
+        arr(i10110) = GATESUM5(0B10110);
+        arr(i10111) = GATESUM5(0B10111);
+        arr(i11000) = GATESUM5(0B11000);
+        arr(i11001) = GATESUM5(0B11001);
+        arr(i11010) = GATESUM5(0B11010);
+        arr(i11011) = GATESUM5(0B11011);
+        arr(i11100) = GATESUM5(0B11100);
+        arr(i11101) = GATESUM5(0B11101);
+        arr(i11110) = GATESUM5(0B11110);
+        arr(i11111) = GATESUM5(0B11111);
     }
 };
 
