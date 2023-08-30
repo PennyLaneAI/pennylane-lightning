@@ -137,25 +137,25 @@ class Measurements final
         switch (wires.size()) {
         case 1:
             Kokkos::parallel_reduce(two2N,
-                                    getExpVal1QubitOpFunctor<PrecisionT, 1>(
+                                    getExpVal1QubitOpFunctor<PrecisionT>(
                                         arr_data, num_qubits, matrix, wires),
                                     expval);
             break;
         case 2:
             Kokkos::parallel_reduce(two2N,
-                                    getExpVal2QubitOpFunctor<PrecisionT, 2>(
+                                    getExpVal2QubitOpFunctor<PrecisionT>(
                                         arr_data, num_qubits, matrix, wires),
                                     expval);
             break;
         case 3:
             Kokkos::parallel_reduce(two2N,
-                                    getExpVal3QubitOpFunctor<PrecisionT, 3>(
+                                    getExpVal3QubitOpFunctor<PrecisionT>(
                                         arr_data, num_qubits, matrix, wires),
                                     expval);
             break;
         case 4:
             Kokkos::parallel_reduce(two2N,
-                                    getExpVal4QubitOpFunctor<PrecisionT, 4>(
+                                    getExpVal4QubitOpFunctor<PrecisionT>(
                                         arr_data, num_qubits, matrix, wires),
                                     expval);
             break;
