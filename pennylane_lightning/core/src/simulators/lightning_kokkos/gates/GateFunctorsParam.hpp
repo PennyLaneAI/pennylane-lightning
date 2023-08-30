@@ -1483,7 +1483,7 @@ template <class PrecisionT, bool inverse = false> struct rotFunctor {
     }
 };
 
-template <class PrecisionT, std::size_t n_wires> struct apply1QubitOpFunctor {
+template <class PrecisionT> struct apply1QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -1491,7 +1491,8 @@ template <class PrecisionT, std::size_t n_wires> struct apply1QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    std::size_t dim;
+    const std::size_t n_wires = 1;
+    const std::size_t dim = 1U << n_wires;
     std::size_t num_qubits;
     size_t rev_wire;
     size_t rev_wire_shift;
@@ -1505,7 +1506,6 @@ template <class PrecisionT, std::size_t n_wires> struct apply1QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << n_wires;
 
         rev_wire = num_qubits - wires_[0] - 1;
         rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
@@ -1525,7 +1525,7 @@ template <class PrecisionT, std::size_t n_wires> struct apply1QubitOpFunctor {
     }
 };
 
-template <class PrecisionT, std::size_t n_wires> struct apply2QubitOpFunctor {
+template <class PrecisionT> struct apply2QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -1533,7 +1533,8 @@ template <class PrecisionT, std::size_t n_wires> struct apply2QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    std::size_t dim;
+    const std::size_t n_wires = 2;
+    const std::size_t dim = 1U << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire0;
     std::size_t rev_wire1;
@@ -1552,7 +1553,6 @@ template <class PrecisionT, std::size_t n_wires> struct apply2QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << n_wires;
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1; // Control qubit
@@ -1590,7 +1590,24 @@ template <class PrecisionT, std::size_t n_wires> struct apply2QubitOpFunctor {
     }
 };
 
-template <class PrecisionT, std::size_t n_wires> struct apply3QubitOpFunctor {
+#define ENTRY3(xx, yy) xx << 3 | yy
+#define TERM3(xx, yy, vyy) matrix(ENTRY3(xx, yy)) * vyy
+#define VECSUM3(xx)                                                            \
+    TERM3(xx, 0B000, v000) + TERM3(xx, 0B001, v001) + TERM3(xx, 0B010, v010) + \
+        TERM3(xx, 0B011, v011) + TERM3(xx, 0B100, v100) +                      \
+        TERM3(xx, 0B101, v101) + TERM3(xx, 0B110, v110) +                      \
+        TERM3(xx, 0B111, v111)
+#define INDEX(ivar, xx)                                                        \
+    std::size_t ivar = kdim | xx;                                              \
+    for (std::size_t pos = 0; pos < n_wires; pos++) {                          \
+        std::size_t x = ((ivar >> (n_wires - pos - 1)) ^                       \
+                         (ivar >> (num_qubits - wires(pos) - 1))) &            \
+                        1U;                                                    \
+        ivar = ivar ^ ((x << (n_wires - pos - 1)) |                            \
+                       (x << (num_qubits - wires(pos) - 1)));                  \
+    }
+
+template <class PrecisionT> struct apply3QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -1599,7 +1616,8 @@ template <class PrecisionT, std::size_t n_wires> struct apply3QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
-    std::size_t dim;
+    const std::size_t n_wires = 3;
+    const std::size_t dim = 1U << n_wires;
     std::size_t num_qubits;
 
     apply3QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1613,129 +1631,52 @@ template <class PrecisionT, std::size_t n_wires> struct apply3QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << n_wires;
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k) const {
         const std::size_t kdim = k * dim;
-
-        std::size_t i000 = kdim | 0;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i000 >> (n_wires - pos - 1)) ^
-                             (i000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i000 = i000 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i000, 0B000);
         ComplexT v000 = arr(i000);
-
-        std::size_t i001 = kdim | 1;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i001 >> (n_wires - pos - 1)) ^
-                             (i001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i001 = i001 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i001, 0B001);
         ComplexT v001 = arr(i001);
-
-        std::size_t i010 = kdim | 2;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i010 >> (n_wires - pos - 1)) ^
-                             (i010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i010 = i010 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i010, 0B010);
         ComplexT v010 = arr(i010);
-
-        std::size_t i011 = kdim | 3;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i011 >> (n_wires - pos - 1)) ^
-                             (i011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i011 = i011 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i011, 0B011);
         ComplexT v011 = arr(i011);
-
-        std::size_t i100 = kdim | 4;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i100 >> (n_wires - pos - 1)) ^
-                             (i100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i100 = i100 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i100, 0B100);
         ComplexT v100 = arr(i100);
-
-        std::size_t i101 = kdim | 5;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i101 >> (n_wires - pos - 1)) ^
-                             (i101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i101 = i101 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i101, 0B101);
         ComplexT v101 = arr(i101);
-
-        std::size_t i110 = kdim | 6;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i110 >> (n_wires - pos - 1)) ^
-                             (i110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i110 = i110 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i110, 0B110);
         ComplexT v110 = arr(i110);
-
-        std::size_t i111 = kdim | 7;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i111 >> (n_wires - pos - 1)) ^
-                             (i111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i111 = i111 ^ ((x << (n_wires - pos - 1)) |
-                           (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i111, 0B111);
         ComplexT v111 = arr(i111);
 
-        arr(i000) = matrix(0B000000) * v000 + matrix(0B000001) * v001 +
-                    matrix(0B000010) * v010 + matrix(0B000011) * v011 +
-                    matrix(0B000100) * v100 + matrix(0B000101) * v101 +
-                    matrix(0B000110) * v110 + matrix(0B000111) * v111;
-        arr(i001) = matrix(0B001000) * v000 + matrix(0B001001) * v001 +
-                    matrix(0B001010) * v010 + matrix(0B001011) * v011 +
-                    matrix(0B001100) * v100 + matrix(0B001101) * v101 +
-                    matrix(0B001110) * v110 + matrix(0B001111) * v111;
-        arr(i010) = matrix(0B010000) * v000 + matrix(0B010001) * v001 +
-                    matrix(0B010010) * v010 + matrix(0B010011) * v011 +
-                    matrix(0B010100) * v100 + matrix(0B010101) * v101 +
-                    matrix(0B010110) * v110 + matrix(0B010111) * v111;
-        arr(i011) = matrix(0B011000) * v000 + matrix(0B011001) * v001 +
-                    matrix(0B011010) * v010 + matrix(0B011011) * v011 +
-                    matrix(0B011100) * v100 + matrix(0B011101) * v101 +
-                    matrix(0B011110) * v110 + matrix(0B011111) * v111;
-        arr(i100) = matrix(0B100000) * v000 + matrix(0B100001) * v001 +
-                    matrix(0B100010) * v010 + matrix(0B100011) * v011 +
-                    matrix(0B100100) * v100 + matrix(0B100101) * v101 +
-                    matrix(0B100110) * v110 + matrix(0B100111) * v111;
-        arr(i101) = matrix(0B101000) * v000 + matrix(0B101001) * v001 +
-                    matrix(0B101010) * v010 + matrix(0B101011) * v011 +
-                    matrix(0B101100) * v100 + matrix(0B101101) * v101 +
-                    matrix(0B101110) * v110 + matrix(0B101111) * v111;
-        arr(i110) = matrix(0B110000) * v000 + matrix(0B110001) * v001 +
-                    matrix(0B110010) * v010 + matrix(0B110011) * v011 +
-                    matrix(0B110100) * v100 + matrix(0B110101) * v101 +
-                    matrix(0B110110) * v110 + matrix(0B110111) * v111;
-        arr(i111) = matrix(0B111000) * v000 + matrix(0B111001) * v001 +
-                    matrix(0B111010) * v010 + matrix(0B111011) * v011 +
-                    matrix(0B111100) * v100 + matrix(0B111101) * v101 +
-                    matrix(0B111110) * v110 + matrix(0B111111) * v111;
+        arr(i000) = VECSUM3(0B000);
+        arr(i001) = VECSUM3(0B001);
+        arr(i010) = VECSUM3(0B010);
+        arr(i011) = VECSUM3(0B011);
+        arr(i100) = VECSUM3(0B100);
+        arr(i101) = VECSUM3(0B101);
+        arr(i110) = VECSUM3(0B110);
+        arr(i111) = VECSUM3(0B111);
     }
 };
 
-template <class PrecisionT, std::size_t n_wires> struct apply4QubitOpFunctor {
+#define ENTRY4(xx, yy) xx << 4 | yy
+#define TERM4(xx, yy, vyy) matrix(ENTRY4(xx, yy)) * vyy
+#define VECSUM4(xx)                                                            \
+    TERM4(xx, 0B0000, v0000) + TERM4(xx, 0B0001, v0001) +                      \
+        TERM4(xx, 0B0010, v0010) + TERM4(xx, 0B0011, v0011) +                  \
+        TERM4(xx, 0B0100, v0100) + TERM4(xx, 0B0101, v0101) +                  \
+        TERM4(xx, 0B0110, v0110) + TERM4(xx, 0B0111, v0111) +                  \
+        TERM4(xx, 0B1000, v1000) + TERM4(xx, 0B1001, v1001) +                  \
+        TERM4(xx, 0B1010, v1010) + TERM4(xx, 0B1011, v1011) +                  \
+        TERM4(xx, 0B1100, v1100) + TERM4(xx, 0B1101, v1101) +                  \
+        TERM4(xx, 0B1110, v1110) + TERM4(xx, 0B1111, v1111)
+
+template <class PrecisionT> struct apply4QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -1744,7 +1685,8 @@ template <class PrecisionT, std::size_t n_wires> struct apply4QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
-    std::size_t dim;
+    const std::size_t n_wires = 4;
+    const std::size_t dim = 1U << n_wires;
     std::size_t num_qubits;
 
     apply4QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1758,305 +1700,83 @@ template <class PrecisionT, std::size_t n_wires> struct apply4QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << n_wires;
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k) const {
         const std::size_t kdim = k * dim;
-
-        std::size_t i0000 = kdim | 0;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0000 >> (n_wires - pos - 1)) ^
-                             (i0000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0000 = i0000 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0000, 0B0000);
         ComplexT v0000 = arr(i0000);
-
-        std::size_t i0001 = kdim | 1;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0001 >> (n_wires - pos - 1)) ^
-                             (i0001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0001 = i0001 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0001, 0B0001);
         ComplexT v0001 = arr(i0001);
-
-        std::size_t i0010 = kdim | 2;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0010 >> (n_wires - pos - 1)) ^
-                             (i0010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0010 = i0010 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0010, 0B0010);
         ComplexT v0010 = arr(i0010);
-
-        std::size_t i0011 = kdim | 3;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0011 >> (n_wires - pos - 1)) ^
-                             (i0011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0011 = i0011 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0011, 0B0011);
         ComplexT v0011 = arr(i0011);
-
-        std::size_t i0100 = kdim | 4;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0100 >> (n_wires - pos - 1)) ^
-                             (i0100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0100 = i0100 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0100, 0B0100);
         ComplexT v0100 = arr(i0100);
-
-        std::size_t i0101 = kdim | 5;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0101 >> (n_wires - pos - 1)) ^
-                             (i0101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0101 = i0101 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0101, 0B0101);
         ComplexT v0101 = arr(i0101);
-
-        std::size_t i0110 = kdim | 6;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0110 >> (n_wires - pos - 1)) ^
-                             (i0110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0110 = i0110 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0110, 0B0110);
         ComplexT v0110 = arr(i0110);
-
-        std::size_t i0111 = kdim | 7;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i0111 >> (n_wires - pos - 1)) ^
-                             (i0111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i0111 = i0111 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i0111, 0B0111);
         ComplexT v0111 = arr(i0111);
-
-        std::size_t i1000 = kdim | 8;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1000 >> (n_wires - pos - 1)) ^
-                             (i1000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1000 = i1000 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1000, 0B1000);
         ComplexT v1000 = arr(i1000);
-
-        std::size_t i1001 = kdim | 9;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1001 >> (n_wires - pos - 1)) ^
-                             (i1001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1001 = i1001 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1001, 0B1001);
         ComplexT v1001 = arr(i1001);
-
-        std::size_t i1010 = kdim | 10;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1010 >> (n_wires - pos - 1)) ^
-                             (i1010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1010 = i1010 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1010, 0B1010);
         ComplexT v1010 = arr(i1010);
-
-        std::size_t i1011 = kdim | 11;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1011 >> (n_wires - pos - 1)) ^
-                             (i1011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1011 = i1011 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1011, 0B1011);
         ComplexT v1011 = arr(i1011);
-
-        std::size_t i1100 = kdim | 12;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1100 >> (n_wires - pos - 1)) ^
-                             (i1100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1100 = i1100 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1100, 0B1100);
         ComplexT v1100 = arr(i1100);
-
-        std::size_t i1101 = kdim | 13;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1101 >> (n_wires - pos - 1)) ^
-                             (i1101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1101 = i1101 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1101, 0B1101);
         ComplexT v1101 = arr(i1101);
-
-        std::size_t i1110 = kdim | 14;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1110 >> (n_wires - pos - 1)) ^
-                             (i1110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1110 = i1110 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1110, 0B1110);
         ComplexT v1110 = arr(i1110);
-
-        std::size_t i1111 = kdim | 15;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i1111 >> (n_wires - pos - 1)) ^
-                             (i1111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i1111 = i1111 ^ ((x << (n_wires - pos - 1)) |
-                             (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i1111, 0B1111);
         ComplexT v1111 = arr(i1111);
 
-        arr(i0000) = matrix(0B00000000) * v0000 + matrix(0B00000001) * v0001 +
-                     matrix(0B00000010) * v0010 + matrix(0B00000011) * v0011 +
-                     matrix(0B00000100) * v0100 + matrix(0B00000101) * v0101 +
-                     matrix(0B00000110) * v0110 + matrix(0B00000111) * v0111 +
-                     matrix(0B00001000) * v1000 + matrix(0B00001001) * v1001 +
-                     matrix(0B00001010) * v1010 + matrix(0B00001011) * v1011 +
-                     matrix(0B00001100) * v1100 + matrix(0B00001101) * v1101 +
-                     matrix(0B00001110) * v1110 + matrix(0B00001111) * v1111;
-        arr(i0001) = matrix(0B00010000) * v0000 + matrix(0B00010001) * v0001 +
-                     matrix(0B00010010) * v0010 + matrix(0B00010011) * v0011 +
-                     matrix(0B00010100) * v0100 + matrix(0B00010101) * v0101 +
-                     matrix(0B00010110) * v0110 + matrix(0B00010111) * v0111 +
-                     matrix(0B00011000) * v1000 + matrix(0B00011001) * v1001 +
-                     matrix(0B00011010) * v1010 + matrix(0B00011011) * v1011 +
-                     matrix(0B00011100) * v1100 + matrix(0B00011101) * v1101 +
-                     matrix(0B00011110) * v1110 + matrix(0B00011111) * v1111;
-        arr(i0010) = matrix(0B00100000) * v0000 + matrix(0B00100001) * v0001 +
-                     matrix(0B00100010) * v0010 + matrix(0B00100011) * v0011 +
-                     matrix(0B00100100) * v0100 + matrix(0B00100101) * v0101 +
-                     matrix(0B00100110) * v0110 + matrix(0B00100111) * v0111 +
-                     matrix(0B00101000) * v1000 + matrix(0B00101001) * v1001 +
-                     matrix(0B00101010) * v1010 + matrix(0B00101011) * v1011 +
-                     matrix(0B00101100) * v1100 + matrix(0B00101101) * v1101 +
-                     matrix(0B00101110) * v1110 + matrix(0B00101111) * v1111;
-        arr(i0011) = matrix(0B00110000) * v0000 + matrix(0B00110001) * v0001 +
-                     matrix(0B00110010) * v0010 + matrix(0B00110011) * v0011 +
-                     matrix(0B00110100) * v0100 + matrix(0B00110101) * v0101 +
-                     matrix(0B00110110) * v0110 + matrix(0B00110111) * v0111 +
-                     matrix(0B00111000) * v1000 + matrix(0B00111001) * v1001 +
-                     matrix(0B00111010) * v1010 + matrix(0B00111011) * v1011 +
-                     matrix(0B00111100) * v1100 + matrix(0B00111101) * v1101 +
-                     matrix(0B00111110) * v1110 + matrix(0B00111111) * v1111;
-        arr(i0100) = matrix(0B01000000) * v0000 + matrix(0B01000001) * v0001 +
-                     matrix(0B01000010) * v0010 + matrix(0B01000011) * v0011 +
-                     matrix(0B01000100) * v0100 + matrix(0B01000101) * v0101 +
-                     matrix(0B01000110) * v0110 + matrix(0B01000111) * v0111 +
-                     matrix(0B01001000) * v1000 + matrix(0B01001001) * v1001 +
-                     matrix(0B01001010) * v1010 + matrix(0B01001011) * v1011 +
-                     matrix(0B01001100) * v1100 + matrix(0B01001101) * v1101 +
-                     matrix(0B01001110) * v1110 + matrix(0B01001111) * v1111;
-        arr(i0101) = matrix(0B01010000) * v0000 + matrix(0B01010001) * v0001 +
-                     matrix(0B01010010) * v0010 + matrix(0B01010011) * v0011 +
-                     matrix(0B01010100) * v0100 + matrix(0B01010101) * v0101 +
-                     matrix(0B01010110) * v0110 + matrix(0B01010111) * v0111 +
-                     matrix(0B01011000) * v1000 + matrix(0B01011001) * v1001 +
-                     matrix(0B01011010) * v1010 + matrix(0B01011011) * v1011 +
-                     matrix(0B01011100) * v1100 + matrix(0B01011101) * v1101 +
-                     matrix(0B01011110) * v1110 + matrix(0B01011111) * v1111;
-        arr(i0110) = matrix(0B01100000) * v0000 + matrix(0B01100001) * v0001 +
-                     matrix(0B01100010) * v0010 + matrix(0B01100011) * v0011 +
-                     matrix(0B01100100) * v0100 + matrix(0B01100101) * v0101 +
-                     matrix(0B01100110) * v0110 + matrix(0B01100111) * v0111 +
-                     matrix(0B01101000) * v1000 + matrix(0B01101001) * v1001 +
-                     matrix(0B01101010) * v1010 + matrix(0B01101011) * v1011 +
-                     matrix(0B01101100) * v1100 + matrix(0B01101101) * v1101 +
-                     matrix(0B01101110) * v1110 + matrix(0B01101111) * v1111;
-        arr(i0111) = matrix(0B01110000) * v0000 + matrix(0B01110001) * v0001 +
-                     matrix(0B01110010) * v0010 + matrix(0B01110011) * v0011 +
-                     matrix(0B01110100) * v0100 + matrix(0B01110101) * v0101 +
-                     matrix(0B01110110) * v0110 + matrix(0B01110111) * v0111 +
-                     matrix(0B01111000) * v1000 + matrix(0B01111001) * v1001 +
-                     matrix(0B01111010) * v1010 + matrix(0B01111011) * v1011 +
-                     matrix(0B01111100) * v1100 + matrix(0B01111101) * v1101 +
-                     matrix(0B01111110) * v1110 + matrix(0B01111111) * v1111;
-        arr(i1000) = matrix(0B10000000) * v0000 + matrix(0B10000001) * v0001 +
-                     matrix(0B10000010) * v0010 + matrix(0B10000011) * v0011 +
-                     matrix(0B10000100) * v0100 + matrix(0B10000101) * v0101 +
-                     matrix(0B10000110) * v0110 + matrix(0B10000111) * v0111 +
-                     matrix(0B10001000) * v1000 + matrix(0B10001001) * v1001 +
-                     matrix(0B10001010) * v1010 + matrix(0B10001011) * v1011 +
-                     matrix(0B10001100) * v1100 + matrix(0B10001101) * v1101 +
-                     matrix(0B10001110) * v1110 + matrix(0B10001111) * v1111;
-        arr(i1001) = matrix(0B10010000) * v0000 + matrix(0B10010001) * v0001 +
-                     matrix(0B10010010) * v0010 + matrix(0B10010011) * v0011 +
-                     matrix(0B10010100) * v0100 + matrix(0B10010101) * v0101 +
-                     matrix(0B10010110) * v0110 + matrix(0B10010111) * v0111 +
-                     matrix(0B10011000) * v1000 + matrix(0B10011001) * v1001 +
-                     matrix(0B10011010) * v1010 + matrix(0B10011011) * v1011 +
-                     matrix(0B10011100) * v1100 + matrix(0B10011101) * v1101 +
-                     matrix(0B10011110) * v1110 + matrix(0B10011111) * v1111;
-        arr(i1010) = matrix(0B10100000) * v0000 + matrix(0B10100001) * v0001 +
-                     matrix(0B10100010) * v0010 + matrix(0B10100011) * v0011 +
-                     matrix(0B10100100) * v0100 + matrix(0B10100101) * v0101 +
-                     matrix(0B10100110) * v0110 + matrix(0B10100111) * v0111 +
-                     matrix(0B10101000) * v1000 + matrix(0B10101001) * v1001 +
-                     matrix(0B10101010) * v1010 + matrix(0B10101011) * v1011 +
-                     matrix(0B10101100) * v1100 + matrix(0B10101101) * v1101 +
-                     matrix(0B10101110) * v1110 + matrix(0B10101111) * v1111;
-        arr(i1011) = matrix(0B10110000) * v0000 + matrix(0B10110001) * v0001 +
-                     matrix(0B10110010) * v0010 + matrix(0B10110011) * v0011 +
-                     matrix(0B10110100) * v0100 + matrix(0B10110101) * v0101 +
-                     matrix(0B10110110) * v0110 + matrix(0B10110111) * v0111 +
-                     matrix(0B10111000) * v1000 + matrix(0B10111001) * v1001 +
-                     matrix(0B10111010) * v1010 + matrix(0B10111011) * v1011 +
-                     matrix(0B10111100) * v1100 + matrix(0B10111101) * v1101 +
-                     matrix(0B10111110) * v1110 + matrix(0B10111111) * v1111;
-        arr(i1100) = matrix(0B11000000) * v0000 + matrix(0B11000001) * v0001 +
-                     matrix(0B11000010) * v0010 + matrix(0B11000011) * v0011 +
-                     matrix(0B11000100) * v0100 + matrix(0B11000101) * v0101 +
-                     matrix(0B11000110) * v0110 + matrix(0B11000111) * v0111 +
-                     matrix(0B11001000) * v1000 + matrix(0B11001001) * v1001 +
-                     matrix(0B11001010) * v1010 + matrix(0B11001011) * v1011 +
-                     matrix(0B11001100) * v1100 + matrix(0B11001101) * v1101 +
-                     matrix(0B11001110) * v1110 + matrix(0B11001111) * v1111;
-        arr(i1101) = matrix(0B11010000) * v0000 + matrix(0B11010001) * v0001 +
-                     matrix(0B11010010) * v0010 + matrix(0B11010011) * v0011 +
-                     matrix(0B11010100) * v0100 + matrix(0B11010101) * v0101 +
-                     matrix(0B11010110) * v0110 + matrix(0B11010111) * v0111 +
-                     matrix(0B11011000) * v1000 + matrix(0B11011001) * v1001 +
-                     matrix(0B11011010) * v1010 + matrix(0B11011011) * v1011 +
-                     matrix(0B11011100) * v1100 + matrix(0B11011101) * v1101 +
-                     matrix(0B11011110) * v1110 + matrix(0B11011111) * v1111;
-        arr(i1110) = matrix(0B11100000) * v0000 + matrix(0B11100001) * v0001 +
-                     matrix(0B11100010) * v0010 + matrix(0B11100011) * v0011 +
-                     matrix(0B11100100) * v0100 + matrix(0B11100101) * v0101 +
-                     matrix(0B11100110) * v0110 + matrix(0B11100111) * v0111 +
-                     matrix(0B11101000) * v1000 + matrix(0B11101001) * v1001 +
-                     matrix(0B11101010) * v1010 + matrix(0B11101011) * v1011 +
-                     matrix(0B11101100) * v1100 + matrix(0B11101101) * v1101 +
-                     matrix(0B11101110) * v1110 + matrix(0B11101111) * v1111;
-        arr(i1111) = matrix(0B11110000) * v0000 + matrix(0B11110001) * v0001 +
-                     matrix(0B11110010) * v0010 + matrix(0B11110011) * v0011 +
-                     matrix(0B11110100) * v0100 + matrix(0B11110101) * v0101 +
-                     matrix(0B11110110) * v0110 + matrix(0B11110111) * v0111 +
-                     matrix(0B11111000) * v1000 + matrix(0B11111001) * v1001 +
-                     matrix(0B11111010) * v1010 + matrix(0B11111011) * v1011 +
-                     matrix(0B11111100) * v1100 + matrix(0B11111101) * v1101 +
-                     matrix(0B11111110) * v1110 + matrix(0B11111111) * v1111;
+        arr(i0000) = VECSUM4(0B0000);
+        arr(i0001) = VECSUM4(0B0001);
+        arr(i0010) = VECSUM4(0B0010);
+        arr(i0011) = VECSUM4(0B0011);
+        arr(i0100) = VECSUM4(0B0100);
+        arr(i0101) = VECSUM4(0B0101);
+        arr(i0110) = VECSUM4(0B0110);
+        arr(i0111) = VECSUM4(0B0111);
+        arr(i1000) = VECSUM4(0B1000);
+        arr(i1001) = VECSUM4(0B1001);
+        arr(i1010) = VECSUM4(0B1010);
+        arr(i1011) = VECSUM4(0B1011);
+        arr(i1100) = VECSUM4(0B1100);
+        arr(i1101) = VECSUM4(0B1101);
+        arr(i1110) = VECSUM4(0B1110);
+        arr(i1111) = VECSUM4(0B1111);
     }
 };
 
-template <class PrecisionT, std::size_t n_wires> struct apply5QubitOpFunctor {
+#define ENTRY5(xx, yy) xx << 5 | yy
+#define TERM5(xx, yy, vyy) matrix(ENTRY5(xx, yy)) * vyy
+#define VECSUM5(xx)                                                            \
+    TERM5(xx, 0B00000, v00000) + TERM5(xx, 0B00001, v00001) +                  \
+        TERM5(xx, 0B00010, v00010) + TERM5(xx, 0B00011, v00011) +              \
+        TERM5(xx, 0B00100, v00100) + TERM5(xx, 0B00101, v00101) +              \
+        TERM5(xx, 0B00110, v00110) + TERM5(xx, 0B00111, v00111) +              \
+        TERM5(xx, 0B01000, v01000) + TERM5(xx, 0B01001, v01001) +              \
+        TERM5(xx, 0B01010, v01010) + TERM5(xx, 0B01011, v01011) +              \
+        TERM5(xx, 0B01100, v01100) + TERM5(xx, 0B01101, v01101) +              \
+        TERM5(xx, 0B01110, v01110) + TERM5(xx, 0B01111, v01111) +              \
+        TERM5(xx, 0B10000, v10000) + TERM5(xx, 0B10001, v10001) +              \
+        TERM5(xx, 0B10010, v10010) + TERM5(xx, 0B10011, v10011) +              \
+        TERM5(xx, 0B10100, v10100) + TERM5(xx, 0B10101, v10101) +              \
+        TERM5(xx, 0B10110, v10110) + TERM5(xx, 0B10111, v10111) +              \
+        TERM5(xx, 0B11000, v11000) + TERM5(xx, 0B11001, v11001) +              \
+        TERM5(xx, 0B11010, v11010) + TERM5(xx, 0B11011, v11011) +              \
+        TERM5(xx, 0B11100, v11100) + TERM5(xx, 0B11101, v11101) +              \
+        TERM5(xx, 0B11110, v11110) + TERM5(xx, 0B11111, v11111)
+template <class PrecisionT> struct apply5QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -2065,7 +1785,8 @@ template <class PrecisionT, std::size_t n_wires> struct apply5QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
-    std::size_t dim;
+    const std::size_t n_wires = 5;
+    const std::size_t dim = 1U << n_wires;
     std::size_t num_qubits;
 
     apply5QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -2079,877 +1800,108 @@ template <class PrecisionT, std::size_t n_wires> struct apply5QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        dim = 1U << n_wires;
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k) const {
         const std::size_t kdim = k * dim;
-
-        std::size_t i00000 = kdim | 0;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00000 >> (n_wires - pos - 1)) ^
-                             (i00000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00000 = i00000 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00000, 0B00000);
         ComplexT v00000 = arr(i00000);
-
-        std::size_t i00001 = kdim | 1;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00001 >> (n_wires - pos - 1)) ^
-                             (i00001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00001 = i00001 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00001, 0B00001);
         ComplexT v00001 = arr(i00001);
-
-        std::size_t i00010 = kdim | 2;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00010 >> (n_wires - pos - 1)) ^
-                             (i00010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00010 = i00010 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00010, 0B00010);
         ComplexT v00010 = arr(i00010);
-
-        std::size_t i00011 = kdim | 3;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00011 >> (n_wires - pos - 1)) ^
-                             (i00011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00011 = i00011 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00011, 0B00011);
         ComplexT v00011 = arr(i00011);
-
-        std::size_t i00100 = kdim | 4;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00100 >> (n_wires - pos - 1)) ^
-                             (i00100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00100 = i00100 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00100, 0B00100);
         ComplexT v00100 = arr(i00100);
-
-        std::size_t i00101 = kdim | 5;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00101 >> (n_wires - pos - 1)) ^
-                             (i00101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00101 = i00101 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00101, 0B00101);
         ComplexT v00101 = arr(i00101);
-
-        std::size_t i00110 = kdim | 6;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00110 >> (n_wires - pos - 1)) ^
-                             (i00110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00110 = i00110 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00110, 0B00110);
         ComplexT v00110 = arr(i00110);
-
-        std::size_t i00111 = kdim | 7;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i00111 >> (n_wires - pos - 1)) ^
-                             (i00111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i00111 = i00111 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i00111, 0B00111);
         ComplexT v00111 = arr(i00111);
-
-        std::size_t i01000 = kdim | 8;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01000 >> (n_wires - pos - 1)) ^
-                             (i01000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01000 = i01000 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01000, 0B01000);
         ComplexT v01000 = arr(i01000);
-
-        std::size_t i01001 = kdim | 9;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01001 >> (n_wires - pos - 1)) ^
-                             (i01001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01001 = i01001 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01001, 0B01001);
         ComplexT v01001 = arr(i01001);
-
-        std::size_t i01010 = kdim | 10;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01010 >> (n_wires - pos - 1)) ^
-                             (i01010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01010 = i01010 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01010, 0B01010);
         ComplexT v01010 = arr(i01010);
-
-        std::size_t i01011 = kdim | 11;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01011 >> (n_wires - pos - 1)) ^
-                             (i01011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01011 = i01011 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01011, 0B01011);
         ComplexT v01011 = arr(i01011);
-
-        std::size_t i01100 = kdim | 12;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01100 >> (n_wires - pos - 1)) ^
-                             (i01100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01100 = i01100 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01100, 0B01100);
         ComplexT v01100 = arr(i01100);
-
-        std::size_t i01101 = kdim | 13;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01101 >> (n_wires - pos - 1)) ^
-                             (i01101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01101 = i01101 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01101, 0B01101);
         ComplexT v01101 = arr(i01101);
-
-        std::size_t i01110 = kdim | 14;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01110 >> (n_wires - pos - 1)) ^
-                             (i01110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01110 = i01110 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01110, 0B01110);
         ComplexT v01110 = arr(i01110);
-
-        std::size_t i01111 = kdim | 15;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i01111 >> (n_wires - pos - 1)) ^
-                             (i01111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i01111 = i01111 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i01111, 0B01111);
         ComplexT v01111 = arr(i01111);
-
-        std::size_t i10000 = kdim | 16;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10000 >> (n_wires - pos - 1)) ^
-                             (i10000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10000 = i10000 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10000, 0B10000);
         ComplexT v10000 = arr(i10000);
-
-        std::size_t i10001 = kdim | 17;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10001 >> (n_wires - pos - 1)) ^
-                             (i10001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10001 = i10001 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10001, 0B10001);
         ComplexT v10001 = arr(i10001);
-
-        std::size_t i10010 = kdim | 18;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10010 >> (n_wires - pos - 1)) ^
-                             (i10010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10010 = i10010 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10010, 0B10010);
         ComplexT v10010 = arr(i10010);
-
-        std::size_t i10011 = kdim | 19;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10011 >> (n_wires - pos - 1)) ^
-                             (i10011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10011 = i10011 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10011, 0B10011);
         ComplexT v10011 = arr(i10011);
-
-        std::size_t i10100 = kdim | 20;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10100 >> (n_wires - pos - 1)) ^
-                             (i10100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10100 = i10100 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10100, 0B10100);
         ComplexT v10100 = arr(i10100);
-
-        std::size_t i10101 = kdim | 21;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10101 >> (n_wires - pos - 1)) ^
-                             (i10101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10101 = i10101 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10101, 0B10101);
         ComplexT v10101 = arr(i10101);
-
-        std::size_t i10110 = kdim | 22;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10110 >> (n_wires - pos - 1)) ^
-                             (i10110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10110 = i10110 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10110, 0B10110);
         ComplexT v10110 = arr(i10110);
-
-        std::size_t i10111 = kdim | 23;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i10111 >> (n_wires - pos - 1)) ^
-                             (i10111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i10111 = i10111 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i10111, 0B10111);
         ComplexT v10111 = arr(i10111);
-
-        std::size_t i11000 = kdim | 24;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11000 >> (n_wires - pos - 1)) ^
-                             (i11000 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11000 = i11000 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11000, 0B11000);
         ComplexT v11000 = arr(i11000);
-
-        std::size_t i11001 = kdim | 25;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11001 >> (n_wires - pos - 1)) ^
-                             (i11001 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11001 = i11001 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11001, 0B11001);
         ComplexT v11001 = arr(i11001);
-
-        std::size_t i11010 = kdim | 26;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11010 >> (n_wires - pos - 1)) ^
-                             (i11010 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11010 = i11010 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11010, 0B11010);
         ComplexT v11010 = arr(i11010);
-
-        std::size_t i11011 = kdim | 27;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11011 >> (n_wires - pos - 1)) ^
-                             (i11011 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11011 = i11011 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11011, 0B11011);
         ComplexT v11011 = arr(i11011);
-
-        std::size_t i11100 = kdim | 28;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11100 >> (n_wires - pos - 1)) ^
-                             (i11100 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11100 = i11100 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11100, 0B11100);
         ComplexT v11100 = arr(i11100);
-
-        std::size_t i11101 = kdim | 29;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11101 >> (n_wires - pos - 1)) ^
-                             (i11101 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11101 = i11101 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11101, 0B11101);
         ComplexT v11101 = arr(i11101);
-
-        std::size_t i11110 = kdim | 30;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11110 >> (n_wires - pos - 1)) ^
-                             (i11110 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11110 = i11110 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11110, 0B11110);
         ComplexT v11110 = arr(i11110);
-
-        std::size_t i11111 = kdim | 31;
-        for (std::size_t pos = 0; pos < n_wires; pos++) {
-            std::size_t x = ((i11111 >> (n_wires - pos - 1)) ^
-                             (i11111 >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-            i11111 = i11111 ^ ((x << (n_wires - pos - 1)) |
-                               (x << (num_qubits - wires(pos) - 1)));
-        }
+        INDEX(i11111, 0B11111);
         ComplexT v11111 = arr(i11111);
 
-        arr(i00000) =
-            matrix(0B0000000000) * v00000 + matrix(0B0000000001) * v00001 +
-            matrix(0B0000000010) * v00010 + matrix(0B0000000011) * v00011 +
-            matrix(0B0000000100) * v00100 + matrix(0B0000000101) * v00101 +
-            matrix(0B0000000110) * v00110 + matrix(0B0000000111) * v00111 +
-            matrix(0B0000001000) * v01000 + matrix(0B0000001001) * v01001 +
-            matrix(0B0000001010) * v01010 + matrix(0B0000001011) * v01011 +
-            matrix(0B0000001100) * v01100 + matrix(0B0000001101) * v01101 +
-            matrix(0B0000001110) * v01110 + matrix(0B0000001111) * v01111 +
-            matrix(0B0000010000) * v10000 + matrix(0B0000010001) * v10001 +
-            matrix(0B0000010010) * v10010 + matrix(0B0000010011) * v10011 +
-            matrix(0B0000010100) * v10100 + matrix(0B0000010101) * v10101 +
-            matrix(0B0000010110) * v10110 + matrix(0B0000010111) * v10111 +
-            matrix(0B0000011000) * v11000 + matrix(0B0000011001) * v11001 +
-            matrix(0B0000011010) * v11010 + matrix(0B0000011011) * v11011 +
-            matrix(0B0000011100) * v11100 + matrix(0B0000011101) * v11101 +
-            matrix(0B0000011110) * v11110 + matrix(0B0000011111) * v11111;
-        arr(i00001) =
-            matrix(0B0000100000) * v00000 + matrix(0B0000100001) * v00001 +
-            matrix(0B0000100010) * v00010 + matrix(0B0000100011) * v00011 +
-            matrix(0B0000100100) * v00100 + matrix(0B0000100101) * v00101 +
-            matrix(0B0000100110) * v00110 + matrix(0B0000100111) * v00111 +
-            matrix(0B0000101000) * v01000 + matrix(0B0000101001) * v01001 +
-            matrix(0B0000101010) * v01010 + matrix(0B0000101011) * v01011 +
-            matrix(0B0000101100) * v01100 + matrix(0B0000101101) * v01101 +
-            matrix(0B0000101110) * v01110 + matrix(0B0000101111) * v01111 +
-            matrix(0B0000110000) * v10000 + matrix(0B0000110001) * v10001 +
-            matrix(0B0000110010) * v10010 + matrix(0B0000110011) * v10011 +
-            matrix(0B0000110100) * v10100 + matrix(0B0000110101) * v10101 +
-            matrix(0B0000110110) * v10110 + matrix(0B0000110111) * v10111 +
-            matrix(0B0000111000) * v11000 + matrix(0B0000111001) * v11001 +
-            matrix(0B0000111010) * v11010 + matrix(0B0000111011) * v11011 +
-            matrix(0B0000111100) * v11100 + matrix(0B0000111101) * v11101 +
-            matrix(0B0000111110) * v11110 + matrix(0B0000111111) * v11111;
-        arr(i00010) =
-            matrix(0B0001000000) * v00000 + matrix(0B0001000001) * v00001 +
-            matrix(0B0001000010) * v00010 + matrix(0B0001000011) * v00011 +
-            matrix(0B0001000100) * v00100 + matrix(0B0001000101) * v00101 +
-            matrix(0B0001000110) * v00110 + matrix(0B0001000111) * v00111 +
-            matrix(0B0001001000) * v01000 + matrix(0B0001001001) * v01001 +
-            matrix(0B0001001010) * v01010 + matrix(0B0001001011) * v01011 +
-            matrix(0B0001001100) * v01100 + matrix(0B0001001101) * v01101 +
-            matrix(0B0001001110) * v01110 + matrix(0B0001001111) * v01111 +
-            matrix(0B0001010000) * v10000 + matrix(0B0001010001) * v10001 +
-            matrix(0B0001010010) * v10010 + matrix(0B0001010011) * v10011 +
-            matrix(0B0001010100) * v10100 + matrix(0B0001010101) * v10101 +
-            matrix(0B0001010110) * v10110 + matrix(0B0001010111) * v10111 +
-            matrix(0B0001011000) * v11000 + matrix(0B0001011001) * v11001 +
-            matrix(0B0001011010) * v11010 + matrix(0B0001011011) * v11011 +
-            matrix(0B0001011100) * v11100 + matrix(0B0001011101) * v11101 +
-            matrix(0B0001011110) * v11110 + matrix(0B0001011111) * v11111;
-        arr(i00011) =
-            matrix(0B0001100000) * v00000 + matrix(0B0001100001) * v00001 +
-            matrix(0B0001100010) * v00010 + matrix(0B0001100011) * v00011 +
-            matrix(0B0001100100) * v00100 + matrix(0B0001100101) * v00101 +
-            matrix(0B0001100110) * v00110 + matrix(0B0001100111) * v00111 +
-            matrix(0B0001101000) * v01000 + matrix(0B0001101001) * v01001 +
-            matrix(0B0001101010) * v01010 + matrix(0B0001101011) * v01011 +
-            matrix(0B0001101100) * v01100 + matrix(0B0001101101) * v01101 +
-            matrix(0B0001101110) * v01110 + matrix(0B0001101111) * v01111 +
-            matrix(0B0001110000) * v10000 + matrix(0B0001110001) * v10001 +
-            matrix(0B0001110010) * v10010 + matrix(0B0001110011) * v10011 +
-            matrix(0B0001110100) * v10100 + matrix(0B0001110101) * v10101 +
-            matrix(0B0001110110) * v10110 + matrix(0B0001110111) * v10111 +
-            matrix(0B0001111000) * v11000 + matrix(0B0001111001) * v11001 +
-            matrix(0B0001111010) * v11010 + matrix(0B0001111011) * v11011 +
-            matrix(0B0001111100) * v11100 + matrix(0B0001111101) * v11101 +
-            matrix(0B0001111110) * v11110 + matrix(0B0001111111) * v11111;
-        arr(i00100) =
-            matrix(0B0010000000) * v00000 + matrix(0B0010000001) * v00001 +
-            matrix(0B0010000010) * v00010 + matrix(0B0010000011) * v00011 +
-            matrix(0B0010000100) * v00100 + matrix(0B0010000101) * v00101 +
-            matrix(0B0010000110) * v00110 + matrix(0B0010000111) * v00111 +
-            matrix(0B0010001000) * v01000 + matrix(0B0010001001) * v01001 +
-            matrix(0B0010001010) * v01010 + matrix(0B0010001011) * v01011 +
-            matrix(0B0010001100) * v01100 + matrix(0B0010001101) * v01101 +
-            matrix(0B0010001110) * v01110 + matrix(0B0010001111) * v01111 +
-            matrix(0B0010010000) * v10000 + matrix(0B0010010001) * v10001 +
-            matrix(0B0010010010) * v10010 + matrix(0B0010010011) * v10011 +
-            matrix(0B0010010100) * v10100 + matrix(0B0010010101) * v10101 +
-            matrix(0B0010010110) * v10110 + matrix(0B0010010111) * v10111 +
-            matrix(0B0010011000) * v11000 + matrix(0B0010011001) * v11001 +
-            matrix(0B0010011010) * v11010 + matrix(0B0010011011) * v11011 +
-            matrix(0B0010011100) * v11100 + matrix(0B0010011101) * v11101 +
-            matrix(0B0010011110) * v11110 + matrix(0B0010011111) * v11111;
-        arr(i00101) =
-            matrix(0B0010100000) * v00000 + matrix(0B0010100001) * v00001 +
-            matrix(0B0010100010) * v00010 + matrix(0B0010100011) * v00011 +
-            matrix(0B0010100100) * v00100 + matrix(0B0010100101) * v00101 +
-            matrix(0B0010100110) * v00110 + matrix(0B0010100111) * v00111 +
-            matrix(0B0010101000) * v01000 + matrix(0B0010101001) * v01001 +
-            matrix(0B0010101010) * v01010 + matrix(0B0010101011) * v01011 +
-            matrix(0B0010101100) * v01100 + matrix(0B0010101101) * v01101 +
-            matrix(0B0010101110) * v01110 + matrix(0B0010101111) * v01111 +
-            matrix(0B0010110000) * v10000 + matrix(0B0010110001) * v10001 +
-            matrix(0B0010110010) * v10010 + matrix(0B0010110011) * v10011 +
-            matrix(0B0010110100) * v10100 + matrix(0B0010110101) * v10101 +
-            matrix(0B0010110110) * v10110 + matrix(0B0010110111) * v10111 +
-            matrix(0B0010111000) * v11000 + matrix(0B0010111001) * v11001 +
-            matrix(0B0010111010) * v11010 + matrix(0B0010111011) * v11011 +
-            matrix(0B0010111100) * v11100 + matrix(0B0010111101) * v11101 +
-            matrix(0B0010111110) * v11110 + matrix(0B0010111111) * v11111;
-        arr(i00110) =
-            matrix(0B0011000000) * v00000 + matrix(0B0011000001) * v00001 +
-            matrix(0B0011000010) * v00010 + matrix(0B0011000011) * v00011 +
-            matrix(0B0011000100) * v00100 + matrix(0B0011000101) * v00101 +
-            matrix(0B0011000110) * v00110 + matrix(0B0011000111) * v00111 +
-            matrix(0B0011001000) * v01000 + matrix(0B0011001001) * v01001 +
-            matrix(0B0011001010) * v01010 + matrix(0B0011001011) * v01011 +
-            matrix(0B0011001100) * v01100 + matrix(0B0011001101) * v01101 +
-            matrix(0B0011001110) * v01110 + matrix(0B0011001111) * v01111 +
-            matrix(0B0011010000) * v10000 + matrix(0B0011010001) * v10001 +
-            matrix(0B0011010010) * v10010 + matrix(0B0011010011) * v10011 +
-            matrix(0B0011010100) * v10100 + matrix(0B0011010101) * v10101 +
-            matrix(0B0011010110) * v10110 + matrix(0B0011010111) * v10111 +
-            matrix(0B0011011000) * v11000 + matrix(0B0011011001) * v11001 +
-            matrix(0B0011011010) * v11010 + matrix(0B0011011011) * v11011 +
-            matrix(0B0011011100) * v11100 + matrix(0B0011011101) * v11101 +
-            matrix(0B0011011110) * v11110 + matrix(0B0011011111) * v11111;
-        arr(i00111) =
-            matrix(0B0011100000) * v00000 + matrix(0B0011100001) * v00001 +
-            matrix(0B0011100010) * v00010 + matrix(0B0011100011) * v00011 +
-            matrix(0B0011100100) * v00100 + matrix(0B0011100101) * v00101 +
-            matrix(0B0011100110) * v00110 + matrix(0B0011100111) * v00111 +
-            matrix(0B0011101000) * v01000 + matrix(0B0011101001) * v01001 +
-            matrix(0B0011101010) * v01010 + matrix(0B0011101011) * v01011 +
-            matrix(0B0011101100) * v01100 + matrix(0B0011101101) * v01101 +
-            matrix(0B0011101110) * v01110 + matrix(0B0011101111) * v01111 +
-            matrix(0B0011110000) * v10000 + matrix(0B0011110001) * v10001 +
-            matrix(0B0011110010) * v10010 + matrix(0B0011110011) * v10011 +
-            matrix(0B0011110100) * v10100 + matrix(0B0011110101) * v10101 +
-            matrix(0B0011110110) * v10110 + matrix(0B0011110111) * v10111 +
-            matrix(0B0011111000) * v11000 + matrix(0B0011111001) * v11001 +
-            matrix(0B0011111010) * v11010 + matrix(0B0011111011) * v11011 +
-            matrix(0B0011111100) * v11100 + matrix(0B0011111101) * v11101 +
-            matrix(0B0011111110) * v11110 + matrix(0B0011111111) * v11111;
-        arr(i01000) =
-            matrix(0B0100000000) * v00000 + matrix(0B0100000001) * v00001 +
-            matrix(0B0100000010) * v00010 + matrix(0B0100000011) * v00011 +
-            matrix(0B0100000100) * v00100 + matrix(0B0100000101) * v00101 +
-            matrix(0B0100000110) * v00110 + matrix(0B0100000111) * v00111 +
-            matrix(0B0100001000) * v01000 + matrix(0B0100001001) * v01001 +
-            matrix(0B0100001010) * v01010 + matrix(0B0100001011) * v01011 +
-            matrix(0B0100001100) * v01100 + matrix(0B0100001101) * v01101 +
-            matrix(0B0100001110) * v01110 + matrix(0B0100001111) * v01111 +
-            matrix(0B0100010000) * v10000 + matrix(0B0100010001) * v10001 +
-            matrix(0B0100010010) * v10010 + matrix(0B0100010011) * v10011 +
-            matrix(0B0100010100) * v10100 + matrix(0B0100010101) * v10101 +
-            matrix(0B0100010110) * v10110 + matrix(0B0100010111) * v10111 +
-            matrix(0B0100011000) * v11000 + matrix(0B0100011001) * v11001 +
-            matrix(0B0100011010) * v11010 + matrix(0B0100011011) * v11011 +
-            matrix(0B0100011100) * v11100 + matrix(0B0100011101) * v11101 +
-            matrix(0B0100011110) * v11110 + matrix(0B0100011111) * v11111;
-        arr(i01001) =
-            matrix(0B0100100000) * v00000 + matrix(0B0100100001) * v00001 +
-            matrix(0B0100100010) * v00010 + matrix(0B0100100011) * v00011 +
-            matrix(0B0100100100) * v00100 + matrix(0B0100100101) * v00101 +
-            matrix(0B0100100110) * v00110 + matrix(0B0100100111) * v00111 +
-            matrix(0B0100101000) * v01000 + matrix(0B0100101001) * v01001 +
-            matrix(0B0100101010) * v01010 + matrix(0B0100101011) * v01011 +
-            matrix(0B0100101100) * v01100 + matrix(0B0100101101) * v01101 +
-            matrix(0B0100101110) * v01110 + matrix(0B0100101111) * v01111 +
-            matrix(0B0100110000) * v10000 + matrix(0B0100110001) * v10001 +
-            matrix(0B0100110010) * v10010 + matrix(0B0100110011) * v10011 +
-            matrix(0B0100110100) * v10100 + matrix(0B0100110101) * v10101 +
-            matrix(0B0100110110) * v10110 + matrix(0B0100110111) * v10111 +
-            matrix(0B0100111000) * v11000 + matrix(0B0100111001) * v11001 +
-            matrix(0B0100111010) * v11010 + matrix(0B0100111011) * v11011 +
-            matrix(0B0100111100) * v11100 + matrix(0B0100111101) * v11101 +
-            matrix(0B0100111110) * v11110 + matrix(0B0100111111) * v11111;
-        arr(i01010) =
-            matrix(0B0101000000) * v00000 + matrix(0B0101000001) * v00001 +
-            matrix(0B0101000010) * v00010 + matrix(0B0101000011) * v00011 +
-            matrix(0B0101000100) * v00100 + matrix(0B0101000101) * v00101 +
-            matrix(0B0101000110) * v00110 + matrix(0B0101000111) * v00111 +
-            matrix(0B0101001000) * v01000 + matrix(0B0101001001) * v01001 +
-            matrix(0B0101001010) * v01010 + matrix(0B0101001011) * v01011 +
-            matrix(0B0101001100) * v01100 + matrix(0B0101001101) * v01101 +
-            matrix(0B0101001110) * v01110 + matrix(0B0101001111) * v01111 +
-            matrix(0B0101010000) * v10000 + matrix(0B0101010001) * v10001 +
-            matrix(0B0101010010) * v10010 + matrix(0B0101010011) * v10011 +
-            matrix(0B0101010100) * v10100 + matrix(0B0101010101) * v10101 +
-            matrix(0B0101010110) * v10110 + matrix(0B0101010111) * v10111 +
-            matrix(0B0101011000) * v11000 + matrix(0B0101011001) * v11001 +
-            matrix(0B0101011010) * v11010 + matrix(0B0101011011) * v11011 +
-            matrix(0B0101011100) * v11100 + matrix(0B0101011101) * v11101 +
-            matrix(0B0101011110) * v11110 + matrix(0B0101011111) * v11111;
-        arr(i01011) =
-            matrix(0B0101100000) * v00000 + matrix(0B0101100001) * v00001 +
-            matrix(0B0101100010) * v00010 + matrix(0B0101100011) * v00011 +
-            matrix(0B0101100100) * v00100 + matrix(0B0101100101) * v00101 +
-            matrix(0B0101100110) * v00110 + matrix(0B0101100111) * v00111 +
-            matrix(0B0101101000) * v01000 + matrix(0B0101101001) * v01001 +
-            matrix(0B0101101010) * v01010 + matrix(0B0101101011) * v01011 +
-            matrix(0B0101101100) * v01100 + matrix(0B0101101101) * v01101 +
-            matrix(0B0101101110) * v01110 + matrix(0B0101101111) * v01111 +
-            matrix(0B0101110000) * v10000 + matrix(0B0101110001) * v10001 +
-            matrix(0B0101110010) * v10010 + matrix(0B0101110011) * v10011 +
-            matrix(0B0101110100) * v10100 + matrix(0B0101110101) * v10101 +
-            matrix(0B0101110110) * v10110 + matrix(0B0101110111) * v10111 +
-            matrix(0B0101111000) * v11000 + matrix(0B0101111001) * v11001 +
-            matrix(0B0101111010) * v11010 + matrix(0B0101111011) * v11011 +
-            matrix(0B0101111100) * v11100 + matrix(0B0101111101) * v11101 +
-            matrix(0B0101111110) * v11110 + matrix(0B0101111111) * v11111;
-        arr(i01100) =
-            matrix(0B0110000000) * v00000 + matrix(0B0110000001) * v00001 +
-            matrix(0B0110000010) * v00010 + matrix(0B0110000011) * v00011 +
-            matrix(0B0110000100) * v00100 + matrix(0B0110000101) * v00101 +
-            matrix(0B0110000110) * v00110 + matrix(0B0110000111) * v00111 +
-            matrix(0B0110001000) * v01000 + matrix(0B0110001001) * v01001 +
-            matrix(0B0110001010) * v01010 + matrix(0B0110001011) * v01011 +
-            matrix(0B0110001100) * v01100 + matrix(0B0110001101) * v01101 +
-            matrix(0B0110001110) * v01110 + matrix(0B0110001111) * v01111 +
-            matrix(0B0110010000) * v10000 + matrix(0B0110010001) * v10001 +
-            matrix(0B0110010010) * v10010 + matrix(0B0110010011) * v10011 +
-            matrix(0B0110010100) * v10100 + matrix(0B0110010101) * v10101 +
-            matrix(0B0110010110) * v10110 + matrix(0B0110010111) * v10111 +
-            matrix(0B0110011000) * v11000 + matrix(0B0110011001) * v11001 +
-            matrix(0B0110011010) * v11010 + matrix(0B0110011011) * v11011 +
-            matrix(0B0110011100) * v11100 + matrix(0B0110011101) * v11101 +
-            matrix(0B0110011110) * v11110 + matrix(0B0110011111) * v11111;
-        arr(i01101) =
-            matrix(0B0110100000) * v00000 + matrix(0B0110100001) * v00001 +
-            matrix(0B0110100010) * v00010 + matrix(0B0110100011) * v00011 +
-            matrix(0B0110100100) * v00100 + matrix(0B0110100101) * v00101 +
-            matrix(0B0110100110) * v00110 + matrix(0B0110100111) * v00111 +
-            matrix(0B0110101000) * v01000 + matrix(0B0110101001) * v01001 +
-            matrix(0B0110101010) * v01010 + matrix(0B0110101011) * v01011 +
-            matrix(0B0110101100) * v01100 + matrix(0B0110101101) * v01101 +
-            matrix(0B0110101110) * v01110 + matrix(0B0110101111) * v01111 +
-            matrix(0B0110110000) * v10000 + matrix(0B0110110001) * v10001 +
-            matrix(0B0110110010) * v10010 + matrix(0B0110110011) * v10011 +
-            matrix(0B0110110100) * v10100 + matrix(0B0110110101) * v10101 +
-            matrix(0B0110110110) * v10110 + matrix(0B0110110111) * v10111 +
-            matrix(0B0110111000) * v11000 + matrix(0B0110111001) * v11001 +
-            matrix(0B0110111010) * v11010 + matrix(0B0110111011) * v11011 +
-            matrix(0B0110111100) * v11100 + matrix(0B0110111101) * v11101 +
-            matrix(0B0110111110) * v11110 + matrix(0B0110111111) * v11111;
-        arr(i01110) =
-            matrix(0B0111000000) * v00000 + matrix(0B0111000001) * v00001 +
-            matrix(0B0111000010) * v00010 + matrix(0B0111000011) * v00011 +
-            matrix(0B0111000100) * v00100 + matrix(0B0111000101) * v00101 +
-            matrix(0B0111000110) * v00110 + matrix(0B0111000111) * v00111 +
-            matrix(0B0111001000) * v01000 + matrix(0B0111001001) * v01001 +
-            matrix(0B0111001010) * v01010 + matrix(0B0111001011) * v01011 +
-            matrix(0B0111001100) * v01100 + matrix(0B0111001101) * v01101 +
-            matrix(0B0111001110) * v01110 + matrix(0B0111001111) * v01111 +
-            matrix(0B0111010000) * v10000 + matrix(0B0111010001) * v10001 +
-            matrix(0B0111010010) * v10010 + matrix(0B0111010011) * v10011 +
-            matrix(0B0111010100) * v10100 + matrix(0B0111010101) * v10101 +
-            matrix(0B0111010110) * v10110 + matrix(0B0111010111) * v10111 +
-            matrix(0B0111011000) * v11000 + matrix(0B0111011001) * v11001 +
-            matrix(0B0111011010) * v11010 + matrix(0B0111011011) * v11011 +
-            matrix(0B0111011100) * v11100 + matrix(0B0111011101) * v11101 +
-            matrix(0B0111011110) * v11110 + matrix(0B0111011111) * v11111;
-        arr(i01111) =
-            matrix(0B0111100000) * v00000 + matrix(0B0111100001) * v00001 +
-            matrix(0B0111100010) * v00010 + matrix(0B0111100011) * v00011 +
-            matrix(0B0111100100) * v00100 + matrix(0B0111100101) * v00101 +
-            matrix(0B0111100110) * v00110 + matrix(0B0111100111) * v00111 +
-            matrix(0B0111101000) * v01000 + matrix(0B0111101001) * v01001 +
-            matrix(0B0111101010) * v01010 + matrix(0B0111101011) * v01011 +
-            matrix(0B0111101100) * v01100 + matrix(0B0111101101) * v01101 +
-            matrix(0B0111101110) * v01110 + matrix(0B0111101111) * v01111 +
-            matrix(0B0111110000) * v10000 + matrix(0B0111110001) * v10001 +
-            matrix(0B0111110010) * v10010 + matrix(0B0111110011) * v10011 +
-            matrix(0B0111110100) * v10100 + matrix(0B0111110101) * v10101 +
-            matrix(0B0111110110) * v10110 + matrix(0B0111110111) * v10111 +
-            matrix(0B0111111000) * v11000 + matrix(0B0111111001) * v11001 +
-            matrix(0B0111111010) * v11010 + matrix(0B0111111011) * v11011 +
-            matrix(0B0111111100) * v11100 + matrix(0B0111111101) * v11101 +
-            matrix(0B0111111110) * v11110 + matrix(0B0111111111) * v11111;
-        arr(i10000) =
-            matrix(0B1000000000) * v00000 + matrix(0B1000000001) * v00001 +
-            matrix(0B1000000010) * v00010 + matrix(0B1000000011) * v00011 +
-            matrix(0B1000000100) * v00100 + matrix(0B1000000101) * v00101 +
-            matrix(0B1000000110) * v00110 + matrix(0B1000000111) * v00111 +
-            matrix(0B1000001000) * v01000 + matrix(0B1000001001) * v01001 +
-            matrix(0B1000001010) * v01010 + matrix(0B1000001011) * v01011 +
-            matrix(0B1000001100) * v01100 + matrix(0B1000001101) * v01101 +
-            matrix(0B1000001110) * v01110 + matrix(0B1000001111) * v01111 +
-            matrix(0B1000010000) * v10000 + matrix(0B1000010001) * v10001 +
-            matrix(0B1000010010) * v10010 + matrix(0B1000010011) * v10011 +
-            matrix(0B1000010100) * v10100 + matrix(0B1000010101) * v10101 +
-            matrix(0B1000010110) * v10110 + matrix(0B1000010111) * v10111 +
-            matrix(0B1000011000) * v11000 + matrix(0B1000011001) * v11001 +
-            matrix(0B1000011010) * v11010 + matrix(0B1000011011) * v11011 +
-            matrix(0B1000011100) * v11100 + matrix(0B1000011101) * v11101 +
-            matrix(0B1000011110) * v11110 + matrix(0B1000011111) * v11111;
-        arr(i10001) =
-            matrix(0B1000100000) * v00000 + matrix(0B1000100001) * v00001 +
-            matrix(0B1000100010) * v00010 + matrix(0B1000100011) * v00011 +
-            matrix(0B1000100100) * v00100 + matrix(0B1000100101) * v00101 +
-            matrix(0B1000100110) * v00110 + matrix(0B1000100111) * v00111 +
-            matrix(0B1000101000) * v01000 + matrix(0B1000101001) * v01001 +
-            matrix(0B1000101010) * v01010 + matrix(0B1000101011) * v01011 +
-            matrix(0B1000101100) * v01100 + matrix(0B1000101101) * v01101 +
-            matrix(0B1000101110) * v01110 + matrix(0B1000101111) * v01111 +
-            matrix(0B1000110000) * v10000 + matrix(0B1000110001) * v10001 +
-            matrix(0B1000110010) * v10010 + matrix(0B1000110011) * v10011 +
-            matrix(0B1000110100) * v10100 + matrix(0B1000110101) * v10101 +
-            matrix(0B1000110110) * v10110 + matrix(0B1000110111) * v10111 +
-            matrix(0B1000111000) * v11000 + matrix(0B1000111001) * v11001 +
-            matrix(0B1000111010) * v11010 + matrix(0B1000111011) * v11011 +
-            matrix(0B1000111100) * v11100 + matrix(0B1000111101) * v11101 +
-            matrix(0B1000111110) * v11110 + matrix(0B1000111111) * v11111;
-        arr(i10010) =
-            matrix(0B1001000000) * v00000 + matrix(0B1001000001) * v00001 +
-            matrix(0B1001000010) * v00010 + matrix(0B1001000011) * v00011 +
-            matrix(0B1001000100) * v00100 + matrix(0B1001000101) * v00101 +
-            matrix(0B1001000110) * v00110 + matrix(0B1001000111) * v00111 +
-            matrix(0B1001001000) * v01000 + matrix(0B1001001001) * v01001 +
-            matrix(0B1001001010) * v01010 + matrix(0B1001001011) * v01011 +
-            matrix(0B1001001100) * v01100 + matrix(0B1001001101) * v01101 +
-            matrix(0B1001001110) * v01110 + matrix(0B1001001111) * v01111 +
-            matrix(0B1001010000) * v10000 + matrix(0B1001010001) * v10001 +
-            matrix(0B1001010010) * v10010 + matrix(0B1001010011) * v10011 +
-            matrix(0B1001010100) * v10100 + matrix(0B1001010101) * v10101 +
-            matrix(0B1001010110) * v10110 + matrix(0B1001010111) * v10111 +
-            matrix(0B1001011000) * v11000 + matrix(0B1001011001) * v11001 +
-            matrix(0B1001011010) * v11010 + matrix(0B1001011011) * v11011 +
-            matrix(0B1001011100) * v11100 + matrix(0B1001011101) * v11101 +
-            matrix(0B1001011110) * v11110 + matrix(0B1001011111) * v11111;
-        arr(i10011) =
-            matrix(0B1001100000) * v00000 + matrix(0B1001100001) * v00001 +
-            matrix(0B1001100010) * v00010 + matrix(0B1001100011) * v00011 +
-            matrix(0B1001100100) * v00100 + matrix(0B1001100101) * v00101 +
-            matrix(0B1001100110) * v00110 + matrix(0B1001100111) * v00111 +
-            matrix(0B1001101000) * v01000 + matrix(0B1001101001) * v01001 +
-            matrix(0B1001101010) * v01010 + matrix(0B1001101011) * v01011 +
-            matrix(0B1001101100) * v01100 + matrix(0B1001101101) * v01101 +
-            matrix(0B1001101110) * v01110 + matrix(0B1001101111) * v01111 +
-            matrix(0B1001110000) * v10000 + matrix(0B1001110001) * v10001 +
-            matrix(0B1001110010) * v10010 + matrix(0B1001110011) * v10011 +
-            matrix(0B1001110100) * v10100 + matrix(0B1001110101) * v10101 +
-            matrix(0B1001110110) * v10110 + matrix(0B1001110111) * v10111 +
-            matrix(0B1001111000) * v11000 + matrix(0B1001111001) * v11001 +
-            matrix(0B1001111010) * v11010 + matrix(0B1001111011) * v11011 +
-            matrix(0B1001111100) * v11100 + matrix(0B1001111101) * v11101 +
-            matrix(0B1001111110) * v11110 + matrix(0B1001111111) * v11111;
-        arr(i10100) =
-            matrix(0B1010000000) * v00000 + matrix(0B1010000001) * v00001 +
-            matrix(0B1010000010) * v00010 + matrix(0B1010000011) * v00011 +
-            matrix(0B1010000100) * v00100 + matrix(0B1010000101) * v00101 +
-            matrix(0B1010000110) * v00110 + matrix(0B1010000111) * v00111 +
-            matrix(0B1010001000) * v01000 + matrix(0B1010001001) * v01001 +
-            matrix(0B1010001010) * v01010 + matrix(0B1010001011) * v01011 +
-            matrix(0B1010001100) * v01100 + matrix(0B1010001101) * v01101 +
-            matrix(0B1010001110) * v01110 + matrix(0B1010001111) * v01111 +
-            matrix(0B1010010000) * v10000 + matrix(0B1010010001) * v10001 +
-            matrix(0B1010010010) * v10010 + matrix(0B1010010011) * v10011 +
-            matrix(0B1010010100) * v10100 + matrix(0B1010010101) * v10101 +
-            matrix(0B1010010110) * v10110 + matrix(0B1010010111) * v10111 +
-            matrix(0B1010011000) * v11000 + matrix(0B1010011001) * v11001 +
-            matrix(0B1010011010) * v11010 + matrix(0B1010011011) * v11011 +
-            matrix(0B1010011100) * v11100 + matrix(0B1010011101) * v11101 +
-            matrix(0B1010011110) * v11110 + matrix(0B1010011111) * v11111;
-        arr(i10101) =
-            matrix(0B1010100000) * v00000 + matrix(0B1010100001) * v00001 +
-            matrix(0B1010100010) * v00010 + matrix(0B1010100011) * v00011 +
-            matrix(0B1010100100) * v00100 + matrix(0B1010100101) * v00101 +
-            matrix(0B1010100110) * v00110 + matrix(0B1010100111) * v00111 +
-            matrix(0B1010101000) * v01000 + matrix(0B1010101001) * v01001 +
-            matrix(0B1010101010) * v01010 + matrix(0B1010101011) * v01011 +
-            matrix(0B1010101100) * v01100 + matrix(0B1010101101) * v01101 +
-            matrix(0B1010101110) * v01110 + matrix(0B1010101111) * v01111 +
-            matrix(0B1010110000) * v10000 + matrix(0B1010110001) * v10001 +
-            matrix(0B1010110010) * v10010 + matrix(0B1010110011) * v10011 +
-            matrix(0B1010110100) * v10100 + matrix(0B1010110101) * v10101 +
-            matrix(0B1010110110) * v10110 + matrix(0B1010110111) * v10111 +
-            matrix(0B1010111000) * v11000 + matrix(0B1010111001) * v11001 +
-            matrix(0B1010111010) * v11010 + matrix(0B1010111011) * v11011 +
-            matrix(0B1010111100) * v11100 + matrix(0B1010111101) * v11101 +
-            matrix(0B1010111110) * v11110 + matrix(0B1010111111) * v11111;
-        arr(i10110) =
-            matrix(0B1011000000) * v00000 + matrix(0B1011000001) * v00001 +
-            matrix(0B1011000010) * v00010 + matrix(0B1011000011) * v00011 +
-            matrix(0B1011000100) * v00100 + matrix(0B1011000101) * v00101 +
-            matrix(0B1011000110) * v00110 + matrix(0B1011000111) * v00111 +
-            matrix(0B1011001000) * v01000 + matrix(0B1011001001) * v01001 +
-            matrix(0B1011001010) * v01010 + matrix(0B1011001011) * v01011 +
-            matrix(0B1011001100) * v01100 + matrix(0B1011001101) * v01101 +
-            matrix(0B1011001110) * v01110 + matrix(0B1011001111) * v01111 +
-            matrix(0B1011010000) * v10000 + matrix(0B1011010001) * v10001 +
-            matrix(0B1011010010) * v10010 + matrix(0B1011010011) * v10011 +
-            matrix(0B1011010100) * v10100 + matrix(0B1011010101) * v10101 +
-            matrix(0B1011010110) * v10110 + matrix(0B1011010111) * v10111 +
-            matrix(0B1011011000) * v11000 + matrix(0B1011011001) * v11001 +
-            matrix(0B1011011010) * v11010 + matrix(0B1011011011) * v11011 +
-            matrix(0B1011011100) * v11100 + matrix(0B1011011101) * v11101 +
-            matrix(0B1011011110) * v11110 + matrix(0B1011011111) * v11111;
-        arr(i10111) =
-            matrix(0B1011100000) * v00000 + matrix(0B1011100001) * v00001 +
-            matrix(0B1011100010) * v00010 + matrix(0B1011100011) * v00011 +
-            matrix(0B1011100100) * v00100 + matrix(0B1011100101) * v00101 +
-            matrix(0B1011100110) * v00110 + matrix(0B1011100111) * v00111 +
-            matrix(0B1011101000) * v01000 + matrix(0B1011101001) * v01001 +
-            matrix(0B1011101010) * v01010 + matrix(0B1011101011) * v01011 +
-            matrix(0B1011101100) * v01100 + matrix(0B1011101101) * v01101 +
-            matrix(0B1011101110) * v01110 + matrix(0B1011101111) * v01111 +
-            matrix(0B1011110000) * v10000 + matrix(0B1011110001) * v10001 +
-            matrix(0B1011110010) * v10010 + matrix(0B1011110011) * v10011 +
-            matrix(0B1011110100) * v10100 + matrix(0B1011110101) * v10101 +
-            matrix(0B1011110110) * v10110 + matrix(0B1011110111) * v10111 +
-            matrix(0B1011111000) * v11000 + matrix(0B1011111001) * v11001 +
-            matrix(0B1011111010) * v11010 + matrix(0B1011111011) * v11011 +
-            matrix(0B1011111100) * v11100 + matrix(0B1011111101) * v11101 +
-            matrix(0B1011111110) * v11110 + matrix(0B1011111111) * v11111;
-        arr(i11000) =
-            matrix(0B1100000000) * v00000 + matrix(0B1100000001) * v00001 +
-            matrix(0B1100000010) * v00010 + matrix(0B1100000011) * v00011 +
-            matrix(0B1100000100) * v00100 + matrix(0B1100000101) * v00101 +
-            matrix(0B1100000110) * v00110 + matrix(0B1100000111) * v00111 +
-            matrix(0B1100001000) * v01000 + matrix(0B1100001001) * v01001 +
-            matrix(0B1100001010) * v01010 + matrix(0B1100001011) * v01011 +
-            matrix(0B1100001100) * v01100 + matrix(0B1100001101) * v01101 +
-            matrix(0B1100001110) * v01110 + matrix(0B1100001111) * v01111 +
-            matrix(0B1100010000) * v10000 + matrix(0B1100010001) * v10001 +
-            matrix(0B1100010010) * v10010 + matrix(0B1100010011) * v10011 +
-            matrix(0B1100010100) * v10100 + matrix(0B1100010101) * v10101 +
-            matrix(0B1100010110) * v10110 + matrix(0B1100010111) * v10111 +
-            matrix(0B1100011000) * v11000 + matrix(0B1100011001) * v11001 +
-            matrix(0B1100011010) * v11010 + matrix(0B1100011011) * v11011 +
-            matrix(0B1100011100) * v11100 + matrix(0B1100011101) * v11101 +
-            matrix(0B1100011110) * v11110 + matrix(0B1100011111) * v11111;
-        arr(i11001) =
-            matrix(0B1100100000) * v00000 + matrix(0B1100100001) * v00001 +
-            matrix(0B1100100010) * v00010 + matrix(0B1100100011) * v00011 +
-            matrix(0B1100100100) * v00100 + matrix(0B1100100101) * v00101 +
-            matrix(0B1100100110) * v00110 + matrix(0B1100100111) * v00111 +
-            matrix(0B1100101000) * v01000 + matrix(0B1100101001) * v01001 +
-            matrix(0B1100101010) * v01010 + matrix(0B1100101011) * v01011 +
-            matrix(0B1100101100) * v01100 + matrix(0B1100101101) * v01101 +
-            matrix(0B1100101110) * v01110 + matrix(0B1100101111) * v01111 +
-            matrix(0B1100110000) * v10000 + matrix(0B1100110001) * v10001 +
-            matrix(0B1100110010) * v10010 + matrix(0B1100110011) * v10011 +
-            matrix(0B1100110100) * v10100 + matrix(0B1100110101) * v10101 +
-            matrix(0B1100110110) * v10110 + matrix(0B1100110111) * v10111 +
-            matrix(0B1100111000) * v11000 + matrix(0B1100111001) * v11001 +
-            matrix(0B1100111010) * v11010 + matrix(0B1100111011) * v11011 +
-            matrix(0B1100111100) * v11100 + matrix(0B1100111101) * v11101 +
-            matrix(0B1100111110) * v11110 + matrix(0B1100111111) * v11111;
-        arr(i11010) =
-            matrix(0B1101000000) * v00000 + matrix(0B1101000001) * v00001 +
-            matrix(0B1101000010) * v00010 + matrix(0B1101000011) * v00011 +
-            matrix(0B1101000100) * v00100 + matrix(0B1101000101) * v00101 +
-            matrix(0B1101000110) * v00110 + matrix(0B1101000111) * v00111 +
-            matrix(0B1101001000) * v01000 + matrix(0B1101001001) * v01001 +
-            matrix(0B1101001010) * v01010 + matrix(0B1101001011) * v01011 +
-            matrix(0B1101001100) * v01100 + matrix(0B1101001101) * v01101 +
-            matrix(0B1101001110) * v01110 + matrix(0B1101001111) * v01111 +
-            matrix(0B1101010000) * v10000 + matrix(0B1101010001) * v10001 +
-            matrix(0B1101010010) * v10010 + matrix(0B1101010011) * v10011 +
-            matrix(0B1101010100) * v10100 + matrix(0B1101010101) * v10101 +
-            matrix(0B1101010110) * v10110 + matrix(0B1101010111) * v10111 +
-            matrix(0B1101011000) * v11000 + matrix(0B1101011001) * v11001 +
-            matrix(0B1101011010) * v11010 + matrix(0B1101011011) * v11011 +
-            matrix(0B1101011100) * v11100 + matrix(0B1101011101) * v11101 +
-            matrix(0B1101011110) * v11110 + matrix(0B1101011111) * v11111;
-        arr(i11011) =
-            matrix(0B1101100000) * v00000 + matrix(0B1101100001) * v00001 +
-            matrix(0B1101100010) * v00010 + matrix(0B1101100011) * v00011 +
-            matrix(0B1101100100) * v00100 + matrix(0B1101100101) * v00101 +
-            matrix(0B1101100110) * v00110 + matrix(0B1101100111) * v00111 +
-            matrix(0B1101101000) * v01000 + matrix(0B1101101001) * v01001 +
-            matrix(0B1101101010) * v01010 + matrix(0B1101101011) * v01011 +
-            matrix(0B1101101100) * v01100 + matrix(0B1101101101) * v01101 +
-            matrix(0B1101101110) * v01110 + matrix(0B1101101111) * v01111 +
-            matrix(0B1101110000) * v10000 + matrix(0B1101110001) * v10001 +
-            matrix(0B1101110010) * v10010 + matrix(0B1101110011) * v10011 +
-            matrix(0B1101110100) * v10100 + matrix(0B1101110101) * v10101 +
-            matrix(0B1101110110) * v10110 + matrix(0B1101110111) * v10111 +
-            matrix(0B1101111000) * v11000 + matrix(0B1101111001) * v11001 +
-            matrix(0B1101111010) * v11010 + matrix(0B1101111011) * v11011 +
-            matrix(0B1101111100) * v11100 + matrix(0B1101111101) * v11101 +
-            matrix(0B1101111110) * v11110 + matrix(0B1101111111) * v11111;
-        arr(i11100) =
-            matrix(0B1110000000) * v00000 + matrix(0B1110000001) * v00001 +
-            matrix(0B1110000010) * v00010 + matrix(0B1110000011) * v00011 +
-            matrix(0B1110000100) * v00100 + matrix(0B1110000101) * v00101 +
-            matrix(0B1110000110) * v00110 + matrix(0B1110000111) * v00111 +
-            matrix(0B1110001000) * v01000 + matrix(0B1110001001) * v01001 +
-            matrix(0B1110001010) * v01010 + matrix(0B1110001011) * v01011 +
-            matrix(0B1110001100) * v01100 + matrix(0B1110001101) * v01101 +
-            matrix(0B1110001110) * v01110 + matrix(0B1110001111) * v01111 +
-            matrix(0B1110010000) * v10000 + matrix(0B1110010001) * v10001 +
-            matrix(0B1110010010) * v10010 + matrix(0B1110010011) * v10011 +
-            matrix(0B1110010100) * v10100 + matrix(0B1110010101) * v10101 +
-            matrix(0B1110010110) * v10110 + matrix(0B1110010111) * v10111 +
-            matrix(0B1110011000) * v11000 + matrix(0B1110011001) * v11001 +
-            matrix(0B1110011010) * v11010 + matrix(0B1110011011) * v11011 +
-            matrix(0B1110011100) * v11100 + matrix(0B1110011101) * v11101 +
-            matrix(0B1110011110) * v11110 + matrix(0B1110011111) * v11111;
-        arr(i11101) =
-            matrix(0B1110100000) * v00000 + matrix(0B1110100001) * v00001 +
-            matrix(0B1110100010) * v00010 + matrix(0B1110100011) * v00011 +
-            matrix(0B1110100100) * v00100 + matrix(0B1110100101) * v00101 +
-            matrix(0B1110100110) * v00110 + matrix(0B1110100111) * v00111 +
-            matrix(0B1110101000) * v01000 + matrix(0B1110101001) * v01001 +
-            matrix(0B1110101010) * v01010 + matrix(0B1110101011) * v01011 +
-            matrix(0B1110101100) * v01100 + matrix(0B1110101101) * v01101 +
-            matrix(0B1110101110) * v01110 + matrix(0B1110101111) * v01111 +
-            matrix(0B1110110000) * v10000 + matrix(0B1110110001) * v10001 +
-            matrix(0B1110110010) * v10010 + matrix(0B1110110011) * v10011 +
-            matrix(0B1110110100) * v10100 + matrix(0B1110110101) * v10101 +
-            matrix(0B1110110110) * v10110 + matrix(0B1110110111) * v10111 +
-            matrix(0B1110111000) * v11000 + matrix(0B1110111001) * v11001 +
-            matrix(0B1110111010) * v11010 + matrix(0B1110111011) * v11011 +
-            matrix(0B1110111100) * v11100 + matrix(0B1110111101) * v11101 +
-            matrix(0B1110111110) * v11110 + matrix(0B1110111111) * v11111;
-        arr(i11110) =
-            matrix(0B1111000000) * v00000 + matrix(0B1111000001) * v00001 +
-            matrix(0B1111000010) * v00010 + matrix(0B1111000011) * v00011 +
-            matrix(0B1111000100) * v00100 + matrix(0B1111000101) * v00101 +
-            matrix(0B1111000110) * v00110 + matrix(0B1111000111) * v00111 +
-            matrix(0B1111001000) * v01000 + matrix(0B1111001001) * v01001 +
-            matrix(0B1111001010) * v01010 + matrix(0B1111001011) * v01011 +
-            matrix(0B1111001100) * v01100 + matrix(0B1111001101) * v01101 +
-            matrix(0B1111001110) * v01110 + matrix(0B1111001111) * v01111 +
-            matrix(0B1111010000) * v10000 + matrix(0B1111010001) * v10001 +
-            matrix(0B1111010010) * v10010 + matrix(0B1111010011) * v10011 +
-            matrix(0B1111010100) * v10100 + matrix(0B1111010101) * v10101 +
-            matrix(0B1111010110) * v10110 + matrix(0B1111010111) * v10111 +
-            matrix(0B1111011000) * v11000 + matrix(0B1111011001) * v11001 +
-            matrix(0B1111011010) * v11010 + matrix(0B1111011011) * v11011 +
-            matrix(0B1111011100) * v11100 + matrix(0B1111011101) * v11101 +
-            matrix(0B1111011110) * v11110 + matrix(0B1111011111) * v11111;
-        arr(i11111) =
-            matrix(0B1111100000) * v00000 + matrix(0B1111100001) * v00001 +
-            matrix(0B1111100010) * v00010 + matrix(0B1111100011) * v00011 +
-            matrix(0B1111100100) * v00100 + matrix(0B1111100101) * v00101 +
-            matrix(0B1111100110) * v00110 + matrix(0B1111100111) * v00111 +
-            matrix(0B1111101000) * v01000 + matrix(0B1111101001) * v01001 +
-            matrix(0B1111101010) * v01010 + matrix(0B1111101011) * v01011 +
-            matrix(0B1111101100) * v01100 + matrix(0B1111101101) * v01101 +
-            matrix(0B1111101110) * v01110 + matrix(0B1111101111) * v01111 +
-            matrix(0B1111110000) * v10000 + matrix(0B1111110001) * v10001 +
-            matrix(0B1111110010) * v10010 + matrix(0B1111110011) * v10011 +
-            matrix(0B1111110100) * v10100 + matrix(0B1111110101) * v10101 +
-            matrix(0B1111110110) * v10110 + matrix(0B1111110111) * v10111 +
-            matrix(0B1111111000) * v11000 + matrix(0B1111111001) * v11001 +
-            matrix(0B1111111010) * v11010 + matrix(0B1111111011) * v11011 +
-            matrix(0B1111111100) * v11100 + matrix(0B1111111101) * v11101 +
-            matrix(0B1111111110) * v11110 + matrix(0B1111111111) * v11111;
+        arr(i00000) = VECSUM5(0B00000);
+        arr(i00001) = VECSUM5(0B00001);
+        arr(i00010) = VECSUM5(0B00010);
+        arr(i00011) = VECSUM5(0B00011);
+        arr(i00100) = VECSUM5(0B00100);
+        arr(i00101) = VECSUM5(0B00101);
+        arr(i00110) = VECSUM5(0B00110);
+        arr(i00111) = VECSUM5(0B00111);
+        arr(i01000) = VECSUM5(0B01000);
+        arr(i01001) = VECSUM5(0B01001);
+        arr(i01010) = VECSUM5(0B01010);
+        arr(i01011) = VECSUM5(0B01011);
+        arr(i01100) = VECSUM5(0B01100);
+        arr(i01101) = VECSUM5(0B01101);
+        arr(i01110) = VECSUM5(0B01110);
+        arr(i01111) = VECSUM5(0B01111);
+        arr(i10000) = VECSUM5(0B10000);
+        arr(i10001) = VECSUM5(0B10001);
+        arr(i10010) = VECSUM5(0B10010);
+        arr(i10011) = VECSUM5(0B10011);
+        arr(i10100) = VECSUM5(0B10100);
+        arr(i10101) = VECSUM5(0B10101);
+        arr(i10110) = VECSUM5(0B10110);
+        arr(i10111) = VECSUM5(0B10111);
+        arr(i11000) = VECSUM5(0B11000);
+        arr(i11001) = VECSUM5(0B11001);
+        arr(i11010) = VECSUM5(0B11010);
+        arr(i11011) = VECSUM5(0B11011);
+        arr(i11100) = VECSUM5(0B11100);
+        arr(i11101) = VECSUM5(0B11101);
+        arr(i11110) = VECSUM5(0B11110);
+        arr(i11111) = VECSUM5(0B11111);
     }
 };
 

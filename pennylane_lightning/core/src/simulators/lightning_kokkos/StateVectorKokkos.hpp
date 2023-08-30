@@ -285,28 +285,23 @@ class StateVectorKokkos final
         switch (wires.size()) {
         case 1:
             Kokkos::parallel_for(
-                two2N, apply1QubitOpFunctor<fp_t, 1>(*data_, num_qubits,
-                                                     matrix_trans, wires));
+                two2N, apply1QubitOpFunctor<fp_t>(*data_, num_qubits,
+                                                  matrix_trans, wires));
             break;
         case 2:
             Kokkos::parallel_for(
-                two2N, apply2QubitOpFunctor<fp_t, 2>(*data_, num_qubits,
-                                                     matrix_trans, wires));
+                two2N, apply2QubitOpFunctor<fp_t>(*data_, num_qubits,
+                                                  matrix_trans, wires));
             break;
         case 3:
             Kokkos::parallel_for(
-                two2N, apply3QubitOpFunctor<fp_t, 3>(*data_, num_qubits,
-                                                     matrix_trans, wires));
+                two2N, apply3QubitOpFunctor<fp_t>(*data_, num_qubits,
+                                                  matrix_trans, wires));
             break;
         case 4:
             Kokkos::parallel_for(
-                two2N, apply4QubitOpFunctor<fp_t, 4>(*data_, num_qubits,
-                                                     matrix_trans, wires));
-            break;
-        case 5:
-            Kokkos::parallel_for(
-                two2N, apply5QubitOpFunctor<fp_t, 5>(*data_, num_qubits,
-                                                     matrix_trans, wires));
+                two2N, apply4QubitOpFunctor<fp_t>(*data_, num_qubits,
+                                                  matrix_trans, wires));
             break;
         default:
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
