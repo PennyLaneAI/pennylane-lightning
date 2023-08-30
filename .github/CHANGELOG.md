@@ -1,4 +1,27 @@
-# Release 0.32.0-dev
+# Release 0.33.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+* Fix RTD builds by removing unsupported `sytem_packages` configuration option.
+  [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+---
+
+# Release 0.32.0
 
 ### New features since last release
 
@@ -25,6 +48,7 @@
 ### Improvements
 
 * Refactor LKokkos `Measurements` class to use (fast) specialized functors whenever possible.
+  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
   [(#481)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
 
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
