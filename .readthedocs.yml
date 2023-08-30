@@ -10,7 +10,6 @@ python:
     - requirements: requirements-dev.txt
     - method: pip
       path: .
-  system_packages: true
 
 build:
   os: ubuntu-22.04

@@ -16,9 +16,14 @@
 
 ### Bug fixes
 
+* Fix RTD builds by removing unsupported `sytem_packages` configuration option.
+  [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
 
 ---
 
