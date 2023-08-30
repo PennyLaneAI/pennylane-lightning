@@ -22,6 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "StateVectorKokkos.hpp"
+#include "TestHelpers.hpp"
 
 /**
  * @file
@@ -35,6 +36,18 @@ using namespace Pennylane::Util;
 using std::size_t;
 } // namespace
 /// @endcond
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
+                   "[StateVectorKokkosManaged_Generator]", float, double) {
+    {
+        const size_t num_qubits = 3;
+        StateVectorKokkos<TestType> state_vector{num_qubits};
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyGenerator("PhaseShiftFunctor", {0}),
+            LightningException,
+            "Generator does not exist for"); // invalid wires
+    }
+}
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorPhaseShift",
                    "[StateVectorKokkosManaged_Generator]", double) {
