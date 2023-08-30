@@ -32,7 +32,7 @@ I, X, Y, Z = (
 )
 
 kokkos_args = [None]
-if device_name == "lightning.kokkos":
+if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
@@ -80,7 +80,7 @@ class TestAdjointJacobian:
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
         params = request.param
-        if device_name == "lightning.kokkos":
+        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
         return qml.device(device_name, wires=3, c_dtype=params[0])
 
@@ -101,7 +101,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name == "lightning.kokkos":
+        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
             message = "Adjoint differentiation does not support State measurements."
         elif ld._CPP_BINARY_AVAILABLE:
             message = "This method does not support statevector return type."
