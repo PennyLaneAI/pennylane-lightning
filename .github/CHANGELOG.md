@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
+
 ### Documentation
 
 ### Bug fixes
@@ -48,7 +51,6 @@ Lee J. O'Riordan
 ### Improvements
 
 * Refactor LKokkos `Measurements` class to use (fast) specialized functors whenever possible.
-  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
   [(#481)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
 
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
