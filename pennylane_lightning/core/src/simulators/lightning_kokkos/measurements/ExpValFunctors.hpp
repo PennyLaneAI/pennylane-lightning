@@ -256,7 +256,6 @@ template <class PrecisionT> struct getExpectationValueTwoQubitOpFunctor {
     }
 };
 
-// LCOV_EXCL_START
 template <class PrecisionT> struct getExpectationValueMultiQubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -326,7 +325,6 @@ template <class PrecisionT> struct getExpectationValueMultiQubitOpFunctor {
         }
     }
 };
-// LCOV_EXCL_END
 
 template <class PrecisionT> struct getExpectationValueSparseFunctor {
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
