@@ -509,28 +509,4 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
     }
     return transposed_tensor;
 }
-
-/**
- * @brief The following namespace holds compile-time tags for indicating where
- * statevector memory storage lives.
- */
-namespace MemoryStorageLocation {
-/**
- * @brief Tag to indicate internal memory storage for compile-time dispatch.
- *
- */
-struct Internal {};
-
-/**
- * @brief Tag to indicate external memory storage for compile-time dispatch.
- *
- */
-struct External {};
-/**
- * @brief Tag to indicate undefined memory storage for compile-time dispatch.
- *
- */
-struct Undefined {};
-} // namespace MemoryStorageLocation
-
 } // namespace Pennylane::Util
