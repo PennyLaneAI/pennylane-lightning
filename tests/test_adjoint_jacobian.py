@@ -38,7 +38,6 @@ if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 fixture_params = itertools.product([np.complex64, np.complex128], kokkos_args)
-# fixture_params = [np.complex64, np.complex128]
 
 
 def Rx(theta):
