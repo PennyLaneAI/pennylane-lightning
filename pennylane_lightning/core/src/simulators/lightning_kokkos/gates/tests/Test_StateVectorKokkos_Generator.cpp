@@ -1226,8 +1226,19 @@ TEMPLATE_TEST_CASE(
         }
     }
 }
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorDoubleExcitation",
                    "[StateVectorKokkosManaged_Generator]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1269,12 +1280,19 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorDoubleExcitation",
             kokkos_gate_svp.HostToDevice(ini_st.data(), ini_st.size());
             kokkos_gate_svm.HostToDevice(ini_st.data(), ini_st.size());
 
-            auto scale = kokkos_gntr_sv.applyGenerator("DoubleExcitation",
-                                                       {0, 1, 2, 3}, false);
-            kokkos_gate_svp.applyOperation("DoubleExcitation", {0, 1, 2, 3},
-                                           false, {ep});
-            kokkos_gate_svm.applyOperation("DoubleExcitation", {0, 1, 2, 3},
-                                           false, {-ep});
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                std::swap(wires[1], wires[3]);
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+            }
+
+            auto scale =
+                kokkos_gntr_sv.applyGenerator("DoubleExcitation", wires, false);
+            kokkos_gate_svp.applyOperation("DoubleExcitation", wires, false,
+                                           {ep});
+            kokkos_gate_svm.applyOperation("DoubleExcitation", wires, false,
+                                           {-ep});
 
             kokkos_gntr_sv.DeviceToHost(result_gntr_sv.data(),
                                         result_gntr_sv.size());
@@ -1304,6 +1322,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGeneratorDoubleExcitation",
 TEMPLATE_TEST_CASE(
     "StateVectorKokkosManaged::applyGeneratorDoubleExcitationMinus",
     "[StateVectorKokkosManaged_Generator]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1345,12 +1373,19 @@ TEMPLATE_TEST_CASE(
             kokkos_gate_svp.HostToDevice(ini_st.data(), ini_st.size());
             kokkos_gate_svm.HostToDevice(ini_st.data(), ini_st.size());
 
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                std::swap(wires[1], wires[3]);
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+            }
+
             auto scale = kokkos_gntr_sv.applyGenerator("DoubleExcitationMinus",
-                                                       {0, 1, 2, 3}, false);
-            kokkos_gate_svp.applyOperation("DoubleExcitationMinus",
-                                           {0, 1, 2, 3}, false, {ep});
-            kokkos_gate_svm.applyOperation("DoubleExcitationMinus",
-                                           {0, 1, 2, 3}, false, {-ep});
+                                                       wires, false);
+            kokkos_gate_svp.applyOperation("DoubleExcitationMinus", wires,
+                                           false, {ep});
+            kokkos_gate_svm.applyOperation("DoubleExcitationMinus", wires,
+                                           false, {-ep});
 
             kokkos_gntr_sv.DeviceToHost(result_gntr_sv.data(),
                                         result_gntr_sv.size());
@@ -1380,6 +1415,16 @@ TEMPLATE_TEST_CASE(
 TEMPLATE_TEST_CASE(
     "StateVectorKokkosManaged::applyGeneratorDoubleExcitationPlus",
     "[StateVectorKokkosManaged_Generator]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1421,12 +1466,19 @@ TEMPLATE_TEST_CASE(
             kokkos_gate_svp.HostToDevice(ini_st.data(), ini_st.size());
             kokkos_gate_svm.HostToDevice(ini_st.data(), ini_st.size());
 
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                std::swap(wires[1], wires[3]);
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+            }
+
             auto scale = kokkos_gntr_sv.applyGenerator("DoubleExcitationPlus",
-                                                       {0, 1, 2, 3}, false);
-            kokkos_gate_svp.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
-                                           false, {ep});
-            kokkos_gate_svm.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
-                                           false, {-ep});
+                                                       wires, false);
+            kokkos_gate_svp.applyOperation("DoubleExcitationPlus", wires, false,
+                                           {ep});
+            kokkos_gate_svm.applyOperation("DoubleExcitationPlus", wires, false,
+                                           {-ep});
 
             kokkos_gntr_sv.DeviceToHost(result_gntr_sv.data(),
                                         result_gntr_sv.size());
