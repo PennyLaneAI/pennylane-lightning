@@ -23,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan
+Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
