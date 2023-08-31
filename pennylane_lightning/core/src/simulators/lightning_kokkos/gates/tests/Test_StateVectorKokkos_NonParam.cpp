@@ -629,6 +629,23 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
         Kokkos::View<Kokkos::complex<TestType> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
+    SECTION("Single Qubit via applyOperation") {
+        auto matrix = getHadamard<Kokkos::complex, TestType>();
+        std::vector<size_t> wires = {0};
+        sv_normal.applyOperation("Hadamard", wires, inverse);
+        auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_normal.getView());
+
+        sv_mq.applyOperation("XXXXXXXX", wires, inverse, {}, matrix);
+        auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_mq.getView());
+
+        for (size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_normal_host[j]) == Approx(imag(sv_mq_host[j])));
+            CHECK(real(sv_normal_host[j]) == Approx(real(sv_mq_host[j])));
+        }
+    }
+
     SECTION("Single Qubit") {
         auto matrix = getHadamard<Kokkos::complex, TestType>();
         std::vector<size_t> wires = {0};
