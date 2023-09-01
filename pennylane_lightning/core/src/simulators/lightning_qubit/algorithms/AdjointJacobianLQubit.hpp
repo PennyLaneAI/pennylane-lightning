@@ -32,6 +32,8 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Algorithms;
+using namespace Pennylane::Util::MemoryStorageLocation;
+
 using Pennylane::LightningQubit::Util::innerProdC;
 using Pennylane::LightningQubit::Util::Transpose;
 
@@ -256,12 +258,13 @@ class AdjointJacobian final
         // Pointer to data storage for StateVectorLQubitRaw<PrecisionT>:
         std::unique_ptr<std::vector<std::vector<ComplexT>>> H_lambda_storage;
         size_t lambda_qubits = lambda.getNumQubits();
-        if constexpr (std::is_same_v<StateVectorLQubitManaged<PrecisionT>,
-                                     StateVectorT>) {
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
             H_lambda = std::make_unique<std::vector<StateVectorT>>(
                 num_observables, StateVectorT{lambda_qubits});
-        } else if constexpr (std::is_same_v<StateVectorLQubitRaw<PrecisionT>,
-                                            StateVectorT>) {
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
             H_lambda_storage =
                 std::make_unique<std::vector<std::vector<ComplexT>>>(
                     num_observables, std::vector<ComplexT>(lambda.getLength()));
@@ -273,6 +276,10 @@ class AdjointJacobian final
                                 (*H_lambda_storage)[ind].size());
                 H_lambda->push_back(sv);
             }
+        } else {
+            /// LCOV_EXCL_START
+            PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
         }
 
         StateVectorLQubitManaged<PrecisionT> mu(lambda_qubits);

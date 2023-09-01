@@ -56,6 +56,7 @@ class StateVectorLQubitRaw final
   public:
     using PrecisionT = fp_t;
     using ComplexT = std::complex<PrecisionT>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::External;
 
   private:
     using BaseType =
