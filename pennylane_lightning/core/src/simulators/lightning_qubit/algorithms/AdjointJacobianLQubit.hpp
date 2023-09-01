@@ -277,7 +277,9 @@ class AdjointJacobian final
                 H_lambda->push_back(sv);
             }
         } else {
+            /// LCOV_EXCL_START
             PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
         }
 
         StateVectorLQubitManaged<PrecisionT> mu(lambda_qubits);
