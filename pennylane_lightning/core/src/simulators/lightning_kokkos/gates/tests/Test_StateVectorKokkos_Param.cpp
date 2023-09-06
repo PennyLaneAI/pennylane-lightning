@@ -15,6 +15,7 @@
 #include <complex>
 #include <cstddef>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -22,8 +23,11 @@
 #include <catch2/catch.hpp>
 
 #include "Gates.hpp"
+#include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
 #include "MeasurementsKokkos.hpp"
+#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#include "TestHelpers.hpp"
 
 /**
  * @file
@@ -33,10 +37,15 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Gates;
+using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Observables;
+using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
+using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::exp2;
 using std::size_t;
+std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -1218,5 +1227,144 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
     SECTION("No wires provided:") {
         REQUIRE_THAT(probabilities,
                      Catch::Approx(expected_probabilities).margin(.05));
+    }
+}
+
+TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
+                   "[StateVectorKokkosManaged_Param]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    // using VectorT = TestVector<std::complex<TestType>>;
+    const size_t num_qubits = 7;
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+
+    StateVectorKokkos<TestType> kokkos_sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    StateVectorKokkos<TestType> copy_sv{kokkos_sv};
+
+    auto m = Measurements(kokkos_sv);
+
+    auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{0});
+    auto Y1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{1});
+    auto Z2 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliZ", std::vector<size_t>{2});
+    auto X3 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{3});
+    auto Y4 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{4});
+
+    ComplexT j{0.0, 1.0};
+    ComplexT u{1.0, 0.0};
+    ComplexT z{0.0, 0.0};
+
+    SECTION("3Qubit") {
+        auto ob =
+            TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Y1, Z2});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{z, z, z, z,  z, z,  -j, z, z,  z, z, z, z,
+                                     z, z, j, z,  z, z,  z,  j, z,  z, z, z, z,
+                                     z, z, z, -j, z, z,  z,  z, -j, z, z, z, z,
+                                     z, z, z, z,  j, z,  z,  z, z,  j, z, z, z,
+                                     z, z, z, z,  z, -j, z,  z, z,  z, z, z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
+    }
+
+    SECTION("4Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{
+            z, z, z,  z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, z,  z, z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2, 3});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
+    }
+
+    SECTION("5Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3, Y4});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, u,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            -u, z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, u, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  -u, z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  u, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, -u, z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  u, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  -u, z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2, 3, 4});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
     }
 }
