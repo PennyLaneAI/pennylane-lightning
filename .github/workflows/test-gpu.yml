@@ -1,0 +1,20 @@
+name: Testing (GPU)
+on:
+  pull_request:
+
+
+
+concurrency:
+  group: tests_gpu-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  gpu_test:
+    runs-on:
+      - self-hosted
+      - ubuntu-22.04
+      - gpu
+
+    steps:
+      - run: nvidia-smi
