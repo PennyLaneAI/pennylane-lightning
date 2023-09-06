@@ -408,7 +408,6 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
     ComplexT z{0.0, 0.0};
 
     SECTION("3Qubit") {
-
         auto ob =
             TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Y1, Z2});
         auto expected = m.expval(*ob);
@@ -426,7 +425,6 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
     }
 
     SECTION("4Qubit") {
-
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
             {X0, Y1, Z2, X3});
         auto expected = m.expval(*ob);
@@ -453,7 +451,6 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
     }
 
     SECTION("5Qubit") {
-
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
             {X0, Y1, Z2, X3, Y4});
         auto expected = m.expval(*ob);
