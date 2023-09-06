@@ -67,7 +67,7 @@ jobs:
         # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          cd kokkos
+          cd kokkos_${{ matrix.exec_model }}
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
