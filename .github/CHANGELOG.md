@@ -4,7 +4,16 @@
 
 ### Breaking changes
 
+* Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
+* Enable pre-commit hooks to format all Python files and linting of all Python source files.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
 ### Improvements
+
+* Add tests to increase LKokkos coverage.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 * Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
   [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
@@ -20,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan
+Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 

@@ -33,8 +33,8 @@ using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;
 enum class ExpValFunc : uint32_t {
-    BEGIN = 0,
-    Identity,
+    BEGIN = 1,
+    Identity = 1,
     PauliX,
     PauliY,
     PauliZ,
@@ -127,7 +127,7 @@ class Measurements final
      * wires.
      */
     auto getExpValMatrix(const KokkosVector &matrix,
-                         const std::vector<std::size_t> &wires) {
+                         const std::vector<std::size_t> &wires) -> PrecisionT {
         if (wires.size() == 1) {
             return applyExpValFunctor<getExpectationValueSingleQubitOpFunctor,
                                       1>(matrix, wires);
