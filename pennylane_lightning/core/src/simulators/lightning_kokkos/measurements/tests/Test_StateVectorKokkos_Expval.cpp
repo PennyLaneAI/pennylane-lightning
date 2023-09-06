@@ -411,24 +411,28 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
         auto ob =
             TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Y1, Z2});
         auto expected = m.expval(*ob);
-
         std::vector<ComplexT> matrix{z, z, z, z,  z, z,  -j, z, z,  z, z, z, z,
                                      z, z, j, z,  z, z,  z,  j, z,  z, z, z, z,
                                      z, z, z, -j, z, z,  z,  z, -j, z, z, z, z,
                                      z, z, z, z,  j, z,  z,  z, z,  j, z, z, z,
                                      z, z, z, z,  z, -j, z,  z, z,  z, z, z};
-        auto hermitian =
-            HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2});
-        auto res = m.expval(hermitian);
+        SECTION("Hermitian") {
+            auto hermitian =
+                HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2});
+            auto res = m.expval(hermitian);
 
-        CHECK(expected == Approx(res));
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2});
+            CHECK(expected == Approx(res));
+        }
     }
 
     SECTION("4Qubit") {
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
             {X0, Y1, Z2, X3});
         auto expected = m.expval(*ob);
-
         std::vector<ComplexT> matrix{
             z, z, z,  z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
             z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
@@ -443,18 +447,23 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
             z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
             z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
             z, z, -j, z, z, z, z, z,  z,  z, z, z, z, z,  z, z};
-        auto hermitian =
-            HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2, 3});
-        auto res = m.expval(hermitian);
+        SECTION("Hermitian") {
+            auto hermitian =
+                HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2, 3});
+            auto res = m.expval(hermitian);
 
-        CHECK(expected == Approx(res));
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2, 3});
+            CHECK(expected == Approx(res));
+        }
     }
 
     SECTION("5Qubit") {
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
             {X0, Y1, Z2, X3, Y4});
         auto expected = m.expval(*ob);
-
         std::vector<ComplexT> matrix{
             z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
             z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
@@ -510,11 +519,17 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
             z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
             z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
             z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z};
-        auto hermitian =
-            HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2, 3, 4});
-        auto res = m.expval(hermitian);
+        SECTION("Hermitian") {
+            auto hermitian = HermitianObs<StateVectorKokkos<TestType>>(
+                matrix, {0, 1, 2, 3, 4});
+            auto res = m.expval(hermitian);
 
-        CHECK(expected == Approx(res));
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2, 3, 4});
+            CHECK(expected == Approx(res));
+        }
     }
 }
 
