@@ -327,7 +327,7 @@ class StateVectorKokkos final
     inline void applyMatrix(ComplexT *matrix, const std::vector<size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = 1U << wires.size();
+        size_t n = static_cast<std::size_t>(1U) << wires.size();
         KokkosVector matrix_(matrix, n * n);
         applyMultiQubitOp(matrix_, wires, inverse);
     }
@@ -361,7 +361,7 @@ class StateVectorKokkos final
                             const std::vector<size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = 1U << wires.size();
+        size_t n = static_cast<std::size_t>(1U) << wires.size();
         size_t n2 = n * n;
         KokkosVector matrix_("matrix_", n2);
         Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));

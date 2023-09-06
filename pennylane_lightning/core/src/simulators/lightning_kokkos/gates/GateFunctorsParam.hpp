@@ -55,7 +55,7 @@ template <class Precision> struct multiQubitOpFunctor {
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
         Kokkos::deep_copy(wires, wires_host);
-        dim = 1U << wires_.size();
+        dim = static_cast<std::size_t>(1U) << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
@@ -1492,7 +1492,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 1;
-    const std::size_t dim = 1U << n_wires;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
     std::size_t num_qubits;
     size_t rev_wire;
     size_t rev_wire_shift;
@@ -1534,7 +1534,7 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 2;
-    const std::size_t dim = 1U << n_wires;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire0;
     std::size_t rev_wire1;
@@ -1617,7 +1617,7 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 3;
-    const std::size_t dim = 1U << n_wires;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
     std::size_t num_qubits;
 
     apply3QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1686,7 +1686,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 4;
-    const std::size_t dim = 1U << n_wires;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
     std::size_t num_qubits;
 
     apply4QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1786,7 +1786,7 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 5;
-    const std::size_t dim = 1U << n_wires;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
     std::size_t num_qubits;
 
     apply5QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,

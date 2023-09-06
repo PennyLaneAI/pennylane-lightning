@@ -36,7 +36,7 @@ for n_wires in range(1, 6):
             arr = arr_;
             matrix = matrix_;
             num_qubits = num_qubits_;
-            dim = 1U << wires.size();
+            dim = static_cast<std::size_t>(1U) << wires.size();
         }}
         
         KOKKOS_INLINE_FUNCTION
@@ -105,7 +105,7 @@ for n_wires in range(1, 6):
             arr = arr_;
             matrix = matrix_;
             num_qubits = num_qubits_;
-            dim = 1U << n_wires;
+            dim = static_cast<std::size_t>(1U) << n_wires;
         }}
         
         KOKKOS_INLINE_FUNCTION
