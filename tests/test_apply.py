@@ -1492,8 +1492,8 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
-    prep = [qml.StatePrep(init_state, wires=range(n_qubits))]
     ops = [
+        qml.StatePrep(init_state, wires=range(n_qubits)),
         qml.RY(theta, wires=[0]),
         qml.RY(phi, wires=[1]),
         qml.CNOT(wires=[0, 1]),
@@ -1501,7 +1501,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
         qml.QubitUnitary(U, wires=range(2, 2 + 2 * n_wires, 2)),
     ]
     measurements = [qml.state()]
-    tape = qml.tape.QuantumTape(ops=ops, measurements=measurements, prep=prep)
+    tape = qml.tape.QuantumTape(ops=ops, measurements=measurements)
     assert np.allclose(dev.execute(tape), dev_def.execute(tape), tol)
 
     def circuit():
