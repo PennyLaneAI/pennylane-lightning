@@ -54,6 +54,7 @@ class StateVectorLQubitManaged final
   public:
     using PrecisionT = fp_t;
     using ComplexT = std::complex<PrecisionT>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
   private:
     using BaseType =

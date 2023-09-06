@@ -15,6 +15,9 @@
 * Add tests to increase LKokkos coverage.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
+* Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
+  [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
+
 ### Documentation
 
 ### Bug fixes

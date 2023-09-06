@@ -57,6 +57,7 @@ template <class PrecisionT, class Derived>
 class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
   public:
     using ComplexT = std::complex<PrecisionT>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
   protected:
     const Threading threading_;
