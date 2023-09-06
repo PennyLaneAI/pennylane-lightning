@@ -62,9 +62,9 @@ if LQ_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
-
-    # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
         create_ops_listC64,
@@ -73,8 +73,6 @@ if LQ_CPP_BINARY_AVAILABLE:
         create_ops_listC128,
         VectorJacobianProductC128,
     )
-
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
     allowed_operations = {
         "Identity",
