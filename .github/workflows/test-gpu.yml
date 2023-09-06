@@ -1,9 +1,9 @@
 name: Testing (GPU)
 on:
   pull_request:
-
-
-
+  push:
+    branches:
+      - master
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -28,55 +28,11 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     steps:
-      # - name: Checkout PennyLane-Lightning-Kokkos
-      #   uses: actions/checkout@v3
-      #   with:
-      #     # Checkout entire git-history if workflow_call passes 'stable' as we need to find the most recent git-tag
-      #     fetch-depth: ${{ inputs.lightning-kokkos-version == 'stable' && 0 || 2 }}
-
-      # - name: Switch to stable build of Lightning-Kokkos
-      #   if: inputs.lightning-kokkos-version == 'stable'
-      #   run: git checkout $(git tag | sort -V | tail -1)
 
       - uses: actions/setup-python@v4
         name: Install Python
         with:
           python-version: '3.9'
-
-      # # Since the self-hosted runner can be re-used. It is best to set up all package
-      # # installations in a virtual environment that gets cleaned at the end of each workflow run
-      # - name: Setup Python virtual environment
-      #   id: setup_venv
-      #   env:
-      #     VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
-      #   run: |
-      #     # Clear any pre-existing venvs
-      #     rm -rf venv_*
-
-      #     # Create new venv for this workflow_run
-      #     python --version
-      #     python -m venv ${{ env.VENV_NAME }}
-
-      #     # Add the venv to PATH for subsequent steps
-      #     echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
-
-      #     # Adding venv name as an output for subsequent steps to reference if needed
-      #     echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
-
-      # - name: Display Python-Path
-      #   id: python_path
-      #   run: |
-      #     py_path=$(which python)
-      #     echo "Python Interpreter Path => $py_path"
-      #     echo "python=$py_path" >> $GITHUB_OUTPUT
-          
-      #     pip_path=$(which pip)
-      #     echo "PIP Path => $pip_path"
-      #     echo "pip=$pip_path" >> $GITHUB_OUTPUT
-
-      # - name: Install required packages
-      #   run: |
-      #     python -m pip install ninja cmake
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION  ninja-build gcovr lcov
@@ -86,32 +42,6 @@ jobs:
           nvidia-smi
           /usr/local/cuda/bin/nvcc --version
 
-      # - name: Install Latest PennyLane
-      #   if: inputs.pennylane-version == 'latest'
-      #   run: |
-      #     python -m pip install --index-url https://test.pypi.org/simple/ pennylane-lightning --pre --force-reinstall --no-deps
-      #     python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
-      # - name: Build and run unit tests
-      #   run: |
-      #     export PATH=/usr/local/cuda-11.8/bin:$PATH
-      #     export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
-      #     cmake . -BBuild \
-      #       -DKokkos_ENABLE_CUDA=ON \
-      #       -DKokkos_ENABLE_SERIAL=ON \
-      #       -DPLKOKKOS_BUILD_TESTS=ON \
-      #       -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
-      #       -G Ninja
-      #     cmake --build ./Build
-      #     ./Build/pennylane_lightning_kokkos/src/tests/runner_kokkos
-
-      # - name: Upload test results
-      #   uses: actions/upload-artifact@v3
-      #   if: always()
-      #   with:
-      #     name: ubuntu-tests-reports
-      #     path: ./Build/tests/results/report_${{ github.job }}.xml
-
       - name: Cache installation directories
         id: kokkos-cache
         uses: actions/cache@v3
@@ -120,7 +50,7 @@ jobs:
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos repository
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
@@ -129,12 +59,12 @@ jobs:
           pushd . &> /dev/null
 
       - name: Install dependencies (Ubuntu)
-        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
 
       - name: Build Kokkos core library (Ubuntu)
-        if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
