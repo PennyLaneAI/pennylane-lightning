@@ -509,5 +509,4 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
     }
     return transposed_tensor;
 }
-
 } // namespace Pennylane::Util

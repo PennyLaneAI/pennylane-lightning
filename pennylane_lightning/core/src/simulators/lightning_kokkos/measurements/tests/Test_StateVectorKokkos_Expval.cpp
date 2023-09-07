@@ -15,6 +15,7 @@
 #include <complex>
 #include <cstddef>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -38,8 +39,21 @@ using namespace Pennylane::LightningKokkos::Observables;
 using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::write_CSR_vectors;
 using std::size_t;
+std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
+
+TEMPLATE_TEST_CASE("StateVectorKokkosManaged::NonExistent",
+                   "[StateVectorKokkosManaged_Expval]", float, double) {
+    const size_t num_qubits = 3;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+    auto m = Measurements(kokkos_sv);
+
+    SECTION("Using expval with non-existent operation") {
+        PL_REQUIRE_THROWS_MATCHES(m.expval("XXX", {0}), LightningException,
+                                  "Expval does not exist for named observable");
+    }
+}
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueIdentity",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
@@ -364,6 +378,158 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         auto res = m.expval(*ob);
         auto expected = TestType(-0.36);
         CHECK(expected == Approx(res));
+    }
+}
+
+TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
+                   "[StateVectorKokkos_Expval]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    using VectorT = TestVector<std::complex<TestType>>;
+    const size_t num_qubits = 7;
+    VectorT sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+
+    StateVectorKokkos<TestType> kokkos_sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    auto m = Measurements(kokkos_sv);
+
+    auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{0});
+    auto Y1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{1});
+    auto Z2 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliZ", std::vector<size_t>{2});
+    auto X3 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{3});
+    auto Y4 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{4});
+
+    ComplexT j{0.0, 1.0};
+    ComplexT u{1.0, 0.0};
+    ComplexT z{0.0, 0.0};
+
+    SECTION("3Qubit") {
+        auto ob =
+            TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Y1, Z2});
+        auto expected = m.expval(*ob);
+        std::vector<ComplexT> matrix{z, z, z, z,  z, z,  -j, z, z,  z, z, z, z,
+                                     z, z, j, z,  z, z,  z,  j, z,  z, z, z, z,
+                                     z, z, z, -j, z, z,  z,  z, -j, z, z, z, z,
+                                     z, z, z, z,  j, z,  z,  z, z,  j, z, z, z,
+                                     z, z, z, z,  z, -j, z,  z, z,  z, z, z};
+        SECTION("Hermitian") {
+            auto hermitian =
+                HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2});
+            auto res = m.expval(hermitian);
+
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2});
+            CHECK(expected == Approx(res));
+        }
+    }
+
+    SECTION("4Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3});
+        auto expected = m.expval(*ob);
+        std::vector<ComplexT> matrix{
+            z, z, z,  z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, z,  z, z};
+        SECTION("Hermitian") {
+            auto hermitian =
+                HermitianObs<StateVectorKokkos<TestType>>(matrix, {0, 1, 2, 3});
+            auto res = m.expval(hermitian);
+
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2, 3});
+            CHECK(expected == Approx(res));
+        }
+    }
+
+    SECTION("5Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3, Y4});
+        auto expected = m.expval(*ob);
+        std::vector<ComplexT> matrix{
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, u,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            -u, z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, u, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  -u, z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  u, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, -u, z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  u, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  -u, z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z};
+        SECTION("Hermitian") {
+            auto hermitian = HermitianObs<StateVectorKokkos<TestType>>(
+                matrix, {0, 1, 2, 3, 4});
+            auto res = m.expval(hermitian);
+
+            CHECK(expected == Approx(res));
+        }
+        SECTION("Matrix") {
+            auto res = m.expval(matrix, {0, 1, 2, 3, 4});
+            CHECK(expected == Approx(res));
+        }
     }
 }
 

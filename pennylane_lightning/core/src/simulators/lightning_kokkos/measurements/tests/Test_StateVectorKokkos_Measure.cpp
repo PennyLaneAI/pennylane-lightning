@@ -24,11 +24,13 @@
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "TestHelpers.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningKokkos::Measures;
 using Pennylane::Util::createNonTrivialState;
+using Pennylane::Util::INVSQRT2;
 }; // namespace
 /// @endcond
 
@@ -62,14 +64,29 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
     }
 
     SECTION("Testing list of operators defined by a matrix:") {
+        PrecisionT isqrt2 = INVSQRT2<PrecisionT>();
+        std::vector<ComplexT> Identity = {1, 0, 0, 1};
+        std::vector<ComplexT> Identity2 = {1, 0, 0, 0, 0, 1, 0, 0,
+                                           0, 0, 1, 0, 0, 0, 0, 1};
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
         std::vector<ComplexT> PauliY = {0, ComplexT{0, -1}, ComplexT{0, 1}, 0};
         std::vector<ComplexT> PauliZ = {1, 0, 0, -1};
+        std::vector<ComplexT> Hadamard = {isqrt2, isqrt2, isqrt2, -isqrt2};
 
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
+
+        operations_list = {Identity, Identity, Identity};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {1.0, 1.0, 1.0};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+
+        operations_list = {Identity2, Identity2};
+        exp_values = Measurer.expval(operations_list, {{0, 1}, {1, 2}});
+        exp_values_ref = {1.0, 1.0};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
@@ -85,6 +102,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+
+        operations_list = {Hadamard, Hadamard, Hadamard};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -92,6 +114,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         std::vector<PrecisionT> exp_values_ref;
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
+
+        operations_list = {"Identity", "Identity", "Identity"};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {1.0, 1.0, 1.0};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
@@ -106,6 +133,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+
+        operations_list = {"Hadamard", "Hadamard", "Hadamard"};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }

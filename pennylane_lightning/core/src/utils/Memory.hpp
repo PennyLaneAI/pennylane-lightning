@@ -172,6 +172,29 @@ bool operator!=([[maybe_unused]] const AlignedAllocator<T> &lhs,
     return lhs.alignment() != rhs.alignment();
 }
 
+/**
+ * @brief The following namespace holds compile-time tags for indicating where
+ * statevector memory storage lives.
+ */
+namespace MemoryStorageLocation {
+/**
+ * @brief Tag to indicate internal memory storage for compile-time dispatch.
+ *
+ */
+struct Internal {};
+
+/**
+ * @brief Tag to indicate external memory storage for compile-time dispatch.
+ *
+ */
+struct External {};
+/**
+ * @brief Tag to indicate undefined memory storage for compile-time dispatch.
+ *
+ */
+struct Undefined {};
+} // namespace MemoryStorageLocation
+
 ///@cond DEV
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
     constexpr static size_t value = std::max(
