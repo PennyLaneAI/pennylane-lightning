@@ -18,10 +18,12 @@ add_library(measurements_tests INTERFACE)
 target_link_libraries(measurements_tests INTERFACE  Catch2::Catch2)
 
 # Create dependencies on the dynamically defined simulator/backend targets.
-target_link_libraries(measurements_tests INTERFACE  ${PL_BACKEND}
-                                                    "${PL_BACKEND}_measurements"
-                                                    "${PL_BACKEND}_observables"
-                                                    )
+foreach(BACKEND ${PL_BACKEND_LIST})
+    target_link_libraries(measurements_tests INTERFACE  ${BACKEND}
+                                                        "${BACKEND}_measurements"
+                                                        "${BACKEND}_observables"
+                                                        )
+endforeach()
 
 ProcessTestOptions(measurements_tests)
 

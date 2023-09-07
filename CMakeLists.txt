@@ -61,6 +61,13 @@ option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Backend
 set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
+set(PL_BACKEND_LIST "lightning_qubit" "lightning_kokkos")
+
+# Split backends
+# string(REPLACE ";" " " PL_BACKEND_LIST ${PL_BACKEND})
+foreach(BACKEND ${PL_BACKEND_LIST})
+    message(STATUS "PL_BACKEND: ${BACKEND}")
+endforeach()
 
 # Process compile options
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -94,39 +101,43 @@ target_link_libraries(pennylane_lightning INTERFACE lightning_observables
                                                     lightning_algorithms
                                                     )
 
-target_link_libraries(pennylane_lightning INTERFACE  ${PL_BACKEND} #simulator
-                                                    "${PL_BACKEND}_algorithms"
-                                                    "${PL_BACKEND}_observables"
-                                                    "${PL_BACKEND}_bindings"
-                                                    "${PL_BACKEND}_measurements"
-)
+foreach(BACKEND ${PL_BACKEND_LIST})
+    target_link_libraries(pennylane_lightning INTERFACE "${BACKEND}" #simulator
+                                                        "${BACKEND}_algorithms"
+                                                        "${BACKEND}_observables"
+                                                        "${BACKEND}_bindings"
+                                                        "${BACKEND}_measurements"
+                                                        )
+endforeach()
                                                 
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
+    foreach(BACKEND ${PL_BACKEND_LIST})
+        pybind11_add_module("${BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
+        target_link_libraries("${BACKEND}_ops" PRIVATE   lightning_compile_options
                                                         lightning_external_libs
                                                         )
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
+        target_link_libraries("${BACKEND}_ops" PRIVATE   lightning_observables
                                                         lightning_utils
                                                         lightning_algorithms
                                                         )
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                        "${PL_BACKEND}_algorithms"
-                                                        "${PL_BACKEND}_observables"
-                                                        "${PL_BACKEND}_bindings"
-                                                        "${PL_BACKEND}_measurements"
+        target_link_libraries("${BACKEND}_ops" PRIVATE  "${BACKEND}" #simulator
+                                                        "${BACKEND}_algorithms"
+                                                        "${BACKEND}_observables"
+                                                        "${BACKEND}_bindings"
+                                                        "${BACKEND}_measurements"
                                                         )
 
-    set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
+        set_target_properties("${BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-    target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
+        target_compile_definitions("${BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
+    endforeach()
 endif()
 
 install(TARGETS pennylane_lightning

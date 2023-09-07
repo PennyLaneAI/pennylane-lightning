@@ -6,7 +6,7 @@ set(LOGO [=[
 ]=])
 message(${LOGO})
 
-project(${PL_BACKEND}
+project(lightning_kokkos
     DESCRIPTION "PennyLane Lightning Kokkos C++ Backend."
     LANGUAGES CXX C
 )
@@ -14,7 +14,7 @@ project(${PL_BACKEND}
 set(LKOKKOS_FILES   StateVectorKokkos.cpp
                     CACHE INTERNAL "" FORCE)
 
-add_library(${PL_BACKEND} STATIC ${LKOKKOS_FILES})
+add_library(lightning_kokkos STATIC ${LKOKKOS_FILES})
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
 
 ##########################
@@ -51,18 +51,18 @@ if(PLKOKKOS_ENABLE_SANITIZER)
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 ENDIF()
 
-target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
+target_link_libraries(lightning_kokkos PUBLIC  lightning_compile_options
                                             lightning_external_libs
                                             lightning_base
                                             lightning_gates
                                             lightning_utils
-                                            ${PL_BACKEND}_utils
-                                            ${PL_BACKEND}_gates
+                                            lightning_kokkos_utils
+                                            lightning_kokkos_gates
                                             )
-target_include_directories(${PL_BACKEND} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(lightning_kokkos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_property(TARGET lightning_kokkos PROPERTY POSITION_INDEPENDENT_CODE ON)
 if(PLKOKKOS_ENABLE_NATIVE)
-    target_compile_options(${PL_BACKEND} PRIVATE -march=native)
+    target_compile_options(lightning_kokkos PRIVATE -march=native)
 endif()
 
 ###############################################################################
