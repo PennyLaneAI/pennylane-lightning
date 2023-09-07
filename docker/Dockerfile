@@ -1,4 +1,4 @@
-# Copyright 2018-2021 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:focal AS base
+FROM ubuntu:jammy AS base
 
 # Setup and install basic packages
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y apt-utils \
-    && DEBIAN_FRONTEND="noninteractive" \
+RUN apt-get update
+RUN apt-get install --no-install-recommends -y apt-utils
+RUN DEBIAN_FRONTEND="noninteractive" \
     apt-get install --no-install-recommends -y tzdata \
     build-essential \
     ca-certificates \
@@ -29,26 +29,30 @@ RUN apt-get update \
     python3-pip \
     python3-venv \
     python3-dev \
-    gcc-11 g++-11 cpp-11 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-10 \
-    && /usr/sbin/update-ccache-symlinks \
-    && mkdir /opt/ccache \
-    && ccache --set-config=cache_dir=/opt/ccache \
-    && python3 -m venv /opt/venv
+    gcc-11 g++-11 cpp-11 
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
+RUN update-alternatives \
+    --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+RUN /usr/sbin/update-ccache-symlinks 
+RUN mkdir /opt/ccache 
+RUN ccache --set-config=cache_dir=/opt/ccache 
 
 ENV PATH="/opt/venv/bin:$PATH"
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Setup and build pennylane-lightning
-WORKDIR /opt/pennylane-lightning
+ENV WORKDIR=/opt/pennylane-lightning
+WORKDIR ${WORKDIR}
+COPY . ${WORKDIR}
 
-COPY . .
-
-RUN pip install --no-cache-dir wheel \
-    sphinx \
-    && pip install --no-cache-dir -r requirements-dev.txt \
-    && pip uninstall -y PennyLane_Lightning \
-    && make install \
-    && make test-python \
-    && make test-cpp
+RUN pip install --no-cache-dir wheel
+RUN pip install --no-cache-dir -r requirements-dev.txt
+RUN pip install --no-cache-dir -r doc/requirements.txt
+RUN python setup.py build_ext
+RUN python setup.py bdist_wheel
+RUN pip install ./dist/PennyLane_Lightning*.whl --force-reinstall
