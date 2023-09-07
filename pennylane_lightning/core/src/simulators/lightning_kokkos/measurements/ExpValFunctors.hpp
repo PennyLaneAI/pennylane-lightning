@@ -377,7 +377,7 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
          EXPVALTERM3(xx, 0B100, i100) + EXPVALTERM3(xx, 0B101, i101) +         \
          EXPVALTERM3(xx, 0B110, i110) + EXPVALTERM3(xx, 0B111, i111))
 #define INDEX(ivar, xx)                                                        \
-    std::size_t ivar = kdim | xx;                                              \
+    kdim | xx;                                                                 \
     for (std::size_t pos = 0; pos < n_wires; pos++) {                          \
         std::size_t x = ((ivar >> (n_wires - pos - 1)) ^                       \
                          (ivar >> (num_qubits - wires(pos) - 1))) &            \
@@ -416,14 +416,14 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
         const std::size_t kdim = k * dim;
-        INDEX(i000, 0B000);
-        INDEX(i001, 0B001);
-        INDEX(i010, 0B010);
-        INDEX(i011, 0B011);
-        INDEX(i100, 0B100);
-        INDEX(i101, 0B101);
-        INDEX(i110, 0B110);
-        INDEX(i111, 0B111);
+        std::size_t i000 = INDEX(i000, 0B000);
+        std::size_t i001 = INDEX(i001, 0B001);
+        std::size_t i010 = INDEX(i010, 0B010);
+        std::size_t i011 = INDEX(i011, 0B011);
+        std::size_t i100 = INDEX(i100, 0B100);
+        std::size_t i101 = INDEX(i101, 0B101);
+        std::size_t i110 = INDEX(i110, 0B110);
+        std::size_t i111 = INDEX(i111, 0B111);
 
         expval += real(EXPVAL3(i000, 0B000));
         expval += real(EXPVAL3(i001, 0B001));
@@ -479,22 +479,22 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     void operator()(const std::size_t k, PrecisionT &expval) const {
         const std::size_t kdim = k * dim;
 
-        INDEX(i0000, 0B0000);
-        INDEX(i0001, 0B0001);
-        INDEX(i0010, 0B0010);
-        INDEX(i0011, 0B0011);
-        INDEX(i0100, 0B0100);
-        INDEX(i0101, 0B0101);
-        INDEX(i0110, 0B0110);
-        INDEX(i0111, 0B0111);
-        INDEX(i1000, 0B1000);
-        INDEX(i1001, 0B1001);
-        INDEX(i1010, 0B1010);
-        INDEX(i1011, 0B1011);
-        INDEX(i1100, 0B1100);
-        INDEX(i1101, 0B1101);
-        INDEX(i1110, 0B1110);
-        INDEX(i1111, 0B1111);
+        std::size_t i0000 = INDEX(i0000, 0B0000);
+        std::size_t i0001 = INDEX(i0001, 0B0001);
+        std::size_t i0010 = INDEX(i0010, 0B0010);
+        std::size_t i0011 = INDEX(i0011, 0B0011);
+        std::size_t i0100 = INDEX(i0100, 0B0100);
+        std::size_t i0101 = INDEX(i0101, 0B0101);
+        std::size_t i0110 = INDEX(i0110, 0B0110);
+        std::size_t i0111 = INDEX(i0111, 0B0111);
+        std::size_t i1000 = INDEX(i1000, 0B1000);
+        std::size_t i1001 = INDEX(i1001, 0B1001);
+        std::size_t i1010 = INDEX(i1010, 0B1010);
+        std::size_t i1011 = INDEX(i1011, 0B1011);
+        std::size_t i1100 = INDEX(i1100, 0B1100);
+        std::size_t i1101 = INDEX(i1101, 0B1101);
+        std::size_t i1110 = INDEX(i1110, 0B1110);
+        std::size_t i1111 = INDEX(i1111, 0B1111);
 
         expval += real(EXPVAL4(i0000, 0B0000));
         expval += real(EXPVAL4(i0001, 0B0001));
@@ -566,38 +566,38 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
     void operator()(const std::size_t k, PrecisionT &expval) const {
         const std::size_t kdim = k * dim;
 
-        INDEX(i00000, 0B00000);
-        INDEX(i00001, 0B00001);
-        INDEX(i00010, 0B00010);
-        INDEX(i00011, 0B00011);
-        INDEX(i00100, 0B00100);
-        INDEX(i00101, 0B00101);
-        INDEX(i00110, 0B00110);
-        INDEX(i00111, 0B00111);
-        INDEX(i01000, 0B01000);
-        INDEX(i01001, 0B01001);
-        INDEX(i01010, 0B01010);
-        INDEX(i01011, 0B01011);
-        INDEX(i01100, 0B01100);
-        INDEX(i01101, 0B01101);
-        INDEX(i01110, 0B01110);
-        INDEX(i01111, 0B01111);
-        INDEX(i10000, 0B10000);
-        INDEX(i10001, 0B10001);
-        INDEX(i10010, 0B10010);
-        INDEX(i10011, 0B10011);
-        INDEX(i10100, 0B10100);
-        INDEX(i10101, 0B10101);
-        INDEX(i10110, 0B10110);
-        INDEX(i10111, 0B10111);
-        INDEX(i11000, 0B11000);
-        INDEX(i11001, 0B11001);
-        INDEX(i11010, 0B11010);
-        INDEX(i11011, 0B11011);
-        INDEX(i11100, 0B11100);
-        INDEX(i11101, 0B11101);
-        INDEX(i11110, 0B11110);
-        INDEX(i11111, 0B11111);
+        std::size_t i00000 = INDEX(i00000, 0B00000);
+        std::size_t i00001 = INDEX(i00001, 0B00001);
+        std::size_t i00010 = INDEX(i00010, 0B00010);
+        std::size_t i00011 = INDEX(i00011, 0B00011);
+        std::size_t i00100 = INDEX(i00100, 0B00100);
+        std::size_t i00101 = INDEX(i00101, 0B00101);
+        std::size_t i00110 = INDEX(i00110, 0B00110);
+        std::size_t i00111 = INDEX(i00111, 0B00111);
+        std::size_t i01000 = INDEX(i01000, 0B01000);
+        std::size_t i01001 = INDEX(i01001, 0B01001);
+        std::size_t i01010 = INDEX(i01010, 0B01010);
+        std::size_t i01011 = INDEX(i01011, 0B01011);
+        std::size_t i01100 = INDEX(i01100, 0B01100);
+        std::size_t i01101 = INDEX(i01101, 0B01101);
+        std::size_t i01110 = INDEX(i01110, 0B01110);
+        std::size_t i01111 = INDEX(i01111, 0B01111);
+        std::size_t i10000 = INDEX(i10000, 0B10000);
+        std::size_t i10001 = INDEX(i10001, 0B10001);
+        std::size_t i10010 = INDEX(i10010, 0B10010);
+        std::size_t i10011 = INDEX(i10011, 0B10011);
+        std::size_t i10100 = INDEX(i10100, 0B10100);
+        std::size_t i10101 = INDEX(i10101, 0B10101);
+        std::size_t i10110 = INDEX(i10110, 0B10110);
+        std::size_t i10111 = INDEX(i10111, 0B10111);
+        std::size_t i11000 = INDEX(i11000, 0B11000);
+        std::size_t i11001 = INDEX(i11001, 0B11001);
+        std::size_t i11010 = INDEX(i11010, 0B11010);
+        std::size_t i11011 = INDEX(i11011, 0B11011);
+        std::size_t i11100 = INDEX(i11100, 0B11100);
+        std::size_t i11101 = INDEX(i11101, 0B11101);
+        std::size_t i11110 = INDEX(i11110, 0B11110);
+        std::size_t i11111 = INDEX(i11111, 0B11111);
 
         expval += real(EXPVAL5(i00000, 0B00000));
         expval += real(EXPVAL5(i00001, 0B00001));
