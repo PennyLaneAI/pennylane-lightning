@@ -20,7 +20,6 @@
 
 * Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
   [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
-  [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
 
 * Add support for dependent external packages to C++ core.
   [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
