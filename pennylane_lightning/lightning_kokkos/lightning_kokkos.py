@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 from warnings import warn
 import numpy as np
 
@@ -51,7 +52,7 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane import (
         math,
         BasisState,
-        QubitStateVector,
+        StatePrep,
         Projector,
         Rot,
         DeviceError,
@@ -64,9 +65,9 @@ if LK_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
-
-    # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
         create_ops_listC64,
@@ -74,10 +75,8 @@ if LK_CPP_BINARY_AVAILABLE:
         create_ops_listC128,
     )
 
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
     def _kokkos_dtype(dtype):
-        if dtype not in [np.complex128, np.complex64]:
+        if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
@@ -88,6 +87,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Identity",
         "BasisState",
         "QubitStateVector",
+        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -164,7 +164,7 @@ if LK_CPP_BINARY_AVAILABLE:
         A device that interfaces with C++ to perform fast linear algebra calculations.
 
         Use of this device requires pre-built binaries or compilation from source. Check out the
-        :doc:`/installation` guide for more details.
+        :doc:`/lightning_kokkos/installation` guide for more details.
 
         Args:
             wires (int): the number of wires to initialize the device with
@@ -195,7 +195,7 @@ if LK_CPP_BINARY_AVAILABLE:
             shots=None,
             batch_obs=False,
             kokkos_args=None,
-        ):
+        ):  # pylint: disable=unused-argument
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             if kokkos_args is None:
@@ -263,12 +263,12 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=3)
             >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
             >>> obs1 = qml.Identity(1)
             >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
-            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j,
-                0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64,)
+            >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
             >>> dev.sync_h2d(state_vector)
             >>> res = dev.expval(H)
             >>> print(res)
@@ -285,6 +285,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
@@ -317,6 +318,7 @@ if LK_CPP_BINARY_AVAILABLE:
             the data.
 
             **Example**
+
             >>> dev = qml.device('lightning.kokkos', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> print(dev.state)
@@ -424,9 +426,10 @@ if LK_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
+            """Applies a list of operations to the state tensor."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
-                if isinstance(operations[0], QubitStateVector):
+                if isinstance(operations[0], StatePrep):
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
@@ -436,7 +439,7 @@ if LK_CPP_BINARY_AVAILABLE:
                     operations = operations[1:]
 
             for operation in operations:
-                if isinstance(operation, (QubitStateVector, BasisState)):
+                if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
                         f"Operation {operation.name} cannot be used after other "
                         + f"Operations have already been applied on a {self.short_name} device."
@@ -483,6 +486,12 @@ if LK_CPP_BINARY_AVAILABLE:
                     csr_hamiltonian.indices,
                     csr_hamiltonian.data,
                 )
+
+            # use specialized functors to compute expval(Hermitian)
+            if observable.name == "Hermitian":
+                observable_wires = self.map_wires(observable.wires)
+                matrix = observable.matrix()
+                return measure.expval(matrix, observable_wires)
 
             if (
                 observable.name in ["Hamiltonian", "Hermitian"]
@@ -580,7 +589,9 @@ if LK_CPP_BINARY_AVAILABLE:
             """
             return self.measurements.probs(wires)
 
+        # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
+            """Return samples of an observable."""
             if observable.name != "PauliZ":
                 self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
@@ -605,7 +616,9 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if len(measurements) == 1 and measurements[0].return_type is State:
                 # return State
-                raise QuantumFunctionError("Not supported")
+                raise QuantumFunctionError(
+                    "Adjoint differentiation does not support State measurements."
+                )
 
             # Now the return_type of measurement processes must be expectation
             if any(m.return_type is not Expectation for m in measurements):
@@ -659,6 +672,12 @@ if LK_CPP_BINARY_AVAILABLE:
             return self.state_vector
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+            """Implements the adjoint method outlined in
+            `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
+
+            After a forward pass, the circuit is reversed by iteratively applying adjoint
+            gates to scan backwards through the circuit.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -672,7 +691,7 @@ if LK_CPP_BINARY_AVAILABLE:
             if not tape_return_type:  # the tape does not have measurements
                 return np.array([], dtype=self.state.dtype)
 
-            if tape_return_type is State:
+            if tape_return_type is State:  # pragma: no cover
                 raise QuantumFunctionError(
                     "This method does not support statevector return type. "
                     "Use vjp method instead for this purpose."
@@ -694,7 +713,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
-            if self._batch_obs and requested_threads > 1:
+            if self._batch_obs and requested_threads > 1:  # pragma: no cover
                 obs_partitions = _chunk_iterable(
                     processed_data["obs_serialized"], requested_threads
                 )
@@ -718,7 +737,9 @@ if LK_CPP_BINARY_AVAILABLE:
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
             jac_r[:, processed_data["record_tp_rows"]] = jac
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if hasattr(qml, "active_return"):  # pragma: no cover
+                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
@@ -806,7 +827,7 @@ if LK_CPP_BINARY_AVAILABLE:
 else:
 
     class LightningKokkos(LightningBaseFallBack):  # pragma: no cover
-        # pylint: disable=missing-class-docstring
+        # pylint: disable=missing-class-docstring, too-few-public-methods
         name = "Lightning Kokkos PennyLane plugin [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.kokkos"
 

@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+
 from warnings import warn
 import numpy as np
 
@@ -49,7 +50,7 @@ if LQ_CPP_BINARY_AVAILABLE:
     from pennylane import (
         math,
         BasisState,
-        QubitStateVector,
+        StatePrep,
         Projector,
         Rot,
         DeviceError,
@@ -61,9 +62,9 @@ if LQ_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
-
-    # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
         create_ops_listC64,
@@ -73,12 +74,11 @@ if LQ_CPP_BINARY_AVAILABLE:
         VectorJacobianProductC128,
     )
 
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
     allowed_operations = {
         "Identity",
         "BasisState",
         "QubitStateVector",
+        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -156,7 +156,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         A device that interfaces with C++ to perform fast linear algebra calculations.
 
         Use of this device requires pre-built binaries or compilation from source. Check out the
-        :doc:`/installation` guide for more details.
+        :doc:`/lightning_qubit/installation` guide for more details.
 
         Args:
             wires (int): the number of wires to initialize the device with
@@ -371,7 +371,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         def apply(self, operations, rotations=None, **kwargs):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
-                if isinstance(operations[0], QubitStateVector):
+                if isinstance(operations[0], StatePrep):
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
@@ -381,7 +381,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     operations = operations[1:]
 
             for operation in operations:
-                if isinstance(operation, (QubitStateVector, BasisState)):
+                if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
                         f"Operation {operation.name} cannot be used after other "
                         f"Operations have already been applied on a {self.short_name} device."
@@ -688,7 +688,9 @@ if LQ_CPP_BINARY_AVAILABLE:
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
             jac_r[:, processed_data["record_tp_rows"]] = jac
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if hasattr(qml, "active_return"):  # pragma: no cover
+                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=line-too-long, inconsistent-return-statements
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):

@@ -41,20 +41,24 @@ using std::size_t;
 } // namespace
 /// @endcond
 
+TEMPLATE_TEST_CASE("StateVectorKokkosManaged::NonExistent",
+                   "[StateVectorKokkosManaged_Expval]", float, double) {
+    const size_t num_qubits = 3;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+    auto m = Measurements(kokkos_sv);
+
+    SECTION("Using expval with non-existent operation") {
+        PL_REQUIRE_THROWS_MATCHES(m.expval("XXX", {0}), LightningException,
+                                  "Expval does not exist for named observable");
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueIdentity",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     const size_t num_qubits = 3;
     auto ONE = TestType(1);
     StateVectorKokkos<TestType> kokkos_sv{num_qubits};
     auto m = Measurements(kokkos_sv);
-
-    SECTION("Apply directly") {
-        kokkos_sv.applyOperation("Hadamard", {0}, false);
-        kokkos_sv.applyOperation("CNOT", {0, 1}, false);
-        kokkos_sv.applyOperation("CNOT", {1, 2}, false);
-        auto res = m.getExpectationValueIdentity({0});
-        CHECK(res == Approx(ONE));
-    }
 
     SECTION("Using expval") {
         kokkos_sv.applyOperation("Hadamard", {0}, false);
@@ -74,15 +78,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliX",
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
 
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("Hadamard", {0}, false);
-            kokkos_sv.applyOperation("CNOT", {0, 1}, false);
-            kokkos_sv.applyOperation("CNOT", {1, 2}, false);
-            auto res = m.getExpectationValuePauliX({0});
-            CHECK(res == ZERO);
-        }
         SECTION("Using expval") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -93,15 +88,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliX",
             auto res = m.expval(ob);
             CHECK(res == ZERO);
         }
-        SECTION("Apply directly: Plus states") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("Hadamard", {0}, false);
-            kokkos_sv.applyOperation("Hadamard", {1}, false);
-            kokkos_sv.applyOperation("Hadamard", {2}, false);
-            auto res = m.getExpectationValuePauliX({0});
-            CHECK(res == Approx(ONE));
-        }
         SECTION("Using expval: Plus states") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -111,18 +97,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliX",
             auto ob = NamedObs<StateVectorKokkos<TestType>>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
-        }
-        SECTION("Apply directly: Minus states") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("PauliX", {0}, false);
-            kokkos_sv.applyOperation("Hadamard", {0}, false);
-            kokkos_sv.applyOperation("PauliX", {1}, false);
-            kokkos_sv.applyOperation("Hadamard", {1}, false);
-            kokkos_sv.applyOperation("PauliX", {2}, false);
-            kokkos_sv.applyOperation("Hadamard", {2}, false);
-            auto res = m.getExpectationValuePauliX({0});
-            CHECK(res == -Approx(ONE));
         }
         SECTION("Using expval: Minus states") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
@@ -149,15 +123,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliY",
         auto ONE = TestType(1);
         auto PI = TestType(M_PI);
 
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("Hadamard", {0}, false);
-            kokkos_sv.applyOperation("CNOT", {0, 1}, false);
-            kokkos_sv.applyOperation("CNOT", {1, 2}, false);
-            auto res = m.getExpectationValuePauliY({0});
-            CHECK(res == ZERO);
-        }
         SECTION("Using expval") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -168,15 +133,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliY",
             auto res = m.expval(ob);
             CHECK(res == ZERO);
         }
-        SECTION("Apply directly: Plus i states") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("RX", {0}, false, {-PI / 2});
-            kokkos_sv.applyOperation("RX", {1}, false, {-PI / 2});
-            kokkos_sv.applyOperation("RX", {2}, false, {-PI / 2});
-            auto res = m.getExpectationValuePauliY({0});
-            CHECK(res == Approx(ONE));
-        }
         SECTION("Using expval: Plus i states") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -186,15 +142,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliY",
             auto ob = NamedObs<StateVectorKokkos<TestType>>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
-        }
-        SECTION("Apply directly: Minus i states") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("RX", {0}, false, {PI / 2});
-            kokkos_sv.applyOperation("RX", {1}, false, {PI / 2});
-            kokkos_sv.applyOperation("RX", {2}, false, {PI / 2});
-            auto res = m.getExpectationValuePauliY({0});
-            CHECK(res == -Approx(ONE));
         }
         SECTION("Using expval: Minus i states") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
@@ -220,12 +167,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliZ",
         StateVectorT kokkos_sv(statevector_data.data(),
                                statevector_data.size());
 
-        SECTION("Apply directly") {
-            auto m = Measurements(kokkos_sv);
-            auto res = m.getExpectationValuePauliZ({0});
-            PrecisionT ref = 0.58498357;
-            REQUIRE(res == Approx(ref).margin(1e-6));
-        }
         SECTION("Using expval") {
             auto m = Measurements(kokkos_sv);
             auto ob = NamedObs<StateVectorKokkos<TestType>>("PauliZ", {1});
@@ -242,19 +183,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueHadamard",
         const size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            auto res = m.getExpectationValueHadamard({0});
-            CHECK(res == INVSQRT2);
-        }
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            kokkos_sv.applyOperation("PauliX", {0});
-            auto res = m.getExpectationValueHadamard({0});
-            CHECK(res == -INVSQRT2);
-        }
         SECTION("Using expval") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -274,25 +202,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueSingleQubitOp",
 
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-            Kokkos::View<ComplexT *> opMatDevice("opMat", 4);
-            Kokkos::View<ComplexT *, Kokkos::HostSpace> opMat("opMatHost", 4);
-
-            const TestType theta = M_PI / 2;
-            const TestType c = std::cos(theta / 2);
-            const TestType js = std::sin(-theta / 2);
-
-            opMat[0] = c;
-            opMat[1] = ComplexT{0, js};
-            opMat[2] = ComplexT{0, js};
-            opMat[3] = c;
-
-            Kokkos::deep_copy(opMatDevice, opMat);
-            auto res = m.getExpectationValueSingleQubitOp(opMatDevice, {0});
-            CHECK(res == INVSQRT2);
-        }
         SECTION("Using expval") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);
@@ -316,28 +225,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueTwoQubitOp",
         const size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
-        SECTION("Apply directly") {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            auto m = Measurements(kokkos_sv);
-
-            Kokkos::View<ComplexT *> opMatDevice("opMat", 16);
-            Kokkos::View<ComplexT *, Kokkos::HostSpace> opMat("opMatHost", 16);
-
-            const TestType theta = M_PI / 2;
-            const TestType c = std::cos(theta / 2);
-            const TestType js = std::sin(-theta / 2);
-
-            opMat[0] = c;
-            opMat[1] = ComplexT{0, js};
-            opMat[4] = ComplexT{0, js};
-            opMat[5] = c;
-            opMat[10] = ComplexT{1, 0};
-            opMat[15] = ComplexT{1, 0};
-
-            Kokkos::deep_copy(opMatDevice, opMat);
-            auto res = m.getExpectationValueTwoQubitOp(opMatDevice, {0, 1});
-            CHECK(res == INVSQRT2);
-        }
         SECTION("Using expval") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             auto m = Measurements(kokkos_sv);

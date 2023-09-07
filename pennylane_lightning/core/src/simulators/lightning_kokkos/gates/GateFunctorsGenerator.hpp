@@ -18,10 +18,12 @@
 
 #include "BitUtil.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
 template <class PrecisionT, bool adj = false>

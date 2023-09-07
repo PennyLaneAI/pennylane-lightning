@@ -17,9 +17,11 @@
 
 #include "BitUtil.hpp"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
@@ -251,6 +253,76 @@ template <class PrecisionT> struct getExpectationValueTwoQubitOpFunctor {
                  conj(arr[i11]) *
                      (matrix[0B1100] * arr[i00] + matrix[0B1101] * arr[i01] +
                       matrix[0B1110] * arr[i10] + matrix[0B1111] * arr[i11]));
+    }
+};
+
+template <class PrecisionT> struct getExpectationValueMultiQubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+    using ScratchViewComplex =
+        Kokkos::View<ComplexT *,
+                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using MemberType = Kokkos::TeamPolicy<>::member_type;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    std::size_t dim;
+    std::size_t num_qubits;
+
+    getExpectationValueMultiQubitOpFunctor(const KokkosComplexVector &arr_,
+                                           std::size_t num_qubits_,
+                                           const KokkosComplexVector &matrix_,
+                                           KokkosIntVector &wires_) {
+        dim = 1U << wires_.size();
+        num_qubits = num_qubits_;
+        wires = wires_;
+        arr = arr_;
+        matrix = matrix_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const MemberType &teamMember, PrecisionT &expval) const {
+        const std::size_t k = teamMember.league_rank() * dim;
+        PrecisionT tempExpVal = 0.0;
+        ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
+        if (teamMember.team_rank() == 0) {
+            Kokkos::parallel_for(
+                Kokkos::ThreadVectorRange(teamMember, dim),
+                [&](const std::size_t inner_idx) {
+                    std::size_t idx = k | inner_idx;
+                    const std::size_t n_wires = wires.size();
+                    for (std::size_t pos = 0; pos < n_wires; pos++) {
+                        std::size_t x =
+                            ((idx >> (n_wires - pos - 1)) ^
+                             (idx >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+                        idx = idx ^ ((x << (n_wires - pos - 1)) |
+                                     (x << (num_qubits - wires(pos) - 1)));
+                    }
+                    coeffs_in(inner_idx) = arr(idx);
+                });
+        }
+        teamMember.team_barrier();
+        Kokkos::parallel_reduce(
+            Kokkos::TeamThreadRange(teamMember, dim),
+            [&](const std::size_t i, PrecisionT &innerExpVal) {
+                const std::size_t base_idx = i * dim;
+                ComplexT tmp{0.0};
+                Kokkos::parallel_reduce(
+                    Kokkos::ThreadVectorRange(teamMember, dim),
+                    [&](const std::size_t j, ComplexT &isum) {
+                        isum = isum + matrix(base_idx + j) * coeffs_in(j);
+                    },
+                    tmp);
+                innerExpVal += real(conj(coeffs_in(i)) * tmp);
+            },
+            tempExpVal);
+        if (teamMember.team_rank() == 0) {
+            expval += tempExpVal;
+        }
     }
 };
 

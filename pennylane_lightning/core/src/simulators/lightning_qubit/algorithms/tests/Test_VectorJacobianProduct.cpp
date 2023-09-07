@@ -338,7 +338,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
         }();
 
         std::vector<PrecisionT> jac(num_params);
-        adj.adjointJacobian(std::span{jac}, jd);
+        adj.adjointJacobian(std::span{jac}, jd, sv);
 
         REQUIRE(grad_vjp == approx(jac).margin(1e-5));
     }

@@ -14,6 +14,7 @@
 """
 Tests for ``adjoint_jacobian`` method on Lightning devices.
 """
+import itertools
 import pytest
 from conftest import device_name, LightningDevice as ld
 
@@ -29,6 +30,14 @@ I, X, Y, Z = (
     qml.PauliY.compute_matrix(),
     qml.PauliZ.compute_matrix(),
 )
+
+kokkos_args = [None]
+if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+    from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+
+    kokkos_args += [InitializationSettings().set_num_threads(2)]
+
+fixture_params = itertools.product([np.complex64, np.complex128], kokkos_args)
 
 
 def Rx(theta):
@@ -67,9 +76,12 @@ def Rz(theta):
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=3, c_dtype=request.param)
+        params = request.param
+        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+            return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
+        return qml.device(device_name, wires=3, c_dtype=params[0])
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -81,6 +93,22 @@ class TestAdjointJacobian:
 
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
+        ):
+            dev.adjoint_jacobian(tape)
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.1, wires=0)
+            qml.state()
+
+        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+            message = "Adjoint differentiation does not support State measurements."
+        elif ld._CPP_BINARY_AVAILABLE:
+            message = "This method does not support statevector return type."
+        else:
+            message = "Adjoint differentiation method does not support measurement StateMP"
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match=message,
         ):
             dev.adjoint_jacobian(tape)
 
@@ -143,7 +171,8 @@ class TestAdjointJacobian:
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    def test_pauli_rotation_gradient(self, G, theta, dev):
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_pauli_rotation_gradient(self, stateprep, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
 
         random_state = np.array(
@@ -151,7 +180,7 @@ class TestAdjointJacobian:
         )
 
         tape = qml.tape.QuantumScript(
-            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [qml.QubitStateVector(random_state, 0)]
+            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [stateprep(random_state, 0)]
         )
 
         tape.trainable_params = {1}
@@ -166,14 +195,15 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    def test_Rot_gradient(self, theta, dev):
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_Rot_gradient(self, stateprep, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
 
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
-            qml.QubitStateVector(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
+            stateprep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
 
