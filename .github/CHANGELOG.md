@@ -24,6 +24,10 @@
 * Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
   [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
 
+* Add support for dependent external packages to C++ core.
+  [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
+
+
 ### Documentation
 
 ### Bug fixes
@@ -35,7 +39,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
