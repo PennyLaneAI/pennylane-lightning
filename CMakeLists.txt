@@ -101,7 +101,7 @@ target_link_libraries(pennylane_lightning INTERFACE  ${PL_BACKEND} #simulator
                                                     "${PL_BACKEND}_measurements"
 )
                                                 
-target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/src;include>")
+target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
 #####################################################
 if(ENABLE_PYTHON)
