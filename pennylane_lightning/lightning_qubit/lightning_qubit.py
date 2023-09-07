@@ -380,11 +380,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                     self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                     operations = operations[1:]
 
-            if any(isinstance(op, (BasisState, StatePrep)) for op in operations):
-                tape = qml.tape.QuantumTape(ops=operations, measurements=[])
-                tape = qml.tape.expand_tape_state_prep(tape, skip_first=False, force_decompose=True)
-                operations = tape._ops
-
             for operation in operations:
                 if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
