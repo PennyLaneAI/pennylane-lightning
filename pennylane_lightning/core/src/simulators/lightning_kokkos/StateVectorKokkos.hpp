@@ -61,8 +61,9 @@ class StateVectorKokkos final
   public:
     using PrecisionT = fp_t;
     using ComplexT = Kokkos::complex<fp_t>;
-    using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
+    using DoubleLoopRank = Kokkos::Rank<2>;
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
+    using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     using KokkosVector = Kokkos::View<ComplexT *>;
     using KokkosSizeTVector = Kokkos::View<size_t *>;
     using UnmanagedComplexHostView =
@@ -272,8 +273,7 @@ class StateVectorKokkos final
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
-            Kokkos::MDRangePolicy<Kokkos::Rank<2>> policy_2d({0, 0},
-                                                             {dim, dim});
+            Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
             Kokkos::parallel_for(
                 policy_2d,
                 KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
