@@ -1484,7 +1484,6 @@ template <class PrecisionT, bool inverse = false> struct rotFunctor {
 };
 
 template <class PrecisionT> struct apply1QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -1526,7 +1525,6 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
 };
 
 template <class PrecisionT> struct apply2QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -1608,7 +1606,6 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     }
 
 template <class PrecisionT> struct apply3QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -1677,7 +1674,6 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
         GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
 
 template <class PrecisionT> struct apply4QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -1777,7 +1773,6 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
         GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
         GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
 template <class PrecisionT> struct apply5QubitOpFunctor {
-
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
