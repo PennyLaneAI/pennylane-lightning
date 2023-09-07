@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
+
 ### Documentation
 
 ### Bug fixes
