@@ -1350,7 +1350,6 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
 TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    // using VectorT = TestVector<std::complex<TestType>>;
     const size_t num_qubits = 7;
     auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
 
