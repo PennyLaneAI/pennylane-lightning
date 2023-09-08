@@ -60,9 +60,9 @@ option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Backend
-set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend devices")
+set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
 
-# Python bindings is not supported with building multiple backend devices
+# Python bindings are not supported with building multiple backend devices
 list(LENGTH PL_BACKEND PL_BACKEND_LEN)
 if ((${PL_BACKEND_LEN} GREATER 1) AND ENABLE_PYTHON)
     message(FATAL_ERROR "You cannot build ${PL_BACKEND} simulators with ENABLE_PYTHON")
@@ -119,29 +119,27 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    foreach(BACKEND ${PL_BACKEND})
-        pybind11_add_module("${BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
+    pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
-        target_link_libraries("${BACKEND}_ops" PRIVATE   lightning_compile_options
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
                                                         lightning_external_libs
                                                         )
 
-        target_link_libraries("${BACKEND}_ops" PRIVATE   lightning_observables
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
                                                         lightning_utils
                                                         lightning_algorithms
                                                         )
 
-        target_link_libraries("${BACKEND}_ops" PRIVATE  "${BACKEND}" #simulator
-                                                        "${BACKEND}_algorithms"
-                                                        "${BACKEND}_observables"
-                                                        "${BACKEND}_bindings"
-                                                        "${BACKEND}_measurements"
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   "${PL_BACKEND}" #simulator
+                                                        "${PL_BACKEND}_algorithms"
+                                                        "${PL_BACKEND}_observables"
+                                                        "${PL_BACKEND}_bindings"
+                                                        "${PL_BACKEND}_measurements"
                                                         )
 
-        set_target_properties("${BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
-        target_compile_definitions("${BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
-    endforeach()
+    target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
 
 install(TARGETS pennylane_lightning
