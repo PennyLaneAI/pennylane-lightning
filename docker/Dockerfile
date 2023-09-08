@@ -67,4 +67,4 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
-RUN pip install PennyLane_Lightning*.whl --force-reinstall
+RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
