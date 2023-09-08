@@ -26,7 +26,7 @@ MACRO(FIND_AND_ADD_SIMULATOR)
     # Finding the list of simulators:
     FIND_SIMULATORS_LIST(SIMULATORS_LIST)
 
-    FOREACH(BACKEND ${PL_BACKEND_LIST})
+    FOREACH(BACKEND ${PL_BACKEND})
         if (${BACKEND} IN_LIST SIMULATORS_LIST)
             add_subdirectory(${BACKEND})
         else()

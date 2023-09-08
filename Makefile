@@ -70,7 +70,7 @@ coverage:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
-	@echo "Generating cpp coverage report in BuildCov/out for $(if $(backend:-=),$(backend),lightning_qubit) backend"
+	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
 	rm -rf ./BuildCov
 	cmake -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DPL_BACKEND=$(PL_BACKEND)
 	cmake --build ./BuildCov

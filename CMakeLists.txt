@@ -60,12 +60,16 @@ option(BUILD_TESTS "Build cpp tests" OFF)
 option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 
 # Backend
-set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
-set(PL_BACKEND_LIST "lightning_qubit" "lightning_kokkos")
+set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend devices")
 
-# Split backends
-# string(REPLACE ";" " " PL_BACKEND_LIST ${PL_BACKEND})
-foreach(BACKEND ${PL_BACKEND_LIST})
+# Python bindings is not supported with building multiple backend devices
+list(LENGTH PL_BACKEND PL_BACKEND_LEN)
+if ((${PL_BACKEND_LEN} GREATER 1) AND ENABLE_PYTHON)
+    message(FATAL_ERROR "You cannot build ${PL_BACKEND} simulators with ENABLE_PYTHON")
+endif()
+
+# Print PL_BACKEND
+foreach(BACKEND ${PL_BACKEND})
     message(STATUS "PL_BACKEND: ${BACKEND}")
 endforeach()
 
@@ -101,7 +105,7 @@ target_link_libraries(pennylane_lightning INTERFACE lightning_observables
                                                     lightning_algorithms
                                                     )
 
-foreach(BACKEND ${PL_BACKEND_LIST})
+foreach(BACKEND ${PL_BACKEND})
     target_link_libraries(pennylane_lightning INTERFACE "${BACKEND}" #simulator
                                                         "${BACKEND}_algorithms"
                                                         "${BACKEND}_observables"
@@ -115,7 +119,7 @@ target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:$
 #####################################################
 if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
-    foreach(BACKEND ${PL_BACKEND_LIST})
+    foreach(BACKEND ${PL_BACKEND})
         pybind11_add_module("${BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
         target_link_libraries("${BACKEND}_ops" PRIVATE   lightning_compile_options
