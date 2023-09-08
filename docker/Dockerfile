@@ -19,6 +19,7 @@ RUN apt-get update
 RUN apt-get install --no-install-recommends -y \
     apt-utils \
     ca-certificates \
+    libgomp1 \
     python3 \
     python3-pip \
     python3-venv \
@@ -33,7 +34,7 @@ RUN DEBIAN_FRONTEND="noninteractive" \
     curl \
     git \
     python3-dev \
-    gcc-11 g++-11 cpp-11 
+    gcc-11 g++-11 cpp-11 libomp-dev
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 RUN update-alternatives \
