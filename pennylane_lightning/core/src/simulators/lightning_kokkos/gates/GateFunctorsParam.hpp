@@ -27,180 +27,8 @@ using std::size_t;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
-template <class PrecisionT, bool inverse = false> struct singleQubitOpFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-    Kokkos::View<Kokkos::complex<PrecisionT> *> matrix;
 
-    size_t rev_wire;
-    size_t rev_wire_shift;
-    size_t wire_parity;
-    size_t wire_parity_inv;
-
-    singleQubitOpFunctor(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_, size_t num_qubits,
-        const Kokkos::View<Kokkos::complex<PrecisionT> *> &matrix_,
-        const std::vector<size_t> &wires) {
-        arr = arr_;
-        matrix = matrix_;
-        rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        wire_parity = fillTrailingOnes(rev_wire);
-        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
-        if constexpr (inverse) {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | rev_wire_shift;
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
-            const Kokkos::complex<PrecisionT> v1 = arr[i1];
-
-            arr[i0] =
-                conj(matrix[0B00]) * v0 +
-                conj(matrix[0B10]) * v1; // NOLINT(readability-magic-numbers)
-            arr[i1] =
-                conj(matrix[0B01]) * v0 +
-                conj(matrix[0B11]) * v1; // NOLINT(readability-magic-numbers)
-                                         // }
-        } else {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | rev_wire_shift;
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
-            const Kokkos::complex<PrecisionT> v1 = arr[i1];
-            arr[i0] = matrix[0B00] * v0 +
-                      matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
-            arr[i1] = matrix[0B10] * v0 +
-                      matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
-        }
-    }
-};
-
-/**
- * @brief Apply a two qubit gate to the statevector.
- *
- * @param arr Pointer to the statevector.
- * @param num_qubits Number of qubits.
- * @param matrix Perfect square matrix in row-major order.
- * @param wires Wires the gate applies to.
- * @param inverse Indicate whether inverse should be taken.
- */
-template <class PrecisionT, bool inverse = false> struct twoQubitOpFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-    Kokkos::View<Kokkos::complex<PrecisionT> *> matrix;
-
-    size_t rev_wire0;
-    size_t rev_wire1;
-    size_t rev_wire0_shift;
-    size_t rev_wire1_shift;
-    size_t rev_wire_min;
-    size_t rev_wire_max;
-    size_t parity_low;
-    size_t parity_high;
-    size_t parity_middle;
-
-    twoQubitOpFunctor(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_, size_t num_qubits,
-        const Kokkos::View<Kokkos::complex<PrecisionT> *> &matrix_,
-        const std::vector<size_t> &wires) {
-        rev_wire0 = num_qubits - wires[1] - 1;
-        rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
-        rev_wire_min = std::min(rev_wire0, rev_wire1);
-        rev_wire_max = std::max(rev_wire0, rev_wire1);
-
-        parity_low = fillTrailingOnes(rev_wire_min);
-        parity_high = fillLeadingOnes(rev_wire_max + 1);
-        parity_middle =
-            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
-
-        arr = arr_;
-        matrix = matrix_;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
-        if constexpr (inverse) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            const Kokkos::complex<PrecisionT> v00 = arr[i00];
-            const Kokkos::complex<PrecisionT> v01 = arr[i01];
-            const Kokkos::complex<PrecisionT> v10 = arr[i10];
-            const Kokkos::complex<PrecisionT> v11 = arr[i11];
-
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i00] = conj(matrix[0b0000]) * v00 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b0100]) * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1000]) * v10 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1100]) * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i01] = conj(matrix[0b0001]) * v00 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b0101]) * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1001]) * v10 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1101]) * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i10] = conj(matrix[0b0010]) * v00 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b0110]) * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1010]) * v10 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1110]) * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i11] = conj(matrix[0b0011]) * v00 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b0111]) * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1011]) * v10 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       conj(matrix[0b1111]) * v11;
-        } else {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            const Kokkos::complex<PrecisionT> v00 = arr[i00];
-            const Kokkos::complex<PrecisionT> v01 = arr[i01];
-            const Kokkos::complex<PrecisionT> v10 = arr[i10];
-            const Kokkos::complex<PrecisionT> v11 = arr[i11];
-
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       matrix[0b0010] * v10 + matrix[0b0011] * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       matrix[0b0110] * v10 + matrix[0b0111] * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       matrix[0b1010] * v10 + matrix[0b1011] * v11;
-            // NOLINTNEXTLINE(readability-magic-numbers)
-            arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
-                       // NOLINTNEXTLINE(readability-magic-numbers)
-                       matrix[0b1110] * v10 + matrix[0b1111] * v11;
-            // }
-        }
-    }
-};
-
-template <class Precision, bool inverse = false> struct multiQubitOpFunctor {
+template <class Precision> struct multiQubitOpFunctor {
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<Precision> *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
     using ScratchViewComplex =
@@ -221,10 +49,14 @@ template <class Precision, bool inverse = false> struct multiQubitOpFunctor {
 
     multiQubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
                         const KokkosComplexVector &matrix_,
-                        KokkosIntVector &wires_) {
-        dim = 1U << wires_.size();
+                        const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_host.size());
+        Kokkos::deep_copy(wires, wires_host);
+        dim = static_cast<std::size_t>(1U) << wires_.size();
         num_qubits = num_qubits_;
-        wires = wires_;
         arr = arr_;
         matrix = matrix_;
     }
@@ -234,74 +66,37 @@ template <class Precision, bool inverse = false> struct multiQubitOpFunctor {
         const std::size_t k = teamMember.league_rank() * dim;
         ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
         ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
-        if constexpr (inverse) {
-            if (teamMember.team_rank() == 0) {
-                Kokkos::parallel_for(
-                    Kokkos::ThreadVectorRange(teamMember, dim),
-                    [&](const std::size_t inner_idx) {
-                        std::size_t idx = k | inner_idx;
-                        const std::size_t n_wires = wires.size();
-
-                        for (std::size_t pos = 0; pos < n_wires; pos++) {
-                            std::size_t x =
-                                ((idx >> (n_wires - pos - 1)) ^
-                                 (idx >> (num_qubits - wires(pos) - 1))) &
-                                1U;
-                            idx = idx ^ ((x << (n_wires - pos - 1)) |
-                                         (x << (num_qubits - wires(pos) - 1)));
-                        }
-
-                        indices(inner_idx) = idx;
-                        coeffs_in(inner_idx) = arr(idx);
-                    });
-            }
-            teamMember.team_barrier();
+        if (teamMember.team_rank() == 0) {
             Kokkos::parallel_for(
-                Kokkos::TeamThreadRange(teamMember, dim),
-                [&](const std::size_t i) {
-                    const auto idx = indices[i];
-                    arr(idx) = 0.0;
+                Kokkos::ThreadVectorRange(teamMember, dim),
+                [&](const std::size_t inner_idx) {
+                    std::size_t idx = k | inner_idx;
+                    const std::size_t n_wires = wires.size();
 
-                    for (size_t j = 0; j < dim; j++) {
-                        const std::size_t base_idx = j * dim;
-                        arr(idx) +=
-                            Kokkos::conj(matrix[base_idx + i]) * coeffs_in[j];
+                    for (std::size_t pos = 0; pos < n_wires; pos++) {
+                        std::size_t x =
+                            ((idx >> (n_wires - pos - 1)) ^
+                             (idx >> (num_qubits - wires(pos) - 1))) &
+                            1U;
+                        idx = idx ^ ((x << (n_wires - pos - 1)) |
+                                     (x << (num_qubits - wires(pos) - 1)));
                     }
+
+                    indices(inner_idx) = idx;
+                    coeffs_in(inner_idx) = arr(idx);
                 });
-        } else {
-            if (teamMember.team_rank() == 0) {
-                Kokkos::parallel_for(
-                    Kokkos::ThreadVectorRange(teamMember, dim),
-                    [&](const std::size_t inner_idx) {
-                        std::size_t idx = k | inner_idx;
-                        const std::size_t n_wires = wires.size();
-
-                        for (std::size_t pos = 0; pos < n_wires; pos++) {
-                            std::size_t x =
-                                ((idx >> (n_wires - pos - 1)) ^
-                                 (idx >> (num_qubits - wires(pos) - 1))) &
-                                1U;
-                            idx = idx ^ ((x << (n_wires - pos - 1)) |
-                                         (x << (num_qubits - wires(pos) - 1)));
-                        }
-
-                        indices(inner_idx) = idx;
-                        coeffs_in(inner_idx) = arr(idx);
-                    });
-            }
-            teamMember.team_barrier();
-            Kokkos::parallel_for(Kokkos::TeamThreadRange(teamMember, dim),
-                                 [&](const std::size_t i) {
-                                     const auto idx = indices[i];
-                                     arr(idx) = 0.0;
-                                     const std::size_t base_idx = i * dim;
-
-                                     for (std::size_t j = 0; j < dim; j++) {
-                                         arr(idx) += matrix(base_idx + j) *
-                                                     coeffs_in(j);
-                                     }
-                                 });
         }
+        teamMember.team_barrier();
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
+                const auto idx = indices[i];
+                arr(idx) = 0.0;
+                const std::size_t base_idx = i * dim;
+
+                for (std::size_t j = 0; j < dim; j++) {
+                    arr(idx) += matrix(base_idx + j) * coeffs_in(j);
+                }
+            });
     }
 };
 
@@ -769,6 +564,7 @@ template <class PrecisionT, bool inverse = false> struct isingZZFunctor {
         arr[i11] *= shift_0;
     }
 };
+
 template <class PrecisionT, bool inverse = false>
 struct singleExcitationFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
@@ -1684,6 +1480,423 @@ template <class PrecisionT, bool inverse = false> struct rotFunctor {
                   rot_mat_0b01 * v1; // NOLINT(readability-magic-numbers)
         arr[i1] = rot_mat_0b10 * v0 +
                   rot_mat_0b11 * v1; // NOLINT(readability-magic-numbers)
+    }
+};
+
+template <class PrecisionT> struct apply1QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    const std::size_t n_wires = 1;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    std::size_t num_qubits;
+    size_t rev_wire;
+    size_t rev_wire_shift;
+    size_t wire_parity;
+    size_t wire_parity_inv;
+
+    apply1QubitOpFunctor(
+        KokkosComplexVector &arr_, std::size_t num_qubits_,
+        const KokkosComplexVector &matrix_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+
+        rev_wire = num_qubits - wires_[0] - 1;
+        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        wire_parity = fillTrailingOnes(rev_wire);
+        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        const size_t i1 = i0 | rev_wire_shift;
+        const Kokkos::complex<PrecisionT> v0 = arr[i0];
+        const Kokkos::complex<PrecisionT> v1 = arr[i1];
+
+        arr(i0) = matrix(0B00) * v0 + matrix(0B01) * v1;
+        arr(i1) = matrix(0B10) * v0 + matrix(0B11) * v1;
+    }
+};
+
+template <class PrecisionT> struct apply2QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    const std::size_t n_wires = 2;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    std::size_t num_qubits;
+    std::size_t rev_wire0;
+    std::size_t rev_wire1;
+    std::size_t rev_wire0_shift;
+    std::size_t rev_wire1_shift;
+    std::size_t rev_wire_min;
+    std::size_t rev_wire_max;
+    std::size_t parity_low;
+    std::size_t parity_high;
+    std::size_t parity_middle;
+
+    apply2QubitOpFunctor(
+        KokkosComplexVector &arr_, std::size_t num_qubits_,
+        const KokkosComplexVector &matrix_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+
+        rev_wire0 = num_qubits - wires_[1] - 1;
+        rev_wire1 = num_qubits - wires_[0] - 1; // Control qubit
+        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire_min = std::min(rev_wire0, rev_wire1);
+        rev_wire_max = std::max(rev_wire0, rev_wire1);
+        parity_low = fillTrailingOnes(rev_wire_min);
+        parity_high = fillLeadingOnes(rev_wire_max + 1);
+        parity_middle =
+            fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const std::size_t i00 = ((k << 2U) & parity_high) |
+                                ((k << 1U) & parity_middle) | (k & parity_low);
+        const std::size_t i10 = i00 | rev_wire1_shift;
+        const std::size_t i01 = i00 | rev_wire0_shift;
+        const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+
+        const Kokkos::complex<PrecisionT> v00 = arr[i00];
+        const Kokkos::complex<PrecisionT> v01 = arr[i01];
+        const Kokkos::complex<PrecisionT> v10 = arr[i10];
+        const Kokkos::complex<PrecisionT> v11 = arr[i11];
+
+        arr(i00) = matrix(0B0000) * v00 + matrix(0B0001) * v01 +
+                   matrix(0B0010) * v10 + matrix(0B0011) * v11;
+        arr(i01) = matrix(0B0100) * v00 + matrix(0B0101) * v01 +
+                   matrix(0B0110) * v10 + matrix(0B0111) * v11;
+        arr(i10) = matrix(0B1000) * v00 + matrix(0B1001) * v01 +
+                   matrix(0B1010) * v10 + matrix(0B1011) * v11;
+        arr(i11) = matrix(0B1100) * v00 + matrix(0B1101) * v01 +
+                   matrix(0B1110) * v10 + matrix(0B1111) * v11;
+    }
+};
+
+#define GATEENTRY3(xx, yy) xx << 3 | yy
+#define GATETERM3(xx, yy, vyy) matrix(GATEENTRY3(xx, yy)) * vyy
+#define GATESUM3(xx)                                                           \
+    GATETERM3(xx, 0B000, v000) + GATETERM3(xx, 0B001, v001) +                  \
+        GATETERM3(xx, 0B010, v010) + GATETERM3(xx, 0B011, v011) +              \
+        GATETERM3(xx, 0B100, v100) + GATETERM3(xx, 0B101, v101) +              \
+        GATETERM3(xx, 0B110, v110) + GATETERM3(xx, 0B111, v111)
+#define INDEX(ivar, xx)                                                        \
+    kdim | xx;                                                                 \
+    for (std::size_t pos = 0; pos < n_wires; pos++) {                          \
+        std::size_t x = ((ivar >> (n_wires - pos - 1)) ^                       \
+                         (ivar >> (num_qubits - wires(pos) - 1))) &            \
+                        1U;                                                    \
+        ivar = ivar ^ ((x << (n_wires - pos - 1)) |                            \
+                       (x << (num_qubits - wires(pos) - 1)));                  \
+    }
+
+template <class PrecisionT> struct apply3QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    const std::size_t n_wires = 3;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    std::size_t num_qubits;
+
+    apply3QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
+                         const KokkosComplexVector &matrix_,
+                         const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_host.size());
+        Kokkos::deep_copy(wires, wires_host);
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const std::size_t kdim = k * dim;
+        std::size_t i000 = INDEX(i000, 0B000);
+        ComplexT v000 = arr(i000);
+        std::size_t i001 = INDEX(i001, 0B001);
+        ComplexT v001 = arr(i001);
+        std::size_t i010 = INDEX(i010, 0B010);
+        ComplexT v010 = arr(i010);
+        std::size_t i011 = INDEX(i011, 0B011);
+        ComplexT v011 = arr(i011);
+        std::size_t i100 = INDEX(i100, 0B100);
+        ComplexT v100 = arr(i100);
+        std::size_t i101 = INDEX(i101, 0B101);
+        ComplexT v101 = arr(i101);
+        std::size_t i110 = INDEX(i110, 0B110);
+        ComplexT v110 = arr(i110);
+        std::size_t i111 = INDEX(i111, 0B111);
+        ComplexT v111 = arr(i111);
+
+        arr(i000) = GATESUM3(0B000);
+        arr(i001) = GATESUM3(0B001);
+        arr(i010) = GATESUM3(0B010);
+        arr(i011) = GATESUM3(0B011);
+        arr(i100) = GATESUM3(0B100);
+        arr(i101) = GATESUM3(0B101);
+        arr(i110) = GATESUM3(0B110);
+        arr(i111) = GATESUM3(0B111);
+    }
+};
+
+#define GATEENTRY4(xx, yy) xx << 4 | yy
+#define GATETERM4(xx, yy, vyy) matrix(GATEENTRY4(xx, yy)) * vyy
+#define GATESUM4(xx)                                                           \
+    GATETERM4(xx, 0B0000, v0000) + GATETERM4(xx, 0B0001, v0001) +              \
+        GATETERM4(xx, 0B0010, v0010) + GATETERM4(xx, 0B0011, v0011) +          \
+        GATETERM4(xx, 0B0100, v0100) + GATETERM4(xx, 0B0101, v0101) +          \
+        GATETERM4(xx, 0B0110, v0110) + GATETERM4(xx, 0B0111, v0111) +          \
+        GATETERM4(xx, 0B1000, v1000) + GATETERM4(xx, 0B1001, v1001) +          \
+        GATETERM4(xx, 0B1010, v1010) + GATETERM4(xx, 0B1011, v1011) +          \
+        GATETERM4(xx, 0B1100, v1100) + GATETERM4(xx, 0B1101, v1101) +          \
+        GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
+
+template <class PrecisionT> struct apply4QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    const std::size_t n_wires = 4;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    std::size_t num_qubits;
+
+    apply4QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
+                         const KokkosComplexVector &matrix_,
+                         const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_host.size());
+        Kokkos::deep_copy(wires, wires_host);
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const std::size_t kdim = k * dim;
+        std::size_t i0000 = INDEX(i0000, 0B0000);
+        ComplexT v0000 = arr(i0000);
+        std::size_t i0001 = INDEX(i0001, 0B0001);
+        ComplexT v0001 = arr(i0001);
+        std::size_t i0010 = INDEX(i0010, 0B0010);
+        ComplexT v0010 = arr(i0010);
+        std::size_t i0011 = INDEX(i0011, 0B0011);
+        ComplexT v0011 = arr(i0011);
+        std::size_t i0100 = INDEX(i0100, 0B0100);
+        ComplexT v0100 = arr(i0100);
+        std::size_t i0101 = INDEX(i0101, 0B0101);
+        ComplexT v0101 = arr(i0101);
+        std::size_t i0110 = INDEX(i0110, 0B0110);
+        ComplexT v0110 = arr(i0110);
+        std::size_t i0111 = INDEX(i0111, 0B0111);
+        ComplexT v0111 = arr(i0111);
+        std::size_t i1000 = INDEX(i1000, 0B1000);
+        ComplexT v1000 = arr(i1000);
+        std::size_t i1001 = INDEX(i1001, 0B1001);
+        ComplexT v1001 = arr(i1001);
+        std::size_t i1010 = INDEX(i1010, 0B1010);
+        ComplexT v1010 = arr(i1010);
+        std::size_t i1011 = INDEX(i1011, 0B1011);
+        ComplexT v1011 = arr(i1011);
+        std::size_t i1100 = INDEX(i1100, 0B1100);
+        ComplexT v1100 = arr(i1100);
+        std::size_t i1101 = INDEX(i1101, 0B1101);
+        ComplexT v1101 = arr(i1101);
+        std::size_t i1110 = INDEX(i1110, 0B1110);
+        ComplexT v1110 = arr(i1110);
+        std::size_t i1111 = INDEX(i1111, 0B1111);
+        ComplexT v1111 = arr(i1111);
+
+        arr(i0000) = GATESUM4(0B0000);
+        arr(i0001) = GATESUM4(0B0001);
+        arr(i0010) = GATESUM4(0B0010);
+        arr(i0011) = GATESUM4(0B0011);
+        arr(i0100) = GATESUM4(0B0100);
+        arr(i0101) = GATESUM4(0B0101);
+        arr(i0110) = GATESUM4(0B0110);
+        arr(i0111) = GATESUM4(0B0111);
+        arr(i1000) = GATESUM4(0B1000);
+        arr(i1001) = GATESUM4(0B1001);
+        arr(i1010) = GATESUM4(0B1010);
+        arr(i1011) = GATESUM4(0B1011);
+        arr(i1100) = GATESUM4(0B1100);
+        arr(i1101) = GATESUM4(0B1101);
+        arr(i1110) = GATESUM4(0B1110);
+        arr(i1111) = GATESUM4(0B1111);
+    }
+};
+
+#define GATEENTRY5(xx, yy) xx << 5 | yy
+#define GATETERM5(xx, yy, vyy) matrix(GATEENTRY5(xx, yy)) * vyy
+#define GATESUM5(xx)                                                           \
+    GATETERM5(xx, 0B00000, v00000) + GATETERM5(xx, 0B00001, v00001) +          \
+        GATETERM5(xx, 0B00010, v00010) + GATETERM5(xx, 0B00011, v00011) +      \
+        GATETERM5(xx, 0B00100, v00100) + GATETERM5(xx, 0B00101, v00101) +      \
+        GATETERM5(xx, 0B00110, v00110) + GATETERM5(xx, 0B00111, v00111) +      \
+        GATETERM5(xx, 0B01000, v01000) + GATETERM5(xx, 0B01001, v01001) +      \
+        GATETERM5(xx, 0B01010, v01010) + GATETERM5(xx, 0B01011, v01011) +      \
+        GATETERM5(xx, 0B01100, v01100) + GATETERM5(xx, 0B01101, v01101) +      \
+        GATETERM5(xx, 0B01110, v01110) + GATETERM5(xx, 0B01111, v01111) +      \
+        GATETERM5(xx, 0B10000, v10000) + GATETERM5(xx, 0B10001, v10001) +      \
+        GATETERM5(xx, 0B10010, v10010) + GATETERM5(xx, 0B10011, v10011) +      \
+        GATETERM5(xx, 0B10100, v10100) + GATETERM5(xx, 0B10101, v10101) +      \
+        GATETERM5(xx, 0B10110, v10110) + GATETERM5(xx, 0B10111, v10111) +      \
+        GATETERM5(xx, 0B11000, v11000) + GATETERM5(xx, 0B11001, v11001) +      \
+        GATETERM5(xx, 0B11010, v11010) + GATETERM5(xx, 0B11011, v11011) +      \
+        GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
+        GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
+template <class PrecisionT> struct apply5QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector wires;
+    const std::size_t n_wires = 5;
+    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    std::size_t num_qubits;
+
+    apply5QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
+                         const KokkosComplexVector &matrix_,
+                         const std::vector<std::size_t> &wires_) {
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            wires_host(wires_.data(), wires_.size());
+        Kokkos::resize(wires, wires_host.size());
+        Kokkos::deep_copy(wires, wires_host);
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const std::size_t kdim = k * dim;
+        std::size_t i00000 = INDEX(i00000, 0B00000);
+        ComplexT v00000 = arr(i00000);
+        std::size_t i00001 = INDEX(i00001, 0B00001);
+        ComplexT v00001 = arr(i00001);
+        std::size_t i00010 = INDEX(i00010, 0B00010);
+        ComplexT v00010 = arr(i00010);
+        std::size_t i00011 = INDEX(i00011, 0B00011);
+        ComplexT v00011 = arr(i00011);
+        std::size_t i00100 = INDEX(i00100, 0B00100);
+        ComplexT v00100 = arr(i00100);
+        std::size_t i00101 = INDEX(i00101, 0B00101);
+        ComplexT v00101 = arr(i00101);
+        std::size_t i00110 = INDEX(i00110, 0B00110);
+        ComplexT v00110 = arr(i00110);
+        std::size_t i00111 = INDEX(i00111, 0B00111);
+        ComplexT v00111 = arr(i00111);
+        std::size_t i01000 = INDEX(i01000, 0B01000);
+        ComplexT v01000 = arr(i01000);
+        std::size_t i01001 = INDEX(i01001, 0B01001);
+        ComplexT v01001 = arr(i01001);
+        std::size_t i01010 = INDEX(i01010, 0B01010);
+        ComplexT v01010 = arr(i01010);
+        std::size_t i01011 = INDEX(i01011, 0B01011);
+        ComplexT v01011 = arr(i01011);
+        std::size_t i01100 = INDEX(i01100, 0B01100);
+        ComplexT v01100 = arr(i01100);
+        std::size_t i01101 = INDEX(i01101, 0B01101);
+        ComplexT v01101 = arr(i01101);
+        std::size_t i01110 = INDEX(i01110, 0B01110);
+        ComplexT v01110 = arr(i01110);
+        std::size_t i01111 = INDEX(i01111, 0B01111);
+        ComplexT v01111 = arr(i01111);
+        std::size_t i10000 = INDEX(i10000, 0B10000);
+        ComplexT v10000 = arr(i10000);
+        std::size_t i10001 = INDEX(i10001, 0B10001);
+        ComplexT v10001 = arr(i10001);
+        std::size_t i10010 = INDEX(i10010, 0B10010);
+        ComplexT v10010 = arr(i10010);
+        std::size_t i10011 = INDEX(i10011, 0B10011);
+        ComplexT v10011 = arr(i10011);
+        std::size_t i10100 = INDEX(i10100, 0B10100);
+        ComplexT v10100 = arr(i10100);
+        std::size_t i10101 = INDEX(i10101, 0B10101);
+        ComplexT v10101 = arr(i10101);
+        std::size_t i10110 = INDEX(i10110, 0B10110);
+        ComplexT v10110 = arr(i10110);
+        std::size_t i10111 = INDEX(i10111, 0B10111);
+        ComplexT v10111 = arr(i10111);
+        std::size_t i11000 = INDEX(i11000, 0B11000);
+        ComplexT v11000 = arr(i11000);
+        std::size_t i11001 = INDEX(i11001, 0B11001);
+        ComplexT v11001 = arr(i11001);
+        std::size_t i11010 = INDEX(i11010, 0B11010);
+        ComplexT v11010 = arr(i11010);
+        std::size_t i11011 = INDEX(i11011, 0B11011);
+        ComplexT v11011 = arr(i11011);
+        std::size_t i11100 = INDEX(i11100, 0B11100);
+        ComplexT v11100 = arr(i11100);
+        std::size_t i11101 = INDEX(i11101, 0B11101);
+        ComplexT v11101 = arr(i11101);
+        std::size_t i11110 = INDEX(i11110, 0B11110);
+        ComplexT v11110 = arr(i11110);
+        std::size_t i11111 = INDEX(i11111, 0B11111);
+        ComplexT v11111 = arr(i11111);
+
+        arr(i00000) = GATESUM5(0B00000);
+        arr(i00001) = GATESUM5(0B00001);
+        arr(i00010) = GATESUM5(0B00010);
+        arr(i00011) = GATESUM5(0B00011);
+        arr(i00100) = GATESUM5(0B00100);
+        arr(i00101) = GATESUM5(0B00101);
+        arr(i00110) = GATESUM5(0B00110);
+        arr(i00111) = GATESUM5(0B00111);
+        arr(i01000) = GATESUM5(0B01000);
+        arr(i01001) = GATESUM5(0B01001);
+        arr(i01010) = GATESUM5(0B01010);
+        arr(i01011) = GATESUM5(0B01011);
+        arr(i01100) = GATESUM5(0B01100);
+        arr(i01101) = GATESUM5(0B01101);
+        arr(i01110) = GATESUM5(0B01110);
+        arr(i01111) = GATESUM5(0B01111);
+        arr(i10000) = GATESUM5(0B10000);
+        arr(i10001) = GATESUM5(0B10001);
+        arr(i10010) = GATESUM5(0B10010);
+        arr(i10011) = GATESUM5(0B10011);
+        arr(i10100) = GATESUM5(0B10100);
+        arr(i10101) = GATESUM5(0B10101);
+        arr(i10110) = GATESUM5(0B10110);
+        arr(i10111) = GATESUM5(0B10111);
+        arr(i11000) = GATESUM5(0B11000);
+        arr(i11001) = GATESUM5(0B11001);
+        arr(i11010) = GATESUM5(0B11010);
+        arr(i11011) = GATESUM5(0B11011);
+        arr(i11100) = GATESUM5(0B11100);
+        arr(i11101) = GATESUM5(0B11101);
+        arr(i11110) = GATESUM5(0B11110);
+        arr(i11111) = GATESUM5(0B11111);
     }
 };
 
