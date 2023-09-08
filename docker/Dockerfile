@@ -53,6 +53,7 @@ COPY . ${WORKDIR}
 RUN pip install --no-cache-dir wheel
 RUN pip install --no-cache-dir -r requirements-dev.txt
 RUN pip install --no-cache-dir -r doc/requirements.txt
+RUN pip uninstall -y pennylane-lightning
 RUN python setup.py build_ext
 RUN python setup.py bdist_wheel
-RUN pip install ./dist/PennyLane_Lightning*.whl --force-reinstall
+RUN python setup.py install
