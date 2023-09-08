@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add mid-circuit state preparation operation tests.
+  [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
+
 ### Breaking changes
 
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
