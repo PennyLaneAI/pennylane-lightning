@@ -12,22 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:jammy AS base
+# Setup and build pennylane-lightning
 
-# Setup and install basic packages
+FROM ubuntu:jammy AS base
 RUN apt-get update
-RUN apt-get install --no-install-recommends -y apt-utils
-RUN DEBIAN_FRONTEND="noninteractive" \
-    apt-get install --no-install-recommends -y tzdata \
-    build-essential \
+RUN apt-get install --no-install-recommends -y \
+    apt-utils \
     ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    tzdata
+
+FROM base AS build-utils
+RUN DEBIAN_FRONTEND="noninteractive" \
+    apt-get install --no-install-recommends -y \
+    build-essential \
     ccache \
     cmake \
     curl \
     git \
-    python3 \
-    python3-pip \
-    python3-venv \
     python3-dev \
     gcc-11 g++-11 cpp-11 
 RUN apt-get clean
@@ -40,20 +44,26 @@ RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache 
 RUN ccache --set-config=cache_dir=/opt/ccache 
 
-ENV PATH="/opt/venv/bin:$PATH"
-ENV VIRTUAL_ENV=/opt/venv
+FROM build-utils AS python-venv
+ENV VIRTUAL_ENV=/opt/venv-build
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-
-# Setup and build pennylane-lightning
-ENV WORKDIR=/opt/pennylane-lightning
-WORKDIR ${WORKDIR}
-COPY . ${WORKDIR}
-
 RUN pip install --no-cache-dir wheel
-RUN pip install --no-cache-dir -r requirements-dev.txt
-RUN pip install --no-cache-dir -r doc/requirements.txt
+RUN --mount=type=bind,source=requirements-dev.txt,target=requirements-dev.txt \
+    pip install --no-cache-dir -r requirements-dev.txt
+RUN --mount=type=bind,source=doc/requirements.txt,target=requirements-doc.txt \
+    pip install --no-cache-dir -r requirements-doc.txt
+
+FROM python-venv AS build-wheel-lightning-qubit
+WORKDIR /opt/pennylane-lightning
+COPY . ${WORKDIR}
 RUN pip uninstall -y pennylane-lightning
 RUN python setup.py build_ext
 RUN python setup.py bdist_wheel
-RUN python setup.py install
+
+FROM base AS wheel-lightning-qubit
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
+RUN pip install PennyLane_Lightning*.whl --force-reinstall
