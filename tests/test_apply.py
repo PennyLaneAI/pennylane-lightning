@@ -454,6 +454,39 @@ class TestApply:
 
         assert pointer_before == pointer_after
 
+    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
+        """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
+        dev = qubit_device(wires=2)
+        with pytest.raises(ValueError, match="Sum of amplitudes-squared does not equal one."):
+            dev.apply([stateprep(np.array([1, -1]), wires=[0])])
+
+        with pytest.raises(
+            DeviceError,
+            match=f"Operation {stateprep(np.array([1, 0]), wires=[0]).name} cannot be used after other Operations have already been applied ",
+        ):
+            dev.reset()
+            dev.apply([qml.RZ(0.5, wires=[0]), stateprep(np.array([0, 1, 0, 0]), wires=[0, 1])])
+
+    def test_apply_errors_basis_state(self, qubit_device):
+        dev = qubit_device(wires=2)
+        with pytest.raises(
+            ValueError, match="BasisState parameter must consist of 0 or 1 integers."
+        ):
+            dev.apply([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
+
+        with pytest.raises(
+            ValueError, match="BasisState parameter and wires must be of equal length."
+        ):
+            dev.apply([qml.BasisState(np.array([0, 1]), wires=[0])])
+
+        with pytest.raises(
+            DeviceError,
+            match="Operation BasisState cannot be used after other Operations have already been applied ",
+        ):
+            dev.reset()
+            dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
+
 
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
