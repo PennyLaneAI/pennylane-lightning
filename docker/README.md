@@ -1,24 +1,30 @@
 # How-to
 
+## Download
+
+```shell
+docker run -v pwd:/io -it vincentmichaudrioux/pennylane bash
+```
+
 ## Build
 
 ### Lightning-Qubit
 
-```python
+```shell
 TARGET=wheel-lightning-qubit
-docker build -f docker/Dockerfile --tag=vincentmichaudrioux/pennylane --target ${TARGET} .
+docker build -f docker/Dockerfile --tag=${TARGET} --target ${TARGET} .
 ```
 
 ## Run
 
-```python
+```shell
 TARGET=wheel-lightning-qubit
 docker run -v `pwd`:/io -it ${TARGET} bash
 ```
 
 ## Test
 
-```python
+```shell
 pip install pytest pytest-mock flaky
 pl-device-test --device default.qubit
 pl-device-test --device default.qubit --shots 10000
