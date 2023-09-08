@@ -21,6 +21,7 @@
 #include "MeasurementsBase.hpp"
 #include "MeasuresFunctors.hpp"
 #include "Observables.hpp"
+#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 
@@ -29,6 +30,7 @@ namespace {
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::LightningKokkos::Observables::HermitianObs;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;
@@ -128,18 +130,49 @@ class Measurements final
      */
     auto getExpValMatrix(const KokkosVector &matrix,
                          const std::vector<std::size_t> &wires) -> PrecisionT {
-        if (wires.size() == 1) {
-            return applyExpValFunctor<getExpectationValueSingleQubitOpFunctor,
-                                      1>(matrix, wires);
-        } else if (wires.size() == 2) {
-            return applyExpValFunctor<getExpectationValueTwoQubitOpFunctor, 2>(
-                matrix, wires);
-        } else {
-            StateVectorT ob_sv{this->_statevector};
-            ob_sv.applyMultiQubitOp(matrix, wires);
-            return getRealOfComplexInnerProduct(this->_statevector.getView(),
-                                                ob_sv.getView());
+        std::size_t num_qubits = this->_statevector.getNumQubits();
+        std::size_t two2N = std::exp2(num_qubits - wires.size());
+        std::size_t dim = std::exp2(wires.size());
+        const KokkosVector arr_data = this->_statevector.getView();
+
+        PrecisionT expval = 0.0;
+        switch (wires.size()) {
+        case 1:
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal1QubitOpFunctor<PrecisionT>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
+            break;
+        case 2:
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal2QubitOpFunctor<PrecisionT>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
+            break;
+        case 3:
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal3QubitOpFunctor<PrecisionT>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
+            break;
+        case 4:
+            Kokkos::parallel_reduce(two2N,
+                                    getExpVal4QubitOpFunctor<PrecisionT>(
+                                        arr_data, num_qubits, matrix, wires),
+                                    expval);
+            break;
+        default:
+            std::size_t scratch_size = ScratchViewComplex::shmem_size(dim);
+            Kokkos::parallel_reduce(
+                "getExpValMultiQubitOpFunctor",
+                TeamPolicy(two2N, Kokkos::AUTO, dim)
+                    .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+                getExpValMultiQubitOpFunctor<PrecisionT>(arr_data, num_qubits,
+                                                         matrix, wires),
+                expval);
+            break;
         }
+        return expval;
     }
 
     /**
@@ -153,6 +186,16 @@ class Measurements final
         ob.applyInPlace(ob_sv);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
                                             ob_sv.getView());
+    }
+
+    /**
+     * @brief Calculate expectation value for a HermitianObs.
+     *
+     * @param ob HermitianObs.
+     * @return Expectation value with respect to the given observable.
+     */
+    PrecisionT expval(const HermitianObs<StateVectorT> &ob) {
+        return expval(ob.getMatrix(), ob.getWires());
     }
 
     /**

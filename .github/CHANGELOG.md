@@ -12,11 +12,18 @@
 
 ### Improvements
 
+* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
+
 * Add tests to increase LKokkos coverage.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 * Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
   [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
+
+* Add support for dependent external packages to C++ core.
+  [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
+
 
 ### Documentation
 
@@ -29,7 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
