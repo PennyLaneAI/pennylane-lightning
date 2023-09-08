@@ -313,7 +313,8 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
     SECTION("Looping over different wire configurations:") {
         for (auto &term : input) {
             // Defining a tensor to be transposed.
-            std::vector<size_t> indices(1U << term.first.size());
+            std::vector<size_t> indices(static_cast<std::size_t>(1U)
+                                        << term.first.size());
             std::iota(indices.begin(), indices.end(), 0);
 
             std::vector<size_t> results(indices.size());
