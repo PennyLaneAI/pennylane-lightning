@@ -15,7 +15,7 @@ FetchAndIncludeCatch()
 ################################################################################
 
 add_library(lightning_kokkos_algorithms_tests INTERFACE)
-target_link_libraries(lightning_kokkos_algorithms_tests INTERFACE    Catch2::Catch2
+target_link_libraries(lightning_kokkos_algorithms_tests INTERFACE   Catch2::Catch2
                                                                     lightning_kokkos
                                                                     lightning_kokkos_algorithms
                                                                     lightning_kokkos_observables
@@ -28,8 +28,7 @@ target_sources(lightning_kokkos_algorithms_tests INTERFACE runner_lightning_kokk
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_AdjointJacobianKokkos.cpp
-                    )
+set(TEST_SOURCES    Test_AdjointJacobianKokkos.cpp)
 
 add_executable(lightning_kokkos_algorithms_test_runner ${TEST_SOURCES})
 target_link_libraries(lightning_kokkos_algorithms_test_runner PRIVATE  lightning_kokkos_algorithms_tests)

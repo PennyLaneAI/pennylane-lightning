@@ -130,7 +130,7 @@ if(ENABLE_PYTHON)
                                                         lightning_algorithms
                                                         )
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   "${PL_BACKEND}" #simulator
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
                                                         "${PL_BACKEND}_algorithms"
                                                         "${PL_BACKEND}_observables"
                                                         "${PL_BACKEND}_bindings"
