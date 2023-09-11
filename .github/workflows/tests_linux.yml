@@ -128,11 +128,11 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
 
-      - name: Install Latest PennyLane
+      - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
           cd main
-          python -m pip install pennylane==$(git tag | sort -V | tail -1 | cut -c2-)
+          python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
