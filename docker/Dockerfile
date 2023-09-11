@@ -17,10 +17,8 @@
 
 FROM ubuntu:jammy AS base
 ARG KOKKOS_VERSION=4.1.00
-ARG KOKKOS_BACKEND=OPENMP
 ARG LIGHTNING_VERSION=0.32.0
 ARG CUDA_VERSION=12.2
-RUN rm -rf /var/lib/apt/lists/*
 
 FROM base AS base-runtime
 RUN apt-get update
@@ -46,7 +44,7 @@ RUN apt-get install --no-install-recommends -y \
     cmake \
     curl \
     git \
-    ninja-build \ 
+    ninja-build \
     python3-dev \
     gcc-11 g++-11 cpp-11 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -54,9 +52,9 @@ RUN update-alternatives \
     --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
     --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
     --slave /usr/bin/gcov gcov /usr/bin/gcov-10
-RUN /usr/sbin/update-ccache-symlinks 
-RUN mkdir /opt/ccache 
-RUN ccache --set-config=cache_dir=/opt/ccache 
+RUN /usr/sbin/update-ccache-symlinks
+RUN mkdir /opt/ccache
+RUN ccache --set-config=cache_dir=/opt/ccache
 
 FROM base-build AS base-build-python
 RUN pip install --no-cache-dir wheel
@@ -77,7 +75,7 @@ FROM base-runtime AS wheel-lightning-qubit
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
-FROM base-build as base-build-kokkos
+FROM base-build as build-kokkos
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
 RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
@@ -88,7 +86,7 @@ RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/buil
     -DBUILD_SHARED_LIBS:BOOL=ON \
     -DBUILD_TESTING:BOOL=OFF \
     -DKokkos_ENABLE_SERIAL:BOOL=ON \
-    -DKokkos_ENABLE_${KOKKOS_BACKEND}:BOOL=ON \
+    -DKokkos_ENABLE_OPENMP:BOOL=ON \
     -DCMAKE_CXX_STANDARD=20 \
     -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
     -DKokkos_ENABLE_TESTS:BOOL=OFF \
@@ -98,7 +96,7 @@ RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
 
 FROM base-build-python AS build-wheel-lightning-kokkos
 WORKDIR /opt/pennylane-lightning
-COPY --from=base-build-kokkos /opt/kokkos /opt/kokkos
+COPY --from=build-kokkos /opt/kokkos /opt/kokkos
 ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
 RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
 RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
@@ -107,17 +105,53 @@ RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 FROM base-runtime AS wheel-lightning-kokkos
-COPY --from=base-build-kokkos /opt/kokkos /opt/kokkos
+COPY --from=build-kokkos /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
-FROM base-build as base-build-cuda
+FROM base-build-python as base-build-cuda
 WORKDIR /opt/cuda-build
 RUN curl -o cuda-12_2.run https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 RUN chmod a+x cuda-12_2.run
 RUN ./cuda-12_2.run --silent --toolkit --toolkitpath=/usr/local/cuda-12.2
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
+
+FROM base-build-cuda as build-kokkos-cuda
+WORKDIR /opt/kokkos-${KOKKOS_VERSION}
+RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
+RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
+RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
+    -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
+    -DBUILD_SHARED_LIBS:BOOL=ON \
+    -DBUILD_TESTING:BOOL=OFF \
+    -DKokkos_ENABLE_SERIAL:BOOL=ON \
+    -DKokkos_ENABLE_OPENMP:BOOL=ON \
+    -DCMAKE_CXX_STANDARD=20 \
+    -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+    -DKokkos_ENABLE_TESTS:BOOL=OFF \
+    -DKokkos_ENABLE_LIBDL:BOOL=OFF \
+    -DKokkos_ENABLE_CUDA:BOOL=ON \
+    -DKokkos_ARCH_AMPERE80=ON
+RUN cmake --build /opt/kokkos-${KOKKOS_VERSION}/build
+RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
+
+FROM base-build-cuda AS build-wheel-lightning-kokkos-cuda
+WORKDIR /opt/pennylane-lightning
+COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
+ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
+RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
+RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
+RUN pip uninstall -y pennylane-lightning
+RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
+RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
+
+FROM base-runtime AS wheel-lightning-kokkos-cuda
+COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
+COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
+RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
 FROM base-build-cuda AS build-wheel-lightning-gpu
 WORKDIR /opt/pennylane-lightning
