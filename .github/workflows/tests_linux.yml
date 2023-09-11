@@ -2,7 +2,7 @@ name: Testing (Linux)
 on:
   workflow_call:
     inputs:
-      lightning-kokkos-version:
+      lightning-version:
         type: string
         required: true
         description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
@@ -23,7 +23,7 @@ env:
   OMP_NUM_THREADS: "2"
 
 concurrency:
-  group: tests_linux-${{ github.ref }}-${{ inputs.lightning-kokkos-version }}-${{ inputs.pennylane-version }}
+  group: tests_linux-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -107,11 +107,13 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
-          fetch-depth: ${{ inputs.lightning-kokkos-version == 'stable' && 0 || 2 }}
+          fetch-depth: ${{ inputs.lightning-version == 'stable' && 0 || 2 }}
 
       - name: Switch to stable build of Lightning-Kokkos
-        if: inputs.lightning-kokkos-version == 'stable'
-        run: git checkout $(git tag | sort -V | tail -1)
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -129,6 +131,7 @@ jobs:
       - name: Install Latest PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
+          cd main
           python -m pip install pennylane==$(git tag | sort -V | tail -1)
 
       - name: Install ML libraries for interfaces
