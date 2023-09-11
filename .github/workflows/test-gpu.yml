@@ -39,6 +39,7 @@ jobs:
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION  ninja-build gcovr lcov
           source /etc/profile.d/modules.sh
           module use /opt/modules
+          module spider cuda
           module load cuda/12.2
 
       - name: Validate GPU version and installed compiler
