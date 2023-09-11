@@ -38,7 +38,6 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module spider cuda
           module load cuda/12.2
 
       - name: Validate GPU version and installed compiler
