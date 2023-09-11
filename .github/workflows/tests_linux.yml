@@ -114,6 +114,7 @@ jobs:
         run: |
           cd main
           git checkout $(git tag | sort -V | tail -1)
+          git log | head 
 
       - uses: actions/setup-python@v4
         name: Install Python
