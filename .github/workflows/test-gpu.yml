@@ -35,7 +35,11 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION  ninja-build gcovr lcov
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION  ninja-build gcovr lcov
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.2
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -66,9 +70,6 @@ jobs:
       - name: Build Kokkos core library (Ubuntu)
         # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
-          source /etc/profile.d/modules.sh
-          module use /opt/modules
-          module load cuda/12.2
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
