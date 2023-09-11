@@ -114,7 +114,7 @@ jobs:
         run: |
           cd main
           git checkout $(git tag | sort -V | tail -1)
-          git log | head 
+          git log | head -1
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -133,7 +133,7 @@ jobs:
         if: inputs.pennylane-version == 'stable'
         run: |
           cd main
-          python pip uninstall pennylane && python -m pip install --no-cache-dir -U pennylane
+          python -m pip uninstall pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
