@@ -38,7 +38,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          ls -l /opt/modules
+          ls -l /opt/modules/cuda
           module load cuda/12.2
 
       - name: Validate GPU version and installed compiler
