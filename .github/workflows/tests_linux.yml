@@ -132,7 +132,7 @@ jobs:
         if: inputs.pennylane-version == 'stable'
         run: |
           cd main
-          python -m pip install -U pennylane
+          python pip uninstall pennylane && python -m pip install --no-cache-dir -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
