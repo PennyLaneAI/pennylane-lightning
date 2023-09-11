@@ -11,5 +11,5 @@ jobs:
     name: Lightning-Kokkos Compatibility test (tests_linux) - stable/stable
     uses: ./.github/workflows/tests_linux.yml
     with:
-      lightning-kokkos-version: stable
+      lightning-version: stable
       pennylane-version: stable
