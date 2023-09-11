@@ -15,9 +15,10 @@ FetchAndIncludeCatch()
 ################################################################################
 
 add_library(lightning_kokkos_gates_tests INTERFACE)
-target_link_libraries(lightning_kokkos_gates_tests INTERFACE     Catch2::Catch2
+target_link_libraries(lightning_kokkos_gates_tests INTERFACE    Catch2::Catch2
                                                                 lightning_kokkos_gates
                                                                 lightning_kokkos_measurements
+                                                                lightning_kokkos_observables
                                                                 lightning_kokkos
                                                                 )
 

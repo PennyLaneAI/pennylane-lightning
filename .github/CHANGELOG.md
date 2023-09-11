@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add mid-circuit state preparation operation tests.
+  [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
+
 ### Breaking changes
 
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
@@ -11,6 +14,9 @@
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 ### Improvements
+
+* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
 
 * Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
   [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
