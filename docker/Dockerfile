@@ -20,6 +20,7 @@ ARG KOKKOS_VERSION=4.1.00
 ARG KOKKOS_BACKEND=OPENMP
 ARG LIGHTNING_VERSION=0.32.0
 ARG CUDA_VERSION=12.2
+RUN rm -rf /var/lib/apt/lists/*
 
 FROM base AS base-runtime
 RUN apt-get update
@@ -31,8 +32,8 @@ RUN apt-get install --no-install-recommends -y \
     python3-pip \
     python3-venv \
     tzdata \
-    wget
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    wget \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv-build
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -47,8 +48,8 @@ RUN apt-get install --no-install-recommends -y \
     git \
     ninja-build \ 
     python3-dev \
-    gcc-11 g++-11 cpp-11
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    gcc-11 g++-11 cpp-11 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN update-alternatives \
     --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
     --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
@@ -66,7 +67,7 @@ RUN --mount=type=bind,source=doc/requirements.txt,target=requirements-doc.txt \
 
 FROM base-build-python AS build-wheel-lightning-qubit
 WORKDIR /opt/pennylane-lightning
-RUN wget https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
+RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
 RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
 RUN pip uninstall -y pennylane-lightning
 RUN python setup.py build_ext
@@ -78,7 +79,7 @@ RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
 FROM base-build as base-build-kokkos
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
-RUN wget https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
+RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
 RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
     -G Ninja \
@@ -99,7 +100,7 @@ FROM base-build-python AS build-wheel-lightning-kokkos
 WORKDIR /opt/pennylane-lightning
 COPY --from=base-build-kokkos /opt/kokkos /opt/kokkos
 ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
-RUN wget https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
+RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
 RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
 RUN pip uninstall -y pennylane-lightning
 RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
@@ -123,7 +124,7 @@ WORKDIR /opt/pennylane-lightning
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN wget https://github.com/PennyLaneAI/pennylane-lightning-gpu/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
+RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning-gpu/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
 RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-gpu-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
 RUN pip uninstall -y pennylane-lightning-gpu
 RUN pip install --no-cache-dir wheel custatevec-cu12
@@ -138,8 +139,8 @@ RUN apt-get install --no-install-recommends -y \
     libgomp1 \
     python3 \
     python3-pip \
-    python3-venv
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    python3-venv \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
