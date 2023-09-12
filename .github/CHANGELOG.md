@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `Dockerfile` in `docker` and `make docker` workflow in `Makefile`. The Docker images and documentation are available on [DockerHub](https://hub.docker.com/r/vincentmichaudrioux/pennylane).
+  [(#496)](https://github.com/PennyLaneAI/pennylane-lightning/pull/496)
+
 * Add mid-circuit state preparation operation tests.
   [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
 
