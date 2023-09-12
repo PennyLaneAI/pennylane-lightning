@@ -75,7 +75,7 @@ FROM base-runtime AS wheel-lightning-qubit
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
-FROM base-build as build-kokkos
+FROM base-build as build-kokkos-openmp
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
 RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
@@ -94,9 +94,9 @@ RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/buil
 RUN cmake --build /opt/kokkos-${KOKKOS_VERSION}/build
 RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
 
-FROM base-build-python AS build-wheel-lightning-kokkos
+FROM base-build-python AS build-wheel-lightning-kokkos-openmp
 WORKDIR /opt/pennylane-lightning
-COPY --from=build-kokkos /opt/kokkos /opt/kokkos
+COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
 ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
 RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
 RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && mv pennylane-lightning-${LIGHTNING_VERSION}/* /opt/pennylane-lightning
@@ -104,9 +104,9 @@ RUN pip uninstall -y pennylane-lightning
 RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
-FROM base-runtime AS wheel-lightning-kokkos
-COPY --from=build-kokkos /opt/kokkos /opt/kokkos
-COPY --from=build-wheel-lightning-kokkos /opt/pennylane-lightning/dist/ /
+FROM base-runtime AS wheel-lightning-kokkos-openmp
+COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
+COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
 
 FROM base-build-python as base-build-cuda
