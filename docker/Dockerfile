@@ -148,7 +148,17 @@ RUN pip uninstall -y pennylane-lightning
 RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
-FROM base-runtime AS wheel-lightning-kokkos-cuda
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-kokkos-cuda
+RUN apt-get update
+RUN apt-get install --no-install-recommends -y \
+    libgomp1 \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl
