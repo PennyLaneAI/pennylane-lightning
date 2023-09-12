@@ -489,6 +489,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestsWithMultipleBackends:
+  # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
