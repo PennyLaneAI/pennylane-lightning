@@ -507,6 +507,18 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
