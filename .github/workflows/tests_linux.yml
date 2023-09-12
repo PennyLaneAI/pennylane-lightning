@@ -489,11 +489,14 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestsWithMultipleBackends:
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
+        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
 
-    name: C++ tests
+    name: C++ tests (multiple backends)
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -504,8 +507,6 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -528,16 +529,17 @@ jobs:
               -DCMAKE_BUILD_TYPE=RelWithDebInfo \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
+              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
             cmake --build ./Build
             cd ./Build
-            mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            mkdir -p ./tests/results_multiple_backends
+            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
-          path: ./Build/tests/results/
+          path: ./Build/tests/results_multiple_backends/

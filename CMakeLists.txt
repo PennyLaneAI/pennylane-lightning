@@ -62,10 +62,10 @@ option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 # Backend
 set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
 
-# Python bindings are not supported with building multiple backend devices
+# Python bindings are not supported while building multiple backend devices
 list(LENGTH PL_BACKEND PL_BACKEND_LEN)
 if ((${PL_BACKEND_LEN} GREATER 1) AND ENABLE_PYTHON)
-    message(FATAL_ERROR "You cannot build ${PL_BACKEND} simulators with ENABLE_PYTHON")
+    message(FATAL_ERROR "Lightning does not provide Python support for building multiple backends. Requested backends: ${PL_BACKEND}")
 endif()
 
 # Print PL_BACKEND
