@@ -15,14 +15,12 @@
 # Setup and build pennylane-lightning
 
 
-FROM ubuntu:jammy AS base
+FROM ubuntu:jammy AS base-runtime
 ARG KOKKOS_VERSION=4.1.00
 ARG LIGHTNING_VERSION=0.32.0
 ARG CUDA_VERSION=12.2
-
-FROM base AS base-runtime
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     apt-utils \
     ca-certificates \
     libgomp1 \
@@ -31,14 +29,15 @@ RUN apt-get install --no-install-recommends -y \
     python3-venv \
     tzdata \
     wget \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv-build
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 FROM base-runtime AS base-build
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     build-essential \
     ccache \
     cmake \
@@ -47,7 +46,8 @@ RUN apt-get install --no-install-recommends -y \
     ninja-build \
     python3-dev \
     gcc-11 g++-11 cpp-11 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 RUN update-alternatives \
     --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
     --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
@@ -150,13 +150,14 @@ RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-kokkos-cuda
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     libgomp1 \
     python3 \
     python3-pip \
     python3-venv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
@@ -179,13 +180,14 @@ RUN python setup.py build_ext --cuquantum=$(python -c "import site; print( f'{si
 RUN python setup.py bdist_wheel
 
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
-RUN apt-get update
-RUN apt-get install --no-install-recommends -y \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     libgomp1 \
     python3 \
     python3-pip \
     python3-venv \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
