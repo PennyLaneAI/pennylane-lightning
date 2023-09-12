@@ -61,6 +61,17 @@ using namespace Pennylane::LightningKokkos::Util;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLGPU == 1
+constexpr bool BACKEND_FOUND = true;
+
+#include "TestHelpersStateVectors.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningGPU::Util;
+} // namespace
+  /// @endcond
+
 #else
 constexpr bool BACKEND_FOUND = false;
 using TestStateVectorBackends = Pennylane::Util::TypeList<void>;
@@ -274,9 +285,15 @@ template <typename TypeList> void testTensorProdObsBase() {
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("0+1");
 
-                REQUIRE(isApproxEqual(state_vector.getData(),
-                                      state_vector.getLength(), expected.data(),
-                                      expected.size()));
+                #ifdef _ENABLE_PLGPU
+                    REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
+                                      state_vector.getDataVector().size(),
+                                      expected.data(), expected.size()));
+                #else
+                    REQUIRE(isApproxEqual(state_vector.getData(),
+                                      state_vector.getLength(),
+                                      expected.data(), expected.size()));
+                #endif
             }
 
             SECTION("Test using |+-01>") {
@@ -289,10 +306,16 @@ template <typename TypeList> void testTensorProdObsBase() {
 
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("+-11");
-
-                REQUIRE(isApproxEqual(state_vector.getData(),
-                                      state_vector.getLength(), expected.data(),
-                                      expected.size()));
+                
+                #ifdef _ENABLE_PLGPU
+                    REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
+                                      state_vector.getDataVector().size(),
+                                      expected.data(), expected.size()));
+                #else
+                    REQUIRE(isApproxEqual(state_vector.getData(),
+                                      state_vector.getLength(),
+                                      expected.data(), expected.size()));
+                #endif
             }
         }
 

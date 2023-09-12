@@ -70,8 +70,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<ComplexT>> ops_matrices)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
-                                                      std::move(ops_matrices)} {
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_{std::move(ops_matrices)} {
         for (const auto &p : ops_params) {
             if (!p.empty()) {
                 num_par_ops_++;
@@ -95,8 +95,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<size_t>> ops_wires,
             std::vector<bool> ops_inverses)
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
-                                                ops_inverses)},
+          ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)},
           ops_matrices_(ops_name.size()) {
         for (const auto &p : ops_params) {
             if (p.size() > 0) {
@@ -203,10 +203,10 @@ template <class StateVectorT> class OpsData {
  */
 template <class StateVectorT> class JacobianData {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
+    using CFP_t = typename StateVectorT::CFP_t;
     size_t num_parameters; /**< Number of parameters in the tape */
     size_t num_elements;   /**< Length of the statevector data */
-    const ComplexT *psi;   /**< Pointer to the statevector data */
+    const CFP_t *psi;      /**< Pointer to the statevector data */
 
     /**
      * @var observables
@@ -249,7 +249,7 @@ template <class StateVectorT> class JacobianData {
      * (e.g. QubitStateVector) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(size_t num_params, size_t num_elem, const ComplexT *sv_ptr,
+    JacobianData(size_t num_params, size_t num_elem, const CFP_t *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                  OpsData<StateVectorT> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),
@@ -278,11 +278,9 @@ template <class StateVectorT> class JacobianData {
     /**
      * @brief Get the pointer to the statevector data.
      *
-     * @return ComplexT *
+     * @return CFP_t *
      */
-    [[nodiscard]] auto getPtrStateVec() const -> const ComplexT * {
-        return psi;
-    }
+    [[nodiscard]] auto getPtrStateVec() const -> const CFP_t * { return psi; }
 
     /**
      * @brief Get observables for which to calculate Jacobian.

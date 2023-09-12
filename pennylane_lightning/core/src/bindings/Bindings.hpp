@@ -71,6 +71,21 @@ using namespace Pennylane::LightningKokkos::Measures;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLGPU == 1
+#include "AdjointJacobianGPU.hpp"
+#include "LGPUBindings.hpp"
+#include "MeasurementsGPU.hpp"
+#include "ObservablesGPU.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Observables;
+using namespace Pennylane::LightningGPU::Measures;
+} // namespace
+  /// @endcond
+
 #else
 
 static_assert(false, "Backend not found.");
@@ -523,7 +538,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
 
     /**
      * Create operation list.
-     * */
+     */
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(
         function_name.c_str(),

@@ -407,9 +407,11 @@ auto createNonTrivialState(size_t num_qubits = 3)
     }
     Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
 
-    return std::vector<ComplexT>(Measured_StateVector.getData(),
-                                 Measured_StateVector.getData() +
-                                     Measured_StateVector.getLength());
+    #ifdef _ENABLE_PLGPU
+        return Measured_StateVector.getDataVector();
+    #else
+        return std::vector<ComplexT>(Measured_StateVector.getData(), Measured_StateVector.getData() + Measured_StateVector.getLength());
+    #endif
 }
 
 /**

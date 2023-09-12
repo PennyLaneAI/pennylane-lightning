@@ -53,6 +53,20 @@ using namespace Pennylane::LightningKokkos::Observables;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLGPU == 1
+constexpr bool BACKEND_FOUND = true;
+#include "AdjointJacobianGPU.hpp"
+#include "ObservablesGPU.hpp"
+#include "TestHelpersStateVectors.hpp"
+
+/// @cond DEV
+namespace {
+// using namespace Pennylane::LightningGPU::Util;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Observables;
+} // namespace
+  /// @endcond
+
 #else
 constexpr bool BACKEND_FOUND = false;
 using TestStateVectorBackends = Pennylane::Util::TypeList<void>;
@@ -391,11 +405,12 @@ template <typename TypeList> void testAdjointJacobian() {
                 const PrecisionT theta = thetas[i];
                 std::vector<PrecisionT> local_params{
                     theta, std::pow(theta, (PrecisionT)3),
-                    SQRT2<PrecisionT>() * theta};
+                    Pennylane::Util::SQRT2<PrecisionT>() * theta};
                 std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-                std::vector<ComplexT> cdata{INVSQRT2<PrecisionT>(),
-                                            -INVSQRT2<PrecisionT>()};
+                std::vector<ComplexT> cdata{
+                    Pennylane::Util::INVSQRT2<PrecisionT>(),
+                    -Pennylane::Util::INVSQRT2<PrecisionT>()};
                 StateVectorT psi(cdata.data(), cdata.size());
 
                 auto ops = OpsData<StateVectorT>(
@@ -430,8 +445,10 @@ template <typename TypeList> void testAdjointJacobian() {
                                                  -2.3,  0.5,  -0.5, 0.5};
             std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-            std::vector<ComplexT> cdata{ONE<PrecisionT>(), ZERO<PrecisionT>(),
-                                        ZERO<PrecisionT>(), ZERO<PrecisionT>()};
+            std::vector<ComplexT> cdata{Pennylane::Util::ONE<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>()};
             StateVectorT psi(cdata.data(), cdata.size());
 
             const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
