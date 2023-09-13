@@ -50,7 +50,7 @@ if LQ_CPP_BINARY_AVAILABLE:
     from pennylane import (
         math,
         BasisState,
-        QubitStateVector,
+        StatePrep,
         Projector,
         Rot,
         DeviceError,
@@ -62,9 +62,9 @@ if LQ_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
-
-    # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
         create_ops_listC64,
@@ -74,12 +74,11 @@ if LQ_CPP_BINARY_AVAILABLE:
         VectorJacobianProductC128,
     )
 
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
     allowed_operations = {
         "Identity",
         "BasisState",
         "QubitStateVector",
+        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -372,7 +371,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         def apply(self, operations, rotations=None, **kwargs):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
-                if isinstance(operations[0], QubitStateVector):
+                if isinstance(operations[0], StatePrep):
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
@@ -382,7 +381,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     operations = operations[1:]
 
             for operation in operations:
-                if isinstance(operation, (QubitStateVector, BasisState)):
+                if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
                         f"Operation {operation.name} cannot be used after other "
                         f"Operations have already been applied on a {self.short_name} device."

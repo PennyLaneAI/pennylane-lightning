@@ -247,17 +247,22 @@ class Measurements final
     auto expval(const Observable<StateVectorT> &ob) -> PrecisionT {
         PrecisionT result{};
 
-        if constexpr (std::is_same_v<StateVectorLQubitManaged<PrecisionT>,
-                                     StateVectorT>) {
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
             StateVectorT sv(this->_statevector);
             result = calculateObsExpval(sv, ob, this->_statevector);
-        } else if constexpr (std::is_same_v<StateVectorLQubitRaw<PrecisionT>,
-                                            StateVectorT>) {
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
             std::vector<ComplexT> data_storage(
                 this->_statevector.getData(),
                 this->_statevector.getData() + this->_statevector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
             result = calculateObsExpval(sv, ob, this->_statevector);
+        } else {
+            /// LCOV_EXCL_START
+            PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
         }
 
         return result;
@@ -271,18 +276,23 @@ class Measurements final
      */
     auto var(const Observable<StateVectorT> &ob) -> PrecisionT {
         PrecisionT result{};
-        if constexpr (std::is_same_v<StateVectorLQubitManaged<PrecisionT>,
-                                     StateVectorT>) {
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
             StateVectorT sv(this->_statevector);
             result = calculateObsVar(sv, ob, this->_statevector);
 
-        } else if constexpr (std::is_same_v<StateVectorLQubitRaw<PrecisionT>,
-                                            StateVectorT>) {
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
             std::vector<ComplexT> data_storage(
                 this->_statevector.getData(),
                 this->_statevector.getData() + this->_statevector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
             result = calculateObsVar(sv, ob, this->_statevector);
+        } else {
+            /// LCOV_EXCL_START
+            PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
         }
         return result;
     }

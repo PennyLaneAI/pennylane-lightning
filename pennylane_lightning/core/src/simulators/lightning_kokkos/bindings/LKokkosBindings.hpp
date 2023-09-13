@@ -26,6 +26,7 @@
 #include "MeasurementsKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "TypeList.hpp"
+#include "Util.hpp" // exp2
 
 /// @cond DEV
 namespace {
@@ -34,6 +35,7 @@ using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Measures;
 using Kokkos::InitializationSettings;
 using Pennylane::LightningKokkos::StateVectorKokkos;
+using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
@@ -163,6 +165,18 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                  const std::string &, const std::vector<size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+               const std::vector<size_t> &wires) {
+                const std::size_t matrix_size = exp2(2 * wires.size());
+                auto matrix_data =
+                    static_cast<ComplexT *>(matrix.request().ptr);
+                std::vector<ComplexT> matrix_v{matrix_data,
+                                               matrix_data + matrix_size};
+                return M.expval(matrix_v, wires);
+            },
+            "Expected value of a Hermitian observable.")
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,

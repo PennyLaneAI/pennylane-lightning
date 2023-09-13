@@ -1,6 +1,57 @@
-# Release 0.32.0-dev
+# Release 0.33.0-dev
 
 ### New features since last release
+
+* Add mid-circuit state preparation operation tests.
+  [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
+
+### Breaking changes
+
+* Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
+* Enable pre-commit hooks to format all Python files and linting of all Python source files.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
+### Improvements
+
+* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
+
+* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
+
+* Add tests to increase LKokkos coverage.
+  [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
+
+* Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
+  [(#492)](https://github.com/PennyLaneAI/pennylane-lightning/pull/492)
+
+* Add support for dependent external packages to C++ core.
+  [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
+
+
+### Documentation
+
+### Bug fixes
+
+* Fix RTD builds by removing unsupported `sytem_packages` configuration option.
+  [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Ali Asadi, Vincent Michaud-Rioux, Lee J. O'Riordan
+
+---
+
+# Release 0.32.0
+
+### New features since last release
+
+* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12). 
+  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)
@@ -13,7 +64,16 @@
 
 ### Breaking changes
 
+* Rename `QubitStateVector` to `StatePrep` in the `LightningQubit` and `LightningKokkos` classes.
+  [(#486)](https://github.com/PennyLaneAI/pennylane-lightning/pull/486)
+
+* Modify `adjointJacobian` methods to accept a (maybe unused) reference `StateVectorT`, allowing device-backed simulators to directly access state vector data for adjoint differentiation instead of copying it back-and-forth into `JacobianData` (host memory).
+  [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
+
 ### Improvements
+
+* Refactor LKokkos `Measurements` class to use (fast) specialized functors whenever possible.
+  [(#481)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/481)
 
 * Merge Lightning Qubit and Lightning Kokkos backends in the new repository.
   [(#472)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/472)

@@ -19,10 +19,13 @@
 #include <utility>
 #include <vector>
 
+#include <Kokkos_Core.hpp>
 #include <catch2/catch.hpp>
 
 #include "Gates.hpp" // getHadamard
 #include "StateVectorKokkos.hpp"
+#include "TestHelpers.hpp"
+#include "Util.hpp"
 
 /**
  * @file
@@ -68,14 +71,73 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::CopyConstructor",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyNamedOperation",
+                   "[StateVectorKokkos_Nonparam]", float, double) {
+    {
+        const size_t num_qubits = 3;
+        StateVectorKokkos<TestType> state_vector{num_qubits};
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyNamedOperation("XXX", {0}), LightningException,
+            "Operation does not exist for"); // invalid wires
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyCY",
+                           "[StateVectorKokkos_Nonparam]", (StateVectorKokkos),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    const bool inverse = GENERATE(true, false);
+
+    SECTION("Apply::CY") {
+        // Defining the statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT sv1(statevector_data.data(), statevector_data.size());
+        StateVectorT sv2(statevector_data.data(), statevector_data.size());
+
+        const std::vector<std::size_t> wires{0, 1};
+        std::vector<ComplexT> matrix = getCY<Kokkos::complex, PrecisionT>();
+        sv1.applyOperation("CY", wires, inverse);
+        sv2.applyMatrix(matrix, wires, inverse);
+
+        auto result1 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                           sv1.getView());
+        auto result2 = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                           sv2.getView());
+
+        for (size_t j = 0; j < sv1.getView().size(); j++) {
+            CHECK(imag(result1[j]) == Approx(imag(result2[j])));
+            CHECK(real(result1[j]) == Approx(real(result2[j])));
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyHadamard",
                    "[StateVectorKokkos_Nonparam]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         const size_t num_qubits = 3;
         SECTION("Apply using dispatcher") {
             for (size_t index = 0; index < num_qubits; index++) {
                 StateVectorKokkos<TestType> kokkos_sv(num_qubits);
-                kokkos_sv.applyOperation("Hadamard", {index}, false);
+                kokkos_sv.applyOperation("Hadamard", {index}, inverse);
+                Kokkos::complex<TestType> expected(1.0 / std::sqrt(2), 0);
+                auto result_subview = Kokkos::subview(kokkos_sv.getView(), 0);
+                Kokkos::complex<TestType> result;
+                Kokkos::deep_copy(result, result_subview);
+                CHECK(expected.real() == Approx(result.real()));
+            }
+        }
+        SECTION("Apply using matrix") {
+            using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+            const auto isqrt2 = ComplexT{INVSQRT2<TestType>()};
+            const std::vector<ComplexT> matrix = {isqrt2, isqrt2, isqrt2,
+                                                  -isqrt2};
+            for (size_t index = 0; index < num_qubits; index++) {
+                StateVectorKokkos<TestType> kokkos_sv(num_qubits);
+                kokkos_sv.applyOperation("Hadamard", {index}, inverse, {},
+                                         matrix);
                 Kokkos::complex<TestType> expected(1.0 / std::sqrt(2), 0);
                 auto result_subview = Kokkos::subview(kokkos_sv.getView(), 0);
                 Kokkos::complex<TestType> result;
@@ -243,6 +305,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyS", "[StateVectorKokkos_Nonparam]",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyT", "[StateVectorKokkos_Nonparam]",
                    float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -250,11 +313,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyT", "[StateVectorKokkos_Nonparam]",
         StateVectorKokkos<TestType> kokkos_sv{num_qubits};
 
         kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                                  {{0}, {1}, {2}},
+                                  {{inverse}, {inverse}, {inverse}});
 
         auto r = ComplexT{HALF<TestType>()} * ComplexT{INVSQRT2<TestType>()};
         auto i = ComplexT{HALF<TestType>()} * ComplexT{HALF<TestType>()} *
                  (ComplexT{IMAG<TestType>()} + ComplexT{ONE<TestType>()});
+        if (inverse) {
+            i = conj(i);
+        }
 
         const std::vector<std::vector<ComplexT>> expected_results = {
             {r, r, r, r, i, i, i, i},
@@ -266,8 +333,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyT", "[StateVectorKokkos_Nonparam]",
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperations(
                     {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
-                    {{false}, {false}, {false}});
-                kokkos_sv.applyOperation("T", {index}, false);
+                    {{inverse}, {inverse}, {inverse}});
+                kokkos_sv.applyOperation("T", {index}, inverse);
 
                 for (size_t j = 0; j < exp2(num_qubits); j++) {
                     auto result_subview =
@@ -553,7 +620,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyToffoli",
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
-                   "[StateVectorKokkos_Nonparam]", float, double) {
+                   "[StateVectorKokkos_Nonparam][Inverse]", float, double) {
+    const bool inverse = GENERATE(true, false);
     size_t num_qubits = 3;
     StateVectorKokkos<TestType> sv_normal{num_qubits};
     StateVectorKokkos<TestType> sv_mq{num_qubits};
@@ -561,10 +629,27 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
         Kokkos::View<Kokkos::complex<TestType> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
+    SECTION("Single Qubit via applyOperation") {
+        auto matrix = getHadamard<Kokkos::complex, TestType>();
+        std::vector<size_t> wires = {0};
+        sv_normal.applyOperation("Hadamard", wires, inverse);
+        auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_normal.getView());
+
+        sv_mq.applyOperation("XXXXXXXX", wires, inverse, {}, matrix);
+        auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_mq.getView());
+
+        for (size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_normal_host[j]) == Approx(imag(sv_mq_host[j])));
+            CHECK(real(sv_normal_host[j]) == Approx(real(sv_mq_host[j])));
+        }
+    }
+
     SECTION("Single Qubit") {
         auto matrix = getHadamard<Kokkos::complex, TestType>();
         std::vector<size_t> wires = {0};
-        sv_normal.applyOperation("Hadamard", wires, false);
+        sv_normal.applyOperation("Hadamard", wires, inverse);
         auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_normal.getView());
 
@@ -572,7 +657,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
                                                                 matrix.size());
         Kokkos::deep_copy(device_matrix, UnmanagedComplexHostView(
                                              matrix.data(), matrix.size()));
-        sv_mq.applyMultiQubitOp(device_matrix, wires, false);
+        sv_mq.applyMultiQubitOp(device_matrix, wires, inverse);
         auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_mq.getView());
 
@@ -585,7 +670,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     SECTION("Two Qubit") {
         auto matrix = getCNOT<Kokkos::complex, TestType>();
         std::vector<size_t> wires = {0, 1};
-        sv_normal.applyOperation("CNOT", wires, false);
+        sv_normal.applyOperation("CNOT", wires, inverse);
         auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_normal.getView());
 
@@ -593,7 +678,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
                                                                 matrix.size());
         Kokkos::deep_copy(device_matrix, UnmanagedComplexHostView(
                                              matrix.data(), matrix.size()));
-        sv_mq.applyMultiQubitOp(device_matrix, wires, false);
+        sv_mq.applyMultiQubitOp(device_matrix, wires, inverse);
         auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_mq.getView());
 
@@ -606,7 +691,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     SECTION("Three Qubit") {
         auto matrix = getToffoli<Kokkos::complex, TestType>();
         std::vector<size_t> wires = {0, 1, 2};
-        sv_normal.applyOperation("Toffoli", wires, false);
+        sv_normal.applyOperation("Toffoli", wires, inverse);
         auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_normal.getView());
 
@@ -614,7 +699,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
                                                                 matrix.size());
         Kokkos::deep_copy(device_matrix, UnmanagedComplexHostView(
                                              matrix.data(), matrix.size()));
-        sv_mq.applyMultiQubitOp(device_matrix, wires, false);
+        sv_mq.applyMultiQubitOp(device_matrix, wires, inverse);
         auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_mq.getView());
 

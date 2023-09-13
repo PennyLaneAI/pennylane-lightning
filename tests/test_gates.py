@@ -16,6 +16,7 @@ Unit tests for the correct application of gates with a Lightning device.
 """
 import pytest
 from conftest import LightningDevice, device_name
+from conftest import THETA, PHI
 
 import itertools
 import numpy as np
@@ -84,7 +85,7 @@ def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector"):
+    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -115,7 +116,7 @@ def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector"):
+    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -236,3 +237,29 @@ def test_get_diagonalizing_gates(obs, has_rotation):
             assert qml.equal(rot_actual, rot_expected)
     else:
         assert len(actual) == 0
+
+
+@pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
+@pytest.mark.parametrize("n_wires", range(1, 7))
+def test_qubit_unitary(n_wires, theta, phi, tol):
+    """Test that Hadamard expectation value is correct"""
+    n_qubits = 10
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    m = 2**n_wires
+    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U, _ = np.linalg.qr(U)
+    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.RY(theta, wires=[0])
+        qml.RY(phi, wires=[1])
+        qml.CNOT(wires=[0, 1])
+        qml.QubitUnitary(U, wires=range(2, 2 + n_wires))
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)

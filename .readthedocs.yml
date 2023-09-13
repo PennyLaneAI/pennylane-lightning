@@ -7,10 +7,9 @@ python:
   install:
     - requirements: ci_build_requirements.txt
     - requirements: doc/requirements.txt
-    - requirements: requirements.txt
+    - requirements: requirements-dev.txt
     - method: pip
       path: .
-  system_packages: true
 
 build:
   os: ubuntu-22.04

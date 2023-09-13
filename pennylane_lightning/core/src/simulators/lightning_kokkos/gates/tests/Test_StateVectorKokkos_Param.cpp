@@ -15,6 +15,7 @@
 #include <complex>
 #include <cstddef>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -22,8 +23,11 @@
 #include <catch2/catch.hpp>
 
 #include "Gates.hpp"
+#include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
 #include "MeasurementsKokkos.hpp"
+#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
+#include "TestHelpers.hpp"
 
 /**
  * @file
@@ -33,10 +37,15 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Gates;
+using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Observables;
+using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
+using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::exp2;
 using std::size_t;
+std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -239,10 +248,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
+    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
+    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -273,8 +284,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
             kokkos_sv.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            kokkos_sv.applyOperation("PhaseShift", {index}, false,
-                                     {angles[index]});
+
+            kokkos_sv.applyOperation("PhaseShift", {index}, inverse,
+                                     {sign * angles[index]});
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -290,10 +302,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
+    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 2.4};
+    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -312,8 +326,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
         StateVectorKokkos<TestType> kokkos_sv{num_qubits};
         kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
-        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, false,
-                                 {angles[1]});
+        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, inverse,
+                                 {sign * angles[1]});
         std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
         kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -367,13 +381,17 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRot",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
+
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     std::vector<ComplexT> expected_results(8);
-    const auto rot_mat =
-        getRot<Kokkos::complex, TestType>(angles[0], angles[1], angles[2]);
+    const auto rot_mat = (inverse) ? getRot<Kokkos::complex, TestType>(
+                                         -angles[2], -angles[1], -angles[0])
+                                   : getRot<Kokkos::complex, TestType>(
+                                         angles[0], angles[1], angles[2]);
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
@@ -381,7 +399,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             kokkos_sv.applyOperation("PauliX", {0}, false);
-            kokkos_sv.applyOperation("CRot", {0, 1}, false, angles);
+            kokkos_sv.applyOperation("CRot", {0, 1}, inverse, angles);
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -871,6 +889,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -896,10 +915,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -912,6 +932,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -937,10 +958,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -953,6 +975,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -978,10 +1001,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
+            const TestType angle =
+                (inverse) ? -0.267030328057308 : 0.267030328057308;
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, false,
-                                     {0.267030328057308});
+            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
+                                     {angle});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -994,6 +1018,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1031,15 +1065,39 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("DoubleExcitation", {0, 1, 2, 3}, false,
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_sv.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_sv.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+                kokkos_sv.applyOperation("SWAP",
+                                         {control.first, control.second});
+            }
+
+            kokkos_sv.applyOperation("DoubleExcitation", wires, false,
                                      {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
+            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
+            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
+            kokkos_ref.HostToDevice(expected.data(), expected.size());
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_ref.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_ref.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                kokkos_ref.applyOperation("SWAP",
+                                          {control.first, control.second});
+            }
+            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
+
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
             }
         }
     }
@@ -1047,6 +1105,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1084,15 +1152,39 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
-                                     false, {0.267030328057308});
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_sv.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_sv.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+                kokkos_sv.applyOperation("SWAP",
+                                         {control.first, control.second});
+            }
+
+            kokkos_sv.applyOperation("DoubleExcitationMinus", wires, false,
+                                     {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
+            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
+            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
+            kokkos_ref.HostToDevice(expected.data(), expected.size());
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_ref.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_ref.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                kokkos_ref.applyOperation("SWAP",
+                                          {control.first, control.second});
+            }
+            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
+
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
             }
         }
     }
@@ -1100,6 +1192,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
+    std::vector<std::size_t> wires = {0, 1, 2, 3};
+    std::pair<std::size_t, std::size_t> control =
+        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
+                 std::pair<std::size_t, std::size_t>{0, 1},
+                 std::pair<std::size_t, std::size_t>{0, 2},
+                 std::pair<std::size_t, std::size_t>{0, 3},
+                 std::pair<std::size_t, std::size_t>{1, 2},
+                 std::pair<std::size_t, std::size_t>{1, 3},
+                 std::pair<std::size_t, std::size_t>{2, 3},
+                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1137,15 +1239,39 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
-                                     false, {0.267030328057308});
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_sv.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_sv.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                std::swap(wires[control.first], wires[control.second]);
+                kokkos_sv.applyOperation("SWAP",
+                                         {control.first, control.second});
+            }
+
+            kokkos_sv.applyOperation("DoubleExcitationPlus", wires, false,
+                                     {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
+            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
+            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
+            kokkos_ref.HostToDevice(expected.data(), expected.size());
+            if (control.first == 3 && control.second == 3) {
+                std::swap(wires[0], wires[2]);
+                kokkos_ref.applyOperation("SWAP", {0, 2});
+                std::swap(wires[1], wires[3]);
+                kokkos_ref.applyOperation("SWAP", {1, 3});
+            } else if (control.first != control.second) {
+                kokkos_ref.applyOperation("SWAP",
+                                          {control.first, control.second});
+            }
+            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
+
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
             }
         }
     }
@@ -1218,5 +1344,143 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
     SECTION("No wires provided:") {
         REQUIRE_THAT(probabilities,
                      Catch::Approx(expected_probabilities).margin(.05));
+    }
+}
+
+TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
+                   "[StateVectorKokkosManaged_Param]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const size_t num_qubits = 7;
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+
+    StateVectorKokkos<TestType> kokkos_sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    StateVectorKokkos<TestType> copy_sv{kokkos_sv};
+
+    auto m = Measurements(kokkos_sv);
+
+    auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{0});
+    auto Y1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{1});
+    auto Z2 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliZ", std::vector<size_t>{2});
+    auto X3 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliX", std::vector<size_t>{3});
+    auto Y4 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
+        "PauliY", std::vector<size_t>{4});
+
+    ComplexT j{0.0, 1.0};
+    ComplexT u{1.0, 0.0};
+    ComplexT z{0.0, 0.0};
+
+    SECTION("3Qubit") {
+        auto ob =
+            TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Y1, Z2});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{z, z, z, z,  z, z,  -j, z, z,  z, z, z, z,
+                                     z, z, j, z,  z, z,  z,  j, z,  z, z, z, z,
+                                     z, z, z, -j, z, z,  z,  z, -j, z, z, z, z,
+                                     z, z, z, z,  j, z,  z,  z, z,  j, z, z, z,
+                                     z, z, z, z,  z, -j, z,  z, z,  z, z, z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
+    }
+
+    SECTION("4Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{
+            z, z, z,  z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, z,  z, z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2, 3});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
+    }
+
+    SECTION("5Qubit") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3, Y4});
+        auto expected = m.expval(*ob);
+
+        std::vector<ComplexT> matrix{
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, u,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            -u, z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, u, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  -u, z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  -u, z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  u, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, -u, z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  u, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  u,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, -u, z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  u, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, -u, z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  u, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, -u, z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  u, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  -u, z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  -u, z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  u, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, -u, z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  u,  z,  z,  z, z, z,  z, z,  z, z, z,
+            z,  z, z,  z, z,  z,  z, z,  z,  z,  z,  z, z, z,  z, z,  z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2, 3, 4});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
     }
 }

@@ -483,9 +483,7 @@ auto registerAdjointJacobian(
                                         observables,
                                         operations,
                                         trainableParams};
-
-    adjoint_jacobian.adjointJacobian(std::span{jac}, jd);
-
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
     return py::array_t<PrecisionT>(py::cast(jac));
 }
 
