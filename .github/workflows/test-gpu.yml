@@ -26,6 +26,7 @@ jobs:
 
       - name: Check CUDA binary folder exists
         run: |
+          set -x
           ls -ltrh /usr/local
           ls -ltrh /usr/local/cuda
           ls -ltrh /usr/local/cuda/bin
