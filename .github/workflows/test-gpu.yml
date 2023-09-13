@@ -44,7 +44,7 @@ jobs:
       - name: Validate GPU version and installed compiler
         run: |
           nvidia-smi
-          /usr/local/cuda/bin/nvcc --version
+          nvcc --version
 
       - name: Cache installation directories
         id: kokkos-cache
