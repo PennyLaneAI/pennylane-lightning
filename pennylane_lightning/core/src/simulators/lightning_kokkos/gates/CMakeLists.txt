@@ -1,12 +1,12 @@
-project(${PL_BACKEND}_gates)
+project(lightning_kokkos_gates)
 
 # We make a static library for default kernels using explicit template instantiations.
 # We thus ensure that only a single instantiation exists during the build process.
 
-add_library(${PL_BACKEND}_gates INTERFACE)
-target_include_directories(${PL_BACKEND}_gates INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(lightning_kokkos_gates INTERFACE)
+target_include_directories(lightning_kokkos_gates INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(${PL_BACKEND}_gates INTERFACE  ${PL_BACKEND}_utils)
+target_link_libraries(lightning_kokkos_gates INTERFACE  lightning_kokkos_utils)
 
 if (BUILD_TESTS)
     enable_testing()

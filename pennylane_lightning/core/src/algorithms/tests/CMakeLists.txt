@@ -20,10 +20,12 @@ target_link_libraries(algorithms_tests INTERFACE    Catch2::Catch2
                                                     )
 
 # Create dependencies on the dynamically defined simulator/backend targets.
-target_link_libraries(algorithms_tests INTERFACE    ${PL_BACKEND}
-                                                    "${PL_BACKEND}_algorithms"
-                                                    "${PL_BACKEND}_observables"
-)
+foreach(BACKEND ${PL_BACKEND})
+    target_link_libraries(algorithms_tests INTERFACE    ${BACKEND}
+                                                        "${BACKEND}_algorithms"
+                                                        "${BACKEND}_observables"
+                                                        )
+endforeach()
 
 ProcessTestOptions(algorithms_tests)
 

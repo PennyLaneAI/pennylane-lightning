@@ -4,6 +4,8 @@ PYTHON := python3
 COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=html:coverage_html_report
 TESTRUNNER := -m pytest tests --tb=short
 
+PL_BACKEND?="$(if $(backend:-=),$(backend),lightning_qubit)"
+
 ifdef verbose
     VERBOSE := --verbose
 else
@@ -68,9 +70,9 @@ coverage:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
-	@echo "Generating cpp coverage report in BuildCov/out for $(if $(backend:-=),$(backend),lightning_qubit) backend"
+	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
 	rm -rf ./BuildCov
-	cmake -BBuildCov  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DPL_BACKEND=$(if $(backend:-=),$(backend),lightning_qubit)
+	cmake -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DPL_BACKEND=$(PL_BACKEND)
 	cmake --build ./BuildCov
 	cd ./BuildCov; for file in *runner ; do ./$file; done; \
 	lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info; \
@@ -78,12 +80,12 @@ coverage-cpp:
 
 build:
 	rm -rf ./Build
-	cmake -BBuild -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(if $(backend:-=),$(backend),lightning_qubit)
+	cmake -BBuild -G Ninja -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 	cmake --build ./Build $(VERBOSE)
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake -BBuildTests -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(if $(backend:-=),$(backend),lightning_qubit)
+	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
 	OMP_PROC_BIND=false ./BuildTests/$(target)
@@ -94,7 +96,7 @@ endif
 
 test-cpp-blas:
 	rm -rf ./BuildTests
-	cmake -BBuildTests -DBUILD_TESTS=ON -DENABLE_BLAS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(if $(backend:-=),$(backend),lightning_qubit)
+	cmake -BBuildTests -G Ninja -DBUILD_TESTS=ON -DENABLE_BLAS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 	cmake --build ./BuildTests $(VERBOSE)
 	cmake --build ./BuildTests $(VERBOSE) --target test
 
@@ -110,7 +112,7 @@ format-python:
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./BuildTidy
-	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(if $(backend:-=),$(backend),lightning_qubit)
+	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
 else

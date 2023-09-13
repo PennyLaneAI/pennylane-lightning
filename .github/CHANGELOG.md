@@ -33,6 +33,8 @@
 * Add support for dependent external packages to C++ core.
   [(#482)](https://github.com/PennyLaneAI/pennylane-lightning/pull/482)
 
+* Add support for building multiple backend simulators.
+  [(#497)](https://github.com/PennyLaneAI/pennylane-lightning/pull/497)
 
 ### Documentation
 
