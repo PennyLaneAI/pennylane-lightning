@@ -17,4 +17,27 @@ jobs:
       - gpu
 
     steps:
-      - run: nvidia-smi
+      - name: Show PATH
+        run: |
+          set -x
+          echo $PATH
+          echo $LD_LIBRARY_PATH
+          set +x
+
+      - name: Check nvidia-smi
+        run: nvidia-smi
+
+      - name: Check default CUDA
+        run: |
+          set -x
+          which nvcc
+          nvcc --version
+          set +x
+
+      - name: Try loading CUDA 12.2
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          
+          module load cuda/12.2
+          nvcc --version
