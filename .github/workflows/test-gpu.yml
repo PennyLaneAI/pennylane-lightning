@@ -40,6 +40,8 @@ jobs:
           source /etc/profile.d/modules.sh
           module use /opt/modules
           module load cuda/12.2
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
 
       - name: Cache installation directories
@@ -66,9 +68,9 @@ jobs:
       - name: Build Kokkos core library (Ubuntu)
         # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
         run: |
-          source /etc/profile.d/modules.sh
-          module use /opt/modules
-          module load cuda/12.2
+          # source /etc/profile.d/modules.sh
+          # module use /opt/modules
+          # module load cuda/12.2
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
