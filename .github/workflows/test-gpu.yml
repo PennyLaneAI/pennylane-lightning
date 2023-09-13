@@ -34,6 +34,14 @@ jobs:
         with:
           python-version: '3.9'
 
+      - run: |
+          set -x
+          echo $GITHUB_PATH
+          cat $GITHUB_PATH
+          
+          echo $GITHUB_ENV
+          cat $GITHUB_ENV
+
       - name: Install dependencies
         run: |
           source /etc/profile.d/modules.sh
