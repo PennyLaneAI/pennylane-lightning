@@ -40,6 +40,8 @@ jobs:
           module use /opt/modules
           ls -l /opt/modules/cuda
           module load cuda/12.2
+          echo $PATH
+          echo $LD_LIBRARY_PATH
 
       - name: Validate GPU version and installed compiler
         run: |
