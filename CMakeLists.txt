@@ -62,6 +62,17 @@ option(BUILD_BENCHMARKS "Enable cpp benchmarks" OFF)
 # Backend
 set(PL_BACKEND "lightning_qubit" CACHE STRING "PennyLane Lightning backend")
 
+# Python bindings are not supported while building multiple backend devices
+list(LENGTH PL_BACKEND PL_BACKEND_LEN)
+if ((${PL_BACKEND_LEN} GREATER 1) AND ENABLE_PYTHON)
+    message(FATAL_ERROR "Lightning does not provide Python support for building multiple backends. Requested backends: ${PL_BACKEND}")
+endif()
+
+# Print PL_BACKEND
+foreach(BACKEND ${PL_BACKEND})
+    message(STATUS "PL_BACKEND: ${BACKEND}")
+endforeach()
+
 # Process compile options
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
@@ -94,12 +105,14 @@ target_link_libraries(pennylane_lightning INTERFACE lightning_observables
                                                     lightning_algorithms
                                                     )
 
-target_link_libraries(pennylane_lightning INTERFACE  ${PL_BACKEND} #simulator
-                                                    "${PL_BACKEND}_algorithms"
-                                                    "${PL_BACKEND}_observables"
-                                                    "${PL_BACKEND}_bindings"
-                                                    "${PL_BACKEND}_measurements"
-)
+foreach(BACKEND ${PL_BACKEND})
+    target_link_libraries(pennylane_lightning INTERFACE "${BACKEND}" #simulator
+                                                        "${BACKEND}_algorithms"
+                                                        "${BACKEND}_observables"
+                                                        "${BACKEND}_bindings"
+                                                        "${BACKEND}_measurements"
+                                                        )
+endforeach()
                                                 
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
