@@ -90,13 +90,12 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
 
     name: C++ tests (Kokkos)
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/setup-python@v4
@@ -114,7 +113,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
@@ -172,13 +171,12 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
 
     name: Python tests with Kokkos
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -197,7 +195,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
