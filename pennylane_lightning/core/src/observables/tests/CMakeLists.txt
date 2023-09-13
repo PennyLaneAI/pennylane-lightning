@@ -33,8 +33,9 @@ add_executable(observables_test_runner ${TEST_SOURCES})
 target_link_libraries(observables_test_runner PRIVATE  observables_tests)
 
 # Create dependency on the dynamically defined simulator/backend target.
-target_link_libraries(observables_test_runner PRIVATE   ${PL_BACKEND}
-                                                        )
+foreach(BACKEND ${PL_BACKEND})
+    target_link_libraries(observables_test_runner PRIVATE ${BACKEND})
+endforeach()
 
 catch_discover_tests(observables_test_runner)
 
