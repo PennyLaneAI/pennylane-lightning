@@ -17,14 +17,15 @@ Each image contains PennyLane and one of several high-performance plugins.
 Choose a device (plugin) among:
 
 - `lightning-gpu`: [pennylane-lightning-gpu](https://github.com/PennyLaneAI/pennylane-lightning-gpu) is a plugin based on the NVIDIA [cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
-- `lightning-kokkos-cuda`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' CUDA backend.
-- `lightning-kokkos-openmp`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' OpenMP backend.
+- `lightning-kokkos-cuda`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [CUDA](https://developer.nvidia.com/cuda-toolkit) backend.
+- `lightning-kokkos-rocm`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [HIP](https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html) backend.
+- `lightning-kokkos-openmp`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [OpenMP](https://www.openmp.org/) backend.
 - `lightning-qubit`: [pennylane-lightning](https://github.com/PennyLaneAI/pennylane-lightning) provides a fast state-vector simulator written in C++.
 
 If you have Docker installed, download and spawn a container with `pennylane-lightning` as follows
 
 ```shell
-docker run -v pwd:/io -it vincentmichaudrioux/pennylane:lightning-qubit bash
+docker run -v pwd:/io -it pennylaneai/pennylane:lightning-qubit bash
 ```
 
 On certain systems, there may be other solutions supporting Docker containers.
@@ -32,8 +33,8 @@ For instance, NERSC computers (e.g. Perlmutter) have [Shifter](https://docs.ners
 In this case, spawning a container is simple as
 
 ```shell
-shifterimg pull vincentmichaudrioux/pennylane:lightning-qubit
-shifter --image=vincentmichaudrioux/pennylane:lightning-qubit /bin/bash
+shifterimg pull pennylaneai/pennylane:lightning-qubit
+shifter --image=pennylaneai/pennylane:lightning-qubit /bin/bash
 ```
 
 where the first command downloads the image and the second spawns a container.
@@ -55,8 +56,9 @@ pl-device-test --device lightning.qubit --shots 10000
 Decide on a target among:
 
 - `wheel-lightning-gpu`
-- `wheel-lightning-kokkos`
 - `wheel-lightning-kokkos-cuda`
+- `wheel-lightning-kokkos-openmp`
+- `wheel-lightning-kokkos-rocm`
 - `wheel-lightning-qubit`
 
 For instance `TARGET=wheel-lightning-qubit`.
