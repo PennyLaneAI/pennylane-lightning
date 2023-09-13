@@ -24,6 +24,24 @@ jobs:
           echo $LD_LIBRARY_PATH
           set +x
 
+      - name: Check CUDA binary folder exists
+        run: |
+          [ ! -d '/usr/local/cuda/bin' ] && exit 1
+
+      - name: Update PATH to include CUDA
+        run: |
+          echo '/usr/local/cuda/bin' >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+          echo "LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> $GITHUB_ENV
+
+      - name: Show PATH (again)
+        run: |
+          set -x
+          echo $PATH
+          echo $LD_LIBRARY_PATH
+          set +x
+
       - name: Check nvidia-smi
         run: nvidia-smi
 
