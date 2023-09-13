@@ -218,7 +218,7 @@ RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl
 
 # Install ROCm in build venv image
 FROM base-build-python as base-build-rocm
-RUN wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
+RUN wget --progress=dot:giga https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
@@ -265,7 +265,7 @@ RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
 FROM base-runtime AS wheel-lightning-kokkos-rocm
-RUN wget https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
+RUN wget --progress=dot:giga https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
