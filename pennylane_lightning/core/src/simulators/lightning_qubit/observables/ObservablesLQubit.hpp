@@ -159,8 +159,8 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
     run(const std::vector<PrecisionT> &coeffs,
         const std::vector<std::shared_ptr<Observable<StateVectorT>>> &terms,
         StateVectorT &sv) {
-        if constexpr (std::is_same_v<StateVectorLQubitManaged<PrecisionT>,
-                                     StateVectorT>) {
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
             auto allocator = sv.allocator();
             std::vector<ComplexT, decltype(allocator)> res(
                 sv.getLength(), ComplexT{0.0, 0.0}, allocator);
@@ -171,8 +171,9 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
                             tmp.getData(), res.data());
             }
             sv.updateData(res);
-        } else if constexpr (std::is_same_v<StateVectorLQubitRaw<PrecisionT>,
-                                            StateVectorT>) {
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
             std::vector<ComplexT> res(sv.getLength(), ComplexT{0.0, 0.0});
             for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
                 std::vector<ComplexT> tmp_data_storage(
@@ -184,6 +185,10 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
                             tmp.getData(), res.data());
             }
             sv.updateData(res);
+        } else {
+            /// LCOV_EXCL_START
+            PL_ABORT("Undefined memory storage location for StateVectorT.");
+            /// LCOV_EXCL_STOP
         }
     }
 };

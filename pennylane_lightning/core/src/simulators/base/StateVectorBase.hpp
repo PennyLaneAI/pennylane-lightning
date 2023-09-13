@@ -41,7 +41,7 @@ namespace Pennylane {
  * @tparam Derived Type of a derived class
  */
 template <class PrecisionT, class Derived> class StateVectorBase {
-  private:
+  protected:
     size_t num_qubits_{0};
 
   public:
