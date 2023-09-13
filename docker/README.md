@@ -5,6 +5,11 @@ PennyLane is an open-source software framework for quantum machine learning, qua
 ## Documentation
 
 For more information on PennyLane, including the demos, APIs and development guide, visit the [PennyLane documentation site](https://pennylane.ai/).
+Listed below are links to the Lightning-plugins documentation:
+
+- [pennylane-lightning doc](https://docs.pennylane.ai/projects/lightning/en/stable/)
+- [pennylane-lightning-gpu doc](https://docs.pennylane.ai/projects/lightning-gpu/en/stable/)
+- [pennylane-lightning-kokkos doc](https://docs.pennylane.ai/projects/lightning-kokkos/en/latest/)
 
 ## Download & install
 
@@ -49,10 +54,10 @@ pl-device-test --device lightning.qubit --shots 10000
 
 Decide on a target among:
 
-- `wheel-lightning-gpu`: pennylane-lightning-gpu
-- `wheel-lightning-kokkos`: pennylane-lightning-kokkos with Kokkos' OpenMP backend.
-- `wheel-lightning-kokkos-cuda`: pennylane-lightning-kokkos with Kokkos' CUDA backend.
-- `wheel-lightning-qubit`: pennylane-lightning
+- `wheel-lightning-gpu`
+- `wheel-lightning-kokkos`
+- `wheel-lightning-kokkos-cuda`
+- `wheel-lightning-qubit`
 
 For instance `TARGET=wheel-lightning-qubit`.
 Then the following command will build the target

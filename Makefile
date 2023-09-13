@@ -125,12 +125,23 @@ clean-docs:
 	$(MAKE) -C doc clean
 
 .PHONY : docker
-docker:
-	docker build -f docker/Dockerfile --tag=vincentmichaudrioux/pennylane:lightning-gpu --target wheel-lightning-gpu .
-	docker build -f docker/Dockerfile --tag=vincentmichaudrioux/pennylane:lightning-kokkos-cuda --target wheel-lightning-kokkos-cuda .
-	docker build -f docker/Dockerfile --tag=vincentmichaudrioux/pennylane:lightning-kokkos-openmp --target wheel-lightning-kokkos-openmp .
-	docker build -f docker/Dockerfile --tag=vincentmichaudrioux/pennylane:lightning-qubit --target wheel-lightning-qubit .
-	docker push vincentmichaudrioux/pennylane:lightning-gpu
-	docker push vincentmichaudrioux/pennylane:lightning-kokkos-cuda
-	docker push vincentmichaudrioux/pennylane:lightning-kokkos-openmp
-	docker push vincentmichaudrioux/pennylane:lightning-qubit
+ifdef target
+    TARGET := $(target)
+else
+    TARGET := lightning-qubit
+endif
+docker-build:
+	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(TARGET) --target wheel-$(TARGET) .
+docker-push:
+	docker push pennylaneai/pennylane:$(TARGET)
+docker-all:
+	$(MAKE) docker-build target=lightning-gpu
+	$(MAKE) docker-push target=lightning-gpu
+	$(MAKE) docker-build target=lightning-kokkos-cuda
+	$(MAKE) docker-push target=lightning-kokkos-cuda
+	$(MAKE) docker-build target=lightning-kokkos-rocm
+	$(MAKE) docker-push target=lightning-kokkos-rocm
+	$(MAKE) docker-build target=lightning-kokkos-openmp
+	$(MAKE) docker-push target=lightning-kokkos-openmp
+	$(MAKE) docker-build target=lightning-qubit
+	$(MAKE) docker-push target=lightning-qubit
