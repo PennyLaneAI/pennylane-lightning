@@ -92,8 +92,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+        exec_model: ["CUDA"]
+        kokkos_version: ["4.1.00"]
 
     name: C++ tests (Kokkos)
     runs-on: ${{ matrix.os }}
@@ -174,8 +174,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+        exec_model: ["CUDA"]
+        kokkos_version: ["4.1.00"]
 
     name: Python tests with Kokkos
     runs-on: ${{ matrix.os }}
