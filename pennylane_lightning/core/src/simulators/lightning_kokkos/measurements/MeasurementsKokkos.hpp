@@ -30,7 +30,6 @@ namespace {
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
-using Pennylane::LightningKokkos::Observables::HermitianObs;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;
@@ -194,7 +193,9 @@ class Measurements final
      * @param ob HermitianObs.
      * @return Expectation value with respect to the given observable.
      */
-    PrecisionT expval(const HermitianObs<StateVectorT> &ob) {
+    PrecisionT
+    expval(const Pennylane::LightningKokkos::Observables::HermitianObs<
+           StateVectorT> &ob) {
         return expval(ob.getMatrix(), ob.getWires());
     }
 
