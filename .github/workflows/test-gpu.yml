@@ -30,7 +30,6 @@ jobs:
           ls -ltrh /usr/local
           ls -ltrh /usr/local/cuda
           ls -ltrh /usr/local/cuda/bin
-          [ ! -d '/usr/local/cuda/bin' ] && exit 1
 
       - name: Update PATH to include CUDA
         run: |
