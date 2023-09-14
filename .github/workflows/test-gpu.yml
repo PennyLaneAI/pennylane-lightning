@@ -6,9 +6,10 @@ on:
       - master
 
 env:
+  CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  CI_CUDA_ARCH: 86
+  TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
   group: tests_gpu-${{ github.ref }}
@@ -141,12 +142,14 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontestswithKokkos:
     needs: [builddeps]

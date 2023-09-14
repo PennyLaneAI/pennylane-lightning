@@ -59,6 +59,7 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
+          if-no-files-found: error
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -81,7 +82,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
+          if-no-files-found: error
 
   pythontests:
     strategy:
@@ -182,6 +183,7 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
+          if-no-files-found: error
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -205,6 +207,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontestswithOpenBLAS:
     strategy:
@@ -326,6 +329,7 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          if-no-files-found: error
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -349,6 +353,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
@@ -544,3 +549,4 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
           path: ./Build/tests/results_multiple_backends/
+          if-no-files-found: error
