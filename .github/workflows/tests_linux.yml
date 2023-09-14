@@ -510,3 +510,60 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  cpptestsWithMultipleBackends:
+  # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
+    needs: [build_and_cache_Kokkos]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+
+    name: C++ tests (multiple backends)
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        run: |
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+
+      - name: Build and run unit tests
+        run: |
+            cmake . -BBuild -G Ninja \
+              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+              -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+            cmake --build ./Build
+            cd ./Build
+            mkdir -p ./tests/results_multiple_backends
+            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
+          path: ./Build/tests/results_multiple_backends/
