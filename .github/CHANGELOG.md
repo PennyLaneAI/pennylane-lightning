@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development versions.
+  [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
+
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
