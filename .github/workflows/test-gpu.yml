@@ -120,7 +120,7 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
