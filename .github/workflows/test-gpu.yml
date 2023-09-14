@@ -73,6 +73,10 @@ jobs:
           cmake --install ./Build
           cd -
 
+      - name: Sleep for 10 seconds to upload cache
+        run: sleep 10s
+        shell: bash
+
   cpptestswithKokkos:
     needs: [builddeps]
     strategy:
