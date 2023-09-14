@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: "0 3 * * 1-5"  # Run daily at 3am Mon-Fri
   workflow_dispatch:
-  pull_request:
 
 jobs:
   tests_linux:
