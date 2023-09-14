@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpptests:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ github.event_name != 'workflow_call' }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -166,7 +166,7 @@ jobs:
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   cpptestswithOpenBLAS:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ github.event_name != 'workflow_call' }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -311,7 +311,7 @@ jobs:
       os: ubuntu-22.04
 
   cpptestswithKokkos:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ github.event_name != 'workflow_call' }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
