@@ -34,7 +34,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          path: $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
@@ -58,10 +58,10 @@ jobs:
       - name: Build Kokkos core library (Ubuntu)
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          rm -rf $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=$/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -91,7 +91,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          path: $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           fail-on-cache-miss: true
 
@@ -99,7 +99,7 @@ jobs:
         run: |
           rm -rf Kokkos
           mkdir Kokkos/
-          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -164,7 +164,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          path: $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           fail-on-cache-miss: true
 
@@ -172,7 +172,7 @@ jobs:
         run: |
           rm -rf Kokkos
           mkdir Kokkos/
-          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf $/opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
