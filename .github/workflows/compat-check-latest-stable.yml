@@ -14,8 +14,8 @@ jobs:
       lightning-version: latest
       pennylane-version: stable
   tests_without_binary:
-    name: Lightning-Kokkos Compatibility test (tests_without_binary) - latest/latest
+    name: Lightning-Kokkos Compatibility test (tests_without_binary) - latest/stable
     uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: latest
-      pennylane-version: latest
+      pennylane-version: stable
