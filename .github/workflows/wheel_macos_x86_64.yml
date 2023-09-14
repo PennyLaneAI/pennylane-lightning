@@ -113,7 +113,7 @@ jobs:
       - name: Copy cached libraries
         run: |
           mkdir Kokkos
-          cp -rf /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - uses: actions/setup-python@v4
         name: Install Python
