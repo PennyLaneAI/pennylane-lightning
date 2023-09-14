@@ -24,6 +24,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
+        os: [ubuntu-22.04]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
 
@@ -33,7 +34,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -46,7 +47,7 @@ jobs:
           nvidia-smi
 
       - name: Clone Kokkos repository
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
           # git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
@@ -56,7 +57,7 @@ jobs:
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
@@ -77,6 +78,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
+        os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
@@ -100,7 +102,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
@@ -158,6 +160,7 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
+        os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
@@ -182,7 +185,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
