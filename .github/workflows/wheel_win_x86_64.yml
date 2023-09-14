@@ -52,10 +52,7 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
-          git clone https://github.com/kokkos/kokkos.git
-          cd D:\a\kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd ..
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
 
       - name: Create installation directory
         if: steps.kokkos-cache.outputs.cache-hit != 'true'

@@ -51,15 +51,13 @@ jobs:
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
           git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
-          # git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
-          # cd kokkos_${{ matrix.exec_model }}
-          # git checkout ${{ matrix.kokkos_version }}
-          # cd -
+          # git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
@@ -85,19 +83,9 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     name: C++ tests (Kokkos)
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
-
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v3
@@ -109,6 +97,16 @@ jobs:
         run: |
           mkdir Kokkos/
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
@@ -167,7 +165,7 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     name: Python tests with Kokkos
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout PennyLane-Lightning

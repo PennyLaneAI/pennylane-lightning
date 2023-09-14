@@ -47,10 +47,7 @@ jobs:
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          git clone https://github.com/kokkos/kokkos.git
-          cd kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd -
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
 
       - uses: docker/setup-qemu-action@v2
