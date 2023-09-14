@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "0 3 * * 1-5"  # Run daily at 3am Mon-Fri
   workflow_dispatch:
+  pull_request:
 
 jobs:
   tests_linux:
@@ -12,3 +13,9 @@ jobs:
     with:
       lightning-version: latest
       pennylane-version: stable
+  tests_without_binary:
+    name: Lightning-Kokkos Compatibility test (tests_without_binary) - latest/latest
+    uses: ./.github/workflows/tests_without_binary.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
