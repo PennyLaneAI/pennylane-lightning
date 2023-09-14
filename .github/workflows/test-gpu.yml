@@ -142,7 +142,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
   pythontestswithKokkos:
     needs: [builddeps]
