@@ -95,6 +95,7 @@ jobs:
 
       - name: Copy cached libraries
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
@@ -165,6 +166,7 @@ jobs:
 
       - name: Copy cached libraries
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
