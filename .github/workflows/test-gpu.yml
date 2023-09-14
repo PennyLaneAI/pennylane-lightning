@@ -49,6 +49,7 @@ jobs:
       - name: Clone Kokkos repository
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
+          rm -rf kokkos_${{ matrix.exec_model }}
           git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
           # git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
