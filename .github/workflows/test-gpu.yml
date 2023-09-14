@@ -52,9 +52,9 @@ jobs:
           rm -rf kokkos_${{ matrix.exec_model }}
           git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
           # git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
-          cd kokkos_${{ matrix.exec_model }}
-          git checkout ${{ matrix.kokkos_version }}
-          cd -
+          # cd kokkos_${{ matrix.exec_model }}
+          # git checkout ${{ matrix.kokkos_version }}
+          # cd -
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
