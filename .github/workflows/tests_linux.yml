@@ -114,6 +114,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           cd main
+          git fetch --all --tags
           git checkout $(git tag | sort -V | tail -1)
           git log -1 --format='%H'
           git status
@@ -252,6 +253,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           cd main
+          git fetch --all --tags
           git checkout $(git tag | sort -V | tail -1)
           git log -1 --format='%H'
           git status
@@ -417,6 +419,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           cd main
+          git fetch --all --tags
           git checkout $(git tag | sort -V | tail -1)
           git log -1 --format='%H'
           git status
