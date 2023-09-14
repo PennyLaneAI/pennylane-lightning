@@ -108,6 +108,7 @@ jobs:
         with:
           path: /root/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          fail-on-cache-miss: true
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3

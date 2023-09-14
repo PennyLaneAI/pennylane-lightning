@@ -103,6 +103,7 @@ jobs:
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
+          fail-on-cache-miss: true
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
