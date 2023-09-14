@@ -28,7 +28,6 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     steps:
-
       - name: Cache installation directories
         id: kokkos-cache
         uses: actions/cache@v3
@@ -37,7 +36,6 @@ jobs:
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
