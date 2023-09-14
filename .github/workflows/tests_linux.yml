@@ -115,7 +115,8 @@ jobs:
         run: |
           cd main
           git checkout $(git tag | sort -V | tail -1)
-          git log | head -1
+          git log -1 --format='%H'
+          git status
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -247,6 +248,14 @@ jobs:
           path: main
           fetch-depth: 2
 
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
+
       - uses: actions/setup-python@v4
         name: Install Python
         with:
@@ -259,6 +268,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
@@ -398,6 +413,14 @@ jobs:
           path: main
           fetch-depth: 2
 
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
+
       - uses: actions/setup-python@v4
         name: Install Python
         with:
@@ -423,6 +446,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
