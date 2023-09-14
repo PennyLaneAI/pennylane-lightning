@@ -29,30 +29,26 @@ jobs:
 
     steps:
 
-      - uses: actions/setup-python@v4
-        name: Install Python
+      - name: Cache installation directories
+        id: kokkos-cache
+        uses: actions/cache@v3
         with:
-          python-version: '3.9'
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          nvidia-smi
           source /etc/profile.d/modules.sh
           module use /opt/modules
           module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
-
-      - name: Cache installation directories
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          nvidia-smi
 
       - name: Clone Kokkos repository
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
@@ -61,11 +57,11 @@ jobs:
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
-        # if: ${{ (((inputs.os == 'ubuntu-latest') || (inputs.os == 'ubuntu-20.04') || (inputs.os == 'ubuntu-22.04')) && (steps.kokkos-cache.outputs.cache-hit != 'true')) }}
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -112,13 +108,13 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
           mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
@@ -194,13 +190,13 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ inputs.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
           mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
           pwd
 
       - name: Install dependencies
