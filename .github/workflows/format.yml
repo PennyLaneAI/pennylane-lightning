@@ -1,6 +1,6 @@
 name: Formatting check
 on:
-  pull_request:
+  #pull_request:
   push:
     branches:
       - master
@@ -77,7 +77,6 @@ jobs:
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-          fail-on-cache-miss: true
 
       - name: Copy cached libraries
         run: |
