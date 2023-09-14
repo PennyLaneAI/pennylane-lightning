@@ -94,9 +94,9 @@ jobs:
         with:
           path: /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-          fail-on-cache-miss: true
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           rm -rf Kokkos
           mkdir Kokkos/
@@ -167,10 +167,10 @@ jobs:
         with:
           path: /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-          fail-on-cache-miss: true
 
       - name: Copy cached libraries
         run: |
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
           rm -rf Kokkos
           mkdir Kokkos/
           cp -rf /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
