@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: a-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: a-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -168,7 +168,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: a-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
