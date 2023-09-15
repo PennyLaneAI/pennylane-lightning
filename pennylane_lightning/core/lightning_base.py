@@ -27,7 +27,7 @@ from pennylane import (
     QubitDevice,
     StatePrep,
 )
-from pennylane.devices import DefaultQubit
+from pennylane.devices import DefaultQubitLegacy
 from pennylane.measurements import MeasurementProcess
 from pennylane.operation import Operation
 from pennylane.wires import Wires
@@ -388,8 +388,8 @@ class LightningBase(QubitDevice):
         return processing_fns
 
 
-class LightningBaseFallBack(DefaultQubit):  # pragma: no cover
-    # pylint: disable=missing-class-docstring
+class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
+    # pylint: disable=missing-class-docstring, too-few-public-methods
     pennylane_requires = ">=0.30"
     version = __version__
     author = "Xanadu Inc."
