@@ -35,8 +35,8 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -59,10 +59,10 @@ jobs:
       - name: Build Kokkos core library (Ubuntu)
         # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          rm -rf Kokkos_install/${{ matrix.exec_model }}
-          mkdir -p Kokkos_install/${{ matrix.exec_model }}
+          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=Kokkos_install/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -92,16 +92,16 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
-          mkdir -p Kokkos
+          mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
-          cp -r Kokkos_install/${{ matrix.exec_model }}/* Kokkos
-          ls -l Kokkos
+          cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
+          ls -l ${{ github.workspace }}/Kokkos
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -118,12 +118,12 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            ls -l Kokkos
+            ls -l ${{ github.workspace }}/Kokkos
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
-              -DCMAKE_PREFIX_PATH=Kokkos \
+              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
@@ -167,15 +167,15 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v3
         with:
-          path: Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos-${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
-          mkdir -p Kokkos
+          mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
-          cp -r Kokkos_install/${{ matrix.exec_model }}/* Kokkos
+          cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -207,7 +207,7 @@ jobs:
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
@@ -224,10 +224,10 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
