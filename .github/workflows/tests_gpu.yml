@@ -92,6 +92,16 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.2
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+
       - name: Restoring cached dependencies
         id: kokkos-cache
         # uses: actions/cache@v3
@@ -110,27 +120,22 @@ jobs:
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
           cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
-          ls -l ${{ github.workspace }}/Kokkos
-          ls -l ${{ github.workspace }}/Kokkos/bin
-          ls -l ${{ github.workspace }}/Kokkos/include
-          ls -l ${{ github.workspace }}/Kokkos/lib
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            ls -l ${{ github.workspace }}/Kokkos
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -175,6 +180,16 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.2
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+
       - name: Restoring cached dependencies
         id: kokkos-cache
         # uses: actions/cache@v3
