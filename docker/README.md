@@ -5,11 +5,11 @@ PennyLane is an open-source software framework for quantum machine learning, qua
 ## Documentation
 
 For more information on PennyLane, including the demos, APIs and development guide, visit the [PennyLane documentation site](https://pennylane.ai/).
-Listed below are links to the Lightning-plugins documentation:
+You can also check the Lightning-plugins documentation:
 
-- [pennylane-lightning doc](https://docs.pennylane.ai/projects/lightning/en/stable/)
-- [pennylane-lightning-gpu doc](https://docs.pennylane.ai/projects/lightning-gpu/en/stable/)
-- [pennylane-lightning-kokkos doc](https://docs.pennylane.ai/projects/lightning-kokkos/en/latest/)
+- [pennylane-lightning](https://docs.pennylane.ai/projects/lightning/en/stable/)
+- [pennylane-lightning-gpu](https://docs.pennylane.ai/projects/lightning-gpu/en/stable/)
+- [pennylane-lightning-kokkos](https://docs.pennylane.ai/projects/lightning-kokkos/en/latest/)
 
 ## Download & install
 
