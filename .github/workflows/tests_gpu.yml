@@ -33,10 +33,14 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        # uses: actions/cache@v3
+        # with:
+        #   path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+        #   key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+        uses: actions/cache/save@v3
         with:
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -90,13 +94,18 @@ jobs:
     steps:
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        # uses: actions/cache@v3
+        # with:
+        #   path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+        #   key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+        uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
@@ -168,14 +177,19 @@ jobs:
     steps:
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        # uses: actions/cache@v3
+        # with:
+        #   path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+        #   key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+        uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: c-${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
         run: |
-        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
           cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
@@ -251,4 +265,3 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-  
