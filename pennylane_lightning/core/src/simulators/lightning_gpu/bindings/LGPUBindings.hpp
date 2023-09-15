@@ -26,6 +26,7 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MeasurementsGPU.hpp"
+#include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TypeList.hpp"
 
@@ -33,7 +34,9 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Measures;
+using namespace Pennylane::LightningGPU::Observables;
 using Pennylane::LightningGPU::StateVectorCudaManaged;
 } // namespace
 /// @endcond
@@ -206,6 +209,25 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
+        .def("expval", [](Measurements<StateVectorT> &M,
+                 const std::vector<std::string> &pauli_words, 
+                 const std::vector<std::vector<size_t>> &target_wires, 
+                 const np_arr_c &coeffs){
+                    return M.expval(pauli_words,target_wires,static_cast<ComplexT *>(coeffs.request().ptr));
+                 },
+             "Expected value of Hamiltonian represented by Pauli words.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+               const std::vector<size_t> &wires) {
+                const std::size_t matrix_size = exp2(2 * wires.size());
+                auto matrix_data =
+                    static_cast<ComplexT *>(matrix.request().ptr);
+                std::vector<ComplexT> matrix_v{matrix_data,
+                                               matrix_data + matrix_size};
+                return M.expval(matrix_v, wires);
+            },
+            "Expected value of a Hermitian observable.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
                 const std::vector<size_t> &wires) {

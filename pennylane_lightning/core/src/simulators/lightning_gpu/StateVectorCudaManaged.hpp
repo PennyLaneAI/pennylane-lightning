@@ -495,6 +495,17 @@ class StateVectorCudaManaged
         static const std::vector<std::string> names(wires.size(), {"RZ"});
         applyParametricPauliGate(names, {}, wires, param, adjoint);
     }
+    inline void applyIsingXY(const std::vector<std::size_t> &wires,
+                             bool adjoint, Precision param) {
+        static const std::string name{"IsingXY"};
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(
+                gate_key, cuGates::getIsingXY<CFP_t>(param));
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+    }
     inline void applyCRot(const std::vector<std::size_t> &wires, bool adjoint,
                           const std::vector<Precision> &params) {
         applyCRot(wires, adjoint, params[0], params[1], params[2]);
@@ -679,6 +690,20 @@ class StateVectorCudaManaged
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT
+    applyGeneratorIsingXY(const std::vector<std::size_t> &wires, bool adjoint) {
+        static const std::string name{"GeneratorIsingXY"};
+        static const Precision param = 0.0;
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key,
+                                 cuGates::getGeneratorIsingXY<CFP_t>());
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+        return static_cast<PrecisionT>(0.5);
     }
 
     /**
@@ -886,7 +911,7 @@ class StateVectorCudaManaged
         }
         auto expect_val = getExpectationValueDeviceMatrix(
             gate_cache_.get_gate_device_ptr(obsName, par[0]), local_wires);
-        return expect_val.x;
+        return expect_val;
     }
     /**
      * @brief See `expval(const std::string &obsName, const std::vector<size_t>
@@ -920,9 +945,6 @@ class StateVectorCudaManaged
     auto expval(const std::vector<size_t> &wires,
                 const std::vector<std::complex<Precision>> &gate_matrix)
         -> Precision {
-
-        PL_ABORT_IF((std::is_same<Precision,double>::value) == false, "FP32 is not supported.");
-
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
 
         for (std::size_t i = 0; i < gate_matrix.size(); i++) {
@@ -944,7 +966,7 @@ class StateVectorCudaManaged
 
         auto expect_val =
             getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires);
-        return expect_val.x;
+        return expect_val;
     }
 
     /**
@@ -1337,6 +1359,12 @@ class StateVectorCudaManaged
                           std::forward<decltype(adjoint)>(adjoint),
                           std::forward<decltype(params[0])>(params[0]));
          }},
+        {"IsingXY",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
+             applyIsingXY(std::forward<decltype(wires)>(wires),
+                          std::forward<decltype(adjoint)>(adjoint),
+                          std::forward<decltype(params[0])>(params[0]));
+         }},
         {"CRX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRX(std::forward<decltype(wires)>(wires),
@@ -1455,6 +1483,12 @@ class StateVectorCudaManaged
         {"IsingZZ",
          [&](auto &&wires, auto &&adjoint) {
              return applyGeneratorIsingZZ(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingXY(
                  std::forward<decltype(wires)>(wires),
                  std::forward<decltype(adjoint)>(adjoint));
          }},
@@ -1877,6 +1911,7 @@ class StateVectorCudaManaged
 
         size_t nIndexBits = BaseType::getNumQubits();
         cudaDataType_t data_type;
+        cudaDataType_t expectationDataType = CUDA_C_64F; //Requested by the custatevecComputeExpectation API
         custatevecComputeType_t compute_type;
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
@@ -1914,7 +1949,7 @@ class StateVectorCudaManaged
             /* cudaDataType_t */ data_type,
             /* const uint32_t */ nIndexBits,
             /* void* */ &expect,
-            /* cudaDataType_t */ data_type,
+            /* cudaDataType_t */ expectationDataType,
             /* double* */ nullptr,
             /* const void* */ matrix,
             /* cudaDataType_t */ data_type,
@@ -1927,7 +1962,7 @@ class StateVectorCudaManaged
 
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-        return expect;
+        return static_cast<PrecisionT>(expect.x);
     }
 };
 }; // namespace Pennylane::LightningGPU

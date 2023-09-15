@@ -30,16 +30,11 @@
 #include <unordered_map>
 #include <vector>
 
-//#include "Error.hpp"
-//#include "DataBuffer.hpp"
-//#include "LinearAlg.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"
 #include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
 
-//#include "cuError.hpp"
-//#include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
@@ -89,15 +84,19 @@ class Measurements final
      *
      * @param wires List of wires to return probabilities for in lexicographical
      * order.
-     * @return std::vector<double>
+     * @return std::vector<PrecisionT>
      */
-
     auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
         return this->_statevector.probability(wires);
     
     
     }
 
+    /**
+     * @brief Utility method for probability calculation for a full wires.
+     *
+     * @return std::vector<PrecisionT>
+     */
     auto probs() -> std::vector<PrecisionT> {
         std::vector<size_t> wires;
         for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
@@ -133,7 +132,6 @@ class Measurements final
      * @param numNNZ Number of non-zero elements.
      * @return auto Expectation value.
      */
-
     template <class index_type>
     auto expval(const index_type *csrOffsets_ptr,
                 const index_type csrOffsets_size, const index_type *columns_ptr,
@@ -150,11 +148,10 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-
     auto expval(const std::string &operation, const std::vector<size_t> &wires)
         -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
-        std::vector<CFP_t> gate_matrix = {};
+        std::vector<ComplexT> gate_matrix = {};
         return this->_statevector.expval(operation, wires, params, gate_matrix);
     }
 
@@ -167,8 +164,7 @@ class Measurements final
      * @return Floating point std::vector with expected values for the
      * observables.
      */
-    template <typename op_type>
-    auto expval(const std::vector<op_type> &operations_list,
+    auto expval(const std::vector<std::string> &operations_list,
            const std::vector<std::vector<size_t>> &wires_list)->std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
@@ -190,8 +186,7 @@ class Measurements final
      * @return Expectation value with respect to the given observable.
      */
     auto expval(const Observable<StateVectorT> &ob) -> PrecisionT {
-        StateVectorT ob_sv(this->_statevector.getData(),
-                           this->_statevector.getLength());
+        StateVectorT ob_sv(this->_statevector);
         ob.applyInPlace(ob_sv);
 
         auto device_id = ob_sv.getDataBuffer().getDevTag().getDeviceID();
@@ -214,8 +209,21 @@ class Measurements final
      */
     auto expval(const std::vector<ComplexT> &matrix,
                 const std::vector<size_t> &wires) -> PrecisionT {
-        PL_ABORT_IF((std::is_same<PrecisionT, float>::value) == true, "FP32 is not supported.");
         return this->_statevector.expval(wires, matrix);
+    }
+
+    /**
+     * @brief Expected value of an observable.
+     *
+     * @param pauli_words Vector of operators' name strings.
+     * @param target_wires Vector of wires where to apply the operator.
+     * @param coeffs Complex buffer of size |pauli_words|
+     * @return Floating point expected value of the observable.
+     */
+    auto expval(const std::vector<std::string> &pauli_words,
+        const std::vector<std::vector<std::size_t>> &target_wires,
+        const std::complex<PrecisionT> *coeffs)->PrecisionT{
+        return this->_statevector.getExpectationValuePauliWords(pauli_words, target_wires, coeffs);
     }
 
     /**
@@ -348,7 +356,6 @@ class Measurements final
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-
     template <class index_type>
     PrecisionT
     var(const index_type *csrOffsets_ptr, const index_type csrOffsets_size,
@@ -384,6 +391,5 @@ class Measurements final
             2));
         return (mean_square - squared_mean);
     };
-
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures

@@ -64,7 +64,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=RX, Obs=Z",
                                             psi.getData(), {obs},
                                             ops,           tp};
 
-            adj.adjointJacobian(std::span{jacobian}, tape, true);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
             CAPTURE(jacobian);
             CHECK(-sin(p) == Approx(jacobian[0]));
         }
@@ -97,7 +97,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
                                             psi.getData(), {obs},
                                             ops,           tp};
 
-            adj.adjointJacobian(std::span{jacobian}, tape, true);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
@@ -132,7 +132,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RX, Obs=[Z,Z]",
                                             psi.getData(), {obs1, obs2},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -170,7 +170,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z]",
                                             psi.getData(), {obs1, obs2, obs3},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
 
@@ -211,7 +211,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z],"
                                             psi.getData(), {obs1, obs2, obs3},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
 
@@ -251,7 +251,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
                                             psi.getData(), {obs},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
 
@@ -300,7 +300,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Mixed, Obs=[XXX]",
                                             psi.getData(), {obs},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
 
@@ -359,7 +359,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Decomposed Rot gate, non "
                                             psi.getData(), {obs},
                                             ops,           tp};
         
-            adj.adjointJacobian(std::span{jacobian}, tape, true);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
             CAPTURE(theta);
             CAPTURE(jacobian);
@@ -437,7 +437,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Mixed Ops, Obs and TParams",
                                             psi.getData(), {obs},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
         // Computed with PennyLane using default.qubit
@@ -545,7 +545,7 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
                                             psi.getData(), {ham},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
         CHECK(-0.3 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
@@ -586,7 +586,7 @@ TEST_CASE(
                                             psi.getData(), {ham},
                                             ops,           tp};
         
-        adj.adjointJacobian(std::span{jacobian}, tape, true);
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
 
@@ -634,8 +634,8 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
                                             ops,           tp};
 
 
-        adj.adjointJacobian(std::span{jacobian1}, tape1, true);
-        adj.adjointJacobian(std::span{jacobian2}, tape2, true);
+        adj.adjointJacobian(std::span{jacobian1}, tape1, psi, true);
+        adj.adjointJacobian(std::span{jacobian2}, tape2, psi, true);
 
         CHECK((jacobian1[0] == Approx(jacobian2[0]).margin(1e-7)));
     }

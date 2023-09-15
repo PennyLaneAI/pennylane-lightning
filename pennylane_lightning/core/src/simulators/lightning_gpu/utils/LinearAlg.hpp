@@ -276,8 +276,22 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
 }
 
 /**
- *
- *
+ * @brief Sparse matrix vector multiply offloaded to cuSparse (Y = alpha*SparseMat*X + beta)
+ * 
+ * @tparam index_type Integer type for offsets, indices and number of elements (size_t for the moment).
+ * @tparam Precision Floating data-type.
+ * @tparam DevTypeID Integer type of device id.
+ * 
+ * @param csrOffsets_ptr Pointer to offsets in CSR format.
+ * @param csrOffsets_size Number of elements of offsets.
+ * @param columns_ptr Pointer to column indices in CSR format.
+ * @param values_ptr Pointer to value of each non-zero elements in CSR format.
+ * @param numNNZ Number of non-zero elements.
+ * @param X Pointer to vector.
+ * @param Y Pointer to vector.
+ * @param device_id Device id.
+ * @param cudaStream_t Stream id.
+ * @param handle cuSparse handle.
  */
 template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
 inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
@@ -311,15 +325,13 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     d_values.CopyHostDataToGpu(values_ptr, d_values.getLength(), false);
 
     cudaDataType_t data_type;
-    cusparseIndexType_t compute_type;
+    cusparseIndexType_t compute_type = CUSPARSE_INDEX_64I;
 
     if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                   std::is_same_v<CFP_t, double2>) {
         data_type = CUDA_C_64F;
-        compute_type = CUSPARSE_INDEX_64I;
     } else {
         data_type = CUDA_C_32F;
-        compute_type = CUSPARSE_INDEX_32I;
     }
 
     // CUSPARSE APIs

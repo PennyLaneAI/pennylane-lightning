@@ -286,7 +286,7 @@ class AdjointJacobian final
                     std::span<PrecisionT> jac_local(jac_local_vector.data(),
                                                     jac_local_vector.size());
 
-                    adjointJacobian(jac_local, jd_local, apply_operations,
+                    adjointJacobian(jac_local, jd_local, local_sv, apply_operations,
                                     dt_local);
 
                     j_promise.set_value(std::move(jac_local_vector));
@@ -335,6 +335,7 @@ class AdjointJacobian final
      */
     void adjointJacobian(std::span<PrecisionT> jac,
                          const JacobianData<StateVectorT> &jd,
+                         const StateVectorT &ref_data,
                          bool apply_operations = false,
                          DevTag<int> dev_tag = {0, 0}) {
         if (!jd.hasTrainableParams()) {
@@ -369,8 +370,9 @@ class AdjointJacobian final
         SharedCusvHandle cusvhandle = make_shared_cusv_handle();
         SharedCublasCaller cublascaller = make_shared_cublas_caller();
         SharedCusparseHandle cusparsehandle = make_shared_cusparse_handle();
-        StateVectorT lambda(jd.getPtrStateVec(), jd.getSizeStateVec(), dt_local,
-                            cusvhandle, cublascaller, cusparsehandle);
+        //StateVectorT lambda(jd.getPtrStateVec(), jd.getSizeStateVec(), dt_local,
+        //                    cusvhandle, cublascaller, cusparsehandle);
+        StateVectorT lambda(ref_data);
 
         // Apply given operations to statevector if requested
         if (apply_operations) {

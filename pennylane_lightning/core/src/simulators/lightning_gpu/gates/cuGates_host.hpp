@@ -1337,6 +1337,81 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<CFP_t> {
     };
 }
 
+/**
+ * @brief Create a matrix representation of the Ising XY coupling
+ * gate data in row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @param angle Phase shift angle.
+ * @return std::vector<CFP_t> Return Ising XY coupling
+ * gate data.
+ */
+template <class CFP_t, class U = double>
+static auto getIsingXY(U angle) -> std::vector<CFP_t> {
+    const U p2 = angle / 2;
+    const CFP_t c{std::cos(p2), 0};
+    const CFP_t pos_is{0, std::sin(p2)};
+    return {cuUtil::ONE<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            c,
+            pos_is,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            pos_is,
+            c,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ONE<CFP_t>()
+            };
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XY coupling
+ * gate data in row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @param params Vector of phase shift angles. Only front element is read.
+ * @return std::vector<CFP_t> Return Ising XY coupling
+ * gate data.
+ */
+template <class CFP_t, class U = double>
+static auto getIsingXY(const std::vector<U> &params) -> std::vector<CFP_t> {
+    return getIsingXY<CFP_t>(params.front());
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XY generator
+ * data in row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @return constexpr std::array<CFP_t>
+ */
+template <class CFP_t, class U = double>
+static constexpr auto getGeneratorIsingXY() -> std::vector<CFP_t> {
+    return {
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+    };
+}
+
+
 template <class CFP_t> static constexpr auto getP11_CU() -> std::vector<CFP_t> {
     return {cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
             cuUtil::ONE<CFP_t>()};
