@@ -13,12 +13,15 @@
 * Enable pre-commit hooks to format all Python files and linting of all Python source files.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
+* Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
+  [(#500)](https://github.com/PennyLaneAI/pennylane-lightning/pull/500)
+
 ### Improvements
 
-* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
 
-* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance. 
+* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
 
 * Add tests to increase LKokkos coverage.
@@ -44,7 +47,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ---
 
@@ -52,7 +55,7 @@ Ali Asadi, Vincent Michaud-Rioux, Lee J. O'Riordan
 
 ### New features since last release
 
-* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12). 
+* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12).
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
