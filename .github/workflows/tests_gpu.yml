@@ -188,8 +188,8 @@ jobs:
           restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        run: |
         # if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
           cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
