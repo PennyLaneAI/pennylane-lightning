@@ -563,31 +563,18 @@ if LGPU_CPP_BINARY_AVAILABLE:
             - Evenly distribute the observables over all available GPUs (`batch_obs=True`): This will evenly split the data into ceil(num_obs/num_gpus) chunks, and allocate enough space on each GPU up-front before running through them concurrently. This relies on C++ threads to handle the orchestration.
             - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
             """
-
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
-
+            
             if self._batch_obs:
-                requested_threads = self._dp.getTotalDevices()
-                obs_partitions = _chunk_iterable(
-                    processed_data["obs_serialized"], requested_threads
-                )
-                jac = []
-                for obs_chunk in obs_partitions:
-                    jac_local = adjoint_jacobian(
-                        processed_data["state_vector"],
-                        obs_chunk,
-                        processed_data["ops_serialized"],
-                        trainable_params,
-                    )
-                    jac.extend(jac_local)
-            else:
-                jac = adjoint_jacobian(
-                    processed_data["state_vector"],
-                    processed_data["obs_serialized"],
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-
+                adjoint_jacobian = adjoint_jacobian.batched
+                
+            jac = adjoint_jacobian(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
+            
             jac = np.array(jac)  # only for parameters differentiable with the adjoint method
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
