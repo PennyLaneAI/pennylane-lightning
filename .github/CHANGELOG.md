@@ -7,7 +7,7 @@
 
 ### Breaking changes
 
-* Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to make ensure the state is properly represented with floating-point numbers.  
+* Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.  
   [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
 
 * Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
