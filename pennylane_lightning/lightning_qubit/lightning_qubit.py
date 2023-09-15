@@ -226,7 +226,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             arr = np.asarray(arr)  # arr is not copied
 
             if arr.dtype.kind not in ["f", "c"]:
-                dtype = np.complex128
+                return arr
 
             if not dtype:
                 dtype = arr.dtype
