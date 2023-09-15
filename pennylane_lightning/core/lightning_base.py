@@ -389,7 +389,7 @@ class LightningBase(QubitDevice):
 
 
 class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
-    # pylint: disable=missing-class-docstring
+    # pylint: disable=missing-class-docstring, too-few-public-methods
     pennylane_requires = ">=0.30"
     version = __version__
     author = "Xanadu Inc."
