@@ -98,8 +98,9 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
-          mkdir -p ${{ github.workspace }}/Kokkos
-          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
+          mkdir -p /opt/actions-runner/_work/Kokkos
+          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* /opt/actions-runner/_work/Kokkos
+          ls -l /opt/actions-runner/_work/Kokkos
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -116,11 +117,12 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            ls -l /opt/actions-runner/_work/Kokkos
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
-              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+              -DCMAKE_PREFIX_PATH=/opt/actions-runner/_work/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
@@ -170,8 +172,8 @@ jobs:
       - name: Copy cached libraries
         run: |
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
-          mkdir -p ${{ github.workspace }}/Kokkos
-          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
+          mkdir -p /opt/actions-runner/_work/Kokkos
+          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* /opt/actions-runner/_work/Kokkos
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -203,7 +205,7 @@ jobs:
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=/opt/actions-runner/_work/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
@@ -220,10 +222,10 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=/opt/actions-runner/_work/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=/opt/actions-runner/_work/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
