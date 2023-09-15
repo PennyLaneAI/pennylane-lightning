@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+  [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
+
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
