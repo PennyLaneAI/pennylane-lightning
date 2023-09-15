@@ -98,9 +98,8 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
-          rm -rf Kokkos
-          mkdir Kokkos/
-          cp -rf /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          mkdir -p Kokkos/
+          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -171,9 +170,8 @@ jobs:
       - name: Copy cached libraries
         run: |
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
-          rm -rf Kokkos
-          mkdir Kokkos/
-          cp -rf /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          mkdir -p Kokkos/
+          cp -r /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3

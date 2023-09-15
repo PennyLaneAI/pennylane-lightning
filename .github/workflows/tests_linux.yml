@@ -43,7 +43,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
@@ -154,7 +154,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
@@ -288,7 +288,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
@@ -497,7 +497,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
