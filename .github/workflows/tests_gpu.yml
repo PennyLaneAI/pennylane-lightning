@@ -49,7 +49,7 @@ jobs:
           nvidia-smi
 
       - name: Clone Kokkos repository
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
           git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
@@ -57,7 +57,7 @@ jobs:
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
           mkdir -p /opt/actions-runner/_work/Kokkos_install/${{ matrix.exec_model }}
