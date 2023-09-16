@@ -568,6 +568,25 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     py::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str(),
                                               py::module_local())
         .def(py::init<>())
+        #ifdef _ENABLE_PLGPU
+        .def("batched",[](AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+            const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+            const OpsData<StateVectorT> &operations,
+            const std::vector<size_t> &trainableParams){
+                using PrecisionT = typename StateVectorT::PrecisionT;
+                std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+                const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                            sv.getLength(),
+                                            sv.getData(),
+                                            observables,
+                                            operations,
+                                            trainableParams};
+                adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+                return py::array_t<PrecisionT>(py::cast(jac));
+            },
+            "Batch Adjoint Jacobian method.")
+        #endif
         .def("__call__", &registerAdjointJacobian<StateVectorT>,
              "Adjoint Jacobian method.");
 }
