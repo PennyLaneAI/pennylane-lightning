@@ -35,7 +35,8 @@ using namespace Pennylane::LightningGPU::Algorithms;
 TEMPLATE_TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU",
                    "[AdjointJacobianGPU]", float, double) {
     SECTION("AdjointJacobianGPU<TestType> {}") {
-        REQUIRE(std::is_constructible<AdjointJacobian<StateVectorCudaManaged<TestType>>>::value);
+        REQUIRE(std::is_constructible<
+                AdjointJacobian<StateVectorCudaManaged<TestType>>>::value);
     }
 }
 
@@ -54,15 +55,13 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=RX, Obs=Z",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         for (const auto &p : param) {
-            auto ops =
-                OpsData<StateVectorT>({"RX"}, {{p}}, {{0}}, {false});
+            auto ops = OpsData<StateVectorT>({"RX"}, {{p}}, {{0}}, {false});
 
             StateVectorT psi(num_qubits);
             psi.initSV();
 
-            JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
+            JacobianData<StateVectorT> tape{
+                param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
 
             adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
             CAPTURE(jacobian);
@@ -70,7 +69,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=RX, Obs=Z",
         }
     }
 }
-
 
 TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
           "[AdjointJacobianGPU]") {
@@ -87,15 +85,13 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         for (const auto &p : param) {
-            auto ops =
-                OpsData<StateVectorT>({"RY"}, {{p}}, {{0}}, {false});
+            auto ops = OpsData<StateVectorT>({"RY"}, {{p}}, {{0}}, {false});
 
             StateVectorT psi(num_qubits);
             psi.initSV();
 
-            JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
+            JacobianData<StateVectorT> tape{
+                param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
 
             adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
@@ -104,7 +100,6 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
         }
     }
 }
-
 
 TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RX, Obs=[Z,Z]",
           "[AdjointJacobianGPU]") {
@@ -124,14 +119,13 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RX, Obs=[Z,Z]",
             "PauliZ", std::vector<size_t>{0});
         const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
-        
-        auto ops =
-                OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs1, obs2},
-                                            ops,           tp};
-        
+        auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+
+        JacobianData<StateVectorT> tape{param.size(),  psi.getLength(),
+                                        psi.getData(), {obs1, obs2},
+                                        ops,           tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -161,15 +155,14 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{2});
 
-        auto ops =
-                OpsData<StateVectorT>({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
-        
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs1, obs2, obs3},
-                                            ops,           tp};
-        
+        auto ops = OpsData<StateVectorT>(
+            {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+            {{0}, {1}, {2}}, {false, false, false});
+
+        JacobianData<StateVectorT> tape{param.size(),  psi.getLength(),
+                                        psi.getData(), {obs1, obs2, obs3},
+                                        ops,           tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -177,7 +170,8 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         // Computed with parameter shift
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
         CHECK(-sin(param[1]) == Approx(jacobian[1 + tp.size()]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[2 + 2 * tp.size()]).margin(1e-7));
+        CHECK(-sin(param[2]) ==
+              Approx(jacobian[2 + 2 * tp.size()]).margin(1e-7));
     }
 }
 
@@ -202,15 +196,14 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z],"
             "PauliZ", std::vector<size_t>{1});
         const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{2});
-        auto ops =
-                OpsData<StateVectorT>({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
+        auto ops = OpsData<StateVectorT>(
+            {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+            {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs1, obs2, obs3},
-                                            ops,           tp};
-        
+        JacobianData<StateVectorT> tape{param.size(),  psi.getLength(),
+                                        psi.getData(), {obs1, obs2, obs3},
+                                        ops,           tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -218,7 +211,8 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z],"
         // Computed with parameter shift
         CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
         CHECK(0 == Approx(jacobian[1 + tp.size()]).margin(1e-7));
-        CHECK(-sin(param[2]) == Approx(jacobian[1 + 2 * tp.size()]).margin(1e-7));
+        CHECK(-sin(param[2]) ==
+              Approx(jacobian[1 + 2 * tp.size()]).margin(1e-7));
     }
 }
 
@@ -238,19 +232,18 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{0}),
+                                                     std::vector<size_t>{0}),
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{1}),
+                                                     std::vector<size_t>{1}),
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{2}));
+                                                     std::vector<size_t>{2}));
         auto ops = OpsData<StateVectorT>(
             {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
             {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
-        
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -278,11 +271,11 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Mixed, Obs=[XXX]",
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>("PauliX",
-                                                  std::vector<size_t>{0}),
+                                                     std::vector<size_t>{0}),
             std::make_shared<NamedObs<StateVectorT>>("PauliX",
-                                                  std::vector<size_t>{1}),
+                                                     std::vector<size_t>{1}),
             std::make_shared<NamedObs<StateVectorT>>("PauliX",
-                                                  std::vector<size_t>{2}));
+                                                     std::vector<size_t>{2}));
         auto ops = OpsData<StateVectorT>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
@@ -296,10 +289,9 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Mixed, Obs=[XXX]",
             {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
             {false, false, false, false, false, false, false, false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
-        
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -354,23 +346,19 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Decomposed Rot gate, non "
                 {"RZ", "RY", "RZ"},
                 {{local_params[0]}, {local_params[1]}, {local_params[2]}},
                 {{0}, {0}, {0}}, {false, false, false});
-            
-            JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
-        
+
+            JacobianData<StateVectorT> tape{
+                param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
             adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
             CAPTURE(theta);
             CAPTURE(jacobian);
 
             // Computed with PennyLane using default.qubit
-            CHECK(expec_results[theta][0] ==
-                  Approx(jacobian[0]).margin(1e-7));
-            CHECK(expec_results[theta][1] ==
-                  Approx(jacobian[1]).margin(1e-7));
-            CHECK(expec_results[theta][2] ==
-                  Approx(jacobian[2]).margin(1e-7));
+            CHECK(expec_results[theta][0] == Approx(jacobian[0]).margin(1e-7));
+            CHECK(expec_results[theta][1] == Approx(jacobian[1]).margin(1e-7));
+            CHECK(expec_results[theta][2] == Approx(jacobian[2]).margin(1e-7));
         }
     }
 }
@@ -400,43 +388,42 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Mixed Ops, Obs and TParams",
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>("PauliX",
-                                                  std::vector<size_t>{0}),
+                                                     std::vector<size_t>{0}),
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{1}));
-        auto ops = OpsData<StateVectorT>(
-                              {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ",
-                               "RY", "RZ", "RZ", "RY", "CNOT"},
-                              {{},
-                               {local_params[0]},
-                               {},
-                               {local_params[1]},
-                               {local_params[2]},
-                               {local_params[3]},
-                               {local_params[4]},
-                               {local_params[5]},
-                               {local_params[6]},
-                               {local_params[7]},
-                               {local_params[8]},
-                               {}},
-                              std::vector<std::vector<std::size_t>>{{0},
-                                                                    {0},
-                                                                    {0, 1},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {1},
-                                                                    {0, 1}},
-                              {false, false, false, false, false, false, false,
-                               false, false, false, false, false});
+                                                     std::vector<size_t>{1}));
+        auto ops =
+            OpsData<StateVectorT>({"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ",
+                                   "RZ", "RY", "RZ", "RZ", "RY", "CNOT"},
+                                  {{},
+                                   {local_params[0]},
+                                   {},
+                                   {local_params[1]},
+                                   {local_params[2]},
+                                   {local_params[3]},
+                                   {local_params[4]},
+                                   {local_params[5]},
+                                   {local_params[6]},
+                                   {local_params[7]},
+                                   {local_params[8]},
+                                   {}},
+                                  std::vector<std::vector<std::size_t>>{{0},
+                                                                        {0},
+                                                                        {0, 1},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {1},
+                                                                        {0, 1}},
+                                  {false, false, false, false, false, false,
+                                   false, false, false, false, false, false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
-        
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
@@ -472,42 +459,42 @@ TEST_CASE("AdjointJacobianGPU::batchAdjointJacobian Mixed Ops, Obs and TParams",
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>("PauliX",
-                                                  std::vector<size_t>{0}),
+                                                     std::vector<size_t>{0}),
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{1}));
-        auto ops = OpsData<StateVectorT>({"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ",
-                               "RY", "RZ", "RZ", "RY", "CNOT"},
-                              {{},
-                               {local_params[0]},
-                               {},
-                               {local_params[1]},
-                               {local_params[2]},
-                               {local_params[3]},
-                               {local_params[4]},
-                               {local_params[5]},
-                               {local_params[6]},
-                               {local_params[7]},
-                               {local_params[8]},
-                               {}},
-                              std::vector<std::vector<std::size_t>>{{0},
-                                                                    {0},
-                                                                    {0, 1},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {0},
-                                                                    {1},
-                                                                    {0, 1}},
-                              {false, false, false, false, false, false, false,
-                               false, false, false, false, false});
+                                                     std::vector<size_t>{1}));
+        auto ops =
+            OpsData<StateVectorT>({"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ",
+                                   "RZ", "RY", "RZ", "RZ", "RY", "CNOT"},
+                                  {{},
+                                   {local_params[0]},
+                                   {},
+                                   {local_params[1]},
+                                   {local_params[2]},
+                                   {local_params[3]},
+                                   {local_params[4]},
+                                   {local_params[5]},
+                                   {local_params[6]},
+                                   {local_params[7]},
+                                   {local_params[8]},
+                                   {}},
+                                  std::vector<std::vector<std::size_t>>{{0},
+                                                                        {0},
+                                                                        {0, 1},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {0},
+                                                                        {1},
+                                                                        {0, 1}},
+                                  {false, false, false, false, false, false,
+                                   false, false, false, false, false, false});
 
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs},
-                                            ops,           tp};
-        
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
         adj.batchAdjointJacobian(std::span{jacobian}, tape, true);
 
         std::vector<double> expected{-0.71429188, 0.04998561, -0.71904837};
@@ -538,13 +525,11 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
 
         auto ham = Hamiltonian<StateVectorT>::create({0.3, 0.7}, {obs1, obs2});
 
-        auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}},
-                                                           {{0}}, {false});
-        
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {ham},
-                                            ops,           tp};
-        
+        auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {ham}, ops, tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -576,16 +561,15 @@ TEST_CASE(
             "PauliZ", std::vector<size_t>{2});
 
         auto ham = Hamiltonian<StateVectorT>::create({0.47, 0.32, 0.96},
-                                                  {obs1, obs2, obs3});
+                                                     {obs1, obs2, obs3});
 
-        auto ops = OpsData<StateVectorT>({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
-        
-        JacobianData<StateVectorT> tape{param.size(),    psi.getLength(),
-                                            psi.getData(), {ham},
-                                            ops,           tp};
-        
+        auto ops = OpsData<StateVectorT>(
+            {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+            {{0}, {1}, {2}}, {false, false, false});
+
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {ham}, ops, tp};
+
         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
         CAPTURE(jacobian);
@@ -613,26 +597,23 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
 
         auto obs1 = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{0}),
+                                                     std::vector<size_t>{0}),
             std::make_shared<NamedObs<StateVectorT>>("PauliZ",
-                                                  std::vector<size_t>{1}));
+                                                     std::vector<size_t>{1}));
         auto obs2 = std::make_shared<HermitianObs<StateVectorT>>(
             std::vector<std::complex<double>>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1,
                                               0, 0, 0, 0, 1},
             std::vector<size_t>{0, 1});
 
-        auto ops = OpsData<StateVectorT>({"RX", "RX", "RX"},
-                                     {{param[0]}, {param[1]}, {param[2]}},
-                                     {{0}, {1}, {2}}, {false, false, false});
+        auto ops = OpsData<StateVectorT>(
+            {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+            {{0}, {1}, {2}}, {false, false, false});
 
-        JacobianData<StateVectorT> tape1{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs1},
-                                            ops,           tp};
-        
-        JacobianData<StateVectorT> tape2{param.size(),    psi.getLength(),
-                                            psi.getData(), {obs2},
-                                            ops,           tp};
+        JacobianData<StateVectorT> tape1{
+            param.size(), psi.getLength(), psi.getData(), {obs1}, ops, tp};
 
+        JacobianData<StateVectorT> tape2{
+            param.size(), psi.getLength(), psi.getData(), {obs2}, ops, tp};
 
         adj.adjointJacobian(std::span{jacobian1}, tape1, psi, true);
         adj.adjointJacobian(std::span{jacobian2}, tape2, psi, true);
@@ -640,4 +621,3 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
         CHECK((jacobian1[0] == Approx(jacobian2[0]).margin(1e-7)));
     }
 }
-

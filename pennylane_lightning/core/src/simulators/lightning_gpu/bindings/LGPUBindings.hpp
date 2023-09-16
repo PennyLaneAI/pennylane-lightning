@@ -209,13 +209,16 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
-        .def("expval", [](Measurements<StateVectorT> &M,
-                 const std::vector<std::string> &pauli_words, 
-                 const std::vector<std::vector<size_t>> &target_wires, 
-                 const np_arr_c &coeffs){
-                    return M.expval(pauli_words,target_wires,static_cast<ComplexT *>(coeffs.request().ptr));
-                 },
-             "Expected value of Hamiltonian represented by Pauli words.")
+        .def(
+            "expval",
+            [](Measurements<StateVectorT> &M,
+               const std::vector<std::string> &pauli_words,
+               const std::vector<std::vector<size_t>> &target_wires,
+               const np_arr_c &coeffs) {
+                return M.expval(pauli_words, target_wires,
+                                static_cast<ComplexT *>(coeffs.request().ptr));
+            },
+            "Expected value of Hamiltonian represented by Pauli words.")
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,

@@ -43,21 +43,21 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-  #ifdef _ENABLE_PLGPU
+#ifdef _ENABLE_PLGPU
   protected:
     StateVectorT &_statevector;
 
   public:
     explicit MeasurementsBase(StateVectorT &statevector)
         : _statevector{statevector} {};
-  #else
+#else
   protected:
     const StateVectorT &_statevector;
 
   public:
     explicit MeasurementsBase(const StateVectorT &statevector)
         : _statevector{statevector} {};
-  #endif
+#endif
 
     /**
      * @brief Calculate the expectation value for a general Observable.

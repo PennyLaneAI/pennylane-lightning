@@ -25,11 +25,11 @@
 #include "Gates.hpp"
 #include "TestHelpers.hpp"
 
+#include "LinearAlg.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
-#include "LinearAlg.hpp"
 
 /// @cond DEV
 namespace {
@@ -61,7 +61,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     SECTION("adj = false") {
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyRX({0}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
@@ -69,9 +70,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
         }
         SECTION("Apply using dispatcher") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-                sv_dispatch.applyOperation("RX", {0}, false,
-                                                      {angles[index]});
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("RX", {0}, false, {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -80,7 +81,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     SECTION("adj = true") {
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyRX({0}, true, {angles[index]});
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
@@ -88,9 +90,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
         }
         SECTION("Apply using dispatcher") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-                sv_dispatch.applyOperation("RX", {0}, true,
-                                                      {angles[index]});
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("RX", {0}, true, {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -123,7 +125,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
     SECTION("adj = false") {
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyRY({0}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
@@ -131,9 +134,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
         }
         SECTION("Apply using dispatcher") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-                sv_dispatch.applyOperation("RY", {0}, false,
-                                                      {angles[index]});
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("RY", {0}, false, {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -142,7 +145,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
     SECTION("adj = true") {
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyRY({0}, true, {angles[index]});
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
@@ -150,9 +154,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
         }
         SECTION("Apply using dispatcher") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-                sv_dispatch.applyOperation("RY", {0}, true,
-                                                      {angles[index]});
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("RY", {0}, true, {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -169,7 +173,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
 
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
@@ -202,7 +206,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
 
             sv_direct.applyRZ({index}, false, {angles[index]});
             CHECK(sv_direct.getDataVector() ==
@@ -211,9 +216,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-            sv_dispatch.applyOperation("RZ", {index}, false,
-                                                  {angles[index]});
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
+            sv_dispatch.applyOperation("RZ", {index}, false, {angles[index]});
 
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
@@ -230,7 +235,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
 
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -264,19 +269,20 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
 
-            sv_direct.applyPhaseShift({index}, false,
-                                                 {angles[index]});
+            sv_direct.applyPhaseShift({index}, false, {angles[index]});
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
             sv_dispatch.applyOperation("PhaseShift", {index}, false,
-                                                  {angles[index]});
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
@@ -292,7 +298,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
 
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -315,17 +321,18 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
 
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
-        StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+        StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                   init_state.size()};
 
-        sv_direct.applyControlledPhaseShift({0, 1}, false,
-                                                       {angles[0]});
+        sv_direct.applyControlledPhaseShift({0, 1}, false, {angles[0]});
         CHECK(sv_direct.getDataVector() ==
               Pennylane::Util::approx(expected_results[0]));
     }
     SECTION("Apply using dispatcher") {
-        StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
-        sv_dispatch.applyOperation("ControlledPhaseShift", {1, 2},
-                                              false, {angles[1]});
+        StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                     init_state.size()};
+        sv_dispatch.applyOperation("ControlledPhaseShift", {1, 2}, false,
+                                   {angles[1]});
         CHECK(sv_dispatch.getDataVector() ==
               Pennylane::Util::approx(expected_results[1]));
     }
@@ -359,7 +366,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
             sv_direct.initSV();
 
             sv_direct.applyRot({index}, false, angles[index][0],
-                                          angles[index][1], angles[index][2]);
+                               angles[index][1], angles[index][2]);
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
@@ -369,8 +376,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation("Rot", {index}, false,
-                                                  angles[index]);
+            sv_dispatch.applyOperation("Rot", {index}, false, angles[index]);
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
@@ -399,8 +405,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
             sv_direct.initSV();
 
-            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1],
-                                           angles[2]);
+            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1], angles[2]);
 
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(init_state));
@@ -408,10 +413,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
             sv_direct.initSV();
-            
+
             sv_direct.applyOperation("PauliX", {0});
-            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1],
-                                           angles[2]);
+            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1], angles[2]);
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
@@ -473,7 +477,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=false") {
         SECTION("IsingXX 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyIsingXX({0, 1}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
@@ -482,19 +487,21 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
         }
         SECTION("IsingXX 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyIsingXX({0, 2}, false, angles[index]);
-                CHECK(
-                    sv_direct.getDataVector() ==
-                    Pennylane::Util::approx(expected_results[index + angles.size()]));
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(
+                          expected_results[index + angles.size()]));
             }
         }
     }
     SECTION("Apply directly adjoint=true") {
         SECTION("IsingXX 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyIsingXX({0, 1}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
@@ -503,7 +510,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
         }
         SECTION("IsingXX 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingXX({0, 2}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(
@@ -513,10 +521,11 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < angles.size(); index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
 
             sv_dispatch.applyOperation("IsingXX", {0, 1}, true,
-                                                  {angles[index]});
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -566,7 +575,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=false") {
         SECTION("IsingYY 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingYY({0, 1}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
@@ -574,18 +584,20 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
         }
         SECTION("IsingYY 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingYY({0, 2}, false, angles[index]);
-                CHECK(
-                    sv_direct.getDataVector() ==
-                    Pennylane::Util::approx(expected_results[index + angles.size()]));
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(
+                          expected_results[index + angles.size()]));
             }
         }
     }
     SECTION("Apply directly adjoint=true") {
         SECTION("IsingYY 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingYY({0, 1}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
@@ -593,7 +605,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
         }
         SECTION("IsingYY 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingYY({0, 2}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(
@@ -605,9 +618,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
         for (size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
-            
+
             sv_dispatch.applyOperation("IsingYY", {0, 1}, true,
-                                                  {angles[index]});
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -638,7 +651,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=false") {
         SECTION("IsingZZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingZZ({0, 1}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
@@ -646,7 +660,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
         }
         SECTION("IsingZZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingZZ({0, 2}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
@@ -656,7 +671,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=true") {
         SECTION("IsingZZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingZZ({0, 1}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
@@ -664,7 +680,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
         }
         SECTION("IsingZZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyIsingZZ({0, 2}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
@@ -677,7 +694,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
             sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("IsingZZ", {0, 1}, true,
-                                                  {angles[index]});
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -700,20 +717,20 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
     SECTION("Apply directly") {
         SECTION("SingleExcitation 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
-                sv_direct.applySingleExcitation({0, 1}, false,
-                                                           angles[index]);
+                sv_direct.applySingleExcitation({0, 1}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results));
             }
         }
         SECTION("SingleExcitation 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
-                sv_direct.applySingleExcitation({0, 2}, false,
-                                                           angles[index]);
+                sv_direct.applySingleExcitation({0, 2}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results));
             }
@@ -723,8 +740,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
         for (size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
-            sv_dispatch.applyOperation("SingleExcitation", {0, 1},
-                                                  false, {angles[index]});
+            sv_dispatch.applyOperation("SingleExcitation", {0, 1}, false,
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
@@ -754,20 +771,22 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
     SECTION("Apply directly adjoint=false") {
         SECTION("SingleExcitationMinus 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationMinus({0, 1}, false,
-                                                                angles[index]);
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
         }
         SECTION("SingleExcitationMinus 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationMinus({0, 2}, false,
-                                                                angles[index]);
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -776,20 +795,22 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
     SECTION("Apply directly adjoint=true") {
         SECTION("SingleExcitationMinus 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationMinus({0, 1}, true,
-                                                                angles[index]);
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
         }
         SECTION("SingleExcitationMinus 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationMinus({0, 2}, true,
-                                                                angles[index]);
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -800,8 +821,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation(
-                "SingleExcitationMinus", {0, 1}, true, {angles[index]});
+            sv_dispatch.applyOperation("SingleExcitationMinus", {0, 1}, true,
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -831,20 +852,22 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
     SECTION("Apply directly adjoint=false") {
         SECTION("SingleExcitationPlus 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationPlus({0, 1}, false,
-                                                               angles[index]);
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
         }
         SECTION("SingleExcitationPlus 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationPlus({0, 2}, false,
-                                                               angles[index]);
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -853,20 +876,22 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
     SECTION("Apply directly adjoint=true") {
         SECTION("SingleExcitationPlus 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationPlus({0, 1}, true,
-                                                               angles[index]);
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
         }
         SECTION("SingleExcitationPlus 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applySingleExcitationPlus({0, 2}, true,
-                                                               angles[index]);
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -877,8 +902,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation(
-                "SingleExcitationPlus", {0, 1}, true, {angles[index]});
+            sv_dispatch.applyOperation("SingleExcitationPlus", {0, 1}, true,
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -901,10 +926,11 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
     SECTION("Apply directly") {
         SECTION("DoubleExcitation 0,1,2,3") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyDoubleExcitation({0, 1, 2, 3}, false,
-                                                           angles[index]);
+                                                angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results));
             }
@@ -915,8 +941,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation(
-                "DoubleExcitation", {0, 1, 2, 3}, false, {angles[index]});
+            sv_dispatch.applyOperation("DoubleExcitation", {0, 1, 2, 3}, false,
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
@@ -946,9 +972,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
     SECTION("Apply directly adjoint=false") {
         SECTION("DoubleExcitationMinus 0,1,2,3") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
-                sv_direct.applyDoubleExcitationMinus(
-                    {0, 1, 2, 3}, false, angles[index]);
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                sv_direct.applyDoubleExcitationMinus({0, 1, 2, 3}, false,
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -957,9 +984,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
     SECTION("Apply directly adjoint=true") {
         SECTION("DoubleExcitationMinus 0,1,2,3") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
-                sv_direct.applyDoubleExcitationMinus(
-                    {0, 1, 2, 3}, true, angles[index]);
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                sv_direct.applyDoubleExcitationMinus({0, 1, 2, 3}, true,
+                                                     angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -970,8 +998,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation(
-                "DoubleExcitationMinus", {0, 1, 2, 3}, true, {angles[index]});
+            sv_dispatch.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
+                                       true, {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -1001,10 +1029,11 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
     SECTION("Apply directly adjoint=false") {
         SECTION("DoubleExcitationPlus 0,1,2,3") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
-                sv_direct.applyDoubleExcitationPlus(
-                    {0, 1, 2, 3}, false, angles[index]);
+                sv_direct.applyDoubleExcitationPlus({0, 1, 2, 3}, false,
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -1013,9 +1042,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
     SECTION("Apply directly adjoint=true") {
         SECTION("DoubleExcitationPlus 0,1,2,3") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
-                sv_direct.applyDoubleExcitationPlus(
-                    {0, 1, 2, 3}, true, angles[index]);
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                sv_direct.applyDoubleExcitationPlus({0, 1, 2, 3}, true,
+                                                    angles[index]);
                 CHECK(sv_direct.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }
@@ -1025,8 +1055,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
         for (size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
-            sv_dispatch.applyOperation(
-                "DoubleExcitationPlus", {0, 1, 2, 3}, true, {angles[index]});
+            sv_dispatch.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
+                                       true, {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -1056,7 +1086,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=false") {
         SECTION("MultiRZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyMultiRZ({0, 1}, false, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
@@ -1065,7 +1096,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
         }
         SECTION("MultiRZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
                 sv_direct.applyMultiRZ({0, 2}, false, angles[index]);
 
                 CHECK(sv_direct.getDataVector() ==
@@ -1076,7 +1108,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     SECTION("Apply directly adjoint=true") {
         SECTION("MultiRZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyMultiRZ({0, 1}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
@@ -1085,7 +1118,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
         }
         SECTION("MultiRZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),init_state.size()};
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
 
                 sv_direct.applyMultiRZ({0, 2}, true, angles[index]);
                 CHECK(sv_direct.getDataVector() ==
@@ -1099,7 +1133,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
             sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("MultiRZ", {0, 1}, true,
-                                                  {angles[index]});
+                                       {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
@@ -1128,15 +1162,12 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliX"}, {"PauliZ"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
+                                           {{index}, {index}}, {false, false});
 
-                sv.applyOperation_std("XZ", {index}, false, {0.0},
-                                                 xz_gate);
+                sv.applyOperation_std("XZ", {index}, false, {0.0}, xz_gate);
             }
 
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
     SECTION("Apply ZX gate") {
@@ -1152,13 +1183,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliZ"}, {"PauliX"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
-                sv.applyOperation_std("ZX", {index}, false, {0.0},
-                                                 zx_gate);
+                                           {{index}, {index}}, {false, false});
+                sv.applyOperation_std("ZX", {index}, false, {0.0}, zx_gate);
             }
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
     SECTION("Apply XY gate") {
@@ -1174,13 +1202,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliX"}, {"PauliY"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
-                sv.applyOperation_std("XY", {index}, false, {0.0},
-                                                 xy_gate);
+                                           {{index}, {index}}, {false, false});
+                sv.applyOperation_std("XY", {index}, false, {0.0}, xy_gate);
             }
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
     SECTION("Apply YX gate") {
@@ -1196,13 +1221,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliY"}, {"PauliX"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
-                sv.applyOperation_std("YX", {index}, false, {0.0},
-                                                 yx_gate);
+                                           {{index}, {index}}, {false, false});
+                sv.applyOperation_std("YX", {index}, false, {0.0}, yx_gate);
             }
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
     SECTION("Apply YZ gate") {
@@ -1218,13 +1240,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliY"}, {"PauliZ"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
-                sv.applyOperation_std("YZ", {index}, false, {0.0},
-                                                 yz_gate);
+                                           {{index}, {index}}, {false, false});
+                sv.applyOperation_std("YZ", {index}, false, {0.0}, yz_gate);
             }
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
     SECTION("Apply ZY gate") {
@@ -1240,13 +1259,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperation({{"PauliZ"}, {"PauliY"}},
-                                                      {{index}, {index}},
-                                                      {false, false});
-                sv.applyOperation_std("ZY", {index}, false, {0.0},
-                                                 zy_gate);
+                                           {{index}, {index}}, {false, false});
+                sv.applyOperation_std("ZY", {index}, false, {0.0}, zy_gate);
             }
-            CHECK(sv.getDataVector() ==
-                  sv_expected.getDataVector());
+            CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
 }
@@ -1259,24 +1275,23 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
     sv_init.initSV();
 
-    sv_init.applyOperation(
-        {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
-        {false, false, false});
+    sv_init.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                           {{0}, {1}, {2}}, {false, false, false});
 
     const auto cz_gate = cuGates::getCZ<cp_t>();
     const auto tof_gate = cuGates::getToffoli<cp_t>();
     const auto arb_gate = cuGates::getToffoli<cp_t>();
 
     SECTION("Apply CZ gate") {
-        StateVectorCudaManaged<TestType> sv{ sv_init.getDataVector().data(), sv_init.getDataVector().size()};
-        StateVectorCudaManaged<TestType> sv_expected{ sv_init.getDataVector().data(), sv_init.getDataVector().size()};
+        StateVectorCudaManaged<TestType> sv{sv_init.getDataVector().data(),
+                                            sv_init.getDataVector().size()};
+        StateVectorCudaManaged<TestType> sv_expected{
+            sv_init.getDataVector().data(), sv_init.getDataVector().size()};
 
-        sv_expected.applyOperation(
-            {{"Hadamard"}, {"CNOT"}, {"Hadamard"}}, {{1}, {0, 1}, {1}},
-            {false, false, false});
+        sv_expected.applyOperation({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
+                                   {{1}, {0, 1}, {1}}, {false, false, false});
 
-        sv.applyOperation_std("CZmat", {0, 1}, false, {0.0},
-                                         cz_gate);
+        sv.applyOperation_std("CZmat", {0, 1}, false, {0.0}, cz_gate);
         CHECK(sv.getDataVector() ==
               Pennylane::Util::approx(sv_expected.getDataVector()));
     }
@@ -1301,10 +1316,10 @@ TEMPLATE_TEST_CASE("Sample", "[LightningGPU_Param]", float, double) {
     TestType alpha = 0.7;
     TestType beta = 0.5;
     TestType gamma = 0.2;
-    sv.applyOperations(
-        {"RX", "RY", "RX", "RY", "RX", "RY"}, {{0}, {0}, {1}, {1}, {2}, {2}},
-        {false, false, false, false, false, false},
-        {{alpha}, {alpha}, {beta}, {beta}, {gamma}, {gamma}});
+    sv.applyOperations({"RX", "RY", "RX", "RY", "RX", "RY"},
+                       {{0}, {0}, {1}, {1}, {2}, {2}},
+                       {false, false, false, false, false, false},
+                       {{alpha}, {alpha}, {beta}, {beta}, {gamma}, {gamma}});
 
     std::vector<TestType> expected_probabilities = {
         0.687573, 0.013842, 0.089279, 0.001797,
@@ -1336,4 +1351,3 @@ TEMPLATE_TEST_CASE("Sample", "[LightningGPU_Param]", float, double) {
     REQUIRE_THAT(probabilities,
                  Catch::Approx(expected_probabilities).margin(.05));
 }
-

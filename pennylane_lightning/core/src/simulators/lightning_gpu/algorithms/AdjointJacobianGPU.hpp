@@ -27,8 +27,8 @@
 #include "AdjointJacobianBase.hpp"
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
-#include "ObservablesGPU.hpp"
 #include "LinearAlg.hpp"
+#include "ObservablesGPU.hpp"
 
 /// @cond DEV
 namespace {
@@ -107,7 +107,7 @@ class AdjointJacobian final
         host_buffer_jac_single_param.clear();
     }
 
-        /**
+    /**
      * @brief OpenMP accelerated application of observables to given
      * statevectors
      *
@@ -119,7 +119,8 @@ class AdjointJacobian final
     inline void applyObservables(
         std::vector<StateVectorT> &states,
         const RefStateVectorT &reference_state,
-        const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables) {
+        const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+            &observables) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -167,10 +168,9 @@ class AdjointJacobian final
      * @param op_idx Index of given operation within operations list to take
      * adjoint of.
      */
-    inline void applyOperationsAdj(
-        std::vector<StateVectorT> &states,
-        const OpsData<StateVectorT> &operations,
-        size_t op_idx) {
+    inline void applyOperationsAdj(std::vector<StateVectorT> &states,
+                                   const OpsData<StateVectorT> &operations,
+                                   size_t op_idx) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
@@ -286,8 +286,8 @@ class AdjointJacobian final
                     std::span<PrecisionT> jac_local(jac_local_vector.data(),
                                                     jac_local_vector.size());
 
-                    adjointJacobian(jac_local, jd_local, local_sv, apply_operations,
-                                    dt_local);
+                    adjointJacobian(jac_local, jd_local, local_sv,
+                                    apply_operations, dt_local);
 
                     j_promise.set_value(std::move(jac_local_vector));
                     dp.releaseDevice(id);
@@ -324,8 +324,9 @@ class AdjointJacobian final
      * the gradient calculations given in `trainableParams`, and the overall
      * number of parameters for the gradient calculation provided within
      * `num_params`. The resulting row-major ordered `jac` matrix representation
-     * will be of size `jd.getSizeStateVec() * jd.getObservables().size()`. OpenMP is
-     * used to enable independent operations to be offloaded to threads.
+     * will be of size `jd.getSizeStateVec() * jd.getObservables().size()`.
+     * OpenMP is used to enable independent operations to be offloaded to
+     * threads.
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
@@ -370,8 +371,9 @@ class AdjointJacobian final
         SharedCusvHandle cusvhandle = make_shared_cusv_handle();
         SharedCublasCaller cublascaller = make_shared_cublas_caller();
         SharedCusparseHandle cusparsehandle = make_shared_cusparse_handle();
-        //StateVectorT lambda(jd.getPtrStateVec(), jd.getSizeStateVec(), dt_local,
-        //                    cusvhandle, cublascaller, cusparsehandle);
+        // StateVectorT lambda(jd.getPtrStateVec(), jd.getSizeStateVec(),
+        // dt_local,
+        //                     cusvhandle, cublascaller, cusparsehandle);
         StateVectorT lambda(ref_data);
 
         // Apply given operations to statevector if requested
@@ -422,9 +424,10 @@ class AdjointJacobian final
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     const PrecisionT scalingFactor =
-                        BaseType::applyGenerator(mu, ops.getOpsName()[op_idx],
-                                             ops.getOpsWires()[op_idx],
-                                             !ops.getOpsInverses()[op_idx]) *
+                        BaseType::applyGenerator(
+                            mu, ops.getOpsName()[op_idx],
+                            ops.getOpsWires()[op_idx],
+                            !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     updateJacobian(H_lambda, mu, jac, scalingFactor,

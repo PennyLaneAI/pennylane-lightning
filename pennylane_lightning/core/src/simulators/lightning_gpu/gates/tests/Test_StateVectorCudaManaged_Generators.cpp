@@ -23,9 +23,6 @@
 #include "TestHelpers.hpp"
 
 using namespace Pennylane::LightningGPU;
-//using namespace Pennylane::CUDA::Generators;
-//using namespace Pennylane::LightningGPU::Algorithms;
-
 // NOTE: the scaling factors are implicitly included in the Adjoint Jacobian
 // evaluation, so excluded from the matrices here.
 
@@ -37,18 +34,21 @@ TEST_CASE("Generators::applyGeneratorRX", "[GateGenerators]") {
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
              applied_qubit++) {
-            auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
 
-            StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-            StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
 
             std::string cache_gate_name = "DirectGenRX" +
                                           std::to_string(applied_qubit) + "_" +
                                           std::to_string(num_qubits);
 
             psi.applyGeneratorRX({applied_qubit}, false);
-            psi_direct.applyOperation(cache_gate_name, {applied_qubit},
-                                              false, {0.0}, matrix);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
 
             CHECK(psi.getDataVector() == psi_direct.getDataVector());
         }
@@ -63,18 +63,21 @@ TEST_CASE("Generators::applyGeneratorRY_GPU", "[GateGenerators]") {
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
              applied_qubit++) {
-            auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
 
-            StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-            StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
 
             std::string cache_gate_name = "DirectGenRY" +
                                           std::to_string(applied_qubit) + "_" +
                                           std::to_string(num_qubits);
 
             psi.applyGeneratorRY({applied_qubit}, false);
-            psi_direct.applyOperation(cache_gate_name, {applied_qubit},
-                                              false, {0.0}, matrix);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
             CHECK(psi.getDataVector() == psi_direct.getDataVector());
         }
     }
@@ -89,18 +92,21 @@ TEST_CASE("Generators::applyGeneratorRZ_GPU", "[GateGenerators]") {
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
              applied_qubit++) {
-            auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
 
-            StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-            StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
 
             std::string cache_gate_name = "DirectGenRZ" +
                                           std::to_string(applied_qubit) + "_" +
                                           std::to_string(num_qubits);
 
             psi.applyGeneratorRZ({applied_qubit}, false);
-            psi_direct.applyOperation(cache_gate_name, {applied_qubit},
-                                              false, {0.0}, matrix);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
             CHECK(psi.getDataVector() == psi_direct.getDataVector());
         }
     }
@@ -116,18 +122,21 @@ TEST_CASE("Generators::applyGeneratorPhaseShift_GPU", "[GateGenerators]") {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
              applied_qubit++) {
 
-            auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
 
-            StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-            StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
 
             std::string cache_gate_name = "DirectGenPhaseShift" +
                                           std::to_string(applied_qubit) + "_" +
                                           std::to_string(num_qubits);
 
             psi.applyGeneratorPhaseShift({applied_qubit}, false);
-            psi_direct.applyOperation(cache_gate_name, {applied_qubit},
-                                              false, {0.0}, matrix);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
             CHECK(psi.getDataVector() == psi_direct.getDataVector());
         }
     }
@@ -150,40 +159,48 @@ TEST_CASE("Generators::applyGeneratorIsingXX_GPU", "[GateGenerators]") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
 
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingXX" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingXX({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingXX({applied_qubit, applied_qubit + 1},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingXX" + std::to_string(applied_qubit + 1) +
                     "_" + std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingXX({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingXX({applied_qubit + 1, applied_qubit},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -206,40 +223,48 @@ TEST_CASE("Generators::applyGeneratorIsingYY_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingYY" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingYY({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingYY({applied_qubit, applied_qubit + 1},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingYY" + std::to_string(applied_qubit + 1) +
                     "_" + std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingYY({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingYY({applied_qubit + 1, applied_qubit},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -262,40 +287,48 @@ TEST_CASE("Generators::applyGeneratorIsingZZ_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingZZ" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingZZ( {applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingZZ({applied_qubit, applied_qubit + 1},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenIsingZZ" + std::to_string(applied_qubit + 1) +
                     "_" + std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorIsingZZ({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorIsingZZ({applied_qubit + 1, applied_qubit},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -321,40 +354,48 @@ TEST_CASE("Generators::applyGeneratorCRX_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRX" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRX({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRX({applied_qubit, applied_qubit + 1},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRX" + std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRX({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRX({applied_qubit + 1, applied_qubit},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -378,40 +419,48 @@ TEST_CASE("Generators::applyGeneratorCRY_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRY" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRY( {applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRY({applied_qubit, applied_qubit + 1},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRY" + std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRY({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRY({applied_qubit + 1, applied_qubit},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -435,40 +484,48 @@ TEST_CASE("Generators::applyGeneratorCRZ_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRZ" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRZ({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRZ({applied_qubit, applied_qubit + 1},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenCRZ" + std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorCRZ({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorCRZ({applied_qubit + 1, applied_qubit},
+                                      false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -493,10 +550,13 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenControlledPhaseShift" +
@@ -504,20 +564,24 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift_GPU",
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorControlledPhaseShift({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorControlledPhaseShift(
+                    {applied_qubit, applied_qubit + 1}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenControlledPhaseShift" +
@@ -525,10 +589,11 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift_GPU",
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorControlledPhaseShift({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorControlledPhaseShift(
+                    {applied_qubit + 1, applied_qubit}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -551,10 +616,13 @@ TEST_CASE("Generators::applyGeneratorSingleExcitation_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitation" +
@@ -562,20 +630,24 @@ TEST_CASE("Generators::applyGeneratorSingleExcitation_GPU",
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorSingleExcitation({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorSingleExcitation(
+                    {applied_qubit, applied_qubit + 1}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitation" +
@@ -583,10 +655,11 @@ TEST_CASE("Generators::applyGeneratorSingleExcitation_GPU",
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorSingleExcitation({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorSingleExcitation(
+                    {applied_qubit + 1, applied_qubit}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -609,10 +682,13 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationMinus_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitationMinus" +
@@ -620,20 +696,24 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationMinus_GPU",
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorSingleExcitationMinus({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorSingleExcitationMinus(
+                    {applied_qubit, applied_qubit + 1}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitationMinus" +
@@ -641,10 +721,11 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationMinus_GPU",
                     std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorSingleExcitationMinus({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorSingleExcitationMinus(
+                    {applied_qubit + 1, applied_qubit}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -667,10 +748,13 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationPlus_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitationPlus" +
@@ -678,20 +762,24 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationPlus_GPU",
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorSingleExcitationPlus({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix);
+                psi.applyGeneratorSingleExcitationPlus(
+                    {applied_qubit, applied_qubit + 1}, false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenSingleExcitationPlus" +
@@ -701,9 +789,9 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationPlus_GPU",
 
                 psi.applyGeneratorSingleExcitationPlus(
                     {applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -757,10 +845,13 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitation" +
@@ -774,21 +865,24 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
                     {applied_qubit, applied_qubit + 1, applied_qubit + 2,
                      applied_qubit + 3},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit, applied_qubit + 1, applied_qubit + 2,
-                     applied_qubit + 3},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1,
+                                           applied_qubit + 2,
+                                           applied_qubit + 3},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitation" +
@@ -802,11 +896,10 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
                     {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
                      applied_qubit},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
-                     applied_qubit},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 3, applied_qubit + 2,
+                                           applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -841,10 +934,13 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitationMinus" +
@@ -858,21 +954,24 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
                     {applied_qubit, applied_qubit + 1, applied_qubit + 2,
                      applied_qubit + 3},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit, applied_qubit + 1, applied_qubit + 2,
-                     applied_qubit + 3},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1,
+                                           applied_qubit + 2,
+                                           applied_qubit + 3},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitationMinus" +
@@ -886,11 +985,10 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
                     {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
                      applied_qubit},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
-                     applied_qubit},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 3, applied_qubit + 2,
+                                           applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -925,10 +1023,13 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitationPlus" +
@@ -942,21 +1043,24 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
                     {applied_qubit, applied_qubit + 1, applied_qubit + 2,
                      applied_qubit + 3},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit, applied_qubit + 1, applied_qubit + 2,
-                     applied_qubit + 3},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1,
+                                           applied_qubit + 2,
+                                           applied_qubit + 3},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenDoubleExcitationPlus" +
@@ -970,11 +1074,10 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
                     {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
                      applied_qubit},
                     false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
-                     applied_qubit},
-                    false, {0.0}, matrix);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 3, applied_qubit + 2,
+                                           applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -1031,40 +1134,48 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices, MultiRZ 2") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit) + "_" +
                     std::to_string(applied_qubit + 1) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorMultiRZ({applied_qubit, applied_qubit + 1}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit, applied_qubit + 1}, false,
-                    {0.0}, matrix2);
+                psi.applyGeneratorMultiRZ({applied_qubit, applied_qubit + 1},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1},
+                                          false, {0.0}, matrix2);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices, MultiRZ 2") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit + 1) +
                     "_" + std::to_string(applied_qubit) + "_" +
                     std::to_string(num_qubits);
 
-                psi.applyGeneratorMultiRZ({applied_qubit + 1, applied_qubit}, false);
-                psi_direct.applyOperation(
-                    cache_gate_name, {applied_qubit + 1, applied_qubit}, false,
-                    {0.0}, matrix2);
+                psi.applyGeneratorMultiRZ({applied_qubit + 1, applied_qubit},
+                                          false);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix2);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
@@ -1072,10 +1183,13 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices, MultiRZ 3") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 2;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit) + "_" +
@@ -1096,10 +1210,13 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
         SECTION("Decreasing qubit indices, MultiRZ 3") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 2;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit + 2) +
@@ -1121,10 +1238,13 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices, MultiRZ 4") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit) + "_" +
@@ -1137,21 +1257,24 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
                                            applied_qubit + 2,
                                            applied_qubit + 3},
                                           false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit, applied_qubit + 1, applied_qubit + 2,
-                     applied_qubit + 3},
-                    false, {0.0}, matrix4);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit, applied_qubit + 1,
+                                           applied_qubit + 2,
+                                           applied_qubit + 3},
+                                          false, {0.0}, matrix4);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }
         SECTION("Decreasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 3;
                  applied_qubit++) {
-                auto init_state = createRandomStateVectorData<double>(re, num_qubits);
+                auto init_state =
+                    createRandomStateVectorData<double>(re, num_qubits);
 
-                StateVectorCudaManaged<double> psi(init_state.data(), init_state.size());
-                StateVectorCudaManaged<double> psi_direct(init_state.data(), init_state.size());
+                StateVectorCudaManaged<double> psi(init_state.data(),
+                                                   init_state.size());
+                StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                          init_state.size());
 
                 std::string cache_gate_name =
                     "DirectGenMultiRZ" + std::to_string(applied_qubit + 3) +
@@ -1163,11 +1286,10 @@ TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
                 psi.applyGeneratorMultiRZ({applied_qubit + 3, applied_qubit + 2,
                                            applied_qubit + 1, applied_qubit},
                                           false);
-                psi_direct.applyOperation(
-                    cache_gate_name,
-                    {applied_qubit + 3, applied_qubit + 2, applied_qubit + 1,
-                     applied_qubit},
-                    false, {0.0}, matrix4);
+                psi_direct.applyOperation(cache_gate_name,
+                                          {applied_qubit + 3, applied_qubit + 2,
+                                           applied_qubit + 1, applied_qubit},
+                                          false, {0.0}, matrix4);
                 CHECK(psi.getDataVector() == psi_direct.getDataVector());
             }
         }

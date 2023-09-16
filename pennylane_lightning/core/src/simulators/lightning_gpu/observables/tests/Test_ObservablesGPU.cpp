@@ -23,8 +23,8 @@ using Pennylane::Util::LightningException;
 } // namespace
 /// @endcond
 
-TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (StateVectorCudaManaged),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using NamedObsT = NamedObs<StateVectorT>;
@@ -66,8 +66,8 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (StateVectorCudaManaged)
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("HermitianObs", "[Observables]", (StateVectorCudaManaged),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("HermitianObs", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using ComplexT = typename StateVectorT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
@@ -117,8 +117,8 @@ TEMPLATE_PRODUCT_TEST_CASE("TensorProdObs", "[Observables]",
         REQUIRE(std::is_move_constructible_v<TensorProdObsT>);
     }
 }
-TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]", (StateVectorCudaManaged),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using TensorProdObsT = TensorProdObs<StateVectorT>;
@@ -190,8 +190,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
             };
 
             REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                  state_vector.getDataVector().size(), expected.data(),
-                                  expected.size()));
+                                  state_vector.getDataVector().size(),
+                                  expected.data(), expected.size()));
         }
 
         SECTION("Hamiltonian applies correctly to |01>") {
@@ -210,8 +210,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
             };
 
             REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                  state_vector.getDataVector().size(), expected.data(),
-                                  expected.size()));
+                                  state_vector.getDataVector().size(),
+                                  expected.data(), expected.size()));
         }
     }
 }

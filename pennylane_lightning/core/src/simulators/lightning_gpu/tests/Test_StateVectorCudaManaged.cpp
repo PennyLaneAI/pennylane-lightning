@@ -49,8 +49,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Constructibility",
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::Constructibility",
-                           "[General Constructibility]", (StateVectorCudaManaged),
-                           (float, double)) {
+                           "[General Constructibility]",
+                           (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using ComplexT = typename StateVectorT::ComplexT;
 
@@ -69,9 +69,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::Constructibility",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a std::vector",
-                           "[applyMatrix]", (StateVectorCudaManaged),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE(
+    "StateVectorCudaManaged::applyMatrix with a std::vector", "[applyMatrix]",
+    (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -196,13 +196,12 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
 
     SECTION("StateVectorCudaManaged<TestType> {ComplexT *, size_t}") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
-        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *,
-                                        size_t>);
+        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, size_t>);
         const size_t num_qubits = 5;
         TestVectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        StateVectorT sv(
-            reinterpret_cast<ComplexT *>(st_data.data()), st_data.size());
+        StateVectorT sv(reinterpret_cast<ComplexT *>(st_data.data()),
+                        st_data.size());
 
         REQUIRE(sv.getNumQubits() == 5);
         REQUIRE(sv.getLength() == 32);
@@ -211,7 +210,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
 
     SECTION("StateVectorCudaManaged<TestType> {const "
             "StateVectorCudaManaged<TestType>&}") {
-        REQUIRE(std::is_constructible_v<StateVectorT,
-                                        const StateVectorT &>);
+        REQUIRE(std::is_constructible_v<StateVectorT, const StateVectorT &>);
     }
 }

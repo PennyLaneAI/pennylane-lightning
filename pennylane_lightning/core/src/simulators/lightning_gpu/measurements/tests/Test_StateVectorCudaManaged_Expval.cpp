@@ -22,8 +22,8 @@
 
 #include <catch2/catch.hpp>
 
-#include "StateVectorCudaManaged.hpp"
 #include "MeasurementsGPU.hpp"
+#include "StateVectorCudaManaged.hpp"
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
@@ -44,7 +44,8 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
+                   double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     const size_t num_qubits = 3;
     auto ONE = TestType(1);
@@ -53,14 +54,16 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float, doubl
     auto m = Measurements(sv);
 
     SECTION("Using expval") {
-        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}}, {{0},{0,1},{1,2}}, {{false},{false},{false}});
+        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                          {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
         auto ob = NamedObs<StateVectorT>("Identity", {0});
         auto res = m.expval(ob);
         CHECK(res == Approx(ONE));
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
+                   double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
         const size_t num_qubits = 3;
@@ -72,7 +75,9 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"},{"CNOT"},{"CNOT"}}, {{0},{0, 1},{1, 2}}, {{false},{false},{false}});
+            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                              {{0}, {0, 1}, {1, 2}},
+                              {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -82,7 +87,8 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"},{"Hadamard"},{"Hadamard"}}, {{0},{1},{2}}, {{false},{false},{false}});
+            sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -92,7 +98,15 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"PauliX"},{"Hadamard"},{"PauliX"},{"Hadamard"},{"PauliX"},{"Hadamard"}}, {{0},{0},{1},{1},{2},{2}}, {{false},{false},{false},{false},{false},{false}});
+            sv.applyOperation(
+                {{"PauliX"},
+                 {"Hadamard"},
+                 {"PauliX"},
+                 {"Hadamard"},
+                 {"PauliX"},
+                 {"Hadamard"}},
+                {{0}, {0}, {1}, {1}, {2}, {2}},
+                {{false}, {false}, {false}, {false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -100,7 +114,8 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
+                   double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
         const size_t num_qubits = 3;
@@ -113,7 +128,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"},{"CNOT"},{"CNOT"}}, {{0},{0, 1},{1, 2}}, {{false},{false},{false}});
+            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                              {{0}, {0, 1}, {1, 2}},
+                              {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -123,7 +140,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"RX"},{"RX"},{"RX"}}, {{0},{1},{2}}, {{false},{false},{false}},{{-PI / 2},{-PI / 2},{-PI / 2}});
+            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                              {{false}, {false}, {false}},
+                              {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -133,7 +152,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float, double)
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"RX"},{"RX"},{"RX"}}, {{0},{1},{2}}, {{false},{false},{false}},{{PI / 2},{PI / 2},{PI / 2}});
+            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                              {{false}, {false}, {false}},
+                              {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -141,15 +162,15 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaManaged_Expval]", float,
+                   double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
         using PrecisionT = StateVectorT::PrecisionT;
 
         // Defining the statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
-        StateVectorT sv(statevector_data.data(),
-                               statevector_data.size());
+        StateVectorT sv(statevector_data.data(), statevector_data.size());
 
         SECTION("Using expval") {
             auto m = Measurements(sv);
@@ -161,7 +182,8 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaManaged_Expval]", float, double)
     }
 }
 
-TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float,
+                   double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
         const size_t num_qubits = 3;
@@ -174,25 +196,25 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float, doubl
             sv.applyOperation("PauliX", {0});
             auto ob = NamedObs<StateVectorT>("Hadamard", {0});
             auto res = m.expval(ob);
-            CHECK( res == Approx(-INVSQRT2).epsilon(1e-7));
+            CHECK(res == Approx(-INVSQRT2).epsilon(1e-7));
         }
     }
 }
-
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
                    "[StateVectorCudaManaged_Expval]", double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
     const size_t num_qubits = 3;
-    
+
     SECTION("GetExpectationIdentity") {
         StateVectorT sv{num_qubits};
         sv.initSV();
         auto m = Measurements(sv);
         std::vector<size_t> wires{0, 1, 2};
 
-        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}}, {{0},{0,1},{1,2}}, {{false},{false},{false}});
+        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                          {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
 
         size_t matrix_dim = static_cast<size_t>(1U) << num_qubits;
         std::vector<ComplexT> matrix(matrix_dim * matrix_dim);
@@ -208,7 +230,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
         ComplexT expected = {1, 0};
         CHECK(real(expected) == Approx(results).epsilon(1e-7));
     }
-    
+
     SECTION("GetExpectationHermitianMatrix") {
         std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                          {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
@@ -272,8 +294,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                          {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                          {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorT sv{init_state.data(),
-                                              init_state.size()};
+        StateVectorT sv{init_state.data(), init_state.size()};
         auto m = Measurements(sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -281,8 +302,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
 
-        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5},
-                                                                   {X0, Z1});
+        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.expval(*ob);
         auto expected = TestType(-0.086);
         CHECK(expected == Approx(res));
@@ -314,7 +334,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaManaged_Expval]", double) {
-    using StateVectorT = StateVectorCudaManaged<TestType>;                
+    using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 
     SECTION("Sparse expval") {

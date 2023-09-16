@@ -37,7 +37,10 @@ if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-fixture_params = itertools.product([np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128], kokkos_args)
+fixture_params = itertools.product(
+    [np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128],
+    kokkos_args,
+)
 
 
 def Rx(theta):
@@ -613,7 +616,9 @@ class TestAdjointJacobian:
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128])
+    @pytest.fixture(
+        params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
+    )
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
@@ -1048,7 +1053,8 @@ def test_integration_custom_wires(returns):
 
     assert np.allclose(j_def, j_lightning)
 
-@pytest.mark.skipif(device_name!="lightning.gpu", reason="Tests only for lightning.gpu")
+
+@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1097,7 +1103,8 @@ def test_integration_custom_wires_batching(returns):
 
     assert np.allclose(j_gpu, j_def, atol=1e-7)
 
-@pytest.mark.skipif(device_name!="lightning.gpu", reason="Tests only for lightning.gpu")
+
+@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1165,6 +1172,7 @@ def test_batching_H(returns):
     assert np.allclose(j_cpu, j_gpu)
     assert np.allclose(j_gpu, j_gpu_default)
 
+
 @pytest.fixture(scope="session")
 def create_xyz_file(tmp_path_factory):
     directory = tmp_path_factory.mktemp("tmp")
@@ -1172,9 +1180,11 @@ def create_xyz_file(tmp_path_factory):
     file.write_text("""2\nH2, Unoptimized\nH  1.0 0.0 0.0\nH -1.0 0.0 0.0""")
     yield file
 
-@pytest.mark.skipif(device_name!="lightning.gpu", reason="Tests only for lightning.gpu")
+
+@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
-    "batches", [False, True, 1, 2, 3, 4],
+    "batches",
+    [False, True, 1, 2, 3, 4],
 )
 def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     skipp_condn = pytest.importorskip("openfermionpyscf")

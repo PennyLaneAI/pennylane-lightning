@@ -276,12 +276,14 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
 }
 
 /**
- * @brief Sparse matrix vector multiply offloaded to cuSparse (Y = alpha*SparseMat*X + beta)
- * 
- * @tparam index_type Integer type for offsets, indices and number of elements (size_t for the moment).
+ * @brief Sparse matrix vector multiply offloaded to cuSparse (Y =
+ * alpha*SparseMat*X + beta)
+ *
+ * @tparam index_type Integer type for offsets, indices and number of elements
+ * (size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
- * 
+ *
  * @param csrOffsets_ptr Pointer to offsets in CSR format.
  * @param csrOffsets_size Number of elements of offsets.
  * @param columns_ptr Pointer to column indices in CSR format.

@@ -109,6 +109,7 @@ def get_device():
         raise ValueError(f"Invalid backend {device}.")
     return device
 
+
 device_name = get_device()
 
 if device_name not in qml.plugin_devices:
@@ -126,8 +127,12 @@ else:
 
 
 # General qubit_device fixture, for any number of wires.
-@pytest.fixture(scope="function", params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128])
+@pytest.fixture(
+    scope="function",
+    params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128],
+)
 def qubit_device(request):
     def _device(wires):
         return qml.device(device_name, wires=wires, c_dtype=request.param)
+
     return _device

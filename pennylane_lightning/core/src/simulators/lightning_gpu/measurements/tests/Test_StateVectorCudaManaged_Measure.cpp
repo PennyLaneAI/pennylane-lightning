@@ -196,10 +196,8 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", double) {
 
     // Defining the State Vector that will be measured.
     const std::size_t num_qubits = 3;
-    auto statevector_data =
-        createNonTrivialState<StateVectorT>(num_qubits);
-    StateVectorT measure_sv(statevector_data.data(),
-                                           statevector_data.size());
+    auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
+    StateVectorT measure_sv(statevector_data.data(), statevector_data.size());
 
     SECTION("Looping over different wire configurations:") {
         auto m = Measurements(measure_sv);

@@ -1367,8 +1367,7 @@ static auto getIsingXY(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
-            cuUtil::ONE<CFP_t>()
-            };
+            cuUtil::ONE<CFP_t>()};
 }
 
 /**
@@ -1406,11 +1405,10 @@ static constexpr auto getGeneratorIsingXY() -> std::vector<CFP_t> {
         cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
     };
 }
-
 
 template <class CFP_t> static constexpr auto getP11_CU() -> std::vector<CFP_t> {
     return {cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),

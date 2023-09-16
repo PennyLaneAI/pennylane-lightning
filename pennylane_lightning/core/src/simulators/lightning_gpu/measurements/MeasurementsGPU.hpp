@@ -35,7 +35,6 @@
 #include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
 
-
 /// @cond DEV
 namespace {
 using namespace Pennylane;
@@ -69,8 +68,7 @@ class Measurements final
     cudaDataType_t data_type_;
 
   public:
-    explicit Measurements(StateVectorT &statevector)
-        : BaseType{statevector} {
+    explicit Measurements(StateVectorT &statevector) : BaseType{statevector} {
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
             data_type_ = CUDA_C_64F;
@@ -88,8 +86,6 @@ class Measurements final
      */
     auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
         return this->_statevector.probability(wires);
-    
-    
     }
 
     /**
@@ -137,8 +133,10 @@ class Measurements final
                 const index_type csrOffsets_size, const index_type *columns_ptr,
                 const std::complex<PrecisionT> *values_ptr,
                 const index_type numNNZ) -> PrecisionT {
-        return this->_statevector.template getExpectationValueOnSparseSpMV<index_type>(csrOffsets_ptr, csrOffsets_size, columns_ptr,
-            values_ptr, numNNZ);
+        return this->_statevector
+            .template getExpectationValueOnSparseSpMV<index_type>(
+                csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr,
+                numNNZ);
     }
 
     /**
@@ -165,7 +163,8 @@ class Measurements final
      * observables.
      */
     auto expval(const std::vector<std::string> &operations_list,
-           const std::vector<std::vector<size_t>> &wires_list)->std::vector<PrecisionT> {
+                const std::vector<std::vector<size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -221,9 +220,10 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<std::string> &pauli_words,
-        const std::vector<std::vector<std::size_t>> &target_wires,
-        const std::complex<PrecisionT> *coeffs)->PrecisionT{
-        return this->_statevector.getExpectationValuePauliWords(pauli_words, target_wires, coeffs);
+                const std::vector<std::vector<std::size_t>> &target_wires,
+                const std::complex<PrecisionT> *coeffs) -> PrecisionT {
+        return this->_statevector.getExpectationValuePauliWords(
+            pauli_words, target_wires, coeffs);
     }
 
     /**
@@ -326,7 +326,8 @@ class Measurements final
      */
     template <typename op_type>
     auto var(const std::vector<op_type> &operations_list,
-        const std::vector<std::vector<size_t>> &wires_list) -> std::vector<PrecisionT> {
+             const std::vector<std::vector<size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -377,7 +378,8 @@ class Measurements final
 
         cuUtil::SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
             csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
-            this->_statevector.getData(), ob_sv.getData(), device_id, stream_id, handle);
+            this->_statevector.getData(), ob_sv.getData(), device_id, stream_id,
+            handle);
 
         const PrecisionT mean_square =
             innerProdC_CUDA(ob_sv.getData(), ob_sv.getData(), ob_sv.getLength(),
@@ -385,8 +387,9 @@ class Measurements final
                 .x;
 
         const PrecisionT squared_mean = static_cast<PrecisionT>(std::pow(
-            innerProdC_CUDA(this->_statevector.getData(), ob_sv.getData(), this->_statevector.getLength(),
-                            device_id, stream_id, this->_statevector.getCublasCaller())
+            innerProdC_CUDA(this->_statevector.getData(), ob_sv.getData(),
+                            this->_statevector.getLength(), device_id,
+                            stream_id, this->_statevector.getCublasCaller())
                 .x,
             2));
         return (mean_square - squared_mean);

@@ -56,7 +56,7 @@ try:
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LGPU_CPP_BINARY_AVAILABLE = True
-#except (ModuleNotFoundError, ImportError, ValueError) as e:
+# except (ModuleNotFoundError, ImportError, ValueError) as e:
 except (ImportError, ValueError) as e:
     warn(str(e), UserWarning)
     LGPU_CPP_BINARY_AVAILABLE = False
@@ -185,7 +185,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 the expectation values. Defaults to ``None`` if not specified. Setting
                 to ``None`` results in computing statistics like expectation values and
                 variances analytically.
-            batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not 
+            batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
         """
 
         name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK"
@@ -262,12 +262,12 @@ if LGPU_CPP_BINARY_AVAILABLE:
             state = self._asarray(state, dtype=self.C_DTYPE)
             self.syncD2H(state)
             return state
-        
+
         @property
         def state_vector(self):
             """Returns a handle to the statevector."""
             return self._gpu_state
-        
+
         @property
         def create_ops_list(self):
             """Returns create_ops_list function of the matching precision."""
@@ -474,7 +474,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             if len(measurements) == 1 and measurements[0].return_type is State:
                 # return State
-                raise QuantumFunctionError("Adjoint differentiation does not support State measurements.")
+                raise QuantumFunctionError(
+                    "Adjoint differentiation does not support State measurements."
+                )
 
             # The return_type of measurement processes must be expectation
             if not all([m.return_type is Expectation for m in measurements]):
@@ -539,7 +541,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             if not tape_return_type:  # the tape does not have measurements
                 return np.array([], dtype=self.state.dtype)
-            
+
             if tape_return_type is State:  # pragma: no cover
                 raise QuantumFunctionError(
                     "This method does not support statevector return type. "
@@ -564,17 +566,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
             - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
             """
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
-            
+
             if self._batch_obs:
                 adjoint_jacobian = adjoint_jacobian.batched
-                
+
             jac = adjoint_jacobian(
                 processed_data["state_vector"],
                 processed_data["obs_serialized"],
                 processed_data["ops_serialized"],
                 trainable_params,
             )
-            
+
             jac = np.array(jac)  # only for parameters differentiable with the adjoint method
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
@@ -633,7 +635,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
-        
+
         def generate_samples(self):
             """Generate samples
 
@@ -641,7 +643,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 array[int]: array of samples in binary representation with shape
                 ``(dev.shots, dev.num_wires)``
             """
-            return self.measurements.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
+            return self.measurements.generate_samples(len(self.wires), self.shots).astype(
+                int, copy=False
+            )
 
         def expval(self, observable, shot_range=None, bin_size=None):
             if observable.name in [
@@ -653,7 +657,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.mean(samples, axis=0))
-            
+
             if observable.name in ["SparseHamiltonian"]:
                 CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
                 return self.measurements.expval(
@@ -661,16 +665,18 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     CSR_SparseHamiltonian.indices,
                     CSR_SparseHamiltonian.data,
                 )
-            
+
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
                 observable_wires = self.map_wires(observable.wires)
                 matrix = observable.matrix()
                 return self.measurements.expval(matrix, observable_wires)
 
-            if( observable.name in ["Hermitian", "Hamiltonian"]
+            if (
+                observable.name in ["Hermitian", "Hamiltonian"]
                 or (observable.arithmetic_depth > 0)
-                or isinstance(observable.name, List)):
+                or isinstance(observable.name, List)
+            ):
                 ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
                     observable, self.wire_map
                 )
@@ -688,7 +694,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             local_prob = self.measurements.probs(observable_wires)
             num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
             return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-
 
         def generate_samples(self):
             """Generate samples

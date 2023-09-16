@@ -176,7 +176,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
     sv.initSV();
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const cp_t p = cuUtil::ConstMult(
         std::complex<TestType>(0.5, 0.0),
@@ -192,7 +192,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
 
             CHECK(sv_direct.getDataVector() == init_state);
             sv_direct.applyPauliY({index}, false);
@@ -202,7 +203,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
     }
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
             CHECK(sv_dispatch.getDataVector() == init_state);
             sv_dispatch.applyOperation("PauliY", {index}, false);
             CHECK(sv_dispatch.getDataVector() ==
@@ -219,7 +221,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliZ",
     sv.initSV();
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const cp_t p(static_cast<TestType>(0.5) *
                  cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -233,7 +235,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliZ",
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
             CHECK(sv_direct.getDataVector() == init_state);
             sv_direct.applyPauliZ({index}, false);
             CHECK(sv_direct.getDataVector() ==
@@ -242,7 +245,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliZ",
     }
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
             CHECK(sv_dispatch.getDataVector() == init_state);
             sv_dispatch.applyOperation("PauliZ", {index}, false);
             CHECK(sv_dispatch.getDataVector() ==
@@ -259,7 +263,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
     sv.initSV();
     // Test using |+++> state
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                             {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const cp_t r(std::complex<TestType>(0.5, 0.0) *
                  cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -273,7 +277,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
             CHECK(sv_direct.getDataVector() == init_state);
             sv_direct.applyS({index}, false);
             CHECK(sv_direct.getDataVector() ==
@@ -282,7 +287,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
     }
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
             CHECK(sv_dispatch.getDataVector() == init_state);
             sv_dispatch.applyOperation("S", {index}, false);
             CHECK(sv_dispatch.getDataVector() ==
@@ -299,7 +305,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
     sv.initSV();
     // Test using |+++> state
     sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                 {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
     cp_t i(1.0 / 4, 1.0 / 4);
@@ -312,7 +318,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
     const auto init_state = sv.getDataVector();
     SECTION("Apply directly") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
             CHECK(sv_direct.getDataVector() == init_state);
             sv_direct.applyT({index}, false);
             CAPTURE(sv_direct.getDataVector());
@@ -323,7 +330,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
     }
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < num_qubits; index++) {
-            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                         init_state.size()};
             CHECK(sv_dispatch.getDataVector() == init_state);
             sv_dispatch.applyOperation("T", {index}, false);
             CHECK(sv_dispatch.getDataVector() ==
@@ -343,7 +351,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCNOT",
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
-        StateVectorCudaManaged<TestType> sv_direct{init_state.data(), init_state.size()};
+        StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                   init_state.size()};
 
         for (std::size_t index = 1; index < num_qubits; index++) {
             sv_direct.applyCNOT({index - 1, index}, false);
@@ -355,11 +364,11 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCNOT",
     }
 
     SECTION("Apply using dispatcher") {
-       StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(), init_state.size()};
+        StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                     init_state.size()};
 
         for (std::size_t index = 1; index < num_qubits; index++) {
-            sv_dispatch.applyOperation("CNOT", {index - 1, index},
-                                                  false);
+            sv_dispatch.applyOperation("CNOT", {index - 1, index}, false);
         }
         CHECK(sv_dispatch.getDataVector().front() ==
               cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -377,8 +386,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
-                                 {false, false});
+    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -403,8 +411,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv01{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv10{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
 
             sv01.applySWAP({0, 1}, false);
             sv10.applySWAP({1, 0}, false);
@@ -423,8 +433,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv02{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv20{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv02{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv20{init_state.data(),
+                                                  init_state.size()};
 
             sv02.applySWAP({0, 2}, false);
             sv20.applySWAP({2, 0}, false);
@@ -442,8 +454,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv12{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv21{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv12{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv21{init_state.data(),
+                                                  init_state.size()};
 
             sv12.applySWAP({1, 2}, false);
             sv21.applySWAP({2, 1}, false);
@@ -463,12 +477,14 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv01{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv10{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
 
             sv01.applyOperation("SWAP", {0, 1});
             sv10.applyOperation("SWAP", {1, 0});
-    
+
             CHECK(sv01.getDataVector() == Pennylane::Util::approx(expected));
             CHECK(sv10.getDataVector() == Pennylane::Util::approx(expected));
         }
@@ -483,8 +499,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv02{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv20{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv02{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv20{init_state.data(),
+                                                  init_state.size()};
 
             sv02.applyOperation("SWAP", {0, 2});
             sv20.applyOperation("SWAP", {2, 0});
@@ -502,8 +520,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv12{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv21{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv12{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv21{init_state.data(),
+                                                  init_state.size()};
 
             sv12.applyOperation("SWAP", {1, 2});
             sv21.applyOperation("SWAP", {2, 1});
@@ -523,8 +543,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
-                                 {false, false});
+    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -549,8 +568,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
                                        std::complex<TestType>(-1 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv01{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv10{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
 
             sv01.applyCZ({0, 1}, false);
             sv10.applyCZ({1, 0}, false);
@@ -562,8 +583,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
         SECTION("CZ0,2 |+10> -> |+10>") {
             auto &&expected = init_state;
 
-            StateVectorCudaManaged<TestType> sv02{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv20{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv02{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv20{init_state.data(),
+                                                  init_state.size()};
 
             sv02.applyCZ({0, 2}, false);
             sv20.applyCZ({2, 0}, false);
@@ -574,8 +597,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
         SECTION("CZ1,2 |+10> -> |+10>") {
             auto &&expected = init_state;
 
-            StateVectorCudaManaged<TestType> sv12{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv21{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv12{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv21{init_state.data(),
+                                                  init_state.size()};
 
             sv12.applyCZ({1, 2}, false);
             sv21.applyCZ({2, 1}, false);
@@ -595,8 +620,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
                                        std::complex<TestType>(-1 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv01{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv10{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
 
             sv01.applyOperation("CZ", {0, 1});
             sv10.applyOperation("CZ", {1, 0});
@@ -616,8 +643,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
-                             {false, false});
+    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -632,7 +658,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::INVSQRT2<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv012{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv012{init_state.data(),
+                                                   init_state.size()};
 
             sv012.applyToffoli({0, 1, 2}, false);
 
@@ -649,8 +676,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
                 std::complex<TestType>(1.0 / sqrt(2), 0)};
-            
-            StateVectorCudaManaged<TestType> sv102{init_state.data(), init_state.size()};
+
+            StateVectorCudaManaged<TestType> sv102{init_state.data(),
+                                                   init_state.size()};
 
             sv102.applyToffoli({1, 0, 2}, false);
 
@@ -659,7 +687,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
         SECTION("Toffoli 0,2,1 |+10> -> |+10>") {
             auto &&expected = init_state;
 
-            StateVectorCudaManaged<TestType> sv021{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv021{init_state.data(),
+                                                   init_state.size()};
 
             sv021.applyToffoli({0, 2, 1}, false);
 
@@ -668,7 +697,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
         SECTION("Toffoli 1,2,0 |+10> -> |+10>") {
             auto &&expected = init_state;
 
-            StateVectorCudaManaged<TestType> sv120{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv120{init_state.data(),
+                                                   init_state.size()};
 
             sv120.applyToffoli({1, 2, 0}, false);
 
@@ -687,8 +717,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
                 cuUtil::ZERO<std::complex<TestType>>(),
                 std::complex<TestType>(1.0 / sqrt(2), 0)};
 
-            StateVectorCudaManaged<TestType> sv012{init_state.data(), init_state.size()};
-            StateVectorCudaManaged<TestType> sv102{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv012{init_state.data(),
+                                                   init_state.size()};
+            StateVectorCudaManaged<TestType> sv102{init_state.data(),
+                                                   init_state.size()};
 
             sv012.applyOperation("Toffoli", {0, 1, 2});
             sv102.applyOperation("Toffoli", {1, 0, 2});
@@ -708,8 +740,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
-                                 {false, false});
+    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -722,8 +753,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
-            
-            StateVectorCudaManaged<TestType> sv012{init_state.data(), init_state.size()};
+
+            StateVectorCudaManaged<TestType> sv012{init_state.data(),
+                                                   init_state.size()};
 
             sv012.applyCSWAP({0, 1, 2}, false);
 
@@ -740,7 +772,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            StateVectorCudaManaged<TestType> sv102{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv102{init_state.data(),
+                                                   init_state.size()};
 
             sv102.applyCSWAP({1, 0, 2}, false);
 
@@ -749,7 +782,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
         SECTION("CSWAP 2,1,0 |+10> -> |+10>") {
             auto &&expected = init_state;
 
-            StateVectorCudaManaged<TestType> sv021{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv021{init_state.data(),
+                                                   init_state.size()};
 
             sv021.applyCSWAP({2, 1, 0}, false);
             CHECK(sv021.getDataVector() == Pennylane::Util::approx(expected));
@@ -765,7 +799,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
-            StateVectorCudaManaged<TestType> sv012{init_state.data(), init_state.size()};
+            StateVectorCudaManaged<TestType> sv012{init_state.data(),
+                                                   init_state.size()};
 
             sv012.applyOperation("CSWAP", {0, 1, 2});
             CHECK(sv012.getDataVector() == Pennylane::Util::approx(expected));
@@ -808,22 +843,19 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
         std::vector<cp_t> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                      {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorCudaManaged<TestType> svdat{init_state.data(), init_state.size()};
-        std::vector<size_t> wires{0, 1, 2};
-        std::vector<cp_t> matrix{
-            {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
-            {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
-            {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
-            {0.3, 0.0},  {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},
-            {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
-            {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
-            {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5},
-            {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
-            {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
-            {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2, 0.5},
-            {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
-            {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
-            {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}};
+        StateVectorCudaManaged<TestType> svdat{init_state.data(),
+init_state.size()}; std::vector<size_t> wires{0, 1, 2}; std::vector<cp_t>
+matrix{ {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2,
+0.5},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0},  {0.5, 0.0},  {0.2, 0.5}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
+0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}};
 
         auto results = svdat.expval(wires, matrix);
 
@@ -841,7 +873,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_cuSparse",
         std::vector<cp_t> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                      {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorCudaManaged<TestType> sv{init_state.data(), init_state.size()};
+        StateVectorCudaManaged<TestType> sv{init_state.data(),
+init_state.size()};
 
         using index_type =
             typename std::conditional<std::is_same<TestType, float>::value,
@@ -878,7 +911,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
     // state vector on the device.
     SECTION("Set state vector with values and their corresponding indices on "
             "the host") {
-        auto init_state = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto expected_state = init_state;
 
         for (size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
@@ -902,8 +936,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
             init_state[1], init_state[3], init_state[5], init_state[7],
             init_state[0], init_state[2], init_state[4], init_state[6]};
 
-        sv.template setStateVector<index_type>(
-            values.size(), values.data(), indices.data(), false);
+        sv.template setStateVector<index_type>(values.size(), values.data(),
+                                               indices.data(), false);
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
@@ -916,7 +950,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
     std::mt19937 re{1337};
 
     SECTION("SetStates with a non-default GPU thread setting") {
-        auto init_state = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto expected_state = init_state;
 
         for (size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
@@ -954,7 +989,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
 
     SECTION(
         "Set Ith element of the state state on device with data on the host") {
-        auto init_state = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto expected_state = init_state;
 
         expected_state[0] = expected_state[1];

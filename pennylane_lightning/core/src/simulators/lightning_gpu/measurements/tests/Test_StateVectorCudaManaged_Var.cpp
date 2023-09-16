@@ -41,7 +41,9 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
         sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
-        sv.applyOperation({{"RX"},{"RY"},{"RX"},{"RY"}}, {{0},{0},{1},{1}}, {{false},{false},{false},{false}}, {{0.7},{0.7},{0.5},{0.5}});
+        sv.applyOperation(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
         auto ob = NamedObs<StateVectorT>("PauliX", {0});
         auto res = m.var(ob);
@@ -54,7 +56,9 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
         sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
-        sv.applyOperation({{"RX"},{"RY"},{"RX"},{"RY"}}, {{0},{0},{1},{1}}, {{false},{false},{false},{false}}, {{0.7},{0.7},{0.5},{0.5}});
+        sv.applyOperation(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
         auto ob = NamedObs<StateVectorT>("PauliY", {0});
         auto res = m.var(ob);
@@ -67,7 +71,9 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
         sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
-        sv.applyOperation({{"RX"},{"RY"},{"RX"},{"RY"}}, {{0},{0},{1},{1}}, {{false},{false},{false},{false}}, {{0.7},{0.7},{0.5},{0.5}});
+        sv.applyOperation(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
         auto ob = NamedObs<StateVectorT>("PauliZ", {1});
         auto res = m.var(ob);
@@ -76,8 +82,8 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
     }
 }
 
-TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaManaged_Var]",
-                   double) {
+TEMPLATE_TEST_CASE("Test variance of HermitianObs",
+                   "[StateVectorCudaManaged_Var]", double) {
     const std::size_t num_qubits = 3;
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -86,7 +92,11 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaManaged_Var
         sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
-        sv.applyOperation({{"RX"},{"RY"},{"RX"},{"RY"},{"RX"},{"RY"}}, {{0},{0},{1},{1},{2},{2}}, {{false},{false},{false},{false},{false},{false}}, {{0.7},{0.7},{0.5},{0.5},{0.3},{0.3}});
+        sv.applyOperation(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}, {"RX"}, {"RY"}},
+            {{0}, {0}, {1}, {1}, {2}, {2}},
+            {{false}, {false}, {false}, {false}, {false}, {false}},
+            {{0.7}, {0.7}, {0.5}, {0.5}, {0.3}, {0.3}});
 
         const TestType theta = M_PI / 2;
         const TestType c = std::cos(theta / 2);
@@ -106,8 +116,8 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaManaged_Var
     }
 }
 
-TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaManaged_Var]",
-                   double) {
+TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
+                   "[StateVectorCudaManaged_Var]", double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     const std::size_t num_qubits = 3;
     SECTION("Using var") {
@@ -115,7 +125,9 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaManaged_Va
         sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
-        sv.applyOperation({{"RX"},{"RY"},{"RX"},{"RY"}}, {{0},{0},{1},{1}}, {{false},{false},{false},{false}}, {{0.5},{0.5},{0.2},{0.2}});
+        sv.applyOperation(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliX", std::vector<size_t>{0});
@@ -129,15 +141,14 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaManaged_Va
     }
 }
 
-TEMPLATE_TEST_CASE("Test variance of HamiltonianObs", "[StateVectorCudaManaged_Var]",
-                   double) {
+TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
+                   "[StateVectorCudaManaged_Var]", double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     SECTION("Using var") {
         std::vector<std::complex<TestType>> init_state{
             {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
             {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorT sv{init_state.data(),
-                                              init_state.size()};
+        StateVectorT sv{init_state.data(), init_state.size()};
         auto m = Measurements<StateVectorT>(sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -145,11 +156,9 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs", "[StateVectorCudaManaged_V
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
 
-        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5},
-                                                                   {X0, Z1});
+        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.var(*ob);
         auto expected = TestType(0.224604);
         CHECK(expected == Approx(res));
     }
 }
-

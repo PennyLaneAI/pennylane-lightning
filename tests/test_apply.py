@@ -67,7 +67,8 @@ class TestApply:
         assert dev.state.dtype == dev.C_DTYPE
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos" or device_name == "lightning.gpu", reason="Only meaningful for lightning_qubit"
+        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+        reason="Only meaningful for lightning_qubit",
     )
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)

@@ -69,7 +69,7 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
  *
  * @tparam Precision Floating-point precision type.
  */
-template <class Precision=double>
+template <class Precision = double>
 class StateVectorCudaManaged
     : public StateVectorCudaBase<Precision, StateVectorCudaManaged<Precision>> {
   private:
@@ -349,7 +349,8 @@ class StateVectorCudaManaged
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        PL_ABORT_IF(gate_matrix.size() != Pennylane::Util::exp2(2 * wires.size()),
+        PL_ABORT_IF(gate_matrix.size() !=
+                        Pennylane::Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
         const std::string opName = {};
@@ -500,8 +501,7 @@ class StateVectorCudaManaged
         static const std::string name{"IsingXY"};
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
-            gate_cache_.add_gate(
-                gate_key, cuGates::getIsingXY<CFP_t>(param));
+            gate_cache_.add_gate(gate_key, cuGates::getIsingXY<CFP_t>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -1001,14 +1001,15 @@ class StateVectorCudaManaged
                                                 true);
 
         SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
-            csrOffsets_ptr, csrOffsets_size, columns_ptr,
-            values_ptr, numNNZ, BaseType::getData(),
-            d_sv_prime->getData(), device_id, stream_id, this->getCusparseHandle());
-        
-        auto expect = innerProdC_CUDA(BaseType::getData(), d_sv_prime->getData(),
-                                 BaseType::getLength(), device_id, stream_id,
-                                 this->getCublasCaller())
-                     .x;
+            csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
+            BaseType::getData(), d_sv_prime->getData(), device_id, stream_id,
+            this->getCusparseHandle());
+
+        auto expect =
+            innerProdC_CUDA(BaseType::getData(), d_sv_prime->getData(),
+                            BaseType::getLength(), device_id, stream_id,
+                            this->getCublasCaller())
+                .x;
 
         return expect;
     }
@@ -1027,7 +1028,8 @@ class StateVectorCudaManaged
      * order.
      * @return std::vector<double>
      */
-    auto probability(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+    auto probability(const std::vector<size_t> &wires)
+        -> std::vector<PrecisionT> {
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
@@ -1065,16 +1067,14 @@ class StateVectorCudaManaged
             /* const int32_t* */ maskOrdering,
             /* const uint32_t */ maskLen));
 
-        
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
             return probabilities;
         } else {
             std::vector<PrecisionT> probs(Pennylane::Util::exp2(wires.size()));
             std::transform(
-            probabilities.begin(), probabilities.end(), probs.begin(), [&](double x) {
-                return static_cast<PrecisionT>(x);
-            });
+                probabilities.begin(), probabilities.end(), probs.begin(),
+                [&](double x) { return static_cast<PrecisionT>(x); });
             return probs;
         }
     }
@@ -1911,7 +1911,8 @@ class StateVectorCudaManaged
 
         size_t nIndexBits = BaseType::getNumQubits();
         cudaDataType_t data_type;
-        cudaDataType_t expectationDataType = CUDA_C_64F; //Requested by the custatevecComputeExpectation API
+        cudaDataType_t expectationDataType =
+            CUDA_C_64F; // Requested by the custatevecComputeExpectation API
         custatevecComputeType_t compute_type;
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
