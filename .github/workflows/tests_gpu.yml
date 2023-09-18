@@ -242,12 +242,14 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
+        env: 
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
@@ -268,6 +270,9 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
+        env: 
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
         run: |
           cd main/
           PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
