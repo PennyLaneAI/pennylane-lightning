@@ -234,7 +234,6 @@ jobs:
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=None
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 2> /dev/null || echo Something went wrong with Pytest
           mv coverage.xml coverage-${{ github.job }}.xml
 
@@ -261,10 +260,8 @@ jobs:
           cd main/
           PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.gpu --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.gpu --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
@@ -272,3 +269,13 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf *
+          rm -rf .git
+          rm -rf .gitignore
+          rm -rf .github
+          pip cache purge
