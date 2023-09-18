@@ -118,6 +118,7 @@ jobs:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
           cd main
+          python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')"
           cmake . -BBuild -G Ninja \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
