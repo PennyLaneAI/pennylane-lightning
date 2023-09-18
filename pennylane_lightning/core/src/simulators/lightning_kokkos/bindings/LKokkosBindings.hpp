@@ -54,7 +54,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT = typename StateVectorT::ComplexT;
-    using ParamT = PrecisionT;             // Parameter's data precision
+    using ParamT = PrecisionT; // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
 
