@@ -225,10 +225,9 @@ if LQ_CPP_BINARY_AVAILABLE:
         def _asarray(arr, dtype=None):
             arr = np.asarray(arr)  # arr is not copied
 
-            if arr.dtype.kind not in ["f", "c"]:
-                return arr
-
-            if not dtype:
+            if arr.dtype.kind == "i":
+                dtype = np.complex128
+            elif not dtype:
                 dtype = arr.dtype
 
             # We allocate a new aligned memory and copy data to there if alignment or dtype
