@@ -162,7 +162,8 @@ class Measurements final
      * @return Floating point std::vector with expected values for the
      * observables.
      */
-    auto expval(const std::vector<std::string> &operations_list,
+    template <typename op_type>
+    auto expval(const std::vector<op_type> &operations_list,
                 const std::vector<std::vector<size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
