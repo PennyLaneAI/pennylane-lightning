@@ -121,11 +121,11 @@ jobs:
         run: |
           cd main
           cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCUQUANTUM_SDK=$python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")\
             -DENABLE_COVERAGE=ON
           cmake --build ./Build
           cd ./Build
