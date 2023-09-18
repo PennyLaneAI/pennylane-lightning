@@ -486,22 +486,24 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
         return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
             new SparseHamiltonianBase<StateVectorT>{
-                std::move(arg1), std::move(arg2), std::move(arg3),
-                std::move(arg4)});
+                std::move(arg1), std::move(arg2), std::move(arg3), arg4});
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
         ss << "SparseHamiltonian: {\n'data' : ";
-        for (const auto &d : data_)
+        for (const auto &d : data_) {
             ss << d;
+        }
         ss << ",\n'indices' : ";
-        for (const auto &i : indices_)
+        for (const auto &i : indices_) {
             ss << i;
+        }
         ss << ",\n'offsets' : ";
-        for (const auto &o : offsets_)
+        for (const auto &o : offsets_) {
             ss << o;
+        }
         ss << "\n}";
         return ss.str();
     }
