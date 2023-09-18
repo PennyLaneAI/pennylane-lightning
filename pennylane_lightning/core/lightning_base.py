@@ -207,6 +207,9 @@ class LightningBase(QubitDevice):
         # translate to wire labels used by device
         device_wires = self.map_wires(device_wires)
 
+        # special case for integral types
+        if state.dtype.kind == "i":
+            state = qml.numpy.array(state, dtype=self.C_DTYPE)
         state = self._asarray(state, dtype=self.C_DTYPE)
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
