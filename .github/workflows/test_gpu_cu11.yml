@@ -54,6 +54,8 @@ jobs:
     steps:
       - name: Validate GPU version and installed compiler
         run: |
+          ls /etc/
+          ls /etc/profile.d/
           source /etc/profile.d/modules.sh
           module use /opt/modules
           module load cuda/11.8
