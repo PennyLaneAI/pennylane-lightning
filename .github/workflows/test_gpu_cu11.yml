@@ -110,22 +110,17 @@ jobs:
         if: inputs.pennylane-version == 'latest'
         run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
-
       - name: Build and run unit tests
-        env: 
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
           cd main
-          python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')"
-          cmake . -BBuild -G Ninja \
+          cmake . -BBuild \
+            -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")\
-            -DENABLE_COVERAGE=ON
+            -DENABLE_COVERAGE=ON \
+            -G Ninja
           cmake --build ./Build
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
