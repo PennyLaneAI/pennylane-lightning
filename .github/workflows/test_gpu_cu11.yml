@@ -143,12 +143,12 @@ jobs:
           path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
-  pythontestswithKokkos:
+  pythontestswithLGPU:
     needs: [builddeps]
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos"]
+        pl_backend: ["lightning_gpu"]
         exec_model: ["CUDA"]
 
     name: Python tests with LGPU
@@ -240,12 +240,15 @@ jobs:
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
+        env: 
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
           CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          
+          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
@@ -258,7 +261,7 @@ jobs:
           PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.gpu --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.gpu --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
