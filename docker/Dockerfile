@@ -16,11 +16,12 @@
 # Define build arguments
 # Create and activate runtime virtual environment
 FROM ubuntu:jammy AS base-runtime
+ARG AMD_ARCH=AMD_GFX90A
+ARG CUDA_ARCH=AMPERE80
+# ARG CUDA_VERSION=12.2
+ARG GCC_VERSION=11
 ARG KOKKOS_VERSION=4.1.00
 ARG LIGHTNING_VERSION=0.32.0
-ARG CUDA_VERSION=12.2
-ARG CUDA_ARCH=AMPERE80
-ARG AMD_ARCH=AMD_GFX90A
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -48,13 +49,13 @@ RUN apt-get update \
     git \
     ninja-build \
     python3-dev \
-    gcc-11 g++-11 cpp-11 \
+    gcc-${GCC_VERSION} g++-${GCC_VERSION} cpp-${GCC_VERSION} \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN update-alternatives \
-    --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
-    --slave /usr/bin/gcov gcov /usr/bin/gcov-10
+    --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_VERSION} 100 \
+    --slave /usr/bin/g++ g++ /usr/bin/g++-${GCC_VERSION} \
+    --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_VERSION}
 RUN /usr/sbin/update-ccache-symlinks
 RUN mkdir /opt/ccache
 RUN ccache --set-config=cache_dir=/opt/ccache
