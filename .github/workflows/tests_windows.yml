@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
