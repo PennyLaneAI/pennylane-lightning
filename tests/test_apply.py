@@ -211,6 +211,24 @@ class TestApply:
 
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
 
+    def test_integer_state_preparation(self, qubit_device, tol):
+        """Tests that applying an operation yields the expected output state for single wire
+        operations that have no parameters."""
+        dev = qubit_device(wires=2)
+
+        @qml.qnode(dev)
+        def circuit0():
+            qml.RX(0.2, wires=[0])
+            return qml.state()
+
+        @qml.qnode(dev)
+        def circuit1():
+            qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])
+            qml.RX(0.2, wires=[0])
+            return qml.state()
+
+        assert np.allclose(circuit0(), circuit1(), atol=tol, rtol=0)
+
     """ operation,input,expected_output,par """
     test_data_single_wire_with_parameters = [
         (qml.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),

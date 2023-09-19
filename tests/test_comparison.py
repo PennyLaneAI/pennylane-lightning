@@ -73,12 +73,12 @@ class TestComparison:
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
-        def circuit():
+        def circuit(measurement):
             """A combination of the one_qubit_block and a simple PauliZ measurement applied to a
             basis state"""
             qml.BasisState(np.array(basis_state), wires=0)
             one_qubit_block(wires=0)
-            return qml.expval(qml.PauliZ(0))
+            return measurement() if callable(measurement) else measurement
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -86,11 +86,10 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning()
+        lightning(qml.expval(qml.PauliZ(0)))
         lightning_state = dev_l.state
 
-        default()
-        default_state = dev_d.state
+        default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
@@ -108,7 +107,7 @@ class TestComparison:
         """Test a two-qubit circuit"""
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
-        def circuit():
+        def circuit(measurement):
             """A combination of two qubit gates with the one_qubit_block and a simple PauliZ
             measurement applied to an input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1])
@@ -123,7 +122,7 @@ class TestComparison:
             one_qubit_block(wires=1)
             qml.CRZ(0.02, wires=[0, 1])
             qml.CRot(0.2, 0.3, 0.7, wires=[0, 1])
-            return qml.expval(qml.PauliZ(0))
+            return measurement() if callable(measurement) else measurement
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -131,11 +130,10 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning()
+        lightning(qml.expval(qml.PauliZ(0)))
         lightning_state = dev_l.state
 
-        default()
-        default_state = dev_d.state
+        default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
 
@@ -152,7 +150,7 @@ class TestComparison:
         """Test a three-qubit circuit"""
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
-        def circuit():
+        def circuit(measurement):
             """A combination of two and three qubit gates with the one_qubit_block and a simple
             PauliZ measurement applied to an input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1, 2])
@@ -175,7 +173,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return qml.expval(qml.PauliZ(0))
+            return measurement() if callable(measurement) else measurement
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -183,11 +181,10 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning()
+        lightning(qml.expval(qml.PauliZ(0)))
         lightning_state = dev_l.state
 
-        default()
-        default_state = dev_d.state
+        default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
 
@@ -204,7 +201,7 @@ class TestComparison:
         """Test a four-qubit circuit"""
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
-        def circuit():
+        def circuit(measurement):
             """A combination of two and three qubit gates with the one_qubit_block and a simple
             PauliZ measurement, all acting on a four qubit input basis state"""
             qml.BasisState(np.array(basis_state), wires=[0, 1, 2, 3])
@@ -232,7 +229,7 @@ class TestComparison:
             qml.CRot(0.2, 0.3, 0.7, wires=[2, 1])
             qml.RZ(0.4, wires=0)
             qml.Toffoli(wires=[2, 1, 0])
-            return qml.expval(qml.PauliZ(0))
+            return measurement() if callable(measurement) else measurement
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -240,11 +237,10 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning()
+        lightning(qml.expval(qml.PauliZ(0)))
         lightning_state = dev_l.state
 
-        default()
-        default_state = dev_d.state
+        default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
 
@@ -265,12 +261,12 @@ class TestComparison:
         shape = qml.StronglyEntanglingLayers.shape(2, wires)
         w = np.random.uniform(high=2 * np.pi, size=shape)
 
-        def circuit():
+        def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
             stateprep(vec, wires=range(wires))
             qml.StronglyEntanglingLayers(w, wires=range(wires))
-            return qml.expval(qml.PauliZ(0))
+            return measurement() if callable(measurement) else measurement
 
         dev_l = lightning_dev_version(wires)
         dev_d = default_qubit_dev(wires)
@@ -278,10 +274,9 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning()
+        lightning(qml.expval(qml.PauliZ(0)))
         lightning_state = dev_l.state
 
-        default()
-        default_state = dev_d.state
+        default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)

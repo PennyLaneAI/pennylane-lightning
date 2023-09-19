@@ -10,14 +10,17 @@
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development versions.
   [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
 
+* Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.  
+  [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
+
+* Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
+  [(#500)](https://github.com/PennyLaneAI/pennylane-lightning/pull/500)
+
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 * Enable pre-commit hooks to format all Python files and linting of all Python source files.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
-
-* Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
-  [(#500)](https://github.com/PennyLaneAI/pennylane-lightning/pull/500)
 
 ### Improvements
 
