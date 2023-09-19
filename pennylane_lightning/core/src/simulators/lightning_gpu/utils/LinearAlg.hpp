@@ -405,4 +405,136 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecX));
     PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecY));
 }
+
+/**
+ * @brief Sparse matrix vector multiply offloaded to cuSparse (Y =
+ * alpha*SparseMat*X + beta)
+ *
+ * @tparam index_type Integer type for offsets, indices and number of elements
+ * (size_t for the moment).
+ * @tparam Precision Floating data-type.
+ * @tparam DevTypeID Integer type of device id.
+ *
+ * @param csrOffsets_ptr Pointer to offsets in CSR format.
+ * @param csrOffsets_size Number of elements of offsets.
+ * @param columns_ptr Pointer to column indices in CSR format.
+ * @param values_ptr Pointer to value of each non-zero elements in CSR format.
+ * @param numNNZ Number of non-zero elements.
+ * @param X Pointer to vector.
+ * @param Y Pointer to vector.
+ * @param device_id Device id.
+ * @param cudaStream_t Stream id.
+ * @param handle cuSparse handle.
+ */
+template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
+inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
+                              const index_type csrOffsets_size,
+                              const index_type *columns_ptr,
+                              const std::complex<Precision> *values_ptr,
+                              const index_type numNNZ, const CFP_t *X, CFP_t *Y,
+                              DevTypeID device_id, cudaStream_t stream_id,
+                              cusparseHandle_t handle) {
+    const int64_t num_rows = static_cast<int64_t>(
+        csrOffsets_size -
+        1); // int64_t is required for num_rows by cusparseCreateCsr
+    const int64_t num_cols = static_cast<int64_t>(
+        num_rows); // int64_t is required for num_cols by cusparseCreateCsr
+    const int64_t nnz = static_cast<int64_t>(
+        numNNZ); // int64_t is required for nnz by cusparseCreateCsr
+
+    const CFP_t alpha = {1.0, 0.0};
+    const CFP_t beta = {0.0, 0.0};
+
+    DataBuffer<index_type, int> d_csrOffsets{
+        static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
+    DataBuffer<index_type, int> d_columns{static_cast<std::size_t>(numNNZ),
+                                          device_id, stream_id, true};
+    DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
+                                    stream_id, true};
+
+    d_csrOffsets.CopyHostDataToGpu(csrOffsets_ptr, d_csrOffsets.getLength(),
+                                   false);
+    d_columns.CopyHostDataToGpu(columns_ptr, d_columns.getLength(), false);
+    d_values.CopyHostDataToGpu(values_ptr, d_values.getLength(), false);
+
+    cudaDataType_t data_type;
+    cusparseIndexType_t compute_type = CUSPARSE_INDEX_64I;
+
+    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                  std::is_same_v<CFP_t, double2>) {
+        data_type = CUDA_C_64F;
+    } else {
+        data_type = CUDA_C_32F;
+    }
+
+    // CUSPARSE APIs
+    cusparseSpMatDescr_t mat;
+    cusparseConstDnVecDescr_t vecX;
+    cusparseDnVecDescr_t vecY;
+
+    size_t bufferSize = 0;
+
+    // Create sparse matrix A in CSR format
+    PL_CUSPARSE_IS_SUCCESS(cusparseCreateCsr(
+        /* cusparseSpMatDescr_t* */ &mat,
+        /* int64_t */ num_rows,
+        /* int64_t */ num_cols,
+        /* int64_t */ nnz,
+        /* void* */ d_csrOffsets.getData(),
+        /* void* */ d_columns.getData(),
+        /* void* */ d_values.getData(),
+        /* cusparseIndexType_t */ compute_type,
+        /* cusparseIndexType_t */ compute_type,
+        /* cusparseIndexBase_t */ CUSPARSE_INDEX_BASE_ZERO,
+        /* cudaDataType */ data_type));
+
+    // Create dense vector X
+    PL_CUSPARSE_IS_SUCCESS(cusparseCreateConstDnVec(
+        /* cusparseDnVecDescr_t* */ &vecX,
+        /* int64_t */ num_cols,
+        /* const void* */ X,
+        /* cudaDataType */ data_type));
+
+    // Create dense vector y
+    PL_CUSPARSE_IS_SUCCESS(cusparseCreateDnVec(
+        /* cusparseDnVecDescr_t* */ &vecY,
+        /* int64_t */ num_rows,
+        /* void* */ Y,
+        /* cudaDataType */ data_type));
+
+    // allocate an external buffer if needed
+    PL_CUSPARSE_IS_SUCCESS(cusparseSpMV_bufferSize(
+        /* cusparseHandle_t */ handle,
+        /* cusparseOperation_t */ CUSPARSE_OPERATION_NON_TRANSPOSE,
+        /* const void* */ &alpha,
+        /* cusparseSpMatDescr_t */ mat,
+        /* cusparseDnVecDescr_t */ vecX,
+        /* const void* */ &beta,
+        /* cusparseDnVecDescr_t */ vecY,
+        /* cudaDataType */ data_type,
+        /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
+        /* size_t* */ &bufferSize));
+
+    DataBuffer<cudaDataType_t, int> dBuffer{bufferSize, device_id, stream_id,
+                                            true};
+
+    // execute SpMV
+    PL_CUSPARSE_IS_SUCCESS(cusparseSpMV(
+        /* cusparseHandle_t */ handle,
+        /* cusparseOperation_t */ CUSPARSE_OPERATION_NON_TRANSPOSE,
+        /* const void* */ &alpha,
+        /* cusparseSpMatDescr_t */ mat,
+        /* cusparseDnVecDescr_t */ vecX,
+        /* const void* */ &beta,
+        /* cusparseDnVecDescr_t */ vecY,
+        /* cudaDataType */ data_type,
+        /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
+        /* void* */
+        reinterpret_cast<void *>(dBuffer.getData())));
+
+    // destroy matrix/vector descriptors
+    PL_CUSPARSE_IS_SUCCESS(cusparseDestroySpMat(mat));
+    PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecX));
+    PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecY));
+}
 } // namespace Pennylane::LightningGPU::Util

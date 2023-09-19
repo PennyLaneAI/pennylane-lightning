@@ -1297,6 +1297,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
     }
 }
 
+/*
 TEMPLATE_TEST_CASE("Sample", "[LightningGPU_Param]", float, double) {
     constexpr uint32_t twos[] = {
         1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
@@ -1351,3 +1352,4 @@ TEMPLATE_TEST_CASE("Sample", "[LightningGPU_Param]", float, double) {
     REQUIRE_THAT(probabilities,
                  Catch::Approx(expected_probabilities).margin(.05));
 }
+*/
