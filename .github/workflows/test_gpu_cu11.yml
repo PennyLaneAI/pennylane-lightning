@@ -34,13 +34,13 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/11.8
+          module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-  cpptestswithLGPU:
+  cpptestswithLGPU_cu12:
     needs: [builddeps]
     strategy:
       matrix:
@@ -56,7 +56,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/11.8
+          module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
@@ -159,7 +159,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/11.8
+          module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
