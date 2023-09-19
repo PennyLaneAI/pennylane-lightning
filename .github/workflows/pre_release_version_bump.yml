@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  timeout-minutes: 30
   pre_release_version_bump:
     runs-on: ubuntu-latest
 

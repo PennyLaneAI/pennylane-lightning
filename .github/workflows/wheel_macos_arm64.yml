@@ -23,6 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  timeout-minutes: 60
   mac-set-matrix-arm:
     name: Set builder matrix
     runs-on: ubuntu-latest

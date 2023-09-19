@@ -3,6 +3,7 @@ on:
   pull_request:
 
 jobs:
+  timeout-minutes: 30
   update-dev-version:
     name: Update version for development branches
     runs-on: ubuntu-latest

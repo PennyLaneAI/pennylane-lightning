@@ -18,6 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  timeout-minutes: 30
   build-pure-python-wheel:
     strategy:
       matrix:

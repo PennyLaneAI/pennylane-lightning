@@ -21,6 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  timeout-minutes: 30
   set_wheel_build_matrix:
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml

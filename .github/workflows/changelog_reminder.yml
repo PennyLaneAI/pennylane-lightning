@@ -5,6 +5,7 @@ on:
 name: Changelog Reminder
 
 jobs:
+  timeout-minutes: 30
   remind:
     name: Changelog Reminder
     runs-on: ubuntu-latest

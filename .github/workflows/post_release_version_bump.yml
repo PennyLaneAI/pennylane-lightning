@@ -5,6 +5,7 @@ on:
     types: [published]
 
 jobs:
+  timeout-minutes: 30
   post_release_version_bump:
     runs-on: ubuntu-latest
 
