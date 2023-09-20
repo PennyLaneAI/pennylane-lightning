@@ -18,11 +18,11 @@
 FROM ubuntu:jammy AS base-runtime
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
-ARG CUDA_VERSION=12.2
+ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG GCC_VERSION=11
 ARG KOKKOS_VERSION=4.1.00
 ARG LIGHTNING_VERSION=0.32.0
-ARG ROCM_VERSION=5.7
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -124,9 +124,9 @@ RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm 
 # Install CUDA-12 in build venv image
 FROM base-build-python as base-build-cuda
 WORKDIR /opt/cuda-build
-RUN curl -o cuda-12_2.run https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
-RUN chmod a+x cuda-12_2.run
-RUN ./cuda-12_2.run --silent --toolkit --toolkitpath=/usr/local/cuda-12.2
+RUN curl -o cuda-install.run ${CUDA_INSTALLER}
+RUN chmod a+x cuda-install.run
+RUN ./cuda-install.run --silent --toolkit --toolkitpath=/usr/local/cuda-$(echo ${CUDA_INSTALLER} | grep -o -P '/cuda/.{0,4}' | cut -d / -f 3)
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 
@@ -216,11 +216,11 @@ RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl && rm 
 
 # Install ROCm in build venv image
 FROM base-build-python as base-build-rocm
-RUN wget --progress=dot:giga https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
+RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
-    ./amdgpu-install_5.3.50300-1_all.deb \
+    ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
@@ -261,14 +261,14 @@ RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
 FROM base-runtime AS wheel-lightning-kokkos-rocm
-RUN wget --progress=dot:giga https://repo.radeon.com/amdgpu-install/5.3/ubuntu/jammy/amdgpu-install_5.3.50300-1_all.deb
+RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
-    ./amdgpu-install_5.3.50300-1_all.deb \
+    ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
+    && amdgpu-install -y --accept-eula --usecase=hip --no-dkms \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-RUN amdgpu-install -y --accept-eula --usecase=hip --no-dkms
+    && rm -rf /var/lib/apt/lists/* $(echo ${ROCM_INSTALLER} | xargs -I {} basename {})
 COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
