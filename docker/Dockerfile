@@ -182,10 +182,13 @@ RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm 
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
-WORKDIR /opt/pennylane-lightning
+WORKDIR /opt/pennylane-lightning-gpu
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning-gpu/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
+RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && ls -l
+RUN mv pennylane-lightning-gpu-${LIGHTNING_VERSION}/* /opt/pennylane-lightning-gpu
 RUN pip uninstall -y pennylane-lightning-gpu
 RUN pip install --no-cache-dir wheel custatevec-cu12
 RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
@@ -208,7 +211,7 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --no-cache-dir custatevec-cu12
-COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
+COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning-gpu/dist/ /
 RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
 
 # Install ROCm in build venv image

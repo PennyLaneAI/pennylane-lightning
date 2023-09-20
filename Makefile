@@ -45,6 +45,9 @@ help:
 	@echo "  check-tidy [verbose=1]   to build PennyLane-Lightning with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"
 	@echo "                           use with 'verbose=1' for building with verbose flag"
 	@echo "  check-tidy [target=?]    to build a specific PennyLane-Lightning target with ENABLE_CLANG_TIDY=ON (requires clang-tidy & CMake)"
+	@echo "  docker-build [target=?]  to build a Docker image for a specific PennyLane-Lightning target"
+	@echo "  docker-push  [target=?]  to push a Docker image to the PennyLaneAI Docker Hub repo"
+	@echo "  docker-all  		      to build and push Docker images for all PennyLane-Lightning targets"
 
 .PHONY : clean
 clean:
@@ -132,10 +135,15 @@ ifdef target
 else
     TARGET := lightning-qubit
 endif
+ifdef version
+    VERSION := $(version)
+else
+    VERSION := 0.32.0
+endif
 docker-build:
-	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(TARGET) --target wheel-$(TARGET) .
+	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) .
 docker-push:
-	docker push pennylaneai/pennylane:$(TARGET)
+	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
 docker-all:
 	$(MAKE) docker-build target=lightning-gpu
 	$(MAKE) docker-push target=lightning-gpu

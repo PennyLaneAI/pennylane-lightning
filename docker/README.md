@@ -14,7 +14,7 @@ You can also check the Lightning-plugins documentation:
 ## Download & install
 
 Each image contains PennyLane and one of several high-performance plugins.
-Choose a device (plugin) among:
+Choose a version (e.g. `0.32.0`) and append a device (plugin) name among the following:
 
 - `lightning-gpu`: [pennylane-lightning-gpu](https://github.com/PennyLaneAI/pennylane-lightning-gpu) is a plugin based on the NVIDIA [cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
 - `lightning-kokkos-cuda`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [CUDA](https://developer.nvidia.com/cuda-toolkit) backend.
@@ -25,7 +25,7 @@ Choose a device (plugin) among:
 If you have Docker installed, download and spawn a container with `pennylane-lightning` as follows
 
 ```shell
-docker run -v pwd:/io -it pennylaneai/pennylane:lightning-qubit bash
+docker run -v pwd:/io -it pennylaneai/pennylane:0.32.0-lightning-qubit bash
 ```
 
 On certain systems, there may be other solutions supporting Docker containers.
@@ -33,8 +33,8 @@ For instance, NERSC computers (e.g. Perlmutter) have [Shifter](https://docs.ners
 In this case, spawning a container is simple as
 
 ```shell
-shifterimg pull pennylaneai/pennylane:lightning-qubit
-shifter --image=pennylaneai/pennylane:lightning-qubit /bin/bash
+shifterimg pull pennylaneai/pennylane:0.32.0-lightning-qubit
+shifter --image=pennylaneai/pennylane:0.32.0-lightning-qubit /bin/bash
 ```
 
 where the first command downloads the image and the second spawns a container.
