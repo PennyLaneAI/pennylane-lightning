@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Introduce `timeout-minutes` in various workflows, mainly to avoid Windows builds hanging for several hours.
+  [(#503)](https://github.com/PennyLaneAI/pennylane-lightning/pull/503)
+
 * Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.  
   [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
 
