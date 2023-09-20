@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  timeout-minutes: 30
   pythontests:
+    timeout-minutes: 30
     name: Python tests
     runs-on: ${{ matrix.os }}
     strategy:

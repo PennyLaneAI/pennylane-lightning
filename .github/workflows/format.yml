@@ -10,7 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  timeout-minutes: 60
   black:
     runs-on: ubuntu-22.04
     steps:

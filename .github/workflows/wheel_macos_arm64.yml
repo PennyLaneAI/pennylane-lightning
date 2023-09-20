@@ -23,8 +23,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  timeout-minutes: 60
   mac-set-matrix-arm:
+    timeout-minutes: 30
     name: Set builder matrix
     runs-on: ubuntu-latest
 
@@ -57,7 +57,7 @@ jobs:
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
-
+    timeout-minutes: 30
     name: macos-latest::arm64 - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
