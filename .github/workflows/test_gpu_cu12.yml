@@ -222,7 +222,7 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
