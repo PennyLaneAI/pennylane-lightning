@@ -72,6 +72,7 @@ jobs:
         env: 
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
         run: |
+          sudo apt-get update && sudo apt-get -y -q install gfortran-$GCC_VERSION
           cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
           cmake -B build
           cmake --build build
