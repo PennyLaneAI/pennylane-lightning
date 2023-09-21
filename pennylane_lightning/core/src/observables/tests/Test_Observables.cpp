@@ -285,15 +285,9 @@ template <typename TypeList> void testTensorProdObsBase() {
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("0+1");
 
-#ifdef _ENABLE_PLGPU
                 REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
                                       state_vector.getDataVector().size(),
                                       expected.data(), expected.size()));
-#else
-                REQUIRE(isApproxEqual(state_vector.getData(),
-                                      state_vector.getLength(), expected.data(),
-                                      expected.size()));
-#endif
             }
 
             SECTION("Test using |+-01>") {
@@ -307,15 +301,9 @@ template <typename TypeList> void testTensorProdObsBase() {
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("+-11");
 
-#ifdef _ENABLE_PLGPU
                 REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
                                       state_vector.getDataVector().size(),
                                       expected.data(), expected.size()));
-#else
-                REQUIRE(isApproxEqual(state_vector.getData(),
-                                      state_vector.getLength(), expected.data(),
-                                      expected.size()));
-#endif
             }
         }
 
