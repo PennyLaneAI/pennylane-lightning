@@ -256,6 +256,7 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
