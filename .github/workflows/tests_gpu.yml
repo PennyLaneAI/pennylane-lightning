@@ -45,8 +45,9 @@ jobs:
         # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
-          git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
+          # git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
           # git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
+          git clone --branch develop https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
