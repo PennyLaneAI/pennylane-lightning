@@ -21,7 +21,7 @@
 
 ### Improvements
 
-* Update setup to allows for sensible multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core package and all other backend packages will depend on it.
+* Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
   [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
 * Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
