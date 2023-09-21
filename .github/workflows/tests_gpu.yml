@@ -68,6 +68,15 @@ jobs:
           cmake --install ./Build
           cd -
 
+      - name: Test Kokkos core library (Ubuntu)
+        env: 
+          CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+        run: |
+          cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
+          cmake -B build
+          cmake --build build
+          cmake --build build --target test
+
       - name: Cache installation directories
         id: kokkos-cache
         # uses: actions/cache@v3
@@ -251,7 +260,6 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          sleep 7200
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
