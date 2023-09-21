@@ -205,6 +205,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
 
+            self._batch_obs = batch_obs
             self._mcmc = mcmc
             if self._mcmc:
                 if kernel_name not in [
@@ -281,7 +282,7 @@ if LQ_CPP_BINARY_AVAILABLE:
 
         @property
         def state(self):
-            # Flattening the state.
+            """Returns the flattened state vector."""
             shape = (1 << self.num_wires,)
             return self._reshape(self._pre_rotated_state, shape)
 
@@ -368,7 +369,9 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             return np.reshape(state_vector, state.shape)
 
+        # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
+            """Applies operations to the state vector."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -629,6 +632,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             return StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+            """Computes and returns the Jacobian with the adjoint method."""
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots. "
@@ -812,7 +816,7 @@ if LQ_CPP_BINARY_AVAILABLE:
 else:
 
     class LightningQubit(LightningBaseFallBack):  # pragma: no cover
-        # pylint: disable=missing-class-docstring
+        # pylint: disable=missing-class-docstring, too-few-public-methods
         name = "Lightning qubit PennyLane plugin [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.qubit"
 

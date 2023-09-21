@@ -45,7 +45,7 @@ jobs:
       matrix:
         exec_model: ${{ fromJson(needs.linux-set-builder-matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
-
+    timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
     runs-on: ${{ inputs.os }}
 
