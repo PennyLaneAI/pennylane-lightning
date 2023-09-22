@@ -61,7 +61,7 @@ constexpr bool BACKEND_FOUND = true;
 
 /// @cond DEV
 namespace {
-// using namespace Pennylane::LightningGPU::Util;
+using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace
