@@ -33,7 +33,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-
+    timeout-minutes: 30
     name: C++ tests
     runs-on: ${{ matrix.os }}
 
@@ -97,7 +97,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-
+    timeout-minutes: 30
     name: Python tests
     runs-on: ${{ matrix.os }}
 
@@ -168,7 +168,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-
+    timeout-minutes: 30
     name: C++ tests (OpenBLAS)
     runs-on: ${{ matrix.os }}
 
@@ -233,7 +233,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-
+    timeout-minutes: 30
     name: Python tests with OpenBLAS
     runs-on: ${{ matrix.os }}
 
@@ -298,7 +298,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-  build_and_cache_Kokkos:
+  build_and_cache_Kokkos:    
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
@@ -313,7 +313,7 @@ jobs:
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-
+    timeout-minutes: 30
     name: C++ tests (Kokkos)
     runs-on: ${{ matrix.os }}
 
@@ -396,7 +396,7 @@ jobs:
         exclude:
           - pl_backend: ["all"]
             exec_model: OPENMP
-
+    timeout-minutes: 30
     name: Python tests with Kokkos
     runs-on: ${{ matrix.os }}
 
@@ -546,7 +546,7 @@ jobs:
         os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-
+    timeout-minutes: 30
     name: C++ tests (multiple backends)
     runs-on: ${{ matrix.os }}
 

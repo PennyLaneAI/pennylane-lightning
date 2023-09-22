@@ -171,6 +171,13 @@ requirements = [
     "pennylane>=0.32",
 ]
 
+packages_list = ['pennylane_lightning.'+backend]
+
+if backend == "lightning_qubit":
+    packages_list += ['pennylane_lightning.core']
+else:
+    requirements += ["pennylane_lightning=="+version]
+
 suffix = backend.replace("lightning_", "")
 suffix = suffix[0].upper() + suffix[1:]
 
@@ -185,14 +192,7 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
-    "packages": find_namespace_packages(include=['pennylane_lightning.core',
-                                                 'pennylane_lightning.'+backend]),
-    "package_data": {
-        'pennylane_lightning.core': [
-            os.path.join("src", "*"),
-            os.path.join("src", "**", "*"),
-        ]
-    },
+    "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
     "entry_points": {"pennylane.plugins": pennylane_plugins},
     "description": "PennyLane-Lightning plugin",
@@ -205,6 +205,15 @@ info = {
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }
+
+if backend == "lightning_qubit":
+    info = info | {
+        "package_data": {
+            'pennylane_lightning.core': [
+                os.path.join("src", "*"),
+                os.path.join("src", "**", "*"),
+            ]
+        },}
 
 classifiers = [
     "Development Status :: 4 - Beta",
