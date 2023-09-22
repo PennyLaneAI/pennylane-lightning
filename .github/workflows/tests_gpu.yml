@@ -49,7 +49,7 @@ jobs:
           # git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           git clone --branch develop https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
-          git checkout 2e743674a89dc133a6b16e0bc7aa992713e0dbc9
+          git checkout e542e989af99cb87881ee2a0d06916541ee76006
           git log | head
           cd -
           pushd . &> /dev/null
