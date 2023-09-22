@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-  pull_request:
+  #pull_request:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
