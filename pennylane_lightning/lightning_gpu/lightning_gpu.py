@@ -22,7 +22,6 @@ import numpy as np
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
-    _chunk_iterable,
 )
 
 try:
@@ -62,7 +61,6 @@ except (ImportError, ValueError) as e:
 if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
     from itertools import product
-
 
     from pennylane import (
         math,
@@ -390,7 +388,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
-        def apply_cq(self, operations, **kwargs):
+        def apply_cq(self, operations):
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
             skipped_ops = ["Identity"]

@@ -1083,7 +1083,6 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
 }
 
 TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
-
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix2{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},
