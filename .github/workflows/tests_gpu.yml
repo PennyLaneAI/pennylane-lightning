@@ -104,8 +104,11 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     name: C++ tests (Kokkos)
-    runs-on: ${{ matrix.os }}
-
+    runs-on: 
+      - ${{ matrix.os }}
+      - self-hosted
+      - gpu
+      
     steps:
       - name: Validate GPU version and installed compiler
         run: |
@@ -190,8 +193,11 @@ jobs:
         kokkos_version: ["4.1.00"]
 
     name: Python tests with Kokkos
-    runs-on: ${{ matrix.os }}
-
+    runs-on: 
+      - ${{ matrix.os }}
+      - self-hosted
+      - gpu
+      
     steps:
       - name: Validate GPU version and installed compiler
         run: |
