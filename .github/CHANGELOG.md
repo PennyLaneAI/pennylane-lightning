@@ -7,7 +7,7 @@
 
 ### Breaking changes
 
-* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development versions.
+* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
   [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
 
 * Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.  
