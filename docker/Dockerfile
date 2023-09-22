@@ -260,7 +260,7 @@ RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
-FROM rocm/dev-ubuntu-22.04 AS wheel-lightning-kokkos-rocm
+FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
