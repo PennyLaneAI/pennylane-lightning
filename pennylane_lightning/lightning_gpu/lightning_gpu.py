@@ -240,9 +240,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # init the state vector to |00..0>
             self._gpu_state.resetGPU(False)  # Sync reset
 
-        # pylint disable=missing-function-docstring
         @property
-        def state(self):
+        def state(self):  # pylint disable=missing-function-docstring
             """Copy the state vector data from the device to the host. A state vector Numpy array is explicitly allocated on the host to store and return the data.
             **Example**
             >>> dev = qml.device('lightning.gpu', wires=1)
