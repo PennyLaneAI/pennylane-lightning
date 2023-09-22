@@ -78,6 +78,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
@@ -194,7 +195,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
-        ):
+        ):  # pylint: disable=unused-argument
             if c_dtype is np.complex64:
                 self.use_csingle = True
             elif c_dtype is np.complex128:
@@ -424,7 +425,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     param = o.parameters
                     method(wires, invert_param, param)
 
-        def apply(self, operations):
+        # pylint: disable=unused-argument
+        def apply(self, operations, rotations=None, **kwargs):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -439,8 +441,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             for operation in operations:
                 if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
-                        "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
+                        "Operation {operation.name} cannot be used after other Operations have already been "
+                        "applied on a {self.short_name} device."
                     )
 
             self.apply_cq(operations)
@@ -571,6 +573,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
             return self._adjoint_jacobian_processing(jac_r)
 
+        # pylint: disable=inconsistent-return-statements, line-too-long
         def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
             """Generate the processing function required to compute the vector-Jacobian products of a tape."""
             if self.shots is not None:
@@ -598,6 +601,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
                 ham = qml.Hamiltonian(dy, [m.obs for m in measurements])
 
+                # pylint: disable=protected-access
                 def processing_fn(tape):
                     nonlocal ham
                     num_params = len(tape.trainable_params)
@@ -612,6 +616,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
                 return processing_fn
 
+        # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             if observable.name != "PauliZ":
                 self.apply_cq(observable.diagonalizing_gates())
@@ -631,6 +636,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
+        # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
             if observable.name in [
                 "Projector",
@@ -719,7 +725,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
 else:  # LGPU_CPP_BINARY_AVAILABLE:
 
-    class LightningGPU(LightningBaseFallBack):
+    class LightningGPU(LightningBaseFallBack):  # pragma: no cover
+        # pylint: disable=missing-class-docstring, too-few-public-methods
         name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK: [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.gpu"
 

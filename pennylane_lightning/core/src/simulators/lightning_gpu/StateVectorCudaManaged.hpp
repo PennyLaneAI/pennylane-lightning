@@ -766,7 +766,7 @@ class StateVectorCudaManaged
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
     inline PrecisionT applyGeneratorCRY(const std::vector<size_t> &wires,
-                                        bool adj = false) {                                                                                                 
+                                        bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
         applyPauliY(std::vector<size_t>{wires.back()}, adj);
