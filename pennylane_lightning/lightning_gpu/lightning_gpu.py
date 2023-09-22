@@ -35,11 +35,9 @@ try:
         StateVectorC64,
         MeasurementsC128,
         MeasurementsC64,
-        device_reset,
         is_gpu_supported,
         get_gpu_arch,
         DevPool,
-        DevTag,
     )
 
     from ctypes.util import find_library
@@ -65,8 +63,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
     from itertools import product
 
-    from concurrent.futures import ThreadPoolExecutor
-    import concurrent.futures
 
     from pennylane import (
         math,
@@ -74,11 +70,10 @@ if LGPU_CPP_BINARY_AVAILABLE:
         StatePrep,
         DeviceError,
         Projector,
-        Hermitian,
         Rot,
         QuantumFunctionError,
     )
-    from pennylane.operation import Tensor, Operation
+    from pennylane.operation import Tensor
     from pennylane.ops.op_math import Adjoint
     from pennylane.measurements import Expectation, MeasurementProcess, State
     from pennylane.wires import Wires

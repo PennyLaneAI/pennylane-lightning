@@ -81,7 +81,6 @@ inline auto innerProdC_CUDA_device(const T *v1, const T *v2,
                                    const int data_size, int dev_id,
                                    cudaStream_t stream_id,
                                    const CublasCaller &cublas, T *d_result) {
-
     if constexpr (std::is_same_v<T, cuFloatComplex>) {
         cublas.call(cublasCdotc, dev_id, stream_id, data_size, v1, 1, v2, 1,
                     d_result);
@@ -138,7 +137,6 @@ inline auto scaleAndAddC_CUDA(const CFP_t a, const T *v1, T *v2,
                               const int data_size, DevTypeID dev_id,
                               cudaStream_t stream_id,
                               const CublasCaller &cublas) {
-
     if constexpr (std::is_same_v<T, cuComplex>) {
         const cuComplex alpha{a.real(), a.imag()};
         cublas.call(cublasCaxpy, dev_id, stream_id, data_size, &alpha, v1, 1,
@@ -167,7 +165,6 @@ template <class CFP_t = std::complex<double>, class T = cuDoubleComplex,
 inline auto scaleC_CUDA(const CFP_t a, T *v1, const int data_size,
                         DevTypeID dev_id, cudaStream_t stream_id,
                         const CublasCaller &cublas) {
-
     cudaDataType_t data_type;
 
     if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
