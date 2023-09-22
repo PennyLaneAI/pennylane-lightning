@@ -242,6 +242,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         @property
         def state(self):
+             # pylint disable=missing-function-docstring
             """Copy the state vector data from the device to the host.
 
             A state vector Numpy array is explicitly allocated on the host to store and return the data.
