@@ -234,6 +234,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 arr = new_arr
             return arr
 
+        # pylint disable=missing-function-docstring
         def reset(self):
             super().reset()
             # init the state vector to |00..0>
