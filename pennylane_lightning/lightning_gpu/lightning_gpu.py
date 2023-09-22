@@ -239,6 +239,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # init the state vector to |00..0>
             self._gpu_state.resetGPU(False)  # Sync reset
 
+        # pylint disable=missing-function-docstring
         @property
         def state(self):
             """Copy the state vector data from the device to the host. A state vector Numpy array is explicitly allocated on the host to store and return the data.
@@ -387,6 +388,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
+        # pylint: disable=missing-function-docstring
         def apply_cq(self, operations):
             """Apply a list of operations to the state tensor.
 
@@ -511,6 +513,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         'the "adjoint" differentiation method'
                     )
 
+        # pylint: disable=missing-function-docstring
         def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
             """Generate an initial state vector for ``_process_jacobian_tape``."""
             if starting_state is not None:
@@ -584,7 +587,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
             return self._adjoint_jacobian_processing(jac_r)
 
-        # pylint: disable=inconsistent-return-statements, line-too-long
+        # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
             """Generate the processing function required to compute the vector-Jacobian products of a tape."""
             if self.shots is not None:
@@ -638,6 +641,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
 
+        # pylint: disable=missing-function-docstring
         def generate_samples(self):
             """Generate samples
 
@@ -649,7 +653,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
-        # pylint: disable=protected-access
+        # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
             if observable.name in [
                 "Projector",
@@ -698,6 +702,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
             return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
 
+        # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
             if self.shots is not None:
                 # estimate the var
