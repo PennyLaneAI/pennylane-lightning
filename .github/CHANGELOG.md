@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
+  [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
+
 * Introduce `timeout-minutes` in various workflows, mainly to avoid Windows builds hanging for several hours.
   [(#503)](https://github.com/PennyLaneAI/pennylane-lightning/pull/503)
 

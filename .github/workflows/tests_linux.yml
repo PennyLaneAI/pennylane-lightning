@@ -1,5 +1,15 @@
 name: Testing (Linux)
 on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
   push:
     branches:
@@ -13,11 +23,12 @@ env:
   OMP_NUM_THREADS: "2"
 
 concurrency:
-  group: tests_linux-${{ github.ref }}
+  group: tests_linux-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   cpptests:
+    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -34,8 +45,6 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
@@ -96,8 +105,16 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
+          fetch-tags: true
           path: main
-          fetch-depth: 2
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -111,6 +128,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
@@ -140,6 +163,7 @@ jobs:
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   cpptestswithOpenBLAS:
+    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -156,8 +180,6 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
@@ -219,8 +241,16 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
+          fetch-tags: true
           path: main
-          fetch-depth: 2
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -234,6 +264,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
@@ -269,6 +305,7 @@ jobs:
       os: ubuntu-22.04
 
   cpptestswithKokkos:
+    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
@@ -288,8 +325,6 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
 
       - name: Restoring cached dependencies
         id: kokkos-cache
@@ -369,8 +404,16 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
+          fetch-tags: true
           path: main
-          fetch-depth: 2
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -397,6 +440,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
         run: |
@@ -490,6 +539,7 @@ jobs:
 
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
+    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
