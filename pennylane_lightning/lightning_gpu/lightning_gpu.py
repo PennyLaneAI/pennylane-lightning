@@ -196,10 +196,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             batch_obs: Union[bool, int] = False,
         ):
             if c_dtype is np.complex64:
-                r_dtype = np.float32
                 self.use_csingle = True
             elif c_dtype is np.complex128:
-                r_dtype = np.float64
                 self.use_csingle = False
             else:
                 raise TypeError(f"Unsupported complex Type: {c_dtype}")
@@ -426,7 +424,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     param = o.parameters
                     method(wires, invert_param, param)
 
-        def apply(self, operations, rotations=None, **kwargs):
+        def apply(self, operations):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -515,7 +513,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 self.apply(tape.operations)
             return self._gpu_state
 
-        def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False, **kwargs):
+        def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -673,7 +671,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             return self.measurements.expval(observable.name, observable_wires)
 
-        def probability_lightning(self, wires=None, shot_range=None, bin_size=None):
+        def probability_lightning(self, wires=None):
             # translate to wire labels used by device
             observable_wires = self.map_wires(wires)
             # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.

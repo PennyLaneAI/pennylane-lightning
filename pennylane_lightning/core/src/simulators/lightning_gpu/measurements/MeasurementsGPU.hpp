@@ -372,7 +372,6 @@ class Measurements final
     auto expval(const std::vector<std::string> &pauli_words,
                 const std::vector<std::vector<std::size_t>> &target_wires,
                 const std::complex<PrecisionT> *coeffs) -> PrecisionT {
-
         uint32_t nIndexBits =
             static_cast<uint32_t>(this->_statevector.getNumQubits());
         cudaDataType_t data_type;
@@ -632,7 +631,6 @@ class Measurements final
     auto expval_(const std::string &obsName, const std::vector<size_t> &wires,
                  const std::vector<PrecisionT> &params = {0.0},
                  const std::vector<CFP_t> &gate_matrix = {}) -> PrecisionT {
-
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
         auto &&local_wires =
             (gate_matrix.empty())
@@ -787,6 +785,5 @@ class Measurements final
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         return static_cast<PrecisionT>(expect.x);
     }
-
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures
