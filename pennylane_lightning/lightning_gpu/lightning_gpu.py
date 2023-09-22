@@ -236,6 +236,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint disable=missing-function-docstring
         def reset(self):
+            """Reset the device"""
             super().reset()
             # init the state vector to |00..0>
             self._gpu_state.resetGPU(False)  # Sync reset
