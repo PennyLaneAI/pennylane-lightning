@@ -56,7 +56,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT; // Parameter's data precision
+    using ParamT = PrecisionT;             // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_sparse_ind = typename std::conditional<

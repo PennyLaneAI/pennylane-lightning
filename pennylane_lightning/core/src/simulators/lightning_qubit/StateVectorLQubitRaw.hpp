@@ -105,8 +105,8 @@ class StateVectorLQubitRaw final
      *
      * @return a std::vector<ComplexT> object that stores statevector data.
      */
-    auto getDataVector() -> std::vector<ComplexT>{
-      return std::vector<ComplexT>{getData(), getData() + getLength()};
+    auto getDataVector() -> std::vector<ComplexT> {
+        return std::vector<ComplexT>{getData(), getData() + getLength()};
     }
 
     /**
