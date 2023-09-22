@@ -42,7 +42,6 @@ jobs:
           nvidia-smi
 
       - name: Clone Kokkos repository
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
           # git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
@@ -55,7 +54,6 @@ jobs:
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
@@ -124,7 +122,6 @@ jobs:
           restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
@@ -183,7 +180,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos", "all"]
+        pl_backend: ["all", "lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.1.00"]
 
@@ -210,7 +207,6 @@ jobs:
           restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
