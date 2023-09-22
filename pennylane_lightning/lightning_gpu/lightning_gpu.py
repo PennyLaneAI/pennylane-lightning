@@ -42,13 +42,13 @@ try:
     from ctypes.util import find_library
     from importlib import util as imp_util
 
-    if find_library("custatevec") == None and not imp_util.find_spec("cuquantum"):
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
         raise ImportError(
             'cuQuantum libraries not found. Please check your "LD_LIBRARY_PATH" environment variable,'
             'or ensure you have installed the appropriate distributable "cuQuantum" package.'
         )
     if not DevPool.getTotalDevices():
-        raise ValueError(f"No supported CUDA-capable device found")
+        raise ValueError("No supported CUDA-capable device found")
     if not is_gpu_supported():
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
@@ -388,6 +388,16 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._create_basis_state(num)
 
         def apply_cq(self, operations):
+            """Apply a list of operations to the state tensor.
+
+            Args:
+                operations (list[~pennylane.operation.Operation]): operations to apply
+                dtype (type): Type of numpy ``complex`` to be used. Can be important
+                to specify for large systems for memory allocation purposes.
+
+            Returns:
+                array[complex]: the output state tensor
+            """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
             skipped_ops = ["Identity"]
@@ -412,7 +422,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         mat = o.matrix
 
                     if len(mat) == 0:
-                        raise Exception("Unsupported operation")
+                        raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
                         name,
                         wires,
@@ -441,8 +451,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             for operation in operations:
                 if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
-                        "Operation {operation.name} cannot be used after other Operations have already been "
-                        "applied on a {self.short_name} device."
+                        f"Operation {operation.name} cannot be used after other "
+                        + f"Operations have already been applied on a {self.short_name} device."
                     )
 
             self.apply_cq(operations)
@@ -465,23 +475,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             # The return_type of measurement processes must be expectation
-            if not all([m.return_type is Expectation for m in measurements]):
+            if any(m.return_type is not Expectation for m in measurements):
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support expectation return type "
                     "mixed with other return types"
                 )
 
-            for m in measurements:
-                if not isinstance(m.obs, Tensor):
-                    if isinstance(m.obs, Projector):
+            for measurement in measurements:
+                if isinstance(measurement.obs, Tensor):
+                    if any(isinstance(o, Projector) for o in measurement.obs.non_identity_obs):
                         raise QuantumFunctionError(
-                            "Adjoint differentiation method does not support the Projector observable"
+                            "Adjoint differentiation method does not support the "
+                            "Projector observable"
                         )
-                else:
-                    if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
-                        raise QuantumFunctionError(
-                            "Adjoint differentiation method does not support the Projector observable"
-                        )
+                elif isinstance(measurement.obs, Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
             return Expectation
 
         @staticmethod
@@ -543,6 +553,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return np.array([], dtype=self.state.dtype)
 
             trainable_params = processed_data["tp_shift"]
+            # pylint: disable=pointless-string-statement
             """
             This path enables controlled batching over the requested observables, be they explicit, or part of a Hamiltonian.
             The traditional path will assume there exists enough free memory to preallocate all arrays and run through each observable iteratively.
@@ -574,7 +585,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long
-        def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
+        def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
             """Generate the processing function required to compute the vector-Jacobian products of a tape."""
             if self.shots is not None:
                 warn(
@@ -585,21 +596,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             tape_return_type = self._check_adjdiff_supported_measurements(measurements)
 
-            if math.allclose(dy, 0) or tape_return_type is None:
-                return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), dy)
+            if math.allclose(grad_vec, 0) or tape_return_type is None:
+                return lambda tape: math.convert_like(
+                    np.zeros(len(tape.trainable_params)), grad_vec
+                )
 
             if tape_return_type is Expectation:
-                if len(dy) != len(measurements):
+                if len(grad_vec) != len(measurements):
                     raise ValueError(
-                        "Number of observables in the tape must be the same as the length of dy in the vjp method"
+                        "Number of observables in the tape must be the same as the length of grad_vec in the vjp method"
                     )
 
-                if np.iscomplexobj(dy):
+                if np.iscomplexobj(grad_vec):
                     raise ValueError(
                         "The vjp method only works with a real-valued grad_vec when the tape is returning an expectation value"
                     )
 
-                ham = qml.Hamiltonian(dy, [m.obs for m in measurements])
+                ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
 
                 # pylint: disable=protected-access
                 def processing_fn(tape):
@@ -684,14 +697,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             local_prob = self.measurements.probs(observable_wires)
             num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
             return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-
-        def generate_samples(self):
-            """Generate samples
-
-            Returns:
-                array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
-            """
-            return self.measurements.generate_samples(len(self.wires), self.shots).astype(int)
 
         def var(self, observable, shot_range=None, bin_size=None):
             if self.shots is not None:
