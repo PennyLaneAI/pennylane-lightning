@@ -38,12 +38,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       - name: Install the pennylane_lightning package
-        if: ${{ matrix.pl_backend == 'lightning_kokkos'}}
-        run: |
-          cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
-        
-        if: ${{ matrix.pl_backend == 'lightning_gpu'}}
+        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
