@@ -415,7 +415,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
 };
 
 /**
- * @brief Sparse representation of HamiltonianGPU<T>
+ * @brief Sparse representation of Hamiltonian<T>
  *
  * @tparam T Floating-point precision.
  */
