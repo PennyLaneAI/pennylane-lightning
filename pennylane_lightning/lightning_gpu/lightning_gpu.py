@@ -245,6 +245,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """Copy the state vector data from the device to the host. A state vector Numpy array is explicitly allocated on the host to store and return the data.
             
             **Example**
+            
             >>> dev = qml.device('lightning.gpu', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> print(dev.state)
