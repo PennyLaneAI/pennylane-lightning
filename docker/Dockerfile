@@ -260,15 +260,18 @@ RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
-FROM base-runtime AS wheel-lightning-kokkos-rocm
-RUN wget --progress=dot:giga ${ROCM_INSTALLER}
+FROM rocm/dev-ubuntu-22.04 AS wheel-lightning-kokkos-rocm
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
-    "linux-headers-$(uname -r)" "linux-modules-extra-$(uname -r)" \
-    ./$(echo ${ROCM_INSTALLER} | xargs -I {} basename {}) \
-    && amdgpu-install -y --accept-eula --usecase=hip --no-dkms \
+    libgomp1 \
+    python3 \
+    python3-pip \
+    python3-venv \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* $(echo ${ROCM_INSTALLER} | xargs -I {} basename {})
+    && rm -rf /var/lib/apt/lists/*
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
