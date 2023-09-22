@@ -1054,7 +1054,7 @@ def test_integration_custom_wires(returns):
     assert np.allclose(j_def, j_lightning)
 
 
-@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
+@pytest.mark.skipif(device_name != "lightning.gpu" and ld._CPP_BINARY_AVAILABLE, reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1104,7 +1104,7 @@ def test_integration_custom_wires_batching(returns):
     assert np.allclose(j_gpu, j_def, atol=1e-7)
 
 
-@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
+@pytest.mark.skipif(device_name != "lightning.gpu" and ld._CPP_BINARY_AVAILABLE, reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1181,7 +1181,7 @@ def create_xyz_file(tmp_path_factory):
     yield file
 
 
-@pytest.mark.skipif(device_name != "lightning.gpu", reason="Tests only for lightning.gpu")
+@pytest.mark.skipif(device_name != "lightning.gpu" and ld._CPP_BINARY_AVAILABLE, reason="Tests only for lightning.gpu")
 @pytest.mark.parametrize(
     "batches",
     [False, True, 1, 2, 3, 4],
