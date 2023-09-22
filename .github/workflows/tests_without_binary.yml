@@ -42,6 +42,11 @@ jobs:
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
+        
+        if: ${{ matrix.pl_backend == 'lightning_gpu'}}
+        run: |
+          cd main
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
 
       - name: Install backend device
         env:
