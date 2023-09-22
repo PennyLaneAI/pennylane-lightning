@@ -99,8 +99,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
-    _name_map = {"PauliX": "X", "PauliY": "Y", "PauliZ": "Z", "Identity": "I"}
-
     allowed_operations = {
         "Identity",
         "BasisState",
@@ -263,10 +261,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self.syncD2H(state)
             return state
 
-        @property
-        def state_vector(self):
-            """Returns a handle to the statevector."""
-            return self._gpu_state
 
         @property
         def create_ops_list(self):
@@ -527,7 +521,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             elif not use_device_state:
                 self.reset()
                 self.apply(tape.operations)
-            return self.state_vector
+            return self._gpu_state
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False, **kwargs):
             if self.shots is not None:
