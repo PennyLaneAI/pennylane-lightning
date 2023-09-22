@@ -10,7 +10,10 @@
 
 ### Breaking changes
 
-* Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.  
+* Introduce `timeout-minutes` in various workflows, mainly to avoid Windows builds hanging for several hours.
+  [(#503)](https://github.com/PennyLaneAI/pennylane-lightning/pull/503)
+
+* Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.
   [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
 
 * Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
@@ -23,6 +26,9 @@
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 ### Improvements
+
+* Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
+  [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
 * Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
