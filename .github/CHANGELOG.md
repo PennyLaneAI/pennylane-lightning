@@ -10,6 +10,9 @@
 * Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 
+* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
+  [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
+
 * Introduce `timeout-minutes` in various workflows, mainly to avoid Windows builds hanging for several hours.
   [(#503)](https://github.com/PennyLaneAI/pennylane-lightning/pull/503)
 
