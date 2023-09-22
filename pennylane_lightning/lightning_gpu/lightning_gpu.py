@@ -43,14 +43,15 @@ try:
     from ctypes.util import find_library
     from importlib import util as imp_util
 
-    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"): # pragma: no cover
         raise ImportError(
             'cuQuantum libraries not found. Please check your "LD_LIBRARY_PATH" environment variable,'
             'or ensure you have installed the appropriate distributable "cuQuantum" package.'
         )
-    if not DevPool.getTotalDevices():
+    if not DevPool.getTotalDevices(): # pragma: no cover
         raise ValueError("No supported CUDA-capable device found")
-    if not is_gpu_supported():
+    
+    if not is_gpu_supported(): # pragma: no cover
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LGPU_CPP_BINARY_AVAILABLE = True
@@ -90,7 +91,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     )
 
     def _gpu_dtype(dtype):
-        if dtype not in [np.complex128, np.complex64]:
+        if dtype not in [np.complex128, np.complex64]: # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
