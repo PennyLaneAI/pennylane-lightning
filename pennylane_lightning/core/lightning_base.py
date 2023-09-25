@@ -33,7 +33,7 @@ from pennylane.operation import Operation
 from pennylane.wires import Wires
 
 
-from ._version import __version__
+from .._version import __version__
 from ._serialize import QuantumScriptSerializer
 
 

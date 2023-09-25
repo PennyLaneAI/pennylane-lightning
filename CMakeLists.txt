@@ -29,7 +29,7 @@ function(set_pennylane_lightning_version VERSION_FILE_PATH)
     set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
 endfunction()
 
-set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/core/_version.py)
+set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/_version.py)
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
