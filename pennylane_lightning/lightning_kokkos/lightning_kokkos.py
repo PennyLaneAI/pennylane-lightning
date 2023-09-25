@@ -65,7 +65,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
     import pennylane as qml
 
-    from pennylane_lightning.core._version import __version__
+    from pennylane_lightning._version import __version__
 
     # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
