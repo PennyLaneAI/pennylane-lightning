@@ -165,7 +165,7 @@ class CMakeBuild(build_ext):
         )
 
 
-with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
+with open(os.path.join("pennylane_lightning", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
