@@ -16,13 +16,13 @@ r"""
 This module contains the :class:`~.LightningGPU` class, a PennyLane simulator device that
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
+
 from warnings import warn
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
-    _chunk_iterable,
 )
 
 try:
@@ -35,24 +35,25 @@ try:
         StateVectorC64,
         MeasurementsC128,
         MeasurementsC64,
-        device_reset,
         is_gpu_supported,
         get_gpu_arch,
         DevPool,
-        DevTag,
     )
 
     from ctypes.util import find_library
     from importlib import util as imp_util
 
-    if find_library("custatevec") == None and not imp_util.find_spec("cuquantum"):
+    if find_library("custatevec") is None and not imp_util.find_spec(
+        "cuquantum"
+    ):  # pragma: no cover
         raise ImportError(
             'cuQuantum libraries not found. Please check your "LD_LIBRARY_PATH" environment variable,'
             'or ensure you have installed the appropriate distributable "cuQuantum" package.'
         )
-    if not DevPool.getTotalDevices():
-        raise ValueError(f"No supported CUDA-capable device found")
-    if not is_gpu_supported():
+    if not DevPool.getTotalDevices():  # pragma: no cover
+        raise ValueError("No supported CUDA-capable device found")
+
+    if not is_gpu_supported():  # pragma: no cover
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LGPU_CPP_BINARY_AVAILABLE = True
@@ -65,26 +66,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
     from itertools import product
 
-    from concurrent.futures import ThreadPoolExecutor
-    import concurrent.futures
-
     from pennylane import (
         math,
         BasisState,
         StatePrep,
         DeviceError,
         Projector,
-        Hermitian,
         Rot,
         QuantumFunctionError,
     )
-    from pennylane.operation import Tensor, Operation
+    from pennylane.operation import Tensor
     from pennylane.ops.op_math import Adjoint
     from pennylane.measurements import Expectation, MeasurementProcess, State
     from pennylane.wires import Wires
 
     import pennylane as qml
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
@@ -95,7 +93,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     )
 
     def _gpu_dtype(dtype):
-        if dtype not in [np.complex128, np.complex64]:
+        if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
@@ -201,12 +199,10 @@ if LGPU_CPP_BINARY_AVAILABLE:
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
-        ):
+        ):  # pylint: disable=unused-argument
             if c_dtype is np.complex64:
-                r_dtype = np.float32
                 self.use_csingle = True
             elif c_dtype is np.complex128:
-                r_dtype = np.float64
                 self.use_csingle = False
             else:
                 raise TypeError(f"Unsupported complex Type: {c_dtype}")
@@ -242,15 +238,22 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 arr = new_arr
             return arr
 
+        # pylint disable=missing-function-docstring
         def reset(self):
+            """Reset the device"""
             super().reset()
             # init the state vector to |00..0>
             self._gpu_state.resetGPU(False)  # Sync reset
 
         @property
         def state(self):
-            """Copy the state vector data from the device to the host. A state vector Numpy array is explicitly allocated on the host to store and return the data.
+            # pylint disable=missing-function-docstring
+            """Copy the state vector data from the device to the host.
+
+            A state vector Numpy array is explicitly allocated on the host to store and return the data.
+
             **Example**
+
             >>> dev = qml.device('lightning.gpu', wires=1)
             >>> dev.apply([qml.PauliX(wires=[0])])
             >>> print(dev.state)
@@ -261,7 +264,10 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self.syncD2H(state)
             return state
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> add_LGPU
         @property
         def create_ops_list(self):
             """Returns create_ops_list function of the matching precision."""
@@ -396,7 +402,18 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
-        def apply_cq(self, operations, **kwargs):
+        # pylint: disable=missing-function-docstring
+        def apply_cq(self, operations):
+            """Apply a list of operations to the state tensor.
+
+            Args:
+                operations (list[~pennylane.operation.Operation]): operations to apply
+                dtype (type): Type of numpy ``complex`` to be used. Can be important
+                to specify for large systems for memory allocation purposes.
+
+            Returns:
+                array[complex]: the output state tensor
+            """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
             skipped_ops = ["Identity"]
@@ -421,7 +438,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         mat = o.matrix
 
                     if len(mat) == 0:
-                        raise Exception("Unsupported operation")
+                        raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
                         name,
                         wires,
@@ -434,6 +451,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     param = o.parameters
                     method(wires, invert_param, param)
 
+        # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
@@ -449,8 +467,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             for operation in operations:
                 if isinstance(operation, (StatePrep, BasisState)):
                     raise DeviceError(
-                        "Operation {} cannot be used after other Operations have already been "
-                        "applied on a {} device.".format(operation.name, self.short_name)
+                        f"Operation {operation.name} cannot be used after other "
+                        + f"Operations have already been applied on a {self.short_name} device."
                     )
 
             self.apply_cq(operations)
@@ -473,23 +491,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             # The return_type of measurement processes must be expectation
-            if not all([m.return_type is Expectation for m in measurements]):
+            if any(m.return_type is not Expectation for m in measurements):
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support expectation return type "
                     "mixed with other return types"
                 )
 
-            for m in measurements:
-                if not isinstance(m.obs, Tensor):
-                    if isinstance(m.obs, Projector):
+            for measurement in measurements:
+                if isinstance(measurement.obs, Tensor):
+                    if any(isinstance(o, Projector) for o in measurement.obs.non_identity_obs):
                         raise QuantumFunctionError(
-                            "Adjoint differentiation method does not support the Projector observable"
+                            "Adjoint differentiation method does not support the "
+                            "Projector observable"
                         )
-                else:
-                    if any([isinstance(o, Projector) for o in m.obs.non_identity_obs]):
-                        raise QuantumFunctionError(
-                            "Adjoint differentiation method does not support the Projector observable"
-                        )
+                elif isinstance(measurement.obs, Projector):
+                    raise QuantumFunctionError(
+                        "Adjoint differentiation method does not support the Projector observable"
+                    )
             return Expectation
 
         @staticmethod
@@ -509,6 +527,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         'the "adjoint" differentiation method'
                     )
 
+        # pylint: disable=missing-function-docstring
         def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
             """Generate an initial state vector for ``_process_jacobian_tape``."""
             if starting_state is not None:
@@ -523,7 +542,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 self.apply(tape.operations)
             return self._gpu_state
 
-        def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False, **kwargs):
+        def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -551,6 +570,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return np.array([], dtype=self.state.dtype)
 
             trainable_params = processed_data["tp_shift"]
+            # pylint: disable=pointless-string-statement
             """
             This path enables controlled batching over the requested observables, be they explicit, or part of a Hamiltonian.
             The traditional path will assume there exists enough free memory to preallocate all arrays and run through each observable iteratively.
@@ -581,7 +601,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
             return self._adjoint_jacobian_processing(jac_r)
 
-        def vjp(self, measurements, dy, starting_state=None, use_device_state=False):
+        # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
+        def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
             """Generate the processing function required to compute the vector-Jacobian products of a tape."""
             if self.shots is not None:
                 warn(
@@ -592,22 +613,25 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             tape_return_type = self._check_adjdiff_supported_measurements(measurements)
 
-            if math.allclose(dy, 0) or tape_return_type is None:
-                return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), dy)
+            if math.allclose(grad_vec, 0) or tape_return_type is None:
+                return lambda tape: math.convert_like(
+                    np.zeros(len(tape.trainable_params)), grad_vec
+                )
 
             if tape_return_type is Expectation:
-                if len(dy) != len(measurements):
+                if len(grad_vec) != len(measurements):
                     raise ValueError(
-                        "Number of observables in the tape must be the same as the length of dy in the vjp method"
+                        "Number of observables in the tape must be the same as the length of grad_vec in the vjp method"
                     )
 
-                if np.iscomplexobj(dy):
+                if np.iscomplexobj(grad_vec):
                     raise ValueError(
                         "The vjp method only works with a real-valued grad_vec when the tape is returning an expectation value"
                     )
 
-                ham = qml.Hamiltonian(dy, [m.obs for m in measurements])
+                ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
 
+                # pylint: disable=protected-access
                 def processing_fn(tape):
                     nonlocal ham
                     num_params = len(tape.trainable_params)
@@ -622,6 +646,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
                 return processing_fn
 
+        # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             if observable.name != "PauliZ":
                 self.apply_cq(observable.diagonalizing_gates())
@@ -630,6 +655,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
 
+        # pylint: disable=missing-function-docstring
         def generate_samples(self):
             """Generate samples
 
@@ -641,6 +667,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
+        # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
             if observable.name in [
                 "Projector",
@@ -681,7 +708,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             return self.measurements.expval(observable.name, observable_wires)
 
-        def probability_lightning(self, wires=None, shot_range=None, bin_size=None):
+        def probability_lightning(self, wires=None):
             # translate to wire labels used by device
             observable_wires = self.map_wires(wires)
             # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
@@ -689,14 +716,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
             return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
 
-        def generate_samples(self):
-            """Generate samples
-
-            Returns:
-                array[int]: array of samples in binary representation with shape ``(dev.shots, dev.num_wires)``
-            """
-            return self.measurements.generate_samples(len(self.wires), self.shots).astype(int)
-
+        # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
             if self.shots is not None:
                 # estimate the var
@@ -729,7 +749,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
 else:  # LGPU_CPP_BINARY_AVAILABLE:
 
-    class LightningGPU(LightningBaseFallBack):
+    class LightningGPU(LightningBaseFallBack):  # pragma: no cover
+        # pylint: disable=missing-class-docstring, too-few-public-methods
         name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK: [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.gpu"
 

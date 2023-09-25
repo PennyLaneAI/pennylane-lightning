@@ -329,6 +329,14 @@ class StateVectorCudaManaged
         }
     }
 
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     */
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false)
         -> PrecisionT {
@@ -337,6 +345,14 @@ class StateVectorCudaManaged
         return generator_map_.at(opName)(wires, adjoint);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
     void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
@@ -347,6 +363,14 @@ class StateVectorCudaManaged
         this->applyOperation_std(opName, wires, adjoint, {}, matrix);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * std vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
@@ -743,7 +767,6 @@ class StateVectorCudaManaged
      */
     inline PrecisionT applyGeneratorCRY(const std::vector<size_t> &wires,
                                         bool adj = false) {
-
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
         applyPauliY(std::vector<size_t>{wires.back()}, adj);

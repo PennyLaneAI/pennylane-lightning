@@ -121,7 +121,6 @@ TEST_CASE("Generators::applyGeneratorPhaseShift_GPU", "[GateGenerators]") {
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
              applied_qubit++) {
-
             auto init_state =
                 createRandomStateVectorData<double>(re, num_qubits);
 
@@ -158,7 +157,6 @@ TEST_CASE("Generators::applyGeneratorIsingXX_GPU", "[GateGenerators]") {
         SECTION("Increasing qubit indices") {
             for (std::size_t applied_qubit = 0; applied_qubit < num_qubits - 1;
                  applied_qubit++) {
-
                 auto init_state =
                     createRandomStateVectorData<double>(re, num_qubits);
 
@@ -1085,7 +1083,6 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
 }
 
 TEST_CASE("Generators::applyGeneratorMultiRZ_GPU", "[GateGenerators]") {
-
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix2{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},

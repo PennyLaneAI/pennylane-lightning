@@ -224,7 +224,6 @@ class AdjointJacobian final
     void batchAdjointJacobian(std::span<PrecisionT> jac,
                               const JacobianData<StateVectorT> &jd,
                               bool apply_operations = false) {
-
         // Create a pool of available GPU devices
         DevicePool<int> dp;
         const auto num_gpus = dp.getTotalDevices();
@@ -371,9 +370,7 @@ class AdjointJacobian final
         SharedCusvHandle cusvhandle = make_shared_cusv_handle();
         SharedCublasCaller cublascaller = make_shared_cublas_caller();
         SharedCusparseHandle cusparsehandle = make_shared_cusparse_handle();
-        // StateVectorT lambda(jd.getPtrStateVec(), jd.getSizeStateVec(),
-        // dt_local,
-        //                     cusvhandle, cublascaller, cusparsehandle);
+
         StateVectorT lambda(ref_data);
 
         // Apply given operations to statevector if requested
