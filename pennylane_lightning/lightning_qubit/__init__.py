@@ -13,5 +13,5 @@
 # limitations under the License.
 """PennyLane lightning_qubit package."""
 
-from pennylane_lightning.core import __version__
+from pennylane_lightning import __version__
 from .lightning_qubit import LightningQubit

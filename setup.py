@@ -164,6 +164,7 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
+
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
@@ -176,7 +177,7 @@ suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 
-pkg_suffix = "" if suffix == "Qubit" else "_"+suffix
+pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
 info = {
     "name": f"PennyLane_Lightning{pkg_suffix}",
@@ -185,10 +186,15 @@ info = {
     "maintainer_email": "software@xanadu.ai",
     "url": "https://github.com/XanaduAI/pennylane-lightning",
     "license": "Apache License 2.0",
-    "packages": find_namespace_packages(include=['pennylane_lightning.core',
-                                                 'pennylane_lightning.'+backend]),
+    "packages": find_namespace_packages(
+        include=[
+            "pennylane_lightning",
+            "pennylane_lightning.core",
+            "pennylane_lightning." + backend,
+        ]
+    ),
     "package_data": {
-        'pennylane_lightning.core': [
+        "pennylane_lightning.core": [
             os.path.join("src", "*"),
             os.path.join("src", "**", "*"),
         ]

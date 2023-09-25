@@ -13,4 +13,4 @@
 # limitations under the License.
 """PennyLane lightning module."""
 
-from pennylane_lightning import __version__
+from ._version import __version__

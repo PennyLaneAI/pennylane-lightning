@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""PennyLane lightning module."""
 
-from pennylane_lightning import __version__
+"""Version information.
+   Version number (major.minor.patch[-label])
+"""
+
+__version__ = "0.32.1"
