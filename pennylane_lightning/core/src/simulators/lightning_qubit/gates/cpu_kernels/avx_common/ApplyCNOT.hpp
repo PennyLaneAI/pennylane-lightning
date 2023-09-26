@@ -39,7 +39,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
     template <size_t control, size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 0;
@@ -58,7 +57,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
                                       [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
             applyInternalInternalPermutation<control, target>();
-
+        #pragma omp parallel for
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, Permutation::permute<perm>(v));
@@ -99,7 +98,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         const size_t max_wire_parity_inv = fillLeadingOnes(rev_wire_max + 1);
 
         constexpr static auto mask = applyInternalExternalMask<control>();
-
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -137,7 +136,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         const size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
 
         constexpr static auto perm = applyExternalInternalPermutation<target>();
-
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -163,7 +162,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
-
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);

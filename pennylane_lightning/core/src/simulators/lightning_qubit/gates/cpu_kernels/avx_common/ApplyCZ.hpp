@@ -39,6 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
             return ((idx >> rev_wire0) & 1U) & ((idx >> rev_wire1) & 1U);
         });
 
+        #pragma omp parallel for
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, v * parity);
@@ -56,7 +57,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
 
         const auto parity =
             internalParity<PrecisionT, packed_size>(min_rev_wire);
-
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -84,6 +85,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
