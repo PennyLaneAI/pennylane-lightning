@@ -646,7 +646,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        /* This is faster than iterate over all indices */
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -700,7 +700,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-
+        #pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
