@@ -618,6 +618,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
         adj.adjointJacobian(std::span{jacobian1}, tape1, psi, true);
         adj.adjointJacobian(std::span{jacobian2}, tape2, psi, true);
 
-        CHECK((jacobian1[0] == Approx(jacobian2[0]).margin(1e-7)));
+        CHECK((jacobian1 == PLApprox(jacobian2).margin(1e-7)));
     }
 }
