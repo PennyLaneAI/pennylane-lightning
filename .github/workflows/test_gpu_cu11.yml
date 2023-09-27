@@ -40,7 +40,7 @@ jobs:
           nvcc --version
           nvidia-smi
 
-  cpptestswithLGPU_cu12:
+  cpptestswithLGPU_cu11:
     needs: [builddeps]
     strategy:
       matrix:
@@ -62,7 +62,7 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning
+      - name: Checkout PennyLane-Lightning-GPU
         uses: actions/checkout@v3
         with:
           path: main
@@ -277,6 +277,44 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+  
+  upload-to-codecov-linux-python:
+    needs: [pythontestswithLGPU]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptestswithLGPU_cu11]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Cleanup
         if: always()
