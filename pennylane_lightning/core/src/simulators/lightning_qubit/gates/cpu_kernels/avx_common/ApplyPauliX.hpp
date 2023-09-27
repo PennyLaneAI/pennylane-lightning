@@ -39,6 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
         constexpr static auto compiled_permutation =
             compilePermutation<PrecisionT>(
                 flip(identity<packed_size>(), rev_wire));
+        LOOP_PRAGMA
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             PrecisionAVXConcept::store(arr + k,
@@ -52,6 +53,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+        LOOP_PRAGMA
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;

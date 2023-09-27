@@ -116,7 +116,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             applyInternalInternalRealFactor<control, target>(angle);
         const auto imag_factor =
             applyInternalInternalImagFactor<control, target>(angle);
-
+        LOOP_PRAGMA
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(
@@ -187,7 +187,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             applyInternalExternalRealFactor<control>(angle);
         const auto imag_factor =
             applyInternalExternalImagFactor<control>(angle);
-
+        LOOP_PRAGMA
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
@@ -251,7 +251,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         }
         const auto real_factor = applyExternalInternalRealFactor<target>(angle);
         const auto imag_factor = applyExternalInternalImagFactor<target>(angle);
-
+        LOOP_PRAGMA
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -294,7 +294,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         const auto imag_factor_p =
             imagFactor<PrecisionT, packed_size>(-std::sin(angle / 2));
         const auto imag_factor_m = -imag_factor_p;
-
+        LOOP_PRAGMA
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
