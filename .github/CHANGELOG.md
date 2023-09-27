@@ -2,10 +2,20 @@
 
 ### New features since last release
 
+* Add `Dockerfile` in `docker` and `make docker` workflow in `Makefile`. The Docker images and documentation are available on [DockerHub](https://hub.docker.com/repository/docker/pennylaneai/pennylane).
+  [(#496)](https://github.com/PennyLaneAI/pennylane-lightning/pull/496)
+
 * Add mid-circuit state preparation operation tests.
   [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
 
 ### Breaking changes
+
+* Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
+  [(#507)](https://github.com/PennyLaneAI/pennylane-lightning/pull/507)
+  [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)
+
+* Introduce `timeout-minutes` in various workflows, mainly to avoid Windows builds hanging for several hours.
+  [(#503)](https://github.com/PennyLaneAI/pennylane-lightning/pull/503)
 
 * Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.
   [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
