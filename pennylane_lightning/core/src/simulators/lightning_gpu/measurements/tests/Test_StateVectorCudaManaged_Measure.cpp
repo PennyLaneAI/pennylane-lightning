@@ -124,7 +124,6 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", double) {
 }
 
 TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
-
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
