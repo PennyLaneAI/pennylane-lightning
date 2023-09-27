@@ -388,6 +388,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
+        for (size_t index = 0; index < num_qubits; index++) {
+            StateVectorCudaManaged<TestType> sv_direct{num_qubits};
+            sv_direct.initSV();
+
+            sv_direct.applyRot({index}, adjoint, angles[index]);
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results[index]));
+        }
     }
     SECTION("Apply using dispatcher") {
         for (size_t index = 0; index < num_qubits; index++) {
@@ -425,14 +433,25 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
 
     SECTION("Apply directly") {
         SECTION("CRot0,1 |000> -> |000>") {
-            StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-            sv_direct.initSV();
+            {
+                StateVectorCudaManaged<TestType> sv_direct{num_qubits};
+                sv_direct.initSV();
 
-            sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
-                                angles[2]);
+                sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
+                                    angles[2]);
 
-            CHECK(sv_direct.getDataVector() ==
-                  Pennylane::Util::approx(init_state));
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(init_state));
+            }
+            {
+                StateVectorCudaManaged<TestType> sv_direct{num_qubits};
+                sv_direct.initSV();
+
+                sv_direct.applyCRot({0, 1}, adjoint, angles);
+
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(init_state));
+            }
         }
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
