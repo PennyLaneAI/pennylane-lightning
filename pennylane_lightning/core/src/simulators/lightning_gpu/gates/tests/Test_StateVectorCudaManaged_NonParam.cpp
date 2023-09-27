@@ -535,6 +535,161 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCY",
+                   "[StateVectorCudaManaged_Nonparam]", float, double) {
+    using cp_t = std::complex<TestType>;
+    const std::size_t num_qubits = 3;
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+    sv.initSV();
+
+    // Test using |+10> state
+    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
+    const auto init_state = sv.getDataVector();
+
+    SECTION("Apply directly") {
+        CHECK(sv.getDataVector() ==
+              Pennylane::Util::approx(
+                  std::vector<cp_t>{cuUtil::ZERO<std::complex<TestType>>(),
+                                    cuUtil::ZERO<std::complex<TestType>>(),
+                                    std::complex<TestType>(1.0 / sqrt(2), 0),
+                                    cuUtil::ZERO<std::complex<TestType>>(),
+                                    cuUtil::ZERO<std::complex<TestType>>(),
+                                    cuUtil::ZERO<std::complex<TestType>>(),
+                                    std::complex<TestType>(1.0 / sqrt(2), 0),
+                                    cuUtil::ZERO<std::complex<TestType>>()}));
+        SECTION("CY0,1") {
+            std::vector<cp_t> expected{cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       std::complex<TestType>(1.0 / sqrt(2), 0),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       std::complex<TestType>(0, -1 / sqrt(2)),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            sv01.applyCY({0, 1}, false);
+
+            CHECK(sv01.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY1,0") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0, -1.0 / sqrt(2)),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0, 1 / sqrt(2)),
+                cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
+            sv10.applyCY({1, 0}, false);
+
+            CHECK(sv10.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY0,2") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0.0, 1.0 / sqrt(2))};
+            StateVectorCudaManaged<TestType> sv02{init_state.data(),
+                                                  init_state.size()};
+            sv02.applyCY({0, 2}, false);
+
+            CHECK(sv02.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY2,0") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv20{init_state.data(),
+                                                  init_state.size()};
+            sv20.applyCY({2, 0}, false);
+
+            CHECK(sv20.getDataVector() == Pennylane::Util::approx(expected));
+        }
+    }
+
+    SECTION("Apply using dispatcher") {
+        SECTION("CY0,1") {
+            std::vector<cp_t> expected{cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       std::complex<TestType>(1.0 / sqrt(2), 0),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       std::complex<TestType>(0, -1 / sqrt(2)),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>(),
+                                       cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv01{init_state.data(),
+                                                  init_state.size()};
+            sv01.applyOperation("CY", {0, 1});
+
+            CHECK(sv01.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY1,0") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0, -1.0 / sqrt(2)),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0, 1 / sqrt(2)),
+                cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv10{init_state.data(),
+                                                  init_state.size()};
+            sv10.applyOperation("CY", {1, 0});
+
+            CHECK(sv10.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY0,2") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(0.0, 1.0 / sqrt(2))};
+            StateVectorCudaManaged<TestType> sv02{init_state.data(),
+                                                  init_state.size()};
+            sv02.applyOperation("CY", {0, 2});
+
+            CHECK(sv02.getDataVector() == Pennylane::Util::approx(expected));
+        }
+        SECTION("CY2,0") {
+            std::vector<cp_t> expected{
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                cuUtil::ZERO<std::complex<TestType>>(),
+                std::complex<TestType>(1.0 / sqrt(2), 0.0),
+                cuUtil::ZERO<std::complex<TestType>>()};
+            StateVectorCudaManaged<TestType> sv20{init_state.data(),
+                                                  init_state.size()};
+            sv20.applyOperation("CY", {2, 0});
+
+            CHECK(sv20.getDataVector() == Pennylane::Util::approx(expected));
+        }
+    }
+}
+
+// NOLINTNEXTLINE: Avoiding complexity errors
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     using cp_t = std::complex<TestType>;
@@ -807,100 +962,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
         }
     }
 }
-/*
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
-                   "[StateVectorCudaManaged_Nonparam]", double) {
-    using cp_t = std::complex<TestType>;
-    const std::size_t num_qubits = 3;
-    SECTION("GetExpectionIdentity") {
-        StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
-        std::vector<size_t> wires{0, 1, 2};
 
-        CHECK(sv.getDataVector()[0] == cp_t{1, 0});
-        sv.applyHadamard({0}, false);
-        sv.applyCNOT({0, 1}, false);
-        sv.applyCNOT({1, 2}, false);
-
-        size_t matrix_dim = static_cast<size_t>(1U) << num_qubits;
-        std::vector<cp_t> matrix(matrix_dim * matrix_dim);
-
-        for (size_t i = 0; i < matrix.size(); i++) {
-            if (i % matrix_dim == i / matrix_dim)
-                matrix[i] = std::complex<TestType>(1, 0);
-            else
-                matrix[i] = std::complex<TestType>(0, 0);
-        }
-
-        auto results = sv.expval(wires, matrix);
-
-        cp_t expected(1, 0);
-        CHECK(expected.real() == Approx(results).epsilon(1e-7));
-    }
-
-    SECTION("GetExpectionRandomMatrix") {
-        using cp_t = std::complex<TestType>;
-        std::vector<cp_t> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
-                                     {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
-                                     {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorCudaManaged<TestType> svdat{init_state.data(),
-init_state.size()}; std::vector<size_t> wires{0, 1, 2}; std::vector<cp_t>
-matrix{ {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2,
-0.5},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}, {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0},  {0.5, 0.0},  {0.2, 0.5}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3,
-0.0}, {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0}};
-
-        auto results = svdat.expval(wires, matrix);
-
-        cp_t expected(1.263000, -1.011000);
-
-        CHECK(expected.real() == Approx(results).epsilon(1e-7));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_cuSparse",
-                   "[StateVectorCudaManaged_Nonparam]", float, double) {
-    using cp_t = std::complex<TestType>;
-
-    SECTION("GetExpectionCuSparse") {
-        std::vector<cp_t> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
-                                     {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
-                                     {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorCudaManaged<TestType> sv{init_state.data(),
-init_state.size()};
-
-        using index_type =
-            typename std::conditional<std::is_same<TestType, float>::value,
-                                      int32_t, int64_t>::type;
-
-        index_type csrOffsets[9] = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-        index_type columns[16] = {0, 3, 1, 2, 1, 2, 0, 3,
-                                  4, 7, 5, 6, 5, 6, 4, 7};
-        std::complex<TestType> values[16] = {
-            {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
-            {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0},
-            {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
-            {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0}};
-        index_type num_csrOffsets = 9;
-        index_type nnz = 16;
-
-        auto results =
-            sv.template getExpectationValueOnSparseSpMV<index_type>(
-                csrOffsets, num_csrOffsets, columns, values, nnz);
-
-        TestType expected = 1;
-
-        CHECK(expected == Approx(results).epsilon(1e-7));
-    }
-}
-*/
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     using PrecisionT = TestType;

@@ -129,7 +129,7 @@ else:
 # General qubit_device fixture, for any number of wires.
 @pytest.fixture(
     scope="function",
-    params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128],
+    params=[np.complex64, np.complex128],
 )
 def qubit_device(request):
     def _device(wires):

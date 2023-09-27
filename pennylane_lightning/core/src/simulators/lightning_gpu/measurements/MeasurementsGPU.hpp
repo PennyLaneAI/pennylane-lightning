@@ -34,6 +34,7 @@
 #include "Observables.hpp"
 #include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
+#include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {

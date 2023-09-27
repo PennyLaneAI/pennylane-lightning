@@ -193,12 +193,6 @@ class StateVectorCudaManaged
                             thread_per_block, stream_id);
     }
 
-    auto getCustatevecHandle() const -> cusparseHandle_t {
-        if (!cusparsehandle_)
-            cusparsehandle_ = make_shared_cusparse_handle();
-        return cusparsehandle_.get();
-    }
-
     /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
@@ -953,6 +947,8 @@ class StateVectorCudaManaged
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
 
     const FMap par_gates_{
+        // LCOV_EXCL_START
+        // Calculation passed to applyParametricPauliGate
         {"RX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRX(std::forward<decltype(wires)>(wires),
@@ -971,6 +967,7 @@ class StateVectorCudaManaged
                      std::forward<decltype(adjoint)>(adjoint),
                      std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_STOP
         {"PhaseShift",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyPhaseShift(std::forward<decltype(wires)>(wires),
@@ -1007,6 +1004,8 @@ class StateVectorCudaManaged
                           std::forward<decltype(adjoint)>(adjoint),
                           std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_START
+        // Calculation passed to applyParametricPauliGate
         {"CRX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRX(std::forward<decltype(wires)>(wires),
@@ -1025,6 +1024,7 @@ class StateVectorCudaManaged
                       std::forward<decltype(adjoint)>(adjoint),
                       std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_STOP
         {"SingleExcitation",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applySingleExcitation(

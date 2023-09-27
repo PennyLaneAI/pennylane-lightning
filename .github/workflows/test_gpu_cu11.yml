@@ -34,13 +34,13 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/11.8
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-  cpptestswithLGPU_cu12:
+  cpptestswithLGPU_cu11:
     needs: [builddeps]
     strategy:
       matrix:
@@ -56,13 +56,13 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/11.8
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning
+      - name: Checkout PennyLane-Lightning-GPU
         uses: actions/checkout@v3
         with:
           path: main
@@ -159,7 +159,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/11.8
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
@@ -230,7 +230,7 @@ jobs:
           CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install -e . -vv
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         env: 
           OMP_NUM_THREADS: 1
@@ -241,7 +241,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -277,6 +277,44 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+  
+  upload-to-codecov-linux-python:
+    needs: [pythontestswithLGPU]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptestswithLGPU_cu11]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Cleanup
         if: always()

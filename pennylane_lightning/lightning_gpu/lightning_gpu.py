@@ -341,24 +341,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             # translate to wire labels used by device
             device_wires = self.map_wires(device_wires)
-            dim = 2 ** len(device_wires)
 
             state = self._asarray(state, dtype=self.C_DTYPE)  # this operation on host
-            batch_size = self._get_batch_size(state, (dim,), dim)  # this operation on host
             output_shape = [2] * self._num_local_wires
-
-            if batch_size is not None:
-                output_shape.insert(0, batch_size)
 
             if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
                 # Initialize the entire device state with the input state
                 if self.num_wires == self._num_local_wires:
                     self.syncH2D(self._reshape(state, output_shape))
                     return
-                local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
-                # Initialize the entire device state with the input state
-                self.syncH2D(self._reshape(local_state, output_shape))
-                return
 
             # generate basis states on subset of qubits via the cartesian product
             basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))

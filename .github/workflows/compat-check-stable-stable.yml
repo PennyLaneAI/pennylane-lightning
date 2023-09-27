@@ -1,0 +1,20 @@
+name: Compat Check w/PL - stable/stable
+
+on:
+  schedule:
+    - cron: "0 3 * * 1-5"  # Run daily at 3am Mon-Fri
+  workflow_dispatch:
+
+jobs:
+  tests_linux:
+    name: Lightning-Kokkos Compatibility test (tests_linux) - stable/stable
+    uses: ./.github/workflows/tests_linux.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+  tests_without_binary:
+    name: Lightning-Kokkos Compatibility test (tests_without_binary) - stable/stable
+    uses: ./.github/workflows/tests_without_binary.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable

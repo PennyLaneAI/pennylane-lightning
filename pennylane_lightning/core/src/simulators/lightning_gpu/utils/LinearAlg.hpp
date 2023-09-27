@@ -466,7 +466,7 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
 
     // CUSPARSE APIs
     cusparseSpMatDescr_t mat;
-    cusparseConstDnVecDescr_t vecX;
+    cusparseDnVecDescr_t vecX;
     cusparseDnVecDescr_t vecY;
 
     size_t bufferSize = 0;
@@ -486,10 +486,10 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
         /* cudaDataType */ data_type));
 
     // Create dense vector X
-    PL_CUSPARSE_IS_SUCCESS(cusparseCreateConstDnVec(
+    PL_CUSPARSE_IS_SUCCESS(cusparseCreateDnVec(
         /* cusparseDnVecDescr_t* */ &vecX,
         /* int64_t */ num_cols,
-        /* const void* */ X,
+        /* void* */ const_cast<void *>(static_cast<const void *>(X)),
         /* cudaDataType */ data_type));
 
     // Create dense vector y

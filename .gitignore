@@ -32,12 +32,4 @@ cpptests
 /pennylane_lightning/*.pyd
 /pennylane_lightning/src/Kokkos/
 /pennylane_lightning/src/GBenchmarks/
-
-
-*sh
-/PennyLane_Lightning_GPU*
-/pennylane_lightning/core/src/simulators/lightning_gpu/MPIWorker.hpp
-/pennylane_lightning/core/src/simulators/lightning_gpu/utils/MPIManager.hpp
-/pennylane_lightning/core/src/simulators/lightning_gpu/utils/CSRMatrix.hpp
-/pennylane_lightning/core/src/simulators/lightning_gpu/*MPI.cpp
-/pennylane_lightning/core/src/simulators/lightning_gpu/*MPI.hpp
+/PennyLane_Lightning*
