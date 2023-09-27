@@ -124,6 +124,24 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
         REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
                             Catch::Contains("must be larger than 0"));
     }
+
+    SECTION("Test a matrix represent PauliX") {
+        std::vector<ComplexT> m = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+        const size_t num_qubits = 4;
+        VectorT st_data =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
+                                  st_data.size());
+        StateVectorT state_vector_ref(
+            reinterpret_cast<ComplexT *>(st_data.data()), st_data.size());
+        state_vector.applyMatrix(m.data(), {1});
+        state_vector_ref.applyPauliX({1}, false);
+
+        CHECK(state_vector.getDataVector() ==
+              Pennylane::Util::approx(state_vector_ref.getDataVector()));
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",

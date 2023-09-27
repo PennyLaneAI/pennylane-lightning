@@ -532,6 +532,61 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("LightningGPU::applyIsingXY", "[LightningGPU_Param]", float,
+                   double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+
+    std::vector<ComplexT> ini_st{
+        ComplexT{0.267462841882, 0.010768564798},
+        ComplexT{0.228575129706, 0.010564590956},
+        ComplexT{0.099492749900, 0.260849823392},
+        ComplexT{0.093690204310, 0.189847108173},
+        ComplexT{0.033390732374, 0.203836830144},
+        ComplexT{0.226979395737, 0.081852150975},
+        ComplexT{0.031235505729, 0.176933497281},
+        ComplexT{0.294287602843, 0.145156781198},
+        ComplexT{0.152742706049, 0.111628061129},
+        ComplexT{0.012553863703, 0.120027860480},
+        ComplexT{0.237156555364, 0.154658769755},
+        ComplexT{0.117001120872, 0.228059505033},
+        ComplexT{0.041495873225, 0.065934827444},
+        ComplexT{0.089653239407, 0.221581340372},
+        ComplexT{0.217892322429, 0.291261296999},
+        ComplexT{0.292993251871, 0.186570798697},
+    };
+
+    std::vector<ComplexT> expected{
+        ComplexT{0.267462849617, 0.010768564418},
+        ComplexT{0.228575125337, 0.010564590804},
+        ComplexT{0.099492751062, 0.260849833488},
+        ComplexT{0.093690201640, 0.189847111702},
+        ComplexT{0.015641822883, 0.225092900621},
+        ComplexT{0.205574608177, 0.082808663337},
+        ComplexT{0.006827173322, 0.211631480575},
+        ComplexT{0.255280800811, 0.161572331669},
+        ComplexT{0.119218164572, 0.115460377284},
+        ComplexT{-0.000315789761, 0.153835664378},
+        ComplexT{0.206786872079, 0.157633689097},
+        ComplexT{0.093027614553, 0.271012980118},
+        ComplexT{0.041495874524, 0.065934829414},
+        ComplexT{0.089653238654, 0.221581339836},
+        ComplexT{0.217892318964, 0.291261285543},
+        ComplexT{0.292993247509, 0.186570793390},
+    };
+
+    SECTION("Apply directly") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+        sv.applyIsingXY({0, 1}, false, {0.312});
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+
+    SECTION("Apply using dispatcher") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+        sv.applyOperation("IsingXY", {0, 1}, false, {0.312});
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+}
+
 TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
@@ -698,6 +753,183 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results_adj[index]));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("LightningGPU::applyCRX", "[LightningGPU_Param]", float,
+                   double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+
+    std::vector<ComplexT> ini_st{
+        ComplexT{0.188018120185, 0.267344585187},
+        ComplexT{0.172684792903, 0.187465336044},
+        ComplexT{0.218892658302, 0.241508557821},
+        ComplexT{0.107094509452, 0.233123916768},
+        ComplexT{0.144398681914, 0.102112687699},
+        ComplexT{0.266641428689, 0.096286886834},
+        ComplexT{0.037126289559, 0.047222166486},
+        ComplexT{0.136865047634, 0.203178369592},
+        ComplexT{0.001562711889, 0.224933454573},
+        ComplexT{0.009933412610, 0.080866505038},
+        ComplexT{0.000948295069, 0.280652963863},
+        ComplexT{0.109817299553, 0.150776413412},
+        ComplexT{0.297480913626, 0.232588348025},
+        ComplexT{0.247386444054, 0.077608200535},
+        ComplexT{0.192650977126, 0.054764192471},
+        ComplexT{0.033093927690, 0.243038790593},
+    };
+
+    std::vector<ComplexT> expected{
+        ComplexT{0.188018120185, 0.267344585187},
+        ComplexT{0.172684792903, 0.187465336044},
+        ComplexT{0.218892658302, 0.241508557821},
+        ComplexT{0.107094509452, 0.233123916768},
+        ComplexT{0.144398681914, 0.102112687699},
+        ComplexT{0.266641428689, 0.096286886834},
+        ComplexT{0.037126289559, 0.047222166486},
+        ComplexT{0.136865047634, 0.203178369592},
+        ComplexT{0.037680529583, 0.175982985869},
+        ComplexT{0.021870621269, 0.041448569986},
+        ComplexT{0.009445384485, 0.247313095111},
+        ComplexT{0.146244209335, 0.143803745197},
+        ComplexT{0.328815969263, 0.229521152393},
+        ComplexT{0.256946415396, 0.075122442730},
+        ComplexT{0.233916049255, 0.053951837341},
+        ComplexT{0.056117891609, 0.223025389250},
+    };
+
+    SECTION("Apply directly") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyCRX({0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+
+    SECTION("Apply using dispatcher") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyOperation("CRX", {0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+}
+
+TEMPLATE_TEST_CASE("LightningGPU::applyCRY", "[LightningGPU_Param]", float,
+                   double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+
+    std::vector<ComplexT> ini_st{
+        ComplexT{0.024509081663, 0.005606762650},
+        ComplexT{0.261792037054, 0.259257414596},
+        ComplexT{0.168380715455, 0.096012484887},
+        ComplexT{0.169761107379, 0.042890935442},
+        ComplexT{0.012169527484, 0.082631086139},
+        ComplexT{0.155790166500, 0.292998574950},
+        ComplexT{0.150529463310, 0.282021216715},
+        ComplexT{0.097100202708, 0.134938013786},
+        ComplexT{0.062640753523, 0.251735121160},
+        ComplexT{0.121654204141, 0.116964600258},
+        ComplexT{0.152865184550, 0.084800955456},
+        ComplexT{0.300145205424, 0.101098965771},
+        ComplexT{0.288274703880, 0.038180155037},
+        ComplexT{0.041378441702, 0.206525491532},
+        ComplexT{0.033201995261, 0.096777018650},
+        ComplexT{0.303210250465, 0.300817738868},
+    };
+
+    std::vector<ComplexT> expected{
+        ComplexT{0.024509081663, 0.005606762650},
+        ComplexT{0.261792037054, 0.259257414596},
+        ComplexT{0.168380715455, 0.096012484887},
+        ComplexT{0.169761107379, 0.042890935442},
+        ComplexT{0.012169527484, 0.082631086139},
+        ComplexT{0.155790166500, 0.292998574950},
+        ComplexT{0.150529463310, 0.282021216715},
+        ComplexT{0.097100202708, 0.134938013786},
+        ComplexT{0.017091411508, 0.242746239557},
+        ComplexT{0.113748028260, 0.083456799483},
+        ComplexT{0.145850361424, 0.068735133269},
+        ComplexT{0.249391258812, 0.053133825802},
+        ComplexT{0.294506455875, 0.076828111036},
+        ComplexT{0.059777143539, 0.222190141515},
+        ComplexT{0.056549175144, 0.108777179774},
+        ComplexT{0.346161234622, 0.312872353290},
+    };
+
+    SECTION("Apply directly") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyCRY({0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+
+    SECTION("Apply using dispatcher") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyOperation("CRY", {0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+}
+
+TEMPLATE_TEST_CASE("LightningGPU::applyCRZ", "[LightningGPU_Param]", float,
+                   double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+
+    std::vector<ComplexT> ini_st{
+        ComplexT{0.264968228755, 0.059389110312},
+        ComplexT{0.004927738580, 0.117198819444},
+        ComplexT{0.192517901751, 0.061524928233},
+        ComplexT{0.285160768924, 0.013212111581},
+        ComplexT{0.278645646186, 0.212116779981},
+        ComplexT{0.171786665640, 0.141260537212},
+        ComplexT{0.199480649113, 0.218261452113},
+        ComplexT{0.071007710848, 0.294720535623},
+        ComplexT{0.169589173252, 0.010528306669},
+        ComplexT{0.061973371011, 0.033143783035},
+        ComplexT{0.177570977662, 0.116785656786},
+        ComplexT{0.070266502325, 0.084338553411},
+        ComplexT{0.053744021753, 0.146932844792},
+        ComplexT{0.254428637803, 0.138916780809},
+        ComplexT{0.260354050166, 0.267004004472},
+        ComplexT{0.008910554792, 0.316282675508},
+    };
+
+    std::vector<ComplexT> expected{
+        ComplexT{0.264968228755, 0.059389110312},
+        ComplexT{0.004927738580, 0.117198819444},
+        ComplexT{0.192517901751, 0.061524928233},
+        ComplexT{0.285160768924, 0.013212111581},
+        ComplexT{0.278645646186, 0.212116779981},
+        ComplexT{0.171786665640, 0.141260537212},
+        ComplexT{0.199480649113, 0.218261452113},
+        ComplexT{0.071007710848, 0.294720535623},
+        ComplexT{0.169165556003, -0.015948278519},
+        ComplexT{0.066370291483, 0.023112625918},
+        ComplexT{0.193559430151, 0.087778634862},
+        ComplexT{0.082516747253, 0.072397233118},
+        ComplexT{0.030262722499, 0.153498691785},
+        ComplexT{0.229755796458, 0.176759943762},
+        ComplexT{0.215708594452, 0.304212379961},
+        ComplexT{-0.040337866447, 0.313826361773},
+    };
+
+    SECTION("Apply directly") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyCRZ({0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
+    }
+
+    SECTION("Apply using dispatcher") {
+        StateVectorCudaManaged<TestType> sv(ini_st.data(), ini_st.size());
+
+        sv.applyOperation("CRZ", {0, 1}, false, {0.312});
+
+        CHECK(sv.getDataVector() == Pennylane::Util::approx(expected));
     }
 }
 
