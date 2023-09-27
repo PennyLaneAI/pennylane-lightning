@@ -193,12 +193,6 @@ class StateVectorCudaManaged
                             thread_per_block, stream_id);
     }
 
-    auto getCustatevecHandle() const -> cusparseHandle_t {
-        if (!cusparsehandle_)
-            cusparsehandle_ = make_shared_cusparse_handle();
-        return cusparsehandle_.get();
-    }
-
     /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached

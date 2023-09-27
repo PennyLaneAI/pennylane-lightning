@@ -109,6 +109,34 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", double) {
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
+    SECTION("Catch failures caused by unsupported named gates") {
+        std::string obs = "paulix";
+        PL_CHECK_THROWS_MATCHES(Measurer.expval(obs, {0}), LightningException,
+                                "Currently unsupported observable: paulix");
+    }
+
+    SECTION("Catch failures caused by unsupported empty matrix gate") {
+        std::vector<ComplexT> gate_matrix = {};
+        PL_CHECK_THROWS_MATCHES(Measurer.expval(gate_matrix, {0}),
+                                LightningException,
+                                "Currently unsupported observable");
+    }
+}
+
+TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
+
+    using StateVectorT = StateVectorCudaManaged<TestType>;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    // Defining the statevector that will be measured.
+    auto statevector_data = createNonTrivialState<StateVectorT>();
+    StateVectorT statevector(statevector_data.data(), statevector_data.size());
+
+    // Initializing the Measurements class.
+    // This object attaches to the statevector allowing several measures.
+    Measurements<StateVectorT> Measurer(statevector);
+
     SECTION("Testing for Pauli words:") {
         PrecisionT exp_values;
         std::vector<PrecisionT> exp_values_ref;

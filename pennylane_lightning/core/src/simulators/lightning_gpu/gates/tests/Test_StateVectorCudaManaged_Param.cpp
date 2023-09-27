@@ -38,6 +38,19 @@ using namespace Pennylane::LightningGPU;
 } // namespace
 /// @endcond
 
+TEMPLATE_TEST_CASE("LightningGPU:applyOperation", "[LightningGPU_Param]",
+                   double) {
+    const size_t num_qubits = 1;
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+    sv.initSV();
+
+    SECTION("Catch failures caused by unsupported named gates") {
+        std::string obs = "paulix";
+        PL_CHECK_THROWS_MATCHES(sv.applyOperation(obs, {0}), LightningException,
+                                "Currently unsupported gate: paulix");
+    }
+}
+
 TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 1;
@@ -340,6 +353,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
 
 TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
                    double) {
+    const bool adjoint = GENERATE(true, false);
+
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
 
@@ -354,8 +369,11 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
         std::vector<cp_t>(0b1 << num_qubits)};
 
     for (size_t i = 0; i < angles.size(); i++) {
-        const auto rot_mat = Gates::getRot<std::complex, TestType>(
-            angles[i][0], angles[i][1], angles[i][2]);
+        const auto rot_mat =
+            (adjoint) ? Gates::getRot<std::complex, TestType>(
+                            -angles[i][0], -angles[i][1], -angles[i][2])
+                      : Gates::getRot<std::complex, TestType>(
+                            angles[i][0], angles[i][1], angles[i][2]);
         expected_results[i][0] = rot_mat[0];
         expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
     }
@@ -365,7 +383,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
             sv_direct.initSV();
 
-            sv_direct.applyRot({index}, false, angles[index][0],
+            sv_direct.applyRot({index}, adjoint, angles[index][0],
                                angles[index][1], angles[index][2]);
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
@@ -376,7 +394,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
             sv_dispatch.initSV();
 
-            sv_dispatch.applyOperation("Rot", {index}, false, angles[index]);
+            sv_dispatch.applyOperation("Rot", {index}, adjoint, angles[index]);
             CHECK(sv_dispatch.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
@@ -385,6 +403,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
 
 TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
                    double) {
+    const bool adjoint = GENERATE(true, false);
+
     using cp_t = std::complex<TestType>;
     const size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
@@ -393,8 +413,11 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
     std::vector<cp_t> expected_results(8);
-    const auto rot_mat =
-        Gates::getRot<std::complex, TestType>(angles[0], angles[1], angles[2]);
+    const auto rot_mat = (adjoint) ? Gates::getRot<std::complex, TestType>(
+                                         -angles[0], -angles[1], -angles[2])
+                                   : Gates::getRot<std::complex, TestType>(
+                                         angles[0], angles[1], angles[2]);
+
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
@@ -405,7 +428,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
             sv_direct.initSV();
 
-            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1], angles[2]);
+            sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
+                                angles[2]);
 
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(init_state));
@@ -415,7 +439,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
             sv_direct.initSV();
 
             sv_direct.applyOperation("PauliX", {0});
-            sv_direct.applyCRot({0, 1}, false, angles[0], angles[1], angles[2]);
+            sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
+                                angles[2]);
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
@@ -426,7 +451,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
             sv_direct.initSV();
 
             sv_direct.applyOperation("PauliX", {0});
-            sv_direct.applyOperation("CRot", {0, 1}, false, angles);
+            sv_direct.applyOperation("CRot", {0, 1}, adjoint, angles);
 
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
