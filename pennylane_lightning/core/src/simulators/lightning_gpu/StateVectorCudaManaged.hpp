@@ -948,6 +948,7 @@ class StateVectorCudaManaged
 
     const FMap par_gates_{
         // LCOV_EXCL_START
+        // Calculation passed to applyParametricPauliGate
         {"RX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRX(std::forward<decltype(wires)>(wires),
@@ -966,7 +967,7 @@ class StateVectorCudaManaged
                      std::forward<decltype(adjoint)>(adjoint),
                      std::forward<decltype(params[0])>(params[0]));
          }},
-         // LCOV_EXCL_STOP
+        // LCOV_EXCL_STOP
         {"PhaseShift",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyPhaseShift(std::forward<decltype(wires)>(wires),
@@ -1004,6 +1005,7 @@ class StateVectorCudaManaged
                           std::forward<decltype(params[0])>(params[0]));
          }},
         // LCOV_EXCL_START
+        // Calculation passed to applyParametricPauliGate
         {"CRX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRX(std::forward<decltype(wires)>(wires),
@@ -1022,7 +1024,7 @@ class StateVectorCudaManaged
                       std::forward<decltype(adjoint)>(adjoint),
                       std::forward<decltype(params[0])>(params[0]));
          }},
-        // LCOV_EXCL_STOP 
+        // LCOV_EXCL_STOP
         {"SingleExcitation",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applySingleExcitation(
