@@ -30,7 +30,7 @@
 
 #include "Error.hpp"
 #include "Util.hpp"
-
+// LCOV_EXCL_START
 namespace {
 using namespace Pennylane::Util;
 }
@@ -188,3 +188,4 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
     return result;
 }
 } // namespace Pennylane::LightningGPU::Util
+  // LCOV_EXCL_STOP

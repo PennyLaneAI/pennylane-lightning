@@ -27,6 +27,7 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane;
 using namespace Pennylane::LightningGPU::Measures;
 using Pennylane::Util::createNonTrivialState;
 }; // namespace
@@ -106,6 +107,45 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", double) {
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing for Pauli words:") {
+        PrecisionT exp_values;
+        std::vector<PrecisionT> exp_values_ref;
+        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::string> operations_list;
+        std::vector<std::complex<PrecisionT>> coeffs = {
+            ComplexT{0.1, 0.0}, ComplexT{0.2, 0.0}, ComplexT{0.3, 0.0}};
+
+        operations_list = {"X", "X", "X"};
+        exp_values =
+            Measurer.expval(operations_list, wires_list, coeffs.data());
+        exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
+        PrecisionT expected_values = 0;
+        for (size_t i = 0; i < coeffs.size(); i++) {
+            expected_values += exp_values_ref[i] * (coeffs[i].real());
+        }
+        CHECK(exp_values == Approx(expected_values).margin(1e-7));
+
+        operations_list = {"Y", "Y", "Y"};
+        exp_values =
+            Measurer.expval(operations_list, wires_list, coeffs.data());
+        exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
+        expected_values = 0;
+        for (size_t i = 0; i < coeffs.size(); i++) {
+            expected_values += exp_values_ref[i] * (coeffs[i].real());
+        }
+        CHECK(exp_values == Approx(expected_values).margin(1e-7));
+
+        operations_list = {"Z", "Z", "Z"};
+        exp_values =
+            Measurer.expval(operations_list, wires_list, coeffs.data());
+        exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
+        expected_values = 0;
+        for (size_t i = 0; i < coeffs.size(); i++) {
+            expected_values += exp_values_ref[i] * (coeffs[i].real());
+        }
+        CHECK(exp_values == Approx(expected_values).margin(1e-7));
     }
 }
 
