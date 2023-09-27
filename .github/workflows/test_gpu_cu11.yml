@@ -230,7 +230,7 @@ jobs:
           CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install -e . -vv
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         env: 
           OMP_NUM_THREADS: 1
@@ -241,7 +241,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
