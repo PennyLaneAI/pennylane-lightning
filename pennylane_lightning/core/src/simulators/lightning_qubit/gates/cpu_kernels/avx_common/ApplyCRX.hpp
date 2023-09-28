@@ -64,7 +64,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     template <size_t control, size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 1;
@@ -85,7 +85,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
 
-        // positions are after permutations
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 arr[2 * k + 0] = std::sin(angle / 2);
@@ -105,8 +105,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     template <size_t control, size_t target, class ParamT>
     static auto applyInternalInternalDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
-
-        // positions are after permutations
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 arr[2 * k + 0] = std::cos(angle / 2);
@@ -134,7 +133,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
             applyInternalInternalOffDiagFactor<control, target>(angle);
         const auto diag_factor =
             applyInternalInternalDiagFactor<control, target>(angle);
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto diag_w = diag_factor * v;
@@ -150,7 +149,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     template <size_t control, typename ParamT>
     static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
-
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
@@ -170,7 +169,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     template <size_t control, typename ParamT>
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
-
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
@@ -212,7 +211,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
@@ -238,7 +237,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         std::array<uint8_t, packed_size> arr{};
 
         uint8_t s = (uint8_t{1U} << target);
-
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             arr[2 * k + 0] = 2 * (k ^ s) + 1;
             arr[2 * k + 1] = 2 * (k ^ s) + 0;
@@ -266,7 +265,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
         const auto offdiag_factor =
             imagFactor<PrecisionT, packed_size>(-std::sin(angle / 2));
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -308,7 +307,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);

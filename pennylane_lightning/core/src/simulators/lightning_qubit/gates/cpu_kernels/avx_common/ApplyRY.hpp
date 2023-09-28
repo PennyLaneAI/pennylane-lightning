@@ -48,7 +48,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRY {
 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), rev_wire));
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto w_diag = diag_real * v;
@@ -73,7 +73,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRY {
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
         const auto p_sin_factor = set1<PrecisionT, packed_size>(sin);
         const auto m_sin_factor = set1<PrecisionT, packed_size>(-sin);
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;

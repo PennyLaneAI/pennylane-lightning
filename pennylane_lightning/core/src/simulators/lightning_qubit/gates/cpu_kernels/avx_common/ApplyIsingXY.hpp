@@ -39,6 +39,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         };
 
         size_t m = (1U << rev_wire0) | (1U << rev_wire1);
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                 perm[2 * k + 0] = 2 * k + 0;
@@ -62,6 +63,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             std::array<PrecisionT, packed_size> arr = {
                 0.0,
             };
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                     // 00 or 11
@@ -79,6 +81,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             std::array<PrecisionT, packed_size> arr = {
                 0.0,
             };
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                     // 00 or 11
@@ -95,7 +98,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         constexpr static auto perm =
             permutationInternalInternal<rev_wire0, rev_wire1>();
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
 
@@ -111,7 +114,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         std::array<uint8_t, packed_size> perm{};
 
         size_t m = 1U << min_rev_wire;
-
+        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             // swap 01 and 10 and apply imaginary
             perm[2 * k + 0] = 2 * (k ^ m) + 1;
@@ -136,6 +139,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
             std::array<PrecisionT, packed_size> arr = {
                 0.0,
             };
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = 1.0;
@@ -150,6 +154,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         const auto real_factor1 = [angle]() {
             std::array<PrecisionT, packed_size> arr{};
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = std::cos(angle / 2);
@@ -164,6 +169,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         const auto imag_factor0 = [isin]() {
             std::array<PrecisionT, packed_size> arr{};
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = 0.0;
@@ -178,6 +184,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         const auto imag_factor1 = [isin]() {
             std::array<PrecisionT, packed_size> arr = {};
+            PL_LOOP_SIMD
             for (size_t k = 0; k < packed_size / 2; k++) {
                 if (((k >> min_rev_wire) & 1U) == 0) {
                     arr[2 * k + 0] = -isin;
@@ -192,7 +199,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         constexpr static auto perm =
             permutationInternalExternal<min_rev_wire>();
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -240,7 +247,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
 
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-        LOOP_PARALLEL
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
