@@ -95,7 +95,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
 
         const auto cos_factor = applyInternalRealFactor(rev_wire);
         const auto isin_factor = applyInternalImagFactor(rev_wire, inverse);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             const auto w =
@@ -118,7 +118,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
             imagFactor<PrecisionT, packed_size>(isqrt2);
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;

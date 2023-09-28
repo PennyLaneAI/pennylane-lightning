@@ -88,7 +88,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
             applyInternalInternalPermuation<control, target>();
         constexpr static auto factor =
             applyInternalInternalFactor<control, target>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n,
@@ -197,7 +197,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
             applyInternalExternalSign_target0<control>();
         constexpr static auto sign1 =
             applyInternalExternalSign_target1<control>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
@@ -247,7 +247,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(flip(identity<packed_size>(), target)));
         constexpr static auto factor = applyExternalInternalSign<target>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -278,7 +278,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
         constexpr static auto factor = imagFactor<PrecisionT, packed_size>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);

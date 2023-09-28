@@ -59,7 +59,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
         using namespace Permutation;
         constexpr static auto perm =
             applyInternalInternalPermutation<rev_wire0, rev_wire1>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, permute<perm>(v));
@@ -115,7 +115,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
         constexpr static auto compiled_mask1 = createMask1<min_rev_wire>();
         constexpr static auto compiled_perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), min_rev_wire));
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
@@ -147,7 +147,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
         const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
         const size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);

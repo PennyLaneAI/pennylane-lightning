@@ -53,7 +53,7 @@ struct ApplyGeneratorPhaseShift {
                               const size_t num_qubits,
                               [[maybe_unused]] bool inverse) -> PrecisionT {
         constexpr auto factor = factorInternal<rev_wire>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             PrecisionAVXConcept::store(arr + k, factor * v);
@@ -69,7 +69,7 @@ struct ApplyGeneratorPhaseShift {
 
         constexpr auto zero =
             typename PrecisionAVXConcept::IntrinsicType{PrecisionT{0.0}};
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             PrecisionAVXConcept::store(arr + i0, zero);

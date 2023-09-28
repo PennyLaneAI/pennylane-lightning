@@ -216,7 +216,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
         if (inverse) {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
                 const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
                 const size_t i1 = i0 | rev_wire_shift;
@@ -230,7 +230,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                               v1; // NOLINT(readability-magic-numbers)
             }
         } else {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
                 const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
                 const size_t i1 = i0 | rev_wire_shift;
@@ -270,7 +270,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             revWireParity(rev_wire0, rev_wire1);
 
         if (inverse) {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
                 const size_t i00 = ((k << 2U) & parity_high) |
                                    ((k << 1U) & parity_middle) |
@@ -304,7 +304,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 // NOLINTEND(readability-magic-numbers)
             }
         } else {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
                 const size_t i00 = ((k << 2U) & parity_high) |
                                    ((k << 1U) & parity_middle) |
@@ -345,7 +345,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
 
         if (inverse) {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
@@ -370,7 +370,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         } else {
-            LOOP_PRAGMA
+            LOOP_PARALLEL
             for (size_t k = 0; k < exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
@@ -419,7 +419,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -438,7 +438,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -459,7 +459,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -478,7 +478,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -501,7 +501,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::complex<PrecisionT> shift =
             (inverse) ? -Pennylane::Util::IMAG<PrecisionT>()
                       : Pennylane::Util::IMAG<PrecisionT>();
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -522,7 +522,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const std::complex<PrecisionT> shift = {isqrt2,
                                                 inverse ? -isqrt2 : isqrt2};
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -544,7 +544,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
                     : std::exp(std::complex<PrecisionT>(0, angle));
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -564,7 +564,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -590,7 +590,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -621,7 +621,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -660,7 +660,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -686,7 +686,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -714,7 +714,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -741,7 +741,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto rotMat =
             (inverse) ? getRot<std::complex, PrecisionT>(-omega, -theta, -phi)
                       : getRot<std::complex, PrecisionT>(phi, theta, omega);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -769,7 +769,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -800,7 +800,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -845,7 +845,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -888,7 +888,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -935,7 +935,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -971,7 +971,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
                     : std::exp(std::complex<PrecisionT>(0, angle));
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -999,7 +999,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1036,7 +1036,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1073,7 +1073,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1101,7 +1101,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 3); k++) {
             const size_t i000 = ((k << 3U) & parity[3]) |
                                 ((k << 2U) & parity[2]) |
@@ -1127,7 +1127,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
 
         auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 3); k++) {
             const size_t i000 = ((k << 3U) & parity[3]) |
                                 ((k << 2U) & parity[2]) |
@@ -1182,7 +1182,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
         auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
             const std::size_t i0000 = ((k << 4U) & parity[4]) |
                                       ((k << 3U) & parity[3]) |
@@ -1223,7 +1223,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
         auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
             const std::size_t i0000 = ((k << 4U) & parity[4]) |
                                       ((k << 3U) & parity[3]) |
@@ -1296,7 +1296,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
 
         auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
             const std::size_t i0000 = ((k << 4U) & parity[4]) |
                                       ((k << 3U) & parity[3]) |
@@ -1363,7 +1363,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             wires_parity |=
                 (static_cast<size_t>(1U) << (num_qubits - wire - 1));
         }
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
         }
@@ -1378,7 +1378,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(wires.size() == 1);
         const size_t rev_wire = num_qubits - wires[0] - 1;
         const auto [parity_high, parity_low] = revWireParity(rev_wire);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
             const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
             arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
@@ -1400,7 +1400,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1428,7 +1428,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
 
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1456,7 +1456,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1485,7 +1485,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1512,7 +1512,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1543,7 +1543,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1576,7 +1576,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
@@ -1604,7 +1604,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
         const auto [parity_high, parity_middle, parity_low] =
             revWireParity(rev_wire0, rev_wire1);
-        LOOP_PRAGMA
+        LOOP_PARALLEL
         for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
             const size_t i00 = ((k << 2U) & parity_high) |
                                ((k << 1U) & parity_middle) | (k & parity_low);
