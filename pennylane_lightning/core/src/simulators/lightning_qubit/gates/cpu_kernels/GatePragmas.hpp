@@ -20,20 +20,16 @@
 
 namespace Pennylane::LightningQubit::Gates::Pragmas {
 
-// Utility pragma to ensure "#" can be generated in macro output
-#define M_Hash #
-
-// Utility to ensure macro names are processable when back-to-back
-#define F(x) x
-
 // Defines utility macros to annotate gate-kernel loops with OpenMP parallel-for
 // and OpenMP SIMD pragmas. Selectable at compile time.
 #ifdef PL_LQ_KERNEL_OMP
-#define PL_LOOP_PARALLEL(N) F(M_Hash)pragma omp parallel for collapse(N)
-#define PL_LOOP_SIMD F(M_Hash) pragma omp simd
+
+#define PRAGMA_WRAP(S) _Pragma (#S)
+#define PL_LOOP_PARALLEL(x) PRAGMA_WRAP(omp parallel for collapse(x))
+#define PL_LOOP_SIMD PRAGMA_WRAP(omp simd)
 #else
-#define PL_LOOP_PARALLEL(N)
-#define PL_LOOP_SIMD
+#define PL_LOOP_PARALLEL(N) 
+#define PL_LOOP_SIMD 
 #endif
 
 }; // namespace Pennylane::LightningQubit::Gates::Pragmas

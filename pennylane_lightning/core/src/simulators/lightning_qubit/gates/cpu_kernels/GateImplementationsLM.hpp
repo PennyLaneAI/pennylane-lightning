@@ -370,7 +370,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         } else {
-            PL_LOOP_PARALLEL(2)
+            PL_LOOP_PARALLEL(1)
             for (size_t k = 0; k < exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     size_t idx = k | inner_idx;
