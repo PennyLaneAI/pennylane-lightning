@@ -64,7 +64,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
     template <size_t control, size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 1;
@@ -237,7 +236,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRX {
         std::array<uint8_t, packed_size> arr{};
 
         uint8_t s = (uint8_t{1U} << target);
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             arr[2 * k + 0] = 2 * (k ^ s) + 1;
             arr[2 * k + 1] = 2 * (k ^ s) + 0;

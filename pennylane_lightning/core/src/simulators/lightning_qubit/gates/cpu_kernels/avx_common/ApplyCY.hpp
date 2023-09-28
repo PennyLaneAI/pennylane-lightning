@@ -43,7 +43,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     template <size_t control, size_t target>
     static consteval auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 1;
@@ -62,7 +61,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     template <size_t control, size_t target>
     static consteval auto applyInternalInternalFactor() {
         std::array<PrecisionT, packed_size> signs{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {    // if control bit is 1
                 if ((k >> target) & 1U) { // if target bit is 1 (was 0) == -> i
@@ -103,7 +101,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     template <size_t control>
     static consteval auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 mask[2 * k + 0] = true;
@@ -119,7 +116,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     template <size_t control>
     static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> permutation{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 permutation[2 * k + 0] = 2 * k + 1;
@@ -141,7 +137,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 signs[2 * k + 0] = 1.0;
@@ -163,7 +158,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 signs[2 * k + 0] = -1.0;
@@ -225,7 +219,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> target) & 1U) { // target is 1 (was 0)
                 signs[2 * k + 0] = -1.0;

@@ -36,7 +36,6 @@ struct ApplyGeneratorPhaseShift {
     static consteval auto factorInternal() ->
         typename PrecisionAVXConcept::IntrinsicType {
         std::array<PrecisionT, packed_size> factors{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size_ / 2; k++) {
             if (((k >> rev_wire) & size_t{1U}) == 0) {
                 factors[2 * k + 0] = 0.0;

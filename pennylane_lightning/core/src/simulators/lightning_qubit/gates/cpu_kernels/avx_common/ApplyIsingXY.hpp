@@ -39,7 +39,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         };
 
         size_t m = (1U << rev_wire0) | (1U << rev_wire1);
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             if ((((k >> rev_wire0) & 1U) ^ ((k >> rev_wire1) & 1U)) == 0) {
                 perm[2 * k + 0] = 2 * k + 0;
@@ -114,7 +113,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXY {
         std::array<uint8_t, packed_size> perm{};
 
         size_t m = 1U << min_rev_wire;
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             // swap 01 and 10 and apply imaginary
             perm[2 * k + 0] = 2 * (k ^ m) + 1;

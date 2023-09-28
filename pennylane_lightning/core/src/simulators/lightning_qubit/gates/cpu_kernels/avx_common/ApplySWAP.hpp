@@ -41,7 +41,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
     static consteval auto applyInternalInternalPermutation() {
         const auto identity_perm = Permutation::identity<packed_size>();
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t i = 0; i < packed_size / 2; i++) {
             // swap rev_wire1 and rev_wire0 bits
             const size_t b = ((i >> rev_wire0) ^ (i >> rev_wire1)) & 1U;
@@ -71,7 +70,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
      */
     template <size_t min_rev_wire> static consteval auto createMask0() {
         std::array<bool, packed_size> m{};
-        PL_LOOP_SIMD
         for (size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = true;
@@ -89,7 +87,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplySWAP {
      */
     template <size_t min_rev_wire> static consteval auto createMask1() {
         std::array<bool, packed_size> m = {};
-        PL_LOOP_SIMD
         for (size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = false;

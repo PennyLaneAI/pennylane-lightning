@@ -43,7 +43,6 @@ struct ApplyControlledPhaseShift {
     static consteval auto applyInternalInternalPermutation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < (packed_size / 2); k++) {
             if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
                 // Only swap real and image for 11
@@ -114,7 +113,6 @@ struct ApplyControlledPhaseShift {
     template <size_t min_rev_wire>
     static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t k = 0; k < (packed_size / 2); k++) {
             if (((k >> min_rev_wire) & 1U) == 1) {
                 // Only swap real and imag when 1

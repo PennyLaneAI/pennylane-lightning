@@ -39,7 +39,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyIsingXX {
         };
 
         size_t m = (1U << rev_wire0) | (1U << rev_wire1);
-        PL_LOOP_SIMD
         for (size_t k = 0; k < packed_size / 2; k++) {
             perm[2 * k + 0] = 2 * (k ^ m) + 1;
             perm[2 * k + 1] = 2 * (k ^ m) + 0;

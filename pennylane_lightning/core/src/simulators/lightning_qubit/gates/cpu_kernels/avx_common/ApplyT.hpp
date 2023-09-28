@@ -39,7 +39,6 @@ template <typename PrecisionT, size_t packed_size> struct ApplyT {
      */
     static constexpr auto applyInternalPermutation(size_t rev_wire) {
         std::array<uint8_t, packed_size> perm{};
-        PL_LOOP_SIMD
         for (size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 perm[2 * n + 0] = 2 * n + 0;
