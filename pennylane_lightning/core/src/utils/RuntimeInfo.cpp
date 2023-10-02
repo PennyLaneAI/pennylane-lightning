@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2023 Xanadu Quantum Technologies Inc. and contributors.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,6 +127,6 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     }
 }
 #else
-RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo(){};
+RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() = default;
 #endif
 } // namespace Pennylane::Util

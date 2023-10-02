@@ -25,11 +25,13 @@
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
+* Fixes clang-tidy error with aarch64 builds []()
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+David Clark (NVIDIA), Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
