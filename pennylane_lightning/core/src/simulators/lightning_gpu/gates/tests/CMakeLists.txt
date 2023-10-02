@@ -72,6 +72,7 @@ if(ENABLE_MPI)
 
     add_executable(${PL_BACKEND}_gates_test_runner_mpi ${TEST_MPI_SOURCES})
     target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi MPI::MPI_CXX lightning_external_libs ${MPI_GTL})
+    #target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi MPI::MPI_CXX lightning_external_libs)
 
     catch_discover_tests(${PL_BACKEND}_gates_test_runner_mpi)
 endif()
