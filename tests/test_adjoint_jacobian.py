@@ -124,9 +124,7 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
-            # self.process_and_compute_derivatives(dev, tape)
             dev.supports_derivatives(AdjointConfig, circuit=tape)
-            # dev.adjoint_jacobian(tape)
 
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.1, wires=0)
@@ -143,7 +141,6 @@ class TestAdjointJacobian:
             match=message,
         ):
             dev.supports_derivatives(AdjointConfig, circuit=tape)
-            # dev.adjoint_jacobian(tape)
 
     def test_finite_shots_warns(self):
         """Tests warning raised when finite shots specified"""
@@ -156,7 +153,6 @@ class TestAdjointJacobian:
         with pytest.warns(
             UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
         ):
-            # dev.adjoint_jacobian(tape)
             dev.supports_derivatives(AdjointConfig, circuit=tape)
 
     def test_empty_measurements(self, dev):
@@ -180,7 +176,6 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="The CRot operation is not supported using the"
         ):
-            # dev.adjoint_jacobian(tape)
             dev.supports_derivatives(AdjointConfig, circuit=tape)
 
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
@@ -193,7 +188,6 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            # dev.adjoint_jacobian(tape)
             dev.supports_derivatives(AdjointConfig, circuit=tape)
 
         with qml.tape.QuantumTape() as tape:
@@ -203,7 +197,6 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
         ):
-            # dev.adjoint_jacobian(tape)
             dev.supports_derivatives(AdjointConfig, circuit=tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
@@ -259,14 +252,14 @@ class TestAdjointJacobian:
             qml.RY(par, wires=[0])
             qml.expval(qml.PauliX(0))
 
-        tape.trainable_params = {0}
+        trainable_params = {0}
 
         # gradients
         exact = np.cos(par)
-        grad_A = dev.adjoint_jacobian(tape)
+        calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
 
         # different methods must agree
-        assert np.allclose(grad_A, exact, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, exact, atol=tol, rtol=0)
 
     def test_rx_gradient(self, tol, dev):
         """Test that the gradient of the RX gate matches the known formula."""
@@ -276,10 +269,10 @@ class TestAdjointJacobian:
             qml.RX(a, wires=0)
             qml.expval(qml.PauliZ(0))
 
-        # circuit jacobians
-        dev_jacobian = dev.adjoint_jacobian(tape)
-        expected_jacobian = -np.sin(a)
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # circuit Jacobians
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        expected_val = -np.sin(a)
+        assert np.allclose(calculated_val, expected_val, atol=tol, rtol=0)
 
     def test_multiple_rx_gradient_pauliz(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
@@ -293,10 +286,10 @@ class TestAdjointJacobian:
             for idx in range(3):
                 qml.expval(qml.PauliZ(idx))
 
-        # circuit jacobians
-        dev_jacobian = dev.adjoint_jacobian(tape)
-        expected_jacobian = -np.diag(np.sin(params))
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # circuit Jacobians
+        calculated_val = self.process_and_compute_derivatives(dev, tape)
+        expected_val = -np.diag(np.sin(params))
+        assert np.allclose(calculated_val, expected_val, atol=tol, rtol=0)
 
     def test_multiple_rx_gradient_hermitian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
@@ -312,12 +305,13 @@ class TestAdjointJacobian:
             for idx in range(3):
                 qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
 
-        tape.trainable_params = {0, 1, 2}
-        # circuit jacobians
-        dev_jacobian = dev.adjoint_jacobian(tape)
-        expected_jacobian = -np.diag(np.sin(params))
+        trainable_params = {0, 1, 2}
 
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        # circuit Jacobians
+        calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
+        expected_val = -np.diag(np.sin(params))
+
+        assert np.allclose(calculated_val, expected_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -339,13 +333,15 @@ class TestAdjointJacobian:
                 )
             )
 
-        tape.trainable_params = {0, 1, 2}
-        dev_jacobian = dev.adjoint_jacobian(tape)
-        expected_jacobian = np.array(
+        trainable_params = {0, 1, 2}
+
+        # circuit Jacobians
+        calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
+        expected_val = np.array(
             [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
         )
 
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, expected_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -376,9 +372,11 @@ class TestAdjointJacobian:
 
             qml.expval(ham)
 
-        tape.trainable_params = {0, 1, 2}
-        dev_jacobian = dev.adjoint_jacobian(tape)
-        expected_jacobian = (
+        trainable_params = {0, 1, 2}
+
+        # circuit Jacobians
+        calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
+        expected_val = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
             + 0.3 * np.array([0, -np.sin(params[1]), 0])
             + 0.4
@@ -387,7 +385,7 @@ class TestAdjointJacobian:
             )
         )
 
-        assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        assert np.allclose(calculated_val, expected_val, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
@@ -527,94 +525,94 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
-    #     """Tests that gates with multiple free parameters yield correct gradients."""
-    #     x, y, z = [0.5, 0.3, -0.7]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
+        """Tests that gates with multiple free parameters yield correct gradients."""
+        x, y, z = [0.5, 0.3, -0.7]
 
-    #     ham = qml.Hamiltonian(
-    #         [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
-    #     )
+        ham = qml.Hamiltonian(
+            [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
+        )
 
-    #     tape = qml.tape.QuantumScript(
-    #         [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
-    #         [qml.expval(ham)],
-    #     )
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [qml.expval(ham)],
+        )
 
-    #     trainable_params = {1, 2, 3}
+        trainable_params = {1, 2, 3}
 
-    #     calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
-    #     reference_val = self.calculate_reference(tape, trainable_params)
+        calculated_val = self.process_and_compute_derivatives(dev, tape, trainable_params)
+        reference_val = self.calculate_reference(tape, trainable_params)
 
-    #     tol = 1e-3 if dev.C_DTYPE == np.complex64 else 1e-7
+        tol = 1e-3 if dev.C_DTYPE == np.complex64 else 1e-7
 
-    #     # gradient has the correct shape and every element is nonzero
-    #     assert len(calculated_val) == 3
-    #     assert all(isinstance(v, np.ndarray) for v in calculated_val)
-    #     assert np.count_nonzero(calculated_val) == 3
+        # gradient has the correct shape and every element is nonzero
+        assert len(calculated_val) == 3
+        assert all(isinstance(v, np.ndarray) for v in calculated_val)
+        assert np.count_nonzero(calculated_val) == 3
 
-    #     # the different methods agree
-    #     assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
+        # the different methods agree
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    # def test_use_device_state(self, tol, dev):
-    #     """Tests that when using the device state, the correct answer is still returned."""
+    def test_use_device_state(self, tol, dev):
+        """Tests that when using the device state, the correct answer is still returned."""
 
-    #     x, y, z = [0.5, 0.3, -0.7]
+        x, y, z = [0.5, 0.3, -0.7]
 
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
 
-    #     tape.trainable_params = {1, 2, 3}
+        tape.trainable_params = {1, 2, 3}
 
-    #     dM1 = dev.adjoint_jacobian(tape)
+        dM1 = dev.adjoint_jacobian(tape)
 
-    #     qml.execute([tape], dev, None)
-    #     dM2 = dev.adjoint_jacobian(tape, use_device_state=True)
+        qml.execute([tape], dev, None)
+        dM2 = dev.adjoint_jacobian(tape, use_device_state=True)
 
-    #     assert np.allclose(dM1, dM2, atol=tol, rtol=0)
+        assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
-    # def test_provide_starting_state(self, tol, dev):
-    #     """Tests provides correct answer when provided starting state."""
-    #     x, y, z = [0.5, 0.3, -0.7]
+    def test_provide_starting_state(self, tol, dev):
+        """Tests provides correct answer when provided starting state."""
+        x, y, z = [0.5, 0.3, -0.7]
 
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
 
-    #     tape.trainable_params = {1, 2, 3}
+        tape.trainable_params = {1, 2, 3}
 
-    #     dM1 = dev.adjoint_jacobian(tape)
+        dM1 = dev.adjoint_jacobian(tape)
 
-    #     dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
+        dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
 
-    #     qml.execute([tape], dev, None)
-    #     dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
+        qml.execute([tape], dev, None)
+        dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
 
-    #     assert np.allclose(dM1, dM2, atol=tol, rtol=0)
+        assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # def test_provide_wrong_starting_state(self, dev):
-    #     """Tests raise an exception when provided starting state mismatches."""
-    #     x, y, z = [0.5, 0.3, -0.7]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    def test_provide_wrong_starting_state(self, dev):
+        """Tests raise an exception when provided starting state mismatches."""
+        x, y, z = [0.5, 0.3, -0.7]
 
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            qml.expval(qml.PauliZ(0))
 
-    #     tape.trainable_params = {1, 2, 3}
+        tape.trainable_params = {1, 2, 3}
 
-    #     with pytest.raises(
-    #         qml.QuantumFunctionError,
-    #         match="The number of qubits of starting_state must be the same as",
-    #     ):
-    #         dev.adjoint_jacobian(tape, starting_state=np.ones(7))
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="The number of qubits of starting_state must be the same as",
+        ):
+            dev.adjoint_jacobian(tape, starting_state=np.ones(7))
 
     @pytest.mark.skipif(
         device_name == "lightning.kokkos",
@@ -642,24 +640,24 @@ class TestAdjointJacobianQNode:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
-    # def test_finite_shots_warning(self):
-    #     """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
+    def test_finite_shots_warning(self):
+        """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
 
-    #     dev = qml.device(device_name, wires=1, shots=1)
+        dev = qml.device(device_name, wires=1, shots=1)
 
-    #     with pytest.warns(
-    #         UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
-    #     ):
+        with pytest.warns(
+            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+        ):
 
-    #         @qml.qnode(dev, diff_method="adjoint")
-    #         def circ(x):
-    #             qml.RX(x, wires=0)
-    #             return qml.expval(qml.PauliZ(0))
+            @qml.qnode(dev, diff_method="adjoint")
+            def circ(x):
+                qml.RX(x, wires=0)
+                return qml.expval(qml.PauliZ(0))
 
-    #     with pytest.warns(
-    #         UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
-    #     ):
-    #         qml.grad(circ)(0.1)
+        with pytest.warns(
+            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+        ):
+            qml.grad(circ)(0.1)
 
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_qnode(self, mocker, dev):
@@ -889,13 +887,13 @@ def circuit_ansatz(params, wires):
     qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
-    qml.adjoint(qml.RX(params[2], wires=wires[2]))
+    qml.adjoint(qml.RX(params[2], wires=wires[2]), lazy=False)
     qml.RZ(params[0], wires=wires[3])
     qml.CRX(params[3], wires=[wires[3], wires[0]])
     qml.PhaseShift(params[4], wires=wires[2])
     qml.CRY(params[5], wires=[wires[2], wires[1]])
-    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]))
-    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]))
+    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]), lazy=False)
+    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]), lazy=False)
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
     qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
@@ -908,7 +906,7 @@ def circuit_ansatz(params, wires):
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
-    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]))
+    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False)
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
