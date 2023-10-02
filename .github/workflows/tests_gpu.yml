@@ -9,6 +9,7 @@ env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
+  KOKKOS_VERSION: e542e989af99cb87881ee2a0d06916541ee76006
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
 
@@ -42,20 +43,18 @@ jobs:
           nvidia-smi
 
       - name: Clone Kokkos repository
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
           # git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git kokkos_${{ matrix.exec_model }}
           # git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           git clone --branch develop https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
           cd kokkos_${{ matrix.exec_model }}
-          git checkout e542e989af99cb87881ee2a0d06916541ee76006
+          git checkout $KOKKOS_VERSION
           git log | head
           cd -
           pushd . &> /dev/null
 
       - name: Build Kokkos core library (Ubuntu)
-        # if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
@@ -129,7 +128,6 @@ jobs:
           restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
@@ -218,7 +216,6 @@ jobs:
           restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
 
       - name: Copy cached libraries
-        # if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
