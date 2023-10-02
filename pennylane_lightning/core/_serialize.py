@@ -45,7 +45,6 @@ class QuantumScriptSerializer:
 
     Args:
     device_name: device shortname.
-    use_csingle (bool): whether to use np.complex64 instead of np.complex128
 
     """
 
@@ -110,64 +109,62 @@ class QuantumScriptSerializer:
         """Hamiltonian observable matching ``use_csingle`` precision."""
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
-    def _named_obs(self, observable, wires_map: dict):
+    def _named_obs(self, observable):
         """Serializes a Named observable"""
-        wires = [wires_map[w] for w in observable.wires]
+        wires = observable.wires.tolist()
         if observable.name == "Identity":
             wires = wires[:1]
         return self.named_obs(observable.name, wires)
 
-    def _hermitian_ob(self, observable, wires_map: dict):
+    def _hermitian_ob(self, observable):
         """Serializes a Hermitian observable"""
         assert not isinstance(observable, Tensor)
 
-        wires = [wires_map[w] for w in observable.wires]
-        return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
+        return self.hermitian_obs(
+            matrix(observable).ravel().astype(self.ctype), observable.wires.tolist()
+        )
 
-    def _tensor_ob(self, observable, wires_map: dict):
+    def _tensor_ob(self, observable):
         """Serialize a tensor observable"""
         assert isinstance(observable, Tensor)
-        return self.tensor_obs([self._ob(obs, wires_map) for obs in observable.obs])
+        return self.tensor_obs([self._ob(obs) for obs in observable.obs])
 
-    def _hamiltonian(self, observable, wires_map: dict):
+    def _hamiltonian(self, observable):
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
-        terms = [self._ob(t, wires_map) for t in observable.ops]
+        terms = [self._ob(t) for t in observable.ops]
         return self.hamiltonian_obs(coeffs, terms)
 
-    def _pauli_word(self, observable, wires_map: dict):
+    def _pauli_word(self, observable):
         """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
         if len(observable) == 1:
             wire, pauli = list(observable.items())[0]
-            return self.named_obs(pauli_name_map[pauli], [wires_map[wire]])
+            return self.named_obs(pauli_name_map[pauli], [wire])
 
         return self.tensor_obs(
-            [
-                self.named_obs(pauli_name_map[pauli], [wires_map[wire]])
-                for wire, pauli in observable.items()
-            ]
+            [self.named_obs(pauli_name_map[pauli], [wire]) for wire, pauli in observable.items()]
         )
 
-    def _pauli_sentence(self, observable, wires_map: dict):
+    def _pauli_sentence(self, observable):
         """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
         pwords, coeffs = zip(*observable.items())
-        terms = [self._pauli_word(pw, wires_map) for pw in pwords]
+        terms = [self._pauli_word(pw) for pw in pwords]
         coeffs = np.array(coeffs).astype(self.rtype)
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access
-    def _ob(self, observable, wires_map):
+    def _ob(self, observable):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
         if isinstance(observable, Tensor):
-            return self._tensor_ob(observable, wires_map)
+            return self._tensor_ob(observable)
         if observable.name == "Hamiltonian":
-            return self._hamiltonian(observable, wires_map)
+            return self._hamiltonian(observable)
         if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
-            return self._named_obs(observable, wires_map)
+            return self._named_obs(observable)
         if observable._pauli_rep is not None:
-            return self._pauli_sentence(observable._pauli_rep, wires_map)
-        return self._hermitian_ob(observable, wires_map)
+            return self._pauli_sentence(observable._pauli_rep)
+        return self._hermitian_ob(observable)
 
-    def serialize_observables(self, tape: QuantumTape, wires_map: dict) -> List:
+    def serialize_observables(self, tape: QuantumTape) -> List:
         """Serializes the observables of an input tape.
 
         Args:
@@ -179,10 +176,10 @@ class QuantumScriptSerializer:
                 the C++ backend
         """
 
-        return [self._ob(observable, wires_map) for observable in tape.observables]
+        return [self._ob(observable) for observable in tape.observables]
 
     def serialize_ops(
-        self, tape: QuantumTape, wires_map: dict
+        self, tape: QuantumTape
     ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
         """Serializes the operations of an input tape.
 
@@ -227,7 +224,7 @@ class QuantumScriptSerializer:
                     mats.append([])
 
                 wires_list = single_op.wires.tolist()
-                wires.append([wires_map[w] for w in wires_list])
+                wires.append(wires_list)
 
         inverses = [False] * len(names)
         return (names, params, wires, inverses, mats), uses_stateprep
