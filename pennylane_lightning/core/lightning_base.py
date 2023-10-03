@@ -292,7 +292,8 @@ class LightningBaseFallBack(DefaultQubit):  # pragma: no cover
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
 
-    def __init__(self,
+    def __init__(
+        self,
         wires=None,
         shots=None,
         c_dtype=np.complex128,
