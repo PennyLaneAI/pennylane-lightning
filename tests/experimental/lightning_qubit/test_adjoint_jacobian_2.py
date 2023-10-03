@@ -51,7 +51,6 @@ class TestAdjointJacobianSupport:
         ):
             dev.supports_derivatives(AdjointConfig, circuit=tape)
 
-
     def test_Projector_unsupported(self, dev):
         """Tests if a QuantumFunctionError is raised for a Projector observable"""
         with qml.tape.QuantumTape() as tape:

@@ -27,6 +27,7 @@ from pennylane import QNode, qnode
 from pennylane.devices import ExecutionConfig, DefaultQubit
 
 from pennylane_lightning.core._preprocess import validate_and_expand_adjoint
+
 AdjointConfig = ExecutionConfig(use_device_gradient=True, gradient_method="adjoint")
 
 from pennylane.devices.qubit.preprocess import validate_and_expand_adjoint as vea_default
@@ -906,7 +907,9 @@ def circuit_ansatz(params, wires):
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
-    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False)
+    qml.adjoint(
+        qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False
+    )
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])

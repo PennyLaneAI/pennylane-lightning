@@ -119,6 +119,7 @@ _operations = {
 
 ### UTILITY FUNCTIONS FOR EXPANDING UNSUPPORTED OPERATIONS ###
 
+
 def _accepted_operator(op: qml.operation.Operator, dev_operations_list=_operations) -> bool:
     """Specify whether or not an Operator object is accepted to be decomposed by the device."""
     if op.name == "QFT":
