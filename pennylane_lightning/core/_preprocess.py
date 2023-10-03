@@ -128,6 +128,7 @@ def _accepted_operator(op: qml.operation.Operator, dev_operations_list=_operatio
         return len(op.wires) < 13
     return (op.name in dev_operations_list) or op.has_matrix
 
+
 @transform
 def validate_and_expand_adjoint(
     tape: qml.tape.QuantumTape,

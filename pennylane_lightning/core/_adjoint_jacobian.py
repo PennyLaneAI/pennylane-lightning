@@ -40,6 +40,7 @@ from pennylane import DeviceError
 
 from pennylane_lightning.lightning_qubit._simulate import asarray
 
+
 class AdjointJacobian:
     """Check and execute the adjoint Jacobian differentiation method.
 
