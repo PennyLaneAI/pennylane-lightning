@@ -26,7 +26,11 @@ from pennylane.typing import Result, ResultBatch
 from pennylane.transforms.core import TransformProgram
 from pennylane.devices.execution_config import ExecutionConfig, DefaultExecutionConfig
 
-from ._preprocess import preprocess, validate_device_wires, validate_and_expand_adjoint
+from pennylane.devices.qubit.preprocess import (
+    validate_device_wires,
+)
+
+from ._preprocess import preprocess, validate_and_expand_adjoint
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -288,9 +292,13 @@ class LightningBaseFallBack(DefaultQubit):  # pragma: no cover
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
 
-    def __init__(self, c_dtype=np.complex128):
+    def __init__(self,
+        wires=None,
+        shots=None,
+        c_dtype=np.complex128,
+    ) -> None:
         self.C_DTYPE = c_dtype
         if self.C_DTYPE not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
 
-        super().__init__()
+        super().__init__(wires=wires, shots=shots)

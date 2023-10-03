@@ -45,6 +45,7 @@ class QuantumScriptSerializer:
 
     Args:
     device_name: device shortname.
+    use_csingle (bool): whether to use np.complex64 instead of np.complex128
 
     """
 
