@@ -93,6 +93,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::SWAP, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::ISWAP, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::IsingXX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);

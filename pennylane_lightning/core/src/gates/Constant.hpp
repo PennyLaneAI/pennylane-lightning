@@ -71,6 +71,7 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, std::string_view>{GateOperation::IsingZZ,
                                                "IsingZZ"},
     std::pair<GateOperation, std::string_view>{GateOperation::SWAP, "SWAP"},
+    std::pair<GateOperation, std::string_view>{GateOperation::ISWAP, "ISWAP"},
     std::pair<GateOperation, std::string_view>{
         GateOperation::ControlledPhaseShift, "ControlledPhaseShift"},
     std::pair<GateOperation, std::string_view>{GateOperation::CRX, "CRX"},
@@ -177,6 +178,7 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::CY, 2},
     std::pair<GateOperation, size_t>{GateOperation::CZ, 2},
     std::pair<GateOperation, size_t>{GateOperation::SWAP, 2},
+    std::pair<GateOperation, size_t>{GateOperation::ISWAP, 2},
     std::pair<GateOperation, size_t>{GateOperation::IsingXX, 2},
     std::pair<GateOperation, size_t>{GateOperation::IsingXY, 2},
     std::pair<GateOperation, size_t>{GateOperation::IsingYY, 2},
@@ -248,6 +250,7 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::CY, 0},
     std::pair<GateOperation, size_t>{GateOperation::CZ, 0},
     std::pair<GateOperation, size_t>{GateOperation::SWAP, 0},
+    std::pair<GateOperation, size_t>{GateOperation::ISWAP, 0},
     std::pair<GateOperation, size_t>{GateOperation::IsingXX, 1},
     std::pair<GateOperation, size_t>{GateOperation::IsingXY, 1},
     std::pair<GateOperation, size_t>{GateOperation::IsingYY, 1},

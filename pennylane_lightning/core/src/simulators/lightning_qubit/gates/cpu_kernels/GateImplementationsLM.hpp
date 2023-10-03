@@ -152,6 +152,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::CY,
         GateOperation::CZ,
         GateOperation::SWAP,
+        GateOperation::ISWAP,
         GateOperation::CSWAP,
         GateOperation::Toffoli,
         GateOperation::IsingXX,
@@ -762,6 +763,35 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const size_t i10 = i00 | rev_wire1_shift;
             const size_t i01 = i00 | rev_wire0_shift;
             std::swap(arr[i10], arr[i01]);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applyISWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                           const std::vector<size_t> &wires, bool inverse) {
+        using ComplexT = std::complex<PrecisionT>;
+        PL_ASSERT(wires.size() == 2);
+
+        const size_t rev_wire0 = num_qubits - wires[1] - 1;
+        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+
+        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+
+        const auto [parity_high, parity_middle, parity_low] =
+            revWireParity(rev_wire0, rev_wire1);
+
+        for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
+            const size_t i00 = ((k << 2U) & parity_high) |
+                               ((k << 1U) & parity_middle) | (k & parity_low);
+            const size_t i10 = i00 | rev_wire1_shift;
+            const size_t i01 = i00 | rev_wire0_shift;
+            const ComplexT v01 = arr[i01];
+            const ComplexT v10 = arr[i10];
+            arr[i01] = inverse ? ComplexT{std::imag(v10), -std::real(v10)}
+                               : ComplexT{-std::imag(v10), std::real(v10)};
+            arr[i10] = inverse ? ComplexT{std::imag(v01), -std::real(v01)}
+                               : ComplexT{-std::imag(v01), std::real(v01)};
         }
     }
 
@@ -1768,6 +1798,13 @@ GateImplementationsLM::applySWAP<float>(std::complex<float> *, size_t,
 extern template void
 GateImplementationsLM::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
+
+extern template void
+GateImplementationsLM::applyISWAP<float>(std::complex<float> *, size_t,
+                                         const std::vector<size_t> &, bool);
+extern template void
+GateImplementationsLM::applyISWAP<double>(std::complex<double> *, size_t,
+                                          const std::vector<size_t> &, bool);
 
 extern template void GateImplementationsLM::applyIsingXX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);

@@ -343,6 +343,13 @@ GateImplementationsLM::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
 
 template void
+GateImplementationsLM::applyISWAP<float>(std::complex<float> *, size_t,
+                                         const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyISWAP<double>(std::complex<double> *, size_t,
+                                          const std::vector<size_t> &, bool);
+
+template void
 GateImplementationsLM::applyCSWAP<float>(std::complex<float> *, size_t,
                                          const std::vector<size_t> &, bool);
 template void

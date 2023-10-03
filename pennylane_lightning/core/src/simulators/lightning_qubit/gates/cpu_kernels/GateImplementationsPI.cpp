@@ -338,6 +338,13 @@ template void
 GateImplementationsPI::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
 
+template void
+GateImplementationsPI::applyISWAP<float>(std::complex<float> *, size_t,
+                                         const std::vector<size_t> &, bool);
+template void
+GateImplementationsPI::applyISWAP<double>(std::complex<double> *, size_t,
+                                          const std::vector<size_t> &, bool);
+
 template void GateImplementationsPI::applyIsingXX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 template void GateImplementationsPI::applyIsingXX<double, double>(

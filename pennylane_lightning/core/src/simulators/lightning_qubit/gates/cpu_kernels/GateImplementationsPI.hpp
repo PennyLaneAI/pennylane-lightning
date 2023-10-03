@@ -80,6 +80,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::CY,
         GateOperation::CZ,
         GateOperation::SWAP,
+        GateOperation::ISWAP,
         GateOperation::IsingXX,
         GateOperation::IsingXY,
         GateOperation::IsingYY,
@@ -554,6 +555,27 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applyISWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                           const std::vector<size_t> &wires,
+                           [[maybe_unused]] bool inverse) {
+        using ComplexT = std::complex<PrecisionT>;
+        PL_ASSERT(wires.size() == 2);
+        const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+        for (const size_t &externalIndex : externalIndices) {
+            ComplexT *shiftedState = arr + externalIndex;
+            ComplexT v0 = shiftedState[indices[1]];
+            shiftedState[indices[1]] =
+                inverse ? ComplexT{shiftedState[indices[2]].imag(),
+                                   -shiftedState[indices[2]].real()}
+                        : ComplexT{-shiftedState[indices[2]].imag(),
+                                   shiftedState[indices[2]].real()};
+            shiftedState[indices[2]] = inverse
+                                           ? ComplexT{v0.imag(), -v0.real()}
+                                           : ComplexT{-v0.imag(), v0.real()};
         }
     }
 
@@ -1176,6 +1198,13 @@ GateImplementationsPI::applySWAP<float>(std::complex<float> *, size_t,
 extern template void
 GateImplementationsPI::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
+
+extern template void
+GateImplementationsPI::applyISWAP<float>(std::complex<float> *, size_t,
+                                         const std::vector<size_t> &, bool);
+extern template void
+GateImplementationsPI::applyISWAP<double>(std::complex<double> *, size_t,
+                                          const std::vector<size_t> &, bool);
 
 extern template void GateImplementationsPI::applyIsingXX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
