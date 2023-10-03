@@ -127,7 +127,6 @@ def measure_final_state(
 
     if not circuit.shots:
         # analytic case
-
         if len(circuit.measurements) == 1:
             return measurement(circuit.measurements[0], state)
 

@@ -45,7 +45,6 @@ except ImportError:
 
 if LQ_CPP_BINARY_AVAILABLE:
     from ._simulate import _execute_single_script
-    # from pennylane_lightning.core._adjoint_jacobian import AdjointJacobian
 
     class LightningQubit(LightningBase):
         """PennyLane Lightning device.

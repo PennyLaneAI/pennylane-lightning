@@ -30,7 +30,6 @@ from pennylane.measurements import (
     MeasurementProcess,
     Expectation,
     State,
-    ExpectationMP,
 )
 from pennylane.tape import QuantumTape
 from pennylane.devices.qubit.initialize_state import create_initial_state
@@ -40,12 +39,6 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane import DeviceError
 
 from pennylane_lightning.lightning_qubit._simulate import asarray
-
-from typing import Generator, Callable, Tuple, Union, Sequence
-from pennylane.transforms.core import transform, TransformProgram
-import warnings
-from ._preprocess import _operator_decomposition_gen
-
 
 class AdjointJacobian:
     """Check and execute the adjoint Jacobian differentiation method.
@@ -184,8 +177,6 @@ class AdjointJacobian:
         Returns:
             Set: A set with a tape processed for Lightning.
         """
-        # print("tape")
-        # print(tape)
         use_csingle = True if state.dtype == np.complex64 else False
         # To support np.complex64 based on the type of self._state
         create_ops_list = self.create_ops_list_c64 if use_csingle else self.create_ops_list_c128
@@ -198,28 +189,13 @@ class AdjointJacobian:
 
         # We need to filter out indices in trainable_params which do not
         # correspond to operators.
-        # print("tape.trainable_params")
-        # print(tape.trainable_params)
-
         trainable_params = sorted(tape.trainable_params)
         if len(trainable_params) == 0:
             return None
 
-        # print("trainable_params = sorted(tape.trainable_params)")
-        # print(trainable_params)
         tp_shift = []
         record_tp_rows = []
         all_params = 0
-
-        # for op_idx, tp in enumerate(trainable_params):
-        #     op, _, _ = tape.get_operation(
-        #         op_idx
-        #     )  # get op_idx-th operator among differentiable operators
-        #     if isinstance(op, Operation) and not isinstance(op, (BasisState, QubitStateVector)):
-        #         # We now just ignore non-op or state preps
-        #         tp_shift.append(tp)
-        #         record_tp_rows.append(all_params)
-        #     all_params += 1
 
         for op_idx, trainable_param in enumerate(trainable_params):
             # get op_idx-th operator among differentiable operators
@@ -263,155 +239,6 @@ class AdjointJacobian:
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
-    # def _accepted_adjoint_operator(self, op: qml.operation.Operator) -> bool:
-    #     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    #     print("_accepted_adjoint_operator")
-    #     return op.num_params == 0 or op.num_params == 1 and op.has_generator
-
-    # @transform
-    # def validate_and_expand_adjoint(
-    #     self,
-    #     tape: qml.tape.QuantumTape
-    # ) -> (Sequence[qml.tape.QuantumTape], Callable):
-    #     """Function for validating that the operations and observables present in the input tape
-    #     are valid for adjoint differentiation.
-
-    #     Args:
-    #         tape(.QuantumTape): the tape to validate
-
-    #     Returns:
-    #         pennylane.QNode or qfunc or Tuple[List[.QuantumTape], Callable]: If a QNode is passed,
-    #         it returns a QNode with the transform added to its transform program.
-    #         If a tape is passed, returns a tuple containing a list of
-    #         quantum tapes to be evaluated, and a function to be applied to these
-    #         tape executions.
-    #     """
-    #     print("validate_and_expand_adjoint")
-    #     try:
-    #         new_ops = [
-    #             final_op
-    #             for op in tape.operations[tape.num_preps :]
-    #             for final_op in _operator_decomposition_gen(op, self._accepted_adjoint_operator)
-    #         ]
-    #     except RecursionError as e:
-    #         raise DeviceError(
-    #             "Reached recursion limit trying to decompose operations. "
-    #             "Operator decomposition may have entered an infinite loop."
-    #         ) from e
-
-    #     for k in tape.trainable_params:
-    #         if hasattr(tape._par_info[k]["op"], "return_type"):
-    #             warnings.warn(
-    #                 "Differentiating with respect to the input parameters of "
-    #                 f"{tape._par_info[k]['op'].name} is not supported with the "
-    #                 "adjoint differentiation method. Gradients are computed "
-    #                 "only with regards to the trainable parameters of the circuit.\n\n Mark "
-    #                 "the parameters of the measured observables as non-trainable "
-    #                 "to silence this warning.",
-    #                 UserWarning,
-    #             )
-
-    #     # Check validity of measurements
-    #     measurements = []
-    #     for m in tape.measurements:
-    #         if not isinstance(m, ExpectationMP):
-    #             return DeviceError(
-    #                 "Adjoint differentiation method does not support "
-    #                 f"measurement {m.__class__.__name__}."
-    #             )
-
-    #         if m.obs.name == "Hamiltonian":
-    #             if not all(tuple(t.has_matrix for t in m.obs.ops)):
-    #                 return DeviceError(
-    #                     f"Adjoint differentiation method does not support some of the Hamiltonian terms."
-    #                 )
-    #         elif not m.obs.has_matrix:
-    #             return DeviceError(
-    #                 f"Adjoint differentiation method does not support observable {m.obs.name}."
-    #             )
-
-    #         measurements.append(m)
-
-    #     new_ops = tape.operations[: tape.num_preps] + new_ops
-    #     new_tape = qml.tape.QuantumScript(new_ops, measurements, shots=tape.shots)
-
-    #     def null_postprocessing(results):
-    #         """A postprocessing function returned by a transform that only converts the batch of results
-    #         into a result for a single ``QuantumTape``.
-    #         """
-    #         return results[0]
-
-    #     return "lala"
-    #     # return [new_tape], null_postprocessing
-
-    # # def validate_and_expand_adjoint(
-    # #     self,
-    # #     tape: qml.tape.QuantumTape
-    # # ) -> (Sequence[qml.tape.QuantumTape]):
-    # #     """Function for validating that the operations and observables present in the input tape
-    # #     are valid for adjoint differentiation.
-
-    # #     Args:
-    # #         tape(.QuantumTape): the tape to validate
-
-    # #     Returns:
-    # #         pennylane.QNode or qfunc or Tuple[List[.QuantumTape], Callable]: If a QNode is passed,
-    # #         it returns a QNode with the transform added to its transform program.
-    # #         If a tape is passed, returns a tuple containing a list of
-    # #         quantum tapes to be evaluated, and a function to be applied to these
-    # #         tape executions.
-    # #     """
-    # #     print("=====>    validate_and_expand_adjoint")
-    # #     try:
-    # #         new_ops = [
-    # #             final_op
-    # #             for op in tape.operations[tape.num_preps :]
-    # #             for final_op in _operator_decomposition_gen(op, self._accepted_adjoint_operator)
-    # #         ]
-    # #     except RecursionError as e:
-    # #         raise DeviceError(
-    # #             "Reached recursion limit trying to decompose operations. "
-    # #             "Operator decomposition may have entered an infinite loop."
-    # #         ) from e
-
-    # #     for k in tape.trainable_params:
-    # #         if hasattr(tape._par_info[k]["op"], "return_type"):
-    # #             warnings.warn(
-    # #                 "Differentiating with respect to the input parameters of "
-    # #                 f"{tape._par_info[k]['op'].name} is not supported with the "
-    # #                 "adjoint differentiation method. Gradients are computed "
-    # #                 "only with regards to the trainable parameters of the circuit.\n\n Mark "
-    # #                 "the parameters of the measured observables as non-trainable "
-    # #                 "to silence this warning.",
-    # #                 UserWarning,
-    # #             )
-
-    # #     # Check validity of measurements
-    # #     measurements = []
-    # #     for m in tape.measurements:
-    # #         if not isinstance(m, ExpectationMP):
-    # #             return DeviceError(
-    # #                 "Adjoint differentiation method does not support "
-    # #                 f"measurement {m.__class__.__name__}."
-    # #             )
-
-    # #         if m.obs.name == "Hamiltonian":
-    # #             if not all(tuple(t.has_matrix for t in m.obs.ops)):
-    # #                 return DeviceError(
-    # #                     f"Adjoint differentiation method does not support some of the Hamiltonian terms."
-    # #                 )
-    # #         elif not m.obs.has_matrix:
-    # #             return DeviceError(
-    # #                 f"Adjoint differentiation method does not support observable {m.obs.name}."
-    # #             )
-
-    # #         measurements.append(m)
-
-    # #     new_ops = tape.operations[: tape.num_preps] + new_ops
-    # #     new_tape = qml.tape.QuantumScript(new_ops, measurements, shots=tape.shots)
-
-    # #     return new_tape
-
     def calculate_adjoint_jacobian(self, tape, c_dtype=np.complex128):
         """Calculates the Adjoint Jacobian for a given tape.
 
@@ -437,7 +264,6 @@ class AdjointJacobian:
             return np.array([], dtype=state.dtype)
 
         trainable_params = processed_data["tp_shift"]
-        # print("trainable_params", trainable_params)
 
         use_csingle = True if state.dtype == np.complex64 else False
         adjoint_jacobian = (
