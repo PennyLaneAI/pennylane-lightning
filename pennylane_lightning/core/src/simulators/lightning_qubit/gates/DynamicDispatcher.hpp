@@ -452,6 +452,41 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
+    void applyControlledMatrix(KernelType kernel, CFP_t *data,
+                               size_t num_qubits,
+                               const std::complex<PrecisionT> *matrix,
+                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<size_t> &wires,
+                               bool inverse) const {
+        PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
+        const auto mat_op = [n_wires = wires.size()]() {
+            switch (n_wires) {
+            default:
+                return MatrixOperation::NQubitOp;
+            }
+        }();
+
+        const auto iter = matrix_kernels_.find(std::make_pair(mat_op, kernel));
+
+        if (iter == matrix_kernels_.end()) {
+            throw std::invalid_argument(
+                std::string(lookup(GateConstant::matrix_names, mat_op)) +
+                " is not registered for the given kernel");
+        }
+        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
+                       inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     void applyMatrix(KernelType kernel, CFP_t *data, size_t num_qubits,
                      const std::vector<std::complex<PrecisionT>> &matrix,
                      const std::vector<size_t> &wires, bool inverse) const {

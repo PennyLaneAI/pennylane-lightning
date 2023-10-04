@@ -107,6 +107,7 @@ enum class MatrixOperation : uint32_t {
     SingleQubitOp = 1,
     TwoQubitOp,
     MultiQubitOp,
+    NQubitOp,
     /* END (placeholder) */
     END
 };

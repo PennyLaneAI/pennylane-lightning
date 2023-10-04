@@ -391,10 +391,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void
-    applyNQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::complex<PrecisionT> *matrix,
-                      const std::vector<size_t> &wires, bool inverse, const std::vector<size_t> &controlled_wires = {}) {
+    static void applyNQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                              const std::complex<PrecisionT> *matrix,
+                              const std::vector<size_t> &controlled_wires,
+                              const std::vector<size_t> &wires, bool inverse) {
         using Pennylane::Util::bitswap;
         const std::size_t nw_tot = controlled_wires.size() + wires.size();
         PL_ASSERT(num_qubits >= nw_tot);
@@ -432,7 +432,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
                     const size_t n_contr = controlled_wires.size();
                     const size_t n_wires = wires.size();
-                    size_t idx = k | (inner_idx << n_contr) | (fillTrailingOnes(n_contr));
+                    size_t idx = k | (inner_idx << n_contr) |
+                                 (fillTrailingOnes(n_contr));
                     for (size_t pos = 0; pos < n_wires; pos++) {
                         idx = bitswap(idx, n_wires - (pos + n_contr) - 1,
                                       num_qubits - (wires[pos] + n_contr) - 1);
@@ -1757,6 +1758,12 @@ extern template void GateImplementationsLM::applyMultiQubitOp<float>(
 extern template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNQubitOp<float>(
+    std::complex<float> *, size_t, const std::complex<float> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNQubitOp<double>(
+    std::complex<double> *, size_t, const std::complex<double> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
 
 // Single-qubit gates
 extern template void

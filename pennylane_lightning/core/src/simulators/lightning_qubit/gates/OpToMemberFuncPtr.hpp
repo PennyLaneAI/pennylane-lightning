@@ -430,6 +430,12 @@ struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyMultiQubitOp<PrecisionT>;
 };
+template <class PrecisionT, class GateImplementation>
+struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                               MatrixOperation::NQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyNQubitOp<PrecisionT>;
+};
 
 /// @cond DEV
 namespace Internal {

@@ -281,6 +281,30 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyControlledMatrix(
+        const ComplexT *matrix, const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, bool inverse = false) {
+        const auto kernel = getKernelForMatrix(MatrixOperation::NQubitOp);
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = this->getData();
+
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+
+        dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
+                                         matrix, controlled_wires, wires,
+                                         inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a given
+     * kernel.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */

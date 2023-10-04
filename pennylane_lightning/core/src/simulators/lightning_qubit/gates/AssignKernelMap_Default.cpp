@@ -230,5 +230,8 @@ void assignKernelsForMatrixOp_Default() {
     instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::PI);
+    instance.assignKernelForOp(MatrixOperation::NQubitOp, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal
