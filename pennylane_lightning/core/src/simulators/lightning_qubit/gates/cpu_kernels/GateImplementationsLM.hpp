@@ -242,6 +242,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
         }
     }
+
     /**
      * @brief Apply a two qubit gate to the statevector.
      *
@@ -381,6 +382,72 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     arr[idx] = 0.0;
                     const size_t base_idx = i * dim;
 
+                    for (size_t j = 0; j < dim; j++) {
+                        arr[idx] += matrix[base_idx + j] * coeffs_in[j];
+                    }
+                }
+            }
+        }
+    }
+
+    template <class PrecisionT>
+    static void
+    applyNQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::complex<PrecisionT> *matrix,
+                      const std::vector<size_t> &wires, bool inverse, const std::vector<size_t> &controlled_wires = {}) {
+        using Pennylane::Util::bitswap;
+        const std::size_t nw_tot = controlled_wires.size() + wires.size();
+        PL_ASSERT(num_qubits >= nw_tot);
+        const size_t step = static_cast<size_t>(1U) << nw_tot;
+        const size_t dim = static_cast<size_t>(1U) << wires.size();
+        std::vector<size_t> indices(dim);
+        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+
+        if (inverse) {
+            for (size_t k = 0; k < exp2(num_qubits); k += dim) {
+                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                    size_t idx = k | inner_idx;
+                    const size_t n_wires = wires.size();
+                    for (size_t pos = 0; pos < n_wires; pos++) {
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - wires[pos] - 1);
+                    }
+                    indices[inner_idx] = idx;
+                    coeffs_in[inner_idx] = arr[idx];
+                }
+
+                for (size_t i = 0; i < dim; i++) {
+                    const auto idx = indices[i];
+                    arr[idx] = 0.0;
+
+                    for (size_t j = 0; j < dim; j++) {
+                        const size_t base_idx = j * dim;
+                        arr[idx] +=
+                            std::conj(matrix[base_idx + i]) * coeffs_in[j];
+                    }
+                }
+            }
+        } else {
+            for (size_t k = 0; k < exp2(num_qubits); k += step) {
+                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                    const size_t n_contr = controlled_wires.size();
+                    const size_t n_wires = wires.size();
+                    size_t idx = k | (inner_idx << n_contr) | (fillTrailingOnes(n_contr));
+                    for (size_t pos = 0; pos < n_wires; pos++) {
+                        idx = bitswap(idx, n_wires - (pos + n_contr) - 1,
+                                      num_qubits - (wires[pos] + n_contr) - 1);
+                    }
+                    for (size_t pos = 0; pos < n_contr; pos++) {
+                        idx = bitswap(idx, n_wires - pos - 1,
+                                      num_qubits - controlled_wires[pos] - 1);
+                    }
+                    indices[inner_idx] = idx;
+                    coeffs_in[inner_idx] = arr[idx];
+                }
+                for (size_t i = 0; i < dim; i++) {
+                    const auto idx = indices[i];
+                    const size_t base_idx = i * dim;
+                    arr[idx] = 0.0;
                     for (size_t j = 0; j < dim; j++) {
                         arr[idx] += matrix[base_idx + j] * coeffs_in[j];
                     }
