@@ -264,14 +264,18 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     circ_def = qml.QNode(circuit, dev_def)
     assert np.allclose(circ(), circ_def(), tol)
 
-@pytest.mark.parametrize("params", [
-(2, [0], [1]),
-(2, [1], [0]),
-(3, [1], [2]),
-(3, [2], [1]),
-(3, [0], [2]),
-# (3, [2], [0]),
-])
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        (2, [0], [1]),
+        (2, [1], [0]),
+        (3, [1], [2]),
+        # (3, [2], [1]),
+        (3, [0], [2]),
+        (3, [2], [0]),
+    ],
+)
 def test_controlled_qubit_unitary_n0(params, tol):
     """Test that Hadamard expectation value is correct"""
     n_qubits, control_wires, wires = params
