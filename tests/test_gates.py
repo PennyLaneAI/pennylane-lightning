@@ -263,3 +263,105 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     circ = qml.QNode(circuit, dev)
     circ_def = qml.QNode(circuit, dev_def)
     assert np.allclose(circ(), circ_def(), tol)
+
+@pytest.mark.parametrize("params", [
+(2, [0], [1]),
+(2, [1], [0]),
+(3, [1], [2]),
+(3, [2], [1]),
+(3, [0], [2]),
+# (3, [2], [0]),
+])
+def test_controlled_qubit_unitary_n0(params, tol):
+    """Test that Hadamard expectation value is correct"""
+    n_qubits, control_wires, wires = params
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    U = np.array(qml.PauliX([0]).matrix(), dtype=np.complex128)
+    init_state = np.random.rand(2**n_qubits) + 0.0j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=wires)
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    print(init_state)
+    print(circ_def())
+    print(circ())
+    assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(device_name != "lightning.qubit", reason="LightningQubit required")
+@pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
+@pytest.mark.parametrize(
+    "wires",
+    [
+        # [0],
+        [1],
+        [2],
+        # [0, 3],
+        # [1, 3],
+        # [2, 3],
+        # [0, 3, 5],
+        # [1, 3, 5],
+        # [2, 3, 5],
+    ],
+)
+@pytest.mark.parametrize(
+    "controls",
+    [
+        [0],
+        # [1],
+        # [2],
+        # [0, 4],
+        # [1, 4],
+        # [2, 4],
+        # [0, 4, 6],
+        # [1, 4, 6],
+        # [2, 4, 6],
+    ],
+)
+def test_controlled_qubit_unitary(controls, wires, theta, phi, tol):
+    """Test that Hadamard expectation value is correct"""
+    if set(controls).intersection(wires) or set(wires).intersection(controls):
+        return
+    n_qubits = 8
+    n_wires = len(wires)
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    m = 2**n_wires
+    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U, _ = np.linalg.qr(U)
+    U = np.array(qml.PauliX([0]).matrix(), dtype=np.complex128)
+    init_state = np.random.rand(2**n_qubits) + 1.0e-16j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    # print(wires)
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        # qml.RY(theta, wires=[0])
+        # qml.RY(phi, wires=[1])
+        # qml.CNOT(wires=[0, 1])
+        qml.ControlledQubitUnitary(U, control_wires=controls, wires=wires)
+        return qml.state()
+
+    def circuit_CX():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        # qml.RY(theta, wires=[0])
+        # qml.RY(phi, wires=[1])
+        # qml.CNOT(wires=[0, 1])
+        qml.CNOT(wires=controls + wires)
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    # print(np.real(init_state))
+    # print(np.real(circ_def()))
+    # print(np.real(circ()))
+    # print(np.real(circ() - circ_def()))
+    # print(np.imag(circ() - circ_def()))
+    assert np.allclose(circ(), circ_def(), tol)

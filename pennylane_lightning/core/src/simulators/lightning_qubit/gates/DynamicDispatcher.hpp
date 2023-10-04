@@ -36,6 +36,8 @@
 #include "OpToMemberFuncPtr.hpp"
 #include "Util.hpp" // PairHash, exp2
 
+// #include "GateImplementationsLM.hpp"
+
 /// @cond DEV
 namespace {
 namespace GateConstant = Pennylane::Gates::Constant;
@@ -452,29 +454,15 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyControlledMatrix(KernelType kernel, CFP_t *data,
-                               size_t num_qubits,
+    void applyControlledMatrix(CFP_t *data, size_t num_qubits,
                                const std::complex<PrecisionT> *matrix,
                                const std::vector<size_t> &controlled_wires,
                                const std::vector<size_t> &wires,
                                bool inverse) const {
         PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
-        const auto mat_op = [n_wires = wires.size()]() {
-            switch (n_wires) {
-            default:
-                return MatrixOperation::NQubitOp;
-            }
-        }();
-
-        const auto iter = matrix_kernels_.find(std::make_pair(mat_op, kernel));
-
-        if (iter == matrix_kernels_.end()) {
-            throw std::invalid_argument(
-                std::string(lookup(GateConstant::matrix_names, mat_op)) +
-                " is not registered for the given kernel");
-        }
-        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
-                       inverse);
+        // &GateImplementationsLM::applyNQubitOp(data, num_qubits, matrix,
+        //                                       controlled_wires, wires,
+        //                                       inverse);
     }
 
     /**

@@ -22,6 +22,7 @@
 
 #pragma once
 #include <complex>
+#include <iostream>
 #include <unordered_map>
 
 #include "CPUMemoryModel.hpp"
@@ -31,12 +32,14 @@
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
 
+#include "BitUtil.hpp"
+// #include "GateImplementationsLM.hpp"
+
 /// @cond DEV
 namespace {
 using Pennylane::LightningQubit::Util::Threading;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::exp2;
-
 using namespace Pennylane::LightningQubit::Gates;
 } // namespace
 /// @endcond
@@ -288,15 +291,90 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     inline void applyControlledMatrix(
         const ComplexT *matrix, const std::vector<size_t> &controlled_wires,
         const std::vector<size_t> &wires, bool inverse = false) {
-        const auto kernel = getKernelForMatrix(MatrixOperation::NQubitOp);
+        // const auto kernel = getKernelForMatrix(MatrixOperation::NQubitOp);
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = this->getData();
+        ComplexT *arr = this->getData();
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
-                                         matrix, controlled_wires, wires,
-                                         inverse);
+        // dispatcher.applyControlledMatrix(arr, this->getNumQubits(), matrix,
+        //                                  controlled_wires, wires, inverse);
+
+        using Pennylane::Util::bitswap;
+        using Pennylane::Util::fillTrailingOnes;
+        using size_t = std::size_t;
+
+        const std::size_t nw_tot = controlled_wires.size() + wires.size();
+        const std::size_t num_qubits = this->getNumQubits();
+        printf("\n=================\n");
+        // printf("num_qubits = %ld\n", num_qubits);
+        // printf("nw_tot = %ld\n", nw_tot);
+        // printf("controlled_wires.size() = %ld\n", controlled_wires.size());
+        // printf("wires.size() = %ld\n", wires.size());
+        PL_ASSERT(num_qubits >= nw_tot);
+        const size_t step = static_cast<size_t>(1U) << nw_tot;
+        const size_t dim = static_cast<size_t>(1U) << wires.size();
+        std::vector<size_t> indices(dim);
+        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+
+        for (size_t k = 0; k < exp2(num_qubits); k += step) {
+            for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+                const size_t n_contr = controlled_wires.size();
+                const size_t n_wires = wires.size();
+                size_t mask = 0;
+                const size_t one{1};
+                for (size_t pos = 0; pos < n_contr; pos++) {
+                    mask |= one << ((num_qubits - 1) - controlled_wires[pos]);
+                }
+
+                size_t idx = k | inner_idx;
+                for (size_t pos = 0; pos < n_wires; pos++) {
+                    idx = bitswap(idx, (n_wires - 1) - pos,
+                                  (num_qubits - 1) - wires[pos]);
+                }
+                idx |= mask;
+
+                // size_t idx =
+                //     k | (inner_idx << n_contr) | (fillTrailingOnes(n_contr));
+                // std::cout << idx << "==" << k << (inner_idx << n_contr)
+                //           << (fillTrailingOnes(n_contr)) << std::endl;
+                // for (size_t pos = 0; pos < n_wires; pos++) {
+                //     idx = bitswap(idx, (n_wires + n_contr - 1) - pos,
+                //                   (num_qubits - 1) - wires[pos]);
+                //     std::cout << "swap(" << (n_wires + n_contr - 1) - pos <<
+                //     ","
+                //               << (num_qubits - 1) - wires[pos] << ")"
+                //               << " => indices = " << idx << std::endl;
+                // }
+                // for (size_t pos = 0; pos < n_contr; pos++) {
+                //     idx = bitswap(idx, (n_contr - 1) - pos,
+                //                   (num_qubits - 1) - controlled_wires[pos]);
+                //     std::cout << "swap(" << (n_contr - 1) - pos << ","
+                //               << (num_qubits - 1) - controlled_wires[pos] <<
+                //               ")"
+                // }
+                indices[inner_idx] = idx;
+                coeffs_in[inner_idx] = arr[idx];
+                std::cout << "indices = " << indices[inner_idx]
+                          << " coeffs_in = " << arr[idx] << std::endl;
+            }
+            for (size_t i = 0; i < dim; i++) {
+                const auto idx = indices[i];
+                const size_t base_idx = i * dim;
+                arr[idx] = 0.0;
+                for (size_t j = 0; j < dim; j++) {
+                    arr[idx] += matrix[base_idx + j] * coeffs_in[j];
+                    std::cout << "matrix[" << base_idx + j
+                              << "] = " << matrix[base_idx + j] << " coeffs_in["
+                              << j << "] = " << coeffs_in[j] << " arr[ " << idx
+                              << " ] = " << arr[idx] << std::endl;
+                    // printf("%ld = %ld, %ld\n", base_idx + j, i, j);
+                }
+                std::cout << "indices = " << idx << " arr[idx] = " << arr[idx]
+                          << std::endl;
+            }
+        }
+        printf("=================\n");
     }
 
     /**

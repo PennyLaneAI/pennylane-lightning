@@ -357,7 +357,10 @@ if LQ_CPP_BINARY_AVAILABLE:
                     if operation.name == "ControlledQubitUnitary":
                         method = getattr(sim, "applyControlledMatrix")
                         control_wires = self.wires.indices(operation.control_wires)
-                        method(qml.matrix(operation), control_wires, wires, False)
+                        wires = list(set(wires).difference(control_wires))
+                        # print(qml.matrix(operation.base))
+                        print(control_wires, wires)
+                        method(qml.matrix(operation.base), control_wires, wires, False)
                     else:
                         # Inverse can be set to False since qml.matrix(operation) is already in
                         # inverted form
