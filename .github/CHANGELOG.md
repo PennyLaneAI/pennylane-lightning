@@ -30,14 +30,17 @@
 
 ### Improvements
 
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
 * Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
-  [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
+  [(#504)](https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
 * Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
-  [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
+  [(#490)](https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
 
 * Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
-  [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
+  [(#489)](https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
 
 * Add tests to increase LKokkos coverage.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
