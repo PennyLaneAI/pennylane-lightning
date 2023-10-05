@@ -339,7 +339,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const size_t dim = static_cast<size_t>(1U) << wires.size();
         std::vector<size_t> indices(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
-
+        printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        printf("applying applyMultiQubitOp\n");
+        printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
         if (inverse) {
             for (size_t k = 0; k < exp2(num_qubits); k += dim) {
                 for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {

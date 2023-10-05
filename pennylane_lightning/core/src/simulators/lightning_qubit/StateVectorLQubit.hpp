@@ -399,9 +399,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     } else {
                         idx = insert_bit(
                             idx, (num_qubits - 1) - all_wires[pos].first,
-                            inner_idx);
+                            (inner_idx & (one << shift)) >> shift);
                         shift--;
-                        std::cout << "bit = " << std::bitset<12>(inner_idx)
+                        std::cout << "bit = "
+                                  << std::bitset<12>((inner_idx >> shift) & one)
                                   << std::endl;
                         std::cout << "idx(x) = " << std::bitset<12>(idx)
                                   << std::endl;
@@ -423,11 +424,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 arr[idx] = 0.0;
                 for (size_t j = 0; j < dim; j++) {
                     arr[idx] += matrix[base_idx + j] * coeffs_in[j];
-                    std::cout << "matrix[" << base_idx + j
-                              << "] = " << matrix[base_idx + j] << " coeffs_in["
-                              << j << "] = " << coeffs_in[j] << " arr[ " << idx
-                              << " ] = " << arr[idx] << std::endl;
-                    // printf("%ld = %ld, %ld\n", base_idx + j, i, j);
+                    // std::cout << "matrix[" << base_idx + j
+                    //           << "] = " << matrix[base_idx + j] << "
+                    //           coeffs_in["
+                    //           << j << "] = " << coeffs_in[j] << " arr[ " <<
+                    //           idx
+                    //           << " ] = " << arr[idx] << std::endl;
+                    // // printf("%ld = %ld, %ld\n", base_idx + j, i, j);
                 }
                 std::cout << "indices = " << idx << " arr[idx] = " << arr[idx]
                           << std::endl;
