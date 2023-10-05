@@ -41,8 +41,6 @@ class TestSerializeObs:
             qml.expval(qml.PauliY(wires=1))
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
             qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
-        )
+        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(tape)
         obtained_chunks = pennylane_lightning.core.lightning_base._chunk_iterable(s, obs_chunk)
         assert len(list(obtained_chunks)) == int(np.ceil(len(s) / obs_chunk))
