@@ -44,7 +44,9 @@ except ImportError:
     LQ_CPP_BINARY_AVAILABLE = False
 
 if LQ_CPP_BINARY_AVAILABLE:
-    from ._simulate import _execute_single_script
+    from ._simulate import get_final_state, measure_final_state
+
+    from pennylane_lightning.core._adjoint_jacobian import AdjointJacobian
 
     class LightningQubit(LightningBase):
         """PennyLane Lightning device.
@@ -92,10 +94,30 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             Note that this function can return measurements for non-commuting observables simultaneously.
 
-            This function assumes that all operations provide matrices.
-
             """
-            return _execute_single_script(circuit, c_dtype, rng, debugger)
+            state, is_state_batched = get_final_state(circuit, c_dtype, debugger=debugger)
+            return measure_final_state(circuit, state, is_state_batched, c_dtype, rng=rng)
+
+        def simulate_and_adjoint(
+            self, circuit: QuantumScript, c_dtype=np.complex128, rng=None, debugger=None
+        ):
+            """Simulate a single quantum script and calculates the state gradient with the adjoint Jacobian method.
+
+            Args:
+                circuit (QuantumTape): The single circuit to simulate
+                rng (Union[None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+                    seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``.
+                    If no value is provided, a default RNG will be used.
+                debugger (_Debugger): The debugger to use
+
+            Returns:
+                Results of the simulation and circuit gradient
+            """
+            state, is_state_batched = get_final_state(circuit, c_dtype, debugger=debugger)
+            jac = AdjointJacobian("lightning.qubit").calculate_adjoint_jacobian(
+                circuit, c_dtype, state
+            )
+            return measure_final_state(circuit, state, is_state_batched, c_dtype, rng=rng), jac
 
 else:
 
