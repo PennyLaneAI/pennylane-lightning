@@ -19,16 +19,17 @@ and interfaces with C++ for improved performance.
 import abc
 import numpy as np
 from typing import Union, Callable, Tuple, Optional, Sequence
+from itertools import islice
 from warnings import warn
-from pennylane.devices import Device
+
+from pennylane.devices import Device, DefaultQubit
+from pennylane.devices.qubit.sampling import get_num_shots_and_executions
+from pennylane.devices.execution_config import ExecutionConfig, DefaultExecutionConfig
+from pennylane.devices.qubit.preprocess import validate_device_wires
+
 from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.typing import Result, ResultBatch
 from pennylane.transforms.core import TransformProgram
-from pennylane.devices.execution_config import ExecutionConfig, DefaultExecutionConfig
-
-from pennylane.devices.qubit.preprocess import (
-    validate_device_wires,
-)
 
 from ._preprocess import preprocess, validate_and_expand_adjoint
 
@@ -38,12 +39,16 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 # always a function from a resultbatch to either a result or a result batch
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
-from pennylane.devices import DefaultQubit
-
 from ._version import __version__
 
 from pennylane_lightning.core._adjoint_jacobian import AdjointJacobian
 
+AdjointExecutionConfig = ExecutionConfig(use_device_gradient=True, gradient_method="adjoint")
+
+def _chunk_iterable(iteration, num_chunks):
+    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
+    iteration = iter(iteration)
+    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 class LightningBase(Device):
     """PennyLane Lightning device.
@@ -68,11 +73,15 @@ class LightningBase(Device):
         wires=None,
         shots=None,
         c_dtype=np.complex128,
+        seed="global",
     ) -> None:
         self.C_DTYPE = c_dtype
         if self.C_DTYPE not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
         super().__init__(wires=wires, shots=shots)
+        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
+        self._rng = np.random.default_rng(seed)
+        self._debugger = None
 
     @property
     def name(self):
@@ -117,26 +126,6 @@ class LightningBase(Device):
         transform_program_preprocess, config = preprocess(execution_config=execution_config)
         transform_program = transform_program + transform_program_preprocess
         return transform_program, config
-        # is_single_circuit = False
-        # if isinstance(circuits, QuantumScript):
-        #     circuits = [circuits]
-        #     is_single_circuit = True
-
-        # if execution_config.gradient_method == "adjoint":
-        #     for c in circuits:
-        #         self._check_adjoint_method_supported(c)
-
-        # batch, post_processing_fn, config = preprocess(circuits, execution_config=execution_config)
-
-        # if is_single_circuit:
-
-        #     def convert_batch_to_single_output(results: ResultBatch) -> Result:
-        #         """Unwraps a dimension so that executing the batch of circuits looks like executing a single circuit."""
-        #         return post_processing_fn(results)[0]
-
-        #     return batch, convert_batch_to_single_output, config
-
-        # return batch, post_processing_fn, config
 
     @abc.abstractmethod
     def simulate(
@@ -180,10 +169,26 @@ class LightningBase(Device):
             circuits = [circuits]
 
         if self.tracker.active:
-            self.tracker.update(batches=1, executions=len(circuits))
+            self.tracker.update(batches=1)
             self.tracker.record()
+            for c in circuits:
+                qpu_executions, shots = get_num_shots_and_executions(c)
+                if c.shots:
+                    self.tracker.update(
+                        simulations=1,
+                        executions=qpu_executions,
+                        shots=shots,
+                        resources=c.specs["resources"],
+                    )
+                else:
+                    self.tracker.update(
+                        simulations=1, executions=qpu_executions, resources=c.specs["resources"]
+                    )
+                self.tracker.record()
 
-        results = tuple(self.simulate(c, self.C_DTYPE) for c in circuits)
+        results = tuple(
+            self.simulate(c, self.C_DTYPE, rng=self._rng, debugger=self._debugger) for c in circuits
+        )
         return results[0] if is_single_circuit else results
 
     def supports_derivatives(
@@ -202,20 +207,8 @@ class LightningBase(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
-        # # if execution_config.gradient_method != "adjoint" or execution_config.derivative_order != 1:
-        # #     return False
-        # # return True
-        # if execution_config.gradient_method == "adjoint" and execution_config.derivative_order == 1:
-        #     if circuit is None:
-        #         return True
-        #     print("circuit", circuit)
-        #     print(validate_and_expand_adjoint(tape=circuit))
-        #     tape, _ = validate_and_expand_adjoint(tape=circuit)
-        #     return isinstance(tape[0][0], QuantumScript)
-
-        # return False
         if execution_config.gradient_method == "adjoint" and execution_config.use_device_gradient:
-            if self.shots is not None:
+            if self.shots.total_shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots. "
                     "The derivative is always exact when using the adjoint "
@@ -230,7 +223,7 @@ class LightningBase(Device):
 
         return False
 
-    def adjoint_jacobian(self, tape, c_dtype=np.complex128):
+    def adjoint_jacobian(self, tape, c_dtype=np.complex128, starting_state=None):
         """Calculates the Adjoint Jacobian for a given tape.
 
         Args:
@@ -241,12 +234,12 @@ class LightningBase(Device):
         Returns:
             np.array: An array results.
         """
-        return AdjointJacobian(self.name).calculate_adjoint_jacobian(tape, c_dtype)
+        return AdjointJacobian(self.name).calculate_adjoint_jacobian(tape, c_dtype, starting_state)
 
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig,
+        execution_config: ExecutionConfig = AdjointExecutionConfig,
     ):
         """Calculate the jacobian of either a single or a batch of circuits on the device.
         Args:
@@ -270,6 +263,43 @@ class LightningBase(Device):
                 circuits = [circuits]
 
             if self.tracker.active:
+                self.tracker.update(derivative_batches=1, derivatives=len(circuits))
+                self.tracker.record()
+
+            results = tuple(self.adjoint_jacobian(c, self.C_DTYPE) for c in circuits)
+            return results[0] if is_single_circuit else results
+
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def simulate_and_adjoint(
+        self, circuit: QuantumScript, c_dtype=np.complex128, rng=None, debugger=None
+    ) -> Result:
+        """Simulate a single quantum script and calculates the state gradient with the adjoint Jacobian method.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            rng (Union[None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+                seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``.
+                If no value is provided, a default RNG will be used.
+            debugger (_Debugger): The debugger to use
+
+        Returns:
+            Results of the simulation and circuit gradient
+        """
+
+    def execute_and_compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
+        if execution_config.gradient_method == "adjoint":
+            is_single_circuit = False
+            if isinstance(circuits, QuantumScript):
+                is_single_circuit = True
+                circuits = [circuits]
+
+            if self.tracker.active:
                 for c in circuits:
                     self.tracker.update(resources=c.specs["resources"])
                 self.tracker.update(
@@ -279,9 +309,13 @@ class LightningBase(Device):
                 )
                 self.tracker.record()
 
-            results = tuple(self.adjoint_jacobian(c, self.C_DTYPE) for c in circuits)
-            return results[0] if is_single_circuit else results
+            results = tuple(
+                self.simulate_and_adjoint(c, rng=self._rng, debugger=self._debugger)
+                for c in circuits
+            )
 
+            results, jacs = tuple(zip(*results))
+            return (results[0], jacs[0]) if is_single_circuit else (results, jacs)
         raise NotImplementedError
 
 
