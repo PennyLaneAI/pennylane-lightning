@@ -20,6 +20,9 @@ from conftest import THETA, PHI, VARPHI
 import numpy as np
 import pennylane as qml
 
+from conftest import LightningDevice
+from pennylane.devices import DefaultQubit
+
 np.random.seed(42)
 
 
@@ -27,22 +30,23 @@ np.random.seed(42)
 class TestVar:
     """Tests for the variance"""
 
+    @staticmethod
+    def process_and_execute(dev, tape):
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
     def test_var(self, theta, phi, qubit_device, tol):
         """Tests for variance calculation"""
         dev = qubit_device(wires=3)
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(phi, wires=[0])
+            qml.RY(theta, wires=[0])
+            qml.var(qml.PauliZ(wires=[0]))
 
-        # test correct variance for <Z> of a rotated state
-        observable = qml.PauliZ(wires=[0])
+        var = self.process_and_execute(dev, tape)
 
-        dev.apply(
-            [
-                qml.RX(phi, wires=[0]),
-                qml.RY(theta, wires=[0]),
-            ],
-            rotations=[*observable.diagonalizing_gates()],
-        )
-
-        var = dev.var(observable)
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
 
         assert np.allclose(var, expected, tol)
@@ -52,23 +56,26 @@ class TestVar:
 class TestTensorVar:
     """Tests for variance of tensor observables"""
 
+    @staticmethod
+    def process_and_execute(dev, tape):
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
     def test_paulix_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         dev = qubit_device(wires=3)
-        obs = qml.PauliX(0) @ qml.PauliY(2)
 
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(varphi, wires=[2])
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[1, 2])
+            qml.var(qml.PauliX(0) @ qml.PauliY(2))
 
-        res = dev.var(obs)
+        var = self.process_and_execute(dev, tape)
 
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
@@ -79,25 +86,20 @@ class TestTensorVar:
             + 14
         ) / 16
 
-        assert np.allclose(res, expected, tol)
+        assert np.allclose(var, expected, tol)
 
     def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, qubit_device, tol):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         dev = qubit_device(wires=3)
-        obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(varphi, wires=[2])
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[1, 2])
+            qml.var(qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2))
 
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.var(obs)
+        var = self.process_and_execute(dev, tape)
 
         expected = (
             3
@@ -106,4 +108,4 @@ class TestTensorVar:
             - 2 * np.cos(theta) * np.sin(phi) * np.sin(2 * varphi)
         ) / 4
 
-        assert np.allclose(res, expected, tol)
+        assert np.allclose(var, expected, tol)
