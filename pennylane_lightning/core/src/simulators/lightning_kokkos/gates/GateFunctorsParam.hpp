@@ -79,13 +79,13 @@ template <class Precision> struct multiQubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
 
-        std::vector<std::size_t> rev_wires(wires.size());
-        std::vector<std::size_t> rev_wire_shifts_(wires.size());
-        for (std::size_t k = 0; k < wires.size(); k++) {
-            rev_wires[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
-            rev_wire_shifts_[k] = (one << rev_wires[k]);
+        std::vector<std::size_t> rev_wires_(wires_.size());
+        std::vector<std::size_t> rev_wire_shifts_(wires_.size());
+        for (std::size_t k = 0; k < wires_.size(); k++) {
+            rev_wires_[k] = (num_qubits - 1) - wires_[(wires_.size() - 1) - k];
+            rev_wire_shifts_[k] = (one << rev_wires_[k]);
         }
-        const std::vector<std::size_t> parity_ = revWireParity(rev_wires);
+        const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);
 
         Kokkos::View<const size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
@@ -113,6 +113,7 @@ template <class Precision> struct multiQubitOpFunctor {
             }
             indices(0) = idx;
             coeffs_in(0) = arr(idx);
+
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
                                  [&](const std::size_t inner_idx) {
                                      std::size_t index = indices(0);
