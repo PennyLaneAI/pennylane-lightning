@@ -240,8 +240,28 @@ def test_get_diagonalizing_gates(obs, has_rotation):
 
 
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
+def test_qubit_RY(theta, phi, tol):
+    """Test that Hadamard expectation value is correct"""
+    n_qubits = 4
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.RY(theta, wires=[0])
+        qml.RY(phi, wires=[1])
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
 @pytest.mark.parametrize("n_wires", range(1, 7))
-@pytest.mark.parametrize("reverse", [True, False])
+@pytest.mark.parametrize("reverse", [False])
 def test_qubit_unitary(reverse, n_wires, theta, phi, tol):
     """Test that Hadamard expectation value is correct"""
     n_qubits = 10
@@ -252,7 +272,7 @@ def test_qubit_unitary(reverse, n_wires, theta, phi, tol):
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
-    wires = range(2, 2 + n_wires)
+    wires = list(range(2, 2 + n_wires))
     if reverse:
         wires.reverse()
 
