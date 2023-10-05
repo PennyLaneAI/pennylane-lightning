@@ -45,10 +45,12 @@ from pennylane_lightning.core._adjoint_jacobian import AdjointJacobian
 
 AdjointExecutionConfig = ExecutionConfig(use_device_gradient=True, gradient_method="adjoint")
 
+
 def _chunk_iterable(iteration, num_chunks):
     "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
     iteration = iter(iteration)
     return iter(lambda: tuple(islice(iteration, num_chunks)), ())
+
 
 class LightningBase(Device):
     """PennyLane Lightning device.

@@ -240,21 +240,24 @@ class AdjointJacobian:
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
-    def calculate_adjoint_jacobian(self, tape, c_dtype=np.complex128):
+    def calculate_adjoint_jacobian(self, tape, c_dtype=np.complex128, state=None):
         """Calculates the Adjoint Jacobian for a given tape.
 
         Args:
             tape (QuantumTape): A quantum tape recording a variational quantum program.
             c_dtype (Complex data type, Optional): Default to ``np.complex128``.
-            starting_state (np.array, Optional): unravelled initial state (1D). Default to None.
+            state (np.array, Optional): unravelled initial state (1D). Default to None.
 
         Returns:
             np.array: An array results.
         """
+        # Map wires if custom wire labels used
+        tape = tape.map_to_standard_wires()
 
-        state = create_initial_state(tape.wires)
-        state = np.ravel(asarray(state, c_dtype))
-        state = self.apply_operations(tape._ops, state)
+        if state is None:
+            state = create_initial_state(tape.wires)
+            state = np.ravel(asarray(state, c_dtype))
+            state = self.apply_operations(tape._ops, state)
 
         if len(tape.measurements) == 0:  # the tape does not have measurements
             return np.array([], dtype=state.dtype)
