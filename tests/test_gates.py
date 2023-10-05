@@ -261,7 +261,7 @@ def test_qubit_RY(theta, phi, tol):
 
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
 @pytest.mark.parametrize("n_wires", range(1, 7))
-@pytest.mark.parametrize("reverse", [False])
+@pytest.mark.parametrize("reverse", [True, False])
 def test_qubit_unitary(reverse, n_wires, theta, phi, tol):
     """Test that Hadamard expectation value is correct"""
     n_qubits = 10
@@ -317,7 +317,7 @@ def test_qubit_U3(wires, theta, phi, tol):
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
         qml.CNOT(wires=[0, 1])
-        qml.QubitUnitary(U, wires=[w for w in wires])
+        qml.QubitUnitary(U, wires=wires)
         return qml.state()
 
     circ = qml.QNode(circuit, dev)

@@ -21,9 +21,6 @@
 #include <tuple>
 #include <vector>
 
-#include <bitset>
-#include <iostream>
-
 #include "BitUtil.hpp" // fillLeadingOnes, fillTrailingOnes, bitswap
 #include "Error.hpp"
 #include "GateOperation.hpp"
@@ -136,6 +133,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         auto rev_wire = wire_list;
         std::sort(rev_wire.begin(), rev_wire.end());
         std::array<std::size_t, wire_size + 1> parity;
+        parity[0] = fillTrailingOnes(rev_wire[0]);
+        for (std::size_t i = 1; i < wire_size; i++) {
+            parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
+                        fillTrailingOnes(rev_wire[i]);
+        }
+        parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
+        return parity;
+    }
+
+    static auto revWireParityM(const std::vector<std::size_t> &wire_list)
+        -> std::vector<std::size_t> {
+        const std::size_t wire_size = wire_list.size();
+        auto rev_wire = wire_list;
+        std::sort(rev_wire.begin(), rev_wire.end());
+        std::vector<std::size_t> parity(wire_size + 1);
         parity[0] = fillTrailingOnes(rev_wire[0]);
         for (std::size_t i = 1; i < wire_size; i++) {
             parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
@@ -351,28 +363,44 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     static void
-    applyMultiQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+    applyMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                       const std::complex<PrecisionT> *matrix,
-                      const std::vector<size_t> &wires, bool inverse) {
+                      const std::vector<std::size_t> &wires, bool inverse) {
         using Pennylane::Util::bitswap;
+        constexpr std::size_t one{1};
         PL_ASSERT(num_qubits >= wires.size());
 
-        const size_t dim = static_cast<size_t>(1U) << wires.size();
-        std::vector<size_t> indices(dim);
+        const std::size_t dim = one << wires.size();
+        std::vector<std::size_t> indices(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+
+        std::vector<std::size_t> rev_wires(wires.size());
+        std::vector<std::size_t> rev_wire_shifts(wires.size());
+        for (std::size_t k = 0; k < wires.size(); k++) {
+            rev_wires[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity = revWireParityM(rev_wires);
+        PL_ASSERT(wires.size() == parity.size() - 1);
+
         if (inverse) {
-            for (size_t k = 0; k < exp2(num_qubits); k += dim) {
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k | inner_idx;
-                    const size_t n_wires = wires.size();
-                    for (size_t pos = 0; pos < n_wires; pos++) {
-                        idx = bitswap(idx, n_wires - pos - 1,
-                                      num_qubits - wires[pos] - 1);
+            for (std::size_t k = 0; k < exp2(num_qubits - wires.size()); k++) {
+                std::size_t idx = (k & parity[0]);
+                for (std::size_t i = 1; i < parity.size(); i++) {
+                    idx |= ((k << i) & parity[i]);
+                }
+                indices[0] = idx;
+                coeffs_in[0] = arr[idx];
+                for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                    idx = indices[0];
+                    for (std::size_t i = 0; i < wires.size(); i++) {
+                        if ((inner_idx & (one << i)) != 0) {
+                            idx |= rev_wire_shifts[i];
+                        }
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];
                 }
-
                 for (size_t i = 0; i < dim; i++) {
                     const auto idx = indices[i];
                     arr[idx] = 0.0;
@@ -385,25 +413,29 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         } else {
-            for (size_t k = 0; k < exp2(num_qubits); k += dim) {
-                for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                    size_t idx = k | inner_idx;
-                    const size_t n_wires = wires.size();
-                    for (size_t pos = 0; pos < n_wires; pos++) {
-                        idx = bitswap(idx, n_wires - pos - 1,
-                                      num_qubits - wires[pos] - 1);
+            for (std::size_t k = 0; k < exp2(num_qubits - wires.size()); k++) {
+                std::size_t idx = (k & parity[0]);
+                for (std::size_t i = 1; i < parity.size(); i++) {
+                    idx |= ((k << i) & parity[i]);
+                }
+                indices[0] = idx;
+                coeffs_in[0] = arr[idx];
+                for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                    idx = indices[0];
+                    for (std::size_t i = 0; i < wires.size(); i++) {
+                        if ((inner_idx & (one << i)) != 0) {
+                            idx |= rev_wire_shifts[i];
+                        }
                     }
                     indices[inner_idx] = idx;
                     coeffs_in[inner_idx] = arr[idx];
                 }
-
-                for (size_t i = 0; i < dim; i++) {
-                    const auto idx = indices[i];
-                    arr[idx] = 0.0;
-                    const size_t base_idx = i * dim;
-
-                    for (size_t j = 0; j < dim; j++) {
-                        arr[idx] += matrix[base_idx + j] * coeffs_in[j];
+                for (std::size_t i = 0; i < dim; i++) {
+                    const auto index = indices[i];
+                    arr[index] = 0.0;
+                    const std::size_t base_idx = i * dim;
+                    for (std::size_t j = 0; j < dim; j++) {
+                        arr[index] += matrix[base_idx + j] * coeffs_in[j];
                     }
                 }
             }
