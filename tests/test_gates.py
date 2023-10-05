@@ -271,7 +271,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
         (2, [0], [1]),
         (2, [1], [0]),
         (3, [1], [2]),
-        # (3, [2], [1]),
+        (3, [2], [1]),
         (3, [0], [2]),
         (3, [2], [0]),
     ],
@@ -303,7 +303,7 @@ def test_controlled_qubit_unitary_n0(params, tol):
 @pytest.mark.parametrize(
     "wires",
     [
-        # [0],
+        [0],
         [1],
         [2],
         # [0, 3],
@@ -318,14 +318,14 @@ def test_controlled_qubit_unitary_n0(params, tol):
     "controls",
     [
         [0],
-        # [1],
-        # [2],
-        # [0, 4],
-        # [1, 4],
-        # [2, 4],
-        # [0, 4, 6],
-        # [1, 4, 6],
-        # [2, 4, 6],
+        [1],
+        [2],
+        [0, 4],
+        [1, 4],
+        [2, 4],
+        [0, 4, 6],
+        [1, 4, 6],
+        [2, 4, 6],
     ],
 )
 def test_controlled_qubit_unitary(controls, wires, theta, phi, tol):
@@ -337,10 +337,10 @@ def test_controlled_qubit_unitary(controls, wires, theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     m = 2**n_wires
-    U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
     U, _ = np.linalg.qr(U)
-    U = np.array(qml.PauliX([0]).matrix(), dtype=np.complex128)
-    init_state = np.random.rand(2**n_qubits) + 1.0e-16j * np.random.rand(2**n_qubits)
+    # U = np.array(qml.PauliX([0]).matrix(), dtype=np.complex128)
+    init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
     # print(wires)
