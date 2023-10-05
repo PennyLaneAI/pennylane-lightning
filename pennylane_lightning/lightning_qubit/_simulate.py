@@ -150,34 +150,3 @@ def measure_final_state(
     #         return tuple(res[0] for res in results)
 
     #     return results[0]
-
-
-def _execute_single_script(
-    circuit: QuantumScript, c_dtype=np.complex128, rng=None, debugger=None
-) -> Result:
-    """Simulate a single quantum script.
-
-    This is an internal function that will be called by the successor to ``lightning.qubit``.
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        rng (Union[None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
-            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``.
-            If no value is provided, a default RNG will be used.
-        debugger (_Debugger): The debugger to use
-
-    Returns:
-        tuple(TensorLike): The results of the simulation
-
-    Note that this function can return measurements for non-commuting observables simultaneously.
-
-    This function assumes that all operations provide matrices.
-
-    >>> qs = qml.tape.QuantumScript([qml.RX(1.2, wires=0)], [qml.expval(qml.PauliZ(0)), qml.probs(wires=(0,1))])
-    >>> _execute_single_script(qs)
-    (0.36235775447667357,
-    tensor([0.68117888, 0.        , 0.31882112, 0.        ], requires_grad=True))
-
-    """
-    state, is_state_batched = get_final_state(circuit, c_dtype, debugger=debugger)
-    return measure_final_state(circuit, state, is_state_batched, c_dtype, rng=rng)
