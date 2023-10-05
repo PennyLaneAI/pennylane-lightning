@@ -17,6 +17,7 @@ import pytest
 from pennylane import numpy as np
 
 import pennylane as qml
+from pennylane.resource import Resources
 from pennylane.devices import ExecutionConfig
 from pennylane_lightning.lightning_qubit import LightningQubit
 
@@ -94,11 +95,29 @@ class TestTracking:
         dev = LightningQubit()
         with qml.Tracker(dev) as tracker:
             dev.execute(qs)
+            dev.compute_derivatives(qs)
             dev.execute([qs, qs])  # and a second time
 
-        assert tracker.history == {"batches": [1, 1], "executions": [1, 2]}
-        assert tracker.totals == {"batches": 2, "executions": 3}
-        assert tracker.latest == {"batches": 1, "executions": 2}
+        assert tracker.history == {
+            "batches": [1, 1],
+            "executions": [1, 1, 1],
+            "simulations": [1, 1, 1],
+            "resources": [Resources(num_wires=1), Resources(num_wires=1), Resources(num_wires=1)],
+            "derivative_batches": [1],
+            "derivatives": [1],
+        }
+        assert tracker.totals == {
+            "batches": 2,
+            "executions": 3,
+            "simulations": 3,
+            "derivative_batches": 1,
+            "derivatives": 1,
+        }
+        assert tracker.latest == {
+            "executions": 1,
+            "simulations": 1,
+            "resources": Resources(num_wires=1),
+        }
 
 
 @pytest.mark.skipif(not LightningQubit._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
