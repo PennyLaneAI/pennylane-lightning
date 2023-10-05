@@ -510,6 +510,275 @@ class TestAdjointJacobianComputeDerivatives:
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
 
+@pytest.mark.skipif(not LightningQubit._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+class TestAdjointDifferentiation:
+    """Tests adjoint differentiation integration with LightningQubit."""
+
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return LightningQubit(c_dtype=request.param)
+
+    def test_derivatives_single_circuit(self, dev):
+        """Tests derivatives with a single circuit."""
+        x = np.array(np.pi / 7)
+        qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+        qs, _ = validate_and_expand_adjoint(qs)
+        qs = qs[0]
+        expected_grad = -qml.math.sin(x)
+        actual_grad = dev.compute_derivatives(qs, AdjointConfig)
+        assert isinstance(actual_grad, np.ndarray)
+        assert actual_grad.shape == ()  # pylint: disable=no-member
+        assert np.isclose(actual_grad, expected_grad)
+
+        expected_val = qml.math.cos(x)
+        actual_val, actual_grad = dev.execute_and_compute_derivatives(qs, AdjointConfig)
+        assert np.isclose(actual_val, expected_val)
+        assert np.isclose(actual_grad, expected_grad)
+
+    def test_derivatives_list_with_single_circuit(self, dev):
+        """Tests a basic example with a batch containing a single circuit."""
+        x = np.array(np.pi / 7)
+        qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+        qs, _ = validate_and_expand_adjoint(qs)
+        qs = qs[0]
+        expected_grad = -qml.math.sin(x)
+        actual_grad = dev.compute_derivatives([qs], AdjointConfig)
+        assert isinstance(actual_grad, tuple)
+        assert isinstance(actual_grad[0], np.ndarray)
+        assert np.isclose(actual_grad[0], expected_grad)
+
+        expected_val = qml.math.cos(x)
+        actual_val, actual_grad = dev.execute_and_compute_derivatives([qs], AdjointConfig)
+        assert np.isclose(expected_val, actual_val[0])
+        assert np.isclose(expected_grad, actual_grad[0])
+
+    def test_derivatives_many_tapes_many_results(self, dev):
+        """Tests a basic example with a batch of circuits of varying return shapes."""
+        x = np.array(np.pi / 7)
+        single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+        multi_meas = qml.tape.QuantumScript(
+            [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+        )
+        expected_grad = (-qml.math.sin(x), (qml.math.cos(x), -qml.math.sin(x)))
+        actual_grad = dev.compute_derivatives([single_meas, multi_meas], AdjointConfig)
+        assert np.isclose(actual_grad[0], expected_grad[0])
+        assert isinstance(actual_grad[1], tuple)
+        assert qml.math.allclose(actual_grad[1], expected_grad[1])
+
+    def test_derivatives_integration(self, dev):
+        """Tests the expected workflow done by a calling method."""
+        x = np.array(np.pi / 7)
+        expected_grad = (-qml.math.sin(x), (qml.math.cos(x), -qml.math.sin(x)))
+        single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+        multi_meas = qml.tape.QuantumScript(
+            [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+        )
+
+        program, new_ec = dev.preprocess(AdjointConfig)
+        circuits, _ = program([single_meas, multi_meas])
+        actual_grad = dev.compute_derivatives(circuits, AdjointConfig)
+
+        assert new_ec.use_device_gradient
+        assert new_ec.grad_on_execution
+
+        assert np.isclose(actual_grad[0], expected_grad[0])
+        assert isinstance(actual_grad[1], tuple)
+        assert qml.math.allclose(actual_grad[1], expected_grad[1])
+
+    # def test_jvps_single_circuit(self, max_workers):
+    #     """Tests jvps with a single circuit."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     tangent = (0.456,)
+
+    #     qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+
+    #     qs, _ = validate_and_expand_adjoint(qs)
+    #     qs = qs[0]
+
+    #     expected_grad = -qml.math.sin(x) * tangent[0]
+    #     actual_grad = dev.compute_jvp(qs, tangent, self.ec)
+    #     assert isinstance(actual_grad, np.ndarray)
+    #     assert actual_grad.shape == ()  # pylint: disable=no-member
+    #     assert np.isclose(actual_grad, expected_grad)
+
+    #     expected_val = qml.math.cos(x)
+    #     actual_val, actual_grad = dev.execute_and_compute_jvp(qs, tangent, self.ec)
+    #     assert np.isclose(actual_val, expected_val)
+    #     assert np.isclose(actual_grad, expected_grad)
+
+    # def test_jvps_list_with_single_circuit(self, max_workers):
+    #     """Tests a basic example with a batch containing a single circuit."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     tangent = (0.456,)
+
+    #     qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+
+    #     qs, _ = validate_and_expand_adjoint(qs)
+    #     qs = qs[0]
+
+    #     expected_grad = -qml.math.sin(x) * tangent[0]
+    #     actual_grad = dev.compute_jvp([qs], [tangent], self.ec)
+    #     assert isinstance(actual_grad, tuple)
+    #     assert isinstance(actual_grad[0], np.ndarray)
+    #     assert np.isclose(actual_grad[0], expected_grad)
+
+    #     expected_val = qml.math.cos(x)
+    #     actual_val, actual_grad = dev.execute_and_compute_jvp([qs], [tangent], self.ec)
+    #     assert np.isclose(expected_val, actual_val[0])
+    #     assert np.isclose(expected_grad, actual_grad[0])
+
+    # def test_jvps_many_tapes_many_results(self, max_workers):
+    #     """Tests a basic example with a batch of circuits of varying return shapes."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     multi_meas = qml.tape.QuantumScript(
+    #         [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+    #     )
+    #     tangents = [(0.456,), (0.789,)]
+
+    #     expected_grad = (
+    #         -qml.math.sin(x) * tangents[0][0],
+    #         (qml.math.cos(x) * tangents[1][0], -qml.math.sin(x) * tangents[1][0]),
+    #     )
+    #     actual_grad = dev.compute_jvp([single_meas, multi_meas], tangents, self.ec)
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert isinstance(actual_grad[1], tuple)
+    #     assert qml.math.allclose(actual_grad[1], expected_grad[1])
+
+    #     expected_val = (qml.math.cos(x), (qml.math.sin(x), qml.math.cos(x)))
+    #     actual_val, actual_grad = dev.execute_and_compute_jvp(
+    #         [single_meas, multi_meas], tangents, self.ec
+    #     )
+    #     assert np.isclose(actual_val[0], expected_val[0])
+    #     assert qml.math.allclose(actual_val[1], expected_val[1])
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert qml.math.allclose(actual_grad[1], expected_grad[1])
+
+    # def test_jvps_integration(self, max_workers):
+    #     """Tests the expected workflow done by a calling method."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+
+    #     single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     multi_meas = qml.tape.QuantumScript(
+    #         [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+    #     )
+    #     tangents = [(0.456,), (0.789,)]
+    #     circuits = [single_meas, multi_meas]
+    #     program, new_ec = dev.preprocess(self.ec)
+    #     circuits, _ = program(circuits)
+    #     actual_grad = dev.compute_jvp(circuits, tangents, self.ec)
+    #     expected_grad = (
+    #         -qml.math.sin(x) * tangents[0][0],
+    #         (qml.math.cos(x) * tangents[1][0], -qml.math.sin(x) * tangents[1][0]),
+    #     )
+
+    #     assert new_ec.use_device_gradient
+    #     assert new_ec.grad_on_execution
+
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert isinstance(actual_grad[1], tuple)
+    #     assert qml.math.allclose(actual_grad[1], expected_grad[1])
+
+    # def test_vjps_single_circuit(self, max_workers):
+    #     """Tests vjps with a single circuit."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     cotangent = (0.456,)
+
+    #     qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     qs, _ = validate_and_expand_adjoint(qs)
+    #     qs = qs[0]
+
+    #     expected_grad = -qml.math.sin(x) * cotangent[0]
+    #     actual_grad = dev.compute_vjp(qs, cotangent, self.ec)
+    #     assert isinstance(actual_grad, np.ndarray)
+    #     assert actual_grad.shape == ()  # pylint: disable=no-member
+    #     assert np.isclose(actual_grad, expected_grad)
+
+    #     expected_val = qml.math.cos(x)
+    #     actual_val, actual_grad = dev.execute_and_compute_vjp(qs, cotangent, self.ec)
+    #     assert np.isclose(actual_val, expected_val)
+    #     assert np.isclose(actual_grad, expected_grad)
+
+    # def test_vjps_list_with_single_circuit(self, max_workers):
+    #     """Tests a basic example with a batch containing a single circuit."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     cotangent = (0.456,)
+
+    #     qs = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     qs, _ = validate_and_expand_adjoint(qs)
+    #     qs = qs[0]
+
+    #     expected_grad = -qml.math.sin(x) * cotangent[0]
+    #     actual_grad = dev.compute_vjp([qs], [cotangent], self.ec)
+    #     assert isinstance(actual_grad, tuple)
+    #     assert isinstance(actual_grad[0], np.ndarray)
+    #     assert np.isclose(actual_grad[0], expected_grad)
+
+    #     expected_val = qml.math.cos(x)
+    #     actual_val, actual_grad = dev.execute_and_compute_vjp([qs], [cotangent], self.ec)
+    #     assert np.isclose(expected_val, actual_val[0])
+    #     assert np.isclose(expected_grad, actual_grad[0])
+
+    # def test_vjps_many_tapes_many_results(self, max_workers):
+    #     """Tests a basic example with a batch of circuits of varying return shapes."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+    #     single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     multi_meas = qml.tape.QuantumScript(
+    #         [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+    #     )
+    #     cotangents = [(0.456,), (0.789, 0.123)]
+
+    #     expected_grad = (
+    #         -qml.math.sin(x) * cotangents[0][0],
+    #         qml.math.cos(x) * cotangents[1][0] - qml.math.sin(x) * cotangents[1][1],
+    #     )
+    #     actual_grad = dev.compute_vjp([single_meas, multi_meas], cotangents, self.ec)
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert np.isclose(actual_grad[1], expected_grad[1])
+
+    #     expected_val = (qml.math.cos(x), (qml.math.sin(x), qml.math.cos(x)))
+    #     actual_val, actual_grad = dev.execute_and_compute_vjp(
+    #         [single_meas, multi_meas], cotangents, self.ec
+    #     )
+    #     assert np.isclose(actual_val[0], expected_val[0])
+    #     assert qml.math.allclose(actual_val[1], expected_val[1])
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert np.isclose(actual_grad[1], expected_grad[1])
+
+    # def test_vjps_integration(self, max_workers):
+    #     """Tests the expected workflow done by a calling method."""
+    #     dev = DefaultQubit(max_workers=max_workers)
+    #     x = np.array(np.pi / 7)
+
+    #     single_meas = qml.tape.QuantumScript([qml.RX(x, 0)], [qml.expval(qml.PauliZ(0))])
+    #     multi_meas = qml.tape.QuantumScript(
+    #         [qml.RY(x, 0)], [qml.expval(qml.PauliX(0)), qml.expval(qml.PauliZ(0))]
+    #     )
+    #     cotangents = [(0.456,), (0.789, 0.123)]
+    #     circuits = [single_meas, multi_meas]
+    #     program, new_ec = dev.preprocess(self.ec)
+    #     circuits, _ = program(circuits)
+
+    #     actual_grad = dev.compute_vjp(circuits, cotangents, self.ec)
+    #     expected_grad = (
+    #         -qml.math.sin(x) * cotangents[0][0],
+    #         qml.math.cos(x) * cotangents[1][0] - qml.math.sin(x) * cotangents[1][1],
+    #     )
+
+    #     assert new_ec.use_device_gradient
+    #     assert new_ec.grad_on_execution
+
+    #     assert np.isclose(actual_grad[0], expected_grad[0])
+    #     assert np.isclose(actual_grad[1], expected_grad[1])
+
+
 class TestOperatorArithmeticComputeDerivatives:
     """Tests integration with SProd, Prod, and Sum."""
 
