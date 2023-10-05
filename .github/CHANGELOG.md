@@ -56,6 +56,9 @@
 
 ### Bug fixes
 
+* Fix a bug in the `LM::multiQubitOp` kernel implementation.
+  [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
+
 * Fix RTD builds by removing unsupported `sytem_packages` configuration option.
   [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
 
