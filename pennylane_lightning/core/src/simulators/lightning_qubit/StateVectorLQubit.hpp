@@ -347,95 +347,119 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
         const size_t n_contr = controlled_wires.size();
         const size_t n_wires = wires.size();
-        auto all_wires = get_all_wires(controlled_wires, wires);
-        for (auto &m : all_wires) {
-            std::cout << m.first << " " << m.second << std::endl;
-        }
-        std::vector<size_t> targets;
-        targets.reserve(wires.size());
-        size_t count = 0;
-        for (auto &m : all_wires) {
-            if (!m.second) {
-                targets.push_back(count);
-            }
-            count++;
-        }
-        count--;
-        for (auto &m : targets) {
-            std::cout << m << std::endl;
-        }
-        std::cout << "count = " << count << std::endl;
 
-        for (std::size_t bit{0}; bit < 2; bit++) {
-            for (std::size_t k = 0; k < 6; k++) {
-                std::size_t inner_idx = 12;
-                // std::cout << "fillTrailingOnes(" << k << ")"
-                //           << std::bitset<8>(fillTrailingOnes(k)) <<
-                //           std::endl;
-                std::cout << "insert_bit(" << inner_idx << ", " << k << ", "
-                          << bit << ")"
-                          << std::bitset<8>(insert_bit(inner_idx, k, bit))
-                          << std::endl;
-            }
-        }
-        for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+        for (size_t k = 0; k < exp2(num_qubits); k += step) {
             for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
-                size_t idx = k;
+                size_t idx =
+                    k | (inner_idx << n_contr) | fillTrailingOnes(n_contr);
                 std::cout << "idx = " << std::bitset<12>(idx) << std::endl;
-                std::size_t shift = n_wires - 1;
-                for (size_t pos = 0; pos < nw_tot; pos++) {
-                    if (all_wires[pos].second) {
-                        idx = insert_bit(
-                            idx, (num_qubits - 1) - all_wires[pos].first, one);
-                        std::cout << "idx(1) = " << std::bitset<12>(idx)
-                                  << std::endl;
-                        // idx = bitswap(idx, (nw_tot - 1) - pos,
-                        //               (num_qubits - 1) -
-                        //               controlled_wires[pos]);
-                        // std::cout
-                        //     << "cswap(" << (nw_tot - 1) - pos << ","
-                        //     << (num_qubits - 1) - controlled_wires[pos] <<
-                        //     ")";
-                    } else {
-                        idx = insert_bit(
-                            idx, (num_qubits - 1) - all_wires[pos].first,
-                            (inner_idx & (one << shift)) >> shift);
-                        shift--;
-                        std::cout << "bit = "
-                                  << std::bitset<12>((inner_idx >> shift) & one)
-                                  << std::endl;
-                        std::cout << "idx(x) = " << std::bitset<12>(idx)
-                                  << std::endl;
-                        // idx = bitswap(idx, (nw_tot - 1) - pos,
-                        //               (num_qubits - 1) - wires[pos]);
-                        // std::cout << "swap(" << (nw_tot - 1) - pos
-                        //           << "," << (num_qubits - 1) - wires[pos]
-                        //           << ")";
-                    }
+                for (size_t pos = 0; pos < n_wires; pos++) {
+                    idx = bitswap(idx, (nw_tot - 1) - pos,
+                                  (num_qubits - 1) - wires[pos]);
+                    std::cout << "idx(x) = " << std::bitset<12>(idx)
+                              << std::endl;
+                }
+                for (size_t pos = 0; pos < n_contr; pos++) {
+                    idx = bitswap(idx, (n_contr - 1) - pos,
+                                  (num_qubits - 1) - controlled_wires[pos]);
+                    std::cout << "idx(1) = " << std::bitset<12>(idx)
+                              << std::endl;
                 }
                 indices[inner_idx] = idx;
-                std::cout << "idx = " << std::bitset<12>(idx) << std::endl;
                 coeffs_in[inner_idx] = arr[idx];
-                std::cout << "coeffs_in = " << arr[idx] << std::endl;
             }
+            // for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+            //     size_t idx =
+            //         k | (inner_idx << n_contr) | fillTrailingOnes(n_contr);
+            //     std::cout << "idx = " << std::bitset<12>(idx) << std::endl;
+            //     for (size_t pos = 0; pos < n_wires; pos++) {
+            //         idx = bitswap(idx, (nw_tot - 1) - pos,
+            //                       (num_qubits - 1) - wires[pos]);
+            //         std::cout << "idx(x) = " << std::bitset<12>(idx)
+            //                   << std::endl;
+            //     }
+            //     for (size_t pos = 0; pos < n_contr; pos++) {
+            //         idx = bitswap(idx, (n_contr - 1) - pos,
+            //                       (num_qubits - 1) - controlled_wires[pos]);
+            //         std::cout << "idx(1) = " << std::bitset<12>(idx)
+            //                   << std::endl;
+            //     }
+            //     indices[inner_idx] = idx;
+            //     coeffs_in[inner_idx] = arr[idx];
+            // }
+
             for (size_t i = 0; i < dim; i++) {
                 const auto idx = indices[i];
-                const size_t base_idx = i * dim;
                 arr[idx] = 0.0;
+                const size_t base_idx = i * dim;
+
                 for (size_t j = 0; j < dim; j++) {
                     arr[idx] += matrix[base_idx + j] * coeffs_in[j];
-                    // std::cout << "matrix[" << base_idx + j
-                    //           << "] = " << matrix[base_idx + j] << "
-                    //           coeffs_in["
-                    //           << j << "] = " << coeffs_in[j] << " arr[ " <<
-                    //           idx
-                    //           << " ] = " << arr[idx] << std::endl;
-                    // // printf("%ld = %ld, %ld\n", base_idx + j, i, j);
                 }
-                std::cout << "indices = " << idx << " arr[idx] = " << arr[idx]
-                          << std::endl;
             }
         }
+        // for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+        //     for (size_t inner_idx = 0; inner_idx < dim; inner_idx++) {
+        //         size_t idx = k;
+        //         std::cout << "idx = " << std::bitset<12>(idx) << std::endl;
+        //         std::size_t shift = n_wires - 1;
+        //         for (size_t pos = 0; pos < nw_tot; pos++) {
+        //             if (all_wires[pos].second) {
+        //                 idx = insert_bit(
+        //                     idx, (num_qubits - 1) - all_wires[pos].first,
+        //                     one);
+        //                 std::cout << "idx(1) = " << std::bitset<12>(idx)
+        //                           << std::endl;
+        //                 // idx = bitswap(idx, (nw_tot - 1) - pos,
+        //                 //               (num_qubits - 1) -
+        //                 //               controlled_wires[pos]);
+        //                 // std::cout
+        //                 //     << "cswap(" << (nw_tot - 1) - pos << ","
+        //                 //     << (num_qubits - 1) - controlled_wires[pos] <<
+        //                 //     ")";
+        //             } else {
+        //                 idx = insert_bit(
+        //                     idx, (num_qubits - 1) - all_wires[pos].first,
+        //                     (inner_idx & (one << shift)) >> shift);
+        //                 shift--;
+        //                 std::cout << "bit = "
+        //                           << std::bitset<12>((inner_idx >> shift) &
+        //                           one)
+        //                           << std::endl;
+        //                 std::cout << "idx(x) = " << std::bitset<12>(idx)
+        //                           << std::endl;
+        //                 // idx = bitswap(idx, (nw_tot - 1) - pos,
+        //                 //               (num_qubits - 1) - wires[pos]);
+        //                 // std::cout << "swap(" << (nw_tot - 1) - pos
+        //                 //           << "," << (num_qubits - 1) - wires[pos]
+        //                 //           << ")";
+        //             }
+        //         }
+        //         indices[inner_idx] = idx;
+        //         std::cout << "idx = " << std::bitset<12>(idx) << std::endl;
+        //         coeffs_in[inner_idx] = arr[idx];
+        //         std::cout << "coeffs_in = " << arr[idx] << std::endl;
+        //     }
+        //     for (size_t i = 0; i < dim; i++) {
+        //         const auto idx = indices[i];
+        //         const size_t base_idx = i * dim;
+        //         arr[idx] = 0.0;
+        //         for (size_t j = 0; j < dim; j++) {
+        //             arr[idx] += matrix[base_idx + j] * coeffs_in[j];
+        //             // std::cout << "matrix[" << base_idx + j
+        //             //           << "] = " << matrix[base_idx + j] << "
+        //             //           coeffs_in["
+        //             //           << j << "] = " << coeffs_in[j] << " arr[ "
+        //             <<
+        //             //           idx
+        //             //           << " ] = " << arr[idx] << std::endl;
+        //             // // printf("%ld = %ld, %ld\n", base_idx + j, i, j);
+        //         }
+        //         std::cout << "indices = " << idx << " arr[idx] = " <<
+        //         arr[idx]
+        //                   << std::endl;
+        //     }
+        // }
         printf("=================\n");
     }
 

@@ -229,7 +229,7 @@ void assignKernelsForMatrixOp_Default() {
                                KernelType::LM);
     instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
                                all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
+                               KernelType::PI);
     instance.assignKernelForOp(MatrixOperation::NQubitOp, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
