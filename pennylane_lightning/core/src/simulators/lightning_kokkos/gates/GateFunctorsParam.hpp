@@ -23,6 +23,23 @@ namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
 using std::size_t;
+
+constexpr std::size_t one{1};
+
+auto revWireParity(const std::vector<std::size_t> &wire_list)
+    -> std::vector<std::size_t> {
+    const std::size_t wire_size = wire_list.size();
+    auto rev_wire = wire_list;
+    std::sort(rev_wire.begin(), rev_wire.end());
+    std::vector<std::size_t> parity(wire_size + 1);
+    parity[0] = fillTrailingOnes(rev_wire[0]);
+    for (std::size_t i = 1; i < wire_size; i++) {
+        parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
+                    fillTrailingOnes(rev_wire[i]);
+    }
+    parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
+    return parity;
+}
 } // namespace
 /// @endcond
 
@@ -44,6 +61,8 @@ template <class Precision> struct multiQubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
     std::size_t dim;
     std::size_t num_qubits;
 
@@ -55,41 +74,62 @@ template <class Precision> struct multiQubitOpFunctor {
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
         Kokkos::deep_copy(wires, wires_host);
-        dim = static_cast<std::size_t>(1U) << wires_.size();
+        dim = one << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
+
+        std::vector<std::size_t> rev_wires(wires.size());
+        std::vector<std::size_t> rev_wire_shifts_(wires.size());
+        for (std::size_t k = 0; k < wires.size(); k++) {
+            rev_wires[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
+            rev_wire_shifts_[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity_ = revWireParity(rev_wires);
+
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            rev_wire_shifts_host(rev_wire_shifts_.data(),
+                                 rev_wire_shifts_.size());
+        Kokkos::resize(rev_wire_shifts, rev_wire_shifts_host.size());
+        Kokkos::deep_copy(rev_wire_shifts, rev_wire_shifts_host);
+
+        Kokkos::View<const size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+            parity_host(parity_.data(), parity_.size());
+        Kokkos::resize(parity, parity_host.size());
+        Kokkos::deep_copy(parity, parity_host);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const MemberType &teamMember) const {
-        const std::size_t k = teamMember.league_rank() * dim;
+        const std::size_t k = teamMember.league_rank();
         ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
         ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
         if (teamMember.team_rank() == 0) {
-            Kokkos::parallel_for(
-                Kokkos::ThreadVectorRange(teamMember, dim),
-                [&](const std::size_t inner_idx) {
-                    std::size_t idx = k | inner_idx;
-                    const std::size_t n_wires = wires.size();
-
-                    for (std::size_t pos = 0; pos < n_wires; pos++) {
-                        std::size_t x =
-                            ((idx >> (n_wires - pos - 1)) ^
-                             (idx >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-                        idx = idx ^ ((x << (n_wires - pos - 1)) |
-                                     (x << (num_qubits - wires(pos) - 1)));
-                    }
-
-                    indices(inner_idx) = idx;
-                    coeffs_in(inner_idx) = arr(idx);
-                });
+            std::size_t idx = (k & parity(0));
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity(i));
+            }
+            indices(0) = idx;
+            coeffs_in(0) = arr(idx);
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
+                                 [&](const std::size_t inner_idx) {
+                                     std::size_t index = indices(0);
+                                     for (std::size_t i = 0; i < wires.size();
+                                          i++) {
+                                         if ((inner_idx & (one << i)) != 0) {
+                                             index |= rev_wire_shifts(i);
+                                         }
+                                     }
+                                     indices(inner_idx) = index;
+                                     coeffs_in(inner_idx) = arr(index);
+                                 });
         }
         teamMember.team_barrier();
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
-                const auto idx = indices[i];
+                const auto idx = indices(i);
                 arr(idx) = 0.0;
                 const std::size_t base_idx = i * dim;
 
@@ -1491,7 +1531,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 1;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     size_t rev_wire;
     size_t rev_wire_shift;
@@ -1532,7 +1572,7 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 2;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire0;
     std::size_t rev_wire1;
@@ -1614,7 +1654,7 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 3;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply3QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1682,7 +1722,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 4;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply4QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
@@ -1781,7 +1821,7 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     KokkosComplexVector matrix;
     KokkosIntVector wires;
     const std::size_t n_wires = 5;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply5QubitOpFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
