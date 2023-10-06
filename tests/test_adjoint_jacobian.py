@@ -778,15 +778,15 @@ def circuit_ansatz(params, wires):
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
     qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
-    # qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
     qml.IsingXX(params[13], wires=[wires[1], wires[0]])
     qml.IsingXY(params[14], wires=[wires[3], wires[2]])
     qml.IsingYY(params[14], wires=[wires[3], wires[2]])
     qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
     qml.U1(params[15], wires=wires[0])
-    # qml.U2(params[16], params[17], wires=wires[0])
-    # qml.U3(params[18], params[19], params[20], wires=wires[1])
+    qml.U2(params[16], params[17], wires=wires[0])
+    qml.U3(params[18], params[19], params[20], wires=wires[1])
     qml.adjoint(
         qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False
     )
