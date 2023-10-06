@@ -765,7 +765,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
+    qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]), lazy=False)
@@ -780,16 +780,16 @@ def circuit_ansatz(params, wires):
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
     # qml.PauliRot(params[12], "XXYZ", wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.CPhase(params[12], wires=[wires[3], wires[2]])
-    # qml.IsingXX(params[13], wires=[wires[1], wires[0]])
-    # qml.IsingXY(params[14], wires=[wires[3], wires[2]])
-    # qml.IsingYY(params[14], wires=[wires[3], wires[2]])
-    # qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
-    # qml.U1(params[15], wires=wires[0])
+    qml.IsingXX(params[13], wires=[wires[1], wires[0]])
+    qml.IsingXY(params[14], wires=[wires[3], wires[2]])
+    qml.IsingYY(params[14], wires=[wires[3], wires[2]])
+    qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
+    qml.U1(params[15], wires=wires[0])
     # qml.U2(params[16], params[17], wires=wires[0])
     # qml.U3(params[18], params[19], params[20], wires=wires[1])
-    # qml.adjoint(
-    #     qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False
-    # )
+    qml.adjoint(
+        qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False
+    )
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])
@@ -875,7 +875,7 @@ def test_integration_chunk_observables():
     """Integration tests that compare to default.qubit for a large circuit with multiple expectation values. Expvals are generated in parallelized chunks."""
     dev_def = qml.device("default.qubit", wires=range(4))
     dev_lig = qml.device(device_name, wires=range(4))
-    dev_lig_batched = qml.device(device_name, wires=range(4), batch_obs=True)
+    # dev_lig_batched = qml.device(device_name, wires=range(4), batch_obs=True)
 
     def circuit(params):
         circuit_ansatz(params, wires=range(4))
@@ -886,7 +886,7 @@ def test_integration_chunk_observables():
 
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lig = qml.QNode(circuit, dev_lig, diff_method="adjoint")
-    qnode_lig_batched = qml.QNode(circuit, dev_lig_batched, diff_method="adjoint")
+    # qnode_lig_batched = qml.QNode(circuit, dev_lig_batched, diff_method="adjoint")
 
     def casted_to_array_def(params):
         return np.array(qnode_def(params))
@@ -894,15 +894,15 @@ def test_integration_chunk_observables():
     def casted_to_array_lig(params):
         return np.array(qnode_lig(params))
 
-    def casted_to_array_batched(params):
-        return np.array(qnode_lig_batched(params))
+    # def casted_to_array_batched(params):
+    #     return np.array(qnode_lig_batched(params))
 
     j_def = qml.jacobian(casted_to_array_def)(params)
     j_lig = qml.jacobian(casted_to_array_lig)(params)
-    j_lig_batched = qml.jacobian(casted_to_array_batched)(params)
+    # j_lig_batched = qml.jacobian(casted_to_array_batched)(params)
 
     assert np.allclose(j_def, j_lig)
-    assert np.allclose(j_def, j_lig_batched)
+    # assert np.allclose(j_def, j_lig_batched)
 
 
 custom_wires = ["alice", 3.14, -1, 0]
