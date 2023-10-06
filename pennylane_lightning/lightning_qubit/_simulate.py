@@ -76,9 +76,11 @@ def get_final_state(circuit: QuantumScript, c_dtype=np.complex128, debugger=None
             whether the state has a batch dimension.
 
     """
-    if set(circuit.wires) != set(range(circuit.num_wires)):
-        wire_map = {w: i for i, w in enumerate(circuit.wires)}
-        circuit = qml.map_wires(circuit, wire_map)
+    circuit = circuit.map_to_standard_wires()
+
+    # if set(circuit.wires) != set(range(circuit.num_wires)):
+    #     wire_map = {w: i for i, w in enumerate(circuit.wires)}
+    #     circuit = qml.map_wires(circuit, wire_map)
 
     prep = None
     if len(circuit) > 0 and isinstance(circuit[0], qml.operation.StatePrepBase):
@@ -86,7 +88,7 @@ def get_final_state(circuit: QuantumScript, c_dtype=np.complex128, debugger=None
 
     state = create_initial_state(circuit.wires, prep)
     state = np.ravel(asarray(state, c_dtype))
-    state = apply_operations(circuit._ops, state)
+    state = apply_operations(circuit._ops, state, prep)
 
     # # initial state is batched only if the state preparation (if it exists) is batched
     # is_state_batched = False
