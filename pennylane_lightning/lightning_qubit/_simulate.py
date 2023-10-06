@@ -78,10 +78,6 @@ def get_final_state(circuit: QuantumScript, c_dtype=np.complex128, debugger=None
     """
     circuit = circuit.map_to_standard_wires()
 
-    # if set(circuit.wires) != set(range(circuit.num_wires)):
-    #     wire_map = {w: i for i, w in enumerate(circuit.wires)}
-    #     circuit = qml.map_wires(circuit, wire_map)
-
     prep = None
     if len(circuit) > 0 and isinstance(circuit[0], qml.operation.StatePrepBase):
         prep = circuit[0]
