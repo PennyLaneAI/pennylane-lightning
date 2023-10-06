@@ -27,12 +27,13 @@ except ImportError:
     pass
 
 
-def apply_operations(operations, state):
+def apply_operations(operations, state, prep=False):
     """Apply a list of operations to the state tensor.
 
     Args:
         operations (List[ops] or None): A list containing operations to be applied.
         state (np.array): The starting state (1D).
+        prep (bool): if the first operation is a state preparation.
 
     Returns:
         array[complex]: the output state.
@@ -42,7 +43,7 @@ def apply_operations(operations, state):
     # Skip over identity operations instead of performing
     # matrix multiplication with the identity.
     skipped_ops = ["Identity"]
-    for op in operations:
+    for op in operations[bool(prep) :]:
         if op.name in skipped_ops:
             continue
 
