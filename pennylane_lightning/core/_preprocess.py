@@ -121,12 +121,12 @@ _operations = {
 
 
 def _accepted_operator(op: qml.operation.Operator, dev_operations_list=_operations) -> bool:
-    """Specify whether or not an Operator object is accepted to be decomposed by the device."""
+    """Specify whether or not an Operator object is directly supported by the device, or decomposed."""
     if op.name == "QFT":
         return len(op.wires) < 10
     if op.name == "GroverOperator":
         return len(op.wires) < 13
-    return (op.name in dev_operations_list) or op.has_matrix
+    return op.name in dev_operations_list
 
 
 @transform
