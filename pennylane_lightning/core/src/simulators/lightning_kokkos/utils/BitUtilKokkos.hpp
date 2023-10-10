@@ -30,25 +30,26 @@ using KokkosIntVector = Kokkos::View<std::size_t *>;
 
 namespace Pennylane::LightningKokkos::Util {
 
-inline constexpr std::size_t one{1};
+constexpr std::size_t one{1};
 
 /**
- * @brief Faster log2 when the value is a power of 2.
+ * @brief Compute the parities and shifts for multi-qubit operations.
  *
- * @param val Size of the state vector. Expected to be a power of 2.
- * @return size_t Log2(val), or the state vector's number of qubits.
+ * @param num_qubits Number of qubits in the state vector.
+ * @param wires List of target wires.
+ * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and shifts for
+ * multi-qubit operations.
  */
-std::pair<KokkosIntVector, KokkosIntVector>
-wires2Parity(const std::size_t num_qubits,
-             const std::vector<std::size_t> &wires_) {
-    constexpr std::size_t one{1};
+inline auto wires2Parity(const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires)
+    -> std::pair<KokkosIntVector, KokkosIntVector> {
     KokkosIntVector parity;
     KokkosIntVector rev_wire_shifts;
 
-    std::vector<std::size_t> rev_wires_(wires_.size());
-    std::vector<std::size_t> rev_wire_shifts_(wires_.size());
-    for (std::size_t k = 0; k < wires_.size(); k++) {
-        rev_wires_[k] = (num_qubits - 1) - wires_[(wires_.size() - 1) - k];
+    std::vector<std::size_t> rev_wires_(wires.size());
+    std::vector<std::size_t> rev_wire_shifts_(wires.size());
+    for (std::size_t k = 0; k < wires.size(); k++) {
+        rev_wires_[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
         rev_wire_shifts_[k] = (one << rev_wires_[k]);
     }
     const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);

@@ -20,6 +20,7 @@ target_link_libraries(lightning_kokkos_gates_tests INTERFACE    Catch2::Catch2
                                                                 lightning_kokkos_measurements
                                                                 lightning_kokkos_observables
                                                                 lightning_kokkos
+                                                                lightning_kokkos_utils
                                                                 )
 
 ProcessTestOptions(lightning_kokkos_gates_tests)

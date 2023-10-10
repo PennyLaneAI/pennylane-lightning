@@ -22,8 +22,9 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using namespace Pennylane::LightningKokkos::Util; // one
 using Kokkos::Experimental::swap;
+using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::wires2Parity;
 using std::size_t;
 } // namespace
 /// @endcond
