@@ -112,7 +112,7 @@ inline auto revWireParity(const std::array<std::size_t, wire_size> &wire_list)
     -> std::array<std::size_t, wire_size + 1> {
     auto rev_wire = wire_list;
     std::sort(rev_wire.begin(), rev_wire.end());
-    std::array<std::size_t, wire_size + 1> parity;
+    std::array<std::size_t, wire_size + 1> parity{};
     parity[0] = fillTrailingOnes(rev_wire[0]);
     for (std::size_t i = 1; i < wire_size; i++) {
         parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
