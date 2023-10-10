@@ -64,10 +64,7 @@ template <class Precision> struct multiQubitOpFunctor {
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
-        std::pair<KokkosIntVector, KokkosIntVector> tmp =
-            wires2Parity(num_qubits_, wires_);
-        parity = tmp.first;
-        rev_wire_shifts = tmp.second;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -1631,10 +1628,7 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::pair<KokkosIntVector, KokkosIntVector> tmp =
-            wires2Parity(num_qubits_, wires_);
-        parity = tmp.first;
-        rev_wire_shifts = tmp.second;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -1708,10 +1702,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::pair<KokkosIntVector, KokkosIntVector> tmp =
-            wires2Parity(num_qubits_, wires_);
-        parity = tmp.first;
-        rev_wire_shifts = tmp.second;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -1821,10 +1812,7 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::pair<KokkosIntVector, KokkosIntVector> tmp =
-            wires2Parity(num_qubits_, wires_);
-        parity = tmp.first;
-        rev_wire_shifts = tmp.second;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION

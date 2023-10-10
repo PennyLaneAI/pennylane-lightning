@@ -56,7 +56,7 @@
 
 ### Bug fixes
 
-* Fix a bug in the `LM::multiQubitOp` kernel implementation.
+* Switch most L-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in L-Kokkos.
   [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
 
 * Fix RTD builds by removing unsupported `sytem_packages` configuration option.
