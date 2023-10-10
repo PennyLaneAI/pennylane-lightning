@@ -87,7 +87,7 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
 }
 
 /**
- * @brief Return integers with leading/tailing ones at positions specified by a
+ * @brief Return integers with leading/trailing ones at positions specified by a
  * list of target wires.
  *
  * @param wire_list Target wires.
