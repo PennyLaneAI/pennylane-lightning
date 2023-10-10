@@ -17,6 +17,7 @@
  * Defines utility functions for Bitwise operations.
  */
 #pragma once
+#include <algorithm> // sort
 #include <array>
 #include <bit>     // countr_zero, popcount, has_single_bit
 #include <climits> // CHAR_BIT
