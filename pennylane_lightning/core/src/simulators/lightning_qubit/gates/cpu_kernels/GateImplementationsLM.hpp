@@ -21,7 +21,7 @@
 #include <tuple>
 #include <vector>
 
-#include "BitUtil.hpp" // fillLeadingOnes, fillTrailingOnes, bitswap
+#include "BitUtil.hpp" // revWireParity
 #include "Error.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
@@ -284,7 +284,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                       const std::complex<PrecisionT> *matrix,
                       const std::vector<std::size_t> &wires, bool inverse) {
-        using Pennylane::Util::bitswap;
         constexpr std::size_t one{1};
         PL_ASSERT(num_qubits >= wires.size());
 

@@ -24,6 +24,9 @@
 #include <complex>
 #include <unordered_map>
 
+#include <bitset>
+#include <iostream>
+
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
 #include "KernelMap.hpp"
@@ -31,12 +34,13 @@
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
 
+#include "BitUtil.hpp"
+
 /// @cond DEV
 namespace {
 using Pennylane::LightningQubit::Util::Threading;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::exp2;
-
 using namespace Pennylane::LightningQubit::Gates;
 } // namespace
 /// @endcond
@@ -273,6 +277,93 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         return dispatcher.applyGenerator(getKernelForGenerator(gen_op), arr,
                                          this->getNumQubits(), opName, wires,
                                          adj);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a given
+     * kernel.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyControlledMatrix(
+        const ComplexT *matrix, const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        ComplexT *arr = this->getData();
+
+        // const auto kernel = getKernelForMatrix(MatrixOperation::NQubitOp);
+        // const auto &dispatcher =
+        // DynamicDispatcher<PrecisionT>::getInstance();
+        // dispatcher.applyControlledMatrix(arr, this->getNumQubits(), matrix,
+        //                                  controlled_wires, wires, inverse);
+
+        using size_t = std::size_t;
+        constexpr std::size_t one{1};
+        constexpr std::size_t zero{0};
+        const std::size_t nw_tot = controlled_wires.size() + wires.size();
+        const std::size_t num_qubits = this->getNumQubits();
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires = controlled_wires;
+        all_wires.insert(all_wires.end(), wires.begin(), wires.end());
+
+        std::vector<std::size_t> rev_wires(all_wires.size());
+        std::vector<std::size_t> rev_wire_shifts(all_wires.size());
+        for (std::size_t k = 0; k < all_wires.size(); k++) {
+            rev_wires[k] =
+                (num_qubits - 1) - all_wires[(all_wires.size() - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        PL_ASSERT(all_wires.size() == parity.size() - 1);
+
+        printf("\n=================\n");
+        printf("num_qubits = %ld\n", num_qubits);
+        printf("nw_tot = %ld\n", nw_tot);
+        printf("controlled_wires.size() = %ld\n", controlled_wires.size());
+        printf("wires.size() = %ld\n", wires.size());
+        const size_t step = one << nw_tot;
+        const size_t dim = one << wires.size();
+        std::vector<size_t> indices(dim);
+        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+        const size_t n_contr = controlled_wires.size();
+        const size_t n_wires = wires.size();
+
+        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            std::size_t idx = (k & parity[0]);
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity[i]);
+            }
+            for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+                idx |= rev_wire_shifts[i];
+            }
+            indices[0] = idx;
+            coeffs_in[0] = arr[idx];
+            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                idx = indices[0];
+                for (std::size_t i = 0; i < wires.size(); i++) {
+                    if ((inner_idx & (one << i)) != 0) {
+                        idx |= rev_wire_shifts[i + n_contr];
+                    }
+                }
+                indices[inner_idx] = idx;
+                coeffs_in[inner_idx] = arr[idx];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = indices[i];
+                arr[index] = 0.0;
+                const std::size_t base_idx = i * dim;
+                for (std::size_t j = 0; j < dim; j++) {
+                    arr[index] += matrix[base_idx + j] * coeffs_in[j];
+                }
+            }
+        }
+        printf("=================\n");
     }
 
     /**
