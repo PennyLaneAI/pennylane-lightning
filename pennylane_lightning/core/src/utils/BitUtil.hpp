@@ -83,4 +83,25 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
     return bits ^ ((x << i) | (x << j));
 }
 
+/**
+ * @brief Return integers with leading/tailing ones at positions specified by a
+ * list of target wires.
+ *
+ * @param wire_list Target wires.
+ */
+auto revWireParity(const std::vector<std::size_t> &wire_list)
+    -> std::vector<std::size_t> {
+    const std::size_t wire_size = wire_list.size();
+    auto rev_wire = wire_list;
+    std::sort(rev_wire.begin(), rev_wire.end());
+    std::vector<std::size_t> parity(wire_size + 1);
+    parity[0] = fillTrailingOnes(rev_wire[0]);
+    for (std::size_t i = 1; i < wire_size; i++) {
+        parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
+                    fillTrailingOnes(rev_wire[i]);
+    }
+    parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
+    return parity;
+}
+
 } // namespace Pennylane::Util
