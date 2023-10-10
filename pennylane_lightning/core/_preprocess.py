@@ -59,9 +59,7 @@ _observables = {
 # Lightning default list of supported operations.
 _operations = {
     "Identity",
-    "BasisState",
     "QubitStateVector",
-    "StatePrep",
     "QubitUnitary",
     "ControlledQubitUnitary",
     "MultiControlledX",
