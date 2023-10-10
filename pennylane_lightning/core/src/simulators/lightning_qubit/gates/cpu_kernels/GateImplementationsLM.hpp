@@ -51,57 +51,31 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
   private:
     /* Alias utility functions */
     static std::pair<size_t, size_t> revWireParity(size_t rev_wire) {
-        const auto parity = revWireParity(std::array<std::size_t, 1>{rev_wire});
+        const auto parity = Pennylane::Util::revWireParity(
+            std::array<std::size_t, 1>{rev_wire});
         return {parity[1], parity[0]};
     }
     static std::tuple<size_t, size_t, size_t> revWireParity(size_t rev_wire0,
                                                             size_t rev_wire1) {
-        const auto parity =
-            revWireParity(std::array<std::size_t, 2>{rev_wire0, rev_wire1});
+        const auto parity = Pennylane::Util::revWireParity(
+            std::array<std::size_t, 2>{rev_wire0, rev_wire1});
         return {parity[2], parity[1], parity[0]};
     }
     template <const size_t wire_size = 3>
     static constexpr auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                                         size_t rev_wire2)
         -> std::array<size_t, wire_size + 1> {
-        return revWireParity(std::array<std::size_t, wire_size>{
-            rev_wire0, rev_wire1, rev_wire2});
+        return Pennylane::Util::revWireParity(
+            std::array<std::size_t, wire_size>{rev_wire0, rev_wire1,
+                                               rev_wire2});
     }
     template <const size_t wire_size = 4>
     static constexpr auto revWireParity(size_t rev_wire0, size_t rev_wire1,
                                         size_t rev_wire2, size_t rev_wire3)
         -> std::array<size_t, wire_size + 1> {
-        return revWireParity(std::array<std::size_t, wire_size>{
-            rev_wire0, rev_wire1, rev_wire2, rev_wire3});
-    }
-    template <std::size_t wire_size>
-    static constexpr auto
-    revWireParity(const std::array<std::size_t, wire_size> &wire_list)
-        -> std::array<std::size_t, wire_size + 1> {
-        auto rev_wire = wire_list;
-        std::sort(rev_wire.begin(), rev_wire.end());
-        std::array<std::size_t, wire_size + 1> parity;
-        parity[0] = fillTrailingOnes(rev_wire[0]);
-        for (std::size_t i = 1; i < wire_size; i++) {
-            parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
-                        fillTrailingOnes(rev_wire[i]);
-        }
-        parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
-        return parity;
-    }
-    static auto revWireParity(const std::vector<std::size_t> &wire_list)
-        -> std::vector<std::size_t> {
-        const std::size_t wire_size = wire_list.size();
-        auto rev_wire = wire_list;
-        std::sort(rev_wire.begin(), rev_wire.end());
-        std::vector<std::size_t> parity(wire_size + 1);
-        parity[0] = fillTrailingOnes(rev_wire[0]);
-        for (std::size_t i = 1; i < wire_size; i++) {
-            parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
-                        fillTrailingOnes(rev_wire[i]);
-        }
-        parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
-        return parity;
+        return Pennylane::Util::revWireParity(
+            std::array<std::size_t, wire_size>{rev_wire0, rev_wire1, rev_wire2,
+                                               rev_wire3});
     }
 
   public:
@@ -324,7 +298,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             rev_wires[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
             rev_wire_shifts[k] = (one << rev_wires[k]);
         }
-        const std::vector<std::size_t> parity = revWireParity(rev_wires);
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(wires.size() == parity.size() - 1);
 
         if (inverse) {

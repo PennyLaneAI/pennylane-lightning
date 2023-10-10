@@ -17,9 +17,11 @@
  * Defines utility functions for Bitwise operations.
  */
 #pragma once
+#include <array>
 #include <bit>     // countr_zero, popcount, has_single_bit
 #include <climits> // CHAR_BIT
 #include <cstddef> // size_t
+#include <vector>
 
 namespace Pennylane::Util {
 /**
@@ -89,12 +91,27 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
  *
  * @param wire_list Target wires.
  */
-auto revWireParity(const std::vector<std::size_t> &wire_list)
+inline auto revWireParity(const std::vector<std::size_t> &wire_list)
     -> std::vector<std::size_t> {
     const std::size_t wire_size = wire_list.size();
     auto rev_wire = wire_list;
     std::sort(rev_wire.begin(), rev_wire.end());
     std::vector<std::size_t> parity(wire_size + 1);
+    parity[0] = fillTrailingOnes(rev_wire[0]);
+    for (std::size_t i = 1; i < wire_size; i++) {
+        parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
+                    fillTrailingOnes(rev_wire[i]);
+    }
+    parity[wire_size] = fillLeadingOnes(rev_wire[wire_size - 1] + 1);
+    return parity;
+}
+
+template <std::size_t wire_size>
+inline auto revWireParity(const std::array<std::size_t, wire_size> &wire_list)
+    -> std::array<std::size_t, wire_size + 1> {
+    auto rev_wire = wire_list;
+    std::sort(rev_wire.begin(), rev_wire.end());
+    std::array<std::size_t, wire_size + 1> parity;
     parity[0] = fillTrailingOnes(rev_wire[0]);
     for (std::size_t i = 1; i < wire_size; i++) {
         parity[i] = fillLeadingOnes(rev_wire[i - 1] + 1) &
