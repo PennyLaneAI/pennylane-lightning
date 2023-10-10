@@ -203,6 +203,157 @@ auto GateImplementationsLM::applyGeneratorSingleExcitationPlus(
     return -static_cast<PrecisionT>(0.5);
 }
 
+template <class PrecisionT>
+auto GateImplementationsLM::applyGeneratorDoubleExcitation(
+    std::complex<PrecisionT> *arr, std::size_t num_qubits,
+    const std::vector<std::size_t> &wires, [[maybe_unused]] bool adj)
+    -> PrecisionT {
+    using ComplexT = std::complex<PrecisionT>;
+    PL_ASSERT(wires.size() == 4);
+
+    const std::size_t rev_wire0 = num_qubits - wires[3] - 1;
+    const std::size_t rev_wire1 = num_qubits - wires[2] - 1;
+    const std::size_t rev_wire2 = num_qubits - wires[1] - 1;
+    const std::size_t rev_wire3 = num_qubits - wires[0] - 1;
+
+    const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire0;
+    const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire1;
+    const std::size_t rev_wire2_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire2;
+    const std::size_t rev_wire3_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire3;
+
+    auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+
+    for (std::size_t k = 0; k < exp2(num_qubits - 4); k++) {
+
+        const std::size_t i0000 =
+            ((k << 4U) & parity[4]) | ((k << 3U) & parity[3]) |
+            ((k << 2U) & parity[2]) | ((k << 1U) & parity[1]) | (k & parity[0]);
+        const std::size_t i0001 = i0000 | rev_wire0_shift;
+        const std::size_t i0010 = i0000 | rev_wire1_shift;
+        const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+        const std::size_t i0100 = i0000 | rev_wire2_shift;
+        const std::size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
+        const std::size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
+        const std::size_t i0111 =
+            i0000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
+        const std::size_t i1000 = i0000 | rev_wire3_shift;
+        const std::size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
+        const std::size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
+        const std::size_t i1011 =
+            i0000 | rev_wire3_shift | rev_wire1_shift | rev_wire0_shift;
+        const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+        const std::size_t i1101 =
+            i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire0_shift;
+        const std::size_t i1110 =
+            i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire1_shift;
+        const std::size_t i1111 = i0000 | rev_wire3_shift | rev_wire2_shift |
+                                  rev_wire1_shift | rev_wire0_shift;
+
+        const ComplexT v3 = arr[i0011];
+        const ComplexT v12 = arr[i1100];
+        arr[i0000] = ComplexT{};
+        arr[i0001] = ComplexT{};
+        arr[i0010] = ComplexT{};
+        arr[i0011] = v12 * ComplexT{0, -1};
+        arr[i0100] = ComplexT{};
+        arr[i0101] = ComplexT{};
+        arr[i0110] = ComplexT{};
+        arr[i0111] = ComplexT{};
+        arr[i1000] = ComplexT{};
+        arr[i1001] = ComplexT{};
+        arr[i1010] = ComplexT{};
+        arr[i1011] = ComplexT{};
+        arr[i1100] = v3 * ComplexT{0, 1};
+        arr[i1101] = ComplexT{};
+        arr[i1110] = ComplexT{};
+        arr[i1111] = ComplexT{};
+    }
+    // NOLINTNEXTLINE(readability - magic - numbers)
+    return -static_cast<PrecisionT>(0.5);
+}
+
+template <class PrecisionT>
+auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus(
+    std::complex<PrecisionT> *arr, std::size_t num_qubits,
+    const std::vector<std::size_t> &wires, [[maybe_unused]] bool adj)
+    -> PrecisionT {
+    using ComplexT = std::complex<PrecisionT>;
+    PL_ASSERT(wires.size() == 4);
+
+    const std::size_t rev_wire0 = num_qubits - wires[3] - 1;
+    const std::size_t rev_wire1 = num_qubits - wires[2] - 1;
+    const std::size_t rev_wire2 = num_qubits - wires[1] - 1;
+    const std::size_t rev_wire3 = num_qubits - wires[0] - 1;
+
+    const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire0;
+    const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire1;
+    const std::size_t rev_wire2_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire2;
+    const std::size_t rev_wire3_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire3;
+
+    auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+
+    for (std::size_t k = 0; k < exp2(num_qubits - 4); k++) {
+        const std::size_t i0000 =
+            ((k << 4U) & parity[4]) | ((k << 3U) & parity[3]) |
+            ((k << 2U) & parity[2]) | ((k << 1U) & parity[1]) | (k & parity[0]);
+        const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+        const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+
+        arr[i0011] *= ComplexT{0, 1};
+        arr[i1100] *= ComplexT{0, -1};
+        swap(arr[i1100], arr[i0011]);
+    }
+    // NOLINTNEXTLINE(readability - magic - numbers)
+    return -static_cast<PrecisionT>(0.5);
+}
+
+template <class PrecisionT>
+auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus(
+    std::complex<PrecisionT> *arr, std::size_t num_qubits,
+    const std::vector<std::size_t> &wires, [[maybe_unused]] bool adj)
+    -> PrecisionT {
+    using ComplexT = std::complex<PrecisionT>;
+    PL_ASSERT(wires.size() == 4);
+
+    const std::size_t rev_wire0 = num_qubits - wires[3] - 1;
+    const std::size_t rev_wire1 = num_qubits - wires[2] - 1;
+    const std::size_t rev_wire2 = num_qubits - wires[1] - 1;
+    const std::size_t rev_wire3 = num_qubits - wires[0] - 1;
+
+    const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire0;
+    const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire1;
+    const std::size_t rev_wire2_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire2;
+    const std::size_t rev_wire3_shift = static_cast<std::size_t>(1U)
+                                        << rev_wire3;
+
+    auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+
+    for (std::size_t k = 0; k < exp2(num_qubits - 4); k++) {
+        const std::size_t i0000 =
+            ((k << 4U) & parity[4]) | ((k << 3U) & parity[3]) |
+            ((k << 2U) & parity[2]) | ((k << 1U) & parity[1]) | (k & parity[0]);
+        const std::size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
+        const std::size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+
+        arr[i0011] *= ComplexT{0, -1};
+        arr[i1100] *= ComplexT{0, 1};
+        swap(arr[i1100], arr[i0011]);
+    }
+    // NOLINTNEXTLINE(readability - magic - numbers)
+    return static_cast<PrecisionT>(0.5);
+}
+
 // Explicit instantiation starts
 /* Matrix operations */
 template void GateImplementationsLM::applySingleQubitOp<float>(
@@ -568,6 +719,31 @@ template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus<float>(
     const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> float;
 
 template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus<double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> double;
+
+template auto GateImplementationsLM::applyGeneratorDoubleExcitation<float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> float;
+
+template auto GateImplementationsLM::applyGeneratorDoubleExcitation<double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> double;
+
+template auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus<float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> float;
+
+template auto
+GateImplementationsLM::applyGeneratorDoubleExcitationMinus<double>(
+    std::complex<double> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> double;
+
+template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus<float>(
+    std::complex<float> *arr, size_t num_qubits,
+    const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> float;
+
+template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus<double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> double;
 

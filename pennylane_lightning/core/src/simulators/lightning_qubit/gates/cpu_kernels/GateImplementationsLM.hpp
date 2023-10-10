@@ -139,6 +139,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::SingleExcitation,
         GeneratorOperation::SingleExcitationMinus,
         GeneratorOperation::SingleExcitationPlus,
+        GeneratorOperation::DoubleExcitation,
+        GeneratorOperation::DoubleExcitationMinus,
+        GeneratorOperation::DoubleExcitationPlus,
         GeneratorOperation::MultiRZ,
     };
 
@@ -1596,6 +1599,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
+    applyGeneratorDoubleExcitation(std::complex<PrecisionT> *arr,
+                                   size_t num_qubits,
+                                   const std::vector<size_t> &wires,
+                                   [[maybe_unused]] bool adj) -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorDoubleExcitationMinus(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorDoubleExcitationPlus(std::complex<PrecisionT> *arr,
+                                       size_t num_qubits,
+                                       const std::vector<size_t> &wires,
+                                       [[maybe_unused]] bool adj) -> PrecisionT;
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
     applyGeneratorMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                           const std::vector<size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
@@ -1940,6 +1963,24 @@ extern template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus(
+    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitation(
+    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
+    -> double;
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitation(
+    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus(
+    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
+    -> double;
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus(
+    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus(
+    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
+    -> double;
+extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 
 extern template auto
