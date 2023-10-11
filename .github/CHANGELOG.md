@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
+  [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
+
 * Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
   [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
@@ -58,6 +61,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Re-add support for `pip install pennylane-lightning[gpu]`.
+  [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
 * Switch most L-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in L-Kokkos.
   [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
