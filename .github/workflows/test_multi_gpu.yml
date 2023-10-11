@@ -25,12 +25,8 @@ jobs:
 
       - name: Show default CUDA
         run: |
-          set -x
           which nvcc
-          
           nvcc --version
-      
-          set +x
 
       - name: Switch CUDA
         run: |
