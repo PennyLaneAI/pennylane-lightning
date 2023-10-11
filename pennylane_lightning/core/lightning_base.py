@@ -315,7 +315,6 @@ class LightningBase(Device):
                 self.simulate_and_adjoint(c, rng=self._rng, debugger=self._debugger)
                 for c in circuits
             )
-
             results, jacs = tuple(zip(*results))
             return (results[0], jacs[0]) if is_single_circuit else (results, jacs)
         raise NotImplementedError

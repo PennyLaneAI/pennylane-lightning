@@ -27,11 +27,11 @@ from pennylane import DeviceError
 
 from pennylane.devices import ExecutionConfig, DefaultQubit
 
-from pennylane_lightning.core._preprocess import validate_and_expand_adjoint
+from pennylane_lightning.core._preprocess import preprocess
 
 AdjointConfig = ExecutionConfig(use_device_gradient=True, gradient_method="adjoint")
 
-from pennylane.devices.qubit.preprocess import validate_and_expand_adjoint as vea_default
+from pennylane.devices.qubit.preprocess import preprocess as preprocess_default
 
 I, X, Y, Z = (
     np.eye(2),
@@ -96,8 +96,9 @@ class TestAdjointJacobian:
     def process_and_compute_derivatives(dev, tape, trainable_params=None):
         if trainable_params != None:
             tape.trainable_params = trainable_params
-        tape, _ = validate_and_expand_adjoint(tape)
-        tape = tape[0]
+        program, _ = preprocess(AdjointConfig)
+        res_tapes, _ = program([tape])
+        tape = res_tapes[0]
         if trainable_params != None:
             tape.trainable_params = trainable_params
         results = dev.compute_derivatives(tape, AdjointConfig)
@@ -108,8 +109,9 @@ class TestAdjointJacobian:
         dev = DefaultQubit(max_workers=1)
         if trainable_params != None:
             tape.trainable_params = trainable_params
-        tape, _ = vea_default(tape)
-        tape = tape[0]
+        program, _ = preprocess_default(AdjointConfig)
+        res_tapes, _ = program([tape])
+        tape = res_tapes[0]
         if trainable_params != None:
             tape.trainable_params = trainable_params
         results = dev.compute_derivatives(tape, AdjointConfig)
@@ -419,7 +421,7 @@ class TestAdjointJacobian:
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
-            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
+            qml.adjoint(qml.RY(0.5, wires=1))
             qml.CNOT(wires=[0, 1])
 
             qml.expval(obs(wires=0))
@@ -460,7 +462,7 @@ class TestAdjointJacobian:
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
-            qml.adjoint(qml.RY(0.5, wires=1), lazy=False)
+            qml.adjoint(qml.RY(0.5, wires=1))
             qml.CNOT(wires=[0, 1])
 
             qml.expval(
@@ -554,66 +556,6 @@ class TestAdjointJacobian:
         assert np.count_nonzero(calculated_val) == 3
         # the different methods agree
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
-
-    # def test_use_device_state(self, tol, dev):
-    #     """Tests that when using the device state, the correct answer is still returned."""
-
-    #     x, y, z = [0.5, 0.3, -0.7]
-
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
-
-    #     tape.trainable_params = {1, 2, 3}
-
-    #     dM1 = dev.adjoint_jacobian(tape)
-
-    #     qml.execute([tape], dev, None)
-    #     dM2 = dev.adjoint_jacobian(tape, use_device_state=True)
-
-    #     assert np.allclose(dM1, dM2, atol=tol, rtol=0)
-
-    # def test_provide_starting_state(self, tol, dev):
-    #     """Tests provides correct answer when provided starting state."""
-    #     x, y, z = [0.5, 0.3, -0.7]
-
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
-
-    #     tape.trainable_params = {1, 2, 3}
-
-    #     dM1 = dev.adjoint_jacobian(tape)
-
-    #     dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
-
-    #     qml.execute([tape], dev, None)
-    #     dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
-
-    #     assert np.allclose(dM1, dM2, atol=tol, rtol=0)
-
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # def test_provide_wrong_starting_state(self, dev):
-    #     """Tests raise an exception when provided starting state mismatches."""
-    #     x, y, z = [0.5, 0.3, -0.7]
-
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         qml.expval(qml.PauliZ(0))
-
-    #     tape.trainable_params = {1, 2, 3}
-
-    #     with pytest.raises(
-    #         qml.QuantumFunctionError,
-    #         match="The number of qubits of starting_state must be the same as",
-    #     ):
-    #         dev.adjoint_jacobian(tape, starting_state=np.ones(7))
 
     @pytest.mark.skipif(
         device_name == "lightning.kokkos",
@@ -768,13 +710,13 @@ def circuit_ansatz(params, wires):
     qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
-    qml.adjoint(qml.RX(params[2], wires=wires[2]), lazy=False)
+    qml.adjoint(qml.RX(params[2], wires=wires[2]))
     qml.RZ(params[0], wires=wires[3])
     qml.CRX(params[3], wires=[wires[3], wires[0]])
     qml.PhaseShift(params[4], wires=wires[2])
     qml.CRY(params[5], wires=[wires[2], wires[1]])
-    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]), lazy=False)
-    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]), lazy=False)
+    qml.adjoint(qml.CRZ(params[5], wires=[wires[0], wires[3]]))
+    qml.adjoint(qml.PhaseShift(params[6], wires=wires[0]))
     qml.Rot(params[6], params[7], params[8], wires=wires[0])
     qml.adjoint(qml.Rot(params[8], params[8], params[9], wires=wires[1]))
     qml.MultiRZ(params[11], wires=[wires[0], wires[1]])
@@ -787,9 +729,7 @@ def circuit_ansatz(params, wires):
     qml.U1(params[15], wires=wires[0])
     qml.U2(params[16], params[17], wires=wires[0])
     qml.U3(params[18], params[19], params[20], wires=wires[1])
-    qml.adjoint(
-        qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]), lazy=False
-    )
+    qml.adjoint(qml.CRot(params[21], params[22], params[23], wires=[wires[1], wires[2]]))
     qml.SingleExcitation(params[24], wires=[wires[2], wires[0]])
     qml.DoubleExcitation(params[25], wires=[wires[2], wires[0], wires[1], wires[3]])
     qml.SingleExcitationPlus(params[26], wires=[wires[0], wires[2]])

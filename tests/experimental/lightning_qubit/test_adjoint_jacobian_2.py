@@ -19,9 +19,9 @@ import pytest
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane.devices import ExecutionConfig, DefaultQubit
-from pennylane_lightning.core._preprocess import validate_and_expand_adjoint
+from pennylane_lightning.core._preprocess import preprocess, validate_and_expand_adjoint
 
-from pennylane.devices.qubit.preprocess import validate_and_expand_adjoint as vea_default
+from pennylane.devices.qubit.preprocess import preprocess as preprocess_default
 from pennylane_lightning.lightning_qubit import LightningQubit
 
 
@@ -96,8 +96,9 @@ class TestAdjointJacobianComputeDerivatives:
     def process_and_compute_derivatives(dev, tape, trainable_params=None):
         if trainable_params != None:
             tape.trainable_params = trainable_params
-        tape, _ = validate_and_expand_adjoint(tape)
-        tape = tape[0]
+        program, _ = preprocess(AdjointConfig)
+        res_tapes, _ = program([tape])
+        tape = res_tapes[0]
         if trainable_params != None:
             tape.trainable_params = trainable_params
         results = dev.compute_derivatives(tape, AdjointConfig)
@@ -108,8 +109,9 @@ class TestAdjointJacobianComputeDerivatives:
         dev = DefaultQubit(max_workers=1)
         if trainable_params != None:
             tape.trainable_params = trainable_params
-        tape, _ = vea_default(tape)
-        tape = tape[0]
+        program, _ = preprocess_default(AdjointConfig)
+        res_tapes, _ = program([tape])
+        tape = res_tapes[0]
         if trainable_params != None:
             tape.trainable_params = trainable_params
         results = dev.compute_derivatives(tape, AdjointConfig)
@@ -790,8 +792,9 @@ class TestOperatorArithmeticComputeDerivatives:
     def process_and_compute_derivatives(dev, tape, trainable_params=None):
         if trainable_params != None:
             tape.trainable_params = trainable_params
-        tape, _ = validate_and_expand_adjoint(tape)
-        tape = tape[0]
+        program, _ = preprocess(AdjointConfig)
+        res_tapes, _ = program([tape])
+        tape = res_tapes[0]
         if trainable_params != None:
             tape.trainable_params = trainable_params
         results = dev.compute_derivatives(tape, AdjointConfig)
