@@ -1,0 +1,52 @@
+name: Testing Multi-GPU (Linux)
+on:
+  pull_request:
+
+
+concurrency:
+  group: tests_multi_gpu_linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner')
+
+    runs-on:
+      - self-hosted
+      - linux
+      - multi-gpu
+      - ubuntu-22.04
+      - x64
+
+
+    steps:
+      - name: Test NVIDIA-SMI
+        run: nvidia-smi
+
+      - name: Show default CUDA
+        run: |
+          set -x
+          which nvcc
+          
+          nvcc --version
+      
+          set +x
+
+      - name: Switch CUDA
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules/
+          
+          echo 'Showing Default CUDA again'
+          set -x
+          which nvcc
+          nvcc --version
+          set +x
+          
+          echo ''
+          echo 'Switching to CUDA 12.2'
+          module load cuda/12.2
+          set -x 
+          which nvcc
+          nvcc --version
+          set +x
