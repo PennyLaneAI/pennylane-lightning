@@ -25,6 +25,7 @@ jobs:
 
       - name: Show default CUDA
         run: |
+          echo $PATH
           which nvcc
           nvcc --version
 
