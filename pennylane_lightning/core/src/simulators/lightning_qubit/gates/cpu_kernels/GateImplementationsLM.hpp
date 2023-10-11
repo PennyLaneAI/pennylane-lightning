@@ -1127,29 +1127,30 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                       const std::vector<size_t> &wires,
                                       bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 4);
+        constexpr std::size_t one{1};
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
 
-        const size_t rev_wire0 = num_qubits - wires[3] - 1;
-        const size_t rev_wire1 = num_qubits - wires[2] - 1;
-        const size_t rev_wire2 = num_qubits - wires[1] - 1;
-        const size_t rev_wire3 = num_qubits - wires[0] - 1;
+        const std::array<std::size_t, 4> rev_wires{
+            num_qubits - wires[3] - 1, num_qubits - wires[2] - 1,
+            num_qubits - wires[1] - 1, num_qubits - wires[0] - 1};
 
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
-        const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
+        const std::array<std::size_t, 4> rev_wire_shifts{
+            one << rev_wires[0], one << rev_wires[1], one << rev_wires[2],
+            one << rev_wires[3]};
 
-        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        const auto parity = Pennylane::Util::revWireParity(rev_wires);
 
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
             const std::size_t i0000 = ((k << 4U) & parity[4]) |
                                       ((k << 3U) & parity[3]) |
                                       ((k << 2U) & parity[2]) |
                                       ((k << 1U) & parity[1]) | (k & parity[0]);
-            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
+            const size_t i0011 =
+                i0000 | rev_wire_shifts[1] | rev_wire_shifts[0];
+            const size_t i1100 =
+                i0000 | rev_wire_shifts[3] | rev_wire_shifts[2];
 
             const std::complex<PrecisionT> v3 = arr[i0011];
             const std::complex<PrecisionT> v12 = arr[i1100];
@@ -1165,6 +1166,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                            const std::vector<size_t> &wires,
                                            bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 4);
+        constexpr std::size_t one{1};
+        constexpr std::size_t dim = one << 4;
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1172,63 +1175,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(std::complex<PrecisionT>{0, angle / 2})
                     : std::exp(std::complex<PrecisionT>{0, -angle / 2});
 
-        const size_t rev_wire0 = num_qubits - wires[3] - 1;
-        const size_t rev_wire1 = num_qubits - wires[2] - 1;
-        const size_t rev_wire2 = num_qubits - wires[1] - 1;
-        const size_t rev_wire3 = num_qubits - wires[0] - 1;
+        const std::array<std::size_t, 4> rev_wires{
+            num_qubits - wires[3] - 1, num_qubits - wires[2] - 1,
+            num_qubits - wires[1] - 1, num_qubits - wires[0] - 1};
 
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
-        const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
+        const std::array<std::size_t, 4> rev_wire_shifts{
+            one << rev_wires[0], one << rev_wires[1], one << rev_wires[2],
+            one << rev_wires[3]};
 
-        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        const auto parity = Pennylane::Util::revWireParity(rev_wires);
+        std::array<std::size_t, dim> indices{};
 
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
-            const std::size_t i0000 = ((k << 4U) & parity[4]) |
-                                      ((k << 3U) & parity[3]) |
-                                      ((k << 2U) & parity[2]) |
-                                      ((k << 1U) & parity[1]) | (k & parity[0]);
-            const size_t i0001 = i0000 | rev_wire0_shift;
-            const size_t i0010 = i0000 | rev_wire1_shift;
-            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const size_t i0100 = i0000 | rev_wire2_shift;
-            const size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
-            const size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
-            const size_t i0111 =
-                i0000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
-            const size_t i1000 = i0000 | rev_wire3_shift;
-            const size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
-            const size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
-            const size_t i1011 =
-                i0000 | rev_wire3_shift | rev_wire1_shift | rev_wire0_shift;
-            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
-            const size_t i1101 =
-                i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire0_shift;
-            const size_t i1110 =
-                i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire1_shift;
-            const size_t i1111 = i0000 | rev_wire3_shift | rev_wire2_shift |
-                                 rev_wire1_shift | rev_wire0_shift;
+            std::size_t idx = (k & parity[0]);
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity[i]);
+            }
+            indices[0] = idx;
+            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                idx = indices[0];
+                for (std::size_t i = 0; i < wires.size(); i++) {
+                    if ((inner_idx & (one << i)) != 0) {
+                        idx |= rev_wire_shifts[i];
+                    }
+                }
+                indices[inner_idx] = idx;
+            }
 
-            const std::complex<PrecisionT> v3 = arr[i0011];
-            const std::complex<PrecisionT> v12 = arr[i1100];
-
-            arr[i0000] *= e;
-            arr[i0001] *= e;
-            arr[i0010] *= e;
-            arr[i0011] = cr * v3 - sj * v12;
-            arr[i0100] *= e;
-            arr[i0101] *= e;
-            arr[i0110] *= e;
-            arr[i0111] *= e;
-            arr[i1000] *= e;
-            arr[i1001] *= e;
-            arr[i1010] *= e;
-            arr[i1011] *= e;
-            arr[i1100] = sj * v3 + cr * v12;
-            arr[i1101] *= e;
-            arr[i1110] *= e;
-            arr[i1111] *= e;
+            const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
+            const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
+            for (const auto &i : indices) {
+                arr[i] *= e;
+            }
+            arr[indices[0B0011]] = cr * v3 - sj * v12;
+            arr[indices[0B1100]] = sj * v3 + cr * v12;
         }
     }
 
@@ -1238,6 +1218,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           const std::vector<size_t> &wires,
                                           bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 4);
+        constexpr std::size_t one{1};
+        constexpr std::size_t dim = one << 4;
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1245,63 +1227,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(std::complex<PrecisionT>{0, -angle / 2})
                     : std::exp(std::complex<PrecisionT>{0, angle / 2});
 
-        const size_t rev_wire0 = num_qubits - wires[3] - 1;
-        const size_t rev_wire1 = num_qubits - wires[2] - 1;
-        const size_t rev_wire2 = num_qubits - wires[1] - 1;
-        const size_t rev_wire3 = num_qubits - wires[0] - 1;
+        const std::array<std::size_t, 4> rev_wires{
+            num_qubits - wires[3] - 1, num_qubits - wires[2] - 1,
+            num_qubits - wires[1] - 1, num_qubits - wires[0] - 1};
 
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const size_t rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
-        const size_t rev_wire3_shift = static_cast<size_t>(1U) << rev_wire3;
+        const std::array<std::size_t, 4> rev_wire_shifts{
+            one << rev_wires[0], one << rev_wires[1], one << rev_wires[2],
+            one << rev_wires[3]};
 
-        auto parity = revWireParity(rev_wire0, rev_wire1, rev_wire2, rev_wire3);
+        const auto parity = Pennylane::Util::revWireParity(rev_wires);
+        std::array<std::size_t, dim> indices{};
 
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
-            const std::size_t i0000 = ((k << 4U) & parity[4]) |
-                                      ((k << 3U) & parity[3]) |
-                                      ((k << 2U) & parity[2]) |
-                                      ((k << 1U) & parity[1]) | (k & parity[0]);
-            const size_t i0001 = i0000 | rev_wire0_shift;
-            const size_t i0010 = i0000 | rev_wire1_shift;
-            const size_t i0011 = i0000 | rev_wire1_shift | rev_wire0_shift;
-            const size_t i0100 = i0000 | rev_wire2_shift;
-            const size_t i0101 = i0000 | rev_wire2_shift | rev_wire0_shift;
-            const size_t i0110 = i0000 | rev_wire2_shift | rev_wire1_shift;
-            const size_t i0111 =
-                i0000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
-            const size_t i1000 = i0000 | rev_wire3_shift;
-            const size_t i1001 = i0000 | rev_wire3_shift | rev_wire0_shift;
-            const size_t i1010 = i0000 | rev_wire3_shift | rev_wire1_shift;
-            const size_t i1011 =
-                i0000 | rev_wire3_shift | rev_wire1_shift | rev_wire0_shift;
-            const size_t i1100 = i0000 | rev_wire3_shift | rev_wire2_shift;
-            const size_t i1101 =
-                i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire0_shift;
-            const size_t i1110 =
-                i0000 | rev_wire3_shift | rev_wire2_shift | rev_wire1_shift;
-            const size_t i1111 = i0000 | rev_wire3_shift | rev_wire2_shift |
-                                 rev_wire1_shift | rev_wire0_shift;
+            std::size_t idx = (k & parity[0]);
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity[i]);
+            }
+            indices[0] = idx;
+            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                idx = indices[0];
+                for (std::size_t i = 0; i < wires.size(); i++) {
+                    if ((inner_idx & (one << i)) != 0) {
+                        idx |= rev_wire_shifts[i];
+                    }
+                }
+                indices[inner_idx] = idx;
+            }
 
-            const std::complex<PrecisionT> v3 = arr[i0011];
-            const std::complex<PrecisionT> v12 = arr[i1100];
-
-            arr[i0000] *= e;
-            arr[i0001] *= e;
-            arr[i0010] *= e;
-            arr[i0011] = cr * v3 - sj * v12;
-            arr[i0100] *= e;
-            arr[i0101] *= e;
-            arr[i0110] *= e;
-            arr[i0111] *= e;
-            arr[i1000] *= e;
-            arr[i1001] *= e;
-            arr[i1010] *= e;
-            arr[i1011] *= e;
-            arr[i1100] = sj * v3 + cr * v12;
-            arr[i1101] *= e;
-            arr[i1110] *= e;
-            arr[i1111] *= e;
+            const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
+            const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
+            for (const auto &i : indices) {
+                arr[i] *= e;
+            }
+            arr[indices[0B0011]] = cr * v3 - sj * v12;
+            arr[indices[0B1100]] = sj * v3 + cr * v12;
         }
     }
 
