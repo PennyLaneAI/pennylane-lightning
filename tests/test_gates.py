@@ -290,52 +290,35 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
         assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.parametrize(
-    "n_qubits, control_wires, wires",
-    [
-        (2, [0], [1]),
-        (2, [1], [0]),
-        (3, [1], [2]),
-        (3, [2], [1]),
-        (3, [0], [2]),
-        (3, [2], [0]),
-        (3, [1, 0], [2]),
-        (3, [0, 1], [2]),
-        (3, [1, 2], [0]),
-        (3, [2, 1], [0]),
-        (3, [2], [0, 1]),
-        (3, [2], [1, 0]),
-        (3, [0], [1, 2]),
-        (3, [0], [2, 1]),
-        (4, [1, 0], [2]),
-        (4, [0, 1], [2]),
-        (4, [1, 2], [0]),
-        (4, [2, 1], [0]),
-        (4, [0], [1, 2]),
-        (4, [2], [0, 1]),
-        (4, [0], [2, 1]),
-    ],
-)
-def test_n0_controlled_qubit_unitary(n_qubits, control_wires, wires, tol):
-    """Test that Hadamard expectation value is correct"""
-    # n_qubits, control_wires, wires = params
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_n0_controlled_qubit_unitary(n_qubits, tol):
+    """Test that ControlledQubitUnitary is correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
-    m = 2 ** len(wires)
-    U = np.random.rand(m, m) + 0.0j * np.random.rand(m, m)
-    U, _ = np.linalg.qr(U)
-    # U = qml.PauliX(wires=wires).matrix()
-    init_state = np.random.rand(2**n_qubits) + 0.0j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    threshold = 500
+    count = 0
+    for n_wires in range(1, 5):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * (n_wires) ** 2
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            for i in range(1, len(all_wires)):
+                count += 1
+                control_wires = all_wires[0:i]
+                target_wires = all_wires[i:]
+                m = 2 ** len(target_wires)
+                U = np.random.rand(m, m) + 0.0j * np.random.rand(m, m)
+                U, _ = np.linalg.qr(U)
+                init_state = np.random.rand(2**n_qubits) + 0.0j * np.random.rand(2**n_qubits)
+                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
-    def circuit():
-        qml.StatePrep(init_state, wires=range(n_qubits))
-        qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=wires)
-        return qml.state()
+                def circuit():
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                    qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires)
+                    return qml.state()
 
-    circ = qml.QNode(circuit, dev)
-    circ_def = qml.QNode(circuit, dev_def)
-    print(init_state)
-    print(circ_def())
-    print(circ())
-    assert np.allclose(circ(), circ_def(), tol)
+                circ = qml.QNode(circuit, dev)
+                circ_def = qml.QNode(circuit, dev_def)
+                assert np.allclose(circ(), circ_def(), tol)
+    print(count)

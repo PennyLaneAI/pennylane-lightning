@@ -323,35 +323,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
 
-        printf("\n=================\n");
-        printf("num_qubits = %ld\n", num_qubits);
-        printf("nw_tot = %ld\n", nw_tot);
-        printf("controlled_wires.size() = %ld\n", n_contr);
-        printf("wires.size() = %ld\n", n_wires);
-        {
-            int count = 0;
-            for (const auto &i : all_wires) {
-                std::cout << "all_wires(" << count++ << ") = " << i << " = "
-                          << std::bitset<8>(i) << std::endl;
-            }
-        }
-
-        {
-            int count = 0;
-            for (const auto &i : rev_wires) {
-                std::cout << "rev_wires(" << count++ << ") = " << i << " = "
-                          << std::bitset<8>(i) << std::endl;
-            }
-        }
-
-        {
-            int count = 0;
-            for (const auto &i : rev_wire_shifts) {
-                std::cout << "rev_wire_shifts(" << count++ << ") = " << i
-                          << " = " << std::bitset<8>(i) << std::endl;
-            }
-        }
-
         const size_t step = one << nw_tot;
         const size_t dim = one << n_wires;
         std::vector<size_t> indices(dim);
@@ -362,11 +333,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             for (std::size_t i = 1; i < parity.size(); i++) {
                 idx |= ((k << i) & parity[i]);
             }
-            std::cout << "index(base) = " << std::bitset<8>(idx) << std::endl;
             for (std::size_t i = 0; i < n_contr; i++) {
                 idx |= rev_wire_shifts[i];
-                std::cout << "index(" << i << ") = " << std::bitset<8>(idx)
-                          << std::endl;
             }
             indices[0] = idx;
             coeffs_in[0] = arr[idx];
@@ -380,13 +348,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 indices[inner_idx] = idx;
                 coeffs_in[inner_idx] = arr[idx];
             }
-            {
-                int count = 0;
-                for (const auto &i : indices) {
-                    std::cout << "index(" << count++
-                              << ") = " << std::bitset<8>(i) << std::endl;
-                }
-            }
             for (std::size_t i = 0; i < dim; i++) {
                 const auto index = indices[i];
                 arr[index] = 0.0;
@@ -396,7 +357,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 }
             }
         }
-        printf("=================\n");
     }
 
     /**

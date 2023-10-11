@@ -352,16 +352,18 @@ if LQ_CPP_BINARY_AVAILABLE:
                     continue
                 method = getattr(sim, operation.name, None)
 
-                wires = self.wires.indices(operation.wires)
                 if method is None:
                     if operation.name == "ControlledQubitUnitary":
                         method = getattr(sim, "applyControlledMatrix")
                         control_wires = self.wires.indices(operation.control_wires)
                         wires = self.wires.indices(operation.target_wires)
-                        # print(qml.matrix(operation.base))
-                        # print(control_wires, wires)
-                        method(qml.matrix(operation.base), control_wires, wires, False)
+                        try:
+                            method(qml.matrix(operation.base), control_wires, wires, False)
+                        except AttributeError:  # pragma: no cover
+                            # To support older versions of PL
+                            method(operation.base.matrix, control_wires, wires, False)
                     else:
+                        wires = self.wires.indices(operation.wires)
                         # Inverse can be set to False since qml.matrix(operation) is already in
                         # inverted form
                         method = getattr(sim, "applyMatrix")
