@@ -213,7 +213,6 @@ auto GateImplementationsLM::applyGeneratorDoubleExcitation(
     constexpr ComplexT zero{};
     constexpr ComplexT imag{0, 1};
     constexpr std::size_t one{1};
-    constexpr std::size_t dim = one << 4;
 
     const std::array<std::size_t, 4> rev_wires{
         num_qubits - wires[3] - 1, num_qubits - wires[2] - 1,
@@ -224,24 +223,10 @@ auto GateImplementationsLM::applyGeneratorDoubleExcitation(
         one << rev_wires[3]};
 
     const auto parity = Pennylane::Util::revWireParity(rev_wires);
-    std::array<std::size_t, dim> indices{};
 
     for (std::size_t k = 0; k < exp2(num_qubits - 4); k++) {
-        std::size_t idx = (k & parity[0]);
-        for (std::size_t i = 1; i < parity.size(); i++) {
-            idx |= ((k << i) & parity[i]);
-        }
-        indices[0] = idx;
-        for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-            idx = indices[0];
-            for (std::size_t i = 0; i < wires.size(); i++) {
-                if ((inner_idx & (one << i)) != 0) {
-                    idx |= rev_wire_shifts[i];
-                }
-            }
-            indices[inner_idx] = idx;
-        }
-
+        const auto indices =
+            GateImplementationsLM::parity2indices(k, parity, rev_wire_shifts);
         const ComplexT v3 = arr[indices[0B0011]];
         const ComplexT v12 = arr[indices[0B1100]];
         for (const auto &i : indices) {

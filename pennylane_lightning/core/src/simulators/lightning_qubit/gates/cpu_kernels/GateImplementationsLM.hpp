@@ -150,6 +150,75 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         MatrixOperation::MultiQubitOp};
 
     /**
+     * @brief Computes the array of indices to apply the gate corresponding to
+     * the k-th state vector block.
+     *
+     * @param k State vector block index.
+     * @param parity Leading/trailing masks.
+     * @param rev_wire_shifts Single-bit masks at wire positions.
+     * @return State vector indices corresponding to the k-th state vector
+     * block.
+     */
+    template <std::size_t length>
+    static auto parity2indices(const std::size_t k,
+                               std::array<std::size_t, length + 1> parity,
+                               std::array<std::size_t, length> rev_wire_shifts)
+        -> std::array<std::size_t, static_cast<std::size_t>(1) << length> {
+        constexpr std::size_t one{1};
+        const std::size_t dim = one << length;
+        std::array<std::size_t, dim> indices{};
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            idx |= ((k << i) & parity[i]);
+        }
+        indices[0] = idx;
+        for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+            idx = indices[0];
+            for (std::size_t i = 0; i < length; i++) {
+                if ((inner_idx & (one << i)) != 0) {
+                    idx |= rev_wire_shifts[i];
+                }
+            }
+            indices[inner_idx] = idx;
+        }
+        return indices;
+    }
+
+    /**
+     * @brief Computes the vector of indices to apply the gate corresponding to
+     * the k-th state vector block.
+     *
+     * @param k State vector block index.
+     * @param parity Leading/trailing masks.
+     * @param rev_wire_shifts Single-bit masks at wire positions.
+     * @return State vector indices corresponding to the k-th state vector
+     * block.
+     */
+    static auto parity2indices(const std::size_t k,
+                               std::vector<std::size_t> parity,
+                               std::vector<std::size_t> rev_wire_shifts)
+        -> std::vector<std::size_t> {
+        constexpr std::size_t one{1};
+        const std::size_t dim = one << rev_wire_shifts.size();
+        std::vector<std::size_t> indices(dim);
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            idx |= ((k << i) & parity[i]);
+        }
+        indices[0] = idx;
+        for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+            idx = indices[0];
+            for (std::size_t i = 0; i < rev_wire_shifts.size(); i++) {
+                if ((inner_idx & (one << i)) != 0) {
+                    idx |= rev_wire_shifts[i];
+                }
+            }
+            indices[inner_idx] = idx;
+        }
+        return indices;
+    }
+
+    /**
      * @brief Apply a single qubit gate to the statevector.
      *
      * @param arr Pointer to the statevector.
@@ -307,21 +376,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         if (inverse) {
             for (std::size_t k = 0; k < exp2(num_qubits - wires.size()); k++) {
-                std::size_t idx = (k & parity[0]);
-                for (std::size_t i = 1; i < parity.size(); i++) {
-                    idx |= ((k << i) & parity[i]);
-                }
-                indices[0] = idx;
-                coeffs_in[0] = arr[idx];
-                for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-                    idx = indices[0];
-                    for (std::size_t i = 0; i < wires.size(); i++) {
-                        if ((inner_idx & (one << i)) != 0) {
-                            idx |= rev_wire_shifts[i];
-                        }
-                    }
-                    indices[inner_idx] = idx;
-                    coeffs_in[inner_idx] = arr[idx];
+                indices = parity2indices(k, parity, rev_wire_shifts);
+                for (std::size_t i = 0; i < dim; i++) {
+                    coeffs_in[i] = arr[indices[i]];
                 }
                 for (size_t i = 0; i < dim; i++) {
                     const auto idx = indices[i];
@@ -336,21 +393,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
         } else {
             for (std::size_t k = 0; k < exp2(num_qubits - wires.size()); k++) {
-                std::size_t idx = (k & parity[0]);
-                for (std::size_t i = 1; i < parity.size(); i++) {
-                    idx |= ((k << i) & parity[i]);
-                }
-                indices[0] = idx;
-                coeffs_in[0] = arr[idx];
-                for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-                    idx = indices[0];
-                    for (std::size_t i = 0; i < wires.size(); i++) {
-                        if ((inner_idx & (one << i)) != 0) {
-                            idx |= rev_wire_shifts[i];
-                        }
-                    }
-                    indices[inner_idx] = idx;
-                    coeffs_in[inner_idx] = arr[idx];
+                indices = parity2indices(k, parity, rev_wire_shifts);
+                for (std::size_t i = 0; i < dim; i++) {
+                    coeffs_in[i] = arr[indices[i]];
                 }
                 for (std::size_t i = 0; i < dim; i++) {
                     const auto index = indices[i];
@@ -1167,7 +1212,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                            bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 4);
         constexpr std::size_t one{1};
-        constexpr std::size_t dim = one << 4;
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1184,24 +1228,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             one << rev_wires[3]};
 
         const auto parity = Pennylane::Util::revWireParity(rev_wires);
-        std::array<std::size_t, dim> indices{};
 
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
-            std::size_t idx = (k & parity[0]);
-            for (std::size_t i = 1; i < parity.size(); i++) {
-                idx |= ((k << i) & parity[i]);
-            }
-            indices[0] = idx;
-            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-                idx = indices[0];
-                for (std::size_t i = 0; i < wires.size(); i++) {
-                    if ((inner_idx & (one << i)) != 0) {
-                        idx |= rev_wire_shifts[i];
-                    }
-                }
-                indices[inner_idx] = idx;
-            }
-
+            const auto indices = parity2indices(k, parity, rev_wire_shifts);
             const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
             const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
             for (const auto &i : indices) {
@@ -1219,7 +1248,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 4);
         constexpr std::size_t one{1};
-        constexpr std::size_t dim = one << 4;
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1236,24 +1264,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             one << rev_wires[3]};
 
         const auto parity = Pennylane::Util::revWireParity(rev_wires);
-        std::array<std::size_t, dim> indices{};
 
         for (size_t k = 0; k < exp2(num_qubits - 4); k++) {
-            std::size_t idx = (k & parity[0]);
-            for (std::size_t i = 1; i < parity.size(); i++) {
-                idx |= ((k << i) & parity[i]);
-            }
-            indices[0] = idx;
-            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-                idx = indices[0];
-                for (std::size_t i = 0; i < wires.size(); i++) {
-                    if ((inner_idx & (one << i)) != 0) {
-                        idx |= rev_wire_shifts[i];
-                    }
-                }
-                indices[inner_idx] = idx;
-            }
-
+            const auto indices = parity2indices(k, parity, rev_wire_shifts);
             const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
             const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
             for (const auto &i : indices) {
