@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
+  [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
+
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
   [(#507)](https://github.com/PennyLaneAI/pennylane-lightning/pull/507)
   [(#498)](https://github.com/PennyLaneAI/pennylane-lightning/pull/498)

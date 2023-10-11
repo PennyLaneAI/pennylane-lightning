@@ -351,6 +351,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                 if operation.name == "Identity":
                     continue
                 method = getattr(sim, operation.name, None)
+                wires = self.wires.indices(operation.wires)
 
                 if method is None:
                     if operation.name == "ControlledQubitUnitary":
@@ -363,7 +364,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                             # To support older versions of PL
                             method(operation.base.matrix, control_wires, wires, False)
                     else:
-                        wires = self.wires.indices(operation.wires)
                         # Inverse can be set to False since qml.matrix(operation) is already in
                         # inverted form
                         method = getattr(sim, "applyMatrix")

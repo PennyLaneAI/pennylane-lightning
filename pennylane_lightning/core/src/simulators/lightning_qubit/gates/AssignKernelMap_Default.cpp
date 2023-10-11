@@ -203,13 +203,13 @@ void assignKernelsForGeneratorOp_Default() {
                                all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitation,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationPlus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationMinus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
 
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
