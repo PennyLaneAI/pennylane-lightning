@@ -24,17 +24,12 @@
 #include <complex>
 #include <unordered_map>
 
-#include <bitset>
-#include <iostream>
-
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
 #include "KernelMap.hpp"
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
-
-#include "BitUtil.hpp"
 
 /// @cond DEV
 namespace {

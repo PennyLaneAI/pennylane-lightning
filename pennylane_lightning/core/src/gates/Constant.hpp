@@ -38,7 +38,6 @@ namespace Pennylane::Gates::Constant {
  */
 [[maybe_unused]] constexpr std::array multi_qubit_matrix_ops{
     MatrixOperation::MultiQubitOp,
-    // ControlledMatrixOperation::NQubitOp,
 };
 
 /**
