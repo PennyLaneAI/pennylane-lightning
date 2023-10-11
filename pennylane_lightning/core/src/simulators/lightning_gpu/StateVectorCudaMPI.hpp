@@ -94,6 +94,8 @@ class StateVectorCudaMPI
     using CFP_t =
         typename StateVectorCudaBase<Precision,
                                      StateVectorCudaMPI<Precision>>::CFP_t;
+    using PrecisionT = Precision;
+    using ComplexT = std::complex<PrecisionT>;
     using GateType = CFP_t *;
 
     StateVectorCudaMPI() = delete;
@@ -184,6 +186,25 @@ class StateVectorCudaMPI
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
         initSV_MPI();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
+    }
+
+    StateVectorCudaMPI(const StateVectorCudaMPI &other)
+        : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
+              other.getNumLocalQubits(), other.getDataBuffer().getDevTag(),
+              true),
+          numGlobalQubits_(other.getNumGlobalQubits()),
+          numLocalQubits_(other.getNumLocalQubits()),
+          mpi_manager_(other.getMPIManager()),
+          handle_(make_shared_cusv_handle()),
+          cublascaller_(make_shared_cublas_caller()),
+          localStream_(make_shared_local_stream()),
+          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+              handle_.get(), mpi_manager_, 0, BaseType::getData(),
+              numLocalQubits_, localStream_.get())),
+          gate_cache_(true, other.getDataBuffer().getDevTag()) {
+        BaseType::CopyGpuDataToGpuIn(other.getData(), other.getLength(), false);
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -448,6 +469,59 @@ class StateVectorCudaMPI
         }
     }
 
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adjoint = false)
+        -> PrecisionT {
+        PL_ABORT_IF(generator_map_.find(opName) == generator_map_.end(),
+                    "Unsupported generator!");
+        return generator_map_.at(opName)(wires, adjoint);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
+                     const std::vector<size_t> &wires, bool adjoint = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        const std::string opName = {};
+        size_t n = size_t{1} << wires.size();
+        const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
+                                                           gate_matrix + n * n);
+        this->applyOperation_std(opName, wires, adjoint, {}, matrix);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * std vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
+                     const std::vector<size_t> &wires, bool adjoint = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF(gate_matrix.size() !=
+                        Pennylane::Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        const std::string opName = {};
+        this->applyOperation_std(opName, wires, adjoint, {}, gate_matrix);
+    }
+
     //****************************************************************************//
     // Explicit gate calls for bindings
     //****************************************************************************//
@@ -587,6 +661,16 @@ class StateVectorCudaMPI
         static const std::vector<std::string> names(wires.size(), {"RZ"});
         applyParametricPauliGate(names, {}, wires, param, adjoint);
     }
+    inline void applyIsingXY(const std::vector<std::size_t> &wires,
+                             bool adjoint, Precision param) {
+        static const std::string name{"IsingXY"};
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getIsingXY<CFP_t>(param));
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+    }
     inline void applyCRot(const std::vector<std::size_t> &wires, bool adjoint,
                           const std::vector<Precision> &params) {
         applyCRot(wires, adjoint, params[0], params[1], params[2]);
@@ -694,8 +778,47 @@ class StateVectorCudaMPI
     }
 
     /* Gate generators */
-    inline void applyGeneratorIsingXX(const std::vector<std::size_t> &wires,
-                                      bool adjoint) {
+    /**
+     * @brief Gradient generator function associated with the RX gate.
+     *
+     * @param sv Statevector
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorRX(const std::vector<size_t> &wires,
+                                       bool adj = false) {
+        applyPauliX(wires, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the RY gate.
+     *
+     * @param sv Statevector
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorRY(const std::vector<size_t> &wires,
+                                       bool adj = false) {
+        applyPauliY(wires, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the RZ gate.
+     *
+     * @param sv Statevector
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorRZ(const std::vector<size_t> &wires,
+                                       bool adj = false) {
+        applyPauliZ(wires, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT
+    applyGeneratorIsingXX(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"GeneratorIsingXX"};
         static const Precision param = 0.0;
         const auto gate_key = std::make_pair(name, param);
@@ -705,9 +828,10 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void applyGeneratorIsingYY(const std::vector<std::size_t> &wires,
-                                      bool adjoint) {
+    inline PrecisionT
+    applyGeneratorIsingYY(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"GeneratorIsingYY"};
         static const Precision param = 0.0;
         const auto gate_key = std::make_pair(name, param);
@@ -717,9 +841,10 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void applyGeneratorIsingZZ(const std::vector<std::size_t> &wires,
-                                      bool adjoint) {
+    inline PrecisionT
+    applyGeneratorIsingZZ(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"GeneratorIsingZZ"};
         static const Precision param = 0.0;
         const auto gate_key = std::make_pair(name, param);
@@ -729,9 +854,96 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
 
-    inline void
+    inline PrecisionT
+    applyGeneratorIsingXY(const std::vector<std::size_t> &wires, bool adjoint) {
+        static const std::string name{"GeneratorIsingXY"};
+        static const Precision param = 0.0;
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key,
+                                 cuGates::getGeneratorIsingXY<CFP_t>());
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+        return static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the PhaseShift gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorPhaseShift(const std::vector<size_t> &wires,
+                                               bool adj = false) {
+        applyOperation("P_11", wires, adj, {0.0}, cuGates::getP11_CU<CFP_t>());
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the controlled RX
+     * gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorCRX(const std::vector<size_t> &wires,
+                                        bool adj = false) {
+        applyOperation("P_11", {wires.front()}, adj, {0.0},
+                       cuGates::getP11_CU<CFP_t>());
+        applyPauliX(std::vector<size_t>{wires.back()}, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the controlled RY
+     * gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorCRY(const std::vector<size_t> &wires,
+                                        bool adj = false) {
+        applyOperation("P_11", {wires.front()}, adj, {0.0},
+                       cuGates::getP11_CU<CFP_t>());
+        applyPauliY(std::vector<size_t>{wires.back()}, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the controlled RZ
+     * gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT applyGeneratorCRZ(const std::vector<size_t> &wires,
+                                        bool adj = false) {
+        applyOperation("P_11", {wires.front()}, adj, {0.0},
+                       cuGates::getP11_CU<CFP_t>());
+        applyPauliZ(std::vector<size_t>{wires.back()}, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    /**
+     * @brief Gradient generator function associated with the controlled
+     * PhaseShift gate.
+     *
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT
+    applyGeneratorControlledPhaseShift(const std::vector<size_t> &wires,
+                                       bool adj = false) {
+        applyOperation("P_1111", {wires}, adj, {0.0},
+                       cuGates::getP1111_CU<CFP_t>());
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    inline PrecisionT
     applyGeneratorSingleExcitation(const std::vector<std::size_t> &wires,
                                    bool adjoint) {
         static const std::string name{"GeneratorSingleExcitation"};
@@ -743,8 +955,9 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void
+    inline PrecisionT
     applyGeneratorSingleExcitationMinus(const std::vector<std::size_t> &wires,
                                         bool adjoint) {
         static const std::string name{"GeneratorSingleExcitationMinus"};
@@ -756,8 +969,9 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void
+    inline PrecisionT
     applyGeneratorSingleExcitationPlus(const std::vector<std::size_t> &wires,
                                        bool adjoint) {
         static const std::string name{"GeneratorSingleExcitationPlus"};
@@ -769,9 +983,10 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
 
-    inline void
+    inline PrecisionT
     applyGeneratorDoubleExcitation(const std::vector<std::size_t> &wires,
                                    bool adjoint) {
         static const std::string name{"GeneratorDoubleExcitation"};
@@ -783,8 +998,9 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void
+    inline PrecisionT
     applyGeneratorDoubleExcitationMinus(const std::vector<std::size_t> &wires,
                                         bool adjoint) {
         static const std::string name{"GeneratorDoubleExcitationMinus"};
@@ -796,8 +1012,9 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
-    inline void
+    inline PrecisionT
     applyGeneratorDoubleExcitationPlus(const std::vector<std::size_t> &wires,
                                        bool adjoint) {
         static const std::string name{"GeneratorDoubleExcitationPlus"};
@@ -809,16 +1026,18 @@ class StateVectorCudaMPI
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
+        return -static_cast<PrecisionT>(0.5);
     }
 
-    inline void applyGeneratorMultiRZ(const std::vector<std::size_t> &wires,
-                                      bool adjoint) {
+    inline PrecisionT
+    applyGeneratorMultiRZ(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"PauliZ"};
         static const Precision param = 0.0;
         for (const auto &w : wires) {
             applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
                                   {}, {w}, adjoint);
         }
+        return -static_cast<PrecisionT>(0.5);
     }
 
     /**
@@ -839,6 +1058,24 @@ class StateVectorCudaMPI
         if (!cusparsehandle_)
             cusparsehandle_ = make_shared_cusparse_handle();
         return cusparsehandle_.get();
+    }
+
+    /**
+     * @brief Get the cuStateVec handle that the object is using.
+     *
+     * @return custatevecHandle_t returns the cuStateVec handle.
+     */
+    auto getCusvHandle() const -> custatevecHandle_t { return handle_.get(); }
+
+    /**
+     * @brief Get a host data copy.
+     *
+     * @return std::vector<std::complex<PrecisionT>>
+     */
+    auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
+        std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
+        this->CopyGpuDataToHost(data_host.data(), data_host.size());
+        return data_host;
     }
 
     /**
@@ -877,6 +1114,7 @@ class StateVectorCudaMPI
             gate_cache_.get_gate_device_ptr(obsName, par[0]), local_wires);
         return expect_val;
     }
+
     /**
      * @brief See `expval(const std::string &obsName, const std::vector<size_t>
      &wires, const std::vector<Precision> &params = {0.0}, const
@@ -927,341 +1165,8 @@ class StateVectorCudaMPI
                 : std::vector<size_t>{wires.rbegin(), wires.rend()};
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto expect_val =
-            getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires);
+            getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires).x;
         return expect_val;
-    }
-
-    /**
-     * @brief expval(H) calculates the expected value using cuSparseSpMV and MPI
-     * to implement distributed Sparse Matrix-Vector multiplication. The dense
-     * vector is distributed across multiple GPU devices and only the MPI rank 0
-     * holds the complete sparse matrix data. The process involves the following
-     * steps: 1. The rank 0 splits the full sparse matrix into n by n blocks,
-     * where n is the size of MPI communicator. Each row of blocks is then
-     * distributed across multiple GPUs. 2. For each GPU, cuSparseSpMV is
-     * invoked to perform the local sparse matrix block and local state vector
-     * multiplication. 3. Each GPU will collect computation results for its
-     * respective row block of the sparse matrix. 4. After all sparse matrix
-     * operations are completed on each GPU, an inner product is performed and
-     * MPI reduce operation is utilized to obtain the final result for the
-     * expectation value.
-     * @tparam index_type Integer type used as indices of the sparse matrix.
-     * @param csr_Offsets_ptr Pointer to the array of row offsets of the sparse
-     * matrix. Array of size csrOffsets_size.
-     * @param csrOffsets_size Number of Row offsets of the sparse matrix.
-     * @param columns_ptr Pointer to the array of column indices of the sparse
-     * matrix. Array of size numNNZ
-     * @param values_ptr Pointer to the array of the non-zero elements
-     * @param numNNZ Number of non-zero elements.
-     * @return auto Expectation value.
-     */
-    template <class index_type>
-    auto getExpectationValueOnSparseSpMV(
-        const index_type *csrOffsets_ptr, const index_type csrOffsets_size,
-        const index_type *columns_ptr,
-        const std::complex<Precision> *values_ptr, const index_type numNNZ) {
-        if (mpi_manager_.getRank() == 0) {
-            PL_ABORT_IF_NOT(static_cast<size_t>(csrOffsets_size - 1) ==
-                                (size_t{1} << this->getTotalNumQubits()),
-                            "Incorrect size of CSR Offsets.");
-            PL_ABORT_IF_NOT(numNNZ > 0, "Empty CSR matrix.");
-        }
-
-        const CFP_t alpha = {1.0, 0.0};
-        const CFP_t beta = {0.0, 0.0};
-
-        Precision local_expect = 0;
-
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-
-        cudaDataType_t data_type;
-        cusparseIndexType_t compute_type;
-        const cusparseOperation_t operation_type =
-            CUSPARSE_OPERATION_NON_TRANSPOSE;
-        const cusparseSpMVAlg_t spmvalg_type = CUSPARSE_SPMV_ALG_DEFAULT;
-        const cusparseIndexBase_t index_base_type = CUSPARSE_INDEX_BASE_ZERO;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
-
-        if constexpr (std::is_same_v<index_type, int64_t>) {
-            compute_type = CUSPARSE_INDEX_64I;
-        } else {
-            compute_type = CUSPARSE_INDEX_32I;
-        }
-
-        // Distribute sparse matrix across multi-nodes/multi-gpus
-        size_t num_rows = size_t{1} << this->getTotalNumQubits();
-        size_t local_num_rows = size_t{1} << this->getNumLocalQubits();
-
-        std::vector<std::vector<CSRMatrix<Precision, index_type>>>
-            csrmatrix_blocks;
-
-        if (mpi_manager_.getRank() == 0) {
-            csrmatrix_blocks = splitCSRMatrix<Precision, index_type>(
-                mpi_manager_, num_rows, csrOffsets_ptr, columns_ptr,
-                values_ptr);
-        }
-        mpi_manager_.Barrier();
-
-        std::vector<CSRMatrix<Precision, index_type>> localCSRMatVector;
-        for (size_t i = 0; i < mpi_manager_.getSize(); i++) {
-            auto localCSRMat = scatterCSRMatrix<Precision, index_type>(
-                mpi_manager_, csrmatrix_blocks[i], local_num_rows, 0);
-            localCSRMatVector.push_back(localCSRMat);
-        }
-
-        mpi_manager_.Barrier();
-
-        const size_t length_local = size_t{1} << this->getNumLocalQubits();
-
-        DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id,
-                                               stream_id, true};
-        DataBuffer<CFP_t, int> d_res_per_rowblock{length_local, device_id,
-                                                  stream_id, true};
-        d_res_per_rowblock.zeroInit();
-
-        for (size_t i = 0; i < mpi_manager_.getSize(); i++) {
-            // Need to investigate if non-blocking MPI operation can improve
-            // performace here.
-            auto &localCSRMatrix = localCSRMatVector[i];
-
-            int64_t num_rows_local = local_num_rows;
-            int64_t num_cols_local = num_rows_local;
-            int64_t nnz_local =
-                static_cast<int64_t>(localCSRMatrix.getValues().size());
-
-            size_t color = 0;
-
-            if (localCSRMatrix.getValues().size() != 0) {
-                d_res_per_block.zeroInit();
-
-                DataBuffer<index_type, int> d_csrOffsets{
-                    localCSRMatrix.getCsrOffsets().size(), device_id, stream_id,
-                    true};
-                DataBuffer<index_type, int> d_columns{
-                    localCSRMatrix.getColumns().size(), device_id, stream_id,
-                    true};
-                DataBuffer<CFP_t, int> d_values{
-                    localCSRMatrix.getValues().size(), device_id, stream_id,
-                    true};
-
-                d_csrOffsets.CopyHostDataToGpu(
-                    localCSRMatrix.getCsrOffsets().data(),
-                    localCSRMatrix.getCsrOffsets().size(), false);
-                d_columns.CopyHostDataToGpu(localCSRMatrix.getColumns().data(),
-                                            localCSRMatrix.getColumns().size(),
-                                            false);
-                d_values.CopyHostDataToGpu(localCSRMatrix.getValues().data(),
-                                           localCSRMatrix.getValues().size(),
-                                           false);
-
-                // CUSPARSE APIs
-                cusparseSpMatDescr_t mat;
-                cusparseDnVecDescr_t vecX, vecY;
-
-                size_t bufferSize = 0;
-                cusparseHandle_t handle = getCusparseHandle();
-
-                // Create sparse matrix A in CSR format
-                PL_CUSPARSE_IS_SUCCESS(cusparseCreateCsr(
-                    /* cusparseSpMatDescr_t* */ &mat,
-                    /* int64_t */ num_rows_local,
-                    /* int64_t */ num_cols_local,
-                    /* int64_t */ nnz_local,
-                    /* void* */ d_csrOffsets.getData(),
-                    /* void* */ d_columns.getData(),
-                    /* void* */ d_values.getData(),
-                    /* cusparseIndexType_t */ compute_type,
-                    /* cusparseIndexType_t */ compute_type,
-                    /* cusparseIndexBase_t */ index_base_type,
-                    /* cudaDataType */ data_type));
-
-                // Create dense vector X
-                PL_CUSPARSE_IS_SUCCESS(cusparseCreateDnVec(
-                    /* cusparseDnVecDescr_t* */ &vecX,
-                    /* int64_t */ num_cols_local,
-                    /* void* */ BaseType::getData(),
-                    /* cudaDataType */ data_type));
-
-                // Create dense vector y
-                PL_CUSPARSE_IS_SUCCESS(cusparseCreateDnVec(
-                    /* cusparseDnVecDescr_t* */ &vecY,
-                    /* int64_t */ num_rows_local,
-                    /* void* */ d_res_per_block.getData(),
-                    /* cudaDataType */ data_type));
-
-                // allocate an external buffer if needed
-                PL_CUSPARSE_IS_SUCCESS(cusparseSpMV_bufferSize(
-                    /* cusparseHandle_t */ handle,
-                    /* cusparseOperation_t */ operation_type,
-                    /* const void* */ &alpha,
-                    /* cusparseSpMatDescr_t */ mat,
-                    /* cusparseDnVecDescr_t */ vecX,
-                    /* const void* */ &beta,
-                    /* cusparseDnVecDescr_t */ vecY,
-                    /* cudaDataType */ data_type,
-                    /* cusparseSpMVAlg_t */ spmvalg_type,
-                    /* size_t* */ &bufferSize));
-
-                DataBuffer<cudaDataType_t, int> dBuffer{bufferSize, device_id,
-                                                        stream_id, true};
-
-                // execute SpMV
-                PL_CUSPARSE_IS_SUCCESS(cusparseSpMV(
-                    /* cusparseHandle_t */ handle,
-                    /* cusparseOperation_t */ operation_type,
-                    /* const void* */ &alpha,
-                    /* cusparseSpMatDescr_t */ mat,
-                    /* cusparseDnVecDescr_t */ vecX,
-                    /* const void* */ &beta,
-                    /* cusparseDnVecDescr_t */ vecY,
-                    /* cudaDataType */ data_type,
-                    /* cusparseSpMVAlg_t */ spmvalg_type,
-                    /* void* */ reinterpret_cast<void *>(dBuffer.getData())));
-
-                // destroy matrix/vector descriptors
-                PL_CUSPARSE_IS_SUCCESS(cusparseDestroySpMat(mat));
-                PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecX));
-                PL_CUSPARSE_IS_SUCCESS(cusparseDestroyDnVec(vecY));
-
-                color = 1;
-            }
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager_.Barrier();
-
-            if (mpi_manager_.getRank() == i) {
-                color = 1;
-                if (localCSRMatrix.getValues().size() == 0) {
-                    d_res_per_block.zeroInit();
-                }
-            }
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager_.Barrier();
-
-            auto new_mpi_manager =
-                mpi_manager_.split(color, mpi_manager_.getRank());
-            int reduce_root_rank = -1;
-
-            if (mpi_manager_.getRank() == i) {
-                reduce_root_rank = new_mpi_manager.getRank();
-            }
-
-            mpi_manager_.Bcast<int>(reduce_root_rank, i);
-
-            if (new_mpi_manager.getComm() != MPI_COMM_NULL) {
-                new_mpi_manager.Reduce<CFP_t>(d_res_per_block,
-                                              d_res_per_rowblock, length_local,
-                                              reduce_root_rank, "sum");
-            }
-        }
-
-        mpi_manager_.Barrier();
-
-        local_expect =
-            innerProdC_CUDA(d_res_per_rowblock.getData(), BaseType::getData(),
-                            BaseType::getLength(), device_id, stream_id,
-                            getCublasCaller())
-                .x;
-
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
-
-        auto expect = mpi_manager_.allreduce<Precision>(local_expect, "sum");
-        return expect;
-    }
-
-    /**
-     * @brief Utility method for probability calculation using given wires.
-     *
-     * @param wires List of wires to return probabilities for in lexicographical
-     * order.
-     * @return std::vector<double>
-     */
-    auto probability(const std::vector<size_t> &wires) -> std::vector<double> {
-        // Data return type fixed as double in custatevec function call
-        std::vector<double> subgroup_probabilities;
-
-        // this should be built upon by the wires not participating
-        int maskLen = 0;
-        int *maskBitString = nullptr;
-        int *maskOrdering = nullptr;
-
-        cudaDataType_t data_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
-
-        std::vector<int> wires_int(wires.size());
-
-        // Transform indices between PL & cuQuantum ordering
-        std::transform(
-            wires.begin(), wires.end(), wires_int.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-
-        // split wires_int to global and local ones
-        std::vector<int> wires_local;
-        std::vector<int> wires_global;
-
-        for (const auto &wire : wires_int) {
-            if (wire < static_cast<int>(this->getNumLocalQubits())) {
-                wires_local.push_back(wire);
-            } else {
-                wires_global.push_back(wire);
-            }
-        }
-
-        std::vector<double> local_probabilities(
-            Pennylane::Util::exp2(wires_local.size()));
-
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumArray(
-            /* custatevecHandle_t */ handle_.get(),
-            /* const void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ this->getNumLocalQubits(),
-            /* double* */ local_probabilities.data(),
-            /* const int32_t* */ wires_local.data(),
-            /* const uint32_t */ wires_local.size(),
-            /* const int32_t* */ maskBitString,
-            /* const int32_t* */ maskOrdering,
-            /* const uint32_t */ maskLen));
-
-        // create new MPI communicator groups
-        size_t subCommGroupId = 0;
-        for (size_t i = 0; i < wires_global.size(); i++) {
-            size_t mask = 1 << (wires_global[i] - this->getNumLocalQubits());
-            size_t bitValue = mpi_manager_.getRank() & mask;
-            subCommGroupId += bitValue
-                              << (wires_global[i] - this->getNumLocalQubits());
-        }
-        auto sub_mpi_manager0 =
-            mpi_manager_.split(subCommGroupId, mpi_manager_.getRank());
-
-        if (sub_mpi_manager0.getSize() == 1) {
-            return local_probabilities;
-        } else {
-            if (sub_mpi_manager0.getRank() == 0) {
-                subgroup_probabilities.resize(
-                    Pennylane::Util::exp2(wires_local.size()));
-            }
-
-            sub_mpi_manager0.Reduce<double>(local_probabilities,
-                                            subgroup_probabilities, 0, "sum");
-
-            return subgroup_probabilities;
-        }
     }
 
     /**
@@ -1457,6 +1362,7 @@ class StateVectorCudaMPI
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
+    /*
     auto generate_samples(size_t num_samples) -> std::vector<size_t> {
         double epsilon = 1e-15;
         size_t nSubSvs = 1UL << (this->getNumGlobalQubits());
@@ -1497,29 +1403,29 @@ class StateVectorCudaMPI
         size_t extraWorkspaceSizeInBytes = 0;
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerCreate(
-            /* custatevecHandle_t */ handle_.get(),
-            /* const void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ this->getNumLocalQubits(),
-            /* custatevecSamplerDescriptor_t * */ &sampler,
-            /* uint32_t */ num_samples,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /-* custatevecHandle_t *-/ handle_.get(),
+            /-* const void* *-/ BaseType::getData(),
+            /-* cudaDataType_t *-/ data_type,
+            /-* const uint32_t *-/ this->getNumLocalQubits(),
+            /-* custatevecSamplerDescriptor_t * *-/ &sampler,
+            /-* uint32_t *-/ num_samples,
+            /-* size_t* *-/ &extraWorkspaceSizeInBytes));
 
         if (extraWorkspaceSizeInBytes > 0)
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerPreprocess(
-            /* custatevecHandle_t */ handle_.get(),
-            /* custatevecSamplerDescriptor_t */ sampler,
-            /* void* */ extraWorkspace,
-            /* const size_t */ extraWorkspaceSizeInBytes));
+            /-* custatevecHandle_t *-/ handle_.get(),
+            /-* custatevecSamplerDescriptor_t *-/ sampler,
+            /-* void* *-/ extraWorkspace,
+            /-* const size_t *-/ extraWorkspaceSizeInBytes));
 
         double subNorm = 0;
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerGetSquaredNorm(
-            /* custatevecHandle_t */ handle_.get(),
-            /* custatevecSamplerDescriptor_t */ sampler,
-            /* double * */ &subNorm));
+            /-* custatevecHandle_t *-/ handle_.get(),
+            /-* custatevecSamplerDescriptor_t *-/ sampler,
+            /-* double * *-/ &subNorm));
 
         int source = (mpi_manager_.getRank() - 1 + mpi_manager_.getSize()) %
                      mpi_manager_.getSize();
@@ -1544,12 +1450,12 @@ class StateVectorCudaMPI
             precumulative = norm - epsilon;
         }
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerApplySubSVOffset(
-            /* custatevecHandle_t */ handle_.get(),
-            /* custatevecSamplerDescriptor_t */ sampler,
-            /* int32_t */ static_cast<int>(mpi_manager_.getRank()),
-            /* uint32_t */ nSubSvs,
-            /* double */ precumulative,
-            /* double */ norm));
+            /-* custatevecHandle_t *-/ handle_.get(),
+            /-* custatevecSamplerDescriptor_t *-/ sampler,
+            /-* int32_t *-/ static_cast<int>(mpi_manager_.getRank()),
+            /-* uint32_t *-/ nSubSvs,
+            /-* double *-/ precumulative,
+            /-* double *-/ norm));
 
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto low = std::lower_bound(rand_nums.begin(), rand_nums.end(),
@@ -1568,14 +1474,14 @@ class StateVectorCudaMPI
         int nSubShots = shotOffset - preshotOffset;
         if (nSubShots > 0) {
             PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
-                /* custatevecHandle_t */ handle_.get(),
-                /* custatevecSamplerDescriptor_t */ sampler,
-                /* custatevecIndex_t* */ &localBitStrings[preshotOffset],
-                /* const int32_t * */ bitOrdering.data(),
-                /* const uint32_t */ bitStringLen,
-                /* const double * */ &rand_nums[preshotOffset],
-                /* const uint32_t */ nSubShots,
-                /* enum custatevecSamplerOutput_t */
+                /-* custatevecHandle_t *-/ handle_.get(),
+                /-* custatevecSamplerDescriptor_t *-/ sampler,
+                /-* custatevecIndex_t* *-/ &localBitStrings[preshotOffset],
+                /-* const int32_t * *-/ bitOrdering.data(),
+                /-* const uint32_t *-/ bitStringLen,
+                /-* const double * *-/ &rand_nums[preshotOffset],
+                /-* const uint32_t *-/ nSubShots,
+                /-* enum custatevecSamplerOutput_t *-/
                 CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
         }
 
@@ -1596,11 +1502,17 @@ class StateVectorCudaMPI
         }
         return samples;
     }
+    */
 
   private:
     using ParFunc = std::function<void(const std::vector<size_t> &, bool,
                                        const std::vector<Precision> &)>;
+    using GeneratorFunc =
+        std::function<Precision(const std::vector<size_t> &, bool)>;
+
     using FMap = std::unordered_map<std::string, ParFunc>;
+    using GMap = std::unordered_map<std::string, GeneratorFunc>;
+
     const FMap par_gates_{
         {"RX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
@@ -1650,6 +1562,14 @@ class StateVectorCudaMPI
                           std::forward<decltype(adjoint)>(adjoint),
                           std::forward<decltype(params[0])>(params[0]));
          }},
+        {"IsingXY",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
+             applyIsingXY(std::forward<decltype(wires)>(wires),
+                          std::forward<decltype(adjoint)>(adjoint),
+                          std::forward<decltype(params[0])>(params[0]));
+         }},
+        // LCOV_EXCL_START
+        // Calculation passed to applyParametricPauliGate
         {"CRX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRX(std::forward<decltype(wires)>(wires),
@@ -1668,6 +1588,7 @@ class StateVectorCudaMPI
                       std::forward<decltype(adjoint)>(adjoint),
                       std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_STOP
         {"SingleExcitation",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applySingleExcitation(
@@ -1734,6 +1655,123 @@ class StateVectorCudaMPI
         {"RZ", CUSTATEVEC_PAULI_Z},       {"CRX", CUSTATEVEC_PAULI_X},
         {"CRY", CUSTATEVEC_PAULI_Y},      {"CRZ", CUSTATEVEC_PAULI_Z},
         {"Identity", CUSTATEVEC_PAULI_I}, {"I", CUSTATEVEC_PAULI_I}};
+
+    // Holds the mapping from gate labels to associated generator functions.
+    const GMap generator_map_{
+        {"RX",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorRX(std::forward<decltype(wires)>(wires),
+                                     std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"RY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorRY(std::forward<decltype(wires)>(wires),
+                                     std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"RZ",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorRZ(std::forward<decltype(wires)>(wires),
+                                     std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXX",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingXX(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingXY(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingYY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingYY(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingZZ",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingZZ(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorIsingXY(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"CRX",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorCRX(std::forward<decltype(wires)>(wires),
+                                      std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"CRY",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorCRY(std::forward<decltype(wires)>(wires),
+                                      std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"CRZ",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorCRZ(std::forward<decltype(wires)>(wires),
+                                      std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"PhaseShift",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorPhaseShift(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"ControlledPhaseShift",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorControlledPhaseShift(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitation",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorSingleExcitation(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitationMinus",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorSingleExcitationMinus(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitationPlus",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorSingleExcitationPlus(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"DoubleExcitation",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorDoubleExcitation(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"DoubleExcitationMinus",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorDoubleExcitationMinus(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"DoubleExcitationPlus",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorDoubleExcitationPlus(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+
+        {"MultiRZ", [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorMultiRZ(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }}};
 
     /**
      * @brief Normalize the index ordering to match PennyLane.
@@ -2250,119 +2288,6 @@ class StateVectorCudaMPI
         }
 
         applyHostMatrixGate(matrix_cu, ctrls, tgts, use_adjoint);
-    }
-
-    /**
-     * @brief Get expectation of a given host-defined matrix.
-     *
-     * @param matrix Host-defined row-major order gate matrix.
-     * @param tgts Target qubits.
-     * @param expect Local expectation value.
-     * @return auto Expectation value.
-     */
-    void getCuSVExpectationValueHostMatrix(const std::vector<CFP_t> &matrix,
-                                           const std::vector<int> &tgts,
-                                           CFP_t &expect) {
-        void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
-
-        size_t nIndexBits = BaseType::getNumQubits();
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
-
-        // check the size of external workspace
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectationGetWorkspaceSize(
-            /* custatevecHandle_t */ handle_.get(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const uint32_t */ tgts.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
-
-        if (extraWorkspaceSizeInBytes > 0) {
-            PL_CUDA_IS_SUCCESS(
-                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
-        }
-
-        // compute expectation
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
-            /* custatevecHandle_t */ handle_.get(),
-            /* void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* void* */ &expect,
-            /* cudaDataType_t */ data_type,
-            /* double* */ nullptr,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t* */ tgts.data(),
-            /* const uint32_t */ tgts.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
-        if (extraWorkspaceSizeInBytes) {
-            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-        }
-    }
-
-    auto getExpectationValueHostMatrix(const std::vector<CFP_t> &matrix,
-                                       const std::vector<std::size_t> &tgts) {
-
-        std::vector<int> tgtsInt(tgts.size());
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-
-        // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
-        std::vector<int> statusWires(this->getTotalNumQubits(),
-                                     WireStatus::Default);
-
-        // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
-            statusWires[tgtsInt[i]] = WireStatus::Target;
-        }
-
-        int StatusGlobalWires = std::reduce(
-            statusWires.begin() + this->getNumLocalQubits(), statusWires.end());
-
-        mpi_manager_.Barrier();
-
-        CFP_t local_expect;
-        if (!StatusGlobalWires) {
-            getCuSVExpectationValueHostMatrix(matrix, tgtsInt, local_expect);
-        } else {
-            std::vector<int> localTgts = tgtsInt;
-
-            auto wirePairs = createWirePairs(this->getNumLocalQubits(),
-                                             this->getTotalNumQubits(),
-                                             localTgts, statusWires);
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-
-            applyMPI_Dispatcher(
-                wirePairs,
-                &StateVectorCudaMPI::getCuSVExpectationValueHostMatrix, matrix,
-                localTgts, local_expect);
-            PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        }
-        auto expect = mpi_manager_.allreduce<CFP_t>(local_expect, "sum");
-        return expect;
     }
 
     /**

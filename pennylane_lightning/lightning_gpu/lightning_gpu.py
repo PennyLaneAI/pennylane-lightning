@@ -264,10 +264,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self.syncD2H(state)
             return state
 
-<<<<<<< HEAD
-
-=======
->>>>>>> add_LGPU
         @property
         def create_ops_list(self):
             """Returns create_ops_list function of the matching precision."""

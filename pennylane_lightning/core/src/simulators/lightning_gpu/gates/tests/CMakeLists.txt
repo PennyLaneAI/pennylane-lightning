@@ -44,18 +44,8 @@ if(ENABLE_MPI)
     ################################################################################
     # Define library
     ################################################################################
-    find_package(MPI REQUIRED)
-
-    find_library(MPI_GTL
-    NAMES libmpi_gtl_cuda.so libmpi_gtl_cuda.so.0 libmpi_gtl_cuda.so.0.0.0
-    HINTS ENV CRAY_LD_LIBRARY_PATH
-    ENV LD_LIBRARY_PATH
-    )
-
-
     add_library(${PL_BACKEND}_gates_tests_mpi INTERFACE)
     target_link_libraries(${PL_BACKEND}_gates_tests_mpi INTERFACE     Catch2::Catch2
-                                                                lightning_external_libs
                                                                 ${PL_BACKEND}_gates
                                                                 ${PL_BACKEND}_utils
                                                                 ${PL_BACKEND}
@@ -68,11 +58,13 @@ if(ENABLE_MPI)
     ################################################################################
     # Define targets
     ################################################################################
-    set(TEST_MPI_SOURCES ./mpi/Test_StateVectorCudaMPI_NonParam.cpp)
+    set(TEST_MPI_SOURCES    ./mpi/Test_StateVectorCudaMPI_NonParam.cpp
+                            ./mpi/Test_StateVectorCudaMPI_Param.cpp
+                            ./mpi/Test_StateVectorCudaMPI_Generators.cpp
+    )
 
     add_executable(${PL_BACKEND}_gates_test_runner_mpi ${TEST_MPI_SOURCES})
-    target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi MPI::MPI_CXX lightning_external_libs ${MPI_GTL})
-    #target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi MPI::MPI_CXX lightning_external_libs)
+    target_link_libraries(${PL_BACKEND}_gates_test_runner_mpi PRIVATE ${PL_BACKEND}_gates_tests_mpi)
 
     catch_discover_tests(${PL_BACKEND}_gates_test_runner_mpi)
 endif()
