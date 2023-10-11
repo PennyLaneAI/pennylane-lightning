@@ -304,55 +304,88 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         using size_t = std::size_t;
         constexpr std::size_t one{1};
         constexpr std::size_t zero{0};
-        const std::size_t nw_tot = controlled_wires.size() + wires.size();
+        const size_t n_contr = controlled_wires.size();
+        const size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
         const std::size_t num_qubits = this->getNumQubits();
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires = controlled_wires;
-        all_wires.insert(all_wires.end(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
 
-        std::vector<std::size_t> rev_wires(all_wires.size());
-        std::vector<std::size_t> rev_wire_shifts(all_wires.size());
-        for (std::size_t k = 0; k < all_wires.size(); k++) {
-            rev_wires[k] =
-                (num_qubits - 1) - all_wires[(all_wires.size() - 1) - k];
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
             rev_wire_shifts[k] = (one << rev_wires[k]);
         }
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
-        PL_ASSERT(all_wires.size() == parity.size() - 1);
+        PL_ASSERT(nw_tot == parity.size() - 1);
 
         printf("\n=================\n");
         printf("num_qubits = %ld\n", num_qubits);
         printf("nw_tot = %ld\n", nw_tot);
-        printf("controlled_wires.size() = %ld\n", controlled_wires.size());
-        printf("wires.size() = %ld\n", wires.size());
+        printf("controlled_wires.size() = %ld\n", n_contr);
+        printf("wires.size() = %ld\n", n_wires);
+        {
+            int count = 0;
+            for (const auto &i : all_wires) {
+                std::cout << "all_wires(" << count++ << ") = " << i << " = "
+                          << std::bitset<8>(i) << std::endl;
+            }
+        }
+
+        {
+            int count = 0;
+            for (const auto &i : rev_wires) {
+                std::cout << "rev_wires(" << count++ << ") = " << i << " = "
+                          << std::bitset<8>(i) << std::endl;
+            }
+        }
+
+        {
+            int count = 0;
+            for (const auto &i : rev_wire_shifts) {
+                std::cout << "rev_wire_shifts(" << count++ << ") = " << i
+                          << " = " << std::bitset<8>(i) << std::endl;
+            }
+        }
+
         const size_t step = one << nw_tot;
-        const size_t dim = one << wires.size();
+        const size_t dim = one << n_wires;
         std::vector<size_t> indices(dim);
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
-        const size_t n_contr = controlled_wires.size();
-        const size_t n_wires = wires.size();
 
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
             std::size_t idx = (k & parity[0]);
             for (std::size_t i = 1; i < parity.size(); i++) {
                 idx |= ((k << i) & parity[i]);
             }
-            for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+            std::cout << "index(base) = " << std::bitset<8>(idx) << std::endl;
+            for (std::size_t i = 0; i < n_contr; i++) {
                 idx |= rev_wire_shifts[i];
+                std::cout << "index(" << i << ") = " << std::bitset<8>(idx)
+                          << std::endl;
             }
             indices[0] = idx;
             coeffs_in[0] = arr[idx];
             for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
                 idx = indices[0];
-                for (std::size_t i = 0; i < wires.size(); i++) {
+                for (std::size_t i = 0; i < n_wires; i++) {
                     if ((inner_idx & (one << i)) != 0) {
                         idx |= rev_wire_shifts[i + n_contr];
                     }
                 }
                 indices[inner_idx] = idx;
                 coeffs_in[inner_idx] = arr[idx];
+            }
+            {
+                int count = 0;
+                for (const auto &i : indices) {
+                    std::cout << "index(" << count++
+                              << ") = " << std::bitset<8>(i) << std::endl;
+                }
             }
             for (std::size_t i = 0; i < dim; i++) {
                 const auto index = indices[i];
