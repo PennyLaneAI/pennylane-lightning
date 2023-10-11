@@ -465,12 +465,7 @@ template <typename PrecisionT> class DynamicDispatcher {
                                const std::vector<size_t> &wires,
                                bool inverse) const {
         PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
-        const auto mat_op = [n_wires = wires.size()]() {
-            switch (n_wires) {
-            default:
-                return ControlledMatrixOperation::NQubitOp;
-            }
-        }();
+        const auto mat_op = ControlledMatrixOperation::NQubitOp;
 
         const auto iter =
             controlled_matrix_kernels_.find(std::make_pair(mat_op, kernel));

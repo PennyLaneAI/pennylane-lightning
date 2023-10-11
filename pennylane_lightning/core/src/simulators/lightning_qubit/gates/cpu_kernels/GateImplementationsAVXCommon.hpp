@@ -68,6 +68,9 @@ class GateImplementationsAVXCommon
         /* IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
     };
 
+    constexpr static std::array<ControlledMatrixOperation, 0>
+        implemented_controlled_matrices{};
+
     template <class PrecisionT>
     static void applyPauliX(std::complex<PrecisionT> *arr,
                             const size_t num_qubits,

@@ -117,6 +117,9 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
         MatrixOperation::MultiQubitOp};
 
+    constexpr static std::array<ControlledMatrixOperation, 0>
+        implemented_controlled_matrices{};
+
     /**
      * @brief Apply a single qubit gate to the statevector.
      *
