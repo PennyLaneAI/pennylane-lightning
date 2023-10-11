@@ -20,15 +20,31 @@ jobs:
 
 
     steps:
+      - name: Update PATH and LD_LIBRARY_PATH
+        run: |
+          set -x
+          echo '/home/ubuntu/.local/bin' >> $GITHUB_PATH
+          echo '/usr/local/cuda/bin' >> $GITHUB_PATH
+          
+          LD_LIBRARY_PATH=/usr/local/cuda/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+          echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
+          set +x
+
+      - name: Show PATH and LD_LIBRARY_PATH
+        run: |
+          echo $PATH
+          echo $LD_LIBRARY_PATH
+
       - name: Test NVIDIA-SMI
         run: nvidia-smi
 
       - name: Show default CUDA
         run: |
-          echo $PATH
+          set -x
           which nvcc
           nvcc --version
-
+          set +x
+          
       - name: Switch CUDA
         run: |
           source /etc/profile.d/modules.sh
