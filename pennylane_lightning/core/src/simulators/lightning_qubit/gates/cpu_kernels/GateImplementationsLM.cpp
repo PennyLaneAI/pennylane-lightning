@@ -338,6 +338,14 @@ template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
 
+template void GateImplementationsLM::applyNQubitOp<float>(
+    std::complex<float> *, size_t, const std::complex<float> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+
+template void GateImplementationsLM::applyNQubitOp<double>(
+    std::complex<double> *, size_t, const std::complex<double> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+
 /* Single-qubit gates */
 template void
 GateImplementationsLM::applyIdentity<float>(std::complex<float> *, size_t,

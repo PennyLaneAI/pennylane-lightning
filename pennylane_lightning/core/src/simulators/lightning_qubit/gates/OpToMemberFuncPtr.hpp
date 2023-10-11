@@ -425,6 +425,19 @@ struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
         &GateImplementation::template applyMultiQubitOp<PrecisionT>;
 };
 
+template <class PrecisionT, class GateImplementation,
+          ControlledMatrixOperation mat_op>
+struct ControlledMatrixOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+                  "Unrecognized matrix operation");
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledMatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                         ControlledMatrixOperation::NQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyNQubitOp<PrecisionT>;
+};
+
 /// @cond DEV
 namespace Internal {
 /**
@@ -513,6 +526,16 @@ template <class PrecisionT> struct MatrixFuncPtr {
                           const std::complex<PrecisionT> *,
                           const std::vector<size_t> &, bool);
 };
+
+/**
+ * @brief Pointer type for a matrix operation
+ */
+template <class PrecisionT> struct ControlledMatrixFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<size_t> &,
+                          const std::vector<size_t> &, bool);
+};
 } // namespace Internal
 /// @endcond
 
@@ -534,6 +557,13 @@ using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
  */
 template <class PrecisionT>
 using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for MatrixfuncPtr.
+ */
+template <class PrecisionT>
+using ControlledMatrixFuncPtrT =
+    typename Internal::ControlledMatrixFuncPtr<PrecisionT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments
@@ -608,5 +638,19 @@ inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
                          const std::complex<PrecisionT *> matrix,
                          const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, wires, adj);
+}
+
+/**
+ * @brief Call a matrix operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ */
+template <class PrecisionT>
+inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
+                                   std::complex<PrecisionT> *data,
+                                   size_t num_qubits,
+                                   const std::complex<PrecisionT *> matrix,
+                                   const std::vector<size_t> &controlled_wires,
+                                   const std::vector<size_t> &wires, bool adj) {
+    return func(data, num_qubits, matrix, controlled_wires, wires, adj);
 }
 } // namespace Pennylane::LightningQubit::Gates

@@ -109,4 +109,15 @@ enum class MatrixOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+
+/**
+ * @brief Enum class for matrix operation
+ */
+enum class ControlledMatrixOperation : uint32_t {
+    BEGIN = 1,
+    NQubitOp = 1,
+    /* END (placeholder) */
+    END
+};
+
 } // namespace Pennylane::Gates

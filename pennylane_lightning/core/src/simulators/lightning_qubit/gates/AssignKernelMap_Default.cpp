@@ -228,4 +228,11 @@ void assignKernelsForMatrixOp_Default() {
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
 }
+void assignKernelsForControlledMatrixOp_Default() {
+    auto &instance =
+        OperationKernelMap<ControlledMatrixOperation>::getInstance();
+    instance.assignKernelForOp(ControlledMatrixOperation::NQubitOp,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+}
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

@@ -73,10 +73,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using GeneratorKernelMap =
         std::unordered_map<GeneratorOperation, KernelType>;
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
+    using ControlledMatrixKernelMap =
+        std::unordered_map<ControlledMatrixOperation, KernelType>;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
+    ControlledMatrixKernelMap kernel_for_controlled_matrices_;
 
     /**
      * @brief Internal function to set kernels for all operations depending on
@@ -98,6 +101,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_matrices_ =
             OperationKernelMap<MatrixOperation>::getInstance().getKernelMap(
                 num_qubits, threading, memory_model);
+        kernel_for_controlled_matrices_ =
+            OperationKernelMap<ControlledMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
     }
 
     /**
@@ -131,6 +137,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto getKernelForMatrix(MatrixOperation mat_op) const
         -> KernelType {
         return kernel_for_matrices_.at(mat_op);
+    }
+
+    /**
+     * @brief Get a kernel for a matrix operation.
+     *
+     * @param mat_op Matrix operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledMatrix(ControlledMatrixOperation mat_op) const
+        -> KernelType {
+        return kernel_for_controlled_matrices_.at(mat_op);
     }
 
     /**
@@ -169,6 +187,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_matrices_;
     }
 
+    /**
+     * @brief Get kernels for all matrix operations.
+     */
+    [[nodiscard]] inline auto getControlledMatrixKernelMap() const & -> const
+        ControlledMatrixKernelMap & {
+        return kernel_for_controlled_matrices_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledMatrixKernelMap() && -> ControlledMatrixKernelMap {
+        return kernel_for_controlled_matrices_;
+    }
+
   protected:
     explicit StateVectorLQubit(size_t num_qubits, Threading threading,
                                CPUMemoryModel memory_model)
@@ -194,17 +225,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *  @brief Returns a tuple containing the gate, generator, and matrix kernel
      * maps respectively.
      */
-    [[nodiscard]] auto getSupportedKernels()
-        const & -> std::tuple<const GateKernelMap &, const GeneratorKernelMap &,
-                              const MatrixKernelMap &> {
+    [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
+        const GateKernelMap &, const GeneratorKernelMap &,
+        const MatrixKernelMap &, const ControlledMatrixKernelMap &> {
         return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap()};
+                getMatrixKernelMap(), getControlledMatrixKernelMap()};
     }
 
-    [[nodiscard]] auto getSupportedKernels() && -> std::tuple<
-        GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&> {
+    [[nodiscard]] auto getSupportedKernels()
+        && -> std::tuple<GateKernelMap &&, GeneratorKernelMap &&,
+                         MatrixKernelMap &&, ControlledMatrixKernelMap &&> {
         return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap()};
+                getMatrixKernelMap(), getControlledMatrixKernelMap()};
     }
 
     /**
@@ -292,71 +324,16 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     inline void applyControlledMatrix(
         const ComplexT *matrix, const std::vector<size_t> &controlled_wires,
         const std::vector<size_t> &wires, bool inverse = false) {
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = this->getData();
+
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        ComplexT *arr = this->getData();
 
-        // const auto kernel = getKernelForMatrix(MatrixOperation::NQubitOp);
-        // const auto &dispatcher =
-        // DynamicDispatcher<PrecisionT>::getInstance();
-        // dispatcher.applyControlledMatrix(arr, this->getNumQubits(), matrix,
-        //                                  controlled_wires, wires, inverse);
-
-        using size_t = std::size_t;
-        constexpr std::size_t one{1};
-        constexpr std::size_t zero{0};
-        const size_t n_contr = controlled_wires.size();
-        const size_t n_wires = wires.size();
-        const std::size_t nw_tot = n_contr + n_wires;
-        const std::size_t num_qubits = this->getNumQubits();
-        PL_ASSERT(num_qubits >= nw_tot);
-
-        std::vector<std::size_t> all_wires = controlled_wires;
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-
-        std::vector<std::size_t> rev_wires(nw_tot);
-        std::vector<std::size_t> rev_wire_shifts(nw_tot);
-        for (std::size_t k = 0; k < nw_tot; k++) {
-            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-            rev_wire_shifts[k] = (one << rev_wires[k]);
-        }
-        const std::vector<std::size_t> parity =
-            Pennylane::Util::revWireParity(rev_wires);
-        PL_ASSERT(nw_tot == parity.size() - 1);
-
-        const size_t step = one << nw_tot;
-        const size_t dim = one << n_wires;
-        std::vector<size_t> indices(dim);
-        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
-
-        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t idx = (k & parity[0]);
-            for (std::size_t i = 1; i < parity.size(); i++) {
-                idx |= ((k << i) & parity[i]);
-            }
-            for (std::size_t i = 0; i < n_contr; i++) {
-                idx |= rev_wire_shifts[i];
-            }
-            indices[0] = idx;
-            coeffs_in[0] = arr[idx];
-            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-                idx = indices[0];
-                for (std::size_t i = 0; i < n_wires; i++) {
-                    if ((inner_idx & (one << i)) != 0) {
-                        idx |= rev_wire_shifts[i + n_contr];
-                    }
-                }
-                indices[inner_idx] = idx;
-                coeffs_in[inner_idx] = arr[idx];
-            }
-            for (std::size_t i = 0; i < dim; i++) {
-                const auto index = indices[i];
-                arr[index] = 0.0;
-                const std::size_t base_idx = i * dim;
-                for (std::size_t j = 0; j < dim; j++) {
-                    arr[index] += matrix[base_idx + j] * coeffs_in[j];
-                }
-            }
-        }
+        const auto kernel =
+            getKernelForControlledMatrix(ControlledMatrixOperation::NQubitOp);
+        dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
+                                         matrix, controlled_wires, wires,
+                                         inverse);
     }
 
     /**

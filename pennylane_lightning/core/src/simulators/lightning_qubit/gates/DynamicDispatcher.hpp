@@ -89,6 +89,7 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
     using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
+    using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
 
   private:
     std::unordered_map<std::string, GateOperation> str_to_gates_;
@@ -104,6 +105,10 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::pair<MatrixOperation, KernelType>, MatrixFunc,
                        PairHash>
         matrix_kernels_;
+
+    std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
+                       ControlledMatrixFunc, PairHash>
+        controlled_matrix_kernels_;
 
     std::unordered_map<KernelType, std::string> kernel_names_;
 
@@ -214,6 +219,19 @@ template <typename PrecisionT> class DynamicDispatcher {
         return matrices;
     }
 
+    [[nodiscard]] auto
+    registeredControlledMatricesForKernel(KernelType kernel) const
+        -> std::unordered_set<ControlledMatrixOperation> {
+        std::unordered_set<ControlledMatrixOperation> matrices;
+
+        for (const auto &[key, val] : controlled_matrix_kernels_) {
+            if (key.second == kernel) {
+                matrices.emplace(key.first);
+            }
+        }
+        return matrices;
+    }
+
     /**
      * @brief Gate name to gate operation
      *
@@ -266,6 +284,17 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Register a new matrix operation. Can pass a custom
+     * kernel
+     */
+    void registerControlledMatrixOperation(ControlledMatrixOperation mat_op,
+                                           KernelType kernel,
+                                           ControlledMatrixFunc func) {
+        controlled_matrix_kernels_.emplace(std::make_pair(mat_op, kernel),
+                                           func);
+    }
+
+    /**
      * @brief Check if a kernel function is registered for the given
      * gate operation and kernel.
      *
@@ -299,6 +328,19 @@ template <typename PrecisionT> class DynamicDispatcher {
     bool isRegistered(MatrixOperation mat_op, KernelType kernel) const {
         return matrix_kernels_.find(std::make_pair(mat_op, kernel)) !=
                matrix_kernels_.cend();
+    }
+
+    /**
+     * @brief Check if a kernel function is registered for the given
+     * matrix operation and kernel.
+     *
+     * @param mat_op Matrix operation
+     * @param kernel Kernel
+     */
+    bool isRegistered(ControlledMatrixOperation mat_op,
+                      KernelType kernel) const {
+        return controlled_matrix_kernels_.find(std::make_pair(
+                   mat_op, kernel)) != controlled_matrix_kernels_.cend();
     }
 
     /**
@@ -404,6 +446,43 @@ template <typename PrecisionT> class DynamicDispatcher {
             applyOperation(kernel, data, num_qubits, ops[i], wires[i],
                            inverse[i], {});
         }
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyControlledMatrix(KernelType kernel, CFP_t *data,
+                               size_t num_qubits,
+                               const std::complex<PrecisionT> *matrix,
+                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<size_t> &wires,
+                               bool inverse) const {
+        PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
+        const auto mat_op = [n_wires = wires.size()]() {
+            switch (n_wires) {
+            default:
+                return ControlledMatrixOperation::NQubitOp;
+            }
+        }();
+
+        const auto iter =
+            controlled_matrix_kernels_.find(std::make_pair(mat_op, kernel));
+
+        if (iter == controlled_matrix_kernels_.end()) {
+            throw std::invalid_argument(
+                std::string(
+                    lookup(GateConstant::controlled_matrix_names, mat_op)) +
+                " is not registered for the given kernel");
+        }
+        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
+                       inverse);
     }
 
     /**

@@ -58,8 +58,8 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap] =
-        sv.getSupportedKernels();
+    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
+          ControlledMatrixKernelMap] = sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -77,6 +77,14 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
     for (const auto &[mat_op, kernel] : MatrixKernelMap) {
         const auto key = std::string(lookup(Constant::matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_matrix_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
 
         res_map[key.c_str()] = value;

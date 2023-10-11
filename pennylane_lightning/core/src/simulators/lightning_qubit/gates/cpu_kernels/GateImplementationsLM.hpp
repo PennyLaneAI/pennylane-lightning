@@ -149,6 +149,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
         MatrixOperation::MultiQubitOp};
 
+    constexpr static std::array implemented_controlled_matrices = {
+        ControlledMatrixOperation::NQubitOp};
+
     /**
      * @brief Computes the array of indices to apply the gate corresponding to
      * the k-th state vector block.
@@ -403,6 +406,69 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     for (std::size_t j = 0; j < dim; j++) {
                         arr[index] += matrix[base_idx + j] * coeffs_in[j];
                     }
+                }
+            }
+        }
+    }
+
+    template <class PrecisionT>
+    static void
+    applyNQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                  const std::complex<PrecisionT> *matrix,
+                  const std::vector<std::size_t> &controlled_wires,
+                  const std::vector<std::size_t> &wires, bool inverse) {
+        using size_t = std::size_t;
+        constexpr std::size_t one{1};
+        constexpr std::size_t zero{0};
+        const size_t n_contr = controlled_wires.size();
+        const size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires = controlled_wires;
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        PL_ASSERT(nw_tot == parity.size() - 1);
+
+        const size_t step = one << nw_tot;
+        const size_t dim = one << n_wires;
+        std::vector<size_t> indices(dim);
+        std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+
+        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            std::size_t idx = (k & parity[0]);
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity[i]);
+            }
+            for (std::size_t i = 0; i < n_contr; i++) {
+                idx |= rev_wire_shifts[i];
+            }
+            indices[0] = idx;
+            coeffs_in[0] = arr[idx];
+            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                idx = indices[0];
+                for (std::size_t i = 0; i < n_wires; i++) {
+                    if ((inner_idx & (one << i)) != 0) {
+                        idx |= rev_wire_shifts[i + n_contr];
+                    }
+                }
+                indices[inner_idx] = idx;
+                coeffs_in[inner_idx] = arr[idx];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = indices[i];
+                arr[index] = 0.0;
+                const std::size_t base_idx = i * dim;
+                for (std::size_t j = 0; j < dim; j++) {
+                    arr[index] += matrix[base_idx + j] * coeffs_in[j];
                 }
             }
         }
@@ -1627,6 +1693,12 @@ extern template void GateImplementationsLM::applyMultiQubitOp<float>(
 extern template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNQubitOp<float>(
+    std::complex<float> *, size_t, const std::complex<float> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNQubitOp<double>(
+    std::complex<double> *, size_t, const std::complex<double> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
 
 // Single-qubit gates
 extern template void
