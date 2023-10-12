@@ -284,8 +284,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Register a new matrix operation. Can pass a custom
-     * kernel
+     * @brief Register a new controlled matrix operation.
      */
     void registerControlledMatrixOperation(ControlledMatrixOperation mat_op,
                                            KernelType kernel,
@@ -332,9 +331,9 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     /**
      * @brief Check if a kernel function is registered for the given
-     * matrix operation and kernel.
+     * controlled matrix operation and kernel.
      *
-     * @param mat_op Matrix operation
+     * @param mat_op Controlled matrix operation
      * @param kernel Kernel
      */
     bool isRegistered(ControlledMatrixOperation mat_op,
@@ -449,12 +448,13 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Apply a given matrix directly to the statevector.
+     * @brief Apply a given matrix and controls directly to the statevector.
      *
      * @param kernel Kernel to use for this operation
      * @param data Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
+     * @param wires Control wires.
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */

@@ -93,7 +93,7 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 }
 
 /**
- * @brief Register matrix.
+ * @brief Register controlled matrix kernel.
  */
 template <class StateVectorT>
 void registerControlledMatrix(
@@ -109,7 +109,7 @@ void registerControlledMatrix(
 }
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Get a controlled matrix and kernel map for a statevector.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {

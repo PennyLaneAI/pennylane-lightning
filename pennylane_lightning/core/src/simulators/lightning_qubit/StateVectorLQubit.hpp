@@ -135,9 +135,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a kernel for a matrix operation.
+     * @brief Get a kernel for a controlled matrix operation.
      *
-     * @param mat_op Matrix operation
+     * @param mat_op Controlled matrix operation
      * @return KernelType
      */
     [[nodiscard]] inline auto
@@ -183,7 +183,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get kernels for all matrix operations.
+     * @brief Get kernels for all controlled matrix operations.
      */
     [[nodiscard]] inline auto getControlledMatrixKernelMap() const & -> const
         ControlledMatrixKernelMap & {
@@ -217,8 +217,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline Threading threading() const { return threading_; }
 
     /**
-     *  @brief Returns a tuple containing the gate, generator, and matrix kernel
-     * maps respectively.
+     *  @brief Returns a tuple containing the gate, generator, and controlled
+     * matrix kernel maps respectively.
      */
     [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
         const GateKernelMap &, const GeneratorKernelMap &,
@@ -307,8 +307,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given matrix directly to the statevector using a given
-     * kernel.
+     * @brief Apply a given controlled-matrix directly to the statevector using
+     * a given kernel.
      *
      * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data (in row-major format).

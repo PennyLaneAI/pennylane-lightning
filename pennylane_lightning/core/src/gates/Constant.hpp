@@ -156,7 +156,9 @@ namespace Pennylane::Gates::Constant {
     std::pair<MatrixOperation, std::string_view>{MatrixOperation::MultiQubitOp,
                                                  "MultiQubitOp"},
 };
-
+/**
+ * @brief Controlled matrix names.
+ */
 [[maybe_unused]] constexpr std::array controlled_matrix_names = {
     std::pair<ControlledMatrixOperation, std::string_view>{
         ControlledMatrixOperation::NQubitOp, "NQubitOp"},

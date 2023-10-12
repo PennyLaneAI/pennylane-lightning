@@ -528,7 +528,7 @@ template <class PrecisionT> struct MatrixFuncPtr {
 };
 
 /**
- * @brief Pointer type for a matrix operation
+ * @brief Pointer type for a controlled matrix operation
  */
 template <class PrecisionT> struct ControlledMatrixFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
@@ -559,7 +559,7 @@ template <class PrecisionT>
 using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 
 /**
- * @brief Convenient type alias for MatrixfuncPtr.
+ * @brief Convenient type alias for ControlledMatrixFuncPtrT.
  */
 template <class PrecisionT>
 using ControlledMatrixFuncPtrT =
@@ -641,7 +641,7 @@ inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
 }
 
 /**
- * @brief Call a matrix operation.
+ * @brief Call a controlled matrix operation.
  * @tparam PrecisionT Floating point type for the state-vector.
  */
 template <class PrecisionT>

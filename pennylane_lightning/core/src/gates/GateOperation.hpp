@@ -111,7 +111,7 @@ enum class MatrixOperation : uint32_t {
 };
 
 /**
- * @brief Enum class for matrix operation
+ * @brief Enum class for controlled matrix operation
  */
 enum class ControlledMatrixOperation : uint32_t {
     BEGIN = 1,

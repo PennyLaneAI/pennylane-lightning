@@ -411,6 +411,16 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
+    /**
+     * @brief Apply a matrix with controls to the statevector.
+     *
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param controlled_wires Control wires.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     template <class PrecisionT>
     static void
     applyNQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,

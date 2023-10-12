@@ -121,7 +121,8 @@ constexpr auto constructMatrixOpsFunctorTupleIter() {
                                                mat_idx + 1>());
     }
 } /**
-   * @brief Internal recursive function for constructMatrixOpsFunctorTuple
+   * @brief Internal recursive function for
+   * constructControlledMatrixOpsFunctorTuple
    */
 template <class PrecisionT, class GateImplementation, size_t mat_idx>
 constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
@@ -173,6 +174,12 @@ template <class PrecisionT, class GateImplementation>
 constexpr auto matrix_op_functor_tuple =
     constructMatrixOpsFunctorTupleIter<PrecisionT, GateImplementation, 0>();
 
+/**
+ * @brief Tuple of controlled matrix operation and function pointer pairs
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam GateImplementation Gate implementation class.
+ */
 template <class PrecisionT, class GateImplementation>
 constexpr auto controlled_matrix_op_functor_tuple =
     constructControlledMatrixOpsFunctorTupleIter<PrecisionT, GateImplementation,
@@ -251,7 +258,13 @@ void registerAllImplementedMatrixOps() {
         },
         matrix_op_functor_tuple<PrecisionT, GateImplementation>);
 }
-
+/**
+ * @brief Register all implemented controlled matrix operation for a given
+ * kernel
+ *
+ * @tparam PrecisionT Floating point precision of underlying statevector data
+ * @tparam GateImplementation Gate implementation class.
+ */
 template <class PrecisionT, class GateImplementation>
 void registerAllImplementedControlledMatrixOps() {
     auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
