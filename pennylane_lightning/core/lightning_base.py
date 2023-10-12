@@ -255,7 +255,9 @@ class LightningBase(QubitDevice):
         return int(qml.math.dot(state, basis_states))
 
     # pylint: disable=too-many-function-args, assignment-from-no-return
-    def _process_jacobian_tape(self, tape, starting_state, use_device_state, used_mpi:bool=False):
+    def _process_jacobian_tape(
+        self, tape, starting_state, use_device_state, used_mpi: bool = False
+    ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
         obs_serialized = QuantumScriptSerializer(

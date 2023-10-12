@@ -19,18 +19,18 @@
 
 #include "cuda.h"
 
-#include "cuda_helpers.hpp"
 #include "BindingsBase.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "Error.hpp"
-#include "MeasurementsGPUMPI.hpp"
 #include "MPIManager.hpp"
+#include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "TypeList.hpp"
+#include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
@@ -73,16 +73,14 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             py::init([](MPIManager &mpi_manager, const DevTag<int> devtag_local,
                         std::size_t mpi_buf_size, std::size_t num_global_qubits,
                         std::size_t num_local_qubits) {
-                return new StateVectorT(
-                    mpi_manager, devtag_local, mpi_buf_size, num_global_qubits,
-                    num_local_qubits);
+                return new StateVectorT(mpi_manager, devtag_local, mpi_buf_size,
+                                        num_global_qubits, num_local_qubits);
             })) // qubits, device
         .def(py::init(
             [](const DevTag<int> devtag_local, std::size_t mpi_buf_size,
                std::size_t num_global_qubits, std::size_t num_local_qubits) {
-                return new StateVectorT(
-                    devtag_local, mpi_buf_size, num_global_qubits,
-                    num_local_qubits);
+                return new StateVectorT(devtag_local, mpi_buf_size,
+                                        num_global_qubits, num_local_qubits);
             })) // qubits, device
         .def(
             "setBasisState",
@@ -205,7 +203,8 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
              "Expected value of an operation by name.")
         .def(
             "expval",
-            [](MeasurementsMPI<StateVectorT> &M, const np_arr_sparse_ind &row_map,
+            [](MeasurementsMPI<StateVectorT> &M,
+               const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
@@ -249,7 +248,8 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
              "Variance of an operation by name.")
         .def(
             "var",
-            [](MeasurementsMPI<StateVectorT> &M, const np_arr_sparse_ind &row_map,
+            [](MeasurementsMPI<StateVectorT> &M,
+               const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
                     static_cast<sparse_index_type *>(row_map.request().ptr),

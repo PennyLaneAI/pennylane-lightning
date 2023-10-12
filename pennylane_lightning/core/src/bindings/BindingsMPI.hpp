@@ -39,7 +39,6 @@
 #include "Observables.hpp"
 #include "Util.hpp" // for_each_enum
 
-
 #ifdef _ENABLE_PLGPU
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianDataMPI.hpp"
@@ -61,7 +60,6 @@ using namespace Pennylane::LightningGPU::Measures;
 static_assert(false, "Backend not found.");
 
 #endif
-
 
 namespace py = pybind11;
 
@@ -93,7 +91,8 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                                                           py::module_local());
 
     class_name = "NamedObsMPIC" + bitsize;
-    py::class_<NamedObsMPI<StateVectorT>, std::shared_ptr<NamedObsMPI<StateVectorT>>,
+    py::class_<NamedObsMPI<StateVectorT>,
+               std::shared_ptr<NamedObsMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
@@ -105,7 +104,8 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const NamedObsMPI<StateVectorT> &self, py::handle other) -> bool {
+            [](const NamedObsMPI<StateVectorT> &self,
+               py::handle other) -> bool {
                 if (!py::isinstance<NamedObsMPI<StateVectorT>>(other)) {
                     return false;
                 }
@@ -262,11 +262,9 @@ auto registerAdjointJacobianMPI(
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
                                 PrecisionT{0.0});
-    const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(),
-                                        sv,
-                                        observables,
-                                        operations,
-                                        trainableParams};
+    const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(), sv,
+                                           observables, operations,
+                                           trainableParams};
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
     return py::array_t<PrecisionT>(py::cast(jac));
 }
@@ -350,7 +348,7 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
     //***********************************************************************//
     class_name = "AdjointJacobianMPIC" + bitsize;
     py::class_<AdjointJacobianMPI<StateVectorT>>(m, class_name.c_str(),
-                                              py::module_local())
+                                                 py::module_local())
         .def(py::init<>())
         .def(
             "batched",
@@ -365,10 +363,7 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
                                                 trainableParams.size(),
                                             PrecisionT{0.0});
                 const JacobianDataMPI<StateVectorT> jd{
-                    operations.getTotalNumParams(),
-                    sv,
-                    observables,
-                    operations,
+                    operations.getTotalNumParams(), sv, observables, operations,
                     trainableParams};
                 adjoint_jacobian.adjointJacobian_serial(std::span{jac}, jd);
                 return py::array_t<PrecisionT>(py::cast(jac));
@@ -404,7 +399,7 @@ template <class StateVectorT> void lightningClassBindingsMPI(py::module_ &m) {
     //***********************************************************************//
     //                              Observables
     //***********************************************************************//
-    
+
     py::module_ obs_submodule =
         m.def_submodule("observablesMPI", "Submodule for observables classes.");
     registerObservablesMPI<StateVectorT>(obs_submodule);
@@ -412,7 +407,7 @@ template <class StateVectorT> void lightningClassBindingsMPI(py::module_ &m) {
     //***********************************************************************//
     //                             Measurements
     //***********************************************************************//
-    
+
     class_name = "MeasurementsMPIC" + bitsize;
     auto pyclass_measurements = py::class_<MeasurementsMPI<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
@@ -420,11 +415,11 @@ template <class StateVectorT> void lightningClassBindingsMPI(py::module_ &m) {
     pyclass_measurements.def(py::init<StateVectorT &>());
     registerBackendAgnosticMeasurementsMPI<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurementsMPI<StateVectorT>(pyclass_measurements);
-    
+
     //***********************************************************************//
     //                           Algorithms
     //***********************************************************************//
-    
+
     py::module_ alg_submodule = m.def_submodule(
         "algorithmsMPI", "Submodule for the algorithms functionality.");
     registerBackendAgnosticAlgorithmsMPI<StateVectorT>(alg_submodule);

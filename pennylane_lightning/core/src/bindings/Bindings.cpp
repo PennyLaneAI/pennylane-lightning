@@ -18,7 +18,7 @@
 #include "Bindings.hpp"
 #ifdef _ENABLE_PLGPU_MPI
 #include "BindingsMPI.hpp"
-#endif 
+#endif
 #include "pybind11/pybind11.h"
 
 // Defining the module name.

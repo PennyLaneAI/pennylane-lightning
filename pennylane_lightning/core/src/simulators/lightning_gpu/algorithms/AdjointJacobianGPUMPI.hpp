@@ -27,10 +27,10 @@
 #include "AdjointJacobianBase.hpp"
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
-#include "MPIManager.hpp"
 #include "JacobianDataMPI.hpp"
 #include "LinearAlg.hpp"
 #include "MPILinearAlg.hpp"
+#include "MPIManager.hpp"
 #include "ObservablesGPUMPI.hpp"
 
 /// @cond DEV

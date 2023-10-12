@@ -37,7 +37,7 @@ try:
         MeasurementsC64,
         is_gpu_supported,
         get_gpu_arch,
-        DevPool
+        DevPool,
     )
 
     try:
@@ -47,8 +47,9 @@ try:
             MeasurementsMPIC128,
             MeasurementsMPIC64,
             MPIManager,
-            DevTag
+            DevTag,
         )
+
         MPI_SUPPORT = True
     except:
         MPI_SUPPORT = False
@@ -247,7 +248,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             if not mpi:
                 self._mpi = False
                 self._num_local_wires = self.num_wires
-                self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)                
+                self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)
             else:
                 self._mpi = True
                 self._mpi_init_helper(self.num_wires)
@@ -282,7 +283,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._sync = sync
             self._batch_obs = batch_obs
             self._create_basis_state(0)
-        
+
         def _mpi_init_helper(self, num_wires):
             if not MPI_SUPPORT:
                 raise ImportError("MPI related APIs are not found.")
@@ -368,9 +369,16 @@ if LGPU_CPP_BINARY_AVAILABLE:
         def measurements(self):
             """Returns Measurements constructor of the matching precision."""
             if not self._mpi:
-                return MeasurementsC64(self._gpu_state) if self.use_csingle else MeasurementsC128(self._gpu_state)
-            return MeasurementsMPIC64(self._gpu_state) if self.use_csingle else MeasurementsMPIC128(self._gpu_state)
-
+                return (
+                    MeasurementsC64(self._gpu_state)
+                    if self.use_csingle
+                    else MeasurementsC128(self._gpu_state)
+                )
+            return (
+                MeasurementsMPIC64(self._gpu_state)
+                if self.use_csingle
+                else MeasurementsMPIC128(self._gpu_state)
+            )
 
         def syncD2H(self, state_vector, use_async=False):
             """Copy the state vector data on device to a state vector on the host provided by the user
@@ -650,7 +658,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # Check adjoint diff support
             self._check_adjdiff_supported_operations(tape.operations)
 
-            processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state, self._mpi)
+            processed_data = self._process_jacobian_tape(
+                tape, starting_state, use_device_state, self._mpi
+            )
 
             if not processed_data:  # training_params is empty
                 return np.array([], dtype=self.state.dtype)
@@ -789,11 +799,10 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         CSR_SparseHamiltonian.data,
                     )
 
-
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
                 observable_wires = self.map_wires(observable.wires)
-                if(len(observable_wires) > self._num_local_wires and self._mpi):
+                if len(observable_wires) > self._num_local_wires and self._mpi:
                     raise RuntimeError(
                         "MPI backend does not support Hermitian with number of target wires larger than local wire number."
                     )

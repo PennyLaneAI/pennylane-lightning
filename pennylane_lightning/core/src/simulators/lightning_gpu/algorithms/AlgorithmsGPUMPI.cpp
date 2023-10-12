@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "MPIManager.hpp"
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianData.hpp"
 #include "JacobianDataMPI.hpp"
+#include "MPIManager.hpp"
 
 // using namespace Pennylane;
 using namespace Pennylane::LightningGPU;

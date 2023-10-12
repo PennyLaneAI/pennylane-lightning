@@ -50,7 +50,7 @@ class QuantumScriptSerializer:
     """
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes
-    def __init__(self, device_name, use_csingle: bool = False, use_mpi:bool = False):
+    def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
         if device_name == "lightning.qubit":
             try:
@@ -89,7 +89,7 @@ class QuantumScriptSerializer:
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
         self.use_mpi = False
-        
+
         if use_mpi:
             self.use_mpi = use_mpi
             self.statevectormpi_c128 = lightning_ops.StateVectorMPIC128
@@ -101,7 +101,6 @@ class QuantumScriptSerializer:
             self.tensor_prod_obsmpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
             self.hamiltonianmpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonianmpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
-            
 
     @property
     def ctype(self):
