@@ -1,4 +1,4 @@
-name: Wheel::Linux::x86_64
+name: Wheel::Linux::x86_64::CUDA-11
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
 #                   Python versions: 3.9, 3.10, 3.11.
@@ -14,6 +14,7 @@ on:
     branches:
       - master
   release:
+    types: [published]
 
 concurrency:
   group: wheel_linux_x86_64_cu11-${{ github.ref }}
@@ -42,18 +43,9 @@ jobs:
     container: ${{ matrix.container_img }}
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-        with:
-          access_token: ${{ github.token }}
 
-      - name: Checkout PennyLane-Lightning-GPU
+      - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
@@ -61,12 +53,9 @@ jobs:
           # Reduce wait time for repos not responding
           cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
           yum update -y && yum install -y docker
-          yum install -y devtoolset-$GCC_VERSION-gcc-c++
-          yum install -y cmake ninja-build
-          echo "COMPILER=g++" >> $GITHUB_ENV
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.11.0
+        run: python3.9 -m pip install cibuildwheel~=2.11.0
 
       - name: Build wheels
         env:
