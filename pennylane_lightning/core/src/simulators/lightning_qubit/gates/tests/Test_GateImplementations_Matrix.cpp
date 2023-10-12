@@ -781,8 +781,9 @@ void testApplyNQubitOp() {
         const bool inverse = GENERATE(false, true);
         const std::size_t wire = GENERATE(0U, 1U, 2U, 3U);
         const std::size_t control = GENERATE(0U, 1U, 2U, 3U);
-        if (wire == control)
+        if (wire == control) {
             return;
+        }
         const auto matrix = getPauliX<std::complex, PrecisionT>();
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
@@ -798,8 +799,9 @@ void testApplyNQubitOp() {
         const bool inverse = GENERATE(false, true);
         const std::size_t wire = GENERATE(0U, 1U, 2U, 3U);
         const std::size_t control = GENERATE(0U, 1U, 2U, 3U);
-        if (wire == control)
+        if (wire == control) {
             return;
+        }
         const auto matrix = getPauliY<std::complex, PrecisionT>();
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
