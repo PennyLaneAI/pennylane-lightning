@@ -538,9 +538,6 @@ class TestExpval:
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         dev.reset()
         dev.apply([stateprep(np.array(input), wires=[0])], obs.diagonalizing_gates())
         res = dev.expval(obs)
@@ -550,9 +547,6 @@ class TestExpval:
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
         dev = qml.device(device_name, wires=1, shots=3)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         @qml.qnode(dev)
         def circuit():
@@ -728,9 +722,6 @@ class TestLightningDeviceIntegration:
         p = 0.543
         dev = qubit_device(wires=1)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         @qml.qnode(dev)
         def circuit(x):
             qml.RX(x, wires=0)
@@ -745,9 +736,6 @@ class TestLightningDeviceIntegration:
 
         p = 0.543
         dev = qubit_device(wires=1)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         @qml.qnode(dev)
         def circuit(x):
@@ -794,9 +782,6 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         op = getattr(qml.ops, name)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         assert dev.supports_operation(name)
 
         @qml.qnode(dev)
@@ -822,8 +807,6 @@ class TestLightningDeviceIntegration:
         """Tests supported gates that act on two wires that are not parameterized"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         assert dev.supports_operation(name)
 
@@ -847,9 +830,6 @@ class TestLightningDeviceIntegration:
         """Tests supported gates that act on three wires that are not parameterized"""
         dev = qubit_device(wires=3)
         op = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         assert dev.supports_operation(name)
 
@@ -878,9 +858,6 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         assert dev.supports_operation(name)
 
         @qml.qnode(dev)
@@ -903,9 +880,6 @@ class TestLightningDeviceIntegration:
         """Tests qubit basis state preparation on subsets of qubits"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         @qml.qnode(dev)
         def circuit():
@@ -931,9 +905,6 @@ class TestLightningDeviceIntegration:
         """Tests qubit state vector preparation on subsets of 2 qubits"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         par = np.array(par)
 
@@ -968,9 +939,6 @@ class TestLightningDeviceIntegration:
         """Tests qubit state vector preparation on subsets of 3 qubits"""
         dev = qubit_device(wires=3)
         op = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         par = np.array(par)
 
@@ -1007,9 +975,6 @@ class TestLightningDeviceIntegration:
         """Tests supported gates that act on a single wire that are parameterized"""
         dev = qubit_device(wires=1)
         op = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         assert dev.supports_operation(name)
 
@@ -1053,9 +1018,6 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         assert dev.supports_operation(name)
 
         @qml.qnode(dev)
@@ -1091,9 +1053,6 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         obs = getattr(qml.ops, name)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         assert dev.supports_observable(name)
 
         @qml.qnode(dev)
@@ -1118,9 +1077,6 @@ class TestLightningDeviceIntegration:
         """Tests supported observables on single wires with parameters."""
         dev = qubit_device(wires=1)
         obs = getattr(qml.ops, name)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         assert dev.supports_observable(name)
 

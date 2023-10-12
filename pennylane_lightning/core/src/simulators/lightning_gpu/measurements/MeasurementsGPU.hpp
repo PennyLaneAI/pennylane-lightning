@@ -762,7 +762,7 @@ class Measurements final
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
 
-        CFP_t expect;
+        cuDoubleComplex expect;
 
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
