@@ -199,7 +199,7 @@ This can be explicitly installed through PyPI as:
 
 .. code-block:: console
 
-    $ pip install pennylane-lightning-kokkos]
+    $ pip install pennylane-lightning-kokkos
 
 
 Building from source
