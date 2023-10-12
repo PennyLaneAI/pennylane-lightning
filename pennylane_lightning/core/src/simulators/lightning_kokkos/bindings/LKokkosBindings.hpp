@@ -238,6 +238,12 @@ auto getBackendInfo() -> py::dict {
  * @param m Pybind11 module.
  */
 void registerBackendSpecificInfo(py::module_ &m) {
+    m.def("kokkos_initialize", []() { Kokkos::initialize(); });
+    m.def("kokkos_initialize",
+          [](const InitializationSettings &args) { Kokkos::initialize(args); });
+    m.def("kokkos_finalize", []() { Kokkos::finalize(); });
+    m.def("kokkos_is_initialized", []() { return Kokkos::is_initialized(); });
+    m.def("kokkos_is_finalized", []() { return Kokkos::is_finalized(); });
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
     m.def(
         "print_configuration",
