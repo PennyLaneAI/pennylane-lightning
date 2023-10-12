@@ -235,4 +235,11 @@ void assignKernelsForControlledMatrixOp_Default() {
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }
+void assignKernelsForControlledGateOp_Default() {
+    auto &instance =
+        OperationKernelMap<ControlledGateOperation>::getInstance();
+    instance.assignKernelForOp(ControlledGateOperation::NCRZ,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+}
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

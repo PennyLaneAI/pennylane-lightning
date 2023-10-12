@@ -18,4 +18,5 @@ void assignKernelsForGateOp_Default();
 void assignKernelsForGeneratorOp_Default();
 void assignKernelsForMatrixOp_Default();
 void assignKernelsForControlledMatrixOp_Default();
+void assignKernelsForControlledGateOp_Default();
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

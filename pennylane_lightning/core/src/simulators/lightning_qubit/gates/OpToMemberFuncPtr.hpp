@@ -438,6 +438,19 @@ struct ControlledMatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
         &GateImplementation::template applyNQubitOp<PrecisionT>;
 };
 
+template <class PrecisionT, class GateImplementation,
+          ControlledGateOperation mat_op>
+struct ControlledGateOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+                  "Unrecognized matrix operation");
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                         ControlledGateOperation::NCRZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCRZ<PrecisionT>;
+};
+
 /// @cond DEV
 namespace Internal {
 /**
@@ -536,6 +549,16 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
                           const std::vector<size_t> &,
                           const std::vector<size_t> &, bool);
 };
+
+/**
+ * @brief Pointer type for a controlled gate operation
+ */
+template <class PrecisionT> struct ControlledGateFuncPtr {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::complex<PrecisionT> *,
+                          const std::vector<size_t> &,
+                          const std::vector<size_t> &, bool);
+};
 } // namespace Internal
 /// @endcond
 
@@ -564,6 +587,13 @@ using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 template <class PrecisionT>
 using ControlledMatrixFuncPtrT =
     typename Internal::ControlledMatrixFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for ControlledGateFuncPtrT.
+ */
+template <class PrecisionT>
+using ControlledGateFuncPtrT =
+    typename Internal::ControlledGateFuncPtr<PrecisionT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments

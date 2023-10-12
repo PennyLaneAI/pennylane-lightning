@@ -54,6 +54,7 @@ int assignKernelsForGateOp();
 int assignKernelsForGeneratorOp();
 int assignKernelsForMatrixOp();
 int assignKernelsForControlledMatrixOp();
+int assignKernelsForControlledGateOp();
 
 template <class Operation> struct AssignKernelForOp;
 
@@ -69,6 +70,10 @@ template <> struct AssignKernelForOp<Pennylane::Gates::MatrixOperation> {
 template <>
 struct AssignKernelForOp<Pennylane::Gates::ControlledMatrixOperation> {
     static inline const int dummy = assignKernelsForControlledMatrixOp();
+};
+template <>
+struct AssignKernelForOp<Pennylane::Gates::ControlledGateOperation> {
+    static inline const int dummy = assignKernelsForControlledGateOp();
 };
 } // namespace Internal
 ///@endcond

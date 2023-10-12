@@ -321,6 +321,23 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 assert np.allclose(circ(), circ_def(), tol)
 
 
+def test_controlled_qubit_unitary_from_op(tol):
+    n_qubits = 10
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+
+    def circuit(x):
+        qml.ControlledQubitUnitary(
+            qml.QubitUnitary(qml.RX.compute_matrix(x), wires=5), control_wires=range(5)
+        )
+        return qml.expval(qml.PauliX(0))
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(circuit, dev_def)
+    par = 0.1234
+    assert np.allclose(circ(par), circ_def(par), tol)
+
+
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))
 def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):

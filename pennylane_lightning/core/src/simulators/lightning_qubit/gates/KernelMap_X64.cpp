@@ -90,4 +90,10 @@ int assignKernelsForControlledMatrixOp() {
     // LCOV_EXCL_STOP
     return 1;
 }
+int assignKernelsForControlledGateOp() {
+    assignKernelsForControlledGateOp_Default();
+
+    // LCOV_EXCL_STOP
+    return 1;
+}
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

@@ -163,6 +163,10 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledMatrixOperation, std::string_view>{
         ControlledMatrixOperation::NQubitOp, "NQubitOp"},
 };
+[[maybe_unused]] constexpr std::array controlled_gate_names = {
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::NCRZ, "NCRZ"},
+};
 
 /**
  * @brief Number of wires for gates besides multi-qubit gates

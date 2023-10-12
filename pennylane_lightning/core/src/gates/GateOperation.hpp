@@ -119,5 +119,11 @@ enum class ControlledMatrixOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+enum class ControlledGateOperation : uint32_t {
+    BEGIN = 1,
+    NCRZ = 1,
+    /* END (placeholder) */
+    END
+};
 
 } // namespace Pennylane::Gates
