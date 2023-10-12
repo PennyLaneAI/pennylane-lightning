@@ -67,7 +67,7 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION);CMAKE_C_COMPILER=$(which gcc-$GCC_VERSION);LIGHTNING_RELEASE_TAG=master"
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++-11);CMAKE_C_COMPILER=$(which gcc-11);LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
@@ -75,10 +75,10 @@ jobs:
             python -m pip install ninja cmake~=3.24.3 auditwheel custatevec-cu$CUDA_VERSION_MAJOR
             yum clean all -y
             yum install centos-release-scl-rh -y
-            yum install devtoolset-$GCC_VERSION-gcc-c++ -y
-            source /opt/rh/devtoolset-$GCC_VERSION/enable -y
+            yum install devtoolset-11-gcc-c++ -y
+            source /opt/rh/devtoolset-11/enable -y
             yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
-            yum -y install cuda-$CUDA_VERSION_MAJOR-$CUDA_VERSION_MINOR git openssh wget
+            yum -y install cuda-11-5 git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
@@ -107,7 +107,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
