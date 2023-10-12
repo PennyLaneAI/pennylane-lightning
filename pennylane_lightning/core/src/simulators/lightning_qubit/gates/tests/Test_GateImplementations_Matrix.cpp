@@ -14,6 +14,7 @@
 #include <catch2/catch.hpp>
 
 #include "ConstantUtil.hpp"  // array_has_elem
+#include "Gates.hpp"         // getPauliX, getPauliY
 #include "LinearAlgebra.hpp" // randomUnitary
 #include "TestHelpers.hpp"   // PrecisionToName
 #include "TestHelpersWires.hpp"
@@ -770,6 +771,47 @@ void testApplyMultiQubitOp() {
     }
 }
 
+template <typename PrecisionT, class GateImplementation>
+void testApplyNQubitOp() {
+    std::mt19937 re{1337};
+    const std::size_t num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+
+    DYNAMIC_SECTION("CNOT") {
+        const bool inverse = GENERATE(false, true);
+        const std::size_t wire = GENERATE(0U, 1U, 2U, 3U);
+        const std::size_t control = GENERATE(0U, 1U, 2U, 3U);
+        if (wire == control)
+            return;
+        const auto matrix = getPauliX<std::complex, PrecisionT>();
+        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        auto st(ref_st);
+
+        GateImplementation::applyNQubitOp(st.data(), num_qubits, matrix.data(),
+                                          {2}, {3}, inverse);
+        GateImplementation::applyCNOT(ref_st.data(), num_qubits, {2, 3},
+                                      inverse);
+
+        REQUIRE(st == approx(ref_st).margin(margin));
+    }
+    DYNAMIC_SECTION("CY") {
+        const bool inverse = GENERATE(false, true);
+        const std::size_t wire = GENERATE(0U, 1U, 2U, 3U);
+        const std::size_t control = GENERATE(0U, 1U, 2U, 3U);
+        if (wire == control)
+            return;
+        const auto matrix = getPauliY<std::complex, PrecisionT>();
+        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        auto st(ref_st);
+
+        GateImplementation::applyNQubitOp(st.data(), num_qubits, matrix.data(),
+                                          {2}, {3}, inverse);
+        GateImplementation::applyCY(ref_st.data(), num_qubits, {2, 3}, inverse);
+
+        REQUIRE(st == approx(ref_st).margin(margin));
+    }
+}
+
 template <typename PrecisionT, typename TypeList>
 void testApplyMatrixForKernels() {
     using Pennylane::Gates::MatrixOperation;
@@ -787,6 +829,11 @@ void testApplyMatrixForKernels() {
         if constexpr (array_has_elem(GateImplementation::implemented_matrices,
                                      MatrixOperation::MultiQubitOp)) {
             testApplyMultiQubitOp<PrecisionT, GateImplementation>();
+        }
+        if constexpr (array_has_elem(
+                          GateImplementation::implemented_controlled_matrices,
+                          ControlledMatrixOperation::NQubitOp)) {
+            testApplyNQubitOp<PrecisionT, GateImplementation>();
         }
         testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
     }

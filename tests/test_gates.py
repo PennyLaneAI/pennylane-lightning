@@ -306,9 +306,9 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 control_wires = all_wires[0:i]
                 target_wires = all_wires[i:]
                 m = 2 ** len(target_wires)
-                U = np.random.rand(m, m) + 0.0j * np.random.rand(m, m)
+                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
                 U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 0.0j * np.random.rand(2**n_qubits)
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
                 init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
                 def circuit():
@@ -319,3 +319,33 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 circ = qml.QNode(circuit, dev)
                 circ_def = qml.QNode(circuit, dev_def)
                 assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("control_wires", range(4))
+@pytest.mark.parametrize("target_wires", range(4))
+def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
+    """Test that ControlledQubitUnitary is correctly applied to a state"""
+    if control_wires == target_wires:
+        return
+    n_qubits = 4
+    control_wires = [control_wires]
+    target_wires = [target_wires]
+    dev = qml.device(device_name, wires=n_qubits)
+    wires = control_wires + target_wires
+    U = qml.matrix(qml.PauliX(target_wires))
+    init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires)
+        return qml.state()
+
+    def cnot_circuit():
+        qml.StatePrep(init_state, wires=range(n_qubits))
+        qml.CNOT(wires=wires)
+        return qml.state()
+
+    circ = qml.QNode(circuit, dev)
+    circ_def = qml.QNode(cnot_circuit, dev)
+    assert np.allclose(circ(), circ_def(), tol)
