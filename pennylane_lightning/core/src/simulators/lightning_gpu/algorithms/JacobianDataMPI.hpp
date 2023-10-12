@@ -1,13 +1,13 @@
 #pragma once
-
+#include "MPIManager.hpp"
 #include "DevTag.hpp"
 #include "JacobianData.hpp"
-#include "MPIManager.hpp"
 
 // using namespace Pennylane;
 /// @cond DEV
 namespace {
 using Pennylane::Observables::Observable;
+using namespace Pennylane::LightningGPU::MPI;
 } // namespace
 /// @endcond
 
