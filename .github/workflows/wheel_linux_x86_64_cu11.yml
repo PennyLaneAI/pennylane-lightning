@@ -19,7 +19,7 @@ on:
     types: [published]
 
 concurrency:
-  group: wheel_linux_x86_64_cu${CUDA_VERSION_MAJOR}-${{ github.ref }}
+  group: wheel_linux_x86_64_cu11-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.24.3 auditwheel custatevec-cu$CUDA_VERSION_MAJOR
+            python -m pip install ninja cmake~=3.24.3 auditwheel custatevec-cu11
             yum clean all -y
             yum install centos-release-scl-rh -y
             yum install devtoolset-11-gcc-c++ -y
