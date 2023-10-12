@@ -59,7 +59,8 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
-          ControlledMatrixKernelMap] = sv.getSupportedKernels();
+          ControlledMatrixKernelMap, ControlledGateKernelMap] =
+        sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -125,18 +126,22 @@ void registerControlledGate(PyClass &pyclass) {
     using Pennylane::Util::for_each_enum;
     namespace Constant = Pennylane::Gates::Constant;
 
-    for_each_enum<ControlledGateOperation>([&pyclass](ControlledGateOperation gate_op) {
-        using Pennylane::Util::lookup;
-        const auto gate_name =
-            std::string(lookup(Constant::controlled_gate_names, gate_op));
-        const std::string doc = "Apply the " + gate_name + " gate.";
-        auto func = [gate_name = gate_name](
-                        StateVectorT &sv, const std::vector<size_t> &controlled_wires, const std::vector<size_t> &wires,
-                        bool inverse, const std::vector<ParamT> &params) {
-            sv.applyControlledOperation(gate_name, controlled_wires, wires, inverse, params);
-        };
-        pyclass.def(gate_name.c_str(), func, doc.c_str());
-    });
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyControlledGate(gate_name, controlled_wires, wires,
+                                       inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
 }
 
 /**
@@ -145,9 +150,7 @@ void registerControlledGate(PyClass &pyclass) {
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
-    pyclass.def("applyControlledGate",
-                &registerControlledGate<StateVectorT>,
-                "Apply controlled gate");
+    registerControlledGate<StateVectorT>(pyclass);
     pyclass.def("applyControlledMatrix",
                 &registerControlledMatrix<StateVectorT>,
                 "Apply controlled operation");

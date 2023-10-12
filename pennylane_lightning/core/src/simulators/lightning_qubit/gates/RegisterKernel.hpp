@@ -62,6 +62,21 @@ constexpr auto gateOpToFunctor() {
     };
 }
 
+template <class PrecisionT, class ParamT, class GateImplementation,
+          Pennylane::Gates::GateOperation gate_op>
+constexpr auto controlledGateOpToFunctor() {
+    return [](std::complex<PrecisionT> *data, size_t num_qubits,
+              const std::vector<size_t> &controlled_wires, const std::vector<size_t> &wires, bool inverse,
+              const std::vector<PrecisionT> &params) {
+        constexpr auto func_ptr =
+            Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                         gate_op>::value;
+        PL_ASSERT(params.size() ==
+                  lookup(Pennylane::Gates::Constant::gate_num_params, gate_op));
+        Gates::callGateOps(func_ptr, data, num_qubits, wires, inverse, params);
+    };
+}
+
 /**
  * @brief Internal recursion function for constructGateOpsFunctorTuple
  *
@@ -120,10 +135,11 @@ constexpr auto constructMatrixOpsFunctorTupleIter() {
             constructMatrixOpsFunctorTupleIter<PrecisionT, GateImplementation,
                                                mat_idx + 1>());
     }
-} /**
-   * @brief Internal recursive function for
-   * constructControlledMatrixOpsFunctorTuple
-   */
+}
+/**
+ * @brief Internal recursive function for
+ * constructControlledMatrixOpsFunctorTuple
+ */
 template <class PrecisionT, class GateImplementation, size_t mat_idx>
 constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
     if constexpr (mat_idx ==
@@ -141,7 +157,27 @@ constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
                 PrecisionT, GateImplementation, mat_idx + 1>());
     }
 }
-/// @endcond
+/**
+ * @brief Internal recursive function for
+ * constructControlledGateOpsFunctorTuple
+ */
+template <class PrecisionT, class GateImplementation, size_t mat_idx>
+constexpr auto constructControlledGateOpsFunctorTupleIter() {
+    if constexpr (mat_idx ==
+                  GateImplementation::implemented_controlled_gates.size()) {
+        return std::tuple{};
+    } else if (mat_idx <
+               GateImplementation::implemented_controlled_gates.size()) {
+        constexpr auto mat_op =
+            GateImplementation::implemented_controlled_gates[mat_idx];
+        return prepend_to_tuple(
+            std::pair{mat_op,
+                      Gates::ControlledGateOpToMemberFuncPtr<
+                          PrecisionT, GateImplementation, mat_op>::value},
+            constructControlledGateOpsFunctorTupleIter<
+                PrecisionT, GateImplementation, mat_idx + 1>());
+    }
+} /// @endcond
 
 /**
  * @brief Tuple of gate operation and function pointer pairs.
@@ -184,6 +220,11 @@ template <class PrecisionT, class GateImplementation>
 constexpr auto controlled_matrix_op_functor_tuple =
     constructControlledMatrixOpsFunctorTupleIter<PrecisionT, GateImplementation,
                                                  0>();
+
+template <class PrecisionT, class GateImplementation>
+constexpr auto controlled_gate_op_functor_tuple =
+    constructControlledGateOpsFunctorTupleIter<PrecisionT, GateImplementation,
+                                               0>();
 
 /**
  * @brief Register all implemented gates for a given kernel
@@ -285,6 +326,25 @@ void registerAllImplementedControlledMatrixOps() {
         controlled_matrix_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 
+template <class PrecisionT, class GateImplementation>
+void registerAllImplementedControlledGateOps() {
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    auto registerControlledGateToDispatcher =
+        [&dispatcher](const auto &mat_op_func_pair) {
+            const auto &[mat_op, func] = mat_op_func_pair;
+            dispatcher.registerControlledGateOperation(
+                mat_op, GateImplementation::kernel_id, func);
+            return mat_op;
+        };
+
+    [[maybe_unused]] const auto registered_mat_ops = std::apply(
+        [&registerControlledGateToDispatcher](auto... elem) {
+            return std::make_tuple(registerControlledGateToDispatcher(elem)...);
+        },
+        controlled_gate_op_functor_tuple<PrecisionT, GateImplementation>);
+}
+
 /**
  * @brief Internal function to iterate over all available kernels in
  * the compile time
@@ -295,6 +355,7 @@ void registerKernel() {
     registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
     registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
     registerAllImplementedControlledMatrixOps<PrecisionT, GateImplementation>();
+    registerAllImplementedControlledGateOps<PrecisionT, GateImplementation>();
 
     DynamicDispatcher<PrecisionT>::getInstance().registerKernelName(
         GateImplementation::kernel_id, std::string{GateImplementation::name});

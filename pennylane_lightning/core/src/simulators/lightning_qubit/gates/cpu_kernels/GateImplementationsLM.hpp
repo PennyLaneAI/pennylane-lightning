@@ -152,6 +152,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     constexpr static std::array implemented_controlled_matrices = {
         ControlledMatrixOperation::NQubitOp};
 
+    constexpr static std::array implemented_controlled_gates = {
+        ControlledGateOperation::NCRZ};
+
     /**
      * @brief Computes the array of indices to apply the gate corresponding to
      * the k-th state vector block.
@@ -512,6 +515,55 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     }
                 }
             }
+        }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void
+    applyNCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+              const std::vector<size_t> &controlled_wires,
+              const std::vector<size_t> &wires, bool inverse, ParamT angle) {
+        PL_ASSERT(wires.size() == 1);
+
+        constexpr std::size_t one{1};
+        const std::size_t n_contr = controlled_wires.size();
+        const std::size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires = controlled_wires;
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        PL_ASSERT(nw_tot == parity.size() - 1);
+
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+
+        for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            std::size_t i0 = (k & parity[0]);
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                i0 |= ((k << i) & parity[i]);
+            }
+            for (std::size_t i = 0; i < n_contr; i++) {
+                i0 |= rev_wire_shifts[i];
+            }
+            const size_t i1 = i0 | rev_wire_shifts[n_contr];
+            arr[i0] *= shifts[0];
+            arr[i1] *= shifts[1];
         }
     }
 

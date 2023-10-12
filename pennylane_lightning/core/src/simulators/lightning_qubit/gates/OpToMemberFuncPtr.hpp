@@ -446,7 +446,7 @@ struct ControlledGateOpToMemberFuncPtr {
 };
 template <class PrecisionT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, GateImplementation,
-                                         ControlledGateOperation::NCRZ> {
+                                       ControlledGateOperation::NCRZ> {
     constexpr static auto value =
         &GateImplementation::template applyNCRZ<PrecisionT>;
 };
@@ -553,11 +553,10 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
 /**
  * @brief Pointer type for a controlled gate operation
  */
-template <class PrecisionT> struct ControlledGateFuncPtr {
+template <class PrecisionT, class ParamT> struct ControlledGateFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
-                          const std::complex<PrecisionT> *,
                           const std::vector<size_t> &,
-                          const std::vector<size_t> &, bool);
+                          const std::vector<size_t> &, bool, ParamT);
 };
 } // namespace Internal
 /// @endcond
@@ -591,9 +590,9 @@ using ControlledMatrixFuncPtrT =
 /**
  * @brief Convenient type alias for ControlledGateFuncPtrT.
  */
-template <class PrecisionT>
+template <class PrecisionT, class ParamT>
 using ControlledGateFuncPtrT =
-    typename Internal::ControlledGateFuncPtr<PrecisionT>::Type;
+    typename Internal::ControlledGateFuncPtr<PrecisionT, ParamT>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments
@@ -683,4 +682,19 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, controlled_wires, wires, adj);
 }
+
+/**
+ * @brief Call a controlled gate operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ */
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOp(ControlledGateFuncPtrT<PrecisionT, ParamT> func,
+                     std::complex<PrecisionT> *data, size_t num_qubits,
+                     const std::vector<size_t> &controlled_wires,
+                     const std::vector<size_t> &wires, bool inverse,
+                     const std::vector<ParamT> &params) {
+    func(data, num_qubits, controlled_wires, wires, inverse, params[0]);
+}
+
 } // namespace Pennylane::LightningQubit::Gates

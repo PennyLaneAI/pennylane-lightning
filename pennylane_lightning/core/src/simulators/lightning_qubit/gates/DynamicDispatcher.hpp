@@ -90,10 +90,16 @@ template <typename PrecisionT> class DynamicDispatcher {
     using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
     using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
     using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
-    using ControlledGateFunc = Gates::ControlledGateFuncPtrT<PrecisionT>;
+    using ControlledGateFunc = std::function<void(
+        std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
+        const std::vector<size_t> & /*controlled_wires*/,
+        const std::vector<size_t> & /*wires*/, bool /*inverse*/,
+        const std::vector<PrecisionT> & /*params*/)>;
 
   private:
     std::unordered_map<std::string, GateOperation> str_to_gates_;
+    std::unordered_map<std::string, ControlledGateOperation>
+        str_to_controlled_gates_;
     std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_;
 
     std::unordered_map<std::pair<GateOperation, KernelType>, GateFunc, PairHash>
@@ -126,6 +132,10 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
         for (const auto &[gntr_op, gntr_name] : gntr_names_without_prefix) {
             str_to_gntrs_.emplace(gntr_name, gntr_op);
+        }
+        for (const auto &[gate_op, gate_name] :
+             GateConstant::controlled_gate_names) {
+            str_to_controlled_gates_.emplace(gate_name, gate_op);
         }
     }
 
@@ -260,6 +270,11 @@ template <typename PrecisionT> class DynamicDispatcher {
         return str_to_gates_.at(gate_name);
     }
 
+    [[nodiscard]] auto strToControlledGateOp(const std::string &gate_name) const
+        -> ControlledGateOperation {
+        return str_to_controlled_gates_.at(gate_name);
+    }
+
     /**
      * @brief Generator name to generator operation
      *
@@ -311,10 +326,9 @@ template <typename PrecisionT> class DynamicDispatcher {
                                            func);
     }
     void registerControlledGateOperation(ControlledGateOperation mat_op,
-                                           KernelType kernel,
-                                           ControlledGateFunc func) {
-        controlled_gate_kernels_.emplace(std::make_pair(mat_op, kernel),
-                                           func);
+                                         KernelType kernel,
+                                         ControlledGateFunc func) {
+        controlled_gate_kernels_.emplace(std::make_pair(mat_op, kernel), func);
     }
 
     /**
@@ -365,10 +379,9 @@ template <typename PrecisionT> class DynamicDispatcher {
         return controlled_matrix_kernels_.find(std::make_pair(
                    mat_op, kernel)) != controlled_matrix_kernels_.cend();
     }
-    bool isRegistered(ControlledGateOperation mat_op,
-                      KernelType kernel) const {
-        return controlled_gate_kernels_.find(std::make_pair(
-                   mat_op, kernel)) != controlled_gate_kernels_.cend();
+    bool isRegistered(ControlledGateOperation mat_op, KernelType kernel) const {
+        return controlled_gate_kernels_.find(std::make_pair(mat_op, kernel)) !=
+               controlled_gate_kernels_.cend();
     }
 
     /**
@@ -476,21 +489,20 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
     }
 
-    void applyControlledMatrix(KernelType kernel, CFP_t *data,
-                               size_t num_qubits,
-                        const std::string &op_name,
-                        const std::vector<size_t> &controlled_wires,
-                        const std::vector<size_t> &wires, bool inverse,
-                        const std::vector<PrecisionT> &params = {}) const {
-        const auto iter =
-            controlled_gate_kernels_.find(std::make_pair(strToGateOp(op_name), kernel));
-        if (iter == gate_kernels_.cend()) {
+    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
+                             const std::string &op_name,
+                             const std::vector<size_t> &controlled_wires,
+                             const std::vector<size_t> &wires, bool inverse,
+                             const std::vector<PrecisionT> &params = {}) const {
+        const auto iter = controlled_gate_kernels_.find(
+            std::make_pair(strToControlledGateOp(op_name), kernel));
+        if (iter == controlled_gate_kernels_.cend()) {
             throw std::invalid_argument(
                 "Cannot find a registered kernel for a given gate "
                 "and kernel pair");
         }
-        (iter->second)(data, num_qubits, controlled_wires, wires,
-                       inverse);
+        (iter->second)(data, num_qubits, controlled_wires, wires, inverse,
+                       params);
     }
 
     /**
