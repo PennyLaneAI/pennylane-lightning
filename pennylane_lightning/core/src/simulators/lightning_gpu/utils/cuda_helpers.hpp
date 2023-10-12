@@ -41,8 +41,8 @@
 namespace Pennylane::LightningGPU::Util {
 
 // SFINAE check for existence of real() method in complex type
-template <typename CFP_t>
-constexpr auto is_cxx_complex(const CFP_t &t) -> decltype(t.real(), bool()) {
+template <typename ComplexT>
+constexpr auto is_cxx_complex(const ComplexT &t) -> decltype(t.real(), bool()) {
     return true;
 }
 
@@ -150,10 +150,12 @@ inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
     }
 }
 
+/*
 template <class CFP_t_T, class CFP_t_U = CFP_t_T>
 inline static constexpr auto ConstMultConj(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
     return ConstMult(Conj(a), b);
 }
+*/
 
 /**
  * @brief Compile-time scalar complex summation.
