@@ -762,7 +762,7 @@ class Measurements final
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
 
-        CFP_t expect;
+        cuDoubleComplex expect_;
 
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
@@ -770,7 +770,7 @@ class Measurements final
             /* const void* */ this->_statevector.getData(),
             /* cudaDataType_t */ data_type,
             /* const uint32_t */ nIndexBits,
-            /* void* */ &expect,
+            /* void* */ &expect_,
             /* cudaDataType_t */ expectationDataType,
             /* double* */ nullptr,
             /* const void* */ matrix,
@@ -784,7 +784,7 @@ class Measurements final
 
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-        return static_cast<PrecisionT>(expect.x);
+        return static_cast<PrecisionT>(expect_.x);
     }
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures

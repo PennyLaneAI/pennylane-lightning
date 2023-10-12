@@ -202,7 +202,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float,
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
-                   "[StateVectorCudaManaged_Expval]", double) {
+                   "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
     const size_t num_qubits = 3;
@@ -333,7 +333,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
-                   "[StateVectorCudaManaged_Expval]", double) {
+                   "[StateVectorCudaManaged_Expval]",float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 

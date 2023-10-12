@@ -83,7 +83,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HermitianObs",
-                   "[StateVectorCudaManaged_Var]", double) {
+                   "[StateVectorCudaManaged_Var]", float, double) {
     const std::size_t num_qubits = 3;
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -117,7 +117,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs",
 }
 
 TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
-                   "[StateVectorCudaManaged_Var]", double) {
+                   "[StateVectorCudaManaged_Var]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     const std::size_t num_qubits = 3;
     SECTION("Using var") {
@@ -142,7 +142,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
-                   "[StateVectorCudaManaged_Var]", double) {
+                   "[StateVectorCudaManaged_Var]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     SECTION("Using var") {
         std::vector<std::complex<TestType>> init_state{

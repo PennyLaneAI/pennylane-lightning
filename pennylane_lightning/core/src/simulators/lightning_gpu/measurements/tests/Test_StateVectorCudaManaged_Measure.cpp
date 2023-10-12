@@ -33,7 +33,7 @@ using Pennylane::Util::createNonTrivialState;
 }; // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", double) {
+TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -176,7 +176,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[Measurements]", double) {
+TEMPLATE_TEST_CASE("Variances", "[Measurements]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -253,7 +253,7 @@ TEMPLATE_TEST_CASE("Variances", "[Measurements]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Probabilities", "[Measures]", double) {
+TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {

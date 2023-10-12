@@ -2307,6 +2307,7 @@ class StateVectorCudaMPI
         size_t nIndexBits = BaseType::getNumQubits();
         cudaDataType_t data_type;
         custatevecComputeType_t compute_type;
+        cudaDataType_t expectationDataType = CUDA_C_64F;
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
@@ -2334,14 +2335,15 @@ class StateVectorCudaMPI
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
 
+        cuDoubleComplex expect_;
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
             /* custatevecHandle_t */ handle_.get(),
             /* void* */ BaseType::getData(),
             /* cudaDataType_t */ data_type,
             /* const uint32_t */ nIndexBits,
-            /* void* */ &expect,
-            /* cudaDataType_t */ data_type,
+            /* void* */ &expect_,
+            /* cudaDataType_t */ expectationDataType,
             /* double* */ nullptr,
             /* const void* */ matrix,
             /* cudaDataType_t */ data_type,
@@ -2355,6 +2357,8 @@ class StateVectorCudaMPI
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }
+        expect.x = static_cast<PrecisionT>(expect_.x);
+        expect.y = static_cast<PrecisionT>(expect_.y);
     }
 
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,
