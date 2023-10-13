@@ -209,7 +209,10 @@ class LightningBase(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
-        if execution_config.gradient_method == "adjoint" and execution_config.use_device_gradient:
+        if (
+            execution_config.gradient_method == "adjoint"
+            and execution_config.use_device_gradient is not False
+        ):
             if self.shots.total_shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots. "
