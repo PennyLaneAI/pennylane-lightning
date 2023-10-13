@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_mpich_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
