@@ -1,0 +1,279 @@
+name: Tests::Linux::x86_64_OPENMPI
+on:
+  release:
+  push:
+    branches:
+      - main
+  #pull_request:
+
+env:
+  COVERAGE_FLAGS: "--cov=pennylane_lightning_gpu --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native" 
+  GCC_VERSION: 11
+  OMP_NUM_THREADS: "2"
+  CI_CUDA_ARCH: 86
+
+concurrency:
+  group: gpu-test-openmpi-${{ github.ref }}-${{ inputs.lightning-gpu-version }}-${{ inputs.pennylane-version }}
+  cancel-in-progress: true
+
+jobs:
+  cpp_openmpi_tests:
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - ubuntu-22.04
+      - multi-gpu
+
+    strategy:
+      max-parallel: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        id: setup_python
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      # Since the self-hosted runner can be re-used. It is best to set up all package
+      # installations in a virtual environment that gets cleaned at the end of each workflow run
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+          
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install required packages
+        run: |
+          python -m pip install ninja cmake custatevec-cu11 
+
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/11.8
+          nvidia-smi
+          which -a nvcc
+          nvcc --version
+
+      - name: Validate Multi-GPU packages
+        if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+        run: |
+          source /etc/profile.d/modules.sh
+
+          module use /opt/modules/
+
+          echo 'Checking for OpenMPI'
+          module load openmpi
+          mpirun --version
+          which mpicc
+          which mpirun
+          module unload openmpi
+
+          echo 'Checking for MPICH'
+          module load mpich
+          mpiexec --version
+          which mpicc
+          which mpiexec
+          module unload mpich
+
+      - name: Build and run unit tests with OpenMPI backend
+        run: |
+            source /etc/profile.d/modules.sh
+            module use /opt/modules/
+            module load openmpi
+            module unload openmpi
+            export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/openmpi/include:/opt/mpi/openmpi/bin
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/openmpi/lib:$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+            cmake . -BBuild \
+              -DCMAKE_PREFIX_PATH=/opt/mpi/openmpi/ \
+              -DPLLGPU_ENABLE_MPI=On \
+              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DPLLGPU_BUILD_TESTS=ON \
+              -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
+              -DLIGHTNING_RELEASE_TAG="master" \
+              -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+              -DCMAKE_CUDA_ARCHITECTURES="86" \
+              -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
+              -G Ninja
+            cmake --build ./Build
+            cd ./Build
+            mkdir -p ./tests/results
+            /opt/mpi/openmpi/bin/mpirun -np 2 ./pennylane_lightning_gpu/src/tests/mpi_runner --order lex --reporter junit --out ./tests/results/report_${{ github.job }}.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports
+          path: ./Build/tests/results/report_${{ github.job }}.xml
+
+      - name: Build and run unit tests for code coverage for OpenMPI backend
+        run: |
+            source /etc/profile.d/modules.sh
+            module use /opt/modules/
+            module load openmpi
+            module unload openmpi
+            export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/openmpi/include:/opt/mpi/openmpi/bin 
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/openmpi/lib:$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+            cmake . -BBuildCov \
+              -DCMAKE_PREFIX_PATH=/opt/mpi/openmpi/ \
+              -DPLLGPU_ENABLE_MPI=On \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DPLLGPU_BUILD_TESTS=ON \
+              -DPLLGPU_ENABLE_COVERAGE=ON \
+              -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
+              -DLIGHTNING_RELEASE_TAG="master" \
+              -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+              -DCMAKE_CUDA_ARCHITECTURES="86" \
+              -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
+              -G Ninja
+            cmake --build ./BuildCov
+            cd ./BuildCov
+            /opt/mpi/openmpi/bin/mpirun -np 2 ./pennylane_lightning_gpu/src/tests/mpi_runner
+            lcov --directory . -b ../pennylane_lightning_gpu/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}.info
+
+      - name: Upload code coverage results for OpenMPI backend
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./BuildCov/coverage-${{ github.job }}.info
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf *
+          rm -rf .git
+          rm -rf .gitignore
+          rm -rf .github
+          pip cache purge
+
+
+  python_openmpi_tests:
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - ubuntu-22.04
+      - multi-gpu
+
+    strategy:
+      max-parallel: 1
+
+    steps:
+      - name: Checkout pennyLane-lightning-gpu
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        id: setup_python
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      # Since the self-hosted runner can be re-used. It is best to set up all package
+      # installations in a virtual environment that gets cleaned at the end of each workflow run
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+          
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install Latest PennyLane
+        # We want to install the latest PL on non workflow_call events
+        if: inputs.pennylane-version == 'latest'  || inputs.pennylane-version == ''
+        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+      - name: Install required packages (OpenMPI backend)
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules/
+          module load openmpi
+          module unload openmpi
+          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/openmpi/include:/opt/mpi/openmpi/bin 
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/openmpi/lib:$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          python -m pip install pip~=22.0
+          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
+          # Sync with latest master branches
+          python -m pip install git+https://github.com/PennyLaneAI/pennylane-lightning.git@master --force-reinstall --no-deps
+          
+      - name: Build and install package (OpenMPI backend)
+        env: 
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+        run: |
+          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/openmpi;PLLGPU_ENABLE_MPI=On;LIGHTNING_RELEASE_TAG=master;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          python -m pip install -e . --verbose
+
+      - name: Run PennyLane-Lightning-GPU unit tests (OpenMPI backend)
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules/
+          module load openmpi
+          /opt/mpi/openmpi/bin/mpirun -np 2 python -m pytest ./mpitests/
+          python -m pytest ./tests/
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf *
+          rm -rf .git
+          rm -rf .gitignore
+          rm -rf .github
+          pip cache purge
