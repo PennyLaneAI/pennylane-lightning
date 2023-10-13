@@ -83,12 +83,12 @@ coverage-cpp:
 
 build:
 	rm -rf ./Build
-	cmake -BBuild -G Ninja -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuild -G Ninja -DENABLE_BLAS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 	cmake --build ./Build $(VERBOSE)
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_OPENMP=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
 	OMP_PROC_BIND=false ./BuildTests/$(target)

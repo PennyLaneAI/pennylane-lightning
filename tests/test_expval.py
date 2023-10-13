@@ -14,6 +14,7 @@
 """
 Unit tests for the expval method of Lightning devices.
 """
+import itertools
 import pytest
 from conftest import THETA, PHI, VARPHI, device_name
 
@@ -115,20 +116,25 @@ class TestExpval:
         m = 2**n_wires
         U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
-        obs = qml.Hermitian(U, wires=range(n_wires))
+        wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
+        perms = list(itertools.permutations(wires))
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        if n_wires > 4:
+            perms = perms[0::30]
+        for perm in perms:
+            obs = qml.Hermitian(U, wires=perm)
 
-        def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.RY(theta, wires=[0])
-            qml.RY(phi, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            return qml.expval(obs)
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RY(theta, wires=[0])
+                qml.RY(phi, wires=[1])
+                qml.CNOT(wires=[0, 1])
+                return qml.expval(obs)
 
-        circ = qml.QNode(circuit, dev)
-        circ_def = qml.QNode(circuit, dev_def)
-        assert np.allclose(circ(), circ_def(), tol)
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)
 
 
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
