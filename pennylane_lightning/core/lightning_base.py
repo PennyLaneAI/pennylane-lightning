@@ -19,7 +19,6 @@ and interfaces with C++ for improved performance.
 import abc
 import numpy as np
 from typing import Union, Callable, Tuple, Optional, Sequence
-from itertools import islice
 from warnings import warn
 
 from pennylane.devices import Device, DefaultQubit
@@ -46,12 +45,6 @@ from pennylane_lightning.core._adjoint_jacobian import AdjointJacobian
 AdjointExecutionConfig = ExecutionConfig(use_device_gradient=True, gradient_method="adjoint")
 
 
-def _chunk_iterable(iteration, num_chunks):
-    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
-    iteration = iter(iteration)
-    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
-
-
 class LightningBase(Device):
     """PennyLane Lightning device.
 
@@ -64,6 +57,9 @@ class LightningBase(Device):
         shots (int, Sequence[int], Sequence[Union[int, Sequence[int]]]): The default number of shots to use in executions involving
             this device.
         c_dtype: Datatypes for state vector representation. Must be one of ``np.complex64`` or ``np.complex128``.
+        batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. This value is only relevant when the lightning
+                qubit is built with OpenMP.
     """
 
     pennylane_requires = ">=0.30"
@@ -78,8 +74,10 @@ class LightningBase(Device):
         shots=None,
         c_dtype=np.complex128,
         seed="global",
+        batch_obs=False,
     ) -> None:
         self.C_DTYPE = c_dtype
+        self._batch_obs = batch_obs
         if self.C_DTYPE not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
         super().__init__(wires=wires, shots=shots)
@@ -241,7 +239,9 @@ class LightningBase(Device):
         Returns:
             np.array: An array results.
         """
-        return AdjointJacobian(self.name).calculate_adjoint_jacobian(tape, c_dtype, starting_state)
+        return AdjointJacobian(self.name).calculate_adjoint_jacobian(
+            tape, c_dtype, starting_state, self._batch_obs
+        )
 
     def compute_derivatives(
         self,

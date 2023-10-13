@@ -66,11 +66,9 @@ if LQ_CPP_BINARY_AVAILABLE:
             wires=None,
             shots=None,
             c_dtype=np.complex128,
+            batch_obs=False,
         ) -> None:
-            self.C_DTYPE = c_dtype
-            if self.C_DTYPE not in [np.complex64, np.complex128]:
-                raise TypeError(f"Unsupported complex Type: {c_dtype}")
-            super().__init__(wires=wires, shots=shots)
+            super().__init__(wires=wires, shots=shots, c_dtype=c_dtype, batch_obs=batch_obs)
 
         @property
         def name(self):
@@ -115,7 +113,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             """
             state, is_state_batched = get_final_state(circuit, c_dtype, debugger=debugger)
             jac = AdjointJacobian("lightning.qubit").calculate_adjoint_jacobian(
-                circuit, c_dtype, state
+                circuit, c_dtype, state, self._batch_obs
             )
             return measure_final_state(circuit, state, is_state_batched, c_dtype, rng=rng), jac
 

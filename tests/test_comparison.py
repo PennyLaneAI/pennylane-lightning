@@ -86,9 +86,7 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
-
+        lightning_state = lightning(qml.state)
         default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
@@ -130,9 +128,7 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
-
+        lightning_state = lightning(qml.state)
         default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
@@ -181,9 +177,7 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
-
+        lightning_state = lightning(qml.state)
         default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
@@ -237,9 +231,7 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
-
+        lightning_state = lightning(qml.state)
         default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)
@@ -274,9 +266,7 @@ class TestComparison:
         lightning = qml.QNode(circuit, dev_l)
         default = qml.QNode(circuit, dev_d)
 
-        lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
-
+        lightning_state = lightning(qml.state)
         default_state = default(qml.state)
 
         assert np.allclose(lightning_state, default_state)

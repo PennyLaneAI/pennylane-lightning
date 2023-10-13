@@ -15,6 +15,7 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 from typing import List, Optional
+from os import getenv
 
 import numpy as np
 import pennylane as qml
@@ -35,7 +36,7 @@ from pennylane.measurements import (
 from pennylane.tape import QuantumTape
 from pennylane.devices.qubit.initialize_state import create_initial_state
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
+from pennylane_lightning.core._serialize import QuantumScriptSerializer, _chunk_iterable
 
 from pennylane import DeviceError
 
@@ -248,13 +249,16 @@ class AdjointJacobian:
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
-    def calculate_adjoint_jacobian(self, tape, c_dtype=np.complex128, state=None):
-        """Calculates the Adjoint Jacobian for a given tape.
+    def calculate_adjoint_jacobian(
+        self, tape, c_dtype=np.complex128, state: Optional[np.array] = None, batch_obs: bool = False
+    ):
+        """Calculates the adjoint Jacobian for a given tape.
 
         Args:
             tape (QuantumTape): A quantum tape recording a variational quantum program.
             c_dtype (Complex data type, Optional): Default to ``np.complex128``.
-            state (np.array, Optional): unravelled initial state (1D). Default to None.
+            state (np.array, Optional): Unravelled initial state (1D). Default to None.
+            batch_obs (bool): If the observables will be batched for openMP execution.
 
         Returns:
             np.array: An array results.
@@ -282,12 +286,29 @@ class AdjointJacobian:
             self.adjointJacobian_c64() if use_csingle else self.adjointJacobian_c128()
         )
 
-        jac = adjoint_jacobian(
-            processed_data["state_vector"],
-            processed_data["obs_serialized"],
-            processed_data["ops_serialized"],
-            trainable_params,
-        )
+        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
+        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
+        # numbers of observables, enabling choice between compute time and memory use.
+        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
+
+        if batch_obs and requested_threads > 1:
+            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
+            jac = []
+            for obs_chunk in obs_partitions:
+                jac_local = adjoint_jacobian(
+                    processed_data["state_vector"],
+                    obs_chunk,
+                    processed_data["ops_serialized"],
+                    trainable_params,
+                )
+                jac.extend(jac_local)
+        else:
+            jac = adjoint_jacobian(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
         jac = np.array(jac)
         jac = jac.reshape(-1, len(trainable_params))
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))

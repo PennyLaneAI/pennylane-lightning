@@ -15,6 +15,8 @@ r"""
 Helper functions for serializing quantum tapes.
 """
 from typing import List, Tuple
+from itertools import islice
+
 import numpy as np
 from pennylane import (
     BasisState,
@@ -38,6 +40,12 @@ pauli_name_map = {
     "Y": "PauliY",
     "Z": "PauliZ",
 }
+
+
+def _chunk_iterable(iteration, num_chunks):
+    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
+    iteration = iter(iteration)
+    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 
 class QuantumScriptSerializer:
