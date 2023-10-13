@@ -21,7 +21,8 @@ fixture_params = itertools.product(
 )
 
 # defaults
-TOL = 1e-4
+TOL = 1e-6
+TOL_STOCHASTIC = 0.05
 
 U = np.array(
     [
@@ -33,6 +34,9 @@ U = np.array(
 U2 = np.array([[0, 1, 1, 1], [1, 0, 1, -1], [1, -1, 0, 1], [1, 1, -1, 0]]) / np.sqrt(3)
 A = np.array([[1.02789352, 1.61296440 - 0.3498192j], [1.61296440 + 0.3498192j, 1.23920938 + 0j]])
 
+THETA = np.linspace(0.11, 1, 3)
+PHI = np.linspace(0.32, 1, 3)
+VARPHI = np.linspace(0.02, 1, 3)
 
 @pytest.fixture(scope="session")
 def tol():
