@@ -14,7 +14,7 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 import pennylane as qml
@@ -30,6 +30,7 @@ from pennylane.measurements import (
     MeasurementProcess,
     Expectation,
     State,
+    ObservableReturnTypes,
 )
 from pennylane.tape import QuantumTape
 from pennylane.devices.qubit.initialize_state import create_initial_state
@@ -107,7 +108,9 @@ class AdjointJacobian:
 
         self.apply_operations = apply_operations
 
-    def _check_supported_measurements(self, measurements: List[MeasurementProcess]):
+    def _check_supported_measurements(
+        self, measurements: List[MeasurementProcess]
+    ) -> Optional[ObservableReturnTypes]:
         """Check whether given list of measurement is supported by the adjoint jacobian differentiation method.
 
         Args:
@@ -116,11 +119,12 @@ class AdjointJacobian:
         Raises:
             QuantumFunctionError: if adjoint method is not supported for any measurement
         """
+
+        if not measurements:
+            return None
+
         if len(measurements) == 1 and measurements[0].return_type is State:
-            raise QuantumFunctionError(
-                "This method does not support state vector return type. "
-                "Use vjp method instead for this purpose."
-            )
+            return State
 
         # Now the return_type of measurement processes must be expectation
         if not all([m.return_type is Expectation for m in measurements]):
@@ -140,6 +144,7 @@ class AdjointJacobian:
                     raise QuantumFunctionError(
                         "Adjoint differentiation method does not support the Projector observable"
                     )
+        return Expectation
 
     def _check_supported_operations(self, operations):
         """Check Lightning adjoint differentiation method support for a tape.
@@ -165,7 +170,10 @@ class AdjointJacobian:
         Args:
             tape (QuantumTape): A quantum tape recording a variational quantum program.
         """
-        self._check_supported_measurements(tape.measurements)
+        tape_return_type = self._check_supported_measurements(tape.measurements)
+        if tape_return_type is State:  # pragma: no cover
+            raise QuantumFunctionError("This method does not support state vector return type. ")
+
         self._check_supported_operations(tape.operations)
 
     def _process_jacobian_tape(self, tape, state):
