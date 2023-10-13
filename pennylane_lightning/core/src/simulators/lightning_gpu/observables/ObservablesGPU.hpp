@@ -180,21 +180,22 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
         using CFP_t = typename StateVectorT::CFP_t;
-        DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
-                                      sv.getDataBuffer().getDevTag());
-        buffer.zeroInit();
+        std::unique_ptr<DataBuffer<CFP_t>> buffer =
+            std::make_unique<DataBuffer<CFP_t>>(sv.getDataBuffer().getLength(),
+                                                sv.getDataBuffer().getDevTag());
+        buffer->zeroInit();
 
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
             StateVectorT tmp(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
             scaleAndAddC_CUDA(
                 std::complex<PrecisionT>{this->coeffs_[term_idx], 0.0},
-                tmp.getData(), buffer.getData(), tmp.getLength(),
+                tmp.getData(), buffer->getData(), tmp.getLength(),
                 tmp.getDataBuffer().getDevTag().getDeviceID(),
                 tmp.getDataBuffer().getDevTag().getStreamID(),
                 tmp.getCublasCaller());
         }
-        sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
+        sv.updateData(std::move(buffer));
     }
 };
 
