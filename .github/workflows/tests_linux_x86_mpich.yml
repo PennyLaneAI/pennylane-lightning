@@ -2,7 +2,7 @@ name: Tests::Linux::x86_64_MPICH
 on:
   workflow_call:
     inputs:
-      lightning-gpu-version:
+      lightning-version:
         type: string
         required: true
         description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
@@ -23,12 +23,12 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: gpu-test-mpich-${{ github.ref }}-${{ inputs.lightning-gpu-version }}-${{ inputs.pennylane-version }}
+  group: gpu-test-mpich-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   cpp_mpich_tests:
-    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -47,7 +47,7 @@ jobs:
           fetch-tags: true
 
       - name: Switch to stable build of Lightning-GPU
-        if: inputs.lightning-gpu-version == 'stable'
+        if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
           git checkout $(git tag | sort -V | tail -1)
@@ -138,7 +138,7 @@ jobs:
               -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
               -DENABLE_MPI=ON \
               -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-              -DPLLGPU_BUILD_TESTS=ON \
+              -DBUILD_TESTS=ON \
               -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
               -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
               -DCMAKE_CUDA_ARCHITECTURES="86" \
@@ -171,8 +171,8 @@ jobs:
               -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
               -DENABLE_MPI=ON \
               -DCMAKE_BUILD_TYPE=Debug \
-              -DPLLGPU_BUILD_TESTS=ON \
-              -DPLLGPU_ENABLE_COVERAGE=ON \
+              -DBUILD_TESTS=ON \
+              -DENABLE_COVERAGE=ON \
               -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
               -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
               -DCMAKE_CUDA_ARCHITECTURES="86" \
@@ -204,7 +204,7 @@ jobs:
 
 
   python_mpich_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -223,7 +223,7 @@ jobs:
           fetch-tags: true
 
       - name: Switch to stable build of Lightning-GPU
-        if: inputs.lightning-gpu-version == 'stable'
+        if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
           git checkout $(git tag | sort -V | tail -1)
