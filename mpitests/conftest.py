@@ -10,8 +10,15 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 """
 import os
 import pytest
-
 from pennylane import numpy as np
+import pennylane as qml
+
+import itertools
+
+fixture_params = itertools.product(
+    [np.complex64, np.complex128],
+    [True, False],
+)
 
 # defaults
 TOL = 1e-4
@@ -37,3 +44,51 @@ def tol():
 def n_subsystems(request):
     """Number of qubits or qumodes."""
     return request.param
+
+# Looking for the device for testing.
+default_device = "lightning.gpu"
+supported_devices = {"lightning.gpu"}
+supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
+
+
+def get_device():
+    """Return the pennylane lightning device.
+
+    The device is ``lightning.qubit`` by default.
+    Allowed values are: "lightning.kokkos" and "lightning.qubit".
+    An underscore can also be used instead of a dot.
+    If the environment variable ``PL_DEVICE`` is defined, its value is used.
+    Underscores are replaced by dots upon exiting.
+    """
+    device = None
+    if "PL_DEVICE" in os.environ:
+        device = os.environ.get("PL_DEVICE", default_device)
+        device = device.replace("_", ".")
+    if device is None:
+        device = default_device
+    if device not in supported_devices:
+        raise ValueError(f"Invalid backend {device}.")
+    return device
+
+
+device_name = get_device()
+
+if device_name not in qml.plugin_devices:
+    raise qml.DeviceError(
+        f"Device {device_name} does not exist. Make sure the required plugin is installed."
+    )
+
+# Device specification
+from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+
+
+# General qubit_device fixture, for any number of wires.
+@pytest.fixture(
+    scope="function",
+    params=fixture_params,
+)
+def qubit_device(request):
+    def _device(wires):
+        return qml.device(device_name, wires=wires, mpi=True, c_dtype=request.param[0], batch_obs=request.param[1])
+
+    return _device

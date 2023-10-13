@@ -814,9 +814,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, self._mpi
+                )._ob(observable, self.wire_map)
                 return self.measurements.expval(ob_serialized)
 
             # translate to wire labels used by device
@@ -856,9 +856,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, self._mpi
+                )._ob(observable, self.wire_map)
                 return self.measurements.var(ob_serialized)
 
             # translate to wire labels used by device
