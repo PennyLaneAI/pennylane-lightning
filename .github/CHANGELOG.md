@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+  [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
+
 * Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
   [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 

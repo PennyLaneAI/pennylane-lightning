@@ -100,13 +100,13 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: console
 
-    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF -DENABLE_KOKKOS=OFF" pip install -e . -vv
+    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
 
 or with ``build_ext`` and the ``--define`` flag as follows:
 
 .. code-block:: console
 
-    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF;ENABLE_KOKKOS=OFF"
+    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF"
     $ python3 setup.py develop
 
 
@@ -151,7 +151,6 @@ Other supported options are
 - ``-DENABLE_NATIVE=ON`` (for ``-march=native``)
 - ``-DENABLE_BLAS=ON``
 - ``-DENABLE_OPENMP=ON``
-- ``-DENABLE_KOKKOS=ON``
 - ``-DENABLE_CLANG_TIDY=ON``
 
 Compile on Windows with MSVC
