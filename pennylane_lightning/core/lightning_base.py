@@ -61,6 +61,8 @@ class LightningBase(Device):
     :doc:`/installation` guide for more details.
 
     Args:
+        shots (int, Sequence[int], Sequence[Union[int, Sequence[int]]]): The default number of shots to use in executions involving
+            this device.
         c_dtype: Datatypes for state vector representation. Must be one of ``np.complex64`` or ``np.complex128``.
     """
 
