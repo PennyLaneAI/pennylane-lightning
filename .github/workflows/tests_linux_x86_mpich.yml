@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_mpich_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -101,7 +101,7 @@ jobs:
           nvcc --version
 
       - name: Validate Multi-GPU packages
-        if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+        # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
         run: |
           source /etc/profile.d/modules.sh
 
@@ -201,7 +201,7 @@ jobs:
 
 
   python_mpich_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-gpu-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
