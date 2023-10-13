@@ -234,7 +234,7 @@ class TestExpandFnTransformations:
             qml.Hadamard(0),
             qml.CNOT([0, 2]),
             qml.CNOT([2, 0]),
-            qml.ops.Controlled(qml.RX(0.123, wires=1), 2),
+            qml.CRX(0.123, wires=[2, 1]),
         ]
 
         for op, exp in zip(expanded_tape, expected + measurements):
@@ -361,7 +361,7 @@ class TestBatchTransform:
         measurements = [qml.expval(qml.PauliZ(1))]
         tape = QuantumScript(ops=ops, measurements=measurements)
 
-        device = qml.devices.DefaultQubit()
+        device = LightningQubit()
 
         program, _ = device.preprocess()
         tapes, _ = program([tape])
@@ -370,46 +370,44 @@ class TestBatchTransform:
         for op, expected in zip(tapes[0].circuit, ops + measurements):
             assert qml.equal(op, expected)
 
+    def test_batch_transform_broadcast_not_adjoint(self):
+        """Test that batch_transform does nothing when batching is required but
+        internal PennyLane broadcasting can be used (diff method != adjoint)"""
+        ops = [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX([np.pi, np.pi / 2], wires=1)]
+        measurements = [qml.expval(qml.PauliZ(1))]
+        tape = QuantumScript(ops=ops, measurements=measurements)
+        device = LightningQubit()
 
-#     def test_batch_transform_broadcast_not_adjoint(self):
-#         """Test that batch_transform does nothing when batching is required but
-#         internal PennyLane broadcasting can be used (diff method != adjoint)"""
-#         ops = [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX([np.pi, np.pi / 2], wires=1)]
-#         measurements = [qml.expval(qml.PauliZ(1))]
-#         tape = QuantumScript(ops=ops, measurements=measurements)
+        program, _ = device.preprocess()
+        tapes, _ = program([tape])
 
-#         tapes, batch_fn = batch_transform(tape)
+        assert len(tapes) == 1
+        for op, expected in zip(tapes[0].circuit, ops + measurements):
+            assert qml.equal(op, expected)
 
-#         assert len(tapes) == 1
-#         for op, expected in zip(tapes[0].circuit, ops + measurements):
-#             assert qml.equal(op, expected)
+    def test_batch_transform_broadcast_adjoint(self):
+        """Test that batch_transform splits broadcasted tapes correctly when
+        the diff method is adjoint"""
+        ops = [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX([np.pi, np.pi / 2], wires=1)]
+        measurements = [qml.expval(qml.PauliZ(1))]
+        tape = QuantumScript(ops=ops, measurements=measurements)
 
-#         input = ([[1, 2], [3, 4]],)
-#         assert np.array_equal(batch_fn(input), np.array([[1, 2], [3, 4]]))
+        execution_config = ExecutionConfig()
+        execution_config.gradient_method = "adjoint"
 
-#     def test_batch_transform_broadcast_adjoint(self):
-#         """Test that batch_transform splits broadcasted tapes correctly when
-#         the diff method is adjoint"""
-#         ops = [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX([np.pi, np.pi / 2], wires=1)]
-#         measurements = [qml.expval(qml.PauliZ(1))]
-#         tape = QuantumScript(ops=ops, measurements=measurements)
+        device = LightningQubit()
 
-#         execution_config = ExecutionConfig()
-#         execution_config.gradient_method = "adjoint"
+        program, _ = device.preprocess(execution_config=execution_config)
+        tapes, _ = program([tape])
+        expected_ops = [
+            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX(np.pi, wires=1)],
+            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX(np.pi / 2, wires=1)],
+        ]
 
-#         tapes, batch_fn = batch_transform(tape, execution_config=execution_config)
-#         expected_ops = [
-#             [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX(np.pi, wires=1)],
-#             [qml.Hadamard(0), qml.CNOT([0, 1]), qml.RX(np.pi / 2, wires=1)],
-#         ]
-
-#         assert len(tapes) == 2
-#         for i, t in enumerate(tapes):
-#             for op, expected in zip(t.circuit, expected_ops[i] + measurements):
-#                 assert qml.equal(op, expected)
-
-#         input = ([[1, 2]], [[3, 4]])
-#         assert np.array_equal(batch_fn(input), np.array([[1, 2], [3, 4]]))
+        assert len(tapes) == 2
+        for i, t in enumerate(tapes):
+            for op, expected in zip(t.circuit, expected_ops[i] + measurements):
+                assert qml.equal(op, expected)
 
 
 class TestAdjointDiffTapeValidation:
@@ -513,9 +511,8 @@ class TestAdjointDiffTapeValidation:
         """Test that a tape that is valid doesn't raise errors and is not expanded"""
         prep_op = qml.StatePrep(pnp.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
         qs = QuantumScript(
-            ops=[G(np.pi, wires=[0])],
+            ops=[prep_op, G(np.pi, wires=[0])],
             measurements=[qml.expval(qml.PauliZ(0))],
-            prep=[prep_op],
         )
 
         qs.trainable_params = {1}
@@ -531,9 +528,8 @@ class TestAdjointDiffTapeValidation:
         and is expanded"""
         prep_op = qml.StatePrep(pnp.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
         qs = QuantumScript(
-            ops=[qml.Rot(0.1, 0.2, 0.3, wires=[0])],
+            ops=[prep_op, qml.Rot(0.1, 0.2, 0.3, wires=[0])],
             measurements=[qml.expval(qml.PauliZ(0))],
-            prep=[prep_op],
             shots=shots,
         )
 
