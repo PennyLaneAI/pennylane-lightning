@@ -110,8 +110,7 @@ def get_device():
     return device
 
 
-# device_name = get_device()
-device_name = "lightning.gpu"
+device_name = get_device()
 
 if device_name not in qml.plugin_devices:
     raise qml.DeviceError(
