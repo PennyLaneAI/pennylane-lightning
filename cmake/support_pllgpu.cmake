@@ -5,8 +5,6 @@
 # Include this only once
 include_guard()
 
-set(CRAY_MPICH OFF)
-
 # Macro to aid in finding CUDA lib
 macro(findCUDA external_libs)
     find_package(CUDA REQUIRED)
@@ -26,22 +24,25 @@ macro(findMPI external_libs)
             message(FATAL_ERROR "MPI is NOT found.")
         endif()
 
+        find_library(GTL
+        NAMES libmpi_gtl_cuda.so libmpi_gtl_cuda.so.0 libmpi_gtl_cuda.so.0.0.0
+        HINTS ENV CRAY_LD_LIBRARY_PATH
+        ENV LD_LIBRARY_PATH
+        )
+
         string(FIND "${CMAKE_SYSTEM}" "cray" subStrIdx)
         if(NOT subStrIdx EQUAL -1)
             if(DEFINED ENV{CRAY_MPICH_VERSION} AND NOT "$ENV{CRAY_MPICH_VERSION}" STREQUAL "none")
-                find_library(MPI_GTL
-                NAMES libmpi_gtl_cuda.so libmpi_gtl_cuda.so.0 libmpi_gtl_cuda.so.0.0.0
-                HINTS ENV CRAY_LD_LIBRARY_PATH
-                ENV LD_LIBRARY_PATH
-                )
-            set(CRAY_MPICH ON)
+                if(NOT GTL)
+                    message(FATAL_ERROR "\nUnable to find GTL (GPU Transport Layer) library.")
+                else()
+                    message(STATUS "GPU Transport Layer library found.")
+                    target_link_libraries(${external_libs} INTERFACE ${GTL})
+                endif()
             endif()
         endif()
 
         target_link_libraries(${external_libs} INTERFACE MPI::MPI_CXX)
-        if($(CRAY_MPICH))
-            target_link_libraries(${external_libs} INTERFACE ${MPI_GTL})
-        endif()
     endif()
 endmacro()
 
