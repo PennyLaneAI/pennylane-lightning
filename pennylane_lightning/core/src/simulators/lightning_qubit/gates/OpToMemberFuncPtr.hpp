@@ -438,14 +438,14 @@ struct ControlledMatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
         &GateImplementation::template applyNQubitOp<PrecisionT>;
 };
 
-template <class PrecisionT, class GateImplementation,
-          ControlledGateOperation mat_op>
+template <class PrecisionT, class ParamT, class GateImplementation,
+          ControlledGateOperation gate_op>
 struct ControlledGateOpToMemberFuncPtr {
     static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "Unrecognized matrix operation");
 };
-template <class PrecisionT, class GateImplementation>
-struct ControlledGateOpToMemberFuncPtr<PrecisionT, GateImplementation,
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::NCRZ> {
     constexpr static auto value =
         &GateImplementation::template applyNCRZ<PrecisionT>;
@@ -553,7 +553,18 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
 /**
  * @brief Pointer type for a controlled gate operation
  */
-template <class PrecisionT, class ParamT> struct ControlledGateFuncPtr {
+template <class PrecisionT, class ParamT, size_t num_params>
+struct ControlledGateFuncPtr {
+    static_assert(num_params < 2, "The given num_params is not supported.");
+};
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 0> {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::vector<size_t> &,
+                          const std::vector<size_t> &, bool);
+};
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &,
                           const std::vector<size_t> &, bool, ParamT);
@@ -590,9 +601,10 @@ using ControlledMatrixFuncPtrT =
 /**
  * @brief Convenient type alias for ControlledGateFuncPtrT.
  */
-template <class PrecisionT, class ParamT>
+template <class PrecisionT, class ParamT, size_t num_params>
 using ControlledGateFuncPtrT =
-    typename Internal::ControlledGateFuncPtr<PrecisionT, ParamT>::Type;
+    typename Internal::ControlledGateFuncPtr<PrecisionT, ParamT,
+                                             num_params>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments
@@ -689,11 +701,23 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
  */
 template <class PrecisionT, class ParamT>
 inline void
-callControlledGateOp(ControlledGateFuncPtrT<PrecisionT, ParamT> func,
-                     std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &controlled_wires,
-                     const std::vector<size_t> &wires, bool inverse,
-                     const std::vector<ParamT> &params) {
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 0> func,
+                      std::complex<PrecisionT> *data, size_t num_qubits,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<size_t> &wires, bool inverse,
+                      [[maybe_unused]] const std::vector<ParamT> &params) {
+    PL_ASSERT(params.empty());
+    func(data, num_qubits, controlled_wires, wires, inverse);
+}
+
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
+                      std::complex<PrecisionT> *data, size_t num_qubits,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 1);
     func(data, num_qubits, controlled_wires, wires, inverse, params[0]);
 }
 

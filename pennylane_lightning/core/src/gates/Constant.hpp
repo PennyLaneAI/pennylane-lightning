@@ -278,4 +278,12 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::CSWAP, 0},
     std::pair<GateOperation, size_t>{GateOperation::MultiRZ, 1},
 };
+
+/**
+ * @brief Number of parameters for gates
+ */
+[[maybe_unused]] constexpr std::array controlled_gate_num_params = {
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRZ,
+                                               1},
+};
 } // namespace Pennylane::Gates::Constant
