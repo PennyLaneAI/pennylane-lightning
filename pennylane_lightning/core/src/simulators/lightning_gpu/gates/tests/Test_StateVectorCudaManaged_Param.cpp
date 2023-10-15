@@ -185,8 +185,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
@@ -247,8 +247,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -310,8 +310,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -1437,8 +1437,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliX"}, {"PauliZ"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliX"}, {"PauliZ"}},
+                                            {{index}, {index}}, {false, false});
 
                 sv.applyOperation_std("XZ", {index}, false, {0.0}, xz_gate);
             }
@@ -1458,8 +1458,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliZ"}, {"PauliX"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliZ"}, {"PauliX"}},
+                                            {{index}, {index}}, {false, false});
                 sv.applyOperation_std("ZX", {index}, false, {0.0}, zx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1477,8 +1477,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliX"}, {"PauliY"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliX"}, {"PauliY"}},
+                                            {{index}, {index}}, {false, false});
                 sv.applyOperation_std("XY", {index}, false, {0.0}, xy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1496,8 +1496,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliY"}, {"PauliX"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliY"}, {"PauliX"}},
+                                            {{index}, {index}}, {false, false});
                 sv.applyOperation_std("YX", {index}, false, {0.0}, yx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1515,8 +1515,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliY"}, {"PauliZ"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliY"}, {"PauliZ"}},
+                                            {{index}, {index}}, {false, false});
                 sv.applyOperation_std("YZ", {index}, false, {0.0}, yz_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1534,8 +1534,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliZ"}, {"PauliY"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliZ"}, {"PauliY"}},
+                                            {{index}, {index}}, {false, false});
                 sv.applyOperation_std("ZY", {index}, false, {0.0}, zy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1551,8 +1551,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
     sv_init.initSV();
 
-    sv_init.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                           {{0}, {1}, {2}}, {false, false, false});
+    sv_init.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                            {{0}, {1}, {2}}, {false, false, false});
 
     const auto cz_gate = cuGates::getCZ<cp_t>();
     const auto tof_gate = cuGates::getToffoli<cp_t>();
@@ -1564,8 +1564,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
         StateVectorCudaManaged<TestType> sv_expected{
             sv_init.getDataVector().data(), sv_init.getDataVector().size()};
 
-        sv_expected.applyOperation({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
-                                   {{1}, {0, 1}, {1}}, {false, false, false});
+        sv_expected.applyOperations({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
+                                    {{1}, {0, 1}, {1}}, {false, false, false});
 
         sv.applyOperation_std("CZmat", {0, 1}, false, {0.0}, cz_gate);
         CHECK(sv.getDataVector() ==

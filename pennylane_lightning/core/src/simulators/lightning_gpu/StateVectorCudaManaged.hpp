@@ -276,54 +276,6 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     * @param params
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints,
-                        const std::vector<std::vector<Precision>> &params) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx],
-                           params[op_idx]);
-        }
-    }
-
-    /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     * @param params
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx]);
-        }
-    }
-
-    /**
      * @brief Apply a single generator to the state vector using the given
      * kernel.
      *
@@ -928,7 +880,7 @@ class StateVectorCudaManaged
      */
     auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
         std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
-        this->CopyGpuDataToHost(data_host.data(), data_host.size());
+        BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;
     }
 

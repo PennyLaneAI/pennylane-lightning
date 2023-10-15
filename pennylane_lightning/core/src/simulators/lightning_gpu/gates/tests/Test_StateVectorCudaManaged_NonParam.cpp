@@ -175,8 +175,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const cp_t p = cuUtil::ConstMult(
         std::complex<TestType>(0.5, 0.0),
@@ -220,8 +220,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliZ",
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const cp_t p(static_cast<TestType>(0.5) *
                  cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -304,8 +304,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
     cp_t i(1.0 / 4, 1.0 / 4);
@@ -386,7 +386,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
+    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -543,7 +543,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCY",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
+    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -698,7 +698,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
+    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
@@ -895,7 +895,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
     sv.initSV();
 
     // Test using |+10> state
-    sv.applyOperation({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
+    sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}}, {false, false});
     const auto init_state = sv.getDataVector();
 
     SECTION("Apply directly") {
