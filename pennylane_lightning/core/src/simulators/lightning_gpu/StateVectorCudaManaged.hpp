@@ -1315,90 +1315,6 @@ class StateVectorCudaManaged
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
     }
-
-    /**
-     * @brief Apply a given host-matrix `matrix` to the state vector at qubit
-     * indices given by `tgts` and control-lines given by `ctrls`. The adjoint
-     * can be taken by setting `use_adjoint` to true.
-     *
-     * @param matrix Host-data vector in row-major order of a given gate.
-     * @param ctrls Control line qubits.
-     * @param tgts Target qubits.
-     * @param use_adjoint Use adjoint of given gate.
-     */
-    void applyHostMatrixGate(const std::vector<CFP_t> &matrix,
-                             const std::vector<std::size_t> &ctrls,
-                             const std::vector<std::size_t> &tgts,
-                             bool use_adjoint = false) {
-        void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
-        int nIndexBits = BaseType::getNumQubits();
-
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
-
-        // check the size of external workspace
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
-            /* custatevecHandle_t */ handle_.get(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const uint32_t */ tgts.size(),
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
-
-        // allocate external workspace if necessary
-        if (extraWorkspaceSizeInBytes > 0) {
-            PL_CUDA_IS_SUCCESS(
-                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
-        }
-
-        // apply gate
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
-            /* custatevecHandle_t */ handle_.get(),
-            /* void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgtsInt.data(),
-            /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrlsInt.data(),
-            /* const int32_t* */ nullptr,
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
-        if (extraWorkspaceSizeInBytes)
-            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-    }
     void applyHostMatrixGate(const std::vector<std::complex<Precision>> &matrix,
                              const std::vector<std::size_t> &ctrls,
                              const std::vector<std::size_t> &tgts,
@@ -1408,8 +1324,7 @@ class StateVectorCudaManaged
             matrix_cu[i] =
                 cuUtil::complexToCu<std::complex<Precision>>(matrix[i]);
         }
-
-        applyHostMatrixGate(matrix_cu, ctrls, tgts, use_adjoint);
+        applyDeviceMatrixGate(matrix_cu.data(), ctrls, tgts, use_adjoint);
     }
 };
 }; // namespace Pennylane::LightningGPU
