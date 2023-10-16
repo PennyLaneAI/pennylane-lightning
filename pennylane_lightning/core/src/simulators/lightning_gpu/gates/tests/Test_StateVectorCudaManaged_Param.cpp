@@ -58,20 +58,17 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     sv.initSV();
 
     const std::vector<TestType> angles{{0.1}, {0.6}};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>{{0.9987502603949663, 0.0},
-                          {0.0, -0.04997916927067834}},
-        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, -0.2955202066613395}},
-        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, -0.867423225594017}}};
-
-    std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>{{0.9987502603949663, 0.0},
-                          {0.0, 0.04997916927067834}},
-        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, 0.2955202066613395}},
-        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, 0.867423225594017}}};
 
     const auto init_state = sv.getDataVector();
     SECTION("adj = false") {
+        std::vector<std::vector<cp_t>> expected_results{
+            std::vector<cp_t>{{0.9987502603949663, 0.0},
+                              {0.0, -0.04997916927067834}},
+            std::vector<cp_t>{{0.9553364891256061, 0.0},
+                              {0, -0.2955202066613395}},
+            std::vector<cp_t>{{0.49757104789172696, 0.0},
+                              {0, -0.867423225594017}}};
+
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -92,6 +89,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
         }
     }
     SECTION("adj = true") {
+        std::vector<std::vector<cp_t>> expected_results_adj{
+            std::vector<cp_t>{{0.9987502603949663, 0.0},
+                              {0.0, 0.04997916927067834}},
+            std::vector<cp_t>{{0.9553364891256061, 0.0},
+                              {0, 0.2955202066613395}},
+            std::vector<cp_t>{{0.49757104789172696, 0.0},
+                              {0, 0.867423225594017}}};
+
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -118,24 +123,17 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
 
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>{{0.8731983044562817, 0.04786268954660339},
-                          {0.0876120655431924, -0.47703040785184303}},
-        std::vector<cp_t>{{0.8243771119105122, 0.16439396602553008},
-                          {0.3009211363333468, -0.45035926880694604}},
-        std::vector<cp_t>{{0.10575112905629831, 0.47593196040758534},
-                          {0.8711876098966215, -0.0577721051072477}}};
-    std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>{{0.8731983044562817, -0.04786268954660339},
-                          {-0.0876120655431924, -0.47703040785184303}},
-        std::vector<cp_t>{{0.8243771119105122, -0.16439396602553008},
-                          {-0.3009211363333468, -0.45035926880694604}},
-        std::vector<cp_t>{{0.10575112905629831, -0.47593196040758534},
-                          {-0.8711876098966215, -0.0577721051072477}}};
 
     const std::vector<cp_t> init_state{{0.8775825618903728, 0.0},
                                        {0.0, -0.47942553860420306}};
     SECTION("adj = false") {
+        std::vector<std::vector<cp_t>> expected_results{
+            std::vector<cp_t>{{0.8731983044562817, 0.04786268954660339},
+                              {0.0876120655431924, -0.47703040785184303}},
+            std::vector<cp_t>{{0.8243771119105122, 0.16439396602553008},
+                              {0.3009211363333468, -0.45035926880694604}},
+            std::vector<cp_t>{{0.10575112905629831, 0.47593196040758534},
+                              {0.8711876098966215, -0.0577721051072477}}};
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -156,6 +154,13 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
         }
     }
     SECTION("adj = true") {
+        std::vector<std::vector<cp_t>> expected_results_adj{
+            std::vector<cp_t>{{0.8731983044562817, -0.04786268954660339},
+                              {-0.0876120655431924, -0.47703040785184303}},
+            std::vector<cp_t>{{0.8243771119105122, -0.16439396602553008},
+                              {-0.3009211363333468, -0.45035926880694604}},
+            std::vector<cp_t>{{0.10575112905629831, -0.47593196040758534},
+                              {-0.8711876098966215, -0.0577721051072477}}};
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
