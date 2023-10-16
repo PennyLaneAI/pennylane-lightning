@@ -126,12 +126,14 @@ jobs:
         run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
       - name: Build and run unit tests with MPICH backend
+        env:
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          PL_BACKEND: lightning_gpu
         run: |
             source /etc/profile.d/modules.sh
             module use /opt/modules/
             module load mpich
             module unload mpich
-            export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
             export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
             cmake . -BBuild \
