@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -196,7 +196,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich", "openmpi"]
+        mpilib: ["openmpi"]
 
     steps:
       - name: Checkout pennyLane-lightning-gpu
