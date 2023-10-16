@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_mpich_tests:
-    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -260,13 +260,14 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
-          PL_BACKEND=lightning_qubit python -m pip install -e . -vv
+          SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package (MPICH backend)
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          PL_BACKEND: lightning_gpu
         run: |
-          python setup.py build_ext -i --define="PL_BACKEND=lightning_gpu;CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           python -m pip install -e . --verbose
 
       - name: Run PennyLane-Lightning-GPU unit tests (MPICH backend)
