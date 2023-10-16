@@ -168,7 +168,7 @@ jobs:
         with:
           if-no-files-found: error
           name: ubuntu-codecov-results-cpp
-          path: ./BuildCov/coverage-${{ github.job }}-lightning_gpu.info
+          path: ./Build/coverage-${{ github.job }}-lightning_gpu.info
 
       - name: Cleanup
         if: always()
@@ -260,7 +260,7 @@ jobs:
           export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
-          SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
+          PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package (MPICH backend)
         env:
