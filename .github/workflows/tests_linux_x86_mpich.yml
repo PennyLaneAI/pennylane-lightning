@@ -138,7 +138,8 @@ jobs:
               -DPL_BACKEND=lightning_gpu \
               -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
               -DENABLE_MPI=ON \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DENABLE_COVERAGE=ON \
               -DBUILD_TESTS=ON \
               -DCMAKE_CXX_COMPILER=mpicxx \
               -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
@@ -150,6 +151,9 @@ jobs:
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             for file in *runner_mpi ; do /opt/mpi/mpich/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-lightning_gpu.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -157,35 +161,6 @@ jobs:
         with:
           name: ubuntu-tests-reports
           path: ./Build/tests/results/
-
-      - name: Build and run unit tests for code coverage for MPICH backend
-        run: |
-            source /etc/profile.d/modules.sh
-            module use /opt/modules/
-            module load mpich
-            module unload mpich
-            export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-            export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
-            cmake . -BBuildCov \
-              -DPL_BACKEND=lightning_gpu \
-              -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
-              -DENABLE_MPI=ON \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_COVERAGE=ON \
-              -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
-              -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
-              -DCMAKE_CUDA_ARCHITECTURES="86" \
-              -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
-              -G Ninja
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            for file in *runner ; do ./$file; done;
-            for file in *runner_mpi ; do /opt/mpi/mpich/bin/mpirun -np 2 ./$file; done;
-            lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-lightning_gpu.info
 
       - name: Upload code coverage results for MPICH backend
         uses: actions/upload-artifact@v3
@@ -205,7 +180,7 @@ jobs:
 
 
   python_mpich_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
 
     runs-on:
       - self-hosted
@@ -286,11 +261,8 @@ jobs:
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package (MPICH backend)
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          PL_BACKEND: lightning_gpu
         run: |
-          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          python setup.py build_ext -i --define="PL_BACKEND=lightning_gpu;CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           python -m pip install -e . --verbose
 
       - name: Run PennyLane-Lightning-GPU unit tests (MPICH backend)
