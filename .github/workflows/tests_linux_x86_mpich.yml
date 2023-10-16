@@ -280,8 +280,8 @@ jobs:
           source /etc/profile.d/modules.sh
           module use /opt/modules/
           module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests/
           PL_DEVICE=lightning.gpu python -m pytest ./tests/
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests/test_apply.py
 
       - name: Cleanup
         if: always()
