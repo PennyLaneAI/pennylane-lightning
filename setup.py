@@ -205,6 +205,10 @@ info = {
     else [CMakeExtension(f"{backend}_ops")],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
+    "extras_require": {
+        "gpu": ["pennylane-lightning-gpu"],
+        "kokkos": ["pennylane-lightning-kokkos"],
+    },
 }
 
 if backend == "lightning_qubit":
