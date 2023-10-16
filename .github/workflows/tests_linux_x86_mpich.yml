@@ -168,6 +168,7 @@ jobs:
             export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
             export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
             cmake . -BBuildCov \
+              -DPL_BACKEND=lightning_gpu \
               -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
               -DENABLE_MPI=ON \
               -DCMAKE_BUILD_TYPE=Debug \
