@@ -1419,7 +1419,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = std::complex<TestType>;
+    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
     const size_t num_qubits = 5;
 
     // Note: gates are defined as right-to-left order
@@ -1440,7 +1440,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                 sv_expected.applyOperations({{"PauliX"}, {"PauliZ"}},
                                             {{index}, {index}}, {false, false});
 
-                sv.applyOperation_std("XZ", {index}, false, {0.0}, xz_gate);
+                sv.applyOperation("XZ", {index}, false, {0.0}, xz_gate);
             }
 
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1460,7 +1460,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliZ"}, {"PauliX"}},
                                             {{index}, {index}}, {false, false});
-                sv.applyOperation_std("ZX", {index}, false, {0.0}, zx_gate);
+                sv.applyOperation("ZX", {index}, false, {0.0}, zx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1479,7 +1479,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliX"}, {"PauliY"}},
                                             {{index}, {index}}, {false, false});
-                sv.applyOperation_std("XY", {index}, false, {0.0}, xy_gate);
+                sv.applyOperation("XY", {index}, false, {0.0}, xy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1498,7 +1498,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliY"}, {"PauliX"}},
                                             {{index}, {index}}, {false, false});
-                sv.applyOperation_std("YX", {index}, false, {0.0}, yx_gate);
+                sv.applyOperation("YX", {index}, false, {0.0}, yx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1517,7 +1517,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliY"}, {"PauliZ"}},
                                             {{index}, {index}}, {false, false});
-                sv.applyOperation_std("YZ", {index}, false, {0.0}, yz_gate);
+                sv.applyOperation("YZ", {index}, false, {0.0}, yz_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1536,7 +1536,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             for (size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliZ"}, {"PauliY"}},
                                             {{index}, {index}}, {false, false});
-                sv.applyOperation_std("ZY", {index}, false, {0.0}, zy_gate);
+                sv.applyOperation("ZY", {index}, false, {0.0}, zy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1545,7 +1545,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = std::complex<TestType>;
+    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
     const size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
@@ -1567,7 +1567,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
         sv_expected.applyOperations({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
                                     {{1}, {0, 1}, {1}}, {false, false, false});
 
-        sv.applyOperation_std("CZmat", {0, 1}, false, {0.0}, cz_gate);
+        sv.applyOperation("CZmat", {0, 1}, false, {0.0}, cz_gate);
         CHECK(sv.getDataVector() ==
               Pennylane::Util::approx(sv_expected.getDataVector()));
     }
