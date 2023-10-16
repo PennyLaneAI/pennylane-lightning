@@ -148,7 +148,6 @@ jobs:
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
-            ls -la ./pennylane_lightning/src/tests
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             for file in *runner_mpi ; do /opt/mpi/mpich/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
 
