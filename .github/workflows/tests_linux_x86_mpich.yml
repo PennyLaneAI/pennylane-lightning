@@ -139,7 +139,7 @@ jobs:
               -DENABLE_MPI=ON \
               -DCMAKE_BUILD_TYPE=RelWithDebInfo \
               -DBUILD_TESTS=ON \
-              -DCMAKE_CXX_COMPILER="$(which g++-${{ env.GCC_VERSION }})" \
+              -DCMAKE_CXX_COMPILER=mpicxx \
               -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
               -DCMAKE_CUDA_ARCHITECTURES="86" \
               -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
