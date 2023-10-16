@@ -159,12 +159,14 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
+          if-no-files-found: error
           name: ubuntu-tests-reports
           path: ./Build/tests/results/
 
       - name: Upload code coverage results for MPICH backend
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: ubuntu-codecov-results-cpp
           path: ./BuildCov/coverage-${{ github.job }}-lightning_gpu.info
 
@@ -253,15 +255,15 @@ jobs:
           module use /opt/modules/
           module load mpich
           module unload mpich
-          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package (MPICH backend)
         run: |
+          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
           python setup.py build_ext -i --define="PL_BACKEND=lightning_gpu;CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           python -m pip install -e . --verbose
 
