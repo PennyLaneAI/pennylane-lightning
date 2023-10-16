@@ -265,20 +265,17 @@ jobs:
       - name: Build and install package (MPICH backend)
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          PL_BACKEND: lightning_gpu
         run: |
-          python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
-          python -m pip install -e . --verbose
+          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
       - name: Run PennyLane-Lightning-GPU unit tests (MPICH backend)
-        env:
-          PL_DEVICE: lightning.gpu
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules/
           module load mpich
-          /opt/mpi/mpich/bin/mpirun -np 2 python -m pytest ./mpitests/
-          python -m pytest ./tests/
+          PL_DEVICE=lightning.gpu /opt/mpi/mpich/bin/mpirun -np 2 python -m pytest ./mpitests/
+          PL_DEVICE=lightning.gpu python -m pytest ./tests/
 
       - name: Cleanup
         if: always()
