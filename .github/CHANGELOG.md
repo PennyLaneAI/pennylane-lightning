@@ -10,6 +10,7 @@
 
 ### Breaking changes
 
+<<<<<<< HEAD
 * Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 

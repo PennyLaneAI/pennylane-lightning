@@ -34,8 +34,8 @@ using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;
 enum class ExpValFunc : uint32_t {
-    BEGIN = 1,
-    Identity = 1,
+    BEGIN = 0,
+    Identity,
     PauliX,
     PauliY,
     PauliZ,

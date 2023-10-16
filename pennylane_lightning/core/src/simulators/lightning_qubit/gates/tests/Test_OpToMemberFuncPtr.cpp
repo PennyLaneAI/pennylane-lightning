@@ -38,28 +38,25 @@ template <typename EnumClass> constexpr auto allGateOps() {
         std::make_integer_sequence<uint32_t,
                                    static_cast<uint32_t>(EnumClass::END)>{}));
 }
-template <class PrecisionT, class ParamT, class GateImplementation,
+template <class PrecisionT, class ParamT, class GateImplemenation,
           uint32_t gate_idx>
 constexpr bool testAllGatesImplementedIter() {
     if constexpr (gate_idx <
-                  static_cast<uint32_t>(Pennylane::Gates::GateOperation::END) -
-                      static_cast<uint32_t>(
-                          Pennylane::Gates::GateOperation::BEGIN)) {
+                  static_cast<uint32_t>(Pennylane::Gates::GateOperation::END)) {
         constexpr auto gate_op = static_cast<GateOperation>(gate_idx);
         static_cast<void>(
-            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+            GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplemenation,
                                   gate_op>::value);
         return testAllGatesImplementedIter<PrecisionT, ParamT,
-                                           GateImplementation, gate_idx + 1>();
+                                           GateImplemenation, gate_idx + 1>();
     } else {
         return true;
     }
 }
-template <class PrecisionT, class ParamT, class GateImplementation>
-constexpr bool testAllGatesImplemented() {
-    return testAllGatesImplementedIter<PrecisionT, ParamT, GateImplementation,
-                                       static_cast<uint32_t>(
-                                           GateOperation::BEGIN)>();
+template <class PrecisionT, class ParamT, class GateImplemenation>
+constexpr bool testAllGatesImplemeted() {
+    return testAllGatesImplementedIter<PrecisionT, ParamT, GateImplemenation,
+                                       0>();
 }
 
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM0(GATE_NAME)                       \
@@ -186,7 +183,7 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
 };
 
-static_assert(testAllGatesImplemented<float, float, DummyImplementation>(),
+static_assert(testAllGatesImplemeted<float, float, DummyImplementation>(),
               "DummyImplementation must define all gate operations.");
 
 struct ImplementedGates {
@@ -233,13 +230,11 @@ constexpr auto opFuncPtrPairsIter() {
  */
 template <typename PrecisionT, typename ParamT>
 constexpr static auto gate_op_func_ptr_pairs =
-    opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGates,
-                       static_cast<size_t>(GateOperation::BEGIN)>();
+    opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGates, 0>();
 
 template <typename PrecisionT, typename ParamT>
 constexpr static auto generator_op_func_ptr_pairs =
-    opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGenerators,
-                       static_cast<size_t>(GeneratorOperation::BEGIN)>();
+    opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGenerators, 0>();
 
 template <typename PrecisionT, typename ParamT, size_t num_params,
           size_t tuple_idx>

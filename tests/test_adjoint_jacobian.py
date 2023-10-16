@@ -14,7 +14,6 @@
 """
 Tests for ``adjoint_jacobian`` method on Lightning devices.
 """
-import itertools
 import pytest
 from conftest import device_name, LightningDevice as ld
 
@@ -30,14 +29,6 @@ I, X, Y, Z = (
     qml.PauliY.compute_matrix(),
     qml.PauliZ.compute_matrix(),
 )
-
-kokkos_args = [None]
-if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
-    from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
-
-    kokkos_args += [InitializationSettings().set_num_threads(2)]
-
-fixture_params = itertools.product([np.complex64, np.complex128], kokkos_args)
 
 
 def Rx(theta):
@@ -76,12 +67,9 @@ def Rz(theta):
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
 
-    @pytest.fixture(params=fixture_params)
+    @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        params = request.param
-        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
-            return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
-        return qml.device(device_name, wires=3, c_dtype=params[0])
+        return qml.device(device_name, wires=3, c_dtype=request.param)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -93,22 +81,6 @@ class TestAdjointJacobian:
 
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
-            dev.adjoint_jacobian(tape)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.1, wires=0)
-            qml.state()
-
-        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
-            message = "Adjoint differentiation does not support State measurements."
-        elif ld._CPP_BINARY_AVAILABLE:
-            message = "This method does not support statevector return type."
-        else:
-            message = "Adjoint differentiation method does not support measurement StateMP"
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match=message,
         ):
             dev.adjoint_jacobian(tape)
 

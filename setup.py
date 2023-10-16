@@ -169,7 +169,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane>=0.32",
+    "pennylane>=0.31",
 ]
 
 packages_list = ["pennylane_lightning." + backend]

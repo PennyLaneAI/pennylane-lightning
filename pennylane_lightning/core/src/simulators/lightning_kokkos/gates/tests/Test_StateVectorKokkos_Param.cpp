@@ -248,12 +248,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
-    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
-    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -284,9 +282,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
             kokkos_sv.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-
-            kokkos_sv.applyOperation("PhaseShift", {index}, inverse,
-                                     {sign * angles[index]});
+            kokkos_sv.applyOperation("PhaseShift", {index}, false,
+                                     {angles[index]});
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -302,12 +299,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
-    const bool inverse = GENERATE(true, false);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 2.4};
-    const TestType sign = (inverse) ? -1.0 : 1.0;
     const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
     std::vector<std::vector<ComplexT>> ps_data;
@@ -326,8 +321,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
         StateVectorKokkos<TestType> kokkos_sv{num_qubits};
         kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
-        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, inverse,
-                                 {sign * angles[1]});
+        kokkos_sv.applyOperation("ControlledPhaseShift", {1, 2}, false,
+                                 {angles[1]});
         std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
         kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -381,17 +376,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRot",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
-
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     std::vector<ComplexT> expected_results(8);
-    const auto rot_mat = (inverse) ? getRot<Kokkos::complex, TestType>(
-                                         -angles[2], -angles[1], -angles[0])
-                                   : getRot<Kokkos::complex, TestType>(
-                                         angles[0], angles[1], angles[2]);
+    const auto rot_mat =
+        getRot<Kokkos::complex, TestType>(angles[0], angles[1], angles[2]);
     expected_results[0b1 << (num_qubits - 1)] = rot_mat[0];
     expected_results[(0b1 << num_qubits) - 2] = rot_mat[2];
 
@@ -399,7 +390,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             kokkos_sv.applyOperation("PauliX", {0}, false);
-            kokkos_sv.applyOperation("CRot", {0, 1}, inverse, angles);
+            kokkos_sv.applyOperation("CRot", {0, 1}, false, angles);
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
             kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 
@@ -889,7 +880,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -915,11 +905,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            const TestType angle =
-                (inverse) ? -0.267030328057308 : 0.267030328057308;
+
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, inverse,
-                                     {angle});
+            kokkos_sv.applyOperation("SingleExcitation", {0, 2}, false,
+                                     {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -932,7 +921,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -958,11 +946,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            const TestType angle =
-                (inverse) ? -0.267030328057308 : 0.267030328057308;
+
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
-                                     {angle});
+            kokkos_sv.applyOperation("SingleExcitationMinus", {0, 2}, false,
+                                     {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -975,7 +962,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -1001,11 +987,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            const TestType angle =
-                (inverse) ? -0.267030328057308 : 0.267030328057308;
+
             kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
-                                     {angle});
+            kokkos_sv.applyOperation("SingleExcitationPlus", {0, 2}, false,
+                                     {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
             for (size_t j = 0; j < exp2(num_qubits); j++) {
@@ -1018,16 +1003,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    std::vector<std::size_t> wires = {0, 1, 2, 3};
-    std::pair<std::size_t, std::size_t> control =
-        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
-                 std::pair<std::size_t, std::size_t>{0, 1},
-                 std::pair<std::size_t, std::size_t>{0, 2},
-                 std::pair<std::size_t, std::size_t>{0, 3},
-                 std::pair<std::size_t, std::size_t>{1, 2},
-                 std::pair<std::size_t, std::size_t>{1, 3},
-                 std::pair<std::size_t, std::size_t>{2, 3},
-                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1065,39 +1040,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_sv.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_sv.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                std::swap(wires[control.first], wires[control.second]);
-                kokkos_sv.applyOperation("SWAP",
-                                         {control.first, control.second});
-            }
 
-            kokkos_sv.applyOperation("DoubleExcitation", wires, false,
+            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
+            kokkos_sv.applyOperation("DoubleExcitation", {0, 1, 2, 3}, false,
                                      {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
-            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
-            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
-            kokkos_ref.HostToDevice(expected.data(), expected.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_ref.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_ref.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                kokkos_ref.applyOperation("SWAP",
-                                          {control.first, control.second});
-            }
-            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
-
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
             }
         }
     }
@@ -1105,16 +1056,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    std::vector<std::size_t> wires = {0, 1, 2, 3};
-    std::pair<std::size_t, std::size_t> control =
-        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
-                 std::pair<std::size_t, std::size_t>{0, 1},
-                 std::pair<std::size_t, std::size_t>{0, 2},
-                 std::pair<std::size_t, std::size_t>{0, 3},
-                 std::pair<std::size_t, std::size_t>{1, 2},
-                 std::pair<std::size_t, std::size_t>{1, 3},
-                 std::pair<std::size_t, std::size_t>{2, 3},
-                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1152,39 +1093,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_sv.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_sv.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                std::swap(wires[control.first], wires[control.second]);
-                kokkos_sv.applyOperation("SWAP",
-                                         {control.first, control.second});
-            }
 
-            kokkos_sv.applyOperation("DoubleExcitationMinus", wires, false,
-                                     {0.267030328057308});
+            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
+            kokkos_sv.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
+                                     false, {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
-            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
-            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
-            kokkos_ref.HostToDevice(expected.data(), expected.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_ref.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_ref.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                kokkos_ref.applyOperation("SWAP",
-                                          {control.first, control.second});
-            }
-            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
-
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
             }
         }
     }
@@ -1192,16 +1109,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    std::vector<std::size_t> wires = {0, 1, 2, 3};
-    std::pair<std::size_t, std::size_t> control =
-        GENERATE(std::pair<std::size_t, std::size_t>{0, 0},
-                 std::pair<std::size_t, std::size_t>{0, 1},
-                 std::pair<std::size_t, std::size_t>{0, 2},
-                 std::pair<std::size_t, std::size_t>{0, 3},
-                 std::pair<std::size_t, std::size_t>{1, 2},
-                 std::pair<std::size_t, std::size_t>{1, 3},
-                 std::pair<std::size_t, std::size_t>{2, 3},
-                 std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 4;
@@ -1239,39 +1146,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
         SECTION("Apply using dispatcher") {
             StateVectorKokkos<TestType> kokkos_sv{num_qubits};
             std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_sv.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_sv.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                std::swap(wires[control.first], wires[control.second]);
-                kokkos_sv.applyOperation("SWAP",
-                                         {control.first, control.second});
-            }
 
-            kokkos_sv.applyOperation("DoubleExcitationPlus", wires, false,
-                                     {0.267030328057308});
+            kokkos_sv.HostToDevice(ini_st.data(), ini_st.size());
+            kokkos_sv.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
+                                     false, {0.267030328057308});
             kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
 
-            StateVectorKokkos<TestType> kokkos_ref{num_qubits};
-            std::vector<ComplexT> result_ref(kokkos_ref.getLength(), {0, 0});
-            kokkos_ref.HostToDevice(expected.data(), expected.size());
-            if (control.first == 3 && control.second == 3) {
-                std::swap(wires[0], wires[2]);
-                kokkos_ref.applyOperation("SWAP", {0, 2});
-                std::swap(wires[1], wires[3]);
-                kokkos_ref.applyOperation("SWAP", {1, 3});
-            } else if (control.first != control.second) {
-                kokkos_ref.applyOperation("SWAP",
-                                          {control.first, control.second});
-            }
-            kokkos_ref.DeviceToHost(result_ref.data(), result_ref.size());
-
             for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(result_ref[j]) == Approx(imag(result_sv[j])));
-                CHECK(real(result_ref[j]) == Approx(real(result_sv[j])));
+                CHECK(imag(expected[j]) == Approx(imag(result_sv[j])));
+                CHECK(real(expected[j]) == Approx(real(result_sv[j])));
             }
         }
     }

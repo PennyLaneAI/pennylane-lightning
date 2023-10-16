@@ -43,18 +43,6 @@ std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("StateVectorKokkosManaged::NonExistent",
-                   "[StateVectorKokkosManaged_Expval]", float, double) {
-    const size_t num_qubits = 3;
-    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-    auto m = Measurements(kokkos_sv);
-
-    SECTION("Using expval with non-existent operation") {
-        PL_REQUIRE_THROWS_MATCHES(m.expval("XXX", {0}), LightningException,
-                                  "Expval does not exist for named observable");
-    }
-}
-
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueIdentity",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     const size_t num_qubits = 3;
