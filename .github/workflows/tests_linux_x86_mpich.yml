@@ -23,7 +23,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: gpu-test-mpich-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: gpu-test-mpi-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -39,6 +39,8 @@ jobs:
 
     strategy:
       max-parallel: 1
+      matrix:
+        mpilib: ["mpich"]
 
     steps:
       - name: Checkout
@@ -129,14 +131,14 @@ jobs:
         run: |
             source /etc/profile.d/modules.sh
             module use /opt/modules/
-            module load mpich
-            module unload mpich
+            module load ${{ matrix.mpilib }}
+            module unload ${{ matrix.mpilib }}
             export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-            export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
-            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
+            export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/${{ matrix.mpilib }}/include:/opt/mpi/${{ matrix.mpilib }}/bin
+            export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/${{ matrix.mpilib }}/lib:$CUQUANTUM_SDK
             cmake . -BBuild \
               -DPL_BACKEND=lightning_gpu \
-              -DCMAKE_PREFIX_PATH=/opt/mpi/mpich/ \
+              -DCMAKE_PREFIX_PATH=/opt/mpi/${{ matrix.mpilib }}/ \
               -DENABLE_MPI=ON \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_COVERAGE=ON \
@@ -150,7 +152,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            for file in *runner_mpi ; do /opt/mpi/mpich/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            for file in *runner_mpi ; do /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-lightning_gpu.info
@@ -253,11 +255,11 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules/
-          module load mpich
-          module unload mpich
+          module load ${{ matrix.mpilib }}
+          module unload ${{ matrix.mpilib }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/mpich/include:/opt/mpi/mpich/bin
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/mpich/lib:$CUQUANTUM_SDK
+          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/${{ matrix.mpilib }}/include:/opt/mpi/${{ matrix.mpilib }}/bin
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/${{ matrix.mpilib }}/lib:$CUQUANTUM_SDK
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
@@ -266,15 +268,15 @@ jobs:
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
-          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=$(which g++-${{ env.GCC_VERSION }});CMAKE_PREFIX_PATH=/opt/mpi/mpich;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=mpicxx;CMAKE_PREFIX_PATH=/opt/mpi/${{ matrix.mpilib }};ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
       - name: Run PennyLane-Lightning-GPU unit tests
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules/
-          module load mpich
-          PL_DEVICE=lightning.gpu /opt/mpi/mpich/bin/mpirun -np 2 python -m pytest ./mpitests/
+          module load ${{ matrix.mpilib }}
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests/
           PL_DEVICE=lightning.gpu python -m pytest ./tests/
 
       - name: Cleanup
