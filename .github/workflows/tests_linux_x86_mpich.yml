@@ -40,7 +40,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich"]
+        mpilib: ["mpich", "openmpi"]
 
     steps:
       - name: Checkout
@@ -195,6 +195,8 @@ jobs:
 
     strategy:
       max-parallel: 1
+      matrix:
+        mpilib: ["mpich", "openmpi"]
 
     steps:
       - name: Checkout pennyLane-lightning-gpu
