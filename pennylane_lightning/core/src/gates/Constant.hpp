@@ -165,6 +165,8 @@ namespace Pennylane::Gates::Constant {
 };
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
     std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::NCRY, "NCRY"},
+    std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::NCRZ, "NCRZ"},
 };
 
@@ -283,6 +285,8 @@ namespace Pennylane::Gates::Constant {
  * @brief Number of parameters for gates
  */
 [[maybe_unused]] constexpr std::array controlled_gate_num_params = {
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRY,
+                                               1},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRZ,
                                                1},
 };

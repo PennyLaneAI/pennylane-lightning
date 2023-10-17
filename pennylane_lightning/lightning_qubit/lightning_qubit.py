@@ -116,6 +116,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "CRX",
         "CRY",
         "CRZ",
+        "C(RY)",
         "C(RZ)",
         "CRot",
         "IsingXX",
@@ -354,8 +355,11 @@ if LQ_CPP_BINARY_AVAILABLE:
                 method = getattr(sim, operation.name, None)
                 wires = self.wires.indices(operation.wires)
 
-                if operation.name == "C(RZ)":
-                    method = getattr(sim, "NCRZ", None)
+                if operation.name[0:2] == "C(":
+                    basename = operation.base.name
+                    method = getattr(sim, f"NC{basename}", None)
+                    if method is None:
+                        raise ValueError(f"Method {operation.name} not implemented.")
                     control_wires = self.wires.indices(operation.control_wires)
                     target_wires = self.wires.indices(operation.target_wires)
                     inv = False

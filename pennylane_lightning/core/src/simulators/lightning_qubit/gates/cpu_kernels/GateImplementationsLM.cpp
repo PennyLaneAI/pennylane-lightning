@@ -514,6 +514,12 @@ template void GateImplementationsLM::applyCRZ<float, float>(
 template void GateImplementationsLM::applyCRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
 
+template void GateImplementationsLM::applyNCRY<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRY<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
 template void GateImplementationsLM::applyNCRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);

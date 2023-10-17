@@ -334,10 +334,11 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<size_t> &controlled_wires,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToControlledGateOp(opName);
         const auto kernel =
-            getKernelForControlledGate(ControlledGateOperation::NCRZ);
+            getKernelForControlledGate(gate_op);
         dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
                                        opName, controlled_wires, wires, inverse,
                                        params);

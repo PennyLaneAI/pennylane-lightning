@@ -121,7 +121,8 @@ enum class ControlledMatrixOperation : uint32_t {
 };
 enum class ControlledGateOperation : uint32_t {
     BEGIN = 1,
-    NCRZ = 1,
+    NCRY = 1,
+    NCRZ,
     /* END (placeholder) */
     END
 };
