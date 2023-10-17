@@ -337,8 +337,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToControlledGateOp(opName);
-        const auto kernel =
-            getKernelForControlledGate(gate_op);
+        const auto kernel = getKernelForControlledGate(gate_op);
         dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
                                        opName, controlled_wires, wires, inverse,
                                        params);
