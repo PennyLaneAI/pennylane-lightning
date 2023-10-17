@@ -343,4 +343,20 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
     return output;
 }
 
+/**
+ * Utility hash function for complex vectors representing matrices.
+ */
+struct MatrixHasher {
+    template <class Precision = double>
+    std::size_t
+    operator()(const std::vector<std::complex<Precision>> &matrix) const {
+        std::size_t hash_val = matrix.size();
+        for (const auto &c_val : matrix) {
+            hash_val ^= std::hash<Precision>()(c_val.real()) ^
+                        std::hash<Precision>()(c_val.imag());
+        }
+        return hash_val;
+    }
+};
+
 } // namespace Pennylane::LightningGPU::Util

@@ -79,6 +79,7 @@ template <class StateVectorT>
 class HermitianObs final : public HermitianObsBase<StateVectorT> {
   private:
     using BaseType = HermitianObsBase<StateVectorT>;
+    inline static const MatrixHasher mh;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -93,6 +94,15 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      */
     HermitianObs(MatrixT matrix, std::vector<size_t> wires)
         : BaseType{matrix, wires} {}
+
+    auto getObsName() const -> std::string final {
+        // To avoid collisions on cached GPU data, use matrix elements to
+        // uniquely identify Hermitian
+        // TODO: Replace with a performant hash function
+        std::ostringstream obs_stream;
+        obs_stream << "Hermitian" << mh(this->matrix_);
+        return obs_stream.str();
+    }
 };
 
 /**

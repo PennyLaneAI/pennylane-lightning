@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `lightning_gpu` backend supports.
+  [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
+
 * Build Linux wheels for Lightning-GPU (CUDA-11).
   [(#517)](https://github.com/PennyLaneAI/pennylane-lightning/pull/517)
 
@@ -81,7 +84,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
