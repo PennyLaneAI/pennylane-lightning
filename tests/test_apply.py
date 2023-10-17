@@ -1482,8 +1482,8 @@ class TestApplyLightningMethod:
         assert dev.state.dtype == dev.C_DTYPE
 
     @pytest.mark.skipif(
-        device_name == "lightning.qubit" and not ld._CPP_BINARY_AVAILABLE,
-        reason="Only meaningful for lightning_gpu and lightning_kokkos",
+        not ld._CPP_BINARY_AVAILABLE,
+        reason="Only meaningful when binary is available.",
     )
     def test_unsupported_operation(self, mocker, tol):
         """Test identity operation does not perform additional computations."""
