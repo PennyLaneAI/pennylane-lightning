@@ -96,31 +96,19 @@ jobs:
 
       - name: Validate GPU version and installed compiler
         run: |
-          source /etc/profile.d/modules.sh
-          module use /opt/modules
-          module load cuda/11.8
+          source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/11.8
           which -a nvcc
           nvcc --version
 
       - name: Validate Multi-GPU packages
         run: |
-          source /etc/profile.d/modules.sh
-
-          module use /opt/modules/
-
-          echo 'Checking for OpenMPI'
-          module load openmpi
-          mpirun --version
-          which -a mpicc
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          echo 'Checking for ${{ matrix.mpilib }}'
           which -a mpirun
-          module unload openmpi
-
-          echo 'Checking for MPICH'
-          module load mpich
-          mpiexec --version
-          which -a mpicc
-          which -a mpiexec
-          module unload mpich
+          mpirun --version
+          which -a mpicxx
+          mpicxx --version
+          module unload ${{ matrix.mpilib }}
 
       - name: Install Latest PennyLane
         if: inputs.pennylane-version == 'latest'
@@ -130,8 +118,6 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/${{ matrix.mpilib }}/include:/opt/mpi/${{ matrix.mpilib }}/bin
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/${{ matrix.mpilib }}/lib:$CUQUANTUM_SDK
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DCMAKE_PREFIX_PATH=/opt/mpi/${{ matrix.mpilib }}/ \
@@ -252,9 +238,6 @@ jobs:
       - name: Install required packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          export PATH=$PATH:/usr/local/cuda/bin:/opt/mpi/${{ matrix.mpilib }}/include:/opt/mpi/${{ matrix.mpilib }}/bin
-          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:/opt/mpi/${{ matrix.mpilib }}/lib:$CUQUANTUM_SDK
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
