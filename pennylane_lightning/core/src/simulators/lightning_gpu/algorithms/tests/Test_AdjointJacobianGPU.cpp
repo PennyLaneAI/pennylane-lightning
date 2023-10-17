@@ -2,10 +2,6 @@
 #include <cmath>
 #include <complex>
 #include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
-#include <variant>
 #include <vector>
 
 #include <catch2/catch.hpp>

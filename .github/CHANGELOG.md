@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `lightning_gpu` backend supports.
+* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
   [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
 
 * Build Linux wheels for Lightning-GPU (CUDA-11).

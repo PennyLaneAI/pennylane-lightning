@@ -729,10 +729,12 @@ class Measurements final
             /* custatevecComputeType_t */ compute_type,
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         cuDoubleComplex expect;
 
@@ -754,8 +756,11 @@ class Measurements final
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
+
         return static_cast<PrecisionT>(expect.x);
     }
 }; // class Measurements
