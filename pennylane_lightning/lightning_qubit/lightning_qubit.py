@@ -359,13 +359,20 @@ if LQ_CPP_BINARY_AVAILABLE:
                 method = getattr(sim, operation.name, None)
                 wires = self.wires.indices(operation.wires)
 
-                if operation.name[0:2] == "C(":
-                    basename = operation.base.name
+                if operation.name[0:2] == "C(" or operation.name == "MultiControlledX":
+                    basename = (
+                        "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+                    )
                     method = getattr(sim, f"NC{basename}", None)
                     if method is None:
                         raise ValueError(f"Method {operation.name} not implemented.")
                     control_wires = self.wires.indices(operation.control_wires)
-                    target_wires = self.wires.indices(operation.target_wires)
+                    if operation.name == "MultiControlledX":
+                        target_wires = list(
+                            set(self.wires.indices(operation.wires)) - set(control_wires)
+                        )
+                    else:
+                        target_wires = self.wires.indices(operation.target_wires)
                     inv = False
                     param = operation.parameters
                     method(control_wires, target_wires, inv, param)
