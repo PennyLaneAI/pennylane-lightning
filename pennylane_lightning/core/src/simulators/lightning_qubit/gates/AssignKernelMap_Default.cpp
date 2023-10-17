@@ -239,6 +239,9 @@ void assignKernelsForControlledMatrixOp_Default() {
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
 
+    instance.assignKernelForOp(ControlledGateOperation::NCRX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::NCRY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);

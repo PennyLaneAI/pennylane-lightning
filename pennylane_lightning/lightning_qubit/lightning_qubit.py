@@ -116,6 +116,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "CRX",
         "CRY",
         "CRZ",
+        "C(RX)",
         "C(RY)",
         "C(RZ)",
         "CRot",
@@ -189,7 +190,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         observables = allowed_observables
         _backend_info = backend_info
 
-        def __init__(
+        def __init__(  # pylint: disable=too-many-arguments
             self,
             wires,
             *,

@@ -514,19 +514,6 @@ template void GateImplementationsLM::applyCRZ<float, float>(
 template void GateImplementationsLM::applyCRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
 
-template void GateImplementationsLM::applyNCRY<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool, float);
-template void GateImplementationsLM::applyNCRY<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool, double);
-template void GateImplementationsLM::applyNCRZ<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool, float);
-template void GateImplementationsLM::applyNCRZ<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool, double);
-
 template void
 GateImplementationsLM::applyCRot<float, float>(std::complex<float> *, size_t,
                                                const std::vector<size_t> &,
@@ -589,6 +576,26 @@ template void GateImplementationsLM::applyDoubleExcitationPlus<float, float>(
 template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
+
+/* N-controlled gates */
+template void GateImplementationsLM::applyNCRX<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRX<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCRY<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRY<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCRZ<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRZ<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
 
 // Generators
 template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRX(
