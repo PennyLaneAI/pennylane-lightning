@@ -22,6 +22,7 @@ import math
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
+from pennylane.operation import Operation
 
 
 class TestApply:
@@ -1479,6 +1480,26 @@ class TestApplyLightningMethod:
 
         assert np.allclose(dev.state, starting_state, atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
+
+    @pytest.mark.skipif(
+        device_name == "lightning.qubit",
+        reason="Only meaningful for lightning_gpu and lightning_kokkos",
+    )
+    def test_unsupported_operation(self, mocker, tol):
+        """Test identity operation does not perform additional computations."""
+
+        class EmptyGate(Operation):
+            num_wires = 1
+
+            @staticmethod
+            def compute_matrix(*params, **hyperparams):
+                return np.eye(0)
+
+        dev = qml.device(device_name, wires=1)
+        dev.operations.add("EmptyGate")
+
+        with pytest.raises(ValueError, match="Unsupported operation"):
+            dev.apply_lightning([EmptyGate(0)])
 
 
 @pytest.mark.skipif(
