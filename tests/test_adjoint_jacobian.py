@@ -928,7 +928,7 @@ def test_tape_qchem_sparse(tol):
     def circuit_sparse(params):
         circuit_ansatz(params, wires=range(4))
         return qml.expval(qml.SparseHamiltonian(H_sparse, wires=range(4)))
-    
+
     def circuit(params):
         circuit_ansatz(params, wires=range(4))
         return qml.expval(H)
