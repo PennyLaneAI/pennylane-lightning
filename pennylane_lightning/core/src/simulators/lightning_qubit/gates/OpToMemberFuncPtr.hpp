@@ -446,6 +446,24 @@ struct ControlledGateOpToMemberFuncPtr {
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliX> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliX<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliY> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliY<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliZ<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::NCRX> {
     constexpr static auto value =
         &GateImplementation::template applyNCRX<PrecisionT, ParamT>;

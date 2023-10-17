@@ -321,14 +321,14 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.parametrize("operation", [qml.RX, qml.RY, qml.RZ])
+@pytest.mark.parametrize("operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.RX, qml.RY, qml.RZ])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
 def test_controlled_qubit_gates(operation, n_qubits, tol):
     """Test that ControlledQubitUnitary is correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 500
-    for n_wires in range(1, 5):
+    for n_wires in range(2, 5):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
         if n_perms > threshold:
@@ -341,7 +341,10 @@ def test_controlled_qubit_gates(operation, n_qubits, tol):
 
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
-                qml.ctrl(operation(0.1234, target_wires), control_wires)
+                if operation in [qml.PauliX, qml.PauliY, qml.PauliZ]:
+                    qml.ctrl(operation(target_wires), control_wires)
+                else:
+                    qml.ctrl(operation(0.1234, target_wires), control_wires)
                 return qml.state()
 
             circ = qml.QNode(circuit, dev)

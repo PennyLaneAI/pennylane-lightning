@@ -153,8 +153,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledMatrixOperation::NQubitOp};
 
     constexpr static std::array implemented_controlled_gates = {
-        ControlledGateOperation::NCRX, ControlledGateOperation::NCRY,
-        ControlledGateOperation::NCRZ};
+        ControlledGateOperation::NCPauliX, ControlledGateOperation::NCPauliY,
+        ControlledGateOperation::NCPauliZ, ControlledGateOperation::NCRX,
+        ControlledGateOperation::NCRY,     ControlledGateOperation::NCRZ};
 
     /**
      * @brief Computes the array of indices to apply the gate corresponding to
@@ -553,6 +554,52 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t i1 = i0 | rev_wire_shifts[n_contr];
             core_function(arr, i0, i1);
         }
+    }
+
+    template <class PrecisionT>
+    static void applyNCPauliX(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
+                              const std::vector<size_t> &controlled_wires,
+                              const std::vector<size_t> &wires, bool inverse) {
+        using ParamT = PrecisionT;
+        PL_ASSERT(wires.size() == 1);
+        auto core_function = [](std::complex<PrecisionT> *arr, std::size_t i0,
+                                const std::size_t i1) {
+            std::swap(arr[i0], arr[i1]);
+        };
+        applyNC<PrecisionT, ParamT, decltype(core_function)>(
+            arr, num_qubits, controlled_wires, wires, core_function);
+    }
+
+    template <class PrecisionT>
+    static void applyNCPauliY(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
+                              const std::vector<size_t> &controlled_wires,
+                              const std::vector<size_t> &wires, bool inverse) {
+        using ParamT = PrecisionT;
+        PL_ASSERT(wires.size() == 1);
+        auto core_function = [](std::complex<PrecisionT> *arr, std::size_t i0,
+                                const std::size_t i1) {
+            const auto v0 = arr[i0];
+            const auto v1 = arr[i1];
+            arr[i0] = {std::imag(v1), -std::real(v1)};
+            arr[i1] = {-std::imag(v0), std::real(v0)};
+        };
+        applyNC<PrecisionT, ParamT, decltype(core_function)>(
+            arr, num_qubits, controlled_wires, wires, core_function);
+    }
+
+    template <class PrecisionT>
+    static void applyNCPauliZ(std::complex<PrecisionT> *arr,
+                              const size_t num_qubits,
+                              const std::vector<size_t> &controlled_wires,
+                              const std::vector<size_t> &wires, bool inverse) {
+        using ParamT = PrecisionT;
+        PL_ASSERT(wires.size() == 1);
+        auto core_function = [](std::complex<PrecisionT> *arr, std::size_t i0,
+                                const std::size_t i1) { arr[i1] *= -1; };
+        applyNC<PrecisionT, ParamT, decltype(core_function)>(
+            arr, num_qubits, controlled_wires, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>

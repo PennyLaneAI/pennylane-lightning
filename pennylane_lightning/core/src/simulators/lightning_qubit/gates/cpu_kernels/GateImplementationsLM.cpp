@@ -578,6 +578,30 @@ template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     const std::vector<size_t> &wires, bool inverse, double angle);
 
 /* N-controlled gates */
+template void
+GateImplementationsLM::applyNCPauliX<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliX<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliY<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliY<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliZ<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliZ<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
