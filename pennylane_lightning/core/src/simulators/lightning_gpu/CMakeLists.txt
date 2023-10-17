@@ -54,21 +54,8 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$OR
 #########################
 ## Set Default Options ##
 #########################
-option(PLLGPU_ENABLE_SANITIZER "Enable address sanitizer" OFF)
 option(PLLGPU_ENABLE_WARNINGS "Enable warnings" ON)
 option(PLLGPU_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
-
-
-if(PLLGPU_ENABLE_SANITIZER)
-    add_compile_options(-fsanitize=address)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        add_link_options(-fsanitize=address)
-    else ()
-        add_link_options(-fsanitize=address -static-libasan)
-    endif()
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-ENDIF()
 
 target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs

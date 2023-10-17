@@ -150,13 +150,6 @@ inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
     }
 }
 
-/*
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static constexpr auto ConstMultConj(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
-    return ConstMult(Conj(a), b);
-}
-*/
-
 /**
  * @brief Compile-time scalar complex summation.
  *

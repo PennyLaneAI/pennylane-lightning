@@ -644,8 +644,7 @@ class Measurements final
                                      // for tensor-observables
 
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
+        if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
             std::string message =
                 "Currently unsupported observable: " + obsName;
             throw LightningException(message.c_str());
