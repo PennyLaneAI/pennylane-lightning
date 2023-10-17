@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64 (Lightning-GPU)
+name: Testing::Linux::x86_64::LGPU
 on:
   pull_request:
   push:
@@ -144,7 +144,7 @@ jobs:
           if-no-files-found: error
 
   pythontestswithLGPU:
-    needs: [builddeps]
+    needs: [builddeps, cpptestswithLGPU_cu11]
     strategy:
       matrix:
         os: [ubuntu-22.04]
