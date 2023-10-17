@@ -1499,7 +1499,7 @@ class TestApplyLightningMethod:
         dev.operations.add("EmptyGate")
 
         with pytest.raises(ValueError, match="Unsupported operation"):
-            dev.apply([EmptyGate(0)])
+            dev.apply_lightning([EmptyGate(0)])
 
 
 @pytest.mark.skipif(
