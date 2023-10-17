@@ -343,6 +343,31 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
     return output;
 }
 
+inline static auto pauliStringToOpNames(const std::string &pauli_word)
+    -> std::vector<std::string> {
+    // Map string rep to Pauli
+    const std::unordered_map<std::string, std::string> pauli_map{
+        std::pair<const std::string, std::string>{std::string("X"),
+                                                  std::string("PauliX")},
+        std::pair<const std::string, std::string>{std::string("Y"),
+                                                  std::string("PauliY")},
+        std::pair<const std::string, std::string>{std::string("Z"),
+                                                  std::string("PauliZ")},
+        std::pair<const std::string, std::string>{std::string("I"),
+                                                  std::string("Identity")}};
+
+    static constexpr std::size_t num_char = 1;
+
+    std::vector<std::string> output;
+    output.reserve(pauli_word.size());
+
+    for (const auto ch : pauli_word) {
+        auto out = pauli_map.at(std::string(num_char, ch));
+        output.push_back(out);
+    }
+    return output;
+}
+
 /**
  * Utility hash function for complex vectors representing matrices.
  */

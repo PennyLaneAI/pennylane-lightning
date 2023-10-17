@@ -1,13 +1,13 @@
 #pragma once
-
 #include "DevTag.hpp"
 #include "JacobianData.hpp"
 #include "MPIManager.hpp"
 
-// using namespace Pennylane;
 /// @cond DEV
 namespace {
 using Pennylane::Observables::Observable;
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::MPI;
 } // namespace
 /// @endcond
 
@@ -30,7 +30,7 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
     virtual ~JacobianDataMPI() = default;
 
     /**
-     * @brief Construct a JacobianData object
+     * @brief Construct a JacobianDataMPI object
      *
      * @param num_params Number of parameters in the Tape.
      * @param sv Referemce to the statevector.

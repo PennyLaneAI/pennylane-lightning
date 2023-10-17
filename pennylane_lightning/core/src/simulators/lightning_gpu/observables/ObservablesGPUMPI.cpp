@@ -28,6 +28,3 @@ template class Observables::TensorProdObsMPI<StateVectorCudaMPI<double>>;
 
 template class Observables::HamiltonianMPI<StateVectorCudaMPI<float>>;
 template class Observables::HamiltonianMPI<StateVectorCudaMPI<double>>;
-
-template class Observables::SparseHamiltonianMPI<StateVectorCudaMPI<float>>;
-template class Observables::SparseHamiltonianMPI<StateVectorCudaMPI<double>>;
