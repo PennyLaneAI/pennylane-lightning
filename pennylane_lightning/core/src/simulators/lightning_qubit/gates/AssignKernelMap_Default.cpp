@@ -121,10 +121,10 @@ void assignKernelsForGateOp_Default() {
     /* Three-qubit gates */
     instance.assignKernelForOp(GateOperation::Toffoli, all_threading,
                                all_memory_model, all_qubit_numbers,
-                               KernelType::PI);
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::CSWAP, all_threading,
                                all_memory_model, all_qubit_numbers,
-                               KernelType::PI);
+                               KernelType::LM);
 
     /* QChem gates */
     instance.assignKernelForOp(GateOperation::SingleExcitation, all_threading,
@@ -138,13 +138,13 @@ void assignKernelsForGateOp_Default() {
                                all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GateOperation::DoubleExcitation, all_threading,
                                all_memory_model, all_qubit_numbers,
-                               KernelType::PI);
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::DoubleExcitationPlus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GateOperation::DoubleExcitationMinus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
 
     /* Multi-qubit gates */
     instance.assignKernelForOp(GateOperation::MultiRZ, all_threading,
@@ -203,13 +203,13 @@ void assignKernelsForGeneratorOp_Default() {
                                all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitation,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationPlus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationMinus,
                                all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::PI);
+                               all_qubit_numbers, KernelType::LM);
 
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
@@ -226,6 +226,6 @@ void assignKernelsForMatrixOp_Default() {
                                KernelType::LM);
     instance.assignKernelForOp(MatrixOperation::MultiQubitOp, all_threading,
                                all_memory_model, all_qubit_numbers,
-                               KernelType::PI);
+                               KernelType::LM);
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

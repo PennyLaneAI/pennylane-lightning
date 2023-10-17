@@ -54,8 +54,8 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
     auto m = Measurements(sv);
 
     SECTION("Using expval") {
-        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                          {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
+        sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                           {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
         auto ob = NamedObs<StateVectorT>("Identity", {0});
         auto res = m.expval(ob);
         CHECK(res == Approx(ONE));
@@ -75,9 +75,9 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                              {{0}, {0, 1}, {1, 2}},
-                              {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                               {{0}, {0, 1}, {1, 2}},
+                               {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -87,8 +87,8 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                               {{0}, {1}, {2}}, {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -98,7 +98,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation(
+            sv.applyOperations(
                 {{"PauliX"},
                  {"Hadamard"},
                  {"PauliX"},
@@ -128,9 +128,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                              {{0}, {0, 1}, {1, 2}},
-                              {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                               {{0}, {0, 1}, {1, 2}},
+                               {{false}, {false}, {false}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -140,9 +140,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                              {{false}, {false}, {false}},
-                              {{-PI / 2}, {-PI / 2}, {-PI / 2}});
+            sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                               {{false}, {false}, {false}},
+                               {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -152,9 +152,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
             StateVectorT sv{num_qubits};
             sv.initSV();
             auto m = Measurements(sv);
-            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                              {{false}, {false}, {false}},
-                              {{PI / 2}, {PI / 2}, {PI / 2}});
+            sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                               {{false}, {false}, {false}},
+                               {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObs<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -202,7 +202,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float,
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
-                   "[StateVectorCudaManaged_Expval]", double) {
+                   "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
     const size_t num_qubits = 3;
@@ -213,8 +213,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
         auto m = Measurements(sv);
         std::vector<size_t> wires{0, 1, 2};
 
-        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                          {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
+        sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                           {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
 
         size_t matrix_dim = static_cast<size_t>(1U) << num_qubits;
         std::vector<ComplexT> matrix(matrix_dim * matrix_dim);

@@ -41,8 +41,8 @@
 namespace Pennylane::LightningGPU::Util {
 
 // SFINAE check for existence of real() method in complex type
-template <typename CFP_t>
-constexpr auto is_cxx_complex(const CFP_t &t) -> decltype(t.real(), bool()) {
+template <typename ComplexT>
+constexpr auto is_cxx_complex(const ComplexT &t) -> decltype(t.real(), bool()) {
     return true;
 }
 
@@ -148,11 +148,6 @@ inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
     } else {
         return {a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x};
     }
-}
-
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static constexpr auto ConstMultConj(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
-    return ConstMult(Conj(a), b);
 }
 
 /**
@@ -348,31 +343,6 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
     return output;
 }
 
-inline static auto pauliStringToOpNames(const std::string &pauli_word)
-    -> std::vector<std::string> {
-    // Map string rep to Pauli
-    const std::unordered_map<std::string, std::string> pauli_map{
-        std::pair<const std::string, std::string>{std::string("X"),
-                                                  std::string("PauliX")},
-        std::pair<const std::string, std::string>{std::string("Y"),
-                                                  std::string("PauliY")},
-        std::pair<const std::string, std::string>{std::string("Z"),
-                                                  std::string("PauliZ")},
-        std::pair<const std::string, std::string>{std::string("I"),
-                                                  std::string("Identity")}};
-
-    static constexpr std::size_t num_char = 1;
-
-    std::vector<std::string> output;
-    output.reserve(pauli_word.size());
-
-    for (const auto ch : pauli_word) {
-        auto out = pauli_map.at(std::string(num_char, ch));
-        output.push_back(out);
-    }
-    return output;
-}
-
 /**
  * Utility hash function for complex vectors representing matrices.
  */
@@ -388,4 +358,5 @@ struct MatrixHasher {
         return hash_val;
     }
 };
+
 } // namespace Pennylane::LightningGPU::Util

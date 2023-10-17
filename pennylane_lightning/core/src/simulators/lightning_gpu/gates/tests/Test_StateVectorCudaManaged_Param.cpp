@@ -58,20 +58,17 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     sv.initSV();
 
     const std::vector<TestType> angles{{0.1}, {0.6}};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>{{0.9987502603949663, 0.0},
-                          {0.0, -0.04997916927067834}},
-        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, -0.2955202066613395}},
-        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, -0.867423225594017}}};
-
-    std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>{{0.9987502603949663, 0.0},
-                          {0.0, 0.04997916927067834}},
-        std::vector<cp_t>{{0.9553364891256061, 0.0}, {0, 0.2955202066613395}},
-        std::vector<cp_t>{{0.49757104789172696, 0.0}, {0, 0.867423225594017}}};
 
     const auto init_state = sv.getDataVector();
     SECTION("adj = false") {
+        std::vector<std::vector<cp_t>> expected_results{
+            std::vector<cp_t>{{0.9987502603949663, 0.0},
+                              {0.0, -0.04997916927067834}},
+            std::vector<cp_t>{{0.9553364891256061, 0.0},
+                              {0, -0.2955202066613395}},
+            std::vector<cp_t>{{0.49757104789172696, 0.0},
+                              {0, -0.867423225594017}}};
+
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -92,6 +89,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
         }
     }
     SECTION("adj = true") {
+        std::vector<std::vector<cp_t>> expected_results_adj{
+            std::vector<cp_t>{{0.9987502603949663, 0.0},
+                              {0.0, 0.04997916927067834}},
+            std::vector<cp_t>{{0.9553364891256061, 0.0},
+                              {0, 0.2955202066613395}},
+            std::vector<cp_t>{{0.49757104789172696, 0.0},
+                              {0, 0.867423225594017}}};
+
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -118,24 +123,17 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
 
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
-    std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>{{0.8731983044562817, 0.04786268954660339},
-                          {0.0876120655431924, -0.47703040785184303}},
-        std::vector<cp_t>{{0.8243771119105122, 0.16439396602553008},
-                          {0.3009211363333468, -0.45035926880694604}},
-        std::vector<cp_t>{{0.10575112905629831, 0.47593196040758534},
-                          {0.8711876098966215, -0.0577721051072477}}};
-    std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>{{0.8731983044562817, -0.04786268954660339},
-                          {-0.0876120655431924, -0.47703040785184303}},
-        std::vector<cp_t>{{0.8243771119105122, -0.16439396602553008},
-                          {-0.3009211363333468, -0.45035926880694604}},
-        std::vector<cp_t>{{0.10575112905629831, -0.47593196040758534},
-                          {-0.8711876098966215, -0.0577721051072477}}};
 
     const std::vector<cp_t> init_state{{0.8775825618903728, 0.0},
                                        {0.0, -0.47942553860420306}};
     SECTION("adj = false") {
+        std::vector<std::vector<cp_t>> expected_results{
+            std::vector<cp_t>{{0.8731983044562817, 0.04786268954660339},
+                              {0.0876120655431924, -0.47703040785184303}},
+            std::vector<cp_t>{{0.8243771119105122, 0.16439396602553008},
+                              {0.3009211363333468, -0.45035926880694604}},
+            std::vector<cp_t>{{0.10575112905629831, 0.47593196040758534},
+                              {0.8711876098966215, -0.0577721051072477}}};
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -156,6 +154,13 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
         }
     }
     SECTION("adj = true") {
+        std::vector<std::vector<cp_t>> expected_results_adj{
+            std::vector<cp_t>{{0.8731983044562817, -0.04786268954660339},
+                              {-0.0876120655431924, -0.47703040785184303}},
+            std::vector<cp_t>{{0.8243771119105122, -0.16439396602553008},
+                              {-0.3009211363333468, -0.45035926880694604}},
+            std::vector<cp_t>{{0.10575112905629831, -0.47593196040758534},
+                              {-0.8711876098966215, -0.0577721051072477}}};
         SECTION("Apply directly") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
@@ -185,8 +190,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
     const std::vector<TestType> angles{0.2, 0.7, 2.9};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
@@ -247,8 +252,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -310,8 +315,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
     sv.initSV();
 
     // Test using |+++> state
-    sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                      {{0}, {1}, {2}}, {{false}, {false}, {false}});
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
     const std::vector<TestType> angles{0.3, 2.4};
     const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
@@ -1419,7 +1424,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = std::complex<TestType>;
+    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
     const size_t num_qubits = 5;
 
     // Note: gates are defined as right-to-left order
@@ -1437,10 +1442,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliX"}, {"PauliZ"}},
-                                           {{index}, {index}}, {false, false});
+                sv_expected.applyOperations({{"PauliX"}, {"PauliZ"}},
+                                            {{index}, {index}}, {false, false});
 
-                sv.applyOperation_std("XZ", {index}, false, {0.0}, xz_gate);
+                sv.applyOperation("XZ", {index}, false, {0.0}, xz_gate);
             }
 
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
@@ -1458,9 +1463,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliZ"}, {"PauliX"}},
-                                           {{index}, {index}}, {false, false});
-                sv.applyOperation_std("ZX", {index}, false, {0.0}, zx_gate);
+                sv_expected.applyOperations({{"PauliZ"}, {"PauliX"}},
+                                            {{index}, {index}}, {false, false});
+                sv.applyOperation("ZX", {index}, false, {0.0}, zx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1477,9 +1482,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliX"}, {"PauliY"}},
-                                           {{index}, {index}}, {false, false});
-                sv.applyOperation_std("XY", {index}, false, {0.0}, xy_gate);
+                sv_expected.applyOperations({{"PauliX"}, {"PauliY"}},
+                                            {{index}, {index}}, {false, false});
+                sv.applyOperation("XY", {index}, false, {0.0}, xy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1496,9 +1501,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliY"}, {"PauliX"}},
-                                           {{index}, {index}}, {false, false});
-                sv.applyOperation_std("YX", {index}, false, {0.0}, yx_gate);
+                sv_expected.applyOperations({{"PauliY"}, {"PauliX"}},
+                                            {{index}, {index}}, {false, false});
+                sv.applyOperation("YX", {index}, false, {0.0}, yx_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1515,9 +1520,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliY"}, {"PauliZ"}},
-                                           {{index}, {index}}, {false, false});
-                sv.applyOperation_std("YZ", {index}, false, {0.0}, yz_gate);
+                sv_expected.applyOperations({{"PauliY"}, {"PauliZ"}},
+                                            {{index}, {index}}, {false, false});
+                sv.applyOperation("YZ", {index}, false, {0.0}, yz_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1534,9 +1539,9 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             sv_expected.initSV();
 
             for (size_t index = 0; index < num_qubits; index++) {
-                sv_expected.applyOperation({{"PauliZ"}, {"PauliY"}},
-                                           {{index}, {index}}, {false, false});
-                sv.applyOperation_std("ZY", {index}, false, {0.0}, zy_gate);
+                sv_expected.applyOperations({{"PauliZ"}, {"PauliY"}},
+                                            {{index}, {index}}, {false, false});
+                sv.applyOperation("ZY", {index}, false, {0.0}, zy_gate);
             }
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
@@ -1545,14 +1550,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = std::complex<TestType>;
+    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
     const size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
     sv_init.initSV();
 
-    sv_init.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                           {{0}, {1}, {2}}, {false, false, false});
+    sv_init.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                            {{0}, {1}, {2}}, {false, false, false});
 
     const auto cz_gate = cuGates::getCZ<cp_t>();
     const auto tof_gate = cuGates::getToffoli<cp_t>();
@@ -1564,10 +1569,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
         StateVectorCudaManaged<TestType> sv_expected{
             sv_init.getDataVector().data(), sv_init.getDataVector().size()};
 
-        sv_expected.applyOperation({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
-                                   {{1}, {0, 1}, {1}}, {false, false, false});
+        sv_expected.applyOperations({{"Hadamard"}, {"CNOT"}, {"Hadamard"}},
+                                    {{1}, {0, 1}, {1}}, {false, false, false});
 
-        sv.applyOperation_std("CZmat", {0, 1}, false, {0.0}, cz_gate);
+        sv.applyOperation("CZmat", {0, 1}, false, {0.0}, cz_gate);
         CHECK(sv.getDataVector() ==
               Pennylane::Util::approx(sv_expected.getDataVector()));
     }

@@ -17,10 +17,6 @@
 #include "TestHelpersStateVectors.hpp"
 #include "Util.hpp"
 
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
