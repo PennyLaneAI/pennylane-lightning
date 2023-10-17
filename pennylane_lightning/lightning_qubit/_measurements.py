@@ -47,7 +47,7 @@ def state_diagonalizing_gates(measurementprocess: StateMeasurement, state: np.ar
     Returns:
         TensorLike: the result of the measurement
     """
-    state = apply_operations(measurementprocess.diagonalizing_gates(), np.copy(state))
+    state = apply_operations(measurementprocess.diagonalizing_gates(), state)
 
     total_wires = int(np.log2(state.size))
     wires = Wires(range(total_wires))
