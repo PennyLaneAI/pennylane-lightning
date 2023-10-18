@@ -451,6 +451,7 @@ class TestApply:
             )
             self.process_and_execute(dev, tape)
 
+
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
@@ -822,14 +823,14 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is ran with two Z expvals
-    #Something fishy here.
+    # Something fishy here.
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
             ("BasisState", [1, 1], [0, 1], [-1, -1]),
             ("BasisState", [1], [0], [-1, 1]),
             ("BasisState", [1], [1], [1, -1]),
-            ("BasisState", [1,0], [1,0], [1, -1]),
+            ("BasisState", [1, 0], [1, 0], [1, -1]),
         ],
     )
     def test_basis_state_2_qubit_subset(self, qubit_device, tol, name, par, wires, expected_output):
@@ -843,6 +844,7 @@ class TestLightningDeviceIntegration:
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
 
         dev2 = qml.devices.DefaultQubit(wires=2)
+
         @qml.qnode(dev2)
         def circuit2():
             op(np.array(par), wires=wires)

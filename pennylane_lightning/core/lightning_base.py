@@ -16,21 +16,36 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
+from dataclasses import replace
 import abc
 import numpy as np
 from typing import Union, Callable, Tuple, Optional, Sequence
 from warnings import warn
 
+import pennylane as qml
 from pennylane.devices import Device, DefaultQubit
 from pennylane.devices.qubit.sampling import get_num_shots_and_executions
 from pennylane.devices.execution_config import ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.qubit.preprocess import validate_device_wires
+from pennylane.devices.preprocess import (
+    decompose,
+    validate_observables,
+    validate_measurements,
+    validate_device_wires,
+    # warn_about_trainable_observables,
+    # no_sampling,
+)
 
 from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.typing import Result, ResultBatch
 from pennylane.transforms.core import TransformProgram
 
-from ._preprocess import preprocess, validate_and_expand_adjoint
+# from ._preprocess import preprocess, validate_and_expand_adjoint
+from ._preprocess import (
+    _add_adjoint_transforms,
+    stopping_condition,
+    accepted_sample_measurement,
+    observable_stopping_condition,
+)
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -98,10 +113,36 @@ class LightningBase(Device):
         """
         AdjointJacobian(self.name)._check_adjoint_method_supported(tape)
 
+    def _setup_execution_config(self, config: ExecutionConfig) -> ExecutionConfig:
+        """Choose the "best" options for the configuration if they are left unspecified.
+
+        Args:
+            config (ExecutionConfig): the initial execution config
+
+        Returns:
+            ExecutionConfig: a new config with the best choices selected.
+        """
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in {
+                "best",
+                "adjoint",
+            }
+        if config.grad_on_execution is None:
+            updated_values["grad_on_execution"] = config.gradient_method == "adjoint"
+
+        updated_values["device_options"] = dict(config.device_options)
+        if "rng" not in updated_values["device_options"]:
+            updated_values["device_options"]["rng"] = self._rng
+
+        return replace(config, **updated_values)
+
     def preprocess(
         self,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ) -> Tuple[QuantumTapeBatch, PostprocessingFn, ExecutionConfig]:
+    ) -> Tuple[TransformProgram, ExecutionConfig]:
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -120,13 +161,24 @@ class LightningBase(Device):
         * Currently does not intrinsically support parameter broadcasting
 
         """
+        config = self._setup_execution_config(execution_config)
         transform_program = TransformProgram()
-        # Validate device wires
-        transform_program.add_transform(validate_device_wires, self)
 
-        # General preprocessing (Validate measurement, expand, adjoint expand, broadcast expand)
-        transform_program_preprocess, config = preprocess(execution_config=execution_config)
-        transform_program = transform_program + transform_program_preprocess
+        transform_program.add_transform(qml.defer_measurements)
+        transform_program.add_transform(validate_device_wires, self.wires, name=self.name)
+        transform_program.add_transform(
+            decompose, stopping_condition=stopping_condition, name=self.name
+        )
+        transform_program.add_transform(
+            validate_measurements, sample_measurements=accepted_sample_measurement, name=self.name
+        )
+        transform_program.add_transform(
+            validate_observables, stopping_condition=observable_stopping_condition, name=self.name
+        )
+
+        if config.gradient_method == "adjoint":
+            _add_adjoint_transforms(transform_program)
+
         return transform_program, config
 
     @abc.abstractmethod
@@ -213,18 +265,28 @@ class LightningBase(Device):
             execution_config.gradient_method == "adjoint"
             and execution_config.use_device_gradient is not False
         ):
-            if self.shots.total_shots is not None:
-                warn(
-                    "Requested adjoint differentiation to be computed with finite shots. "
-                    "The derivative is always exact when using the adjoint "
-                    "differentiation method.",
-                    UserWarning,
-                )
             if circuit is None:
                 return True
-            return self._check_adjoint_method_supported(circuit) and isinstance(
-                validate_and_expand_adjoint(circuit)[0][0], QuantumScript
-            )
+            # if self.shots.total_shots is not None:
+            #     warn(
+            #         "Requested adjoint differentiation to be computed with finite shots. "
+            #         "The derivative is always exact when using the adjoint "
+            #         "differentiation method.",
+            #         UserWarning,
+            #     )
+            # if circuit is None:
+            #     return True
+            # return self._check_adjoint_method_supported(circuit) and isinstance(
+            #     validate_and_expand_adjoint(circuit)[0][0], QuantumScript
+            # )
+            prog = TransformProgram()
+            _add_adjoint_transforms(prog)
+
+            try:
+                prog((circuit,))
+            except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+                return False
+            return self._check_adjoint_method_supported(circuit)
 
         return False
 
