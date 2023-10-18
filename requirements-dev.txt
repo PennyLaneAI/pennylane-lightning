@@ -8,3 +8,4 @@ pytest-cov
 pytest-mock
 black==23.7.0
 clang-format==14
+custatevec-cu11

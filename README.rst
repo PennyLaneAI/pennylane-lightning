@@ -283,21 +283,49 @@ For a system with access to the ROCm stack outside of a manylinux container, an 
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
 
+.. installation_LGPU-start-inclusion-marker-do-not-remove
+Lightning GPU installation
+=============================
+
+Note that Lightning Qubit should be installed before Lightning-GPU.
+
+Lightning-GPU can be installed using ``pip``:
+
+.. code-block:: console
+    pip install pennylane-lightning[gpu]
+Use of Lightning-GPU also requires explicit installation of the NVIDIA cuQuantum SDK. The SDK library directory may be provided on the ``LD_LIBRARY_PATH`` environment variable, or the SDK Python package may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda``. Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
+
+Building from source
+--------------------
+
+To build a wheel from the package sources using the direct SDK path:
+
+.. code-block:: console
+    PL_BACKEND="lightning_gpu" python -m pip install -e .
+To build using the PyPI/Conda installed cuQuantum package:
+
+.. code-block:: console
+    cmake -BBuild -DPL_BACKEND=lightning_gpu -DCUQUANTUM_SDK=<path to sdk>
+    cmake --build ./Build --verbose
+    python -m pip install wheel
+    PL_BACKEND="lightning_gpu" python setup.py build_ext
+    PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
+The built wheel can now be installed as:
+
+.. code-block:: console
+    python -m pip install ./dist/PennyLane_Lightning_GPU-*.whl
+To simplify the build, we recommend using the following containerized build process, which creates `manylinux2014 <https://github.com/pypa/manylinux>`_ compatible wheels.
+
+To build the plugin directly with CMake:
+
+.. code-block:: console
+   cmake -B build -DCUQUANTUM_SDK=<path to sdk> -DBUILD_TESTS=ON -DPL_BACKEND=lightning_gpu -G Ninja
+   cmake --build build
+.. installation_LGPU-end-inclusion-marker-do-not-remove
+
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
-
-GPU support
------------
-
-For GPU support, `PennyLane-Lightning-GPU <https://github.com/PennyLaneAI/pennylane-lightning-gpu>`_
-can be installed by providing the optional ``[gpu]`` tag:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[gpu]
-
-For more information, please refer to the PennyLane Lightning GPU `documentation <https://docs.pennylane.ai/projects/lightning-gpu>`_.
 
 Docker Support
 --------------
