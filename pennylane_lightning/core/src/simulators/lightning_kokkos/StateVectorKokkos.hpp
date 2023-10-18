@@ -513,6 +513,9 @@ class StateVectorKokkos final
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
+        if (!generators_indices_.contains(opName)) {
+            PL_ABORT(std::string("Generator does not exist for ") + opName);
+        }
         switch (generators_indices_[opName]) {
         case GeneratorOperation::RX:
             applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
@@ -582,8 +585,10 @@ class StateVectorKokkos final
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::MultiRZ:
             return applyGeneratorMultiRZ(wires, inverse, params);
+        /// LCOV_EXCL_START
         default:
             PL_ABORT(std::string("Generator does not exist for ") + opName);
+            /// LCOV_EXCL_STOP
         }
     }
 

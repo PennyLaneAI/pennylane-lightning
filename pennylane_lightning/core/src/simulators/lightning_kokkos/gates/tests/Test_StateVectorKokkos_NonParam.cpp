@@ -76,9 +76,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyNamedOperation",
     {
         const size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyNamedOperation("XXX", {0}), LightningException,
-            "Operation does not exist for"); // invalid wires
+        PL_REQUIRE_THROWS_MATCHES(state_vector.applyNamedOperation("XXX", {0}),
+                                  LightningException,
+                                  "Operation does not exist for");
     }
 }
 
