@@ -1,6 +1,6 @@
 name: Testing::Linux::x86_64::LGPU
 on:
-  #pull_request:
+  pull_request.
   push:
     branches:
       - master
