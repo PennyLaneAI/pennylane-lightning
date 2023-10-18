@@ -19,16 +19,16 @@ from conftest import THETA, PHI, VARPHI, device_name
 
 import numpy as np
 import pennylane as qml
-import mpi4py
+from mpi4py import MPI
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
     """Test expectation values"""
 
-    def test_identity_expectation(self, theta, phi, qubit_device, tol):
+    def test_identity_expectation(self, theta, phi, tol):
         """Test that identity expectation value (i.e. the trace) is 1"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
@@ -43,9 +43,9 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
-    def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
+    def test_pauliz_expectation(self, theta, phi, tol):
         """Test that PauliZ expectation value is correct"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
 
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
@@ -61,9 +61,9 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
-    def test_paulix_expectation(self, theta, phi, qubit_device, tol):
+    def test_paulix_expectation(self, theta, phi, tol):
         """Test that PauliX expectation value is correct"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
 
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
@@ -81,9 +81,9 @@ class TestExpval:
             res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
         )
 
-    def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
+    def test_pauliy_expectation(self, theta, phi, tol):
         """Test that PauliY expectation value is correct"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
 
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
@@ -99,9 +99,9 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
-    def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
+    def test_hadamard_expectation(self, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
 
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
@@ -121,11 +121,11 @@ class TestExpval:
         assert np.allclose(res, expected, tol)
 
     @pytest.mark.parametrize("n_wires", range(1, 8))
-    def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):
+    def test_hermitian_expectation(self, n_wires, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7
         dev_def = qml.device("default.qubit", wires=n_qubits)
-        dev = qubit_device(mpi=True, wires=n_qubits)
+        dev = qml.device(device_name, mpi=True, wires=n_qubits)
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
@@ -148,7 +148,7 @@ class TestExpval:
         mpisize = comm.Get_size()
         if n_wires > n_qubits - np.log2(mpisize):
             with pytest.raises(
-                TypeError,
+                RuntimeError,
                 match="MPI backend does not support Hermitian with number of target wires larger than local wire number",
             ):
                 circ()
@@ -161,10 +161,10 @@ class TestExpval:
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
 
-    def test_sprod(self, diff_method, qubit_device):
+    def test_sprod(self, diff_method):
         """Test the `SProd` class with lightning qubit."""
 
-        dev = qubit_device(mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=2)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -179,10 +179,10 @@ class TestExpOperatorArithmetic:
         expected_grad = -0.5 * np.sin(x)
         assert qml.math.allclose(g, expected_grad)
 
-    def test_prod(self, diff_method, qubit_device):
+    def test_prod(self, diff_method):
         """Test the `Prod` class with lightning qubit."""
 
-        dev = qubit_device(mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=2)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -199,10 +199,10 @@ class TestExpOperatorArithmetic:
         expected_grad = np.sin(x)
         assert qml.math.allclose(g, expected_grad)
 
-    def test_sum(self, diff_method, qubit_device):
+    def test_sum(self, diff_method):
         """Test the `Sum` class with lightning qubit."""
 
-        dev = qubit_device(mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=2)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -219,12 +219,12 @@ class TestExpOperatorArithmetic:
         expected = (-np.sin(x), np.cos(y))
         assert qml.math.allclose(g, expected)
 
-    def test_integration(self, diff_method, qubit_device):
+    def test_integration(self, diff_method):
         """Test a Combination of `Sum`, `SProd`, and `Prod`."""
 
         obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
-        dev = qubit_device(mpi=True, wires=2)
+        dev = qml.device(device_name, mpi=True, wires=2)
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -248,10 +248,10 @@ class TestExpOperatorArithmetic:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, qubit_device, tol):
+    def test_paulix_pauliy(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliX and PauliY works
         correctly"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
         obs = qml.PauliX(0) @ qml.PauliY(2)
 
         dev.apply(
@@ -270,10 +270,10 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, atol=tol)
 
-    def test_pauliz_identity(self, theta, phi, varphi, qubit_device, tol):
+    def test_pauliz_identity(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliZ and Identity works
         correctly"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
         obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
 
         dev.apply(
@@ -293,10 +293,10 @@ class TestTensorExpval:
 
         assert np.allclose(res, expected, tol)
 
-    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, qubit_device, tol):
+    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliZ and PauliY and Hadamard
         works correctly"""
-        dev = qubit_device(mpi=True, wires=3)
+        dev = qml.device(device_name, mpi=True, wires=3)
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
 
         dev.apply(

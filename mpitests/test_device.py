@@ -19,16 +19,16 @@ from conftest import device_name, LightningDevice as ld
 
 import numpy as np
 import pennylane as qml
-
+from mpi4py import MPI
+    
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name != "lightning.gpu":
     pytest.skip("Only lightning.gpu supports MPI. Skipping.", allow_module_level=True)
 
-
 def test_create_device():
-    dev = qml.device(device_name, wires=1, mpi=True)
+    dev = qml.device(device_name, wires=4, mpi=True)
 
 
 @pytest.mark.skipif(
@@ -37,7 +37,7 @@ def test_create_device():
 )
 def test_create_device_with_unsupported_mpi_buf_size():
     with pytest.raises(
-        TypeError,
+        ValueError,
         match="Number of processes should be smaller than the number of statevector elements",
     ):
         dev = qml.device(device_name, wires=1, mpi=True)
