@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -66,7 +66,7 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning package
-        if: ${{ matrix.pl_backend == 'lightning_kokkos'}}
+        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv

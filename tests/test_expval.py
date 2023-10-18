@@ -16,7 +16,7 @@ Unit tests for the expval method of Lightning devices.
 """
 import itertools
 import pytest
-from conftest import THETA, PHI, VARPHI
+from conftest import THETA, PHI, VARPHI, device_name
 
 import numpy as np
 import pennylane as qml
@@ -44,6 +44,7 @@ class TestExpval:
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliZ expectation value is correct"""
         dev = qubit_device(wires=3)
+
         O1 = qml.PauliZ(wires=[0])
         O2 = qml.PauliZ(wires=[1])
 
@@ -58,6 +59,7 @@ class TestExpval:
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliX expectation value is correct"""
         dev = qubit_device(wires=3)
+
         O1 = qml.PauliX(wires=[0])
         O2 = qml.PauliX(wires=[1])
 
@@ -74,6 +76,7 @@ class TestExpval:
     def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliY expectation value is correct"""
         dev = qubit_device(wires=3)
+
         O1 = qml.PauliY(wires=[0])
         O2 = qml.PauliY(wires=[1])
 
@@ -88,6 +91,7 @@ class TestExpval:
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
         dev = qubit_device(wires=3)
+
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])
 
@@ -108,6 +112,7 @@ class TestExpval:
         n_qubits = 7
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
+
         m = 2**n_wires
         U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
