@@ -13,6 +13,24 @@
 using namespace Pennylane;
 using namespace Pennylane::LightningGPU::MPI;
 
+TEST_CASE("MPIManager ctor", "[MPIManager]") {
+    SECTION("Default constructibility") {
+        REQUIRE(std::is_constructible_v<MPIManager>);
+    }
+
+    SECTION("Construct with MPI_Comm") {
+        REQUIRE(std::is_constructible_v<MPIManager, MPI_Comm>);
+    }
+
+    SECTION("Construct with args") {
+        REQUIRE(std::is_constructible_v<MPIManager, int, char **>);
+    }
+
+    SECTION("MPIManager {MPIManager&}") {
+        REQUIRE(std::is_copy_constructible_v<MPIManager>);
+    }
+}
+
 TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;

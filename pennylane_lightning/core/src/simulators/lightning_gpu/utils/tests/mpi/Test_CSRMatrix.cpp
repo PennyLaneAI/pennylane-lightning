@@ -26,11 +26,11 @@ TEMPLATE_TEST_CASE("CSRMatrix", "[Sparse Matrix]", float, double) {
 
     SECTION("Constructibility - optional parameters") {
         REQUIRE(std::is_constructible_v<CSRMatrix<TestType, size_t>, size_t,
-                                        size_t, size_t *,
-                                        size_t * std::complex<PrecisionT> *>);
+                                        size_t, size_t *, size_t *,
+                                        std::complex<TestType> *>);
         REQUIRE(std::is_constructible_v<CSRMatrix<TestType, int32_t>, size_t,
-                                        size_t, int32_t *,
-                                        int32_t * std::complex<PrecisionT> *>);
+                                        size_t, int32_t *, int32_t *,
+                                        std::complex<TestType> *>);
     }
 }
 
