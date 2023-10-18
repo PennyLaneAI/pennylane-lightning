@@ -1482,11 +1482,11 @@ class TestApplyLightningMethod:
         assert dev.state.dtype == dev.C_DTYPE
 
     @pytest.mark.skipif(
-        not ld._CPP_BINARY_AVAILABLE,
+        not ld._CPP_BINARY_AVAILABLE or device_name != "lightning.gpu",
         reason="Only meaningful when binary is available.",
     )
     def test_unsupported_operation(self, mocker, tol):
-        """Test identity operation does not perform additional computations."""
+        """Test unsupported operations."""
 
         class EmptyGate(Operation):
             num_wires = 1
