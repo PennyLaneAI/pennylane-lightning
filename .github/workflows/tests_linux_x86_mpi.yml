@@ -117,10 +117,10 @@ jobs:
       - name: Build and run unit tests
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          unset CFLAGS
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
-            -DCMAKE_PREFIX_PATH=/opt/mpi/${{ matrix.mpilib }}/ \
             -DENABLE_MPI=ON \
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
@@ -177,7 +177,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["openmpi"]
+        mpilib: ["mpich", "openmpi"]
     timeout-minutes: 30
 
     steps:
@@ -238,6 +238,7 @@ jobs:
       - name: Install required packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          unset CFLAGS
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
@@ -247,7 +248,7 @@ jobs:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=mpicxx;CMAKE_PREFIX_PATH=/opt/mpi/${{ matrix.mpilib }};ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=mpicxx;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
       - name: Run PennyLane-Lightning-GPU unit tests
