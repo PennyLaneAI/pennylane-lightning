@@ -217,7 +217,6 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
 
     SECTION("ApplyInPlace", "[Apply Method]") {
         SECTION("Hamiltonian applies correctly to |+->") {
-
             StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
                                 nGlobalIndexBits, nLocalIndexBits);
 

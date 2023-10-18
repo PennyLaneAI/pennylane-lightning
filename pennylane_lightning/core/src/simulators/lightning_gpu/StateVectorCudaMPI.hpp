@@ -293,7 +293,6 @@ class StateVectorCudaMPI
     void setStateVector(const index_type num_indices,
                         const std::complex<Precision> *values,
                         const index_type *indices, const bool async = false) {
-
         BaseType::getDataBuffer().zeroInit();
 
         std::vector<index_type> indices_local;
@@ -1200,7 +1199,6 @@ class StateVectorCudaMPI
         const std::vector<std::string> &pauli_words,
         const std::vector<std::vector<std::size_t>> &tgts,
         const std::complex<Precision> *coeffs) {
-
         enum WiresSwapStatus : std::size_t { Local, Swappable, UnSwappable };
 
         std::vector<double> expect_local(pauli_words.size());
@@ -1649,7 +1647,6 @@ class StateVectorCudaMPI
     auto expvalOnPauliBasis(const std::vector<std::string> &pauli_words,
                             const std::vector<std::vector<std::size_t>> &tgts,
                             std::vector<double> &local_expect) {
-
         uint32_t nIndexBits = static_cast<uint32_t>(this->getNumLocalQubits());
         cudaDataType_t data_type;
 
@@ -1913,7 +1910,6 @@ class StateVectorCudaMPI
                                const std::vector<std::size_t> &ctrls,
                                const std::vector<std::size_t> &tgts,
                                bool use_adjoint = false) {
-
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 

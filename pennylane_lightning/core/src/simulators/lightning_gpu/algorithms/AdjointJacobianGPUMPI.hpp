@@ -82,7 +82,6 @@ class AdjointJacobianMPI final
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, size_t obs_idx,
                                size_t param_index, size_t tp_size) {
-
         PL_ABORT_IF_NOT(sv1.getDataBuffer().getDevTag().getDeviceID() ==
                             sv2.getDataBuffer().getDevTag().getDeviceID(),
                         "Data exists on different GPUs. Aborting.");

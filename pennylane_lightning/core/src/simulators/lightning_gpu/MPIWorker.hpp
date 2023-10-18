@@ -167,7 +167,6 @@ inline SharedMPIWorker
 make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
                        const size_t mpi_buf_size, CFP_t *sv,
                        const size_t numLocalQubits, cudaStream_t localStream) {
-
     custatevecSVSwapWorkerDescriptor_t svSegSwapWorker = nullptr;
 
     int nDevices_int = 0;
