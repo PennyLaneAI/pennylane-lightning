@@ -1508,6 +1508,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
+    // LCOV_EXCL_START
     SECTION("Apply YZ gate") {
         const std::vector<cp_t> yz_gate{
             cuUtil::ZERO<cp_t>(), -cuUtil::IMAG<cp_t>(), -cuUtil::IMAG<cp_t>(),
@@ -1527,6 +1528,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
             CHECK(sv.getDataVector() == sv_expected.getDataVector());
         }
     }
+    // LCOV_EXCL_STOP
     SECTION("Apply ZY gate") {
         const std::vector<cp_t> zy_gate{
             cuUtil::ZERO<cp_t>(), cuUtil::IMAG<cp_t>(), cuUtil::IMAG<cp_t>(),

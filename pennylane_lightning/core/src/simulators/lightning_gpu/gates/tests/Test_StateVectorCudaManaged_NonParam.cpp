@@ -1104,7 +1104,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
-
+// LCOV_EXCL_START
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     using PrecisionT = TestType;
@@ -1142,6 +1142,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
+// LCOV_EXCL_STOP
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
