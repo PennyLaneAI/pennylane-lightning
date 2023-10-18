@@ -32,3 +32,4 @@ cpptests
 /pennylane_lightning/*.pyd
 /pennylane_lightning/src/Kokkos/
 /pennylane_lightning/src/GBenchmarks/
+/PennyLane_Lightning*

@@ -21,7 +21,7 @@ from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 
@@ -29,7 +29,7 @@ def get_backend():
     """Return backend.
 
     The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit".
+    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
     A dot can also be used instead of an underscore.
     If the environment variable ``PL_BACKEND`` is defined, its value is used.
     Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
@@ -180,6 +180,8 @@ else:
     requirements += ["pennylane_lightning==" + version]
 
 suffix = backend.replace("lightning_", "")
+if suffix == "gpu":
+    suffix = suffix[0:].upper()
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
@@ -205,6 +207,10 @@ info = {
     else [CMakeExtension(f"{backend}_ops")],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
+    "extras_require": {
+        "gpu": ["pennylane-lightning-gpu"],
+        "kokkos": ["pennylane-lightning-kokkos"],
+    },
 }
 
 if backend == "lightning_qubit":

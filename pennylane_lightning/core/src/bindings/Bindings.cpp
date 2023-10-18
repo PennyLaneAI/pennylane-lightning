@@ -24,6 +24,8 @@
 #define LIGHTNING_MODULE_NAME lightning_qubit_ops
 #elif _ENABLE_PLKOKKOS == 1
 #define LIGHTNING_MODULE_NAME lightning_kokkos_ops
+#elif _ENABLE_PLGPU == 1
+#define LIGHTNING_MODULE_NAME lightning_gpu_ops
 #endif
 
 #if defined(LIGHTNING_MODULE_NAME)
