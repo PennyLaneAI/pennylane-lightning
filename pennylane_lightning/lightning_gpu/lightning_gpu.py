@@ -793,7 +793,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     # CSR_SparseHamiltonian for rank == 0
                     if self._mpi_manager.getRank() == 0:
                         CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-                    return self._gpu_state.expval(
+                    return self.measurements.expval(
                         CSR_SparseHamiltonian.indptr,
                         CSR_SparseHamiltonian.indices,
                         CSR_SparseHamiltonian.data,
