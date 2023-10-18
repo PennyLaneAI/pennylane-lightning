@@ -23,6 +23,7 @@ from scipy.stats import unitary_group
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
+from pennylane import qchem
 
 I, X, Y, Z = (
     np.eye(2),
@@ -909,6 +910,35 @@ def test_tape_qchem(tol):
     dev_dq = qml.device("default.qubit", wires=qubits)
 
     circuit_ld = qml.QNode(circuit, dev_ld, diff_method="adjoint")
+    circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
+
+    assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+def test_tape_qchem_sparse(tol):
+    """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
+
+    H, qubits = qml.qchem.molecular_hamiltonian(
+        ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
+    )
+
+    H_sparse = H.sparse_matrix(range(4))
+
+    def circuit_sparse(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(qml.SparseHamiltonian(H_sparse, wires=range(4)))
+
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(H)
+
+    params = np.linspace(0, 29, 30) * 0.111
+
+    dev_ld = qml.device(device_name, wires=qubits)
+    dev_dq = qml.device("default.qubit", wires=qubits)
+
+    circuit_ld = qml.QNode(circuit_sparse, dev_ld, diff_method="adjoint")
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)

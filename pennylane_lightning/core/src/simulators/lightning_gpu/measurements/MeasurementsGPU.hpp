@@ -635,13 +635,7 @@ class Measurements final
         -> PrecisionT {
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{
-                      wires.rbegin(),
-                      wires.rend()}; // ensure wire indexing correctly preserved
-                                     // for tensor-observables
+        auto &&local_wires = wires;
 
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
         if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
@@ -672,10 +666,7 @@ class Measurements final
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
 
         auto expect_val = this->getExpectationValueDeviceMatrix_(
             matrix_cu.data(), local_wires);
@@ -729,10 +720,12 @@ class Measurements final
             /* custatevecComputeType_t */ compute_type,
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         cuDoubleComplex expect;
 
@@ -754,8 +747,11 @@ class Measurements final
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
+
         return static_cast<PrecisionT>(expect.x);
     }
 }; // class Measurements

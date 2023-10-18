@@ -266,9 +266,9 @@ class StateVectorCudaManaged
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false)
         -> PrecisionT {
-        PL_ABORT_IF(generator_map_.find(opName) == generator_map_.end(),
-                    "Unsupported generator!");
-        return generator_map_.at(opName)(wires, adjoint);
+        auto it = generator_map_.find(opName);
+        PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
+        return (it->second)(wires, adjoint);
     }
 
     /**
@@ -1273,10 +1273,12 @@ class StateVectorCudaManaged
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
         // allocate external workspace if necessary
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         // apply gate
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
@@ -1296,8 +1298,10 @@ class StateVectorCudaManaged
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
     }
 };
 }; // namespace Pennylane::LightningGPU

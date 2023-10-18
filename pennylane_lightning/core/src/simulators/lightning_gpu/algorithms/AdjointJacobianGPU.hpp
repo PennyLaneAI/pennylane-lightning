@@ -157,6 +157,7 @@ class AdjointJacobian final
                     std::size_t offset_first, std::size_t offset_last) {
                     // Ensure No OpenMP threads spawned;
                     // to be resolved with streams in future releases
+                    omp_set_num_threads(1);
 
                     // Grab a GPU index, and set a device tag
                     const auto id = dp.acquireDevice();

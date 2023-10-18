@@ -655,11 +655,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
-            if observable.name in [
-                "Projector",
-            ]:
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
