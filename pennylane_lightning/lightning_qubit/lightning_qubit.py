@@ -363,7 +363,10 @@ if LQ_CPP_BINARY_AVAILABLE:
                 method = getattr(sim, operation.name, None)
                 wires = self.wires.indices(operation.wires)
 
-                if operation.name[0:2] == "C(" or operation.name == "MultiControlledX":
+                if operation.name[0:2] == "C(" or (
+                    operation.name == "MultiControlledX"
+                    and all(char == "1" for char in operation.hyperparameters["control_values"])
+                ):
                     basename = (
                         "PauliX" if operation.name == "MultiControlledX" else operation.base.name
                     )

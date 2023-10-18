@@ -321,6 +321,10 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="N-controlled operations only implemented in lightning.qubit.",
+)
 @pytest.mark.parametrize(
     "operation",
     [
