@@ -48,3 +48,21 @@ def test_create_device_with_unsupported_dtype():
 def test_create_device_with_unsupported_kokkos_args():
     with pytest.raises(TypeError, match="Argument kokkos_args must be of type"):
         dev = qml.device(device_name, wires=1, kokkos_args=np.complex256)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Only lightning.gpu has a kwarg mpi_buf_size.",
+)
+def test_create_device_with_unsupported_mpi_buf_size():
+    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+        dev = qml.device(device_name, wires=1, mpi_buf_size=-1)
+    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+        dev = qml.device(device_name, wires=1, mpi_buf_size=3)
+    with pytest.warns(
+        RuntimeWarning, match="MPI buffer size is over the size of local state vector"
+    ):
+        dev = qml.device(device_name, wires=1, mpi_buf_size=4)
+    with pytest.warns(ImportError, match="MPI related APIs are not found"):
+        dev = qml.device(device_name, wires=1)
+        dev._mpi_init_helper(1)
