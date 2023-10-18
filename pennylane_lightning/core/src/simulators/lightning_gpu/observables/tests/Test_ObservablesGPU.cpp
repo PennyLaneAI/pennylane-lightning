@@ -117,6 +117,7 @@ TEMPLATE_PRODUCT_TEST_CASE("TensorProdObs", "[Observables]",
         REQUIRE(std::is_move_constructible_v<TensorProdObsT>);
     }
 }
+
 TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
                            (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;

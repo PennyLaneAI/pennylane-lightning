@@ -59,6 +59,7 @@ using namespace Pennylane::LightningGPU::MPI;
 #define PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, NUM_QUBITS, GATE_METHOD,       \
                                       GATE_NAME, WIRE, ANGLE)                  \
     {                                                                          \
+        const bool adjoint = GENERATE(true, false);                            \
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
@@ -90,12 +91,12 @@ using namespace Pennylane::LightningGPU::MPI;
                     mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,   \
                     nLocalIndexBits);                                          \
                 sv.CopyHostDataToGpu(local_state, false);                      \
-                sv.GATE_METHOD(WIRE, false, ANGLE);                            \
+                sv.GATE_METHOD(WIRE, adjoint, ANGLE);                          \
                 sv.CopyGpuDataToHost(local_state.data(), subSvLength);         \
                 StateVectorCudaManaged<TestType> svdat{init_sv.data(),         \
                                                        svLength};              \
                 if (mpi_manager.getRank() == 0) {                              \
-                    svdat.GATE_METHOD(WIRE, false, ANGLE);                     \
+                    svdat.GATE_METHOD(WIRE, adjoint, ANGLE);                   \
                     svdat.CopyGpuDataToHost(expected_sv.data(), svLength);     \
                 }                                                              \
                 auto expected_local_sv = mpi_manager.scatter(expected_sv, 0);  \
@@ -109,12 +110,12 @@ using namespace Pennylane::LightningGPU::MPI;
                     mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,   \
                     nLocalIndexBits);                                          \
                 sv.CopyHostDataToGpu(local_state, false);                      \
-                sv.applyOperation(GATE_NAME, WIRE, false, ANGLE);              \
+                sv.applyOperation(GATE_NAME, WIRE, adjoint, ANGLE);            \
                 sv.CopyGpuDataToHost(local_state.data(), subSvLength);         \
                 StateVectorCudaManaged<TestType> svdat{init_sv.data(),         \
                                                        svLength};              \
                 if (mpi_manager.getRank() == 0) {                              \
-                    svdat.applyOperation(GATE_NAME, WIRE, false, ANGLE);       \
+                    svdat.applyOperation(GATE_NAME, WIRE, adjoint, ANGLE);     \
                     svdat.CopyGpuDataToHost(expected_sv.data(), svLength);     \
                 }                                                              \
                 auto expected_local_sv = mpi_manager.scatter(expected_sv, 0);  \

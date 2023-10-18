@@ -43,3 +43,29 @@ target_link_libraries(algorithms_test_runner PRIVATE algorithms_tests)
 catch_discover_tests(algorithms_test_runner)
 
 install(TARGETS algorithms_test_runner DESTINATION bin)
+
+if(ENABLE_MPI)
+    add_library(algorithms_tests_mpi INTERFACE)
+    target_link_libraries(algorithms_tests_mpi INTERFACE     Catch2::Catch2)
+    foreach(BACKEND ${PL_BACKEND})
+        target_link_libraries(algorithms_tests_mpi INTERFACE  ${BACKEND}
+                                                            "${BACKEND}_gates"
+                                                            "${BACKEND}_measurements"
+                                                            "${BACKEND}_algorithms"
+                                                            "${BACKEND}_observables"
+        )
+    endforeach()
+
+    ProcessTestOptions(algorithms_tests_mpi)
+
+    target_sources(algorithms_tests_mpi INTERFACE ./mpi/runner_algorithms_mpi.cpp)
+
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES    ./mpi/Test_AdjointJacobianMPI.cpp)
+
+    add_executable(algorithms_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(algorithms_test_runner_mpi PRIVATE algorithms_tests_mpi)
+    catch_discover_tests(algorithms_test_runner_mpi)
+endif()

@@ -15,16 +15,13 @@
 #include "StateVectorCudaManaged.hpp"
 
 #include "AdjointJacobianGPUMPI.hpp"
+#include "JacobianDataMPI.hpp"
 #include "MPIManager.hpp"
 #include "StateVectorCudaMPI.hpp"
 
 #include "TestHelpers.hpp"
 #include "TestHelpersStateVectors.hpp"
 #include "Util.hpp"
-
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
 
 /// @cond DEV
 namespace {
