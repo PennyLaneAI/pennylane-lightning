@@ -14,6 +14,11 @@ Each device in the Lightning ecosystem is a separate Python package. Select the 
    :description: Guidelines to installing and testing the Lightning Kokkos device
    :link: ./lightning_kokkos/installation.html
 
+.. title-card::
+   :name: Lightning GPU
+   :description: Guidelines to installing and testing the Lightning GPU device
+   :link: ./lightning_gpu/installation.html
+
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -24,3 +29,4 @@ Each device in the Lightning ecosystem is a separate Python package. Select the 
 
    lightning_qubit/installation
    lightning_kokkos/installation
+   lightning_gpu/installation
