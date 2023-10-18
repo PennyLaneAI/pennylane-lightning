@@ -204,7 +204,7 @@ class MPIManager final {
         size_per_node_ = other.size_per_node_;
     }
 
-    ~MPIManager() final {
+    virtual ~MPIManager() final {
         if (!isExternalComm_) {
             int initflag;
             int finflag;
