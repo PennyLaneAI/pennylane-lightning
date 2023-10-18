@@ -1,7 +1,4 @@
-// Adapted from JET: https://github.com/XanaduAI/jet.git
-// and from Lightning: https://github.com/PennylaneAI/pennylane-lightning.git
-
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc. and contributors.
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Adapted from JET: https://github.com/XanaduAI/jet.git
+// and from Lightning: https://github.com/PennylaneAI/pennylane-lightning.git
 /**
  * @file cuda_helpers.hpp
  */
