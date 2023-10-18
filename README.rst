@@ -233,8 +233,8 @@ The C++ code can be tested with
 Lightning-GPU
 *************
 
-Pip wheels
-==========
+PyPI wheels
+===========
 
 Lightning-GPU can be installed using ``pip``:
 
@@ -326,8 +326,8 @@ The C++ code is tested with
 Lightning-Kokkos
 ****************
 
-Pip wheels
-==========
+PyPI wheels
+===========
 
 On linux systems, `lightning.kokkos` and be installed with the OpenMP backend by providing the optional ``[kokkos]`` tag:
 
