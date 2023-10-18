@@ -136,7 +136,7 @@ jobs:
           for file in *runner_mpi ; do /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-lightning_gpu.info
+          mv coverage.info coverage-${{ github.job }}-lightning_gpu_mpi.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -151,7 +151,7 @@ jobs:
         with:
           if-no-files-found: error
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-lightning_gpu.info
+          path: ./Build/coverage-${{ github.job }}-lightning_gpu_mpi.info
 
       - name: Cleanup
         if: always()
@@ -251,13 +251,13 @@ jobs:
           PL_DEVICE=lightning.gpu python -m pytest ./tests/ $COVERAGE_FLAGS
           PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests/test_adjoint_jacobian.py $COVERAGE_FLAGS
 
-          mv coverage.xml coverage-${{ github.job }}-lightning_gpu.xml
+          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_mpi.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: coverage-${{ github.job }}-lightning_gpu.xml
+          path: coverage-${{ github.job }}-lightning_gpu_mpi.xml
           if-no-files-found: error
 
       - name: Cleanup
@@ -284,6 +284,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Cleanup
@@ -310,6 +311,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Cleanup
