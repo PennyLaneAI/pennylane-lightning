@@ -1,7 +1,9 @@
 # Release 0.33.0-dev
 
 ### New features since last release
-
+* Add docs to `lightning_gpu` with single-GPU features.
+  [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
+  
 * Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
   [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
 
