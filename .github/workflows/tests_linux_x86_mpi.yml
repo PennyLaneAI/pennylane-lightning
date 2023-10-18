@@ -157,10 +157,7 @@ jobs:
         if: always()
         run: |
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf *
-          rm -rf .git
-          rm -rf .gitignore
-          rm -rf .github
+          rm -rf * .git .gitignore .github
           pip cache purge
 
 
@@ -172,7 +169,6 @@ jobs:
       - x64
       - ubuntu-22.04
       - multi-gpu
-    needs: ["cpp_tests"]
     strategy:
       max-parallel: 1
       matrix:
@@ -268,8 +264,57 @@ jobs:
         if: always()
         run: |
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf *
-          rm -rf .git
-          rm -rf .gitignore
-          rm -rf .github
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
+  upload-to-codecov-linux-cpp:
+    needs: ["cpp_tests"]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
+  upload-to-codecov-linux-python:
+    needs: ["python_tests"]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
           pip cache purge
