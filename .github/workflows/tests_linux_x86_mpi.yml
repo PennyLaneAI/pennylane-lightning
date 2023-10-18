@@ -117,7 +117,6 @@ jobs:
       - name: Build and run unit tests
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          unset CFLAGS
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
@@ -238,7 +237,6 @@ jobs:
       - name: Install required packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          unset CFLAGS
           python -m pip install pip~=22.0
           python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
