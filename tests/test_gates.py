@@ -321,7 +321,21 @@ def test_controlled_qubit_unitary(n_qubits, tol):
                 assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.parametrize("operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.RX, qml.RY, qml.RZ])
+@pytest.mark.parametrize(
+    "operation",
+    [
+        qml.PauliX,
+        qml.PauliY,
+        qml.PauliZ,
+        qml.Hadamard,
+        qml.S,
+        qml.T,
+        qml.PhaseShift,
+        qml.RX,
+        qml.RY,
+        qml.RZ,
+    ],
+)
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
 def test_controlled_qubit_gates(operation, n_qubits, tol):
     """Test that ControlledQubitUnitary is correctly applied to a state"""
@@ -341,7 +355,7 @@ def test_controlled_qubit_gates(operation, n_qubits, tol):
 
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
-                if operation in [qml.PauliX, qml.PauliY, qml.PauliZ]:
+                if operation.num_params == 0:
                     qml.ctrl(operation(target_wires), control_wires)
                 else:
                     qml.ctrl(operation(0.1234, target_wires), control_wires)

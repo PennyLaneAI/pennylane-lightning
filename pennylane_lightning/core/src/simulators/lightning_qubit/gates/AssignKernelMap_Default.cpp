@@ -248,6 +248,18 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::NCPauliZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCHadamard,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCS, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCT, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCPhaseShift,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::NCRX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);

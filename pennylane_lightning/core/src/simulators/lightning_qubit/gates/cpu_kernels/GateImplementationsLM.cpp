@@ -602,6 +602,34 @@ template void
 GateImplementationsLM::applyNCPauliZ<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &,
                                              const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCHadamard<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCHadamard<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCS<float>(std::complex<float> *, size_t,
+                                       const std::vector<size_t> &,
+                                       const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCS<double>(std::complex<double> *, size_t,
+                                        const std::vector<size_t> &,
+                                        const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCT<float>(std::complex<float> *, size_t,
+                                       const std::vector<size_t> &,
+                                       const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCT<double>(std::complex<double> *, size_t,
+                                        const std::vector<size_t> &,
+                                        const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCPhaseShift<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCPhaseShift<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
 template void GateImplementationsLM::applyNCRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
