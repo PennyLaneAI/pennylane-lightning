@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Adapted from JET: https://github.com/XanaduAI/jet.git
+
 /**
  * @file cuda_helpers.hpp
  */
