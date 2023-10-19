@@ -107,107 +107,6 @@ class AdjointJacobian final
         host_buffer_jac_single_param.clear();
     }
 
-    /**
-     * @brief OpenMP accelerated application of observables to given
-     * statevectors
-     *
-     * @param states Vector of statevector copies, one per observable.
-     * @param reference_state Reference statevector
-     * @param observables Vector of observables to apply to each statevector.
-     */
-    template <class RefStateVectorT>
-    inline void applyObservables(
-        std::vector<StateVectorT> &states,
-        const RefStateVectorT &reference_state,
-        const std::vector<std::shared_ptr<Observable<StateVectorT>>>
-            &observables) {
-        // clang-format off
-        // Globally scoped exception value to be captured within OpenMP block.
-        // See the following for OpenMP design decisions:
-        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
-        std::exception_ptr ex = nullptr;
-        size_t num_observables = observables.size();
-        #if defined(_OPENMP)
-            #pragma omp parallel default(none)                                 \
-            shared(states, reference_state, observables, ex, num_observables)
-        {
-            #pragma omp for
-        #endif
-            for (size_t h_i = 0; h_i < num_observables; h_i++) {
-                try {
-                    states[h_i].updateData(reference_state);
-                    BaseType::applyObservable(states[h_i], *observables[h_i]);
-                } catch (...) {
-                    #if defined(_OPENMP)
-                        #pragma omp critical
-                    #endif
-                    ex = std::current_exception();
-                    #if defined(_OPENMP)
-                        #pragma omp cancel for
-                    #endif
-                }
-            }
-        #if defined(_OPENMP)
-            if (ex) {
-                #pragma omp cancel parallel
-            }
-        }
-        #endif
-        if (ex) {
-            std::rethrow_exception(ex);
-        }
-        // clang-format on
-    }
-
-    /**
-     * @brief OpenMP accelerated application of adjoint operations to
-     * statevectors.
-     *
-     * @param states Vector of all statevectors; 1 per observable
-     * @param operations Operations list.
-     * @param op_idx Index of given operation within operations list to take
-     * adjoint of.
-     */
-    inline void applyOperationsAdj(std::vector<StateVectorT> &states,
-                                   const OpsData<StateVectorT> &operations,
-                                   size_t op_idx) {
-        // clang-format off
-        // Globally scoped exception value to be captured within OpenMP block.
-        // See the following for OpenMP design decisions:
-        // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
-        std::exception_ptr ex = nullptr;
-        size_t num_states = states.size();
-        #if defined(_OPENMP)
-            #pragma omp parallel default(none)                                 \
-                shared(states, operations, op_idx, ex, num_states)
-        {
-            #pragma omp for
-        #endif
-            for (size_t obs_idx = 0; obs_idx < num_states; obs_idx++) {
-                try {
-                    BaseType::applyOperationAdj(states[obs_idx], operations, op_idx);
-                } catch (...) {
-                    #if defined(_OPENMP)
-                        #pragma omp critical
-                    #endif
-                    ex = std::current_exception();
-                    #if defined(_OPENMP)
-                        #pragma omp cancel for
-                    #endif
-                }
-            }
-        #if defined(_OPENMP)
-            if (ex) {
-                #pragma omp cancel parallel
-            }
-        }
-        #endif
-        if (ex) {
-            std::rethrow_exception(ex);
-        }
-        // clang-format on
-    }
-
   public:
     AdjointJacobian() = default;
 
@@ -256,9 +155,6 @@ class AdjointJacobian final
             auto adj_lambda =
                 [&](std::promise<std::vector<PrecisionT>> j_promise,
                     std::size_t offset_first, std::size_t offset_last) {
-                    // Ensure No OpenMP threads spawned;
-                    // to be resolved with streams in future releases
-
                     // Grab a GPU index, and set a device tag
                     const auto id = dp.acquireDevice();
                     DevTag<int> dt_local(id, 0);

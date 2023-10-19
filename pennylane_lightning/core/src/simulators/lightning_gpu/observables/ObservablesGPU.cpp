@@ -28,6 +28,3 @@ template class Observables::TensorProdObs<StateVectorCudaManaged<double>>;
 
 template class Observables::Hamiltonian<StateVectorCudaManaged<float>>;
 template class Observables::Hamiltonian<StateVectorCudaManaged<double>>;
-
-template class Observables::SparseHamiltonian<StateVectorCudaManaged<float>>;
-template class Observables::SparseHamiltonian<StateVectorCudaManaged<double>>;

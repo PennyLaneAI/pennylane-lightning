@@ -40,6 +40,7 @@ using namespace Pennylane::LightningGPU;
 /// @endcond
 
 namespace Pennylane::LightningGPU::MPI {
+// LCOV_EXCL_START
 inline void errhandler(int errcode, const char *str) {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;
@@ -47,6 +48,7 @@ inline void errhandler(int errcode, const char *str) {
     fprintf(stderr, "%s: %s\n", str, msg);
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
+// LCOV_EXCL_STOP
 
 #define PL_MPI_IS_SUCCESS(fn)                                                  \
     {                                                                          \
@@ -224,7 +226,8 @@ class MPIManager final {
         size_per_node_ = other.size_per_node_;
     }
 
-    virtual ~MPIManager() final {
+    // LCOV_EXCL_START
+    virtual ~MPIManager() {
         if (!isExternalComm_) {
             int initflag;
             int finflag;
@@ -241,6 +244,7 @@ class MPIManager final {
                 PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
         }
     }
+    // LCOV_EXCL_STOP
 
     // General MPI operations
     /**

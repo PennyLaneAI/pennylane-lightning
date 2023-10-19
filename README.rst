@@ -100,13 +100,13 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: console
 
-    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF -DENABLE_KOKKOS=OFF" pip install -e . -vv
+    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
 
 or with ``build_ext`` and the ``--define`` flag as follows:
 
 .. code-block:: console
 
-    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF;ENABLE_KOKKOS=OFF"
+    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF"
     $ python3 setup.py develop
 
 
@@ -151,7 +151,6 @@ Other supported options are
 - ``-DENABLE_NATIVE=ON`` (for ``-march=native``)
 - ``-DENABLE_BLAS=ON``
 - ``-DENABLE_OPENMP=ON``
-- ``-DENABLE_KOKKOS=ON``
 - ``-DENABLE_CLANG_TIDY=ON``
 
 Compile on Windows with MSVC
@@ -190,9 +189,27 @@ Note that OpenMP and BLAS are disabled in this setting.
 Lightning Kokkos installation
 =============================
 
+For linux systems, `lightning.kokkos` and be readily installed with an OpenMP backend by providing the optional ``[kokkos]`` tag: 
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning[kokkos]
+
+This can be explicitly installed through PyPI as:
+
+.. code-block:: console
+
+    $ pip install pennylane-lightning-kokkos
+
+
+Building from source
+--------------------
+
+As Kokkos enables support for many different HPC-targetted hardware platforms, `lightning.kokkos` can be built to support any of these platforms when building from source.
+
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
-If an installation is not found, our builder will install it from scratch nevertheless.
+If an installation is not found, our builder will clone and install it during the build process.
 
 The simplest way to install PennyLane-Lightning-Kokkos (OpenMP backend) is using ``pip``.
 
@@ -221,7 +238,7 @@ To build the plugin directly with CMake:
    cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPLKOKKOS_BUILD_TESTS=ON -DPL_BACKEND=lightning_kokkos -G Ninja
    cmake --build build
 
-Supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
+The supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 One can activate simultaneously one serial, one parallel CPU host (e.g. "OPENMP", "THREADS") and one parallel GPU device backend (e.g. "HIP", "CUDA"), but not two of any category at the same time.
 For "HIP" and "CUDA", the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.

@@ -23,6 +23,7 @@ from scipy.stats import unitary_group
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
+from pennylane import qchem
 
 I, X, Y, Z = (
     np.eye(2),
@@ -179,9 +180,6 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_pauli_rotation_gradient(self, stateprep, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
         )
@@ -206,9 +204,6 @@ class TestAdjointJacobian:
     def test_Rot_gradient(self, stateprep, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
@@ -230,9 +225,6 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         with qml.tape.QuantumTape() as tape:
             qml.RY(par, wires=[0])
             qml.expval(qml.PauliX(0))
@@ -248,9 +240,6 @@ class TestAdjointJacobian:
 
     def test_rx_gradient(self, tol, dev):
         """Test that the gradient of the RX gate matches the known formula."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         a = 0.7418
 
         with qml.tape.QuantumTape() as tape:
@@ -264,9 +253,6 @@ class TestAdjointJacobian:
 
     def test_multiple_rx_gradient_pauliz(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
         with qml.tape.QuantumTape() as tape:
@@ -286,8 +272,6 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
         """
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
         with qml.tape.QuantumTape() as tape:
@@ -312,8 +296,6 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
         """
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
         with qml.tape.QuantumTape() as tape:
@@ -343,8 +325,6 @@ class TestAdjointJacobian:
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
         """
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
         ham = qml.Hamiltonian(
@@ -398,8 +378,6 @@ class TestAdjointJacobian:
     def test_gradients_pauliz(self, op, obs, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.QuantumTape() as tape:
             qml.Hadamard(wires=0)
@@ -440,9 +418,6 @@ class TestAdjointJacobian:
     def test_gradients_hermitian(self, op, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.QuantumTape() as tape:
             qml.Hadamard(wires=0)
@@ -473,9 +448,6 @@ class TestAdjointJacobian:
 
     def test_gradient_gate_with_multiple_parameters_pauliz(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         x, y, z = [0.5, 0.3, -0.7]
 
         tape = qml.tape.QuantumScript(
@@ -500,8 +472,6 @@ class TestAdjointJacobian:
 
     def test_gradient_gate_with_multiple_parameters_hermitian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
         x, y, z = [0.5, 0.3, -0.7]
 
         tape = qml.tape.QuantumScript(
@@ -641,9 +611,7 @@ class TestAdjointJacobian:
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
 
-    @pytest.fixture(
-        params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
@@ -942,6 +910,35 @@ def test_tape_qchem(tol):
     dev_dq = qml.device("default.qubit", wires=qubits)
 
     circuit_ld = qml.QNode(circuit, dev_ld, diff_method="adjoint")
+    circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
+
+    assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+def test_tape_qchem_sparse(tol):
+    """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
+
+    H, qubits = qml.qchem.molecular_hamiltonian(
+        ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
+    )
+
+    H_sparse = H.sparse_matrix(range(4))
+
+    def circuit_sparse(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(qml.SparseHamiltonian(H_sparse, wires=range(4)))
+
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(H)
+
+    params = np.linspace(0, 29, 30) * 0.111
+
+    dev_ld = qml.device(device_name, wires=qubits)
+    dev_dq = qml.device("default.qubit", wires=qubits)
+
+    circuit_ld = qml.QNode(circuit_sparse, dev_ld, diff_method="adjoint")
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)

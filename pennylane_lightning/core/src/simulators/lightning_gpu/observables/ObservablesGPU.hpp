@@ -79,6 +79,7 @@ template <class StateVectorT>
 class HermitianObs final : public HermitianObsBase<StateVectorT> {
   private:
     using BaseType = HermitianObsBase<StateVectorT>;
+    inline static const MatrixHasher mh;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -93,6 +94,15 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      */
     HermitianObs(MatrixT matrix, std::vector<size_t> wires)
         : BaseType{matrix, wires} {}
+
+    auto getObsName() const -> std::string final {
+        // To avoid collisions on cached GPU data, use matrix elements to
+        // uniquely identify Hermitian
+        // TODO: Replace with a performant hash function
+        std::ostringstream obs_stream;
+        obs_stream << "Hermitian" << mh(this->matrix_);
+        return obs_stream.str();
+    }
 };
 
 /**
@@ -180,107 +190,22 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
         using CFP_t = typename StateVectorT::CFP_t;
-        DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
-                                      sv.getDataBuffer().getDevTag());
-        buffer.zeroInit();
+        std::unique_ptr<DataBuffer<CFP_t>> buffer =
+            std::make_unique<DataBuffer<CFP_t>>(sv.getDataBuffer().getLength(),
+                                                sv.getDataBuffer().getDevTag());
+        buffer->zeroInit();
 
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
             StateVectorT tmp(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
             scaleAndAddC_CUDA(
                 std::complex<PrecisionT>{this->coeffs_[term_idx], 0.0},
-                tmp.getData(), buffer.getData(), tmp.getLength(),
+                tmp.getData(), buffer->getData(), tmp.getLength(),
                 tmp.getDataBuffer().getDevTag().getDeviceID(),
                 tmp.getDataBuffer().getDevTag().getStreamID(),
                 tmp.getCublasCaller());
         }
-        sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
-    }
-};
-
-/**
- * @brief Sparse representation of HamiltonianGPU<StateVectorT>
- *
- */
-template <class StateVectorT>
-class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
-  public:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    // cuSparse required index type
-    using IdxT =
-        typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                  int32_t, int64_t>::type;
-
-  private:
-    using BaseType = SparseHamiltonianBase<StateVectorT>;
-
-  public:
-    /**
-     * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
-     * format.
-     *
-     * @param data Arguments to construct data
-     * @param indices Arguments to construct indices
-     * @param offsets Arguments to construct offsets
-     * @param wires Arguments to construct wires
-     */
-    template <typename T1, typename T2, typename T3 = T2, typename T4>
-    explicit SparseHamiltonian(T1 &&data, T2 &&indices, T3 &&offsets,
-                               T4 &&wires)
-        : BaseType{data, indices, offsets, wires} {}
-
-    /**
-     * @brief Convenient wrapper for the constructor as the constructor does not
-     * convert the std::shared_ptr with a derived class correctly.
-     *
-     * This function is useful as std::make_shared does not handle
-     * brace-enclosed initializer list correctly.
-     *
-     * @param data Argument to construct data
-     * @param indices Argument to construct indices
-     * @param offsets Argument to construct ofsets
-     * @param wires Argument to construct wires
-     */
-    static auto create(std::initializer_list<ComplexT> data,
-                       std::initializer_list<IdxT> indices,
-                       std::initializer_list<IdxT> offsets,
-                       std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
-        return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
-            new SparseHamiltonian<StateVectorT>{
-                std::move(data), std::move(indices), std::move(offsets),
-                std::move(wires)});
-    }
-
-    /**
-     * @brief Updates the statevector SV:->SV', where SV' = a*H*SV, and where H
-     * is a sparse Hamiltonian.
-     *
-     */
-    void applyInPlace(StateVectorT &sv) const override {
-        PL_ABORT_IF_NOT(this->wires_.size() == sv.getNumQubits(),
-                        "SparseH wire count does not match state-vector size");
-        using CFP_t = typename StateVectorT::CFP_t;
-
-        const std::size_t nIndexBits = sv.getNumQubits();
-        const std::size_t length = std::size_t{1} << nIndexBits;
-
-        auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
-
-        cusparseHandle_t handle = sv.getCusparseHandle();
-
-        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
-            std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
-                                                true);
-
-        SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
-            this->offsets_.data(), this->offsets_.size(), this->indices_.data(),
-            this->data_.data(), this->data_.size(), sv.getData(),
-            d_sv_prime->getData(), device_id, stream_id, handle);
-
-        sv.updateData(std::move(d_sv_prime));
+        sv.updateData(std::move(buffer));
     }
 };
 

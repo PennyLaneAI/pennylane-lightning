@@ -93,7 +93,6 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const size_t &num_rows,
                     const index_type *columns_ptr,
                     const std::complex<Precision> *values_ptr)
     -> std::vector<std::vector<CSRMatrix<Precision, index_type>>> {
-
     size_t num_row_blocks = mpi_manager.getSize();
     size_t num_col_blocks = num_row_blocks;
 
@@ -114,7 +113,6 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const size_t &num_rows,
         for (size_t col_idx = static_cast<size_t>(csrOffsets_ptr[row]);
              col_idx < static_cast<size_t>(csrOffsets_ptr[row + 1]);
              col_idx++) {
-
             current_global_row = row;
             current_global_col = columns_ptr[col_idx];
             std::complex<Precision> current_val = values_ptr[col_idx];

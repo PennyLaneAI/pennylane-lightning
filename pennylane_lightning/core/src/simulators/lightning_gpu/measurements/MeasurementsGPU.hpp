@@ -631,54 +631,20 @@ class Measurements final
      */
     auto expval_(const std::string &obsName, const std::vector<size_t> &wires,
                  const std::vector<PrecisionT> &params = {0.0},
-                 const std::vector<CFP_t> &gate_matrix = {}) -> PrecisionT {
-        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{
-                      wires.rbegin(),
-                      wires.rend()}; // ensure wire indexing correctly preserved
-                                     // for tensor-observables
-
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            gate_cache_.add_gate(obsName, par[0], gate_matrix);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
-            std::string message =
-                "Currently unsupported observable: " + obsName;
-            throw LightningException(message.c_str());
-        }
-        auto expect_val = this->getExpectationValueDeviceMatrix_(
-            gate_cache_.get_gate_device_ptr(obsName, par[0]), local_wires);
-        return expect_val;
-    }
-
-    /**
-     * @brief See `expval(const std::string &obsName, const std::vector<size_t>
-     &wires, const std::vector<Precision> &params = {0.0}, const
-     std::vector<CFP_t> &gate_matrix = {})`
-     */
-    auto expval_(const std::string &obsName, const std::vector<size_t> &wires,
-                 const std::vector<PrecisionT> &params = {0.0},
                  const std::vector<std::complex<PrecisionT>> &gate_matrix = {})
         -> PrecisionT {
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
+        auto &&local_wires = wires;
+
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            for (std::size_t i = 0; i < gate_matrix.size(); i++) {
-                matrix_cu[i] = cuUtil::complexToCu<std::complex<PrecisionT>>(
-                    gate_matrix[i]);
-            }
-            gate_cache_.add_gate(obsName, par[0], matrix_cu);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
+        if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
             std::string message =
                 "Currently unsupported observable: " + obsName;
             throw LightningException(message.c_str());
         }
-        return this->expval_(obsName, wires, params, matrix_cu);
+        return this->getExpectationValueDeviceMatrix_(
+            gate_cache_.get_gate_device_ptr(obsName, par[0]), local_wires);
     }
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
@@ -700,10 +666,7 @@ class Measurements final
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
 
         auto expect_val = this->getExpectationValueDeviceMatrix_(
             matrix_cu.data(), local_wires);
@@ -757,12 +720,14 @@ class Measurements final
             /* custatevecComputeType_t */ compute_type,
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
-        cuDoubleComplex expect_;
+        cuDoubleComplex expect;
 
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
@@ -782,9 +747,12 @@ class Measurements final
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
 
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-        return static_cast<PrecisionT>(expect_.x);
+        // LCOV_EXCL_STOP
+
+        return static_cast<PrecisionT>(expect.x);
     }
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures

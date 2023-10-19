@@ -1,7 +1,4 @@
-// Adapted from JET: https://github.com/XanaduAI/jet.git
-// and from Lightning: https://github.com/PennylaneAI/pennylane-lightning.git
-
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc. and contributors.
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +11,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+// Adapted from JET: https://github.com/XanaduAI/jet.git
+
 /**
  * @file cuda_helpers.hpp
  */
@@ -41,8 +41,8 @@
 namespace Pennylane::LightningGPU::Util {
 
 // SFINAE check for existence of real() method in complex type
-template <typename CFP_t>
-constexpr auto is_cxx_complex(const CFP_t &t) -> decltype(t.real(), bool()) {
+template <typename ComplexT>
+constexpr auto is_cxx_complex(const ComplexT &t) -> decltype(t.real(), bool()) {
     return true;
 }
 
@@ -148,11 +148,6 @@ inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
     } else {
         return {a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x};
     }
-}
-
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static constexpr auto ConstMultConj(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
-    return ConstMult(Conj(a), b);
 }
 
 /**
@@ -388,4 +383,5 @@ struct MatrixHasher {
         return hash_val;
     }
 };
+
 } // namespace Pennylane::LightningGPU::Util

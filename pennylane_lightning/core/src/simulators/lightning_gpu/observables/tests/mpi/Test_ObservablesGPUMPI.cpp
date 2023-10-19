@@ -121,6 +121,7 @@ TEMPLATE_PRODUCT_TEST_CASE("TensorProdObs", "[Observables]",
         REQUIRE(std::is_move_constructible_v<TensorProdObsT>);
     }
 }
+
 TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI", "[Observables]",
                            (StateVectorCudaMPI), (float, double)) {
     using StateVectorT = TestType;
@@ -216,7 +217,6 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
 
     SECTION("ApplyInPlace", "[Apply Method]") {
         SECTION("Hamiltonian applies correctly to |+->") {
-
             StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
                                 nGlobalIndexBits, nLocalIndexBits);
 
@@ -245,5 +245,46 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
             REQUIRE(isApproxEqual(expected_local.data(), expected_local.size(),
                                   local_state.data(), local_state.size()));
         }
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasherMPI", "[Observables]",
+                           (StateVectorCudaMPI), (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using TensorProdObsT = TensorProdObsMPI<StateVectorT>;
+    using NamedObsT = NamedObsMPI<StateVectorT>;
+    using HermitianT = HermitianObsMPI<StateVectorT>;
+    using HamiltonianT = HamiltonianMPI<StateVectorT>;
+
+    std::vector<ComplexT> hermitian_h{{0.7071067811865475, 0},
+                                      {0.7071067811865475, 0},
+                                      {0.7071067811865475, 0},
+                                      {-0.7071067811865475, 0}};
+
+    auto obs1 =
+        std::make_shared<HermitianT>(hermitian_h, std::vector<size_t>{0});
+    auto obs2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+    auto obs3 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{3});
+
+    auto tp_obs1 = std::make_shared<TensorProdObsT>(obs1, obs2);
+    auto tp_obs2 = std::make_shared<TensorProdObsT>(obs2, obs3);
+
+    auto ham_1 =
+        HamiltonianT::create({0.165, 0.13, 0.5423}, {obs1, obs2, obs2});
+    auto ham_2 = HamiltonianT::create({0.8545, 0.3222}, {tp_obs1, tp_obs2});
+
+    SECTION("HamiltonianGPU<TestType>::obsName") {
+        std::ostringstream res1, res2;
+        res1 << "Hamiltonian: { 'coeffs' : [0.165, 0.13, 0.5423], "
+                "'observables' : [Hermitian"
+             << MatrixHasher()(hermitian_h) << ", PauliX[2], PauliX[2]]}";
+        res2 << "Hamiltonian: { 'coeffs' : [0.8545, 0.3222], 'observables' : "
+                "[Hermitian"
+             << MatrixHasher()(hermitian_h)
+             << " @ PauliX[2], PauliX[2] @ PauliX[3]]}";
+
+        CHECK(ham_1->getObsName() == res1.str());
+        CHECK(ham_2->getObsName() == res2.str());
     }
 }

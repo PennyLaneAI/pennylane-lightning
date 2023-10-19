@@ -215,6 +215,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
 #define PLGPU_MPI_TEST_GATE_OPS_NONPARAM(TestType, NUM_QUBITS, GATE_METHOD,    \
                                          GATE_NAME, WIRE)                      \
     {                                                                          \
+        const bool adjoint = GENERATE(true, false);                            \
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
@@ -246,14 +247,14 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
                     mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,   \
                     nLocalIndexBits);                                          \
                 sv.CopyHostDataToGpu(local_state, false);                      \
-                sv.GATE_METHOD(WIRE, false);                                   \
+                sv.GATE_METHOD(WIRE, adjoint);                                 \
                 sv.CopyGpuDataToHost(local_state.data(),                       \
                                      static_cast<std::size_t>(subSvLength));   \
                                                                                \
                 StateVectorCudaManaged<TestType> svdat{init_sv.data(),         \
                                                        svLength};              \
                 if (mpi_manager.getRank() == 0) {                              \
-                    svdat.GATE_METHOD(WIRE, false);                            \
+                    svdat.GATE_METHOD(WIRE, adjoint);                          \
                     svdat.CopyGpuDataToHost(expected_sv.data(), svLength);     \
                 }                                                              \
                 auto expected_local_sv = mpi_manager.scatter(expected_sv, 0);  \
@@ -267,13 +268,13 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
                     mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,   \
                     nLocalIndexBits);                                          \
                 sv.CopyHostDataToGpu(local_state, false);                      \
-                sv.applyOperation(GATE_NAME, WIRE, false);                     \
+                sv.applyOperation(GATE_NAME, WIRE, adjoint);                   \
                 sv.CopyGpuDataToHost(local_state.data(),                       \
                                      static_cast<std::size_t>(subSvLength));   \
                 StateVectorCudaManaged<TestType> svdat{init_sv.data(),         \
                                                        svLength};              \
                 if (mpi_manager.getRank() == 0) {                              \
-                    svdat.applyOperation(GATE_NAME, WIRE, false);              \
+                    svdat.applyOperation(GATE_NAME, WIRE, adjoint);            \
                     svdat.CopyGpuDataToHost(expected_sv.data(), svLength);     \
                 }                                                              \
                 auto expected_local_sv = mpi_manager.scatter(expected_sv, 0);  \

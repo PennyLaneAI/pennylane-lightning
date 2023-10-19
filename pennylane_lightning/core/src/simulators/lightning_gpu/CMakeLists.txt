@@ -1,6 +1,3 @@
-##########################
-## Set Project version
-##########################
 cmake_minimum_required(VERSION 3.21)
 set(LOGO [=[
 ░█░░░▀█▀░█▀▀░█░█░▀█▀░█▀█░▀█▀░█▀█░█▀▀░░░░█▀▀░█▀█░█░█
@@ -35,10 +32,6 @@ add_library(${PL_BACKEND} STATIC ${LGPU_FILES})
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU=1")
 
-if(ENABLE_MPI)
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU_MPI=1")
-endif()
-
 ##########################
 ## Enforce C++ Standard ##
 ##########################
@@ -58,21 +51,7 @@ set(CMAKE_INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$OR
 #########################
 ## Set Default Options ##
 #########################
-option(PLLGPU_ENABLE_SANITIZER "Enable address sanitizer" OFF)
-option(PLLGPU_ENABLE_WARNINGS "Enable warnings" ON)
-option(PLLGPU_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
-
-
-if(PLLGPU_ENABLE_SANITIZER)
-    add_compile_options(-fsanitize=address)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        add_link_options(-fsanitize=address)
-    else ()
-        add_link_options(-fsanitize=address -static-libasan)
-    endif()
-    set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-    set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
-ENDIF()
+option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
 target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs
@@ -90,7 +69,7 @@ set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # string(REPLACE "libcudart_static.a" "libcudart.so" CUDA_SHARED_RT "${CUDA_LIBRARIES}")
 set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
 
-if(PLLGPU_DISABLE_CUDA_SAFETY)
+if(PL_DISABLE_CUDA_SAFETY)
     target_compile_options(${PL_BACKEND} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
 endif()
 
