@@ -57,6 +57,7 @@ def test_create_device_with_unsupported_kokkos_args():
 def test_create_device_with_unsupported_mpi_buf_size():
     try:
         from mpi4py import MPI
+
         with pytest.raises(ImportError, match="MPI related APIs are not found"):
             dev = qml.device(device_name, wires=1)
             dev._mpi_init_helper(1)
