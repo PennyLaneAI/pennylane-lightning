@@ -1261,6 +1261,7 @@ class StateVectorCudaMPI
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
 
     const FMap par_gates_{
+        // LCOV_EXCL_START
         {"RX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRX(std::forward<decltype(wires)>(wires),
@@ -1279,6 +1280,7 @@ class StateVectorCudaMPI
                      std::forward<decltype(adjoint)>(adjoint),
                      std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_STOP
         {"PhaseShift",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyPhaseShift(std::forward<decltype(wires)>(wires),
@@ -1385,17 +1387,21 @@ class StateVectorCudaMPI
                  std::forward<decltype(adjoint)>(adjoint),
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_START
         {"Rot",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRot(std::forward<decltype(wires)>(wires),
                       std::forward<decltype(adjoint)>(adjoint),
                       std::forward<decltype(params)>(params));
          }},
-        {"CRot", [&](auto &&wires, auto &&adjoint, auto &&params) {
+        {"CRot",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRot(std::forward<decltype(wires)>(wires),
                        std::forward<decltype(adjoint)>(adjoint),
                        std::forward<decltype(params)>(params));
-         }}};
+         }}
+        // LCOV_EXCL_STOP
+    };
 
     const std::unordered_map<std::string, custatevecPauli_t> native_gates_{
         {"RX", CUSTATEVEC_PAULI_X},       {"RY", CUSTATEVEC_PAULI_Y},

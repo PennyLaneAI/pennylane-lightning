@@ -207,7 +207,7 @@ class MPIManager final {
     }
 
     // LCOV_EXCL_START
-    virtual ~MPIManager() final {
+    virtual ~MPIManager() {
         if (!isExternalComm_) {
             int initflag;
             int finflag;
