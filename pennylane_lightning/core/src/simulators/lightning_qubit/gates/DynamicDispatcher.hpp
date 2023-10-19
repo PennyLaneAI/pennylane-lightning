@@ -249,10 +249,10 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     [[nodiscard]] auto
     registeredControlledGatesForKernel(KernelType kernel) const
-        -> std::unordered_set<ControlledMatrixOperation> {
-        std::unordered_set<ControlledMatrixOperation> gates;
+        -> std::unordered_set<ControlledGateOperation> {
+        std::unordered_set<ControlledGateOperation> gates;
 
-        for (const auto &[key, val] : controlled_matrix_kernels_) {
+        for (const auto &[key, val] : controlled_gate_kernels_) {
             if (key.second == kernel) {
                 gates.emplace(key.first);
             }
@@ -402,9 +402,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter =
             gate_kernels_.find(std::make_pair(strToGateOp(op_name), kernel));
         if (iter == gate_kernels_.cend()) {
-            throw std::invalid_argument(
-                "Cannot find a registered kernel for a given gate "
-                "and kernel pair");
+            PL_ABORT("Cannot find a registered kernel for a given gate "
+                     "and kernel pair");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -426,9 +425,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                         const std::vector<PrecisionT> &params = {}) const {
         const auto iter = gate_kernels_.find(std::make_pair(gate_op, kernel));
         if (iter == gate_kernels_.cend()) {
-            throw std::invalid_argument(
-                "Cannot find a registered kernel for a given gate "
-                "and kernel pair");
+            PL_ABORT("Cannot find a registered kernel for a given gate "
+                     "and kernel pair");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
     }
@@ -451,9 +449,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                     const std::vector<std::vector<PrecisionT>> &params) const {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size() || numOperations != params.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
+            PL_ABORT("Invalid arguments: number of operations, wires, and "
+                     "parameters must all be equal");
         }
 
         for (size_t i = 0; i < numOperations; i++) {
@@ -478,9 +475,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                          const std::vector<bool> &inverse) const {
         const size_t numOperations = ops.size();
         if (numOperations != wires.size()) {
-            throw std::invalid_argument(
-                "Invalid arguments: number of operations, wires, and "
-                "parameters must all be equal");
+            PL_ABORT("Invalid arguments: number of operations, wires, and "
+                     "parameters must all be equal");
         }
 
         for (size_t i = 0; i < numOperations; i++) {
@@ -497,9 +493,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = controlled_gate_kernels_.find(
             std::make_pair(strToControlledGateOp(op_name), kernel));
         if (iter == controlled_gate_kernels_.cend()) {
-            throw std::invalid_argument(
-                "Cannot find a registered kernel for a given gate "
-                "and kernel pair");
+            PL_ABORT("Cannot find a registered kernel for a given gate "
+                     "and kernel pair");
         }
         (iter->second)(data, num_qubits, controlled_wires, wires, inverse,
                        params);
@@ -523,16 +518,15 @@ template <typename PrecisionT> class DynamicDispatcher {
                                const std::vector<size_t> &wires,
                                bool inverse) const {
         PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
-        const auto mat_op = ControlledMatrixOperation::NQubitOp;
+        const auto mat_op = ControlledMatrixOperation::NCMultiQubitOp;
 
         const auto iter =
             controlled_matrix_kernels_.find(std::make_pair(mat_op, kernel));
 
         if (iter == controlled_matrix_kernels_.end()) {
-            throw std::invalid_argument(
-                std::string(
-                    lookup(GateConstant::controlled_matrix_names, mat_op)) +
-                " is not registered for the given kernel");
+            PL_ABORT(std::string(lookup(GateConstant::controlled_matrix_names,
+                                        mat_op)) +
+                     " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
                        inverse);
@@ -567,9 +561,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = matrix_kernels_.find(std::make_pair(mat_op, kernel));
 
         if (iter == matrix_kernels_.end()) {
-            throw std::invalid_argument(
-                std::string(lookup(GateConstant::matrix_names, mat_op)) +
-                " is not registered for the given kernel");
+            PL_ABORT(std::string(lookup(GateConstant::matrix_names, mat_op)) +
+                     " is not registered for the given kernel");
         }
         (iter->second)(data, num_qubits, matrix, wires, inverse);
     }
@@ -588,9 +581,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                      const std::vector<std::complex<PrecisionT>> &matrix,
                      const std::vector<size_t> &wires, bool inverse) const {
         if (matrix.size() != exp2(2 * wires.size())) {
-            throw std::invalid_argument(
-                "The size of matrix does not match with the given "
-                "number of wires");
+            PL_ABORT("The size of matrix does not match with the given "
+                     "number of wires");
         }
         applyMatrix(kernel, data, num_qubits, matrix.data(), wires, inverse);
     }
@@ -614,9 +606,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter =
             generator_kernels_.find(std::make_pair(gntr_op, kernel));
         if (iter == generator_kernels_.cend()) {
-            throw std::invalid_argument(
-                "Cannot find a registered kernel for a given generator "
-                "and kernel pair.");
+            PL_ABORT("Cannot find a registered kernel for a given generator "
+                     "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
     }
@@ -638,9 +629,8 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = generator_kernels_.find(
             std::make_pair(strToGeneratorOp(op_name), kernel));
         if (iter == generator_kernels_.cend()) {
-            throw std::invalid_argument(
-                "Cannot find a registered kernel for a given generator "
-                "and kernel pair.");
+            PL_ABORT("Cannot find a registered kernel for a given generator "
+                     "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
     }

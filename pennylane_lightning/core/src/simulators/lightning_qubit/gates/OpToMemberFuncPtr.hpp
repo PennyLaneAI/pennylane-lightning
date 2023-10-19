@@ -432,10 +432,10 @@ struct ControlledMatrixOpToMemberFuncPtr {
                   "Unrecognized matrix operation");
 };
 template <class PrecisionT, class GateImplementation>
-struct ControlledMatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
-                                         ControlledMatrixOperation::NQubitOp> {
+struct ControlledMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, ControlledMatrixOperation::NCMultiQubitOp> {
     constexpr static auto value =
-        &GateImplementation::template applyNQubitOp<PrecisionT>;
+        &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
 };
 
 template <class PrecisionT, class ParamT, class GateImplementation,

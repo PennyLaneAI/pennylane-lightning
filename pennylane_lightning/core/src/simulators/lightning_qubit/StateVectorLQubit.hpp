@@ -361,8 +361,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        const auto kernel =
-            getKernelForControlledMatrix(ControlledMatrixOperation::NQubitOp);
+        const auto kernel = getKernelForControlledMatrix(
+            ControlledMatrixOperation::NCMultiQubitOp);
         dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
                                          matrix, controlled_wires, wires,
                                          inverse);

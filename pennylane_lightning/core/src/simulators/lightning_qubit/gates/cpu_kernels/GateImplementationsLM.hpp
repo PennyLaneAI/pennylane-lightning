@@ -150,7 +150,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         MatrixOperation::MultiQubitOp};
 
     constexpr static std::array implemented_controlled_matrices = {
-        ControlledMatrixOperation::NQubitOp};
+        ControlledMatrixOperation::NCMultiQubitOp};
 
     constexpr static std::array implemented_controlled_gates = {
         ControlledGateOperation::NCPauliX,
@@ -435,18 +435,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      */
     template <class PrecisionT>
     static void
-    applyNQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
-                  const std::complex<PrecisionT> *matrix,
-                  const std::vector<std::size_t> &controlled_wires,
-                  const std::vector<std::size_t> &wires, bool inverse) {
+    applyNCMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::complex<PrecisionT> *matrix,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<std::size_t> &wires, bool inverse) {
         constexpr std::size_t one{1};
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(num_qubits >= nw_tot);
 
-        std::vector<std::size_t> all_wires = controlled_wires;
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
 
         std::vector<std::size_t> rev_wires(nw_tot);
         std::vector<std::size_t> rev_wire_shifts(nw_tot);
@@ -537,8 +540,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(num_qubits >= nw_tot);
 
-        std::vector<std::size_t> all_wires = controlled_wires;
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
 
         std::vector<std::size_t> rev_wires(nw_tot);
         std::vector<std::size_t> rev_wire_shifts(nw_tot);
@@ -1984,10 +1990,10 @@ extern template void GateImplementationsLM::applyMultiQubitOp<float>(
 extern template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
-extern template void GateImplementationsLM::applyNQubitOp<float>(
+extern template void GateImplementationsLM::applyNCMultiQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
     const std::vector<size_t> &, const std::vector<size_t> &, bool);
-extern template void GateImplementationsLM::applyNQubitOp<double>(
+extern template void GateImplementationsLM::applyNCMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, const std::vector<size_t> &, bool);
 

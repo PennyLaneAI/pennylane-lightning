@@ -105,7 +105,7 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
  * @brief Register controlled matrix kernel.
  */
 template <class StateVectorT>
-void registerControlledMatrix(
+void applyControlledMatrix(
     StateVectorT &st,
     const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
                       py::array::c_style | py::array::forcecast> &matrix,
@@ -151,8 +151,7 @@ template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-    pyclass.def("applyControlledMatrix",
-                &registerControlledMatrix<StateVectorT>,
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
                 "Apply controlled operation");
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");

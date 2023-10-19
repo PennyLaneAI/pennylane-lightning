@@ -232,7 +232,7 @@ void assignKernelsForControlledMatrixOp_Default() {
     auto &instance =
         OperationKernelMap<ControlledMatrixOperation>::getInstance();
 
-    instance.assignKernelForOp(ControlledMatrixOperation::NQubitOp,
+    instance.assignKernelForOp(ControlledMatrixOperation::NCMultiQubitOp,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }
