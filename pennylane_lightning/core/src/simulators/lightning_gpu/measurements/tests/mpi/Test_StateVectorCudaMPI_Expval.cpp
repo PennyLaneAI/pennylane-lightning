@@ -74,8 +74,8 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
     auto m = MeasurementsMPI(sv);
 
     SECTION("Using expval") {
-        sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                          {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
+        sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                           {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
         auto ob = NamedObsMPI<StateVectorT>("Identity", {0});
         auto res = m.expval(ob);
         CHECK(res == Approx(ONE));
@@ -111,9 +111,9 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
             sv.initSV_MPI();
 
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                              {{0}, {0, 1}, {1, 2}},
-                              {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                               {{0}, {0, 1}, {1, 2}},
+                               {{false}, {false}, {false}});
             auto ob = NamedObsMPI<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -124,8 +124,8 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
                             nGlobalIndexBits, nLocalIndexBits);
             sv.initSV_MPI();
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                               {{0}, {1}, {2}}, {{false}, {false}, {false}});
             auto ob = NamedObsMPI<StateVectorT>("PauliX", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -136,7 +136,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
                             nGlobalIndexBits, nLocalIndexBits);
             sv.initSV_MPI();
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation(
+            sv.applyOperations(
                 {{"PauliX"},
                  {"Hadamard"},
                  {"PauliX"},
@@ -181,9 +181,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
                             nGlobalIndexBits, nLocalIndexBits);
             sv.initSV_MPI();
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                              {{0}, {0, 1}, {1, 2}},
-                              {{false}, {false}, {false}});
+            sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                               {{0}, {0, 1}, {1, 2}},
+                               {{false}, {false}, {false}});
             auto ob = NamedObsMPI<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == ZERO);
@@ -194,9 +194,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
                             nGlobalIndexBits, nLocalIndexBits);
             sv.initSV_MPI();
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                              {{false}, {false}, {false}},
-                              {{-PI / 2}, {-PI / 2}, {-PI / 2}});
+            sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                               {{false}, {false}, {false}},
+                               {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObsMPI<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == Approx(ONE));
@@ -207,9 +207,9 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
                             nGlobalIndexBits, nLocalIndexBits);
             sv.initSV_MPI();
             auto m = MeasurementsMPI(sv);
-            sv.applyOperation({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                              {{false}, {false}, {false}},
-                              {{PI / 2}, {PI / 2}, {PI / 2}});
+            sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                               {{false}, {false}, {false}},
+                               {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObsMPI<StateVectorT>("PauliY", {0});
             auto res = m.expval(ob);
             CHECK(res == -Approx(ONE));

@@ -52,15 +52,19 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -68,29 +72,14 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
-
-      - name: Build and run unit tests for code coverage
-        run: |
-            cmake . -BBuildCov -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DENABLE_COVERAGE=ON \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            for file in *runner ; do ./$file; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontests:
     strategy:
@@ -188,16 +177,20 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DBUILD_TESTS=ON \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -205,29 +198,14 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
-
-      - name: Build and run unit tests for code coverage
-        run: |
-            cmake . -BBuildCov -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DENABLE_BLAS=ON \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DENABLE_COVERAGE=ON \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            for file in *runner ; do ./$file; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontestswithOpenBLAS:
     strategy:
@@ -336,6 +314,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
@@ -346,16 +325,20 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -363,29 +346,14 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-
-      - name: Build and run unit tests for code coverage
-        run: |
-            cmake . -BBuildCov -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DENABLE_COVERAGE=ON \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./BuildCov
-            cd ./BuildCov
-            for file in *runner ; do ./$file; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./BuildCov/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
 
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
@@ -431,6 +399,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
@@ -478,10 +447,10 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_KOKKOS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
@@ -570,6 +539,7 @@ jobs:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
@@ -580,7 +550,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+              -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
@@ -597,3 +567,4 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
           path: ./Build/tests/results_multiple_backends/
+          if-no-files-found: error

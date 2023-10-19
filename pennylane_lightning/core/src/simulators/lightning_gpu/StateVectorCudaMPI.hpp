@@ -32,6 +32,7 @@
 #include "Error.hpp"
 #include "MPIManager.hpp"
 #include "MPIWorker.hpp"
+#include "MPI_helpers.hpp"
 #include "StateVectorCudaBase.hpp"
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
@@ -72,7 +73,7 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
  *
  * @tparam Precision Floating-point precision type.
  */
-template <class Precision>
+template <class Precision = double>
 class StateVectorCudaMPI
     : public StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>> {
   private:
@@ -293,7 +294,6 @@ class StateVectorCudaMPI
     void setStateVector(const index_type num_indices,
                         const std::complex<Precision> *values,
                         const index_type *indices, const bool async = false) {
-
         BaseType::getDataBuffer().zeroInit();
 
         std::vector<index_type> indices_local;
@@ -372,11 +372,11 @@ class StateVectorCudaMPI
             if (adjoint) {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyHostMatrixGate(rot_matrix, ctrls, tgts, true);
+                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
             } else {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyHostMatrixGate(rot_matrix, ctrls, tgts, false);
+                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
@@ -401,73 +401,6 @@ class StateVectorCudaMPI
                 tgts_local, adjoint);
         }
     }
-    /**
-     * @brief STL-friendly variant of `applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {})`
-     *
-     */
-    void applyOperation_std(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<std::complex<Precision>>
-            &gate_matrix = {}) {
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        std::transform(gate_matrix.begin(), gate_matrix.end(),
-                       matrix_cu.begin(), [](const std::complex<Precision> &x) {
-                           return cuUtil::complexToCu<std::complex<Precision>>(
-                               x);
-                       });
-        applyOperation(opName, wires, adjoint, params, matrix_cu);
-    }
-
-    /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     * @param params
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints,
-                        const std::vector<std::vector<Precision>> &params) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx],
-                           params[op_idx]);
-        }
-    }
-
-    /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx]);
-        }
-    }
 
     /**
      * @brief Apply a single generator to the state vector using the given
@@ -480,9 +413,9 @@ class StateVectorCudaMPI
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false)
         -> PrecisionT {
-        PL_ABORT_IF(generator_map_.find(opName) == generator_map_.end(),
-                    "Unsupported generator!");
-        return generator_map_.at(opName)(wires, adjoint);
+        auto it = generator_map_.find(opName);
+        PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
+        return (it->second)(wires, adjoint);
     }
 
     /**
@@ -500,7 +433,13 @@ class StateVectorCudaMPI
         size_t n = size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
-        this->applyOperation_std(opName, wires, adjoint, {}, matrix);
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, wires, adjoint, {}, matrix_cu);
     }
 
     /**
@@ -513,13 +452,11 @@ class StateVectorCudaMPI
      */
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
-        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
-        const std::string opName = {};
-        this->applyOperation_std(opName, wires, adjoint, {}, gate_matrix);
+        applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
     //****************************************************************************//
@@ -1094,18 +1031,9 @@ class StateVectorCudaMPI
                 const std::vector<Precision> &params = {0.0},
                 const std::vector<CFP_t> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{
-                      wires.rbegin(),
-                      wires.rend()}; // ensure wire indexing correctly preserved
-                                     // for tensor-observables
+        auto &&local_wires = wires;
 
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            gate_cache_.add_gate(obsName, par[0], gate_matrix);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
+        if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
             std::string message =
                 "Currently unsupported observable: " + obsName;
             throw LightningException(message.c_str());
@@ -1115,31 +1043,6 @@ class StateVectorCudaMPI
         return expect_val;
     }
 
-    /**
-     * @brief See `expval(const std::string &obsName, const std::vector<size_t>
-     &wires, const std::vector<Precision> &params = {0.0}, const
-     std::vector<CFP_t> &gate_matrix = {})`
-     */
-    auto expval(const std::string &obsName, const std::vector<size_t> &wires,
-                const std::vector<Precision> &params = {0.0},
-                const std::vector<std::complex<Precision>> &gate_matrix = {}) {
-        auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            for (std::size_t i = 0; i < gate_matrix.size(); i++) {
-                matrix_cu[i] = cuUtil::complexToCu<std::complex<Precision>>(
-                    gate_matrix[i]);
-            }
-            gate_cache_.add_gate(obsName, par[0], matrix_cu);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
-            std::string message =
-                "Currently unsupported observable: " + obsName;
-            throw LightningException(message.c_str());
-        }
-        return expval(obsName, wires, params, matrix_cu);
-    }
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
      */
@@ -1159,10 +1062,7 @@ class StateVectorCudaMPI
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto expect_val =
             getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires).x;
@@ -1200,113 +1100,31 @@ class StateVectorCudaMPI
         const std::vector<std::string> &pauli_words,
         const std::vector<std::vector<std::size_t>> &tgts,
         const std::complex<Precision> *coeffs) {
-
-        enum WiresSwapStatus : std::size_t { Local, Swappable, UnSwappable };
-
         std::vector<double> expect_local(pauli_words.size());
 
         std::vector<std::size_t> tgtsSwapStatus;
         std::vector<std::vector<int2>> tgtswirePairs;
-        std::vector<std::vector<size_t>> tgtsIntTrans;
-        tgtsIntTrans.reserve(tgts.size());
-
-        for (const auto &vec : tgts) {
-            std::vector<size_t> tmpVecInt(
-                vec.size()); // Reserve memory for efficiency
-
-            std::transform(vec.begin(), vec.end(), tmpVecInt.begin(),
-                           [&](std::size_t x) {
-                               return this->getTotalNumQubits() - 1 - x;
-                           });
-            tgtsIntTrans.push_back(std::move(tmpVecInt));
-        }
-
         // Local target wires (required by expvalOnPauliBasis)
         std::vector<std::vector<size_t>> localTgts;
         localTgts.reserve(tgts.size());
 
-        for (const auto &vec : tgtsIntTrans) {
-            std::vector<int> statusWires(this->getTotalNumQubits(),
-                                         WireStatus::Default);
+        tgtsVecProcess(this->getNumLocalQubits(), this->getTotalNumQubits(),
+                       tgts, localTgts, tgtsSwapStatus, tgtswirePairs);
 
-            for (auto &v : vec) {
-                statusWires[v] = WireStatus::Target;
-            }
-            size_t StatusGlobalWires =
-                std::reduce(statusWires.begin() + this->getNumLocalQubits(),
-                            statusWires.end());
-
-            if (!StatusGlobalWires) {
-                tgtsSwapStatus.push_back(WiresSwapStatus::Local);
-                localTgts.push_back(vec);
-            } else {
-                size_t counts_global_wires = std::count_if(
-                    statusWires.begin(),
-                    statusWires.begin() + this->getNumLocalQubits(),
-                    [](int i) { return i != WireStatus::Default; });
-                size_t counts_local_wires_avail =
-                    this->getNumLocalQubits() -
-                    (vec.size() - counts_global_wires);
-                // Check if there are sufficent number of local wires for bit
-                // swap
-                if (counts_global_wires <= counts_local_wires_avail) {
-                    tgtsSwapStatus.push_back(WiresSwapStatus::Swappable);
-
-                    std::vector<int> localVec(vec.size());
-                    std::transform(
-                        vec.begin(), vec.end(), localVec.begin(),
-                        [&](size_t x) { return static_cast<int>(x); });
-                    auto wirePairs = createWirePairs(this->getNumLocalQubits(),
-                                                     this->getTotalNumQubits(),
-                                                     localVec, statusWires);
-                    std::vector<size_t> localVecSizeT(localVec.size());
-                    std::transform(
-                        localVec.begin(), localVec.end(), localVecSizeT.begin(),
-                        [&](int x) { return static_cast<size_t>(x); });
-                    localTgts.push_back(localVecSizeT);
-                    tgtswirePairs.push_back(wirePairs);
-                } else {
-                    tgtsSwapStatus.push_back(WiresSwapStatus::UnSwappable);
-                    localTgts.push_back(vec);
-                }
-            }
-        }
         // Check if all target wires are local
         auto threshold = WiresSwapStatus::Swappable;
-        bool allLocal = std::all_of(
+        bool isAllTargetsLocal = std::all_of(
             tgtsSwapStatus.begin(), tgtsSwapStatus.end(),
             [&threshold](size_t status) { return status < threshold; });
 
         mpi_manager_.Barrier();
 
-        if (allLocal) {
+        if (isAllTargetsLocal) {
             expvalOnPauliBasis(pauli_words, localTgts, expect_local);
         } else {
             size_t wirePairsIdx = 0;
             for (size_t i = 0; i < pauli_words.size(); i++) {
-                if (tgtsSwapStatus[i] == WiresSwapStatus::Local) {
-                    std::vector<std::string> pauli_words_idx(
-                        1, std::string(pauli_words[i]));
-                    std::vector<std::vector<size_t>> tgts_idx;
-                    tgts_idx.push_back(localTgts[i]);
-                    std::vector<double> expval_local(1);
-
-                    expvalOnPauliBasis(pauli_words_idx, tgts_idx, expval_local);
-                    expect_local[i] = expval_local[0];
-                } else if (tgtsSwapStatus[i] == WiresSwapStatus::Swappable) {
-                    std::vector<std::string> pauli_words_idx(
-                        1, std::string(pauli_words[i]));
-                    std::vector<std::vector<size_t>> tgts_idx;
-                    tgts_idx.push_back(localTgts[i]);
-                    std::vector<double> expval_local(1);
-
-                    applyMPI_Dispatcher(tgtswirePairs[wirePairsIdx],
-                                        &StateVectorCudaMPI::expvalOnPauliBasis,
-                                        pauli_words_idx, tgts_idx,
-                                        expval_local);
-                    wirePairsIdx++;
-                    expect_local[i] = expval_local[0];
-                } else {
+                if (tgtsSwapStatus[i] == WiresSwapStatus::UnSwappable) {
                     auto opsNames = pauliStringToOpNames(pauli_words[i]);
                     StateVectorCudaMPI<Precision> tmp(
                         this->getDataBuffer().getDevTag(),
@@ -1327,6 +1145,24 @@ class StateVectorCudaMPI
                             BaseType::getDataBuffer().getDevTag().getStreamID(),
                             this->getCublasCaller())
                             .x;
+                } else {
+                    std::vector<std::string> pauli_words_idx(
+                        1, std::string(pauli_words[i]));
+                    std::vector<std::vector<size_t>> tgts_idx;
+                    tgts_idx.push_back(localTgts[i]);
+                    std::vector<double> expval_local(1);
+
+                    if (tgtsSwapStatus[i] == WiresSwapStatus::Local) {
+                        expvalOnPauliBasis(pauli_words_idx, tgts_idx,
+                                           expval_local);
+                    } else {
+                        applyMPI_Dispatcher(
+                            tgtswirePairs[wirePairsIdx],
+                            &StateVectorCudaMPI::expvalOnPauliBasis,
+                            pauli_words_idx, tgts_idx, expval_local);
+                        wirePairsIdx++;
+                    }
+                    expect_local[i] = expval_local[0];
                 }
             }
         }
@@ -1352,158 +1188,6 @@ class StateVectorCudaMPI
         }
     }
 
-    /**
-     * @brief Utility method for samples.
-     *
-     * @param num_samples Number of Samples
-     *
-     * @return std::vector<size_t> A 1-d array storing the samples.
-     * Each sample has a length equal to the number of qubits. Each sample can
-     * be accessed using the stride sample_id*num_qubits, where sample_id is a
-     * number between 0 and num_samples-1.
-     */
-    /*
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
-        double epsilon = 1e-15;
-        size_t nSubSvs = 1UL << (this->getNumGlobalQubits());
-        std::vector<double> rand_nums(num_samples);
-        std::vector<size_t> samples(num_samples * this->getTotalNumQubits(), 0);
-
-        size_t bitStringLen =
-            this->getNumGlobalQubits() + this->getNumLocalQubits();
-
-        std::vector<int> bitOrdering(bitStringLen);
-
-        for (size_t i = 0; i < bitOrdering.size(); i++) {
-            bitOrdering[i] = i;
-        }
-
-        std::vector<custatevecIndex_t> localBitStrings(num_samples);
-        std::vector<custatevecIndex_t> globalBitStrings(num_samples);
-
-        if (mpi_manager_.getRank() == 0) {
-            for (size_t n = 0; n < num_samples; n++) {
-                rand_nums[n] = (n + 1.0) / (num_samples + 2.0);
-            }
-        }
-
-        mpi_manager_.Bcast<double>(rand_nums, 0);
-
-        cudaDataType_t data_type;
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-        } else {
-            data_type = CUDA_C_32F;
-        }
-
-        custatevecSamplerDescriptor_t sampler;
-
-        void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
-
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerCreate(
-            /-* custatevecHandle_t *-/ handle_.get(),
-            /-* const void* *-/ BaseType::getData(),
-            /-* cudaDataType_t *-/ data_type,
-            /-* const uint32_t *-/ this->getNumLocalQubits(),
-            /-* custatevecSamplerDescriptor_t * *-/ &sampler,
-            /-* uint32_t *-/ num_samples,
-            /-* size_t* *-/ &extraWorkspaceSizeInBytes));
-
-        if (extraWorkspaceSizeInBytes > 0)
-            PL_CUDA_IS_SUCCESS(
-                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
-
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerPreprocess(
-            /-* custatevecHandle_t *-/ handle_.get(),
-            /-* custatevecSamplerDescriptor_t *-/ sampler,
-            /-* void* *-/ extraWorkspace,
-            /-* const size_t *-/ extraWorkspaceSizeInBytes));
-
-        double subNorm = 0;
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerGetSquaredNorm(
-            /-* custatevecHandle_t *-/ handle_.get(),
-            /-* custatevecSamplerDescriptor_t *-/ sampler,
-            /-* double * *-/ &subNorm));
-
-        int source = (mpi_manager_.getRank() - 1 + mpi_manager_.getSize()) %
-                     mpi_manager_.getSize();
-        int dest = (mpi_manager_.getRank() + 1) % mpi_manager_.getSize();
-
-        double cumulative = 0;
-        mpi_manager_.Scan<double>(subNorm, cumulative, "sum");
-
-        double norm = cumulative;
-        mpi_manager_.Bcast<double>(norm, mpi_manager_.getSize() - 1);
-
-        double precumulative;
-        mpi_manager_.Sendrecv<double>(cumulative, dest, precumulative, source);
-        if (mpi_manager_.getRank() == 0) {
-            precumulative = 0;
-        }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-
-        // Ensure the 'custatevecSamplerApplySubSVOffset' function can be called
-        // successfully without reducing accuracy.
-        if (precumulative == norm) {
-            precumulative = norm - epsilon;
-        }
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerApplySubSVOffset(
-            /-* custatevecHandle_t *-/ handle_.get(),
-            /-* custatevecSamplerDescriptor_t *-/ sampler,
-            /-* int32_t *-/ static_cast<int>(mpi_manager_.getRank()),
-            /-* uint32_t *-/ nSubSvs,
-            /-* double *-/ precumulative,
-            /-* double *-/ norm));
-
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        auto low = std::lower_bound(rand_nums.begin(), rand_nums.end(),
-                                    cumulative / norm);
-        int shotOffset = std::distance(rand_nums.begin(), low);
-        if (mpi_manager_.getRank() == (mpi_manager_.getSize() - 1)) {
-            shotOffset = num_samples;
-        }
-
-        int preshotOffset;
-        mpi_manager_.Sendrecv<int>(shotOffset, dest, preshotOffset, source);
-        if (mpi_manager_.getRank() == 0) {
-            preshotOffset = 0;
-        }
-
-        int nSubShots = shotOffset - preshotOffset;
-        if (nSubShots > 0) {
-            PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
-                /-* custatevecHandle_t *-/ handle_.get(),
-                /-* custatevecSamplerDescriptor_t *-/ sampler,
-                /-* custatevecIndex_t* *-/ &localBitStrings[preshotOffset],
-                /-* const int32_t * *-/ bitOrdering.data(),
-                /-* const uint32_t *-/ bitStringLen,
-                /-* const double * *-/ &rand_nums[preshotOffset],
-                /-* const uint32_t *-/ nSubShots,
-                /-* enum custatevecSamplerOutput_t *-/
-                CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
-        }
-
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerDestroy(sampler));
-
-        if (extraWorkspaceSizeInBytes > 0) {
-            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-        }
-
-        mpi_manager_.Allreduce<custatevecIndex_t>(localBitStrings,
-                                                  globalBitStrings, "sum");
-
-        for (size_t i = 0; i < num_samples; i++) {
-            for (size_t j = 0; j < bitStringLen; j++) {
-                samples[i * bitStringLen + (bitStringLen - 1 - j)] =
-                    (globalBitStrings[i] >> j) & 1U;
-            }
-        }
-        return samples;
-    }
-    */
-
   private:
     using ParFunc = std::function<void(const std::vector<size_t> &, bool,
                                        const std::vector<Precision> &)>;
@@ -1514,6 +1198,7 @@ class StateVectorCudaMPI
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
 
     const FMap par_gates_{
+        // LCOV_EXCL_START
         {"RX",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRX(std::forward<decltype(wires)>(wires),
@@ -1532,6 +1217,7 @@ class StateVectorCudaMPI
                      std::forward<decltype(adjoint)>(adjoint),
                      std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_STOP
         {"PhaseShift",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyPhaseShift(std::forward<decltype(wires)>(wires),
@@ -1638,17 +1324,21 @@ class StateVectorCudaMPI
                  std::forward<decltype(adjoint)>(adjoint),
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        // LCOV_EXCL_START
         {"Rot",
          [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyRot(std::forward<decltype(wires)>(wires),
                       std::forward<decltype(adjoint)>(adjoint),
                       std::forward<decltype(params)>(params));
          }},
-        {"CRot", [&](auto &&wires, auto &&adjoint, auto &&params) {
+        {"CRot",
+         [&](auto &&wires, auto &&adjoint, auto &&params) {
              applyCRot(std::forward<decltype(wires)>(wires),
                        std::forward<decltype(adjoint)>(adjoint),
                        std::forward<decltype(params)>(params));
-         }}};
+         }}
+        // LCOV_EXCL_STOP
+    };
 
     const std::unordered_map<std::string, custatevecPauli_t> native_gates_{
         {"RX", CUSTATEVEC_PAULI_X},       {"RY", CUSTATEVEC_PAULI_Y},
@@ -1801,7 +1491,6 @@ class StateVectorCudaMPI
     auto expvalOnPauliBasis(const std::vector<std::string> &pauli_words,
                             const std::vector<std::vector<std::size_t>> &tgts,
                             std::vector<double> &local_expect) {
-
         uint32_t nIndexBits = static_cast<uint32_t>(this->getNumLocalQubits());
         cudaDataType_t data_type;
 
@@ -2022,10 +1711,12 @@ class StateVectorCudaMPI
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
         // allocate external workspace if necessary
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         // apply gate
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
@@ -2045,8 +1736,10 @@ class StateVectorCudaMPI
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
     }
 
     /**
@@ -2065,7 +1758,6 @@ class StateVectorCudaMPI
                                const std::vector<std::size_t> &ctrls,
                                const std::vector<std::size_t> &tgts,
                                bool use_adjoint = false) {
-
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 
@@ -2129,168 +1821,6 @@ class StateVectorCudaMPI
     }
 
     /**
-     * @brief Apply a given host-matrix `matrix` to the local state vector at
-     * qubit indices given by `tgts` and control-lines given by `ctrls`. The
-     * adjoint can be taken by setting `use_adjoint` to true.
-     *
-     * @param matrix Host-data vector in row-major order of a given gate.
-     * @param ctrls Control line qubits.
-     * @param tgts Target qubits.
-     * @param use_adjoint Use adjoint of given gate.
-     */
-    void applyCuSVHostMatrixGate(const std::vector<CFP_t> &matrix,
-                                 const std::vector<int> &ctrls,
-                                 const std::vector<int> &tgts,
-                                 bool use_adjoint = false) {
-        void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
-        int nIndexBits = BaseType::getNumQubits();
-
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
-
-        // check the size of external workspace
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
-            /* custatevecHandle_t */ handle_.get(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const uint32_t */ tgts.size(),
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
-
-        // allocate external workspace if necessary
-        if (extraWorkspaceSizeInBytes > 0) {
-            PL_CUDA_IS_SUCCESS(
-                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
-        }
-
-        // apply gate
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
-            /* custatevecHandle_t */ handle_.get(),
-            /* void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgts.data(),
-            /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrls.data(),
-            /* const int32_t* */ nullptr,
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
-        if (extraWorkspaceSizeInBytes)
-            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-    }
-
-    /**
-     * @brief Apply a given host-matrix `matrix` to the state vector at qubit
-     * indices given by `tgts` and control-lines given by `ctrls`. The adjoint
-     * can be taken by setting `use_adjoint` to true.
-     *
-     * @param matrix Host-data vector in row-major order of a given gate.
-     * @param ctrls Control line qubits.
-     * @param tgts Target qubits.
-     * @param use_adjoint Use adjoint of given gate.
-     */
-    void applyHostMatrixGate(const std::vector<CFP_t> &matrix,
-                             const std::vector<std::size_t> &ctrls,
-                             const std::vector<std::size_t> &tgts,
-                             bool use_adjoint = false) {
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-
-        // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
-        std::vector<int> statusWires(this->getTotalNumQubits(),
-                                     WireStatus::Default);
-
-        // Update wire status based on the gate information
-        for (size_t i = 0; i < ctrlsInt.size(); i++) {
-            statusWires[ctrlsInt[i]] = WireStatus::Control;
-        }
-        // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
-            statusWires[tgtsInt[i]] = WireStatus::Target;
-        }
-
-        int StatusGlobalWires = std::reduce(
-            statusWires.begin() + this->getNumLocalQubits(), statusWires.end());
-
-        mpi_manager_.Barrier();
-
-        if (!StatusGlobalWires) {
-            applyCuSVHostMatrixGate(matrix, ctrlsInt, tgtsInt, use_adjoint);
-        } else {
-            size_t counts_global_wires =
-                std::count_if(statusWires.begin(),
-                              statusWires.begin() + this->getNumLocalQubits(),
-                              [](int i) { return i != WireStatus::Default; });
-            size_t counts_local_wires =
-                ctrlsInt.size() + tgtsInt.size() - counts_global_wires;
-
-            PL_ABORT_IF(
-                counts_global_wires >
-                    (this->getNumLocalQubits() - counts_local_wires),
-                "There is not enough local wires for bit swap operation.");
-
-            std::vector<int> localCtrls = ctrlsInt;
-            std::vector<int> localTgts = tgtsInt;
-
-            auto wirePairs = createWirePairs(
-                this->getNumLocalQubits(), this->getTotalNumQubits(),
-                localCtrls, localTgts, statusWires);
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-
-            applyMPI_Dispatcher(wirePairs,
-                                &StateVectorCudaMPI::applyCuSVHostMatrixGate,
-                                matrix, localCtrls, localTgts, use_adjoint);
-            PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        }
-    }
-
-    void applyHostMatrixGate(const std::vector<std::complex<Precision>> &matrix,
-                             const std::vector<std::size_t> &ctrls,
-                             const std::vector<std::size_t> &tgts,
-                             bool use_adjoint = false) {
-        std::vector<CFP_t> matrix_cu(matrix.size());
-        for (std::size_t i = 0; i < matrix.size(); i++) {
-            matrix_cu[i] =
-                cuUtil::complexToCu<std::complex<Precision>>(matrix[i]);
-        }
-
-        applyHostMatrixGate(matrix_cu, ctrls, tgts, use_adjoint);
-    }
-
-    /**
      * @brief Get expectation of a given host or device defined array.
      *
      * @param matrix Host or device defined row-major order gate matrix array.
@@ -2329,11 +1859,12 @@ class StateVectorCudaMPI
             /* const uint32_t */ tgts.size(),
             /* custatevecComputeType_t */ compute_type,
             /* size_t* */ &extraWorkspaceSizeInBytes));
-
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         cuDoubleComplex expect_;
         // compute expectation
@@ -2353,12 +1884,11 @@ class StateVectorCudaMPI
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
-
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }
-        expect.x = static_cast<PrecisionT>(expect_.x);
-        expect.y = static_cast<PrecisionT>(expect_.y);
+        // LCOV_EXCL_STOP
     }
 
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,

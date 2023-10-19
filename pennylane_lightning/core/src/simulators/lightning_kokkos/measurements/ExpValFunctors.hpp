@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
-
 #include <Kokkos_Core.hpp>
 
 #include "BitUtil.hpp"
+#include "BitUtilKokkos.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
+using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
+
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
@@ -174,6 +177,8 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
     std::size_t dim;
     std::size_t num_qubits;
 
@@ -187,33 +192,36 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
         Kokkos::resize(wires, wires_.size());
         Kokkos::deep_copy(wires, wires_host);
 
-        dim = static_cast<std::size_t>(1U) << wires_.size();
+        dim = one << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const MemberType &teamMember, PrecisionT &expval) const {
-        const std::size_t k = teamMember.league_rank() * dim;
+        const std::size_t k = teamMember.league_rank();
         PrecisionT tempExpVal = 0.0;
         ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
         if (teamMember.team_rank() == 0) {
-            Kokkos::parallel_for(
-                Kokkos::ThreadVectorRange(teamMember, dim),
-                [&](const std::size_t inner_idx) {
-                    std::size_t idx = k | inner_idx;
-                    const std::size_t n_wires = wires.size();
-                    for (std::size_t pos = 0; pos < n_wires; pos++) {
-                        std::size_t x =
-                            ((idx >> (n_wires - pos - 1)) ^
-                             (idx >> (num_qubits - wires(pos) - 1))) &
-                            1U;
-                        idx = idx ^ ((x << (n_wires - pos - 1)) |
-                                     (x << (num_qubits - wires(pos) - 1)));
-                    }
-                    coeffs_in(inner_idx) = arr(idx);
-                });
+            std::size_t idx = (k & parity(0));
+            for (std::size_t i = 1; i < parity.size(); i++) {
+                idx |= ((k << i) & parity(i));
+            }
+            coeffs_in(0) = arr(idx);
+
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
+                                 [&](const std::size_t inner_idx) {
+                                     std::size_t index = idx;
+                                     for (std::size_t i = 0; i < wires.size();
+                                          i++) {
+                                         if ((inner_idx & (one << i)) != 0) {
+                                             index |= rev_wire_shifts(i);
+                                         }
+                                     }
+                                     coeffs_in(inner_idx) = arr(index);
+                                 });
         }
         teamMember.team_barrier();
         Kokkos::parallel_reduce(
@@ -273,7 +281,8 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 1;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire;
     std::size_t rev_wire_shift;
@@ -321,7 +330,8 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     const std::size_t n_wires = 2;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire0;
     std::size_t rev_wire1;
@@ -376,15 +386,6 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
          EXPVALTERM3(xx, 0B010, i010) + EXPVALTERM3(xx, 0B011, i011) +         \
          EXPVALTERM3(xx, 0B100, i100) + EXPVALTERM3(xx, 0B101, i101) +         \
          EXPVALTERM3(xx, 0B110, i110) + EXPVALTERM3(xx, 0B111, i111))
-#define INDEX(ivar, xx)                                                        \
-    kdim | xx;                                                                 \
-    for (std::size_t pos = 0; pos < n_wires; pos++) {                          \
-        std::size_t x = ((ivar >> (n_wires - pos - 1)) ^                       \
-                         (ivar >> (num_qubits - wires(pos) - 1))) &            \
-                        1U;                                                    \
-        ivar = ivar ^ ((x << (n_wires - pos - 1)) |                            \
-                       (x << (num_qubits - wires(pos) - 1)));                  \
-    }
 
 template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -394,8 +395,12 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
+
     const std::size_t n_wires = 3;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     getExpVal3QubitOpFunctor(const KokkosComplexVector &arr_,
@@ -411,20 +416,24 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        const std::size_t kdim = k * dim;
-        std::size_t i000 = INDEX(i000, 0B000);
-        std::size_t i001 = INDEX(i001, 0B001);
-        std::size_t i010 = INDEX(i010, 0B010);
-        std::size_t i011 = INDEX(i011, 0B011);
-        std::size_t i100 = INDEX(i100, 0B100);
-        std::size_t i101 = INDEX(i101, 0B101);
-        std::size_t i110 = INDEX(i110, 0B110);
-        std::size_t i111 = INDEX(i111, 0B111);
+        std::size_t i000 = (k & parity(0));
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            i000 |= ((k << i) & parity(i));
+        }
 
+        std::size_t i001 = i000 | rev_wire_shifts(0);
+        std::size_t i010 = i000 | rev_wire_shifts(1);
+        std::size_t i011 = i000 | rev_wire_shifts(0) | rev_wire_shifts(1);
+        std::size_t i100 = i000 | rev_wire_shifts(2);
+        std::size_t i101 = i000 | rev_wire_shifts(0) | rev_wire_shifts(2);
+        std::size_t i110 = i000 | rev_wire_shifts(1) | rev_wire_shifts(2);
+        std::size_t i111 =
+            i000 | rev_wire_shifts(0) | rev_wire_shifts(1) | rev_wire_shifts(2);
         expval += real(EXPVAL3(i000, 0B000));
         expval += real(EXPVAL3(i001, 0B001));
         expval += real(EXPVAL3(i010, 0B010));
@@ -457,8 +466,12 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
+
     const std::size_t n_wires = 4;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     getExpVal4QubitOpFunctor(const KokkosComplexVector &arr_,
@@ -473,28 +486,36 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        const std::size_t kdim = k * dim;
+        std::size_t i0000 = (k & parity(0));
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            i0000 |= ((k << i) & parity(i));
+        }
 
-        std::size_t i0000 = INDEX(i0000, 0B0000);
-        std::size_t i0001 = INDEX(i0001, 0B0001);
-        std::size_t i0010 = INDEX(i0010, 0B0010);
-        std::size_t i0011 = INDEX(i0011, 0B0011);
-        std::size_t i0100 = INDEX(i0100, 0B0100);
-        std::size_t i0101 = INDEX(i0101, 0B0101);
-        std::size_t i0110 = INDEX(i0110, 0B0110);
-        std::size_t i0111 = INDEX(i0111, 0B0111);
-        std::size_t i1000 = INDEX(i1000, 0B1000);
-        std::size_t i1001 = INDEX(i1001, 0B1001);
-        std::size_t i1010 = INDEX(i1010, 0B1010);
-        std::size_t i1011 = INDEX(i1011, 0B1011);
-        std::size_t i1100 = INDEX(i1100, 0B1100);
-        std::size_t i1101 = INDEX(i1101, 0B1101);
-        std::size_t i1110 = INDEX(i1110, 0B1110);
-        std::size_t i1111 = INDEX(i1111, 0B1111);
+        std::size_t i0001 = i0000 | rev_wire_shifts(0);
+        std::size_t i0010 = i0000 | rev_wire_shifts(1);
+        std::size_t i0011 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(1);
+        std::size_t i0100 = i0000 | rev_wire_shifts(2);
+        std::size_t i0101 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(2);
+        std::size_t i0110 = i0000 | rev_wire_shifts(1) | rev_wire_shifts(2);
+        std::size_t i0111 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                            rev_wire_shifts(2);
+        std::size_t i1000 = i0000 | rev_wire_shifts(3);
+        std::size_t i1001 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(3);
+        std::size_t i1010 = i0000 | rev_wire_shifts(1) | rev_wire_shifts(3);
+        std::size_t i1011 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                            rev_wire_shifts(3);
+        std::size_t i1100 = i0000 | rev_wire_shifts(2) | rev_wire_shifts(3);
+        std::size_t i1101 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(2) |
+                            rev_wire_shifts(3);
+        std::size_t i1110 = i0000 | rev_wire_shifts(1) | rev_wire_shifts(2) |
+                            rev_wire_shifts(3);
+        std::size_t i1111 = i0000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                            rev_wire_shifts(2) | rev_wire_shifts(3);
 
         expval += real(EXPVAL4(i0000, 0B0000));
         expval += real(EXPVAL4(i0001, 0B0001));
@@ -544,8 +565,12 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
     KokkosIntVector wires;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wire_shifts;
+
     const std::size_t n_wires = 5;
-    const std::size_t dim = static_cast<std::size_t>(1U) << n_wires;
+
+    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     getExpVal5QubitOpFunctor(const KokkosComplexVector &arr_,
@@ -560,44 +585,64 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
+        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k, PrecisionT &expval) const {
-        const std::size_t kdim = k * dim;
+        std::size_t i00000 = (k & parity(0));
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            i00000 |= ((k << i) & parity(i));
+        }
 
-        std::size_t i00000 = INDEX(i00000, 0B00000);
-        std::size_t i00001 = INDEX(i00001, 0B00001);
-        std::size_t i00010 = INDEX(i00010, 0B00010);
-        std::size_t i00011 = INDEX(i00011, 0B00011);
-        std::size_t i00100 = INDEX(i00100, 0B00100);
-        std::size_t i00101 = INDEX(i00101, 0B00101);
-        std::size_t i00110 = INDEX(i00110, 0B00110);
-        std::size_t i00111 = INDEX(i00111, 0B00111);
-        std::size_t i01000 = INDEX(i01000, 0B01000);
-        std::size_t i01001 = INDEX(i01001, 0B01001);
-        std::size_t i01010 = INDEX(i01010, 0B01010);
-        std::size_t i01011 = INDEX(i01011, 0B01011);
-        std::size_t i01100 = INDEX(i01100, 0B01100);
-        std::size_t i01101 = INDEX(i01101, 0B01101);
-        std::size_t i01110 = INDEX(i01110, 0B01110);
-        std::size_t i01111 = INDEX(i01111, 0B01111);
-        std::size_t i10000 = INDEX(i10000, 0B10000);
-        std::size_t i10001 = INDEX(i10001, 0B10001);
-        std::size_t i10010 = INDEX(i10010, 0B10010);
-        std::size_t i10011 = INDEX(i10011, 0B10011);
-        std::size_t i10100 = INDEX(i10100, 0B10100);
-        std::size_t i10101 = INDEX(i10101, 0B10101);
-        std::size_t i10110 = INDEX(i10110, 0B10110);
-        std::size_t i10111 = INDEX(i10111, 0B10111);
-        std::size_t i11000 = INDEX(i11000, 0B11000);
-        std::size_t i11001 = INDEX(i11001, 0B11001);
-        std::size_t i11010 = INDEX(i11010, 0B11010);
-        std::size_t i11011 = INDEX(i11011, 0B11011);
-        std::size_t i11100 = INDEX(i11100, 0B11100);
-        std::size_t i11101 = INDEX(i11101, 0B11101);
-        std::size_t i11110 = INDEX(i11110, 0B11110);
-        std::size_t i11111 = INDEX(i11111, 0B11111);
+        std::size_t i00001 = i00000 | rev_wire_shifts(0);
+        std::size_t i00010 = i00000 | rev_wire_shifts(1);
+        std::size_t i00011 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1);
+        std::size_t i00100 = i00000 | rev_wire_shifts(2);
+        std::size_t i00101 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(2);
+        std::size_t i00110 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(2);
+        std::size_t i00111 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(2);
+        std::size_t i01000 = i00000 | rev_wire_shifts(3);
+        std::size_t i01001 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(3);
+        std::size_t i01010 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(3);
+        std::size_t i01011 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(3);
+        std::size_t i01100 = i00000 | rev_wire_shifts(2) | rev_wire_shifts(3);
+        std::size_t i01101 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(2) |
+                             rev_wire_shifts(3);
+        std::size_t i01110 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(2) |
+                             rev_wire_shifts(3);
+        std::size_t i01111 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(2) | rev_wire_shifts(3);
+        std::size_t i10000 = i00000 | rev_wire_shifts(4);
+        std::size_t i10001 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(4);
+        std::size_t i10010 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(4);
+        std::size_t i10011 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(4);
+        std::size_t i10100 = i00000 | rev_wire_shifts(2) | rev_wire_shifts(4);
+        std::size_t i10101 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(2) |
+                             rev_wire_shifts(4);
+        std::size_t i10110 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(2) |
+                             rev_wire_shifts(4);
+        std::size_t i10111 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(2) | rev_wire_shifts(4);
+        std::size_t i11000 = i00000 | rev_wire_shifts(3) | rev_wire_shifts(4);
+        std::size_t i11001 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(3) |
+                             rev_wire_shifts(4);
+        std::size_t i11010 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(3) |
+                             rev_wire_shifts(4);
+        std::size_t i11011 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(3) | rev_wire_shifts(4);
+        std::size_t i11100 = i00000 | rev_wire_shifts(2) | rev_wire_shifts(3) |
+                             rev_wire_shifts(4);
+        std::size_t i11101 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(2) |
+                             rev_wire_shifts(3) | rev_wire_shifts(4);
+        std::size_t i11110 = i00000 | rev_wire_shifts(1) | rev_wire_shifts(2) |
+                             rev_wire_shifts(3) | rev_wire_shifts(4);
+        std::size_t i11111 = i00000 | rev_wire_shifts(0) | rev_wire_shifts(1) |
+                             rev_wire_shifts(2) | rev_wire_shifts(3) |
+                             rev_wire_shifts(4);
 
         expval += real(EXPVAL5(i00000, 0B00000));
         expval += real(EXPVAL5(i00001, 0B00001));

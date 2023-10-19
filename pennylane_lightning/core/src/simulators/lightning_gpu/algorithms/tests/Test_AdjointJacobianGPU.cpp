@@ -2,10 +2,6 @@
 #include <cmath>
 #include <complex>
 #include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
-#include <variant>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -16,10 +12,6 @@
 #include "TestHelpers.hpp"
 #include "TestHelpersStateVectors.hpp"
 #include "Util.hpp"
-
-#ifndef _USE_MATH_DEFINES
-#define _USE_MATH_DEFINES
-#endif
 
 /// @cond DEV
 namespace {
@@ -98,6 +90,51 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
             CAPTURE(jacobian);
             CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
         }
+    }
+}
+
+TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=[QubitStateVector, "
+          "StatePrep, BasisState], Obs=[Z,Z]",
+          "[AdjointJacobianGPU]") {
+    const std::string test_ops =
+        GENERATE("QubitStateVector", "StatePrep", "BasisState");
+    using StateVectorT = StateVectorCudaManaged<double>;
+    using ComplexT = StateVectorT::ComplexT;
+    AdjointJacobian<StateVectorT> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    std::vector<size_t> tp{0};
+    {
+        const size_t num_qubits = 2;
+        const size_t num_obs = 2;
+        std::vector<double> jacobian(num_obs * tp.size(), 0);
+        std::vector<double> jacobian_ref(num_obs * tp.size(), 0);
+        std::vector<ComplexT> matrix = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+
+        StateVectorT psi(num_qubits);
+        psi.initSV();
+
+        const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        auto ops = OpsData<StateVectorT>({test_ops}, {{param[0]}}, {{0}},
+                                         {false}, {matrix});
+
+        JacobianData<StateVectorT> tape{param.size(),  psi.getLength(),
+                                        psi.getData(), {obs1, obs2},
+                                        ops,           tp};
+
+        // apply_operations should be set as false to cover if statement in
+        // adjointJacobian when ops is "QubitStateVector" "StatePrep" or
+        // "BasisState". If apply_operations is set as true, errors will be
+        // thrown out since ops mentioned above is not supported in
+        // apply_operation method of sv.
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, false);
+
+        CAPTURE(jacobian);
+        CHECK(jacobian == Pennylane::Util::approx(jacobian_ref).margin(1e-7));
     }
 }
 

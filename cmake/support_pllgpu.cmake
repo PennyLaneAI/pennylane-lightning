@@ -5,7 +5,6 @@
 # Include this only once
 include_guard()
 
-
 # Macro to aid in finding CUDA lib
 macro(findCUDA external_libs)
     find_package(CUDA REQUIRED)

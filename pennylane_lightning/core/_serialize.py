@@ -57,24 +57,21 @@ class QuantumScriptSerializer:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.kokkos":
             try:
                 import pennylane_lightning.lightning_kokkos_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.gpu":
             try:
                 import pennylane_lightning.lightning_gpu_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')

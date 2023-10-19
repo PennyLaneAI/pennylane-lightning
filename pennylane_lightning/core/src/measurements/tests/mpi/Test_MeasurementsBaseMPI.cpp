@@ -27,6 +27,7 @@ constexpr bool BACKEND_FOUND = true;
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
+#include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TestHelpersStateVectorsMPI.hpp"
 #include "TestHelpersWires.hpp"

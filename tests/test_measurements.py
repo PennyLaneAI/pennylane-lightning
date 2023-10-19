@@ -228,9 +228,7 @@ class TestProbs:
 class TestExpval:
     """Tests for the expval function"""
 
-    @pytest.fixture(
-        params=[np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
@@ -497,9 +495,7 @@ class TestWiresInExpval:
             (["a"], ["nothing"]),
         ],
     )
-    @pytest.mark.parametrize(
-        "C", [np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_wires_expval(self, wires1, wires2, C, tol):
         """Test that the expectation of a circuit is independent from the wire labels used."""
         dev1 = qml.device(device_name, wires=wires1, c_dtype=C)
@@ -542,9 +538,7 @@ class TestWiresInExpval:
             ([-1, -2], ["ancilla", 2]),
         ],
     )
-    @pytest.mark.parametrize(
-        "C", [np.complex64, np.complex128] if device_name != "lightning.gpu" else [np.complex128]
-    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_wires_expval_hermitian(self, wires1, wires2, C, tol):
         """Test that the expectation of a circuit is independent from the wire labels used."""
         dev1 = qml.device(device_name, wires=wires1, c_dtype=C)

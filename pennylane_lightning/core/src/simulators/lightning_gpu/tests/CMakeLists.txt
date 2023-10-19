@@ -34,3 +34,25 @@ target_link_libraries(${PL_BACKEND}_test_runner PRIVATE ${PL_BACKEND}_tests)
 catch_discover_tests(${PL_BACKEND}_test_runner)
 
 install(TARGETS ${PL_BACKEND}_test_runner DESTINATION bin)
+
+if(ENABLE_MPI)
+    add_library(${PL_BACKEND}_tests_mpi INTERFACE)
+    target_link_libraries(${PL_BACKEND}_tests_mpi INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}
+                                                                )
+
+    ProcessTestOptions(${PL_BACKEND}_tests_mpi)
+
+    target_sources(${PL_BACKEND}_tests_mpi INTERFACE ./mpi/runner_${PL_BACKEND}_mpi.cpp)
+
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES ./mpi/Test_StateVectorCudaMPI.cpp)
+
+    add_executable(${PL_BACKEND}_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(${PL_BACKEND}_test_runner_mpi PRIVATE ${PL_BACKEND}_tests_mpi)
+    catch_discover_tests(${PL_BACKEND}_test_runner_mpi)
+
+endif()
+

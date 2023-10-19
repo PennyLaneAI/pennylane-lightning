@@ -61,8 +61,7 @@ try:
         "cuquantum"
     ):  # pragma: no cover
         raise ImportError(
-            'cuQuantum libraries not found. Please check your "LD_LIBRARY_PATH" environment variable,'
-            'or ensure you have installed the appropriate distributable "cuQuantum" package.'
+            'custatevec libraries not found. Please pip install appropriate custatevec in a virtual environment and then add its path to the "LD_LIBRARY_PATH" environment variable.'
         )
     if not DevPool.getTotalDevices():  # pragma: no cover
         raise ValueError("No supported CUDA-capable device found")
@@ -497,7 +496,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._create_basis_state(num)
 
         # pylint: disable=missing-function-docstring
-        def apply_cq(self, operations):
+        def apply_lightning(self, operations):
             """Apply a list of operations to the state tensor.
 
             Args:
@@ -513,23 +512,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
             skipped_ops = ["Identity"]
             invert_param = False
 
-            for o in operations:
-                if str(o.name) in skipped_ops:
+            for ops in operations:
+                if str(ops.name) in skipped_ops:
                     continue
-                name = o.name
-                if isinstance(o, Adjoint):
-                    name = o.base.name
+                name = ops.name
+                if isinstance(ops, Adjoint):
+                    name = ops.base.name
                     invert_param = True
                 method = getattr(self._gpu_state, name, None)
-                wires = self.wires.indices(o.wires)
+                wires = self.wires.indices(ops.wires)
 
                 if method is None:
-                    # Inverse can be set to False since qml.matrix(o) is already in inverted form
+                    # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
-                        mat = qml.matrix(o)
+                        mat = qml.matrix(ops)
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
-                        mat = o.matrix
+                        mat = ops.matrix
 
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
@@ -542,7 +541,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
 
                 else:
-                    param = o.parameters
+                    param = ops.parameters
                     method(wires, invert_param, param)
 
         # pylint: disable=unused-argument
@@ -565,7 +564,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         + f"Operations have already been applied on a {self.short_name} device."
                     )
 
-            self.apply_cq(operations)
+            self.apply_lightning(operations)
 
         @staticmethod
         def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
@@ -575,7 +574,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             Returns:
                 Expectation or State: a common return type of measurements.
             """
-            if len(measurements) == 0:
+            if not measurements:
                 return None
 
             if len(measurements) == 1 and measurements[0].return_type is State:
@@ -745,7 +744,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             if observable.name != "PauliZ":
-                self.apply_cq(observable.diagonalizing_gates())
+                self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
             return super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
@@ -765,11 +764,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
-            if observable.name in [
-                "Projector",
-            ]:
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
