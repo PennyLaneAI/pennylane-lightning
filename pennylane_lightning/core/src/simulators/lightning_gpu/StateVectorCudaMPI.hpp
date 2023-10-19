@@ -32,6 +32,7 @@
 #include "Error.hpp"
 #include "MPIManager.hpp"
 #include "MPIWorker.hpp"
+#include "MPI_helpers.hpp"
 #include "StateVectorCudaBase.hpp"
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
@@ -1099,113 +1100,31 @@ class StateVectorCudaMPI
         const std::vector<std::string> &pauli_words,
         const std::vector<std::vector<std::size_t>> &tgts,
         const std::complex<Precision> *coeffs) {
-        enum WiresSwapStatus : std::size_t { Local, Swappable, UnSwappable };
-
         std::vector<double> expect_local(pauli_words.size());
 
         std::vector<std::size_t> tgtsSwapStatus;
         std::vector<std::vector<int2>> tgtswirePairs;
-        std::vector<std::vector<size_t>> tgtsIntTrans;
-        tgtsIntTrans.reserve(tgts.size());
-
-        for (const auto &vec : tgts) {
-            std::vector<size_t> tmpVecInt(
-                vec.size()); // Reserve memory for efficiency
-
-            std::transform(vec.begin(), vec.end(), tmpVecInt.begin(),
-                           [&](std::size_t x) {
-                               return this->getTotalNumQubits() - 1 - x;
-                           });
-            tgtsIntTrans.push_back(std::move(tmpVecInt));
-        }
-
         // Local target wires (required by expvalOnPauliBasis)
         std::vector<std::vector<size_t>> localTgts;
         localTgts.reserve(tgts.size());
 
-        for (const auto &vec : tgtsIntTrans) {
-            std::vector<int> statusWires(this->getTotalNumQubits(),
-                                         WireStatus::Default);
+        tgtsVecProcess(this->getNumLocalQubits(), this->getTotalNumQubits(),
+                       tgts, localTgts, tgtsSwapStatus, tgtswirePairs);
 
-            for (auto &v : vec) {
-                statusWires[v] = WireStatus::Target;
-            }
-
-            size_t StatusGlobalWires =
-                std::reduce(statusWires.begin() + this->getNumLocalQubits(),
-                            statusWires.end());
-
-            if (!StatusGlobalWires) {
-                tgtsSwapStatus.push_back(WiresSwapStatus::Local);
-                localTgts.push_back(vec);
-            } else {
-                size_t counts_global_wires = std::count_if(
-                    statusWires.begin(),
-                    statusWires.begin() + this->getNumLocalQubits(),
-                    [](int i) { return i != WireStatus::Default; });
-                size_t counts_local_wires_avail =
-                    this->getNumLocalQubits() -
-                    (vec.size() - counts_global_wires);
-                // Check if there are sufficent number of local wires for bit
-                // swap
-                if (counts_global_wires <= counts_local_wires_avail) {
-                    tgtsSwapStatus.push_back(WiresSwapStatus::Swappable);
-
-                    std::vector<int> localVec(vec.size());
-                    std::transform(
-                        vec.begin(), vec.end(), localVec.begin(),
-                        [&](size_t x) { return static_cast<int>(x); });
-                    auto wirePairs = createWirePairs(this->getNumLocalQubits(),
-                                                     this->getTotalNumQubits(),
-                                                     localVec, statusWires);
-                    std::vector<size_t> localVecSizeT(localVec.size());
-                    std::transform(
-                        localVec.begin(), localVec.end(), localVecSizeT.begin(),
-                        [&](int x) { return static_cast<size_t>(x); });
-                    localTgts.push_back(localVecSizeT);
-                    tgtswirePairs.push_back(wirePairs);
-                } else {
-                    tgtsSwapStatus.push_back(WiresSwapStatus::UnSwappable);
-                    localTgts.push_back(vec);
-                }
-            }
-        }
         // Check if all target wires are local
         auto threshold = WiresSwapStatus::Swappable;
-        bool allLocal = std::all_of(
+        bool isAllTargetsLocal = std::all_of(
             tgtsSwapStatus.begin(), tgtsSwapStatus.end(),
             [&threshold](size_t status) { return status < threshold; });
 
         mpi_manager_.Barrier();
 
-        if (allLocal) {
+        if (isAllTargetsLocal) {
             expvalOnPauliBasis(pauli_words, localTgts, expect_local);
         } else {
             size_t wirePairsIdx = 0;
             for (size_t i = 0; i < pauli_words.size(); i++) {
-                if (tgtsSwapStatus[i] == WiresSwapStatus::Local) {
-                    std::vector<std::string> pauli_words_idx(
-                        1, std::string(pauli_words[i]));
-                    std::vector<std::vector<size_t>> tgts_idx;
-                    tgts_idx.push_back(localTgts[i]);
-                    std::vector<double> expval_local(1);
-
-                    expvalOnPauliBasis(pauli_words_idx, tgts_idx, expval_local);
-                    expect_local[i] = expval_local[0];
-                } else if (tgtsSwapStatus[i] == WiresSwapStatus::Swappable) {
-                    std::vector<std::string> pauli_words_idx(
-                        1, std::string(pauli_words[i]));
-                    std::vector<std::vector<size_t>> tgts_idx;
-                    tgts_idx.push_back(localTgts[i]);
-                    std::vector<double> expval_local(1);
-
-                    applyMPI_Dispatcher(tgtswirePairs[wirePairsIdx],
-                                        &StateVectorCudaMPI::expvalOnPauliBasis,
-                                        pauli_words_idx, tgts_idx,
-                                        expval_local);
-                    wirePairsIdx++;
-                    expect_local[i] = expval_local[0];
-                } else {
+                if (tgtsSwapStatus[i] == WiresSwapStatus::UnSwappable) {
                     auto opsNames = pauliStringToOpNames(pauli_words[i]);
                     StateVectorCudaMPI<Precision> tmp(
                         this->getDataBuffer().getDevTag(),
@@ -1226,6 +1145,24 @@ class StateVectorCudaMPI
                             BaseType::getDataBuffer().getDevTag().getStreamID(),
                             this->getCublasCaller())
                             .x;
+                } else {
+                    std::vector<std::string> pauli_words_idx(
+                        1, std::string(pauli_words[i]));
+                    std::vector<std::vector<size_t>> tgts_idx;
+                    tgts_idx.push_back(localTgts[i]);
+                    std::vector<double> expval_local(1);
+
+                    if (tgtsSwapStatus[i] == WiresSwapStatus::Local) {
+                        expvalOnPauliBasis(pauli_words_idx, tgts_idx,
+                                           expval_local);
+                    } else {
+                        applyMPI_Dispatcher(
+                            tgtswirePairs[wirePairsIdx],
+                            &StateVectorCudaMPI::expvalOnPauliBasis,
+                            pauli_words_idx, tgts_idx, expval_local);
+                        wirePairsIdx++;
+                    }
+                    expect_local[i] = expval_local[0];
                 }
             }
         }
