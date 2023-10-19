@@ -142,6 +142,12 @@ class MPIManager final {
 
   public:
     MPIManager() : communicator_(MPI_COMM_WORLD) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
+
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -158,6 +164,11 @@ class MPIManager final {
     }
 
     MPIManager(MPI_Comm communicator) : communicator_(communicator) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -174,7 +185,11 @@ class MPIManager final {
     }
 
     MPIManager(int argc, char **argv) {
-        PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        }
         isExternalComm_ = false;
         communicator_ = MPI_COMM_WORLD;
         int rank_int;
@@ -192,6 +207,11 @@ class MPIManager final {
     }
 
     MPIManager(const MPIManager &other) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         rank_ = other.rank_;
         size_ = other.size_;
