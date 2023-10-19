@@ -20,28 +20,37 @@ from conftest import device_name, LightningDevice as ld
 import numpy as np
 import pennylane as qml
 from mpi4py import MPI
-    
+
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name != "lightning.gpu":
     pytest.skip("Only lightning.gpu supports MPI. Skipping.", allow_module_level=True)
 
+
 def test_create_device():
-    dev = qml.device(device_name, mpi=True, wires=4)
+    if MPI.COMM_WORLD.Get_size() > 2:
+        with pytest.raises(
+            ValueError,
+            match="Number of devices should be larger than or equal to the number of processes on each node.",
+        ):
+            dev = qml.device(device_name, mpi=True, wires=4)
+    else:
+        dev = qml.device(device_name, mpi=True, wires=4)
 
 
 @pytest.mark.skipif(
     device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
     reason="Only lightning.gpu has a kwarg mpi_buf_size.",
 )
-def test_create_device_with_unsupported_mpi_buf_size():
+def test_unsupported_mpi_buf_size():
     with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
     with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=3)
     with pytest.warns(
-        RuntimeWarning, match="The MPI buffer size is larger than the local state vector size"
+        RuntimeWarning,
+        match="The MPI buffer size is larger than the local state vector size",
     ):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=2**4)
     with pytest.raises(

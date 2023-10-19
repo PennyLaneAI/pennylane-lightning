@@ -36,12 +36,36 @@ class TestSparseExpval:
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000, 1.000000000000000000],
-            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122, 0.960530638694763184],
-            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050, 0.848353326320648193],
-            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000, 1.000000119209289551],
-            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520, 0.151646673679351807],
-            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
+            [
+                qml.PauliX(0) @ qml.Identity(1),
+                0.00000000000000000,
+                1.000000000000000000,
+            ],
+            [
+                qml.Identity(0) @ qml.PauliX(1),
+                -0.19866933079506122,
+                0.960530638694763184,
+            ],
+            [
+                qml.PauliY(0) @ qml.Identity(1),
+                -0.38941834230865050,
+                0.848353326320648193,
+            ],
+            [
+                qml.Identity(0) @ qml.PauliY(1),
+                0.00000000000000000,
+                1.000000119209289551,
+            ],
+            [
+                qml.PauliZ(0) @ qml.Identity(1),
+                0.92106099400288520,
+                0.151646673679351807,
+            ],
+            [
+                qml.Identity(0) @ qml.PauliZ(1),
+                0.98006657784124170,
+                0.039469480514526367,
+            ],
         ],
     )
     def test_sparse_Pauli_words(self, cases, tol, dev):

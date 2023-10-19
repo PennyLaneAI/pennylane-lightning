@@ -78,7 +78,9 @@ class TestExpval:
 
         res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
         assert np.allclose(
-            res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
+            res,
+            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE),
+            tol * 10,
         )
 
     def test_pauliy_expectation(self, theta, phi, tol):
@@ -116,12 +118,15 @@ class TestExpval:
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
         expected = np.array(
-            [np.sin(theta) * np.sin(phi) + np.cos(theta), np.cos(theta) * np.cos(phi) + np.sin(phi)]
+            [
+                np.sin(theta) * np.sin(phi) + np.cos(theta),
+                np.cos(theta) * np.cos(phi) + np.sin(phi),
+            ]
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    # @pytest.mark.parametrize("n_wires", range(1, 8))
-    @pytest.mark.parametrize("n_wires", range(7, 8))
+    @pytest.mark.parametrize("n_wires", range(1, 8))
+    # @pytest.mark.parametrize("n_wires", range(7, 8))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7
@@ -223,7 +228,10 @@ class TestExpOperatorArithmetic:
     def test_integration(self, diff_method):
         """Test a Combination of `Sum`, `SProd`, and `Prod`."""
 
-        obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
+        obs = qml.sum(
+            qml.s_prod(2.3, qml.PauliZ(0)),
+            -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)),
+        )
 
         dev = qml.device(device_name, mpi=True, wires=2)
 
@@ -241,7 +249,10 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(res, expected)
 
         g = qml.grad(circuit)(x, y)
-        expected = (-2.3 * np.sin(x) + 0.5 * np.cos(y) * np.cos(x), -0.5 * np.sin(x) * np.sin(y))
+        expected = (
+            -2.3 * np.sin(x) + 0.5 * np.cos(y) * np.cos(x),
+            -0.5 * np.sin(x) * np.sin(y),
+        )
         assert qml.math.allclose(g, expected)
 
 

@@ -38,6 +38,7 @@ fixture_params = itertools.product(
     [True, False],
 )
 
+
 def Rx(theta):
     r"""One-qubit rotation about the x axis.
 
@@ -76,7 +77,13 @@ class TestAdjointJacobian:
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=8, mpi=True, c_dtype=request.param[0], batch_obs=request.param[1])
+        return qml.device(
+            device_name,
+            wires=8,
+            mpi=True,
+            c_dtype=request.param[0],
+            batch_obs=request.param[1],
+        )
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -116,7 +123,8 @@ class TestAdjointJacobian:
             qml.expval(qml.PauliZ(0))
 
         with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+            UserWarning,
+            match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -139,7 +147,8 @@ class TestAdjointJacobian:
             qml.expval(qml.PauliZ(0))
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="The CRot operation is not supported using the"
+            qml.QuantumFunctionError,
+            match="The CRot operation is not supported using the",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -151,7 +160,8 @@ class TestAdjointJacobian:
             qml.expval(qml.Projector([0, 1], wires=[0, 1]))
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+            qml.QuantumFunctionError,
+            match="differentiation method does not support the Projector",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -160,7 +170,8 @@ class TestAdjointJacobian:
             qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+            qml.QuantumFunctionError,
+            match="differentiation method does not support the Projector",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -294,14 +305,19 @@ class TestAdjointJacobian:
 
             qml.expval(
                 qml.Hermitian(
-                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
+                    wires=[0, 2],
                 )
             )
 
         tape.trainable_params = {0, 1, 2}
         dev_jacobian = dev.adjoint_jacobian(tape)
         expected_jacobian = np.array(
-            [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
+            [
+                -np.sin(params[0]) * np.cos(params[2]),
+                0,
+                -np.cos(params[0]) * np.sin(params[2]),
+            ]
         )
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -323,7 +339,8 @@ class TestAdjointJacobian:
                 qml.PauliZ(0),
                 qml.PauliZ(1),
                 qml.Hermitian(
-                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]], wires=[0, 2]
+                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
+                    wires=[0, 2],
                 ),
             ],
         )
@@ -342,7 +359,11 @@ class TestAdjointJacobian:
             + 0.3 * np.array([0, -np.sin(params[1]), 0])
             + 0.4
             * np.array(
-                [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
+                [
+                    -np.sin(params[0]) * np.cos(params[2]),
+                    0,
+                    -np.cos(params[0]) * np.sin(params[2]),
+                ]
             )
         )
 
@@ -422,7 +443,8 @@ class TestAdjointJacobian:
 
             qml.expval(
                 qml.Hermitian(
-                    [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]], wires=[0, 1]
+                    [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]],
+                    wires=[0, 1],
                 )
             )
 
@@ -440,7 +462,11 @@ class TestAdjointJacobian:
         x, y, z = [0.5, 0.3, -0.7]
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [
+                qml.RX(0.4, wires=[0]),
+                qml.Rot(x, y, z, wires=[0]),
+                qml.RY(-0.2, wires=[0]),
+            ],
             [qml.expval(qml.PauliZ(0))],
         )
 
@@ -464,7 +490,11 @@ class TestAdjointJacobian:
         x, y, z = [0.5, 0.3, -0.7]
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [
+                qml.RX(0.4, wires=[0]),
+                qml.Rot(x, y, z, wires=[0]),
+                qml.RY(-0.2, wires=[0]),
+            ],
             [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
         )
 
@@ -489,11 +519,16 @@ class TestAdjointJacobian:
         x, y, z = [0.5, 0.3, -0.7]
 
         ham = qml.Hamiltonian(
-            [1.0, 0.3, 0.3], [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)]
+            [1.0, 0.3, 0.3],
+            [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)],
         )
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])],
+            [
+                qml.RX(0.4, wires=[0]),
+                qml.Rot(x, y, z, wires=[0]),
+                qml.RY(-0.2, wires=[0]),
+            ],
             [qml.expval(ham)],
         )
 
@@ -590,7 +625,8 @@ class TestAdjointJacobian:
         tape.trainable_params = {0}
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type."
+            qml.QuantumFunctionError,
+            match="This method does not support statevector return type.",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -600,7 +636,13 @@ class TestAdjointJacobianQNode:
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=8, mpi=True, c_dtype=request.param[0], batch_obs=request.param[1])
+        return qml.device(
+            device_name,
+            wires=8,
+            mpi=True,
+            c_dtype=request.param[0],
+            batch_obs=request.param[1],
+        )
 
     def test_finite_shots_warning(self):
         """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
@@ -608,7 +650,8 @@ class TestAdjointJacobianQNode:
         dev = qml.device(device_name, wires=8, mpi=True, shots=1)
 
         with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+            UserWarning,
+            match="Requested adjoint differentiation to be computed with finite shots.",
         ):
 
             @qml.qnode(dev, diff_method="adjoint")
@@ -617,7 +660,8 @@ class TestAdjointJacobianQNode:
                 return qml.expval(qml.PauliZ(0))
 
         with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+            UserWarning,
+            match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             qml.grad(circ)(0.1)
 
@@ -890,7 +934,8 @@ def circuit_ansatz(params, wires):
         qml.PauliX(0) @ qml.PauliY(3),
         qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),
         qml.Hermitian(
-            np.kron(qml.PauliY.compute_matrix(), qml.PauliZ.compute_matrix()), wires=[3, 2]
+            np.kron(qml.PauliY.compute_matrix(), qml.PauliZ.compute_matrix()),
+            wires=[3, 2],
         ),
         qml.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=0),
         qml.Hermitian(np.array([[0, 1], [1, 0]], requires_grad=False), wires=0) @ qml.PauliZ(2),
@@ -922,6 +967,7 @@ def test_integration(returns):
     j_lightning = qml.jacobian(casted_to_array_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
+
 
 custom_wires = ["alice", 3.14, -1, 0, "bob", 1, "unit", "test"]
 
@@ -980,7 +1026,11 @@ def test_integration_custom_wires(returns):
     [
         (qml.PauliZ(custom_wires[0]),),
         (qml.PauliZ(custom_wires[0]), qml.PauliZ(custom_wires[1])),
-        (qml.PauliZ(custom_wires[0]), qml.PauliZ(custom_wires[1]), qml.PauliZ(custom_wires[3])),
+        (
+            qml.PauliZ(custom_wires[0]),
+            qml.PauliZ(custom_wires[1]),
+            qml.PauliZ(custom_wires[3]),
+        ),
         (
             qml.PauliZ(custom_wires[0]),
             qml.PauliZ(custom_wires[1]),
@@ -991,7 +1041,10 @@ def test_integration_custom_wires(returns):
             qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
             qml.PauliZ(custom_wires[1]) @ qml.PauliY(custom_wires[2]),
         ),
-        (qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]), qml.PauliZ(custom_wires[1])),
+        (
+            qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+            qml.PauliZ(custom_wires[1]),
+        ),
     ],
 )
 def test_integration_custom_wires_batching(returns):
