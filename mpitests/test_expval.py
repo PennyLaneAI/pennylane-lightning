@@ -143,7 +143,7 @@ class TestExpval:
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
         init_state = init_state.astype(dev.C_DTYPE)
-        
+
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
             qml.RY(theta, wires=[0])
