@@ -141,6 +141,25 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu.info
 
+  upload-to-codecov-linux-cpp:
+    needs: [cpp_tests]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
       - name: Cleanup
         if: always()
         run: |
