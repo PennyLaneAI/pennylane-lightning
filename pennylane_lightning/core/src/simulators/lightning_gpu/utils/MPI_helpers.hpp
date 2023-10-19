@@ -75,8 +75,20 @@ inline std::vector<int2> createWirePairs(int numLocalQubits, int numTotalQubits,
                            statusWires);
 }
 
-inline void tgtsVecProcess(const size_t num_local_qubits,
-                           const size_t num_qubits,
+/**
+ * @brief Create wire pairs for bit index swap and transform all target wires to
+ * local ones for a vector of targets.
+ *
+ * @param numLocalQubits Number of local qubits.
+ * @param numTotalQubits Number of total qubits.
+ * @param tgts Vector of target wires vector.
+ * @param localTgts Vector of local target wires vector.
+ * @param tgtsSwapStatus Vector of swap status.
+ * @param tgtswirePairs Vector of wire pairs for MPI operation.
+ */
+
+inline void tgtsVecProcess(const size_t numLocalQubits,
+                           const size_t numTotalQubits,
                            const std::vector<std::vector<std::size_t>> &tgts,
                            std::vector<std::vector<size_t>> &localTgts,
                            std::vector<std::size_t> &tgtsSwapStatus,
@@ -89,29 +101,29 @@ inline void tgtsVecProcess(const size_t num_local_qubits,
             vec.size()); // Reserve memory for efficiency
 
         std::transform(vec.begin(), vec.end(), tmpVecInt.begin(),
-                       [&](std::size_t x) { return num_qubits - 1 - x; });
+                       [&](std::size_t x) { return numTotalQubits - 1 - x; });
         tgtsIntTrans.push_back(std::move(tmpVecInt));
     }
 
     for (const auto &vec : tgtsIntTrans) {
-        std::vector<int> statusWires(num_qubits, WireStatus::Default);
+        std::vector<int> statusWires(numTotalQubits, WireStatus::Default);
 
         for (auto &v : vec) {
             statusWires[v] = WireStatus::Target;
         }
 
         size_t StatusGlobalWires = std::reduce(
-            statusWires.begin() + num_local_qubits, statusWires.end());
+            statusWires.begin() + numLocalQubits, statusWires.end());
 
         if (!StatusGlobalWires) {
             tgtsSwapStatus.push_back(WiresSwapStatus::Local);
             localTgts.push_back(vec);
         } else {
             size_t counts_global_wires = std::count_if(
-                statusWires.begin(), statusWires.begin() + num_local_qubits,
+                statusWires.begin(), statusWires.begin() + numLocalQubits,
                 [](int i) { return i != WireStatus::Default; });
             size_t counts_local_wires_avail =
-                num_local_qubits - (vec.size() - counts_global_wires);
+                numLocalQubits - (vec.size() - counts_global_wires);
             // Check if there are sufficent number of local wires for bit
             // swap
             if (counts_global_wires <= counts_local_wires_avail) {
@@ -120,7 +132,7 @@ inline void tgtsVecProcess(const size_t num_local_qubits,
                 std::vector<int> localVec(vec.size());
                 std::transform(vec.begin(), vec.end(), localVec.begin(),
                                [&](size_t x) { return static_cast<int>(x); });
-                auto wirePairs = createWirePairs(num_local_qubits, num_qubits,
+                auto wirePairs = createWirePairs(numLocalQubits, numTotalQubits,
                                                  localVec, statusWires);
                 std::vector<size_t> localVecSizeT(localVec.size());
                 std::transform(localVec.begin(), localVec.end(),
