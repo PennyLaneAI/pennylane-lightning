@@ -94,14 +94,13 @@ Lightning plugins can be installed using ``pip`` as follows
     $ pip install pennylane-lightning
 
 The above command will install the Lightning-Qubit plugin (the default since it is most broadly supported).
-Other backends are installed with
+In order to install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends, you can respectively use the following commands:
 
 .. code-block:: console
 
     $ pip install pennylane-lightning[gpu]
     $ pip install pennylane-lightning[kokkos]
 
-which will install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends respectively.
 
 Installing from source
 ----------------------
