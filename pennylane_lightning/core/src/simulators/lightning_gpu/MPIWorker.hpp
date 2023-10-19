@@ -233,6 +233,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
     }
 
     // LCOV_EXCL_START
+    // The following lines are for handling the errors caused by python
+    // layer calls. Won't be covered by cpp unit tests.
     auto err = custatevecCommunicatorCreate(handle, &communicator,
                                             communicatorType, nullptr);
     if (err != CUSTATEVEC_STATUS_SUCCESS) {
@@ -307,6 +309,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* size_t */ transferWorkspaceSize));
 
     // LCOV_EXCL_START
+    // Won't be covered by CI checks with 2 nvidia GPUs without nvlink
+    // connection
     if (nP2PDeviceBits != 0) {
         cudaIpcMemHandle_t ipcMemHandle;
         PL_CUDA_IS_SUCCESS(cudaIpcGetMemHandle(&ipcMemHandle, sv));

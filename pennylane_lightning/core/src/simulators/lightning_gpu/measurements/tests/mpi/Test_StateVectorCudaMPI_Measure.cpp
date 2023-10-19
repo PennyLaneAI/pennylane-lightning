@@ -190,8 +190,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Pauliwords base on expval",
-                   "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
     using StateVectorT = StateVectorCudaMPI<TestType>;
@@ -231,8 +230,8 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval",
     DevTag<int> dt_local(deviceId, 0);
     mpi_manager.Barrier();
 
-    StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
-                                          nGlobalIndexBits, nLocalIndexBits);
+    StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                    nLocalIndexBits);
     sv.CopyHostDataToGpu(local_state, false);
 
     SECTION("Test getExpectationValuePauliWords (full wires)") {
@@ -243,8 +242,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval",
         std::vector<std::vector<size_t>> tgts = {{0, 1, 2, 3}, {0, 1, 2, 3}};
         std::vector<std::complex<PrecisionT>> coeffs = {{0.1, 0.0}, {0.2, 0.0}};
 
-        auto expval_mpi =
-            Measurer.expval(pauli_words, tgts, coeffs.data());
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
         CHECK(expval_mpi == Approx(0.0014895211).margin(1e-7));
     }
@@ -258,8 +256,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval",
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
-        auto expval_mpi =
-            Measurer.expval(pauli_words, tgts, coeffs.data());
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
         CHECK(expval_mpi == Approx(0.4589167637).margin(1e-7));
     }
@@ -274,8 +271,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval",
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
-        auto expval_mpi =
-            Measurer.expval(pauli_words, tgts, coeffs.data());
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
         CHECK(expval_mpi == Approx(0.4841317321).margin(1e-7));
     }
@@ -290,8 +286,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval",
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
-        auto expval_mpi =
-            Measurer.expval(pauli_words, tgts, coeffs.data());
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
         CHECK(expval_mpi == Approx(-0.0105768395).margin(1e-7));
     }

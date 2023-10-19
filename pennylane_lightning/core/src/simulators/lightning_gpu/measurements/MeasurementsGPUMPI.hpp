@@ -169,6 +169,7 @@ class MeasurementsMPI final
             }
         } else {
             // LCOV_EXCL_START
+            // Won't be covered with 2 MPI processes in CI checks
             if (sub_mpi_manager0.getRank() == 0) {
                 subgroup_probabilities.resize(
                     Pennylane::Util::exp2(wires_local.size()));
