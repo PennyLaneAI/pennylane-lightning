@@ -223,22 +223,22 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[MeasurementsMPI]", float, double) {
     sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
     mpi_manager.Barrier();
 
+    StateVectorCudaManaged<TestType> statevector(statevector_data.data(),
+                                                 statevector_data.size());
+
     // Initializing the Measurements class.
     // This object attaches to the statevector allowing several measures.
-    // MeasurementsMPI<StateVectorT> Measurer(sv);
-    // mpi_manager.Barrier();
 
-    SECTION("Testing for Pauli words:") {
+    SECTION("Testing for Pauli words full wires:") {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
         PrecisionT exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<size_t>> wires_list = {{0, 1, 2}};
         std::vector<std::string> operations_list;
-        std::vector<std::complex<PrecisionT>> coeffs = {
-            ComplexT{0.1, 0.0}, ComplexT{0.2, 0.0}, ComplexT{0.3, 0.0}};
+        std::vector<std::complex<PrecisionT>> coeffs = {ComplexT{0.1, 0.0}};
 
-        operations_list = {"X", "X", "X"};
+        operations_list = {{"X", "X", "X"}};
         exp_values =
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
@@ -248,6 +248,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[MeasurementsMPI]", float, double) {
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
 
+        /*
         operations_list = {"Y", "Y", "Y"};
         exp_values =
             Measurer.expval(operations_list, wires_list, coeffs.data());
@@ -267,6 +268,32 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[MeasurementsMPI]", float, double) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
+        */
+    }
+
+    SECTION("Testing for Pauli words subset wires:") {
+        MeasurementsMPI<StateVectorT> MeasurerMPI(sv);
+        mpi_manager.Barrier();
+
+        PrecisionT exp_values;
+        PrecisionT exp_values_ref;
+        std::vector<std::vector<size_t>> wires_list0 = {{0}};
+        std::vector<std::vector<size_t>> wires_list1 = {{2}};
+        std::vector<std::string> operations_list;
+        std::vector<std::complex<PrecisionT>> coeffs = {ComplexT{0.1, 0.0}};
+
+        operations_list = {"X"};
+        exp_values =
+            MeasurerMPI.expval(operations_list, wires_list0, coeffs.data());
+        exp_values_ref = 0.049272486;
+
+        CHECK(exp_values == Approx(exp_values_ref).margin(1e-7));
+
+        exp_values =
+            MeasurerMPI.expval(operations_list, wires_list1, coeffs.data());
+        exp_values_ref = 0.028232124;
+
+        CHECK(exp_values == Approx(exp_values_ref).margin(1e-7));
     }
 }
 

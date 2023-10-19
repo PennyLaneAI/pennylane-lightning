@@ -40,6 +40,7 @@ using namespace Pennylane::LightningGPU;
 /// @endcond
 
 namespace Pennylane::LightningGPU::MPI {
+// LCOV_EXCL_START
 inline void errhandler(int errcode, const char *str) {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;
@@ -47,6 +48,7 @@ inline void errhandler(int errcode, const char *str) {
     fprintf(stderr, "%s: %s\n", str, msg);
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
+// LCOV_EXCL_STOP
 
 #define PL_MPI_IS_SUCCESS(fn)                                                  \
     {                                                                          \

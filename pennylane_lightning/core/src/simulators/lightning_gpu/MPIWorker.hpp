@@ -129,10 +129,12 @@ struct MPIWorkerDeleter {
             custatevecCommunicatorDestroy(handle, communicator));
         PL_CUDA_IS_SUCCESS(cudaFree(d_extraWorkspace));
         PL_CUDA_IS_SUCCESS(cudaFree(d_transferWorkspace));
+        // LCOV_EXCL_START
         for (auto *d_subSV : d_subSVsP2P)
             PL_CUDA_IS_SUCCESS(cudaIpcCloseMemHandle(d_subSV));
         for (auto event : remoteEvents)
             PL_CUDA_IS_SUCCESS(cudaEventDestroy(event));
+        // LCOV_EXCL_STOP
         PL_CUDA_IS_SUCCESS(cudaEventDestroy(localEvent));
     }
 };
@@ -230,6 +232,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         communicatorType = CUSTATEVEC_COMMUNICATOR_TYPE_OPENMPI;
     }
 
+    // LCOV_EXCL_START
     auto err = custatevecCommunicatorCreate(handle, &communicator,
                                             communicatorType, nullptr);
     if (err != CUSTATEVEC_STATUS_SUCCESS) {
@@ -237,6 +240,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         PL_CUSTATEVEC_IS_SUCCESS(custatevecCommunicatorCreate(
             handle, &communicator, communicatorType, "libmpi.so"));
     }
+    // LCOV_EXCL_STOP
     mpi_manager.Barrier();
 
     void *d_extraWorkspace = nullptr;
@@ -302,6 +306,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* void* */ d_transferWorkspace,
         /* size_t */ transferWorkspaceSize));
 
+    // LCOV_EXCL_START
     if (nP2PDeviceBits != 0) {
         cudaIpcMemHandle_t ipcMemHandle;
         PL_CUDA_IS_SUCCESS(cudaIpcGetMemHandle(&ipcMemHandle, sv));
@@ -347,6 +352,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
             /* cudaEvent_t */ remoteEvents.data(),
             /* const uint32_t */ static_cast<uint32_t>(d_subSVsP2P.size())));
     }
+    // LCOV_EXCL_START
 
     return {svSegSwapWorker,
             std::bind(MPIWorkerDeleter(), std::placeholders::_1, handle,

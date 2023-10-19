@@ -175,6 +175,16 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::IsingXX", "[StateVectorCudaMPI_Param]",
                                   msb_2qbit, angle_1param);
 }
 
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::IsingXY", "[StateVectorCudaMPI_Param]",
+                   float, double) {
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyIsingXY, "IsingXY",
+                                  lsb_2qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyIsingXY, "IsingXY",
+                                  mlsb_2qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyIsingXY, "IsingXY",
+                                  msb_2qbit, angle_1param);
+}
+
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::IsingYY", "[StateVectorCudaMPI_Param]",
                    float, double) {
     PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyIsingYY, "IsingYY",
@@ -248,6 +258,16 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::CRot", "[StateVectorCudaMPI_Param]",
                                   msb_2qbit, angle_3param);
 }
 
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::MultiRZ", "[StateVectorCudaMPI_Param]",
+                   float, double) {
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyMultiRZ, "MultiRZ",
+                                  lsb_2qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyMultiRZ, "MultiRZ",
+                                  mlsb_2qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applyMultiRZ, "MultiRZ",
+                                  msb_2qbit, angle_1param);
+}
+
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::SingleExcitation",
                    "[StateVectorCudaMPI_Param]", float, double) {
     PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits, applySingleExcitation,
@@ -318,4 +338,32 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::DoubleExcitationPlus",
     PLGPU_MPI_TEST_GATE_OPS_PARAM(
         TestType, num_qubits, applyDoubleExcitationPlus, "DoubleExcitationPlus",
         msb_4qbit, angle_1param);
+}
+
+TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
+                   double) {
+    using StateVectorT = StateVectorCudaMPI<double>;
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+
+    size_t mpi_buffersize = 1;
+
+    int nGlobalIndexBits =
+        std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
+    int nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    mpi_manager.Barrier();
+
+    int nDevices = 0; // Number of GPU devices per node
+    cudaGetDeviceCount(&nDevices);
+    int deviceId = mpi_manager.getRank() % nDevices;
+    cudaSetDevice(deviceId);
+    DevTag<int> dt_local(deviceId, 0);
+
+    SECTION("Catch failures caused by unsupported named gates") {
+        std::string obs = "paulix";
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.initSV_MPI();
+        PL_CHECK_THROWS_MATCHES(sv.applyOperation(obs, {0}), LightningException,
+                                "Currently unsupported gate: paulix");
+    }
 }

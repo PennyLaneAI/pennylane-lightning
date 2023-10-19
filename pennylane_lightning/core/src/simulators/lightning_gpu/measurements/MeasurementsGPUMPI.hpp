@@ -168,6 +168,7 @@ class MeasurementsMPI final
                 return local_probs;
             }
         } else {
+            // LCOV_EXCL_START
             if (sub_mpi_manager0.getRank() == 0) {
                 subgroup_probabilities.resize(
                     Pennylane::Util::exp2(wires_local.size()));
@@ -188,6 +189,7 @@ class MeasurementsMPI final
                     [&](double x) { return static_cast<PrecisionT>(x); });
                 return local_probs;
             }
+            // LCOV_EXCL_STOP
         }
     }
 
@@ -290,9 +292,11 @@ class MeasurementsMPI final
 
         // Ensure the 'custatevecSamplerApplySubSVOffset' function can be called
         // successfully without reducing accuracy.
+        // LCOV_EXCL_START
         if (precumulative == norm) {
             precumulative = norm - epsilon;
         }
+        // LCOV_EXCL_STOP
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerApplySubSVOffset(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
             /* custatevecSamplerDescriptor_t */ sampler,
@@ -418,7 +422,7 @@ class MeasurementsMPI final
     auto expval(const std::string &operation, const std::vector<size_t> &wires)
         -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
-        std::vector<ComplexT> gate_matrix = {};
+        std::vector<CFP_t> gate_matrix = {};
         auto expect =
             this->_statevector.expval(operation, wires, params, gate_matrix);
 

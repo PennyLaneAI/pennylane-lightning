@@ -62,7 +62,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 
         auto m = MeasurementsMPI(sv);
 
-        sv.applyOperation(
+        sv.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
@@ -79,7 +79,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 
         auto m = MeasurementsMPI(sv);
 
-        sv.applyOperation(
+        sv.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
@@ -96,7 +96,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 
         auto m = MeasurementsMPI(sv);
 
-        sv.applyOperation(
+        sv.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
 
@@ -135,7 +135,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
 
         auto m = MeasurementsMPI(sv);
 
-        sv.applyOperation(
+        sv.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}, {"RX"}, {"RY"}},
             {{0}, {0}, {1}, {1}, {2}, {2}},
             {{false}, {false}, {false}, {false}, {false}, {false}},
@@ -186,7 +186,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
 
         auto m = MeasurementsMPI(sv);
 
-        sv.applyOperation(
+        sv.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 

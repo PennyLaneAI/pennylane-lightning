@@ -96,6 +96,63 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     }
 }
 
+TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
+          "StatePrep, BasisState], Obs=[Z,Z]",
+          "[AdjointJacobianGPUMPI]") {
+    const std::string test_ops =
+        GENERATE("QubitStateVector", "StatePrep", "BasisState");
+    using StateVectorT = StateVectorCudaMPI<double>;
+
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+
+    AdjointJacobianMPI<StateVectorT> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    std::vector<size_t> tp{0};
+
+    const size_t num_qubits = 4;
+    const size_t num_obs = 2;
+    std::vector<double> jacobian(num_obs * tp.size(), 0);
+    std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
+    std::vector<double> jacobian_ref(num_obs * tp.size(), 0);
+
+    size_t mpi_buffersize = 1;
+
+    int nGlobalIndexBits =
+        std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
+    int nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    mpi_manager.Barrier();
+
+    int nDevices = 0; // Number of GPU devices per node
+    cudaGetDeviceCount(&nDevices);
+    int deviceId = mpi_manager.getRank() % nDevices;
+    cudaSetDevice(deviceId);
+    DevTag<int> dt_local(deviceId, 0);
+    {
+        StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
+                         nGlobalIndexBits, nLocalIndexBits);
+        psi.initSV_MPI();
+
+        const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{0});
+        const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+
+        JacobianDataMPI<StateVectorT> tape{
+            param.size(), psi, {obs1, obs2}, ops, tp};
+
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, false);
+        adj.adjointJacobian_serial(std::span{jacobian_serial}, tape, false);
+
+        CAPTURE(jacobian);
+        CAPTURE(jacobian_serial);
+        CHECK(jacobian == Pennylane::Util::approx(jacobian_ref).margin(1e-7));
+        CHECK(jacobian_serial ==
+              Pennylane::Util::approx(jacobian_ref).margin(1e-7));
+    }
+}
+
 TEST_CASE(
     "AdjointJacobianGPUMPI::AdjointJacobianGPUMPI Op=[RX,RX,RX], Obs=[Z,Z,Z]",
     "[AdjointJacobianGPUMPI]") {

@@ -23,7 +23,6 @@
 #include "LinearAlg.hpp"
 #include "Observables.hpp"
 #include "StateVectorCudaMPI.hpp"
-//#include "StateVectorCudaManaged.hpp"
 #include "Util.hpp"
 #include "cuError.hpp"
 
@@ -33,7 +32,6 @@ using namespace Pennylane::Util;
 using namespace Pennylane::Observables;
 using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU::MPI;
-// using Pennylane::LightningGPU::StateVectorCudaManaged;
 using Pennylane::LightningGPU::StateVectorCudaMPI;
 } // namespace
 /// @endcond

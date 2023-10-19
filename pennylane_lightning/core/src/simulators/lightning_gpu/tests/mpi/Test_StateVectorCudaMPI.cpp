@@ -101,7 +101,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
     const size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    size_t mpi_buffersize = 1;
+    size_t mpi_buffersize = 128;
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
     size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;

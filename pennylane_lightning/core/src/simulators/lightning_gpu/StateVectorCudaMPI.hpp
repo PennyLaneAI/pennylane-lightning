@@ -371,11 +371,11 @@ class StateVectorCudaMPI
             if (adjoint) {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyHostMatrixGate(rot_matrix, ctrls, tgts, true);
+                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
             } else {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyHostMatrixGate(rot_matrix, ctrls, tgts, false);
+                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
@@ -400,73 +400,6 @@ class StateVectorCudaMPI
                 tgts_local, adjoint);
         }
     }
-    /**
-     * @brief STL-friendly variant of `applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {})`
-     *
-     */
-    void applyOperation_std(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<std::complex<Precision>>
-            &gate_matrix = {}) {
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        std::transform(gate_matrix.begin(), gate_matrix.end(),
-                       matrix_cu.begin(), [](const std::complex<Precision> &x) {
-                           return cuUtil::complexToCu<std::complex<Precision>>(
-                               x);
-                       });
-        applyOperation(opName, wires, adjoint, params, matrix_cu);
-    }
-
-    /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     * @param params
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints,
-                        const std::vector<std::vector<Precision>> &params) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx],
-                           params[op_idx]);
-        }
-    }
-
-    /**
-     * @brief Multi-op variant of `execute(const std::string &opName, const
-     std::vector<int> &wires, bool adjoint = false, const std::vector<Precision>
-     &params)`
-     *
-     * @param opNames
-     * @param wires
-     * @param adjoints
-     */
-    void applyOperation(const std::vector<std::string> &opNames,
-                        const std::vector<std::vector<size_t>> &wires,
-                        const std::vector<bool> &adjoints) {
-        PL_ABORT_IF(opNames.size() != wires.size(),
-                    "Incompatible number of ops and wires");
-        PL_ABORT_IF(opNames.size() != adjoints.size(),
-                    "Incompatible number of ops and adjoints");
-        const auto num_ops = opNames.size();
-        for (std::size_t op_idx = 0; op_idx < num_ops; op_idx++) {
-            applyOperation(opNames[op_idx], wires[op_idx], adjoints[op_idx]);
-        }
-    }
 
     /**
      * @brief Apply a single generator to the state vector using the given
@@ -479,9 +412,9 @@ class StateVectorCudaMPI
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false)
         -> PrecisionT {
-        PL_ABORT_IF(generator_map_.find(opName) == generator_map_.end(),
-                    "Unsupported generator!");
-        return generator_map_.at(opName)(wires, adjoint);
+        auto it = generator_map_.find(opName);
+        PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
+        return (it->second)(wires, adjoint);
     }
 
     /**
@@ -499,7 +432,13 @@ class StateVectorCudaMPI
         size_t n = size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
-        this->applyOperation_std(opName, wires, adjoint, {}, matrix);
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, wires, adjoint, {}, matrix_cu);
     }
 
     /**
@@ -512,13 +451,11 @@ class StateVectorCudaMPI
      */
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
-        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
-        const std::string opName = {};
-        this->applyOperation_std(opName, wires, adjoint, {}, gate_matrix);
+        applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
     //****************************************************************************//
@@ -1093,18 +1030,9 @@ class StateVectorCudaMPI
                 const std::vector<Precision> &params = {0.0},
                 const std::vector<CFP_t> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{
-                      wires.rbegin(),
-                      wires.rend()}; // ensure wire indexing correctly preserved
-                                     // for tensor-observables
+        auto &&local_wires = wires;
 
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            gate_cache_.add_gate(obsName, par[0], gate_matrix);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
+        if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
             std::string message =
                 "Currently unsupported observable: " + obsName;
             throw LightningException(message.c_str());
@@ -1114,31 +1042,6 @@ class StateVectorCudaMPI
         return expect_val;
     }
 
-    /**
-     * @brief See `expval(const std::string &obsName, const std::vector<size_t>
-     &wires, const std::vector<Precision> &params = {0.0}, const
-     std::vector<CFP_t> &gate_matrix = {})`
-     */
-    auto expval(const std::string &obsName, const std::vector<size_t> &wires,
-                const std::vector<Precision> &params = {0.0},
-                const std::vector<std::complex<Precision>> &gate_matrix = {}) {
-        auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
-        if (!(gate_cache_.gateExists(obsName, par[0]) || gate_matrix.empty())) {
-            for (std::size_t i = 0; i < gate_matrix.size(); i++) {
-                matrix_cu[i] = cuUtil::complexToCu<std::complex<Precision>>(
-                    gate_matrix[i]);
-            }
-            gate_cache_.add_gate(obsName, par[0], matrix_cu);
-        } else if (!gate_cache_.gateExists(obsName, par[0]) &&
-                   gate_matrix.empty()) {
-            std::string message =
-                "Currently unsupported observable: " + obsName;
-            throw LightningException(message.c_str());
-        }
-        return expval(obsName, wires, params, matrix_cu);
-    }
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
      */
@@ -1158,10 +1061,7 @@ class StateVectorCudaMPI
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires =
-            (gate_matrix.empty())
-                ? wires
-                : std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto expect_val =
             getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires).x;
@@ -1230,6 +1130,7 @@ class StateVectorCudaMPI
             for (auto &v : vec) {
                 statusWires[v] = WireStatus::Target;
             }
+
             size_t StatusGlobalWires =
                 std::reduce(statusWires.begin() + this->getNumLocalQubits(),
                             statusWires.end());
@@ -1867,10 +1768,12 @@ class StateVectorCudaMPI
             /* size_t* */ &extraWorkspaceSizeInBytes));
 
         // allocate external workspace if necessary
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         // apply gate
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
@@ -1890,8 +1793,10 @@ class StateVectorCudaMPI
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
     }
 
     /**
@@ -1973,168 +1878,6 @@ class StateVectorCudaMPI
     }
 
     /**
-     * @brief Apply a given host-matrix `matrix` to the local state vector at
-     * qubit indices given by `tgts` and control-lines given by `ctrls`. The
-     * adjoint can be taken by setting `use_adjoint` to true.
-     *
-     * @param matrix Host-data vector in row-major order of a given gate.
-     * @param ctrls Control line qubits.
-     * @param tgts Target qubits.
-     * @param use_adjoint Use adjoint of given gate.
-     */
-    void applyCuSVHostMatrixGate(const std::vector<CFP_t> &matrix,
-                                 const std::vector<int> &ctrls,
-                                 const std::vector<int> &tgts,
-                                 bool use_adjoint = false) {
-        void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
-        int nIndexBits = BaseType::getNumQubits();
-
-        cudaDataType_t data_type;
-        custatevecComputeType_t compute_type;
-
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
-            data_type = CUDA_C_64F;
-            compute_type = CUSTATEVEC_COMPUTE_64F;
-        } else {
-            data_type = CUDA_C_32F;
-            compute_type = CUSTATEVEC_COMPUTE_32F;
-        }
-
-        // check the size of external workspace
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
-            /* custatevecHandle_t */ handle_.get(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const uint32_t */ tgts.size(),
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
-
-        // allocate external workspace if necessary
-        if (extraWorkspaceSizeInBytes > 0) {
-            PL_CUDA_IS_SUCCESS(
-                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
-        }
-
-        // apply gate
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
-            /* custatevecHandle_t */ handle_.get(),
-            /* void* */ BaseType::getData(),
-            /* cudaDataType_t */ data_type,
-            /* const uint32_t */ nIndexBits,
-            /* const void* */ matrix.data(),
-            /* cudaDataType_t */ data_type,
-            /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
-            /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgts.data(),
-            /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrls.data(),
-            /* const int32_t* */ nullptr,
-            /* const uint32_t */ ctrls.size(),
-            /* custatevecComputeType_t */ compute_type,
-            /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
-        if (extraWorkspaceSizeInBytes)
-            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
-    }
-
-    /**
-     * @brief Apply a given host-matrix `matrix` to the state vector at qubit
-     * indices given by `tgts` and control-lines given by `ctrls`. The adjoint
-     * can be taken by setting `use_adjoint` to true.
-     *
-     * @param matrix Host-data vector in row-major order of a given gate.
-     * @param ctrls Control line qubits.
-     * @param tgts Target qubits.
-     * @param use_adjoint Use adjoint of given gate.
-     */
-    void applyHostMatrixGate(const std::vector<CFP_t> &matrix,
-                             const std::vector<std::size_t> &ctrls,
-                             const std::vector<std::size_t> &tgts,
-                             bool use_adjoint = false) {
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(this->getTotalNumQubits() - 1 - x);
-            });
-
-        // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
-        std::vector<int> statusWires(this->getTotalNumQubits(),
-                                     WireStatus::Default);
-
-        // Update wire status based on the gate information
-        for (size_t i = 0; i < ctrlsInt.size(); i++) {
-            statusWires[ctrlsInt[i]] = WireStatus::Control;
-        }
-        // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
-            statusWires[tgtsInt[i]] = WireStatus::Target;
-        }
-
-        int StatusGlobalWires = std::reduce(
-            statusWires.begin() + this->getNumLocalQubits(), statusWires.end());
-
-        mpi_manager_.Barrier();
-
-        if (!StatusGlobalWires) {
-            applyCuSVHostMatrixGate(matrix, ctrlsInt, tgtsInt, use_adjoint);
-        } else {
-            size_t counts_global_wires =
-                std::count_if(statusWires.begin(),
-                              statusWires.begin() + this->getNumLocalQubits(),
-                              [](int i) { return i != WireStatus::Default; });
-            size_t counts_local_wires =
-                ctrlsInt.size() + tgtsInt.size() - counts_global_wires;
-
-            PL_ABORT_IF(
-                counts_global_wires >
-                    (this->getNumLocalQubits() - counts_local_wires),
-                "There is not enough local wires for bit swap operation.");
-
-            std::vector<int> localCtrls = ctrlsInt;
-            std::vector<int> localTgts = tgtsInt;
-
-            auto wirePairs = createWirePairs(
-                this->getNumLocalQubits(), this->getTotalNumQubits(),
-                localCtrls, localTgts, statusWires);
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-
-            applyMPI_Dispatcher(wirePairs,
-                                &StateVectorCudaMPI::applyCuSVHostMatrixGate,
-                                matrix, localCtrls, localTgts, use_adjoint);
-            PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        }
-    }
-
-    void applyHostMatrixGate(const std::vector<std::complex<Precision>> &matrix,
-                             const std::vector<std::size_t> &ctrls,
-                             const std::vector<std::size_t> &tgts,
-                             bool use_adjoint = false) {
-        std::vector<CFP_t> matrix_cu(matrix.size());
-        for (std::size_t i = 0; i < matrix.size(); i++) {
-            matrix_cu[i] =
-                cuUtil::complexToCu<std::complex<Precision>>(matrix[i]);
-        }
-
-        applyHostMatrixGate(matrix_cu, ctrls, tgts, use_adjoint);
-    }
-
-    /**
      * @brief Get expectation of a given host or device defined array.
      *
      * @param matrix Host or device defined row-major order gate matrix array.
@@ -2172,11 +1915,12 @@ class StateVectorCudaMPI
             /* const uint32_t */ tgts.size(),
             /* custatevecComputeType_t */ compute_type,
             /* size_t* */ &extraWorkspaceSizeInBytes));
-
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
                 cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
         }
+        // LCOV_EXCL_STOP
 
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
@@ -2195,10 +1939,11 @@ class StateVectorCudaMPI
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
-
+        // LCOV_EXCL_STOP
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }
+        // LCOV_EXCL_STOP
     }
 
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,
