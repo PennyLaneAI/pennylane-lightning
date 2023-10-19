@@ -280,15 +280,17 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", double) {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
 
-        std::vector<std::string> pauli_words = {"X", "XY", "XYZ", "XYZI"};
+        std::vector<std::string> pauli_words = {"X", "XY", "XYZ", "XYZI",
+                                                "X", "Y",  "Z",   "I"};
         std::vector<std::vector<size_t>> tgts = {
-            {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}};
+            {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}, {3}, {3}, {3}, {3}};
         std::vector<std::complex<PrecisionT>> coeffs = {
+            {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0},
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
         auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
-        CHECK(expval_mpi == Approx(-0.0105768395).margin(1e-7));
+        CHECK(expval_mpi == Approx(0.4735548926).margin(1e-7));
     }
 }
 

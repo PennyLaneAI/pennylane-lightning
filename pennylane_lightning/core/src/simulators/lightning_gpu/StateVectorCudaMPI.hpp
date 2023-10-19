@@ -1939,7 +1939,7 @@ class StateVectorCudaMPI
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* size_t */ extraWorkspaceSizeInBytes));
-        // LCOV_EXCL_STOP
+        // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }

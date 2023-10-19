@@ -206,6 +206,7 @@ class MPIManager final {
         size_per_node_ = other.size_per_node_;
     }
 
+    // LCOV_EXCL_START
     virtual ~MPIManager() final {
         if (!isExternalComm_) {
             int initflag;
@@ -223,6 +224,7 @@ class MPIManager final {
                 PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
         }
     }
+    // LCOV_EXCL_STOP
 
     // General MPI operations
     /**

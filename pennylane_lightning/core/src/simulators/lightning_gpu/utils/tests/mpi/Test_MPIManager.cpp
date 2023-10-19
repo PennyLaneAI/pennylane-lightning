@@ -127,6 +127,44 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
     }
 }
 
+TEMPLATE_TEST_CASE("MPIManager::Reduce", "[MPIManager]", float, double) {
+    using PrecisionT = TestType;
+    using cp_t = std::complex<PrecisionT>;
+
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+    int rank = mpi_manager.getRank();
+    int size = mpi_manager.getSize();
+
+    SECTION("Apply Reduce vector") {
+        std::vector<cp_t> sendBuf(1, {static_cast<PrecisionT>(rank), 0});
+        std::vector<cp_t> recvBuf(1, {0, 0});
+
+        mpi_manager.Reduce<cp_t>(sendBuf, recvBuf, 0, "sum");
+
+        if (mpi_manager.getRank() == 0) {
+            CHECK(recvBuf[0].real() ==
+                  static_cast<PrecisionT>((size - 1) * size / 2));
+            CHECK(recvBuf[0].imag() == static_cast<PrecisionT>(0));
+        }
+    }
+
+    SECTION("Catch failures caused by unsupported ops") {
+        std::vector<cp_t> sendBuf(1, {static_cast<PrecisionT>(rank), 0});
+        std::vector<cp_t> recvBuf(1, {0, 0});
+        REQUIRE_THROWS_WITH(
+            mpi_manager.Reduce<cp_t>(sendBuf, recvBuf, 0, "SUM"),
+            Catch::Matchers::Contains("Op not supported"));
+    }
+
+    SECTION("Catch failures caused by unsupported ops") {
+        std::vector<std::string> sendBuf(1, "test");
+        std::vector<std::string> recvBuf(1, "test");
+        REQUIRE_THROWS_WITH(
+            mpi_manager.Reduce<std::string>(sendBuf, recvBuf, 0, "SUM"),
+            Catch::Matchers::Contains("Type not supported"));
+    }
+}
+
 TEMPLATE_TEST_CASE("MPIManager::Allreduce", "[MPIManager]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
