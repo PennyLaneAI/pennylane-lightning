@@ -135,7 +135,7 @@ class TestSparseExpvalQChem:
 
         H_sparse = H.sparse_matrix(wires)
 
-        dev = qml.device(device_name, wires=wires, c_dtype=request.param)
+        dev = qml.device(device_name, mpi=True, wires=wires, c_dtype=request.param)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit():

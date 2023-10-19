@@ -125,8 +125,7 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    # @pytest.mark.parametrize("n_wires", range(1, 8))
-    @pytest.mark.parametrize("n_wires", range(7, 8))
+    @pytest.mark.parametrize("n_wires", range(1, 8))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7
@@ -134,15 +133,19 @@ class TestExpval:
         dev = qml.device(device_name, mpi=True, wires=n_qubits)
         if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
             pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
+        comm = MPI.COMM_WORLD
 
         m = 2**n_wires
         U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
         U = U.astype(dev.C_DTYPE)
+        comm.Bcast(U, root=0)
         obs = qml.Hermitian(U, wires=range(n_wires))
+
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
         init_state = init_state.astype(dev.C_DTYPE)
+        comm.Bcast(init_state, root=0)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
