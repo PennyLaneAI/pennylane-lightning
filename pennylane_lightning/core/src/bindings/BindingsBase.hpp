@@ -21,6 +21,7 @@
 
 #include <pybind11/pybind11.h>
 
+#include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
 

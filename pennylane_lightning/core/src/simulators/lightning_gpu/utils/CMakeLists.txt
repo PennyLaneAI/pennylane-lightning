@@ -1,0 +1,6 @@
+project(${PL_BACKEND}_utils LANGUAGES CXX CUDA)
+set(CMAKE_CXX_STANDARD 20)
+
+add_library(${PL_BACKEND}_utils INTERFACE)
+target_include_directories(${PL_BACKEND}_utils INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_link_libraries(${PL_BACKEND}_utils INTERFACE CUDA::cublas CUDA::cusparse)

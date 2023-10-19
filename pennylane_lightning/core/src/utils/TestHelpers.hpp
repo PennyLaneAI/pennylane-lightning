@@ -377,8 +377,7 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
  * @return std::vector<typename StateVectorT::ComplexT>>
  */
 template <class StateVectorT>
-auto createNonTrivialState(size_t num_qubits = 3)
-    -> std::vector<typename StateVectorT::ComplexT> {
+auto createNonTrivialState(size_t num_qubits = 3) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
@@ -407,9 +406,7 @@ auto createNonTrivialState(size_t num_qubits = 3)
     }
     Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
 
-    return std::vector<ComplexT>(Measured_StateVector.getData(),
-                                 Measured_StateVector.getData() +
-                                     Measured_StateVector.getLength());
+    return Measured_StateVector.getDataVector();
 }
 
 /**

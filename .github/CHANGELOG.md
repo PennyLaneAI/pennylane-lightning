@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
+  [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
+
+* Build Linux wheels for Lightning-GPU (CUDA-11).
+  [(#517)](https://github.com/PennyLaneAI/pennylane-lightning/pull/517)
+
 * Add `Dockerfile` in `docker` and `make docker` workflow in `Makefile`. The Docker images and documentation are available on [DockerHub](https://hub.docker.com/repository/docker/pennylaneai/pennylane).
   [(#496)](https://github.com/PennyLaneAI/pennylane-lightning/pull/496)
 
@@ -78,7 +84,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

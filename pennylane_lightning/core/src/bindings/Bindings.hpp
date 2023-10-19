@@ -71,6 +71,21 @@ using namespace Pennylane::LightningKokkos::Measures;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLGPU == 1
+#include "AdjointJacobianGPU.hpp"
+#include "LGPUBindings.hpp"
+#include "MeasurementsGPU.hpp"
+#include "ObservablesGPU.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Observables;
+using namespace Pennylane::LightningGPU::Measures;
+} // namespace
+  /// @endcond
+
 #else
 
 static_assert(false, "Backend not found.");
@@ -521,7 +536,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
 
     /**
      * Create operation list.
-     * */
+     */
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(
         function_name.c_str(),
@@ -553,6 +568,31 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     py::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str(),
                                               py::module_local())
         .def(py::init<>())
+#ifdef _ENABLE_PLGPU
+        .def(
+            "batched",
+            [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+               const StateVectorT &sv,
+               const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+                   &observables,
+               const OpsData<StateVectorT> &operations,
+               const std::vector<size_t> &trainableParams) {
+                using PrecisionT = typename StateVectorT::PrecisionT;
+                std::vector<PrecisionT> jac(observables.size() *
+                                                trainableParams.size(),
+                                            PrecisionT{0.0});
+                const JacobianData<StateVectorT> jd{
+                    operations.getTotalNumParams(),
+                    sv.getLength(),
+                    sv.getData(),
+                    observables,
+                    operations,
+                    trainableParams};
+                adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+                return py::array_t<PrecisionT>(py::cast(jac));
+            },
+            "Batch Adjoint Jacobian method.")
+#endif
         .def("__call__", &registerAdjointJacobian<StateVectorT>,
              "Adjoint Jacobian method.");
 }

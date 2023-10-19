@@ -56,6 +56,7 @@ class StateVectorLQubitRaw final
   public:
     using PrecisionT = fp_t;
     using ComplexT = std::complex<PrecisionT>;
+    using CFP_t = ComplexT;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::External;
 
   private:
@@ -98,6 +99,15 @@ class StateVectorLQubitRaw final
      * @return ComplexT* Pointer to statevector data.
      */
     auto getData() -> ComplexT * { return data_; }
+
+    /**
+     * @brief Get a copy of underlying data.
+     *
+     * @return a std::vector<ComplexT> object that stores statevector data.
+     */
+    auto getDataVector() -> std::vector<ComplexT> {
+        return std::vector<ComplexT>{data_, data_ + length_};
+    }
 
     /**
      * @brief Get the number of data elements in the statevector array.
