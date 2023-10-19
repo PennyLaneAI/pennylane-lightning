@@ -59,7 +59,8 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
-          ControlledMatrixKernelMap] = sv.getSupportedKernels();
+          ControlledMatrixKernelMap, ControlledGateKernelMap] =
+        sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -89,6 +90,14 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
         res_map[key.c_str()] = value;
     }
+
+    for (const auto &[mat_op, kernel] : ControlledGateKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_gate_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
     return res_map;
 }
 
@@ -96,7 +105,7 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
  * @brief Register controlled matrix kernel.
  */
 template <class StateVectorT>
-void registerControlledMatrix(
+void applyControlledMatrix(
     StateVectorT &st,
     const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
                       py::array::c_style | py::array::forcecast> &matrix,
@@ -107,6 +116,33 @@ void registerControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
         wires, inverse);
 }
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyControlledGate(gate_name, controlled_wires, wires,
+                                       inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
 
 /**
  * @brief Get a controlled matrix and kernel map for a statevector.
@@ -114,8 +150,8 @@ void registerControlledMatrix(
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
-    pyclass.def("applyControlledMatrix",
-                &registerControlledMatrix<StateVectorT>,
+    registerControlledGate<StateVectorT>(pyclass);
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
                 "Apply controlled operation");
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");

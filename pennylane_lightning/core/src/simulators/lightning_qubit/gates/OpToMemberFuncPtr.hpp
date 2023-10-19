@@ -432,10 +432,77 @@ struct ControlledMatrixOpToMemberFuncPtr {
                   "Unrecognized matrix operation");
 };
 template <class PrecisionT, class GateImplementation>
-struct ControlledMatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
-                                         ControlledMatrixOperation::NQubitOp> {
+struct ControlledMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, ControlledMatrixOperation::NCMultiQubitOp> {
     constexpr static auto value =
-        &GateImplementation::template applyNQubitOp<PrecisionT>;
+        &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
+};
+
+template <class PrecisionT, class ParamT, class GateImplementation,
+          ControlledGateOperation gate_op>
+struct ControlledGateOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+                  "Unrecognized matrix operation");
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliX> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliX<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliY> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliY<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPauliZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPauliZ<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCHadamard> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCHadamard<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCS> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCS<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCT> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCT<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCPhaseShift> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPhaseShift<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCRX> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCRX<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCRY> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCRY<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::NCRZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCRZ<PrecisionT, ParamT>;
 };
 
 /// @cond DEV
@@ -536,6 +603,26 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
                           const std::vector<size_t> &,
                           const std::vector<size_t> &, bool);
 };
+
+/**
+ * @brief Pointer type for a controlled gate operation
+ */
+template <class PrecisionT, class ParamT, size_t num_params>
+struct ControlledGateFuncPtr {
+    static_assert(num_params < 2, "The given num_params is not supported.");
+};
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 0> {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::vector<size_t> &,
+                          const std::vector<size_t> &, bool);
+};
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::vector<size_t> &,
+                          const std::vector<size_t> &, bool, ParamT);
+};
 } // namespace Internal
 /// @endcond
 
@@ -564,6 +651,14 @@ using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 template <class PrecisionT>
 using ControlledMatrixFuncPtrT =
     typename Internal::ControlledMatrixFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for ControlledGateFuncPtrT.
+ */
+template <class PrecisionT, class ParamT, size_t num_params>
+using ControlledGateFuncPtrT =
+    typename Internal::ControlledGateFuncPtr<PrecisionT, ParamT,
+                                             num_params>::Type;
 
 /**
  * @defgroup Call gate operation with provided arguments
@@ -653,4 +748,31 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, controlled_wires, wires, adj);
 }
+
+/**
+ * @brief Call a controlled gate operation.
+ * @tparam PrecisionT Floating point type for the state-vector.
+ */
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 0> func,
+                      std::complex<PrecisionT> *data, size_t num_qubits,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<size_t> &wires, bool inverse,
+                      [[maybe_unused]] const std::vector<ParamT> &params) {
+    PL_ASSERT(params.empty());
+    func(data, num_qubits, controlled_wires, wires, inverse);
+}
+
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
+                      std::complex<PrecisionT> *data, size_t num_qubits,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 1);
+    func(data, num_qubits, controlled_wires, wires, inverse, params[0]);
+}
+
 } // namespace Pennylane::LightningQubit::Gates

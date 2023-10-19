@@ -114,8 +114,23 @@ enum class MatrixOperation : uint32_t {
  * @brief Enum class for controlled matrix operation
  */
 enum class ControlledMatrixOperation : uint32_t {
-    BEGIN = 1,
-    NQubitOp = 1,
+    BEGIN = 0,
+    NCMultiQubitOp = 0,
+    /* END (placeholder) */
+    END
+};
+enum class ControlledGateOperation : uint32_t {
+    BEGIN = 0,
+    NCPauliX = 0,
+    NCPauliY,
+    NCPauliZ,
+    NCHadamard,
+    NCS,
+    NCT,
+    NCPhaseShift,
+    NCRX,
+    NCRY,
+    NCRZ,
     /* END (placeholder) */
     END
 };

@@ -338,11 +338,11 @@ template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
 
-template void GateImplementationsLM::applyNQubitOp<float>(
+template void GateImplementationsLM::applyNCMultiQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
     const std::vector<size_t> &, const std::vector<size_t> &, bool);
 
-template void GateImplementationsLM::applyNQubitOp<double>(
+template void GateImplementationsLM::applyNCMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, const std::vector<size_t> &, bool);
 
@@ -576,6 +576,78 @@ template void GateImplementationsLM::applyDoubleExcitationPlus<float, float>(
 template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
+
+/* N-controlled gates */
+template void
+GateImplementationsLM::applyNCPauliX<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliX<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliY<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliY<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliZ<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCPauliZ<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &,
+                                             const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCHadamard<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCHadamard<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCS<float>(std::complex<float> *, size_t,
+                                       const std::vector<size_t> &,
+                                       const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCS<double>(std::complex<double> *, size_t,
+                                        const std::vector<size_t> &,
+                                        const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCT<float>(std::complex<float> *, size_t,
+                                       const std::vector<size_t> &,
+                                       const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applyNCT<double>(std::complex<double> *, size_t,
+                                        const std::vector<size_t> &,
+                                        const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCPhaseShift<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCPhaseShift<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCRX<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRX<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCRY<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRY<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCRZ<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCRZ<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
 
 // Generators
 template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRX(

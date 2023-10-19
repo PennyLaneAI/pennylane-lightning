@@ -231,8 +231,43 @@ void assignKernelsForMatrixOp_Default() {
 void assignKernelsForControlledMatrixOp_Default() {
     auto &instance =
         OperationKernelMap<ControlledMatrixOperation>::getInstance();
-    instance.assignKernelForOp(ControlledMatrixOperation::NQubitOp,
+
+    instance.assignKernelForOp(ControlledMatrixOperation::NCMultiQubitOp,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
+}
+void assignKernelsForControlledGateOp_Default() {
+    auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
+
+    instance.assignKernelForOp(ControlledGateOperation::NCPauliX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCPauliY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCPauliZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCHadamard,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCS, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCT, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCPhaseShift,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCRX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCRY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::NCRZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

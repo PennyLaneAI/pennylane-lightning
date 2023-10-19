@@ -70,11 +70,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
     using ControlledMatrixKernelMap =
         std::unordered_map<ControlledMatrixOperation, KernelType>;
+    using ControlledGateKernelMap =
+        std::unordered_map<ControlledGateOperation, KernelType>;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
     ControlledMatrixKernelMap kernel_for_controlled_matrices_;
+    ControlledGateKernelMap kernel_for_controlled_gates_;
 
     /**
      * @brief Internal function to set kernels for all operations depending on
@@ -98,6 +101,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 num_qubits, threading, memory_model);
         kernel_for_controlled_matrices_ =
             OperationKernelMap<ControlledMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_gates_ =
+            OperationKernelMap<ControlledGateOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
     }
 
@@ -144,6 +150,11 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     getKernelForControlledMatrix(ControlledMatrixOperation mat_op) const
         -> KernelType {
         return kernel_for_controlled_matrices_.at(mat_op);
+    }
+    [[nodiscard]] inline auto
+    getKernelForControlledGate(ControlledGateOperation mat_op) const
+        -> KernelType {
+        return kernel_for_controlled_gates_.at(mat_op);
     }
 
     /**
@@ -194,6 +205,15 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     getControlledMatrixKernelMap() && -> ControlledMatrixKernelMap {
         return kernel_for_controlled_matrices_;
     }
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() const & -> const ControlledGateKernelMap & {
+        return kernel_for_controlled_gates_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() && -> ControlledGateKernelMap {
+        return kernel_for_controlled_gates_;
+    }
 
   protected:
     explicit StateVectorLQubit(size_t num_qubits, Threading threading,
@@ -222,16 +242,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
         const GateKernelMap &, const GeneratorKernelMap &,
-        const MatrixKernelMap &, const ControlledMatrixKernelMap &> {
+        const MatrixKernelMap &, const ControlledMatrixKernelMap &,
+        const ControlledGateKernelMap &> {
         return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap(), getControlledMatrixKernelMap()};
+                getMatrixKernelMap(), getControlledMatrixKernelMap(),
+                getControlledGateKernelMap()};
     }
 
-    [[nodiscard]] auto getSupportedKernels()
-        && -> std::tuple<GateKernelMap &&, GeneratorKernelMap &&,
-                         MatrixKernelMap &&, ControlledMatrixKernelMap &&> {
+    [[nodiscard]] auto getSupportedKernels() && -> std::tuple<
+        GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&,
+        ControlledMatrixKernelMap &&, ControlledGateKernelMap &&> {
         return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap(), getControlledMatrixKernelMap()};
+                getMatrixKernelMap(), getControlledMatrixKernelMap(),
+                getControlledGateKernelMap()};
     }
 
     /**
@@ -306,6 +329,20 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                          adj);
     }
 
+    inline void
+    applyControlledGate(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<PrecisionT> &params = {}) {
+        auto *arr = this->getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToControlledGateOp(opName);
+        const auto kernel = getKernelForControlledGate(gate_op);
+        dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
+                                       opName, controlled_wires, wires, inverse,
+                                       params);
+    }
+
     /**
      * @brief Apply a given controlled-matrix directly to the statevector using
      * a given kernel.
@@ -324,8 +361,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        const auto kernel =
-            getKernelForControlledMatrix(ControlledMatrixOperation::NQubitOp);
+        const auto kernel = getKernelForControlledMatrix(
+            ControlledMatrixOperation::NCMultiQubitOp);
         dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
                                          matrix, controlled_wires, wires,
                                          inverse);

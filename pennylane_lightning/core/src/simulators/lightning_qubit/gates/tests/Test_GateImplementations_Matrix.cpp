@@ -772,7 +772,7 @@ void testApplyMultiQubitOp() {
 }
 
 template <typename PrecisionT, class GateImplementation>
-void testApplyNQubitOp() {
+void testApplyNCMultiQubitOp() {
     std::mt19937 re{1337};
     const std::size_t num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
@@ -788,8 +788,8 @@ void testApplyNQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        GateImplementation::applyNQubitOp(st.data(), num_qubits, matrix.data(),
-                                          {2}, {3}, inverse);
+        GateImplementation::applyNCMultiQubitOp(
+            st.data(), num_qubits, matrix.data(), {2}, {3}, inverse);
         GateImplementation::applyCNOT(ref_st.data(), num_qubits, {2, 3},
                                       inverse);
 
@@ -806,8 +806,8 @@ void testApplyNQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        GateImplementation::applyNQubitOp(st.data(), num_qubits, matrix.data(),
-                                          {2}, {3}, inverse);
+        GateImplementation::applyNCMultiQubitOp(
+            st.data(), num_qubits, matrix.data(), {2}, {3}, inverse);
         GateImplementation::applyCY(ref_st.data(), num_qubits, {2, 3}, inverse);
 
         REQUIRE(st == approx(ref_st).margin(margin));
@@ -834,8 +834,8 @@ void testApplyMatrixForKernels() {
         }
         if constexpr (array_has_elem(
                           GateImplementation::implemented_controlled_matrices,
-                          ControlledMatrixOperation::NQubitOp)) {
-            testApplyNQubitOp<PrecisionT, GateImplementation>();
+                          ControlledMatrixOperation::NCMultiQubitOp)) {
+            testApplyNCMultiQubitOp<PrecisionT, GateImplementation>();
         }
         testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
     }
