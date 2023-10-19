@@ -28,7 +28,7 @@ if device_name != "lightning.gpu":
     pytest.skip("Only lightning.gpu supports MPI. Skipping.", allow_module_level=True)
 
 def test_create_device():
-    dev = qml.device(device_name, wires=4, mpi=True)
+    dev = qml.device(device_name, mpi=True, wires=4)
 
 
 @pytest.mark.skipif(
@@ -36,8 +36,16 @@ def test_create_device():
     reason="Only lightning.gpu has a kwarg mpi_buf_size.",
 )
 def test_create_device_with_unsupported_mpi_buf_size():
+    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
+    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=3)
+    with pytest.warns(
+        RuntimeWarning, match="The MPI buffer size is larger than the local state vector size"
+    ):
+        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=2**4)
     with pytest.raises(
         ValueError,
         match="Number of processes should be smaller than the number of statevector elements",
     ):
-        dev = qml.device(device_name, wires=1, mpi=True)
+        dev = qml.device(device_name, mpi=True, wires=1)

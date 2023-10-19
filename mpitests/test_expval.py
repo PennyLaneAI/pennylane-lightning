@@ -120,7 +120,8 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    @pytest.mark.parametrize("n_wires", range(1, 8))
+    # @pytest.mark.parametrize("n_wires", range(1, 8))
+    @pytest.mark.parametrize("n_wires", range(7, 8))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7

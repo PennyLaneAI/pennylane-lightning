@@ -19,12 +19,10 @@ from mpi4py import MPI
 import pytest
 import itertools
 
-from conftest import THETA, PHI, VARPHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
+from conftest import TOL_STOCHASTIC, device_name
 
-import math
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 
 fixture_params = itertools.product(
     [np.complex64, np.complex128],
@@ -70,7 +68,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
         return qml.state()
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode(*par)
+    expected_output_cpu = cpu_qnode(*par).astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     mpi_qnode = qml.QNode(circuit, dev_mpi)
@@ -107,7 +105,7 @@ def apply_operation_gates_apply_param(tol, dev_mpi, operation, par, Wires):
         operation(*params, wires=Wires)
         return qml.state()
 
-    expected_output_cpu = circuit(*par)
+    expected_output_cpu = circuit(*par).astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     dev_mpi.syncH2D(local_state_vector)
@@ -145,7 +143,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
         return qml.state()
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
-    expected_output_cpu = cpu_qnode()
+    expected_output_cpu = cpu_qnode().astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     mpi_qnode = qml.QNode(circuit, dev_mpi)
@@ -182,7 +180,7 @@ def apply_operation_gates_apply_nonparam(tol, dev_mpi, operation, Wires):
         operation(wires=Wires)
         return qml.state()
 
-    expected_output_cpu = circuit()
+    expected_output_cpu = circuit().astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     dev_mpi.syncH2D(local_state_vector)
@@ -210,7 +208,7 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, C_DTYPE):
         return qml.probs(wires=Wires)
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
-    probs_cpu = cpu_qnode()
+    probs_cpu = cpu_qnode().astype(c_dtype)
 
     mpi_qnode = qml.QNode(circuit, dev_mpi)
     local_probs = mpi_qnode()
@@ -249,7 +247,7 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE):
         return qml.probs(wires=Wires)
 
     cpu_qnode = qml.QNode(circuit, dev_cpu)
-    probs_cpu = cpu_qnode()
+    probs_cpu = cpu_qnode().astype(c_dtype)
 
     mpi_qnode = qml.QNode(circuit, dev_mpi)
     local_probs = mpi_qnode()
@@ -410,7 +408,7 @@ class TestApply:
         cpu_qnode = qml.QNode(circuit, dev_cpu)
         mpi_qnode = qml.QNode(circuit, dev_mpi)
 
-        expected_output_cpu = cpu_qnode()
+        expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
         local_state_vector = mpi_qnode()
@@ -471,7 +469,7 @@ class TestApply:
         cpu_qnode = qml.QNode(circuit, dev_cpu)
         mpi_qnode = qml.QNode(circuit, dev_mpi)
 
-        expected_output_cpu = cpu_qnode()
+        expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
         local_state_vector = mpi_qnode()
@@ -509,7 +507,7 @@ class TestApply:
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
 
-        expected_output_cpu = cpu_qnode()
+        expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
         dev_mpi.reset()
