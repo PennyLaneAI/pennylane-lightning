@@ -262,13 +262,9 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
         StateVectorT d_sv_prime(sv.getNumQubits());
 
         SparseMV_Kokkos<PrecisionT, ComplexT>(
-            sv.getView(), d_sv_prime.getView(), this->indices_.data(),
-            this->indices_.size(), this->offsets_.data(), this->data_.data(),
+            sv.getView(), d_sv_prime.getView(), this->offsets_.data(),
+            this->offsets_.size(), this->indices_.data(), this->data_.data(),
             this->data_.size());
-        // (Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
-        //                      const size_t *row_map, const size_t
-        //                      row_map_size, const size_t *entries_ptr, const
-        //                      ComplexT *values_ptr, const size_t numNNZ)
 
         sv.updateData(d_sv_prime);
     }

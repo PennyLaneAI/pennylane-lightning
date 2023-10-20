@@ -26,7 +26,6 @@ from pennylane import QNode, qnode
 from pennylane import qchem
 
 
-
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -858,6 +857,7 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
+
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
@@ -944,11 +944,14 @@ def test_tape_qchem_sparse(tol):
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
 
+
 custom_wires = ["alice", 3.14, -1, 0]
 
 
 @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-@pytest.mark.skipif(device_name != "lightning.kokkos", reason="SparseHamiltonian only supported by Lightning-Kokkos")
+@pytest.mark.skipif(
+    device_name != "lightning.kokkos", reason="SparseHamiltonian only supported by Lightning-Kokkos"
+)
 @pytest.mark.parametrize(
     "returns",
     [
