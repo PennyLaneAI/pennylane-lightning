@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
+  [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
+
 * Integrate cpp backend of distributed Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
