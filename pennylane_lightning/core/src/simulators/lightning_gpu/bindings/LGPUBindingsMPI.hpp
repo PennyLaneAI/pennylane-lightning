@@ -58,7 +58,9 @@ template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT;             // Parameter's data precision
+    using CFP_t =
+        typename StateVectorT::CFP_t; // Statevector's complex precision
+    using ParamT = PrecisionT;        // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
     using np_arr_sparse_ind = typename std::conditional<
@@ -160,15 +162,14 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
                [[maybe_unused]] const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
-                std::vector<std::complex<ParamT>> conv_matrix;
+                std::vector<CFP_t> matrix_cu;
                 if (m_buffer.size) {
-                    const auto m_ptr =
-                        static_cast<const std::complex<ParamT> *>(m_buffer.ptr);
-                    conv_matrix = std::vector<std::complex<ParamT>>{
-                        m_ptr, m_ptr + m_buffer.size};
+                    const auto m_ptr = static_cast<const CFP_t *>(m_buffer.ptr);
+                    matrix_cu =
+                        std::vector<CFP_t>{m_ptr, m_ptr + m_buffer.size};
                 }
-                sv.applyOperation_std(str, wires, inv, std::vector<ParamT>{},
-                                      conv_matrix);
+                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                                  matrix_cu);
             },
             "Apply operation via the gate matrix");
 }

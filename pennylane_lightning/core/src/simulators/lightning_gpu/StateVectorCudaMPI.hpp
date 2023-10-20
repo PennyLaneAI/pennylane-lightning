@@ -1889,6 +1889,8 @@ class StateVectorCudaMPI
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }
         // LCOV_EXCL_STOP
+        expect.x = static_cast<PrecisionT>(expect_.x);
+        expect.y = static_cast<PrecisionT>(expect_.y);
     }
 
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,

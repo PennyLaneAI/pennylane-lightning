@@ -735,7 +735,7 @@ class Measurements final
             /* const void* */ this->_statevector.getData(),
             /* cudaDataType_t */ data_type,
             /* const uint32_t */ nIndexBits,
-            /* void* */ &expect_,
+            /* void* */ &expect,
             /* cudaDataType_t */ expectationDataType,
             /* double* */ nullptr,
             /* const void* */ matrix,
