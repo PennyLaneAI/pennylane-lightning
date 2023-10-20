@@ -155,13 +155,13 @@ class QuantumScriptSerializer:
             wire_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:
-            sparsehamiltonian_obs (SparseHamiltonianKokkos_C64 or SparseHamiltonianKokkos_C128): A Sparse Hamiltonian observable object compatible with the C++ backend
+            sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
         """
 
         spm = observable.sparse_matrix()
         data = np.array(spm.data).astype(self.ctype)
-        indices = np.array(spm.indices).astype(np.int)
-        offsets = np.array(spm.indptr).astype(np.int)
+        indices = np.array(spm.indices).astype(np.int64)
+        offsets = np.array(spm.indptr).astype(np.int64)
 
         wires = []
         wires_list = observable.wires.tolist()
@@ -192,7 +192,6 @@ class QuantumScriptSerializer:
     # pylint: disable=protected-access
     def _ob(self, observable, wires_map):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
-        print(observable.__class__)
         if isinstance(observable, Tensor):
             return self._tensor_ob(observable, wires_map)
         if observable.name == "Hamiltonian":
