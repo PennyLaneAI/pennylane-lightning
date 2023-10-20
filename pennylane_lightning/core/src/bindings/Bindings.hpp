@@ -442,7 +442,7 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonianGPU<StateVectorT> &self,
+            [](const SparseHamiltonian<StateVectorT> &self,
                py::handle other) -> bool {
                 if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
                     return false;
