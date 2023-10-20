@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
-                   double) {
+                   float, double) {
     const std::size_t num_qubits = 3;
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -160,7 +160,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
-                   double) {
+                   float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     const std::size_t num_qubits = 3;
 
@@ -203,7 +203,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
-                   "[StateVectorCudaMPI_Var]", double) {
+                   "[StateVectorCudaMPI_Var]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     const std::size_t num_qubits = 3;
 

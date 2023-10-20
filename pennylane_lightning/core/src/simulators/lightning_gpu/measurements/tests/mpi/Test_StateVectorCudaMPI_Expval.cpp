@@ -384,7 +384,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
-                   "[StateVectorCudaMPI_Expval]", double) {
+                   "[StateVectorCudaMPI_Expval]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 
