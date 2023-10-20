@@ -39,43 +39,12 @@
 #include "Observables.hpp"
 #include "Util.hpp" // for_each_enum
 
-#ifdef _ENABLE_PLQUBIT
-
-#include "AdjointJacobianLQubit.hpp"
-#include "LQubitBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
-#include "MeasurementsLQubit.hpp"
-#include "ObservablesLQubit.hpp"
-
-/// @cond DEV
-namespace {
-using namespace Pennylane::LightningQubit;
-using namespace Pennylane::LightningQubit::Algorithms;
-using namespace Pennylane::LightningQubit::Observables;
-using namespace Pennylane::LightningQubit::Measures;
-} // namespace
-/// @endcond
-
-#elif _ENABLE_PLKOKKOS == 1
-
-#include "AdjointJacobianKokkos.hpp"
-#include "LKokkosBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
-#include "MeasurementsKokkos.hpp"
-#include "ObservablesKokkos.hpp"
-
-/// @cond DEV
-namespace {
-using namespace Pennylane::LightningKokkos;
-using namespace Pennylane::LightningKokkos::Algorithms;
-using namespace Pennylane::LightningKokkos::Observables;
-using namespace Pennylane::LightningKokkos::Measures;
-} // namespace
-  /// @endcond
-
-#elif _ENABLE_PLGPU == 1
-#include "AdjointJacobianGPU.hpp"
-#include "LGPUBindings.hpp"
-#include "MeasurementsGPU.hpp"
-#include "ObservablesGPU.hpp"
+#ifdef _ENABLE_PLGPU
+#include "AdjointJacobianGPUMPI.hpp"
+#include "JacobianDataMPI.hpp"
+#include "LGPUBindingsMPI.hpp"
+#include "MeasurementsGPUMPI.hpp"
+#include "ObservablesGPUMPI.hpp"
 
 /// @cond DEV
 namespace {
@@ -92,202 +61,16 @@ static_assert(false, "Backend not found.");
 
 #endif
 
-/// @cond DEV
-namespace {
-using Pennylane::Util::bestCPUMemoryModel;
-using Pennylane::Util::CPUMemoryModel;
-using Pennylane::Util::getMemoryModel;
-} // namespace
-/// @endcond
-
 namespace py = pybind11;
 
 namespace Pennylane {
-/**
- * @brief Create a State Vector From a 1D Numpy Data object.
- *
- * @tparam StateVectorT
- * @param numpyArray inout data
- * @return StateVectorT
- */
-template <class StateVectorT>
-auto createStateVectorFromNumpyData(
-    const py::array_t<std::complex<typename StateVectorT::PrecisionT>>
-        &numpyArray) -> StateVectorT {
-    using ComplexT = typename StateVectorT::ComplexT;
-    py::buffer_info numpyArrayInfo = numpyArray.request();
-    if (numpyArrayInfo.ndim != 1) {
-        throw std::invalid_argument(
-            "NumPy array must be a 1-dimensional array");
-    }
-    if (numpyArrayInfo.itemsize != sizeof(ComplexT)) {
-        throw std::invalid_argument(
-            "NumPy array must be of type np.complex64 or np.complex128");
-    }
-    auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-    return StateVectorT(
-        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
-}
-
-/**
- * @brief Get memory alignment of a given numpy array.
- *
- * @param numpyArray Pybind11's numpy array type.
- * @return CPUMemoryModel Memory model describing alignment
- */
-auto getNumpyArrayAlignment(const py::array &numpyArray) -> CPUMemoryModel {
-    return getMemoryModel(numpyArray.request().ptr);
-}
-
-/**
- * @brief Create an aligned numpy array for a given type, memory model and array
- * size.
- *
- * @tparam T Datatype of numpy array to create
- * @param memory_model Memory model to use
- * @param size Size of the array to create
- * @return Numpy array
- */
-template <typename T>
-auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> py::array {
-    using Pennylane::Util::alignedAlloc;
-    if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
-        void *ptr =
-            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
-        auto capsule = py::capsule(ptr, &Util::alignedFree);
-        return py::array{py::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
-    }
-    void *ptr = static_cast<void *>(new T[size]);
-    auto capsule =
-        py::capsule(ptr, [](void *p) { delete static_cast<T *>(p); });
-    return py::array{py::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
-}
-/**
- * @brief Create a numpy array whose underlying data is allocated by
- * lightning.
- *
- * See https://github.com/pybind/pybind11/issues/1042#issuecomment-325941022
- * for capsule usage.
- *
- * @param size Size of the array to create
- * @param dt Pybind11's datatype object
- */
-auto allocateAlignedArray(size_t size, const py::dtype &dt) -> py::array {
-    auto memory_model = bestCPUMemoryModel();
-
-    if (dt.is(py::dtype::of<float>())) {
-        return alignedNumpyArray<float>(memory_model, size);
-    }
-    if (dt.is(py::dtype::of<double>())) {
-        return alignedNumpyArray<double>(memory_model, size);
-    }
-    if (dt.is(py::dtype::of<std::complex<float>>())) {
-        return alignedNumpyArray<std::complex<float>>(memory_model, size);
-    }
-    if (dt.is(py::dtype::of<std::complex<double>>())) {
-        return alignedNumpyArray<std::complex<double>>(memory_model, size);
-    }
-    throw py::type_error("Unsupported datatype.");
-}
-
-/**
- * @brief Register functionality for numpy array memory alignment.
- *
- * @param m Pybind module
- */
-void registerArrayAlignmentBindings(py::module_ &m) {
-    /* Add CPUMemoryModel enum class */
-    py::enum_<CPUMemoryModel>(m, "CPUMemoryModel", py::module_local())
-        .value("Unaligned", CPUMemoryModel::Unaligned)
-        .value("Aligned256", CPUMemoryModel::Aligned256)
-        .value("Aligned512", CPUMemoryModel::Aligned512);
-
-    /* Add array alignment functionality */
-    m.def("get_alignment", &getNumpyArrayAlignment,
-          "Get alignment of an underlying data for a numpy array.");
-    m.def("allocate_aligned_array", &allocateAlignedArray,
-          "Get numpy array whose underlying data is aligned.");
-    m.def("best_alignment", &bestCPUMemoryModel,
-          "Best memory alignment. for the simulator.");
-}
-
-/**
- * @brief Return basic information of the compiled binary.
- */
-auto getCompileInfo() -> py::dict {
-    using namespace Pennylane::Util;
-    using namespace py::literals;
-
-    const std::string_view cpu_arch_str = [] {
-        switch (cpu_arch) {
-        case CPUArch::X86_64:
-            return "x86_64";
-        case CPUArch::PPC64:
-            return "PPC64";
-        case CPUArch::ARM:
-            return "ARM";
-        default:
-            return "Unknown";
-        }
-    }();
-
-    const std::string_view compiler_name_str = [] {
-        switch (compiler) {
-        case Compiler::GCC:
-            return "GCC";
-        case Compiler::Clang:
-            return "Clang";
-        case Compiler::MSVC:
-            return "MSVC";
-        case Compiler::NVCC:
-            return "NVCC";
-        case Compiler::NVHPC:
-            return "NVHPC";
-        default:
-            return "Unknown";
-        }
-    }();
-
-    const auto compiler_version_str = getCompilerVersion<compiler>();
-
-    return py::dict("cpu.arch"_a = cpu_arch_str,
-                    "compiler.name"_a = compiler_name_str,
-                    "compiler.version"_a = compiler_version_str,
-                    "AVX2"_a = use_avx2, "AVX512F"_a = use_avx512f);
-}
-
-/**
- * @brief Return basic information of runtime environment.
- */
-auto getRuntimeInfo() -> py::dict {
-    using Pennylane::Util::RuntimeInfo;
-    using namespace py::literals;
-
-    return py::dict("AVX"_a = RuntimeInfo::AVX(),
-                    "AVX2"_a = RuntimeInfo::AVX2(),
-                    "AVX512F"_a = RuntimeInfo::AVX512F());
-}
-
-/**
- * @brief Register bindings for general info.
- *
- * @param m Pybind11 module.
- */
-void registerInfo(py::module_ &m) {
-    /* Add compile info */
-    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
-
-    /* Add runtime info */
-    m.def("runtime_info", &getRuntimeInfo, "Runtime information.");
-}
-
 /**
  * @brief Register observable classes.
  *
  * @tparam StateVectorT
  * @param m Pybind module
  */
-template <class StateVectorT> void registerObservables(py::module_ &m) {
+template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
@@ -306,116 +89,117 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
 
     std::string class_name;
 
-    class_name = "ObservableC" + bitsize;
+    class_name = "ObservableMPIC" + bitsize;
     py::class_<Observable<StateVectorT>,
                std::shared_ptr<Observable<StateVectorT>>>(m, class_name.c_str(),
                                                           py::module_local());
 
-    class_name = "NamedObsC" + bitsize;
-    py::class_<NamedObs<StateVectorT>, std::shared_ptr<NamedObs<StateVectorT>>,
+    class_name = "NamedObsMPIC" + bitsize;
+    py::class_<NamedObsMPI<StateVectorT>,
+               std::shared_ptr<NamedObsMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
             [](const std::string &name, const std::vector<size_t> &wires) {
-                return NamedObs<StateVectorT>(name, wires);
+                return NamedObsMPI<StateVectorT>(name, wires);
             }))
-        .def("__repr__", &NamedObs<StateVectorT>::getObsName)
-        .def("get_wires", &NamedObs<StateVectorT>::getWires,
+        .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const NamedObs<StateVectorT> &self, py::handle other) -> bool {
-                if (!py::isinstance<NamedObs<StateVectorT>>(other)) {
+            [](const NamedObsMPI<StateVectorT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<NamedObsMPI<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<NamedObs<StateVectorT>>();
+                auto other_cast = other.cast<NamedObsMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = "HermitianObsC" + bitsize;
-    py::class_<HermitianObs<StateVectorT>,
-               std::shared_ptr<HermitianObs<StateVectorT>>,
+    class_name = "HermitianObsMPIC" + bitsize;
+    py::class_<HermitianObsMPI<StateVectorT>,
+               std::shared_ptr<HermitianObsMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
             [](const np_arr_c &matrix, const std::vector<size_t> &wires) {
                 auto buffer = matrix.request();
                 const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
-                return HermitianObs<StateVectorT>(
+                return HermitianObsMPI<StateVectorT>(
                     std::vector<ComplexT>(ptr, ptr + buffer.size), wires);
             }))
-        .def("__repr__", &HermitianObs<StateVectorT>::getObsName)
-        .def("get_wires", &HermitianObs<StateVectorT>::getWires,
+        .def("__repr__", &HermitianObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &HermitianObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const HermitianObs<StateVectorT> &self,
+            [](const HermitianObsMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<HermitianObs<StateVectorT>>(other)) {
+                if (!py::isinstance<HermitianObsMPI<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HermitianObs<StateVectorT>>();
+                auto other_cast = other.cast<HermitianObsMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = "TensorProdObsC" + bitsize;
-    py::class_<TensorProdObs<StateVectorT>,
-               std::shared_ptr<TensorProdObs<StateVectorT>>,
+    class_name = "TensorProdObsMPIC" + bitsize;
+    py::class_<TensorProdObsMPI<StateVectorT>,
+               std::shared_ptr<TensorProdObsMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
             [](const std::vector<std::shared_ptr<Observable<StateVectorT>>>
-                   &obs) { return TensorProdObs<StateVectorT>(obs); }))
-        .def("__repr__", &TensorProdObs<StateVectorT>::getObsName)
-        .def("get_wires", &TensorProdObs<StateVectorT>::getWires,
+                   &obs) { return TensorProdObsMPI<StateVectorT>(obs); }))
+        .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const TensorProdObs<StateVectorT> &self,
+            [](const TensorProdObsMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<TensorProdObs<StateVectorT>>(other)) {
+                if (!py::isinstance<TensorProdObsMPI<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<TensorProdObs<StateVectorT>>();
+                auto other_cast = other.cast<TensorProdObsMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = "HamiltonianC" + bitsize;
+    class_name = "HamiltonianMPIC" + bitsize;
     using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
-    py::class_<Hamiltonian<StateVectorT>,
-               std::shared_ptr<Hamiltonian<StateVectorT>>,
+    py::class_<HamiltonianMPI<StateVectorT>,
+               std::shared_ptr<HamiltonianMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
                 auto buffer = coeffs.request();
                 const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return Hamiltonian<StateVectorT>{
+                return HamiltonianMPI<StateVectorT>{
                     std::vector(ptr, ptr + buffer.size), obs};
             }))
-        .def("__repr__", &Hamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &Hamiltonian<StateVectorT>::getWires,
+        .def("__repr__", &HamiltonianMPI<StateVectorT>::getObsName)
+        .def("get_wires", &HamiltonianMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const Hamiltonian<StateVectorT> &self,
+            [](const HamiltonianMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<Hamiltonian<StateVectorT>>(other)) {
+                if (!py::isinstance<HamiltonianMPI<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<Hamiltonian<StateVectorT>>();
+                auto other_cast = other.cast<HamiltonianMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
-
 #ifdef _ENABLE_PLGPU
-    class_name = "SparseHamiltonianC" + bitsize;
-    using SpIDX = typename SparseHamiltonian<StateVectorT>::IdxT;
-    py::class_<SparseHamiltonian<StateVectorT>,
-               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
+    class_name = "SparseHamiltonianMPIC" + bitsize;
+    using SpIDX = typename SparseHamiltonianMPI<StateVectorT>::IdxT;
+    py::class_<SparseHamiltonianMPI<StateVectorT>,
+               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
@@ -430,57 +214,25 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
             const py::buffer_info buffer_offsets = offsets.request();
             const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
 
-            return SparseHamiltonian<StateVectorT>{
+            return SparseHamiltonianMPI<StateVectorT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
         }))
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+        .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
+            [](const SparseHamiltonianMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                if (!py::isinstance<SparseHamiltonianMPI<StateVectorT>>(
+                        other)) {
                     return false;
                 }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
-                return self == other_cast;
-            },
-            "Compare two observables");
-#endif
-
-#if _ENABLE_PLKOKKOS == 1
-    class_name = "SparseHamiltonianC" + bitsize;
-    py::class_<SparseHamiltonian<StateVectorT>,
-               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
-        .def(py::init([](const np_arr_c &data,
-                         const std::vector<std::size_t> &indices,
-                         const std::vector<std::size_t> &indptr,
-                         const std::vector<std::size_t> &wires) {
-            using ComplexT = typename StateVectorT::ComplexT;
-            const py::buffer_info buffer_data = data.request();
-            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
-
-            return SparseHamiltonian<StateVectorT>{
-                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
-                indices, indptr, wires};
-        }))
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                auto other_cast =
+                    other.cast<SparseHamiltonianMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
@@ -495,36 +247,36 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
  * @param pyclass Pybind11's measurements class to bind methods.
  */
 template <class StateVectorT, class PyClass>
-void registerBackendAgnosticMeasurements(PyClass &pyclass) {
+void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
 
     pyclass
         .def("probs",
-             [](Measurements<StateVectorT> &M,
+             [](MeasurementsMPI<StateVectorT> &M,
                 const std::vector<size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
-             [](Measurements<StateVectorT> &M) {
+             [](MeasurementsMPI<StateVectorT> &M) {
                  return py::array_t<ParamT>(py::cast(M.probs()));
              })
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M,
+            [](MeasurementsMPI<StateVectorT> &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
         .def(
             "var",
-            [](Measurements<StateVectorT> &M,
+            [](MeasurementsMPI<StateVectorT> &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](Measurements<StateVectorT> &M,
+        .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
                                     size_t num_wires, size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);
             const size_t ndim = 2;
@@ -547,8 +299,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
  * @brief Register the adjoint Jacobian method.
  */
 template <class StateVectorT>
-auto registerAdjointJacobian(
-    AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
+auto registerAdjointJacobianMPI(
+    AdjointJacobianMPI<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
     const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
     const OpsData<StateVectorT> &operations,
     const std::vector<size_t> &trainableParams)
@@ -556,12 +308,9 @@ auto registerAdjointJacobian(
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
                                 PrecisionT{0.0});
-    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
-                                        sv.getLength(),
-                                        sv.getData(),
-                                        observables,
-                                        operations,
-                                        trainableParams};
+    const JacobianDataMPI<StateVectorT> jd{operations.getTotalNumParams(), sv,
+                                           observables, operations,
+                                           trainableParams};
     adjoint_jacobian.adjointJacobian(std::span{jac}, jd, sv);
     return py::array_t<PrecisionT>(py::cast(jac));
 }
@@ -573,7 +322,7 @@ auto registerAdjointJacobian(
  * @param m Pybind module
  */
 template <class StateVectorT>
-void registerBackendAgnosticAlgorithms(py::module_ &m) {
+void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
@@ -591,7 +340,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     //                              Operations
     //***********************************************************************//
 
-    class_name = "OpsStructC" + bitsize;
+    class_name = "OpsStructMPIC" + bitsize;
     py::class_<OpsData<StateVectorT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
@@ -616,7 +365,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     /**
      * Create operation list.
      */
-    std::string function_name = "create_ops_listC" + bitsize;
+    std::string function_name = "create_ops_listMPIC" + bitsize;
     m.def(
         function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
@@ -643,14 +392,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     //***********************************************************************//
     //                            Adjoint Jacobian
     //***********************************************************************//
-    class_name = "AdjointJacobianC" + bitsize;
-    py::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str(),
-                                              py::module_local())
+    class_name = "AdjointJacobianMPIC" + bitsize;
+    py::class_<AdjointJacobianMPI<StateVectorT>>(m, class_name.c_str(),
+                                                 py::module_local())
         .def(py::init<>())
-#ifdef _ENABLE_PLGPU
         .def(
             "batched",
-            [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+            [](AdjointJacobianMPI<StateVectorT> &adjoint_jacobian,
                const StateVectorT &sv,
                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &observables,
@@ -660,19 +408,14 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),
                                             PrecisionT{0.0});
-                const JacobianData<StateVectorT> jd{
-                    operations.getTotalNumParams(),
-                    sv.getLength(),
-                    sv.getData(),
-                    observables,
-                    operations,
+                const JacobianDataMPI<StateVectorT> jd{
+                    operations.getTotalNumParams(), sv, observables, operations,
                     trainableParams};
-                adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+                adjoint_jacobian.adjointJacobian_serial(std::span{jac}, jd);
                 return py::array_t<PrecisionT>(py::cast(jac));
             },
             "Batch Adjoint Jacobian method.")
-#endif
-        .def("__call__", &registerAdjointJacobian<StateVectorT>,
+        .def("__call__", &registerAdjointJacobianMPI<StateVectorT>,
              "Adjoint Jacobian method.");
 }
 
@@ -682,7 +425,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
  * @tparam StateVectorT State vector type
  * @param m Pybind11 module.
  */
-template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
+template <class StateVectorT> void lightningClassBindingsMPI(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     // Enable module name to be based on size of complex datatype
@@ -692,53 +435,49 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
-    std::string class_name = "StateVectorC" + bitsize;
+    std::string class_name = "StateVectorMPIC" + bitsize;
     auto pyclass =
         py::class_<StateVectorT>(m, class_name.c_str(), py::module_local());
-    pyclass.def(py::init(&createStateVectorFromNumpyData<StateVectorT>))
-        .def_property_readonly("size", &StateVectorT::getLength);
+    pyclass.def_property_readonly("size", &StateVectorT::getLength);
 
-    registerBackendClassSpecificBindings<StateVectorT>(pyclass);
+    registerBackendClassSpecificBindingsMPI<StateVectorT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
     //***********************************************************************//
-    /* Observables submodule */
+
     py::module_ obs_submodule =
-        m.def_submodule("observables", "Submodule for observables classes.");
-    registerObservables<StateVectorT>(obs_submodule);
+        m.def_submodule("observablesMPI", "Submodule for observables classes.");
+    registerObservablesMPI<StateVectorT>(obs_submodule);
 
     //***********************************************************************//
     //                             Measurements
     //***********************************************************************//
-    class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
+
+    class_name = "MeasurementsMPIC" + bitsize;
+    auto pyclass_measurements = py::class_<MeasurementsMPI<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
-#ifdef _ENABLE_PLGPU
     pyclass_measurements.def(py::init<StateVectorT &>());
-#else
-    pyclass_measurements.def(py::init<const StateVectorT &>());
-#endif
-    registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
-    registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
+    registerBackendAgnosticMeasurementsMPI<StateVectorT>(pyclass_measurements);
+    registerBackendSpecificMeasurementsMPI<StateVectorT>(pyclass_measurements);
 
     //***********************************************************************//
     //                           Algorithms
     //***********************************************************************//
-    /* Algorithms submodule */
+
     py::module_ alg_submodule = m.def_submodule(
-        "algorithms", "Submodule for the algorithms functionality.");
-    registerBackendAgnosticAlgorithms<StateVectorT>(alg_submodule);
-    registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
+        "algorithmsMPI", "Submodule for the algorithms functionality.");
+    registerBackendAgnosticAlgorithmsMPI<StateVectorT>(alg_submodule);
+    registerBackendSpecificAlgorithmsMPI<StateVectorT>(alg_submodule);
 }
 
 template <typename TypeList>
-void registerLightningClassBindings(py::module_ &m) {
+void registerLightningClassBindingsMPI(py::module_ &m) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
-        lightningClassBindings<StateVectorT>(m);
-        registerLightningClassBindings<typename TypeList::Next>(m);
+        lightningClassBindingsMPI<StateVectorT>(m);
+        registerLightningClassBindingsMPI<typename TypeList::Next>(m);
     }
 }
 } // namespace Pennylane

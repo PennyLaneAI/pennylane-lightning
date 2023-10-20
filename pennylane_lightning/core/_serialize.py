@@ -25,6 +25,8 @@ from pennylane import (
     Identity,
     StatePrep,
     Rot,
+    Hamiltonian,
+    SparseHamiltonian,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -50,8 +52,9 @@ class QuantumScriptSerializer:
     """
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes
-    def __init__(self, device_name, use_csingle: bool = False):
+    def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
+        self.device_name = device_name
         if device_name == "lightning.qubit":
             try:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
@@ -84,9 +87,34 @@ class QuantumScriptSerializer:
         self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
-        if device_name == "lightning.kokkos":
+        if device_name in ["lightning.gpu", "lightning.kokkos"]:
             self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
             self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
+
+        self.use_mpi = False
+
+        if use_mpi:
+            self.use_mpi = use_mpi
+            self.statevectormpi_c128 = lightning_ops.StateVectorMPIC128
+            self.named_obsmpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
+            self.named_obsmpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
+            self.hermitian_obsmpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
+            self.hermitian_obsmpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
+            self.tensor_prod_obsmpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
+            self.tensor_prod_obsmpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
+            self.hamiltonianmpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
+            self.hamiltonianmpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+
+            if self.device_name == "lightning.gpu":
+                self.sparse_hamiltonianmpi_c64 = (
+                    lightning_ops.observablesMPI.SparseHamiltonianMPIC64
+                )
+                self.sparse_hamiltonianmpi_c128 = (
+                    lightning_ops.observablesMPI.SparseHamiltoniaMPInC128
+                )
+            else:
+                ValueError(f"{self.device_name} does not support MPI.")
+            self.mpi_manager = lightning_ops.MPIManager
 
     @property
     def ctype(self):
@@ -99,28 +127,48 @@ class QuantumScriptSerializer:
         return np.float32 if self.use_csingle else np.float64
 
     @property
+    def sv_type(self):
+        if self.use_mpi:
+            return self.statevectormpi_c128
+        return self.statevector_c128
+
+    @property
     def named_obs(self):
         """Named observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.named_obsmpi_c64 if self.use_csingle else self.named_obsmpi_c128
         return self.named_obs_c64 if self.use_csingle else self.named_obs_c128
 
     @property
     def hermitian_obs(self):
         """Hermitian observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.hermitian_obsmpi_c64 if self.use_csingle else self.hermitian_obsmpi_c128
         return self.hermitian_obs_c64 if self.use_csingle else self.hermitian_obs_c128
 
     @property
     def tensor_obs(self):
         """Tensor product observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.tensor_prod_obsmpi_c64 if self.use_csingle else self.tensor_prod_obsmpi_c128
         return self.tensor_prod_obs_c64 if self.use_csingle else self.tensor_prod_obs_c128
 
     @property
     def hamiltonian_obs(self):
         """Hamiltonian observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.hamiltonianmpi_c64 if self.use_csingle else self.hamiltonianmpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
     @property
     def sparse_hamiltonian_obs(self):
         """SparseHamiltonian observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return (
+                self.sparse_hamiltonianmpi_c64
+                if self.use_csingle
+                else self.sparse_hamiltonianmpi_c128
+            )
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
     def _named_obs(self, observable, wires_map: dict):
@@ -158,6 +206,16 @@ class QuantumScriptSerializer:
             sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
         """
 
+        if self.use_mpi:
+            Hmat = Hamiltonian([1.0], [Identity(0)]).sparse_matrix()
+            H_sparse = SparseHamiltonian(Hmat, wires=range(1))
+            spm = H_sparse.sparse_matrix()
+            # Only root 0 needs the overall sparsematrix data
+            if self.mpi_manager().getRank() == 0:
+                spm = observable.sparse_matrix()
+            self.mpi_manager().Barrier()
+        else:
+            spm = observable.sparse_matrix()
         spm = observable.sparse_matrix()
         data = np.array(spm.data).astype(self.ctype)
         indices = np.array(spm.indices).astype(np.int64)
@@ -255,7 +313,7 @@ class QuantumScriptSerializer:
                 name = single_op.name
                 names.append(name)
 
-                if not hasattr(self.statevector_c128, name):
+                if not hasattr(self.sv_type, name):
                     params.append([])
                     mats.append(matrix(single_op))
 
