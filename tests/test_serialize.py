@@ -34,6 +34,8 @@ if device_name == "lightning.kokkos":
         TensorProdObsC128,
         HamiltonianC64,
         HamiltonianC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
     )
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu_ops.observables import (
@@ -92,6 +94,10 @@ def test_wrong_device_name():
         (qml.Projector([0], wires=0), HermitianObsC128),
         (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
         (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
+        (
+            qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
+            SparseHamiltonianC128,
+        ),
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):

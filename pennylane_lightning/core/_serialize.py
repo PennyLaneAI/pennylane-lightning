@@ -84,6 +84,9 @@ class QuantumScriptSerializer:
         self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
+        if device_name == "lightning.kokkos":
+            self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+            self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
     @property
     def ctype(self):
@@ -115,6 +118,11 @@ class QuantumScriptSerializer:
         """Hamiltonian observable matching ``use_csingle`` precision."""
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
+    @property
+    def sparse_hamiltonian_obs(self):
+        """SparseHamiltonian observable matching ``use_csingle`` precision."""
+        return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
+
     def _named_obs(self, observable, wires_map: dict):
         """Serializes a Named observable"""
         wires = [wires_map[w] for w in observable.wires]
@@ -139,6 +147,28 @@ class QuantumScriptSerializer:
         terms = [self._ob(t, wires_map) for t in observable.ops]
         return self.hamiltonian_obs(coeffs, terms)
 
+    def _sparse_hamiltonian(self, observable, wires_map: dict):
+        """Serialize an observable (Sparse Hamiltonian)
+
+        Args:
+            observable (Observable): the input observable (Sparse Hamiltonian)
+            wire_map (dict): a dictionary mapping input wires to the device's backend wires
+
+        Returns:
+            sparsehamiltonian_obs (SparseHamiltonianKokkos_C64 or SparseHamiltonianKokkos_C128): A Sparse Hamiltonian observable object compatible with the C++ backend
+        """
+
+        spm = observable.sparse_matrix()
+        data = np.array(spm.data).astype(self.ctype)
+        indices = np.array(spm.indices).astype(np.int)
+        offsets = np.array(spm.indptr).astype(np.int)
+
+        wires = []
+        wires_list = observable.wires.tolist()
+        wires.extend([wires_map[w] for w in wires_list])
+
+        return self.sparse_hamiltonian_obs(data, indices, offsets, wires)
+
     def _pauli_word(self, observable, wires_map: dict):
         """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
         if len(observable) == 1:
@@ -162,10 +192,13 @@ class QuantumScriptSerializer:
     # pylint: disable=protected-access
     def _ob(self, observable, wires_map):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
+        print(observable.__class__)
         if isinstance(observable, Tensor):
             return self._tensor_ob(observable, wires_map)
         if observable.name == "Hamiltonian":
             return self._hamiltonian(observable, wires_map)
+        if observable.name == "SparseHamiltonian":
+            return self._sparse_hamiltonian(observable, wires_map)
         if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
             return self._named_obs(observable, wires_map)
         if observable._pauli_rep is not None:
