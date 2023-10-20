@@ -15,9 +15,11 @@
 #include "AdjointJacobianGPUMPI.hpp"
 #include "JacobianData.hpp"
 #include "JacobianDataMPI.hpp"
+#include "MPIManager.hpp"
 
 // using namespace Pennylane;
 using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::MPI;
 using Pennylane::LightningGPU::StateVectorCudaMPI;
 
 // explicit instantiation

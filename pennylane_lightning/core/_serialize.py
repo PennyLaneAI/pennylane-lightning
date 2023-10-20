@@ -50,7 +50,7 @@ class QuantumScriptSerializer:
     """
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes
-    def __init__(self, device_name, use_csingle: bool = False):
+    def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
         if device_name == "lightning.qubit":
             try:
@@ -85,6 +85,20 @@ class QuantumScriptSerializer:
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
+        self.use_mpi = False
+
+        if use_mpi:
+            self.use_mpi = use_mpi
+            self.statevectormpi_c128 = lightning_ops.StateVectorMPIC128
+            self.named_obsmpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
+            self.named_obsmpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
+            self.hermitian_obsmpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
+            self.hermitian_obsmpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
+            self.tensor_prod_obsmpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
+            self.tensor_prod_obsmpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
+            self.hamiltonianmpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
+            self.hamiltonianmpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+
     @property
     def ctype(self):
         """Complex type."""
@@ -96,23 +110,37 @@ class QuantumScriptSerializer:
         return np.float32 if self.use_csingle else np.float64
 
     @property
+    def sv_type(self):
+        if self.use_mpi:
+            return self.statevectormpi_c128
+        return self.statevector_c128
+
+    @property
     def named_obs(self):
         """Named observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.named_obsmpi_c64 if self.use_csingle else self.named_obsmpi_c128
         return self.named_obs_c64 if self.use_csingle else self.named_obs_c128
 
     @property
     def hermitian_obs(self):
         """Hermitian observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.hermitian_obsmpi_c64 if self.use_csingle else self.hermitian_obsmpi_c128
         return self.hermitian_obs_c64 if self.use_csingle else self.hermitian_obs_c128
 
     @property
     def tensor_obs(self):
         """Tensor product observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.tensor_prod_obsmpi_c64 if self.use_csingle else self.tensor_prod_obsmpi_c128
         return self.tensor_prod_obs_c64 if self.use_csingle else self.tensor_prod_obs_c128
 
     @property
     def hamiltonian_obs(self):
         """Hamiltonian observable matching ``use_csingle`` precision."""
+        if self.use_mpi:
+            return self.hamiltonianmpi_c64 if self.use_csingle else self.hamiltonianmpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
     def _named_obs(self, observable, wires_map: dict):
@@ -223,7 +251,7 @@ class QuantumScriptSerializer:
                 name = single_op.name
                 names.append(name)
 
-                if not hasattr(self.statevector_c128, name):
+                if not hasattr(self.sv_type, name):
                     params.append([])
                     mats.append(matrix(single_op))
 
