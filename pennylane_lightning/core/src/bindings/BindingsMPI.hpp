@@ -82,6 +82,10 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
+    using np_arr_sparse_ind = typename std::conditional<
+        std::is_same<ParamT, float>::value,
+        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
+        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
 
     std::string class_name;
 
@@ -191,6 +195,49 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                 return self == other_cast;
             },
             "Compare two observables");
+#ifdef _ENABLE_PLGPU
+    class_name = "SparseHamiltonianMPIC" + bitsize;
+    using SpIDX = typename SparseHamiltonianMPI<StateVectorT>::IdxT;
+    py::class_<SparseHamiltonianMPI<StateVectorT>,
+               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str(),
+                                          py::module_local())
+        .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
+                         const np_arr_sparse_ind &offsets,
+                         const std::vector<std::size_t> &wires) {
+            const py::buffer_info buffer_data = data.request();
+            const auto *data_ptr =
+                static_cast<ComplexT *>(buffer_data.ptr);
+
+            const py::buffer_info buffer_indices = indices.request();
+            const auto *indices_ptr = static_cast<SpIDX *>(buffer_indices.ptr);
+
+            const py::buffer_info buffer_offsets = offsets.request();
+            const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
+
+            return SparseHamiltonianMPI<StateVectorT>{
+                std::vector<ComplexT>(
+                    {data_ptr, data_ptr + data.size()}),
+                std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
+                std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
+                wires};
+        }))
+        .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonianMPI<StateVectorT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<SparseHamiltonianMPI<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast =
+                    other.cast<SparseHamiltonianMPI<StateVectorT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+#endif
 }
 
 /**
