@@ -414,4 +414,105 @@ class HamiltonianBase : public Observable<StateVectorT> {
     }
 };
 
+/**
+ * @brief Sparse representation of SparseHamiltonian<T>
+ *
+ * @tparam T Floating-point precision.
+ */
+template <class StateVectorT>
+class SparseHamiltonianBase : public Observable<StateVectorT> {
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    // cuSparse required index type
+    using IdxT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
+
+  protected:
+    std::vector<ComplexT> data_;
+    std::vector<IdxT> indices_;
+    std::vector<IdxT> offsets_;
+    std::vector<std::size_t> wires_;
+
+  private:
+    [[nodiscard]] bool
+    isEqual(const Observable<StateVectorT> &other) const override {
+        const auto &other_cast =
+            static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
+
+        if (data_ != other_cast.data_ || indices_ != other_cast.indices_ ||
+            offsets_ != other_cast.offsets_) {
+            return false;
+        }
+
+        return true;
+    }
+
+  public:
+    /**
+     * @brief Create a SparseHamiltonianBase from data, indices and offsets in
+     * CSR format.
+     *
+     * @param arg1 Arguments to construct data
+     * @param arg2 Arguments to construct indices
+     * @param arg3 Arguments to construct offsets
+     * @param arg4 Arguments to construct wires
+     */
+    template <typename T1, typename T2, typename T3 = T2,
+              typename T4 = std::vector<std::size_t>>
+    SparseHamiltonianBase(T1 &&arg1, T2 &&arg2, T3 &&arg3, T4 &&arg4)
+        : data_{std::forward<T1>(arg1)}, indices_{std::forward<T2>(arg2)},
+          offsets_{std::forward<T3>(arg3)}, wires_{std::forward<T4>(arg4)} {
+        PL_ASSERT(data_.size() == indices_.size());
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param arg1 Argument to construct data
+     * @param arg2 Argument to construct indices
+     * @param arg3 Argument to construct ofsets
+     * @param arg4 Argument to construct wires
+     */
+    static auto create(std::initializer_list<ComplexT> arg1,
+                       std::initializer_list<IdxT> arg2,
+                       std::initializer_list<IdxT> arg3,
+                       std::initializer_list<std::size_t> arg4)
+        -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
+        return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
+            new SparseHamiltonianBase<StateVectorT>{
+                std::move(arg1), std::move(arg2), std::move(arg3),
+                std::move(arg4)});
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Pennylane::Util::operator<<;
+        std::ostringstream ss;
+        ss << "SparseHamiltonian: {\n'data' : \n";
+        for (const auto &d : data_)
+            //Note that for LGPU backend, ComplexT is std::complex as of 0.33 release
+            //Need to revisit it once we set ComplexT as cuComplex later
+            ss <<"{" << d.real() <<", "<< d.real() <<"},"<< "\n";
+        ss << ",\n'indices' : \n";
+        for (const auto &i : indices_)
+            ss << i <<;
+        ss << ",\n'offsets' : \n";
+        for (const auto &o : offsets_)
+            ss << o;
+        ss << "\n}";
+        return ss.str();
+    }
+    /**
+     * @brief Get the wires the observable applies to.
+     */
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> {
+        return wires_;
+    };
+};
+
 } // namespace Pennylane::Observables
