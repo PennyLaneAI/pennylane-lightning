@@ -495,12 +495,14 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         std::ostringstream ss;
         ss << "SparseHamiltonian: {\n'data' : \n";
         for (const auto &d : data_)
-            //Note that for LGPU backend, ComplexT is std::complex as of 0.33 release
-            //Need to revisit it once we set ComplexT as cuComplex later
-            ss <<"{" << d.real() <<", "<< d.real() <<"},"<< "\n";
+            // Note that for LGPU backend, ComplexT is std::complex as of 0.33
+            // release Need to revisit it once we set ComplexT as cuComplex
+            // later
+            ss << "{" << d.real() << ", " << d.real() << "},"
+               << "\n";
         ss << ",\n'indices' : \n";
         for (const auto &i : indices_)
-            ss << i <<;
+            ss << i << std::endl;
         ss << ",\n'offsets' : \n";
         for (const auto &o : offsets_)
             ss << o;
