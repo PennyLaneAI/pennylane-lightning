@@ -90,7 +90,6 @@ class QuantumScriptSerializer:
             self.sparsehamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
             self.sparsehamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
-
         self.use_mpi = False
 
         if use_mpi:
@@ -104,10 +103,12 @@ class QuantumScriptSerializer:
             self.tensor_prod_obsmpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
             self.hamiltonianmpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonianmpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
-            
+
             if self.device_name == "lightning.gpu":
                 self.sparsehamiltonianmpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
-                self.sparsehamiltonianmpi_c128 = lightning_ops.observablesMPI.SparseHamiltoniaMPInC128
+                self.sparsehamiltonianmpi_c128 = (
+                    lightning_ops.observablesMPI.SparseHamiltonianMPIC128
+                )
             self.mpi_manager = lightning_ops.MPIManager
 
     @property
@@ -153,12 +154,16 @@ class QuantumScriptSerializer:
         if self.use_mpi:
             return self.hamiltonianmpi_c64 if self.use_csingle else self.hamiltonianmpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
-    
+
     @property
     def sparsehamiltonian_obs(self):
         """Sparse Hamiltonian observable matching ``use_csingle`` precision."""
         if self.use_mpi:
-            return self.sparsehamiltonianmpi_c64 if self.use_csingle else self.sparsehamiltonianmpi_c128
+            return (
+                self.sparsehamiltonianmpi_c64
+                if self.use_csingle
+                else self.sparsehamiltonianmpi_c128
+            )
         return self.sparsehamiltonian_c64 if self.use_csingle else self.sparsehamiltonian_c128
 
     def _named_obs(self, observable, wires_map: dict):
@@ -184,12 +189,12 @@ class QuantumScriptSerializer:
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in observable.ops]
         return self.hamiltonian_obs(coeffs, terms)
-    
+
     def _sparsehamiltonian(self, observable, wires_map: dict):
         wires = []
         wires_list = observable.wires.tolist()
         wires.extend([wires_map[w] for w in wires_list])
-        if use_mpi:
+        if self.use_mpi:
             Hmat = qml.Hamiltonian([1.0], [qml.Identity(0)]).sparse_matrix()
             H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()
@@ -199,9 +204,9 @@ class QuantumScriptSerializer:
             self.mpi_manager().Barrier()
         else:
             spm = observable.sparse_matrix()
-        data = np.array(spm.data).astype(ctype)
-        indices = np.array(spm.indices).astype(rtype)
-        offsets = np.array(spm.indptr).astype(rtype)
+        data = np.array(spm.data).astype(self.ctype)
+        indices = np.array(spm.indices).astype(self.rtype)
+        offsets = np.array(spm.indptr).astype(self.rtype)
 
         return self.sparsehamiltonian_obs(data, indices, offsets, wires)
 

@@ -40,6 +40,8 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
     using CFP_t = StateVectorT::CFP_t;
+    using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
+                                           int32_t, int64_t>::type;
 
     std::size_t num_qubits = 3;
     std::size_t data_size = exp2(num_qubits);
@@ -52,9 +54,9 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         {0.2, -0.1}, {-0.1, 0.2}, {0.2, 0.1}, {0.1, 0.2},
         {0.7, -0.2}, {-0.1, 0.6}, {0.6, 0.1}, {0.2, 0.7}};
 
-    std::vector<size_t> indptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-    std::vector<size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
-                                   4, 7, 5, 6, 5, 6, 4, 7};
+    std::vector<IdxT> indptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
+    std::vector<IdxT> indices = {0, 3, 1, 2, 1, 2, 0, 3,
+                                 4, 7, 5, 6, 5, 6, 4, 7};
     std::vector<ComplexT> values = {
         {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
         {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0},
@@ -69,10 +71,10 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     SECTION("Testing sparse matrix vector product:") {
         std::vector<ComplexT> result(data_size);
 
-        cuUtil::SparseMV_cuSparse<size_t, TestType, CFP_t>(
-            indptr.data(), indptr.size(), indices.data(), values.data(),
-            values.size(), sv_x.getData(), sv_y.getData(),
-            sv_x.getDataBuffer().getDevTag().getDeviceID(),
+        cuUtil::SparseMV_cuSparse<IdxT, TestType, CFP_t>(
+            indptr.data(), static_cast<int64_t>(indptr.size()), indices.data(),
+            values.data(), static_cast<int64_t>(values.size()), sv_x.getData(),
+            sv_y.getData(), sv_x.getDataBuffer().getDevTag().getDeviceID(),
             sv_x.getDataBuffer().getDevTag().getStreamID(),
             sv_x.getCusparseHandle());
 

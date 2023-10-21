@@ -201,13 +201,12 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
     py::class_<SparseHamiltonianMPI<StateVectorT>,
                std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
-                                          py::module_local())
+                                         py::module_local())
         .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
                          const np_arr_sparse_ind &offsets,
                          const std::vector<std::size_t> &wires) {
             const py::buffer_info buffer_data = data.request();
-            const auto *data_ptr =
-                static_cast<ComplexT *>(buffer_data.ptr);
+            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
 
             const py::buffer_info buffer_indices = indices.request();
             const auto *indices_ptr = static_cast<SpIDX *>(buffer_indices.ptr);
@@ -216,8 +215,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
             const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
 
             return SparseHamiltonianMPI<StateVectorT>{
-                std::vector<ComplexT>(
-                    {data_ptr, data_ptr + data.size()}),
+                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
@@ -229,7 +227,8 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
             "__eq__",
             [](const SparseHamiltonianMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonianMPI<StateVectorT>>(other)) {
+                if (!py::isinstance<SparseHamiltonianMPI<StateVectorT>>(
+                        other)) {
                     return false;
                 }
                 auto other_cast =

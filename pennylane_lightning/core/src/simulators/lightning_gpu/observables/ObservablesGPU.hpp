@@ -287,8 +287,9 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
                                                 true);
 
         SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
-            this->offsets_.data(), this->offsets_.size(), this->indices_.data(),
-            this->data_.data(), this->data_.size(), sv.getData(),
+            this->offsets_.data(), static_cast<int64_t>(this->offsets_.size()),
+            this->indices_.data(), this->data_.data(),
+            static_cast<int64_t>(this->data_.size()), sv.getData(),
             d_sv_prime->getData(), device_id, stream_id, handle);
 
         sv.updateData(std::move(d_sv_prime));

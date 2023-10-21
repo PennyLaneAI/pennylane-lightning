@@ -892,7 +892,10 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Lightning binary required",
+)
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -915,7 +918,10 @@ def test_tape_qchem(tol):
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Lightning binary required",
+)
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 

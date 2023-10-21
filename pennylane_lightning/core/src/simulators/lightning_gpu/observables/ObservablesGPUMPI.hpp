@@ -21,6 +21,7 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "LinearAlg.hpp"
+#include "MPILinearAlg.hpp"
 #include "Observables.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "Util.hpp"
@@ -283,6 +284,7 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
         }
         using CFP_t = typename StateVectorT::CFP_t;
 
+        /*
         // Distribute sparse matrix across multi-nodes/multi-gpus
         size_t num_rows = size_t{1} << sv.getTotalNumQubits();
         size_t local_num_rows = size_t{1} << sv.getNumLocalQubits();
@@ -304,22 +306,32 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
         }
 
         mpi_manager.Barrier();
+        */
 
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
-        cusparseHandle_t handle = sv.getCusparseHandle();
+        // cusparseHandle_t handle = sv.getCusparseHandle();
 
         const size_t length_local = size_t{1} << sv.getNumLocalQubits();
 
         std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
             std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
                                                 stream_id, true);
-        std::unique_ptr<DataBuffer<CFP_t>> d_tmp =
-            std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
-                                                stream_id, true);
         d_sv_prime->zeroInit();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
+
+        cuUtil::SparseMV_cuSparseMPI<IdxT, PrecisionT, CFP_t>(
+            mpi_manager, length_local, this->offsets_.data(),
+            static_cast<int64_t>(this->offsets_.size()), this->indices_.data(),
+            this->data_.data(), const_cast<CFP_t *>(sv.getData()),
+            d_sv_prime->getData(), device_id, stream_id,
+            sv.getCusparseHandle());
+
+        /*
+        std::unique_ptr<DataBuffer<CFP_t>> d_tmp =
+            std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
+                                                stream_id, true);
 
         for (size_t i = 0; i < mpi_manager.getSize(); i++) {
             size_t color = 0;
@@ -329,11 +341,11 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                 color = 1;
                 SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
                     localCSRMatrix.getCsrOffsets().data(),
-                    localCSRMatrix.getCsrOffsets().size(),
+                    static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
                     localCSRMatrix.getColumns().data(),
                     localCSRMatrix.getValues().data(),
-                    localCSRMatrix.getValues().size(), sv.getData(),
-                    d_sv_prime->getData(), device_id, stream_id, handle);
+                    static_cast<int64_t>(localCSRMatrix.getValues().size()),
+        sv.getData(), d_sv_prime->getData(), device_id, stream_id, handle);
             }
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
             mpi_manager.Barrier();
@@ -365,6 +377,8 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
             mpi_manager.Barrier();
         }
+        */
+
         sv.CopyGpuDataToGpuIn(d_sv_prime->getData(), d_sv_prime->getLength());
         mpi_manager.Barrier();
     }

@@ -416,13 +416,12 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
     py::class_<SparseHamiltonian<StateVectorT>,
                std::shared_ptr<SparseHamiltonian<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
-                                          py::module_local())
+                                         py::module_local())
         .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
                          const np_arr_sparse_ind &offsets,
                          const std::vector<std::size_t> &wires) {
             const py::buffer_info buffer_data = data.request();
-            const auto *data_ptr =
-                static_cast<ComplexT *>(buffer_data.ptr);
+            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
 
             const py::buffer_info buffer_indices = indices.request();
             const auto *indices_ptr = static_cast<SpIDX *>(buffer_indices.ptr);
@@ -431,8 +430,7 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
             const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
 
             return SparseHamiltonian<StateVectorT>{
-                std::vector<ComplexT>(
-                    {data_ptr, data_ptr + data.size()}),
+                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
@@ -447,8 +445,7 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
                 if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast =
-                    other.cast<SparseHamiltonian<StateVectorT>>();
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
