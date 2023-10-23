@@ -422,20 +422,6 @@ template <typename TypeList> void testHamiltonianBase() {
 
                 REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
             }
-
-            /*
-            DYNAMIC_SECTION("applyInPlace must fail - "
-                            << StateVectorMPIToName<StateVectorT>::name) {
-                auto ham =
-                    HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
-                auto st_data = createZeroState<ComplexT>(2);
-
-                StateVectorT state_vector(st_data.data(), st_data.size());
-
-                REQUIRE_THROWS_AS(ham->applyInPlace(state_vector),
-                                  LightningException);
-            }
-            */
         }
         testHamiltonianBase<typename TypeList::Next>();
     }

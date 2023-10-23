@@ -37,7 +37,7 @@ using Pennylane::Util::createNonTrivialState;
 }; // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -49,6 +49,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -58,6 +59,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -190,87 +192,115 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Pauli word based API", "[MeasurementsMPI]", float, double) {
+TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using cp_t = std::complex<PrecisionT>;
     using StateVectorT = StateVectorCudaMPI<TestType>;
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-
-    // Defining the statevector that will be measured.
-    auto statevector_data =
-        createNonTrivialState<StateVectorCudaManaged<TestType>>();
-
-    size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
+    size_t numqubits = 4;
     size_t mpi_buffersize = 1;
 
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    size_t nLocalIndexBits = numqubits - nGlobalIndexBits;
+    mpi_manager.Barrier();
 
-    int nDevices = 0;
+    std::vector<cp_t> init_sv{{0.1653855288944372, 0.08360762242222763},
+                              {0.0731293375604395, 0.13209080879903976},
+                              {0.23742759434160687, 0.2613440813782711},
+                              {0.16768740742688235, 0.2340607179431313},
+                              {0.2247465091396771, 0.052469062762363974},
+                              {0.1595307101966878, 0.018355977199570113},
+                              {0.01433428625707798, 0.18836803047905595},
+                              {0.20447553584586473, 0.02069817884076428},
+                              {0.17324175995006008, 0.12834320562185453},
+                              {0.021542232643170886, 0.2537776554975786},
+                              {0.2917899745322105, 0.30227665008366594},
+                              {0.17082687702494623, 0.013880922806771745},
+                              {0.03801974084659355, 0.2233816291263903},
+                              {0.1991010562067874, 0.2378546697582974},
+                              {0.13833362414043807, 0.0571737109901294},
+                              {0.1960850292216881, 0.22946370987301284}};
+
+    auto local_state = mpi_manager.scatter(init_sv, 0);
+
+    int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     mpi_manager.Barrier();
 
-    auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
-
     StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                     nLocalIndexBits);
-    sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
-    mpi_manager.Barrier();
+    sv.CopyHostDataToGpu(local_state, false);
 
-    // Initializing the Measurements class.
-    // This object attaches to the statevector allowing several measures.
-    // MeasurementsMPI<StateVectorT> Measurer(sv);
-    // mpi_manager.Barrier();
-
-    SECTION("Testing for Pauli words:") {
+    SECTION("Test getExpectationValuePauliWords (full wires)") {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
-        PrecisionT exp_values;
-        std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
-        std::vector<std::string> operations_list;
+
+        std::vector<std::string> pauli_words = {"XYZI", "ZZXX"};
+        std::vector<std::vector<size_t>> tgts = {{0, 1, 2, 3}, {0, 1, 2, 3}};
+        std::vector<std::complex<PrecisionT>> coeffs = {{0.1, 0.0}, {0.2, 0.0}};
+
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
+
+        CHECK(expval_mpi == Approx(0.0014895211).margin(1e-7));
+    }
+
+    SECTION("Test getExpectationValuePauliWords (global wires)") {
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        std::vector<std::string> pauli_words = {"X", "Y", "Z", "I"};
+        std::vector<std::vector<size_t>> tgts = {{0}, {0}, {0}, {0}};
         std::vector<std::complex<PrecisionT>> coeffs = {
-            ComplexT{0.1, 0.0}, ComplexT{0.2, 0.0}, ComplexT{0.3, 0.0}};
+            {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
-        operations_list = {"X", "X", "X"};
-        exp_values =
-            Measurer.expval(operations_list, wires_list, coeffs.data());
-        exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        PrecisionT expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
-            expected_values += exp_values_ref[i] * (coeffs[i].real());
-        }
-        CHECK(exp_values == Approx(expected_values).margin(1e-7));
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
 
-        operations_list = {"Y", "Y", "Y"};
-        exp_values =
-            Measurer.expval(operations_list, wires_list, coeffs.data());
-        exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
-            expected_values += exp_values_ref[i] * (coeffs[i].real());
-        }
-        CHECK(exp_values == Approx(expected_values).margin(1e-7));
+        CHECK(expval_mpi == Approx(0.4589167637).margin(1e-7));
+    }
 
-        operations_list = {"Z", "Z", "Z"};
-        exp_values =
-            Measurer.expval(operations_list, wires_list, coeffs.data());
-        exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
-            expected_values += exp_values_ref[i] * (coeffs[i].real());
-        }
-        CHECK(exp_values == Approx(expected_values).margin(1e-7));
+    SECTION("Test getExpectationValuePauliWords (local wires)") {
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        std::vector<std::string> pauli_words = {"X", "Y", "Z", "I"};
+        std::vector<std::vector<size_t>> tgts = {
+            {numqubits - 1}, {numqubits - 1}, {numqubits - 1}, {numqubits - 1}};
+        std::vector<std::complex<PrecisionT>> coeffs = {
+            {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
+
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
+
+        CHECK(expval_mpi == Approx(0.4841317321).margin(1e-7));
+    }
+
+    SECTION("Test getExpectationValuePauliWords (mixed wires)") {
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        std::vector<std::string> pauli_words = {"X", "XY", "XYZ", "XYZI",
+                                                "X", "Y",  "Z",   "I"};
+        std::vector<std::vector<size_t>> tgts = {
+            {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}, {3}, {3}, {3}, {3}};
+        std::vector<std::complex<PrecisionT>> coeffs = {
+            {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0},
+            {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
+
+        auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
+
+        CHECK(expval_mpi == Approx(0.4735548926).margin(1e-7));
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -282,6 +312,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -291,6 +322,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -380,7 +412,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
+TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {
@@ -396,6 +428,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -405,6 +438,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

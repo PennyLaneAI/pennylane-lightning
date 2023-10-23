@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "MPIManager.hpp"
+#include "MPI_helpers.hpp"
 #include "cuError.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -32,79 +33,12 @@ using namespace Pennylane::LightningGPU;
 
 namespace Pennylane::LightningGPU::MPI {
 
-enum WireStatus { Default, Target, Control };
-
 inline size_t mebibyteToBytes(const size_t mebibytes) {
     return mebibytes * size_t{1024 * 1024};
 }
 
 inline double bytesToMebibytes(const size_t bytes) {
     return static_cast<double>(bytes) / (1024.0 * 1024.0);
-}
-
-/**
- * @brief Create wire pairs for bit index swap and transform all control and
- * target wires to local ones.
- *
- * @param numLocalQubits Number of local qubits.
- * @param numTotalQubits Number of total qubits.
- * @param ctrls Vector of control wires.
- * @param tgts Vector of target wires.
- * @return wirePairs Wire pairs to be passed to SV bit index swap worker.
- */
-inline std::vector<int2> createWirePairs(const int numLocalQubits,
-                                         const int numTotalQubits,
-                                         std::vector<int> &ctrls,
-                                         std::vector<int> &tgts,
-                                         std::vector<int> &statusWires) {
-    std::vector<int2> wirePairs;
-    int localbit = numLocalQubits - 1, globalbit = numLocalQubits;
-    while (localbit >= 0 && globalbit < numTotalQubits) {
-        if (statusWires[localbit] == WireStatus::Default &&
-            statusWires[globalbit] != WireStatus::Default) {
-            int2 wirepair = make_int2(localbit, globalbit);
-            wirePairs.push_back(wirepair);
-            if (statusWires[globalbit] == WireStatus::Control) {
-                for (size_t k = 0; k < ctrls.size(); k++) {
-                    if (ctrls[k] == globalbit) {
-                        ctrls[k] = localbit;
-                    }
-                }
-            } else {
-                for (size_t k = 0; k < tgts.size(); k++) {
-                    if (tgts[k] == globalbit) {
-                        tgts[k] = localbit;
-                    }
-                }
-            }
-            std::swap(statusWires[localbit], statusWires[globalbit]);
-        } else {
-            if (statusWires[localbit] != WireStatus::Default) {
-                localbit--;
-            }
-            if (statusWires[globalbit] == WireStatus::Default) {
-                globalbit++;
-            }
-        }
-    }
-    return wirePairs;
-}
-
-/**
- * @brief Create wire pairs for bit index swap and transform all target wires to
- * local ones.
- *
- * @param numLocalQubits Number of local qubits.
- * @param numTotalQubits Number of total qubits.
- * @param tgts Vector of target wires.
- * @return wirePairs Wire pairs to be passed to SV bit index swap worker.
- */
-inline std::vector<int2> createWirePairs(int numLocalQubits, int numTotalQubits,
-                                         std::vector<int> &tgts,
-                                         std::vector<int> &statusWires) {
-    std::vector<int> ctrls;
-    return createWirePairs(numLocalQubits, numTotalQubits, ctrls, tgts,
-                           statusWires);
 }
 
 /**
@@ -129,10 +63,12 @@ struct MPIWorkerDeleter {
             custatevecCommunicatorDestroy(handle, communicator));
         PL_CUDA_IS_SUCCESS(cudaFree(d_extraWorkspace));
         PL_CUDA_IS_SUCCESS(cudaFree(d_transferWorkspace));
+        // LCOV_EXCL_START
         for (auto *d_subSV : d_subSVsP2P)
             PL_CUDA_IS_SUCCESS(cudaIpcCloseMemHandle(d_subSV));
         for (auto event : remoteEvents)
             PL_CUDA_IS_SUCCESS(cudaEventDestroy(event));
+        // LCOV_EXCL_STOP
         PL_CUDA_IS_SUCCESS(cudaEventDestroy(localEvent));
     }
 };
@@ -167,7 +103,6 @@ inline SharedMPIWorker
 make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
                        const size_t mpi_buf_size, CFP_t *sv,
                        const size_t numLocalQubits, cudaStream_t localStream) {
-
     custatevecSVSwapWorkerDescriptor_t svSegSwapWorker = nullptr;
 
     int nDevices_int = 0;
@@ -231,6 +166,9 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         communicatorType = CUSTATEVEC_COMMUNICATOR_TYPE_OPENMPI;
     }
 
+    // LCOV_EXCL_START
+    // The following lines are for handling the errors caused by python
+    // layer calls. Won't be covered by cpp unit tests.
     auto err = custatevecCommunicatorCreate(handle, &communicator,
                                             communicatorType, nullptr);
     if (err != CUSTATEVEC_STATUS_SUCCESS) {
@@ -238,6 +176,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         PL_CUSTATEVEC_IS_SUCCESS(custatevecCommunicatorCreate(
             handle, &communicator, communicatorType, "libmpi.so"));
     }
+    // LCOV_EXCL_STOP
     mpi_manager.Barrier();
 
     void *d_extraWorkspace = nullptr;
@@ -303,6 +242,9 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* void* */ d_transferWorkspace,
         /* size_t */ transferWorkspaceSize));
 
+    // LCOV_EXCL_START
+    // Won't be covered by CI checks with 2 nvidia GPUs without nvlink
+    // connection
     if (nP2PDeviceBits != 0) {
         cudaIpcMemHandle_t ipcMemHandle;
         PL_CUDA_IS_SUCCESS(cudaIpcGetMemHandle(&ipcMemHandle, sv));
@@ -348,6 +290,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
             /* cudaEvent_t */ remoteEvents.data(),
             /* const uint32_t */ static_cast<uint32_t>(d_subSVsP2P.size())));
     }
+    // LCOV_EXCL_START
 
     return {svSegSwapWorker,
             std::bind(MPIWorkerDeleter(), std::placeholders::_1, handle,

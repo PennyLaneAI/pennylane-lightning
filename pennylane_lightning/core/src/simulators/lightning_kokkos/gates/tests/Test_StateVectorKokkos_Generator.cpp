@@ -42,10 +42,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
     {
         const size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyGenerator("PhaseShiftFunctor", {0}),
-            LightningException,
-            "Generator does not exist for"); // invalid wires
+        PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
+                                  LightningException,
+                                  "Generator does not exist for");
     }
 }
 

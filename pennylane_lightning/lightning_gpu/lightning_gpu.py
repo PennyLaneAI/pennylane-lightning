@@ -41,6 +41,7 @@ try:
     )
 
     try:
+        # pylint: disable=no-name-in-module
         from pennylane_lightning.lightning_gpu_ops import (
             StateVectorMPIC128,
             StateVectorMPIC64,
@@ -51,7 +52,7 @@ try:
         )
 
         MPI_SUPPORT = True
-    except:
+    except ImportError:
         MPI_SUPPORT = False
 
     from ctypes.util import find_library
@@ -61,8 +62,7 @@ try:
         "cuquantum"
     ):  # pragma: no cover
         raise ImportError(
-            'cuQuantum libraries not found. Please check your "LD_LIBRARY_PATH" environment variable,'
-            'or ensure you have installed the appropriate distributable "cuQuantum" package.'
+            'custatevec libraries not found. Please pip install appropriate custatevec in a virtual environment and then add its path to the "LD_LIBRARY_PATH" environment variable.'
         )
     if not DevPool.getTotalDevices():  # pragma: no cover
         raise ValueError("No supported CUDA-capable device found")
@@ -203,7 +203,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "SProd",
     }
 
-    class LightningGPU(LightningBase):
+    class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane-Lightning-GPU device.
         Args:
             wires (int): the number of wires to initialize the device with
@@ -233,7 +233,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
-        ):  # pylint: disable=unused-argument
+        ):  # pylint: disable=too-many-arguments
             if c_dtype is np.complex64:
                 self.use_csingle = True
             elif c_dtype is np.complex128:
@@ -256,17 +256,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 if mpi_buf_size < 0:
                     raise TypeError(f"Unsupported mpi_buf_size value: {mpi_buf_size}")
 
-                if not mpi_buf_size:
+                if mpi_buf_size:
                     if mpi_buf_size & (mpi_buf_size - 1):
                         raise TypeError(
                             f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
                         )
 
-                if not mpi_buf_size:
+                if mpi_buf_size:
                     # Memory size in bytes
                     sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
                     if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                        w_msg = "MPI buffer size is over the size of local state vector."
+                        w_msg = "The MPI buffer size is larger than the local state vector size."
                         warn(
                             w_msg,
                             RuntimeWarning,
@@ -497,7 +497,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._create_basis_state(num)
 
         # pylint: disable=missing-function-docstring
-        def apply_cq(self, operations):
+        def apply_lightning(self, operations):
             """Apply a list of operations to the state tensor.
 
             Args:
@@ -513,23 +513,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
             skipped_ops = ["Identity"]
             invert_param = False
 
-            for o in operations:
-                if str(o.name) in skipped_ops:
+            for ops in operations:
+                if str(ops.name) in skipped_ops:
                     continue
-                name = o.name
-                if isinstance(o, Adjoint):
-                    name = o.base.name
+                name = ops.name
+                if isinstance(ops, Adjoint):
+                    name = ops.base.name
                     invert_param = True
                 method = getattr(self._gpu_state, name, None)
-                wires = self.wires.indices(o.wires)
+                wires = self.wires.indices(ops.wires)
 
                 if method is None:
-                    # Inverse can be set to False since qml.matrix(o) is already in inverted form
+                    # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
-                        mat = qml.matrix(o)
+                        mat = qml.matrix(ops)
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
-                        mat = o.matrix
+                        mat = ops.matrix
 
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
@@ -542,7 +542,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
 
                 else:
-                    param = o.parameters
+                    param = ops.parameters
                     method(wires, invert_param, param)
 
         # pylint: disable=unused-argument
@@ -565,7 +565,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         + f"Operations have already been applied on a {self.short_name} device."
                     )
 
-            self.apply_cq(operations)
+            self.apply_lightning(operations)
 
         @staticmethod
         def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
@@ -575,7 +575,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             Returns:
                 Expectation or State: a common return type of measurements.
             """
-            if len(measurements) == 0:
+            if not measurements:
                 return None
 
             if len(measurements) == 1 and measurements[0].return_type is State:
@@ -745,7 +745,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             if observable.name != "PauliZ":
-                self.apply_cq(observable.diagonalizing_gates())
+                self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
             return super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
@@ -765,11 +765,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
-            if observable.name in [
-                "Projector",
-            ]:
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
@@ -783,21 +778,20 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         CSR_SparseHamiltonian.indices,
                         CSR_SparseHamiltonian.data,
                     )
-                else:
-                    # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                    # host(cpu) memory requirements
-                    obs = qml.Identity(0)
-                    Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                    H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                    CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
-                    # CSR_SparseHamiltonian for rank == 0
-                    if self._mpi_manager.getRank() == 0:
-                        CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-                    return self.measurements.expval(
-                        CSR_SparseHamiltonian.indptr,
-                        CSR_SparseHamiltonian.indices,
-                        CSR_SparseHamiltonian.data,
-                    )
+                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                # host(cpu) memory requirements
+                obs = qml.Identity(0)
+                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                # CSR_SparseHamiltonian for rank == 0
+                if self._mpi_manager.getRank() == 0:
+                    CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+                return self.measurements.expval(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
 
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
@@ -832,8 +826,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             if len(local_prob) > 0:
                 num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
                 return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-            else:
-                return local_prob
+            return local_prob
 
         # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):

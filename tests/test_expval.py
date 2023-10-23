@@ -14,6 +14,7 @@
 """
 Unit tests for the expval method of Lightning devices.
 """
+import itertools
 import pytest
 from conftest import THETA, PHI, VARPHI, device_name
 
@@ -28,8 +29,6 @@ class TestExpval:
     def test_identity_expectation(self, theta, phi, qubit_device, tol):
         """Test that identity expectation value (i.e. the trace) is 1"""
         dev = qubit_device(wires=3)
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.Identity(wires=[0])
         O2 = qml.Identity(wires=[1])
@@ -46,9 +45,6 @@ class TestExpval:
         """Test that PauliZ expectation value is correct"""
         dev = qubit_device(wires=3)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         O1 = qml.PauliZ(wires=[0])
         O2 = qml.PauliZ(wires=[1])
 
@@ -63,9 +59,6 @@ class TestExpval:
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliX expectation value is correct"""
         dev = qubit_device(wires=3)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.PauliX(wires=[0])
         O2 = qml.PauliX(wires=[1])
@@ -84,9 +77,6 @@ class TestExpval:
         """Test that PauliY expectation value is correct"""
         dev = qubit_device(wires=3)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         O1 = qml.PauliY(wires=[0])
         O2 = qml.PauliY(wires=[1])
 
@@ -101,9 +91,6 @@ class TestExpval:
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
         dev = qubit_device(wires=3)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])
@@ -126,26 +113,28 @@ class TestExpval:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         m = 2**n_wires
         U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
         U = U + np.conj(U.T)
-        obs = qml.Hermitian(U, wires=range(n_wires))
+        wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
+        perms = list(itertools.permutations(wires))
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        if n_wires > 4:
+            perms = perms[0::30]
+        for perm in perms:
+            obs = qml.Hermitian(U, wires=perm)
 
-        def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.RY(theta, wires=[0])
-            qml.RY(phi, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            return qml.expval(obs)
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RY(theta, wires=[0])
+                qml.RY(phi, wires=[1])
+                qml.CNOT(wires=[0, 1])
+                return qml.expval(obs)
 
-        circ = qml.QNode(circuit, dev)
-        circ_def = qml.QNode(circuit, dev_def)
-        assert np.allclose(circ(), circ_def(), tol)
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)
 
 
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))

@@ -40,6 +40,7 @@ using namespace Pennylane::LightningGPU;
 /// @endcond
 
 namespace Pennylane::LightningGPU::MPI {
+// LCOV_EXCL_START
 inline void errhandler(int errcode, const char *str) {
     char msg[MPI_MAX_ERROR_STRING];
     int resultlen;
@@ -47,6 +48,7 @@ inline void errhandler(int errcode, const char *str) {
     fprintf(stderr, "%s: %s\n", str, msg);
     MPI_Abort(MPI_COMM_WORLD, 1);
 }
+// LCOV_EXCL_STOP
 
 #define PL_MPI_IS_SUCCESS(fn)                                                  \
     {                                                                          \
@@ -142,6 +144,12 @@ class MPIManager final {
 
   public:
     MPIManager() : communicator_(MPI_COMM_WORLD) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
+
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -158,6 +166,11 @@ class MPIManager final {
     }
 
     MPIManager(MPI_Comm communicator) : communicator_(communicator) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -174,7 +187,11 @@ class MPIManager final {
     }
 
     MPIManager(int argc, char **argv) {
-        PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        }
         isExternalComm_ = false;
         communicator_ = MPI_COMM_WORLD;
         int rank_int;
@@ -192,6 +209,11 @@ class MPIManager final {
     }
 
     MPIManager(const MPIManager &other) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         rank_ = other.rank_;
         size_ = other.size_;
@@ -204,7 +226,8 @@ class MPIManager final {
         size_per_node_ = other.size_per_node_;
     }
 
-    virtual ~MPIManager() final {
+    // LCOV_EXCL_START
+    virtual ~MPIManager() {
         if (!isExternalComm_) {
             int initflag;
             int finflag;
@@ -221,6 +244,7 @@ class MPIManager final {
                 PL_MPI_IS_SUCCESS(MPI_Comm_free(&communicator_));
         }
     }
+    // LCOV_EXCL_STOP
 
     // General MPI operations
     /**

@@ -49,7 +49,7 @@ class QuantumScriptSerializer:
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
         if device_name == "lightning.qubit":
@@ -57,24 +57,21 @@ class QuantumScriptSerializer:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.kokkos":
             try:
                 import pennylane_lightning.lightning_kokkos_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         elif device_name == "lightning.gpu":
             try:
                 import pennylane_lightning.lightning_gpu_ops as lightning_ops
             except ImportError as exception:
                 raise ImportError(
-                    f"Pre-compiled binaries for {device_name}"
-                    " serialize functionality are not available."
+                    f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -114,6 +111,7 @@ class QuantumScriptSerializer:
 
     @property
     def sv_type(self):
+        """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self.use_mpi:
             return self.statevectormpi_c128
         return self.statevector_c128

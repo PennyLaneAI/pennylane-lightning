@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64 (Lightning-GPU)
+name: Testing::Linux::x86_64::LGPU
 on:
   pull_request:
   push:
@@ -27,7 +27,7 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        exec_model: ["CUDA"]
+        pl_backend: ["lightning_gpu"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -46,7 +46,6 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
-        exec_model: ["CUDA"]
 
     name: C++ tests (Lightning-GPU)
     runs-on: ${{ matrix.os }}
@@ -104,7 +103,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu12 
+          python -m pip install ninja cmake custatevec-cu11
       
       - name: Install Latest PennyLane
         if: inputs.pennylane-version == 'latest'
@@ -144,12 +143,12 @@ jobs:
           if-no-files-found: error
 
   pythontestswithLGPU:
-    needs: [builddeps]
+    needs: [builddeps, cpptestswithLGPU_cu11]
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
-        exec_model: ["CUDA"]
+        default_backend: ["lightning_qubit"]
 
     name: Python tests with LGPU
     runs-on: ${{ matrix.os }}
@@ -169,7 +168,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
-          fetch-depth: 2
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -214,7 +212,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu12 pytest pytest-mock flaky pytest-cov
+          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov
 
       - name: Build and install package
         env: 
@@ -222,12 +220,12 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
 
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests
@@ -250,11 +248,11 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DENABLE_KOKKOS=OFF -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
           
-          CMAKE_ARGS="-DPL_BACKEND="lightning_gpu" -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed

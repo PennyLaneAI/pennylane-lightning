@@ -38,6 +38,7 @@ THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 VARPHI = np.linspace(0.02, 1, 3)
 
+
 @pytest.fixture(scope="session")
 def tol():
     """Numerical tolerance for equality tests."""
@@ -48,6 +49,7 @@ def tol():
 def n_subsystems(request):
     """Number of qubits or qumodes."""
     return request.param
+
 
 # Looking for the device for testing.
 default_device = "lightning.gpu"
@@ -93,6 +95,12 @@ from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
 )
 def qubit_device(request):
     def _device(wires):
-        return qml.device(device_name, wires=wires, mpi=True, c_dtype=request.param[0], batch_obs=request.param[1])
+        return qml.device(
+            device_name,
+            wires=wires,
+            mpi=True,
+            c_dtype=request.param[0],
+            batch_obs=request.param[1],
+        )
 
     return _device

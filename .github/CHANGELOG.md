@@ -2,6 +2,18 @@
 
 ### New features since last release
 
+* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
+  [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
+
+* Integrate cpp backend of distributed Lightning-GPU into the Lightning monorepo.
+  [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
+
+* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
+  [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
+
+* Build Linux wheels for Lightning-GPU (CUDA-11).
+  [(#517)](https://github.com/PennyLaneAI/pennylane-lightning/pull/517)
+
 * Add `Dockerfile` in `docker` and `make docker` workflow in `Makefile`. The Docker images and documentation are available on [DockerHub](https://hub.docker.com/repository/docker/pennylaneai/pennylane).
   [(#496)](https://github.com/PennyLaneAI/pennylane-lightning/pull/496)
 
@@ -9,6 +21,12 @@
   [(#495)](https://github.com/PennyLaneAI/pennylane-lightning/pull/495)
 
 ### Breaking changes
+
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+  [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
+
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
+  [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
   [(#507)](https://github.com/PennyLaneAI/pennylane-lightning/pull/507)
@@ -30,6 +48,12 @@
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 ### Improvements
+
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+  [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
+
+* Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
+  [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
 * Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
   [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
@@ -56,6 +80,12 @@
 
 ### Bug fixes
 
+* Re-add support for `pip install pennylane-lightning[gpu]`.
+  [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
+
+* Switch most L-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in L-Kokkos.
+  [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
+
 * Fix RTD builds by removing unsupported `sytem_packages` configuration option.
   [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
 
@@ -63,7 +93,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

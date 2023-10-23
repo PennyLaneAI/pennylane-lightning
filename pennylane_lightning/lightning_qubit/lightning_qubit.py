@@ -197,7 +197,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             kernel_name="Local",
             num_burnin=100,
             batch_obs=False,
-        ):
+        ):  # pylint: disable=too-many-arguments
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             # Create the initial state. Internally, we store the

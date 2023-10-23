@@ -69,6 +69,24 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::Constructibility",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::getDataVector",
+                           "[getDataVector]", (StateVectorCudaManaged),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using VectorT = TestVector<std::complex<PrecisionT>>;
+
+    const size_t num_qubits = 4;
+    VectorT st_data = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
+                              st_data.size());
+
+    auto host_data = state_vector.getDataVector();
+
+    CHECK(host_data == Pennylane::Util::approx(st_data));
+}
+
 TEMPLATE_PRODUCT_TEST_CASE(
     "StateVectorCudaManaged::applyMatrix with a std::vector", "[applyMatrix]",
     (StateVectorCudaManaged), (float, double)) {

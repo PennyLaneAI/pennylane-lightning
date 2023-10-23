@@ -27,6 +27,7 @@ constexpr bool BACKEND_FOUND = true;
 #include "MeasurementsGPUMPI.hpp"
 #include "ObservablesGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
+#include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TestHelpersStateVectorsMPI.hpp"
 #include "TestHelpersWires.hpp"
@@ -67,6 +68,7 @@ template <typename TypeList> void testProbabilities() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -76,6 +78,7 @@ template <typename TypeList> void testProbabilities() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -126,6 +129,7 @@ template <typename TypeList> void testNamedObsExpval() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -135,6 +139,7 @@ template <typename TypeList> void testNamedObsExpval() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -196,6 +201,7 @@ template <typename TypeList> void testHermitianObsExpval() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -205,6 +211,7 @@ template <typename TypeList> void testHermitianObsExpval() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -293,6 +300,7 @@ template <typename TypeList> void testNamedObsVar() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -302,6 +310,7 @@ template <typename TypeList> void testNamedObsVar() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -364,6 +373,7 @@ template <typename TypeList> void testHermitianObsVar() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -373,6 +383,7 @@ template <typename TypeList> void testHermitianObsVar() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -469,6 +480,7 @@ template <typename TypeList> void testSamples() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -478,6 +490,7 @@ template <typename TypeList> void testSamples() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
