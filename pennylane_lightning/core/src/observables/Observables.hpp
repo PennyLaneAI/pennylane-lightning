@@ -517,7 +517,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     /**
      * @brief Get the wires the observable applies to.
      */
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> {
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
         return wires_;
     };
 };
