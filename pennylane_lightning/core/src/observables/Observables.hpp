@@ -414,6 +414,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
     }
 };
 
+// NOLINTBEGIN
 /**
  * @brief Sparse representation of SparseHamiltonian<T>
  *
@@ -480,7 +481,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
      *
      * @param arg1 Argument to construct data
      * @param arg2 Argument to construct indices
-     * @param arg3 Argument to construct ofsets
+     * @param arg3 Argument to construct offsets
      * @param arg4 Argument to construct wires
      */
     static auto create(std::initializer_list<ComplexT> arg1,
@@ -504,19 +505,19 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
         ss << "SparseHamiltonian: {\n'data' : \n";
-        for (const auto &d : data_)
-            // Note that for LGPU backend, ComplexT is std::complex as of 0.33
+        for (const auto &d : data_) { // Note that for LGPU backend, ComplexT is
+                                      // std::complex as of 0.33
             // release Need to revisit it once we set ComplexT as cuComplex
             // later
-            ss << "{" << d.real() << ", " << d.imag() << "},"
-               << "\n";
+            ss << "{" << d.real() << ", " << d.imag() << "}, ";
+        }
         ss << ",\n'indices' : \n";
         for (const auto &i : indices_) {
-            ss << i;
+            ss << i << ", ";
         }
         ss << ",\n'offsets' : \n";
         for (const auto &o : offsets_) {
-            ss << o;
+            ss << o << ", ";
         }
         ss << "\n}";
         return ss.str();
@@ -528,5 +529,6 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         return wires_;
     };
 };
+// NOLINTEND
 
 } // namespace Pennylane::Observables
