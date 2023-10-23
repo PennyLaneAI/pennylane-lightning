@@ -61,12 +61,12 @@ set_property(TARGET lightning_qubit PROPERTY POSITION_INDEPENDENT_CODE ON)
 ###############################################################################
 # Include subdirectories
 ###############################################################################
-set(COMPONENT_SUBDIRS   algorithms
+set(COMPONENT_SUBDIRS   utils
+                        algorithms
                         bindings
                         gates
                         measurements
                         observables
-                        utils
                         )
 
 foreach(COMP ${COMPONENT_SUBDIRS})

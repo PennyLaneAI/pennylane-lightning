@@ -333,7 +333,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
-                   "[StateVectorCudaManaged_Expval]", double) {
+                   "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 

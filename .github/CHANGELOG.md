@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
+  [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
+
 * Integrate cpp backend of distributed Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
@@ -45,6 +48,9 @@
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 ### Improvements
+
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+  [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
 
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
