@@ -254,8 +254,8 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
      * @param wires Argument to construct wires
      */
     static auto create(std::initializer_list<ComplexT> data,
-                       std::initializer_list<IdxT> indices,
-                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> indices,
+                       std::initializer_list<std::size_t> offsets,
                        std::initializer_list<std::size_t> wires)
         -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
         return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
@@ -286,11 +286,14 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
             std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
                                                 true);
 
+        std::vector<IdxT> offsets_cp(this->offsets_.begin(),
+                                     this->offsets_.end());
+        std::vector<IdxT> indices_cp(this->indices_.begin(),
+                                     this->indices_.end());
         SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
-            this->offsets_.data(), this->offsets_.size(), this->indices_.data(),
+            offsets_cp.data(), offsets_cp.size(), indices_cp.data(),
             this->data_.data(), this->data_.size(), sv.getData(),
             d_sv_prime->getData(), device_id, stream_id, handle);
-
         sv.updateData(std::move(d_sv_prime));
     }
 };

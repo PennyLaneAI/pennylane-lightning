@@ -413,7 +413,7 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
 
 #ifdef _ENABLE_PLGPU
     class_name = "SparseHamiltonianC" + bitsize;
-    using SpIDX = typename SparseHamiltonian<StateVectorT>::IdxT;
+    // using SpIDX = typename SparseHamiltonian<StateVectorT>::IdxT;
     py::class_<SparseHamiltonian<StateVectorT>,
                std::shared_ptr<SparseHamiltonian<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
@@ -425,15 +425,19 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
             const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
 
             const py::buffer_info buffer_indices = indices.request();
-            const auto *indices_ptr = static_cast<SpIDX *>(buffer_indices.ptr);
+            const auto *indices_ptr =
+                static_cast<std::size_t *>(buffer_indices.ptr);
 
             const py::buffer_info buffer_offsets = offsets.request();
-            const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
+            const auto *offsets_ptr =
+                static_cast<std::size_t *>(buffer_offsets.ptr);
 
             return SparseHamiltonian<StateVectorT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
-                std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
-                std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
+                std::vector<std::size_t>(
+                    {indices_ptr, indices_ptr + indices.size()}),
+                std::vector<std::size_t>(
+                    {offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
         }))
         .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
