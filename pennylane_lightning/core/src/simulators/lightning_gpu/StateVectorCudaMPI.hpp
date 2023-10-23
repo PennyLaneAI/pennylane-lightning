@@ -241,7 +241,7 @@ class StateVectorCudaMPI
         return svSegSwapWorker_.get();
     }
     /**
-     * @brief Init 00....0>.
+     * @brief Init |00....0>.
      */
     void initSV_MPI(bool async = false) {
         size_t index = 0;
@@ -1168,8 +1168,15 @@ class StateVectorCudaMPI
         }
 
         auto expect = mpi_manager_.allreduce<double>(expect_local, "sum");
-        std::complex<Precision> result{0, 0};
+        std::complex<PrecisionT> result{0, 0};
 
+        for (std::size_t idx = 0; idx < expect.size(); idx++) {
+
+            result += static_cast<PrecisionT>(expect[idx]) * coeffs[idx];
+        }
+        return std::real(result);
+
+        /*
         if constexpr (std::is_same_v<Precision, double>) {
             for (std::size_t idx = 0; idx < expect.size(); idx++) {
                 result += expect[idx] * coeffs[idx];
@@ -1186,6 +1193,7 @@ class StateVectorCudaMPI
 
             return std::real(result);
         }
+        */
     }
 
   private:
@@ -1893,6 +1901,13 @@ class StateVectorCudaMPI
         expect.y = static_cast<PrecisionT>(expect_.y);
     }
 
+    /**
+     * @brief Get expectation of a given host or device defined array.
+     *
+     * @param matrix Host or device defined row-major order gate matrix array.
+     * @param tgts Target qubits.
+     * @return auto Expectation value.
+     */
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,
                                          const std::vector<std::size_t> &tgts) {
         std::vector<int> tgtsInt(tgts.size());
