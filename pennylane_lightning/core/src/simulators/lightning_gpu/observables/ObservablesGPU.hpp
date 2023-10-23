@@ -222,7 +222,7 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     // cuSparse required index type
-    using IdxT = BaseType::IdxT;
+    using IdxT = typename BaseType::IdxT;
 
     /**
      * @brief Create a SparseHamiltonian from data, indices and offsets in CSR

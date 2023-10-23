@@ -254,7 +254,10 @@ class QuantumScriptSerializer:
             return self._tensor_ob(observable, wires_map)
         if observable.name == "Hamiltonian":
             return self._hamiltonian(observable, wires_map)
-        if observable.name == "SparseHamiltonian":
+        if (
+            self.device_name in ["lightning.gpu", "lightning.kokkos"]
+            and observable.name == "SparseHamiltonian"
+        ):
             return self._sparse_hamiltonian(observable, wires_map)
         if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
             return self._named_obs(observable, wires_map)
