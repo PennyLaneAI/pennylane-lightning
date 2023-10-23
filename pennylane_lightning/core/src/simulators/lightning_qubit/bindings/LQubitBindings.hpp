@@ -181,6 +181,15 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables([[maybe_unused]] py::module_ &m) {}
+
+/**
  * @brief Register Vector Jacobian Product.
  */
 template <class StateVectorT, class np_arr_c>

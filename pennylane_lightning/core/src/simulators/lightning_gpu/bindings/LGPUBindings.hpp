@@ -265,6 +265,73 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 }
 
 /**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables(py::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ComplexT =
+        typename StateVectorT::ComplexT; // Statevector's complex type.
+    using ParamT = PrecisionT;           // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+
+    std::string class_name;
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    using np_arr_sparse_ind = typename std::conditional<
+        std::is_same<ParamT, float>::value,
+        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
+        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
+    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    py::class_<SparseHamiltonian<StateVectorT>,
+               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str(),
+                                         py::module_local())
+        .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
+                         const np_arr_sparse_ind &offsets,
+                         const std::vector<std::size_t> &wires) {
+            const py::buffer_info buffer_data = data.request();
+            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
+
+            const py::buffer_info buffer_indices = indices.request();
+            const auto *indices_ptr =
+                static_cast<std::size_t *>(buffer_indices.ptr);
+
+            const py::buffer_info buffer_offsets = offsets.request();
+            const auto *offsets_ptr =
+                static_cast<std::size_t *>(buffer_offsets.ptr);
+
+            return SparseHamiltonian<StateVectorT>{
+                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
+                std::vector<IdxT>({indices_ptr, indices_ptr + indices.size()}),
+                std::vector<IdxT>({offsets_ptr, offsets_ptr + offsets.size()}),
+                wires};
+        }))
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonian<StateVectorT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+}
+
+/**
  * @brief Register backend specific adjoint Jacobian methods.
  *
  * @tparam StateVectorT
