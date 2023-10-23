@@ -60,6 +60,8 @@ else:
         TensorProdObsC128,
         HamiltonianC64,
         HamiltonianC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
     )
 
 
@@ -70,41 +72,38 @@ def test_wrong_device_name():
         QuantumScriptSerializer("thunder.qubit")
 
 
-obs_list = [
-    (qml.PauliZ(0), NamedObsC128),
-    (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
-    (qml.Hadamard(0), NamedObsC128),
-    (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
-    (
-        qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-        HamiltonianC128,
-    ),
-    (
+@pytest.mark.parametrize(
+    "obs,obs_type",
+    [
+        (qml.PauliZ(0), NamedObsC128),
+        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
+        (qml.Hadamard(0), NamedObsC128),
+        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
         (
-            qml.Hermitian(np.eye(2), wires=0)
-            @ qml.Hermitian(np.eye(2), wires=1)
-            @ qml.Projector([0], wires=2)
+            qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
+            HamiltonianC128,
         ),
-        TensorProdObsC128,
-    ),
-    (
-        qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
-        TensorProdObsC128,
-    ),
-    (qml.Projector([0], wires=0), HermitianObsC128),
-    (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
-    (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
-]
-if device_name in ["lightning.gpu", "lightning.kokkos"]:
-    obs_list += [
+        (
+            (
+                qml.Hermitian(np.eye(2), wires=0)
+                @ qml.Hermitian(np.eye(2), wires=1)
+                @ qml.Projector([0], wires=2)
+            ),
+            TensorProdObsC128,
+        ),
+        (
+            qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
+            TensorProdObsC128,
+        ),
+        (qml.Projector([0], wires=0), HermitianObsC128),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
         (
             qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
             SparseHamiltonianC128,
         ),
-    ]
-
-
-@pytest.mark.parametrize("obs,obs_type", obs_list)
+    ],
+)
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type."""
     assert isinstance(

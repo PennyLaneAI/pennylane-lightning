@@ -87,9 +87,8 @@ class QuantumScriptSerializer:
         self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
-        if device_name in ["lightning.gpu", "lightning.kokkos"]:
-            self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
-            self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
+        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
         self.use_mpi = False
 
@@ -241,10 +240,7 @@ class QuantumScriptSerializer:
             return self._tensor_ob(observable, wires_map)
         if observable.name == "Hamiltonian":
             return self._hamiltonian(observable, wires_map)
-        if (
-            self.device_name in ["lightning.gpu", "lightning.kokkos"]
-            and observable.name == "SparseHamiltonian"
-        ):
+        if observable.name == "SparseHamiltonian":
             return self._sparse_hamiltonian(observable, wires_map)
         if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
             return self._named_obs(observable, wires_map)

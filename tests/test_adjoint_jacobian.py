@@ -920,10 +920,6 @@ def test_tape_qchem(tol):
 
 
 @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-@pytest.mark.skipif(
-    device_name not in ["lightning.gpu", "lightning.kokkos"],
-    reason="SparseHamiltonian only supported by Lightning-Kokkos",
-)
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -956,10 +952,6 @@ custom_wires = ["alice", 3.14, -1, 0]
 
 
 @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-@pytest.mark.skipif(
-    device_name not in ["lightning.gpu", "lightning.kokkos"],
-    reason="SparseHamiltonian only supported by Lightning-Kokkos",
-)
 @pytest.mark.parametrize(
     "returns",
     [

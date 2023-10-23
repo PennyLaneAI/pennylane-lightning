@@ -27,6 +27,7 @@
 #include "LinearAlgebra.hpp" // scaleAndAdd
 #include "Macros.hpp"        // use_openmp
 #include "Observables.hpp"
+#include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -356,6 +357,74 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
         detail::HamiltonianApplyInPlace<
             StateVectorT, Pennylane::Util::use_openmp>::run(this->coeffs_,
                                                             this->obs_, sv);
+    }
+};
+
+/**
+ * @brief Sparse representation of Hamiltonian<StateVectorT>
+ *
+ */
+template <class StateVectorT>
+class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
+  private:
+    using BaseType = SparseHamiltonianBase<StateVectorT>;
+
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using IdxT = typename BaseType::IdxT;
+
+    /**
+     * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
+     * format.
+     *
+     * @param data Arguments to construct data
+     * @param indices Arguments to construct indices
+     * @param offsets Arguments to construct offsets
+     * @param wires Arguments to construct wires
+     */
+    template <typename T1, typename T2, typename T3 = T2, typename T4>
+    explicit SparseHamiltonian(T1 &&data, T2 &&indices, T3 &&offsets,
+                               T4 &&wires)
+        : BaseType{data, indices, offsets, wires} {}
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param data Argument to construct data
+     * @param indices Argument to construct indices
+     * @param offsets Argument to construct ofsets
+     * @param wires Argument to construct wires
+     */
+    static auto create(std::initializer_list<ComplexT> data,
+                       std::initializer_list<IdxT> indices,
+                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> wires)
+        -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
+        return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
+            new SparseHamiltonian<StateVectorT>{
+                std::move(data), std::move(indices), std::move(offsets),
+                std::move(wires)});
+    }
+
+    /**
+     * @brief Updates the statevector SV:->SV', where SV' = a*H*SV, and where H
+     * is a sparse Hamiltonian.
+     *
+     */
+    void applyInPlace(StateVectorT &sv) const override {
+        PL_ABORT_IF_NOT(this->wires_.size() == sv.getNumQubits(),
+                        "SparseH wire count does not match state-vector size");
+        auto operator_vector = Util::apply_Sparse_Matrix(
+            sv.getData(), sv.getLength(), this->offsets_.data(),
+            this->offsets_.size(), this->indices_.data(), this->data_.data(),
+            this->data_.size());
+
+        sv.updateData(operator_vector);
     }
 };
 
