@@ -243,51 +243,6 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob4);
             REQUIRE(ob1 != ob5);
         }
-
-        /*
-        DYNAMIC_SECTION("Tensor product applies to a statevector correctly"
-                        << StateVectorMPIToName<StateVectorT>::name) {
-            using VectorT = TestVector<ComplexT>;
-
-            auto obs = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2}),
-            };
-
-            SECTION("Test using |1+0>") {
-                VectorT st_data =
-                    createProductState<PrecisionT, ComplexT>("1+0");
-
-                StateVectorT state_vector(st_data.data(), st_data.size());
-
-                obs.applyInPlace(state_vector);
-
-                VectorT expected =
-                    createProductState<PrecisionT, ComplexT>("0+1");
-
-                REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                      state_vector.getDataVector().size(),
-                                      expected.data(), expected.size()));
-            }
-
-            SECTION("Test using |+-01>") {
-                VectorT st_data =
-                    createProductState<PrecisionT, ComplexT>("+-01");
-
-                StateVectorT state_vector(st_data.data(), st_data.size());
-
-                obs.applyInPlace(state_vector);
-
-                VectorT expected =
-                    createProductState<PrecisionT, ComplexT>("+-11");
-
-                REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                      state_vector.getDataVector().size(),
-                                      expected.data(), expected.size()));
-            }
-        }
-        */
-
         testTensorProdObsBase<typename TypeList::Next>();
     }
 }
@@ -422,20 +377,6 @@ template <typename TypeList> void testHamiltonianBase() {
 
                 REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
             }
-
-            /*
-            DYNAMIC_SECTION("applyInPlace must fail - "
-                            << StateVectorMPIToName<StateVectorT>::name) {
-                auto ham =
-                    HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
-                auto st_data = createZeroState<ComplexT>(2);
-
-                StateVectorT state_vector(st_data.data(), st_data.size());
-
-                REQUIRE_THROWS_AS(ham->applyInPlace(state_vector),
-                                  LightningException);
-            }
-            */
         }
         testHamiltonianBase<typename TypeList::Next>();
     }
@@ -445,5 +386,69 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
           "[HamiltonianBase]") {
     if constexpr (BACKEND_FOUND) {
         testHamiltonianBase<TestStateVectorMPIBackends>();
+    }
+}
+
+template <typename TypeList> void testSparseHamiltonianBase() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        const std::size_t num_qubits = 3;
+        std::mt19937 re{1337};
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+
+        size_t mpi_buffersize = 1;
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        size_t subSvLength = 1 << nLocalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        std::vector<ComplexT> expected_sv(subSvLength);
+        std::vector<ComplexT> local_state(subSvLength);
+
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        mpi_manager.Scatter(init_state.data(), local_state.data(), subSvLength,
+                            0);
+        mpi_manager.Barrier();
+
+        DYNAMIC_SECTION("applyInPlace must fail - "
+                        << StateVectorMPIToName<StateVectorT>::name) {
+
+            auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+
+            StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
+                                nGlobalIndexBits, nLocalIndexBits);
+
+            sv_mpi.CopyHostDataToGpu(local_state, false);
+
+            REQUIRE_THROWS_AS(sparseH->applyInPlace(sv_mpi),
+                              LightningException);
+        }
+
+        testSparseHamiltonianBase<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHamiltonianBase<TestStateVectorMPIBackends>();
     }
 }
