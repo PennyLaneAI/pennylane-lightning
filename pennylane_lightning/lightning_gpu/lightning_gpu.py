@@ -41,6 +41,7 @@ try:
     )
 
     try:
+        # pylint: disable=no-name-in-module
         from pennylane_lightning.lightning_gpu_ops import (
             StateVectorMPIC128,
             StateVectorMPIC64,
@@ -51,7 +52,7 @@ try:
         )
 
         MPI_SUPPORT = True
-    except:
+    except ImportError:
         MPI_SUPPORT = False
 
     from ctypes.util import find_library
@@ -202,7 +203,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "SProd",
     }
 
-    class LightningGPU(LightningBase):
+    class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane-Lightning-GPU device.
         Args:
             wires (int): the number of wires to initialize the device with
@@ -232,7 +233,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
-        ):  # pylint: disable=unused-argument
+        ):  # pylint: disable=too-many-arguments
             if c_dtype is np.complex64:
                 self.use_csingle = True
             elif c_dtype is np.complex128:
@@ -777,21 +778,20 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         CSR_SparseHamiltonian.indices,
                         CSR_SparseHamiltonian.data,
                     )
-                else:
-                    # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                    # host(cpu) memory requirements
-                    obs = qml.Identity(0)
-                    Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                    H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                    CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
-                    # CSR_SparseHamiltonian for rank == 0
-                    if self._mpi_manager.getRank() == 0:
-                        CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-                    return self.measurements.expval(
-                        CSR_SparseHamiltonian.indptr,
-                        CSR_SparseHamiltonian.indices,
-                        CSR_SparseHamiltonian.data,
-                    )
+                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                # host(cpu) memory requirements
+                obs = qml.Identity(0)
+                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                # CSR_SparseHamiltonian for rank == 0
+                if self._mpi_manager.getRank() == 0:
+                    CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+                return self.measurements.expval(
+                    CSR_SparseHamiltonian.indptr,
+                    CSR_SparseHamiltonian.indices,
+                    CSR_SparseHamiltonian.data,
+                )
 
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
@@ -826,8 +826,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             if len(local_prob) > 0:
                 num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
                 return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-            else:
-                return local_prob
+            return local_prob
 
         # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):

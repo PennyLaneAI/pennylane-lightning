@@ -49,7 +49,7 @@ class QuantumScriptSerializer:
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
         if device_name == "lightning.qubit":
@@ -111,6 +111,7 @@ class QuantumScriptSerializer:
 
     @property
     def sv_type(self):
+        """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self.use_mpi:
             return self.statevectormpi_c128
         return self.statevector_c128
