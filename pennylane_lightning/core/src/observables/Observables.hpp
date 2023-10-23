@@ -424,11 +424,17 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-
+#ifdef _ENABLE_PLGPU
+    using IdxT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
+#else
+    using IdxT = std::size_t;
+#endif
   protected:
     std::vector<ComplexT> data_;
-    std::vector<std::size_t> indices_;
-    std::vector<std::size_t> offsets_;
+    std::vector<IdxT> indices_;
+    std::vector<IdxT> offsets_;
     std::vector<std::size_t> wires_;
 
   private:
@@ -476,8 +482,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
      * @param arg4 Argument to construct wires
      */
     static auto create(std::initializer_list<ComplexT> arg1,
-                       std::initializer_list<std::size_t> arg2,
-                       std::initializer_list<std::size_t> arg3,
+                       std::initializer_list<IdxT> arg2,
+                       std::initializer_list<IdxT> arg3,
                        std::initializer_list<std::size_t> arg4)
         -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
         return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(

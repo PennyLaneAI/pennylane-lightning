@@ -429,7 +429,8 @@ void write_CSR_vectors(std::vector<IndexT> &row_map,
     const ComplexT SC_ONE = 1.0;
 
     row_map.resize(numRows + 1);
-    for (IndexT rowIdx = 1; rowIdx < (IndexT)row_map.size(); ++rowIdx) {
+    for (IndexT rowIdx = 1; rowIdx < static_cast<IndexT>(row_map.size());
+         ++rowIdx) {
         row_map[rowIdx] = row_map[rowIdx - 1] + 3;
     };
     const IndexT numNNZ = row_map[numRows];
@@ -437,6 +438,7 @@ void write_CSR_vectors(std::vector<IndexT> &row_map,
     entries.resize(numNNZ);
     values.resize(numNNZ);
     for (IndexT rowIdx = 0; rowIdx < numRows; ++rowIdx) {
+        size_t idx = row_map[rowIdx];
         if (rowIdx == 0) {
             entries[0] = rowIdx;
             entries[1] = rowIdx + 1;
@@ -446,21 +448,21 @@ void write_CSR_vectors(std::vector<IndexT> &row_map,
             values[1] = -SC_ONE;
             values[2] = -SC_ONE;
         } else if (rowIdx == numRows - 1) {
-            entries[row_map[rowIdx]] = 0;
-            entries[row_map[rowIdx] + 1] = rowIdx - 1;
-            entries[row_map[rowIdx] + 2] = rowIdx;
+            entries[idx] = 0;
+            entries[idx + 1] = rowIdx - 1;
+            entries[idx + 2] = rowIdx;
 
-            values[row_map[rowIdx]] = -SC_ONE;
-            values[row_map[rowIdx] + 1] = -SC_ONE;
-            values[row_map[rowIdx] + 2] = SC_ONE;
+            values[idx] = -SC_ONE;
+            values[idx + 1] = -SC_ONE;
+            values[idx + 2] = SC_ONE;
         } else {
-            entries[row_map[rowIdx]] = rowIdx - 1;
-            entries[row_map[rowIdx] + 1] = rowIdx;
-            entries[row_map[rowIdx] + 2] = rowIdx + 1;
+            entries[idx] = rowIdx - 1;
+            entries[idx + 1] = rowIdx;
+            entries[idx + 2] = rowIdx + 1;
 
-            values[row_map[rowIdx]] = -SC_ONE;
-            values[row_map[rowIdx] + 1] = SC_ONE;
-            values[row_map[rowIdx] + 2] = -SC_ONE;
+            values[idx] = -SC_ONE;
+            values[idx + 1] = SC_ONE;
+            values[idx + 2] = -SC_ONE;
         }
     }
 };
