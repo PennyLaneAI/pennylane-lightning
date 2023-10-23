@@ -443,13 +443,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     isEqual(const Observable<StateVectorT> &other) const override {
         const auto &other_cast =
             static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
-
-        if (data_ != other_cast.data_ || indices_ != other_cast.indices_ ||
-            offsets_ != other_cast.offsets_) {
-            return false;
-        }
-
-        return true;
+        return data_ != other_cast.data_ || indices_ != other_cast.indices_ ||
+               offsets_ != other_cast.offsets_;
     }
 
   public:
