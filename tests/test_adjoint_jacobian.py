@@ -990,7 +990,7 @@ def test_adjoint_SparseHamiltonian(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
-    dev_kokkos = qml.device("lightning.kokkos", wires=custom_wires)
+    dev_kokkos = qml.device(device_name, wires=custom_wires)
     dev_default = qml.device("default.qubit", wires=custom_wires)
 
     def circuit(params):

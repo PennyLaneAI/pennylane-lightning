@@ -503,11 +503,13 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
             ss << "{" << d.real() << ", " << d.real() << "},"
                << "\n";
         ss << ",\n'indices' : \n";
-        for (const auto &i : indices_)
+        for (const auto &i : indices_) {
             ss << i;
+        }
         ss << ",\n'offsets' : \n";
-        for (const auto &o : offsets_)
+        for (const auto &o : offsets_) {
             ss << o;
+        }
         ss << "\n}";
         return ss.str();
     }
