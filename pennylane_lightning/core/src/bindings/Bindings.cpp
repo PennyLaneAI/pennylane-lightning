@@ -16,9 +16,6 @@
  * Export C++ functions to Python using Pybind.
  */
 #include "Bindings.hpp"
-#ifdef _ENABLE_PLGPU_MPI
-#include "BindingsMPI.hpp"
-#endif
 #include "pybind11/pybind11.h"
 
 // Defining the module name.
@@ -58,11 +55,6 @@ PYBIND11_MODULE(
     registerBackendSpecificInfo(m);
 
     registerLightningClassBindings<StateVectorBackends>(m);
-
-#ifdef _ENABLE_PLGPU_MPI
-    registerBackendSpecificInfoMPI(m);
-    registerLightningClassBindingsMPI<StateVectorMPIBackends>(m);
-#endif
 }
 
 #endif

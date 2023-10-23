@@ -147,7 +147,8 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
 
-        auto ops = OpsData<StateVectorT>({test_ops}, {{param[0]}}, {{0}}, {false});
+        auto ops =
+            OpsData<StateVectorT>({test_ops}, {{param[0]}}, {{0}}, {false});
 
         JacobianDataMPI<StateVectorT> tape{
             param.size(), psi, {obs1, obs2}, ops, tp};

@@ -48,18 +48,3 @@ def test_create_device_with_unsupported_dtype():
 def test_create_device_with_unsupported_kokkos_args():
     with pytest.raises(TypeError, match="Argument kokkos_args must be of type"):
         dev = qml.device(device_name, wires=1, kokkos_args=np.complex256)
-
-
-@pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
-    reason="Only lightning.gpu has a kwarg mpi_buf_size.",
-)
-def test_create_device_with_unsupported_mpi_buf_size():
-    try:
-        from mpi4py import MPI
-
-        with pytest.raises(ImportError, match="MPI related APIs are not found"):
-            dev = qml.device(device_name, wires=1)
-            dev._mpi_init_helper(1)
-    except:
-        pass
