@@ -309,7 +309,7 @@ void registerBackendSpecificObservables(py::module_ &m) {
             const auto *offsets_ptr =
                 static_cast<std::size_t *>(buffer_offsets.ptr);
 
-            return SparseHamiltonian<StateVectorT>{
+            return SparseHamiltonian<StateVectorT, IdxT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<IdxT>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<IdxT>({offsets_ptr, offsets_ptr + offsets.size()}),

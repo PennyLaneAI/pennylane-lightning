@@ -212,7 +212,6 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using IdxT = typename BaseType::IdxT;
 
     /**
      * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
@@ -241,8 +240,8 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
      * @param wires Argument to construct wires
      */
     static auto create(std::initializer_list<ComplexT> data,
-                       std::initializer_list<IdxT> indices,
-                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> indices,
+                       std::initializer_list<std::size_t> offsets,
                        std::initializer_list<std::size_t> wires)
         -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
         return std::shared_ptr<SparseHamiltonian<StateVectorT>>(

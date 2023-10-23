@@ -263,11 +263,13 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-
+    using IdxT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
     const std::size_t num_qubits = 3;
     std::mt19937 re{1337};
 
-    auto sparseH = SparseHamiltonian<StateVectorT>::create(
+    auto sparseH = SparseHamiltonian<StateVectorT, IdxT>::create(
         {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},

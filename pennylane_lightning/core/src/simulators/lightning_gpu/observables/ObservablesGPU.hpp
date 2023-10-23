@@ -213,16 +213,15 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
  * @brief Sparse representation of Hamiltonian<StateVectorT>
  *
  */
-template <class StateVectorT>
-class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
+template <class StateVectorT, class IdxT = int64_t>
+class SparseHamiltonian final
+    : public SparseHamiltonianBase<StateVectorT, IdxT> {
   private:
     using BaseType = SparseHamiltonianBase<StateVectorT>;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    // cuSparse required index type
-    using IdxT = typename BaseType::IdxT;
 
     /**
      * @brief Create a SparseHamiltonian from data, indices and offsets in CSR

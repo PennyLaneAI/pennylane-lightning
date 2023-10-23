@@ -420,18 +420,11 @@ class HamiltonianBase : public Observable<StateVectorT> {
  *
  * @tparam T Floating-point precision.
  */
-template <class StateVectorT>
+template <class StateVectorT, class IdxT = std::size_t>
 class SparseHamiltonianBase : public Observable<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-#ifdef _ENABLE_PLGPU
-    using IdxT =
-        typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                  int32_t, int64_t>::type;
-#else
-    using IdxT = std::size_t;
-#endif
 
   protected:
     std::vector<ComplexT> data_;
@@ -443,7 +436,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     [[nodiscard]] bool
     isEqual(const Observable<StateVectorT> &other) const override {
         const auto &other_cast =
-            static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
+            static_cast<const SparseHamiltonianBase<StateVectorT, IdxT> &>(
+                other);
 
         if (data_ != other_cast.data_ || indices_ != other_cast.indices_ ||
             offsets_ != other_cast.offsets_) {
