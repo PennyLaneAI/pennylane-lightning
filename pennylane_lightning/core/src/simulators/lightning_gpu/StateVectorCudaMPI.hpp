@@ -1867,7 +1867,6 @@ class StateVectorCudaMPI
         // LCOV_EXCL_STOP
 
         cuDoubleComplex expect_;
-
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
             /* custatevecHandle_t */ handle_.get(),

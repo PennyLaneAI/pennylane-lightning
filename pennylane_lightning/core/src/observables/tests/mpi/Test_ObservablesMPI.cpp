@@ -363,7 +363,6 @@ template <typename TypeList> void testHamiltonianBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
-        // using ComplexT = typename StateVectorT::ComplexT;
         using NamedObsT = NamedObsBase<StateVectorT>;
         using TensorProdObsT = TensorProdObsBase<StateVectorT>;
         using HamiltonianT = HamiltonianBase<StateVectorT>;
