@@ -414,7 +414,6 @@ class HamiltonianBase : public Observable<StateVectorT> {
     }
 };
 
-// NOLINTBEGIN
 /**
  * @brief Sparse representation of SparseHamiltonian<T>
  *
@@ -488,10 +487,12 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                        std::initializer_list<IdxT> arg3,
                        std::initializer_list<std::size_t> arg4)
         -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
+        // NOLINTBEGIN(*-move-const-arg)
         return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
             new SparseHamiltonianBase<StateVectorT>{
                 std::move(arg1), std::move(arg2), std::move(arg3),
                 std::move(arg4)});
+        // NOLINTEND(*-move-const-arg)
     }
 
     void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
@@ -525,6 +526,5 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         return wires_;
     };
 };
-// NOLINTEND
 
 } // namespace Pennylane::Observables

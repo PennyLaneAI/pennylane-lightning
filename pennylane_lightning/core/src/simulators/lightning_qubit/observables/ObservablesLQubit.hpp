@@ -405,10 +405,12 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
         -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
+        // NOLINTBEGIN(*-move-const-arg)
         return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
             new SparseHamiltonian<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
+        // NOLINTEND(*-move-const-arg)
     }
 
     /**
