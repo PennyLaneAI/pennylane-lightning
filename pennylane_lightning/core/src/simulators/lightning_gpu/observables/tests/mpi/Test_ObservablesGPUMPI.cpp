@@ -310,10 +310,9 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
     size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
     size_t subSvLength = 1 << nLocalIndexBits;
-    size_t svLength = 1 << num_qubits;
 
     mpi_manager.Barrier();
-    std::vector<ComplexT> expected_sv(svLength);
+    std::vector<ComplexT> expected_sv(subSvLength);
     std::vector<ComplexT> local_state(subSvLength);
 
     auto init_state = createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -339,27 +338,7 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
     mpi_manager.Scatter(init_state.data(), expected_sv.data(), subSvLength, 0);
     mpi_manager.Barrier();
 
-    CHECK(sv_mpi.getDataVector()[0].real() ==
-          Approx(expected_sv[0].real()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[1].real() ==
-          Approx(expected_sv[1].real()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[2].real() ==
-          Approx(expected_sv[2].real()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[3].real() ==
-          Approx(expected_sv[3].real()).epsilon(1e-5));
-
-    CHECK(sv_mpi.getDataVector()[0].imag() ==
-          Approx(expected_sv[0].imag()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[1].imag() ==
-          Approx(expected_sv[1].imag()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[2].imag() ==
-          Approx(expected_sv[2].imag()).epsilon(1e-5));
-    CHECK(sv_mpi.getDataVector()[3].imag() ==
-          Approx(expected_sv[3].imag()).epsilon(1e-5));
-
-    /*
     REQUIRE(isApproxEqual(sv_mpi.getDataVector().data(),
-                                  sv_mpi.getDataVector().size(),
-                                  expected_sv.data(), expected_sv.size()));
-    */
+                          sv_mpi.getDataVector().size(), expected_sv.data(),
+                          expected_sv.size()));
 }

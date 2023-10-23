@@ -464,3 +464,42 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
         testHamiltonianBase<TestStateVectorBackends>();
     }
 }
+
+template <typename TypeList> void testSparseHamiltonianBase() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        const std::size_t num_qubits = 3;
+        std::mt19937 re{1337};
+
+        DYNAMIC_SECTION("applyInPlace must fail - "
+                        << StateVectorToName<StateVectorT>::name) {
+
+            auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+
+            REQUIRE_THROWS_AS(sparseH->applyInPlace(state_vector),
+                              LightningException);
+        }
+
+        testSparseHamiltonianBase<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHamiltonianBase<TestStateVectorBackends>();
+    }
+}

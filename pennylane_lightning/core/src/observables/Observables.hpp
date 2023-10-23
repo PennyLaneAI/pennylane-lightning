@@ -425,9 +425,13 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     // cuSparse required index type
+#ifdef _ENABLE_PLGPU
     using IdxT =
         typename std::conditional<std::is_same<PrecisionT, float>::value,
                                   int32_t, int64_t>::type;
+#else
+    using IdxT = std::size_t;
+#endif
 
   protected:
     std::vector<ComplexT> data_;
@@ -490,6 +494,12 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                 std::move(arg4)});
     }
 
+    void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
+        PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
+                 "must be "
+                 "defined at the backend level.");
+    }
+
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
@@ -498,7 +508,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
             // Note that for LGPU backend, ComplexT is std::complex as of 0.33
             // release Need to revisit it once we set ComplexT as cuComplex
             // later
-            ss << "{" << d.real() << ", " << d.real() << "},"
+            ss << "{" << d.real() << ", " << d.imag() << "},"
                << "\n";
         ss << ",\n'indices' : \n";
         for (const auto &i : indices_)
