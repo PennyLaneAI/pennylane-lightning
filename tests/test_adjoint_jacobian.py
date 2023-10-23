@@ -25,6 +25,7 @@ from pennylane import numpy as np
 from pennylane import QNode, qnode
 from pennylane import qchem
 
+
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -918,9 +919,10 @@ def test_tape_qchem(tol):
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
 
 
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
-    reason="Lightning binary required",
+    device_name not in ["lightning.gpu", "lightning.kokkos"],
+    reason="SparseHamiltonian only supported by Lightning-Kokkos",
 )
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
@@ -948,6 +950,64 @@ def test_tape_qchem_sparse(tol):
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+custom_wires = ["alice", 3.14, -1, 0]
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(
+    device_name not in ["lightning.gpu", "lightning.kokkos"],
+    reason="SparseHamiltonian only supported by Lightning-Kokkos",
+)
+@pytest.mark.parametrize(
+    "returns",
+    [
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [0.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[1])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [2.0],
+                [qml.PauliX(wires=custom_wires[2]) @ qml.PauliZ(wires=custom_wires[0])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [1.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[2])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+    ],
+)
+def test_adjoint_SparseHamiltonian(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+
+    dev_kokkos = qml.device(device_name, wires=custom_wires)
+    dev_default = qml.device("default.qubit", wires=custom_wires)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return qml.expval(returns)
+
+    n_params = 30
+    np.random.seed(1337)
+    params = np.random.rand(n_params)
+
+    qnode_kokkos = qml.QNode(circuit, dev_kokkos, diff_method="adjoint")
+    qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
+
+    j_kokkos = qml.jacobian(qnode_kokkos)(params)
+    j_default = qml.jacobian(qnode_default)(params)
+
+    assert np.allclose(j_kokkos, j_default)
 
 
 @pytest.mark.parametrize(
@@ -1028,9 +1088,6 @@ def test_integration_chunk_observables():
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
-
-
-custom_wires = ["alice", 3.14, -1, 0]
 
 
 @pytest.mark.parametrize(

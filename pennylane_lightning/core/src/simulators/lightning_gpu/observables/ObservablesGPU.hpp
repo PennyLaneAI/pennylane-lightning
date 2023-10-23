@@ -215,18 +215,15 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
  */
 template <class StateVectorT>
 class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
-  public:
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using ComplexT = typename StateVectorT::ComplexT;
-    // cuSparse required index type
-    using IdxT =
-        typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                  int32_t, int64_t>::type;
-
   private:
     using BaseType = SparseHamiltonianBase<StateVectorT>;
 
   public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    // cuSparse required index type
+    using IdxT = typename BaseType::IdxT;
+
     /**
      * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
      * format.
@@ -291,7 +288,6 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
             this->indices_.data(), this->data_.data(),
             static_cast<int64_t>(this->data_.size()), sv.getData(),
             d_sv_prime->getData(), device_id, stream_id, handle);
-
         sv.updateData(std::move(d_sv_prime));
     }
 };

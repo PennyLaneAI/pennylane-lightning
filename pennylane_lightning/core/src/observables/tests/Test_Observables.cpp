@@ -41,6 +41,7 @@ using Pennylane::Util::TestVector;
 
 #ifdef _ENABLE_PLQUBIT
 constexpr bool BACKEND_FOUND = true;
+constexpr bool SPARSE_HAM_SUPPORTED = false;
 
 #include "TestHelpersStateVectors.hpp" // TestStateVectorBackends, StateVectorToName
 
@@ -52,6 +53,7 @@ using namespace Pennylane::LightningQubit::Util;
 
 #elif _ENABLE_PLKOKKOS == 1
 constexpr bool BACKEND_FOUND = true;
+constexpr bool SPARSE_HAM_SUPPORTED = true;
 
 #include "TestHelpersStateVectors.hpp" // TestStateVectorBackends, StateVectorToName
 
@@ -63,6 +65,7 @@ using namespace Pennylane::LightningKokkos::Util;
 
 #elif _ENABLE_PLGPU == 1
 constexpr bool BACKEND_FOUND = true;
+constexpr bool SPARSE_HAM_SUPPORTED = true;
 
 #include "TestHelpersStateVectors.hpp"
 
@@ -74,6 +77,7 @@ using namespace Pennylane::LightningGPU::Util;
 
 #else
 constexpr bool BACKEND_FOUND = false;
+constexpr bool SPARSE_HAM_SUPPORTED = false;
 using TestStateVectorBackends = Pennylane::Util::TypeList<void>;
 
 template <class StateVector> struct StateVectorToName {};
@@ -474,15 +478,33 @@ template <typename TypeList> void testSparseHamiltonianBase() {
         const std::size_t num_qubits = 3;
         std::mt19937 re{1337};
 
+        auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
+            {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+            {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
+
+        DYNAMIC_SECTION("getWires - "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});
+        }
+
+        DYNAMIC_SECTION("getObsName - "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE(sparseH->getObsName() ==
+                    "SparseHamiltonian: {\n"
+                    "'data' : \n"
+                    "{1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, "
+                    "{1, 0}, ,\n"
+                    "'indices' : \n"
+                    "7, 6, 5, 4, 3, 2, 1, 0, ,\n"
+                    "'offsets' : \n"
+                    "0, 1, 2, 3, 4, 5, 6, 7, 8, \n"
+                    "}");
+        }
+
         DYNAMIC_SECTION("applyInPlace must fail - "
                         << StateVectorToName<StateVectorT>::name) {
-
-            auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
-                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
-                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
-                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
-                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
-                {0, 1, 2});
 
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -499,7 +521,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
 TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
           "[SparseHamiltonianBase]") {
-    if constexpr (BACKEND_FOUND) {
+    if constexpr (SPARSE_HAM_SUPPORTED) {
         testSparseHamiltonianBase<TestStateVectorBackends>();
     }
 }

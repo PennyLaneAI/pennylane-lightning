@@ -287,7 +287,8 @@ void registerInfo(py::module_ &m) {
  * @tparam StateVectorT
  * @param m Pybind module
  */
-template <class StateVectorT> void registerObservables(py::module_ &m) {
+template <class StateVectorT>
+void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
@@ -299,10 +300,6 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
-    using np_arr_sparse_ind = typename std::conditional<
-        std::is_same<ParamT, float>::value,
-        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
-        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
 
     std::string class_name;
 
@@ -410,46 +407,6 @@ template <class StateVectorT> void registerObservables(py::module_ &m) {
                 return self == other_cast;
             },
             "Compare two observables");
-#ifdef _ENABLE_PLGPU
-    class_name = "SparseHamiltonianC" + bitsize;
-    using SpIDX = typename SparseHamiltonian<StateVectorT>::IdxT;
-    py::class_<SparseHamiltonian<StateVectorT>,
-               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
-        .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
-                         const np_arr_sparse_ind &offsets,
-                         const std::vector<std::size_t> &wires) {
-            const py::buffer_info buffer_data = data.request();
-            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
-
-            const py::buffer_info buffer_indices = indices.request();
-            const auto *indices_ptr = static_cast<SpIDX *>(buffer_indices.ptr);
-
-            const py::buffer_info buffer_offsets = offsets.request();
-            const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
-
-            return SparseHamiltonian<StateVectorT>{
-                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
-                std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
-                std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
-                wires};
-        }))
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
-        .def(
-            "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
-                    return false;
-                }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
-                return self == other_cast;
-            },
-            "Compare two observables");
-#endif
 }
 
 /**
@@ -671,7 +628,9 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     /* Observables submodule */
     py::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerObservables<StateVectorT>(obs_submodule);
+    // registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
+    registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
+    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
 
     //***********************************************************************//
     //                             Measurements

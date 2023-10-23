@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `SparseHamiltonian` support for Lightning-Kokkos.
+  [(#527)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/527)
+
 * Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
   [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
 
