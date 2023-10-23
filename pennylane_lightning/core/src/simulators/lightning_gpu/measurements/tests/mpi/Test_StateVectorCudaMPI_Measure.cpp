@@ -329,9 +329,6 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 
     // Initializing the Measurements class.
     // This object attaches to the statevector allowing several measures.
-    // MeasurementsMPI<StateVectorT> Measurer(sv);
-    // mpi_manager.Barrier();
-
     SECTION("Testing single operation defined by a matrix:") {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
