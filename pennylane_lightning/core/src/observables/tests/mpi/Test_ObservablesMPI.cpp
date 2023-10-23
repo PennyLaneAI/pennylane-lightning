@@ -176,7 +176,7 @@ TEST_CASE("Methods implemented in the HermitianObsBase class",
 template <typename TypeList> void testTensorProdObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
-        // using PrecisionT = typename StateVectorT::PrecisionT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
         using ComplexT = typename StateVectorT::ComplexT;
         using HermitianObsT = HermitianObsBase<StateVectorT>;
         using NamedObsT = NamedObsBase<StateVectorT>;
@@ -244,7 +244,6 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob5);
         }
 
-        /*
         DYNAMIC_SECTION("Tensor product applies to a statevector correctly"
                         << StateVectorMPIToName<StateVectorT>::name) {
             using VectorT = TestVector<ComplexT>;
@@ -255,38 +254,99 @@ template <typename TypeList> void testTensorProdObsBase() {
             };
 
             SECTION("Test using |1+0>") {
+                MPIManager mpi_manager(MPI_COMM_WORLD);
+                CHECK(mpi_manager.getSize() == 2);
+
+                const size_t num_qubits = 3;
+                size_t mpi_buffersize = 1;
+
+                int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
+                                           mpi_manager.getSize())) -
+                                       1;
+                int nLocalIndexBits = num_qubits - nGlobalIndexBits;
+                size_t subSvLength = 1 << nLocalIndexBits;
+                mpi_manager.Barrier();
+
+                int nDevices = 0; // Number of GPU devices per node
+                cudaGetDeviceCount(&nDevices);
+                CHECK(nDevices >= 2);
+                int deviceId = mpi_manager.getRank() % nDevices;
+                cudaSetDevice(deviceId);
+                DevTag<int> dt_local(deviceId, 0);
+
                 VectorT st_data =
                     createProductState<PrecisionT, ComplexT>("1+0");
 
-                StateVectorT state_vector(st_data.data(), st_data.size());
+                std::vector<ComplexT> sv_data_local(subSvLength);
+                mpi_manager.Scatter(st_data.data(), sv_data_local.data(),
+                                    subSvLength, 0);
 
-                obs.applyInPlace(state_vector);
+                StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
+                                nGlobalIndexBits, nLocalIndexBits);
+                sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(),
+                                     false);
+                mpi_manager.Barrier();
+
+                obs.applyInPlace(sv);
 
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("0+1");
+                std::vector<ComplexT> expected_local(subSvLength);
+                mpi_manager.Scatter(expected.data(), expected_local.data(),
+                                    subSvLength, 0);
 
-                REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                      state_vector.getDataVector().size(),
-                                      expected.data(), expected.size()));
+                REQUIRE(isApproxEqual(
+                    sv.getDataVector().data(), sv.getDataVector().size(),
+                    expected_local.data(), expected_local.size()));
             }
 
             SECTION("Test using |+-01>") {
+                MPIManager mpi_manager(MPI_COMM_WORLD);
+                CHECK(mpi_manager.getSize() == 2);
+
+                const size_t num_qubits = 4;
+                size_t mpi_buffersize = 1;
+
+                int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
+                                           mpi_manager.getSize())) -
+                                       1;
+                int nLocalIndexBits = num_qubits - nGlobalIndexBits;
+                size_t subSvLength = 1 << nLocalIndexBits;
+                mpi_manager.Barrier();
+
+                int nDevices = 0; // Number of GPU devices per node
+                cudaGetDeviceCount(&nDevices);
+                CHECK(nDevices >= 2);
+                int deviceId = mpi_manager.getRank() % nDevices;
+                cudaSetDevice(deviceId);
+                DevTag<int> dt_local(deviceId, 0);
+
                 VectorT st_data =
                     createProductState<PrecisionT, ComplexT>("+-01");
 
-                StateVectorT state_vector(st_data.data(), st_data.size());
+                std::vector<ComplexT> sv_data_local(subSvLength);
+                mpi_manager.Scatter(st_data.data(), sv_data_local.data(),
+                                    subSvLength, 0);
 
-                obs.applyInPlace(state_vector);
+                StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
+                                nGlobalIndexBits, nLocalIndexBits);
+                sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(),
+                                     false);
+                mpi_manager.Barrier();
+
+                obs.applyInPlace(sv);
 
                 VectorT expected =
                     createProductState<PrecisionT, ComplexT>("+-11");
+                std::vector<ComplexT> expected_local(subSvLength);
+                mpi_manager.Scatter(expected.data(), expected_local.data(),
+                                    subSvLength, 0);
 
-                REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
-                                      state_vector.getDataVector().size(),
-                                      expected.data(), expected.size()));
+                REQUIRE(isApproxEqual(
+                    sv.getDataVector().data(), sv.getDataVector().size(),
+                    expected_local.data(), expected_local.size()));
             }
         }
-        */
 
         testTensorProdObsBase<typename TypeList::Next>();
     }
@@ -307,6 +367,25 @@ template <typename TypeList> void testHamiltonianBase() {
         using NamedObsT = NamedObsBase<StateVectorT>;
         using TensorProdObsT = TensorProdObsBase<StateVectorT>;
         using HamiltonianT = HamiltonianBase<StateVectorT>;
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+        CHECK(mpi_manager.getSize() == 2);
+
+        const size_t num_qubits = 3;
+        size_t mpi_buffersize = 1;
+
+        int nGlobalIndexBits =
+            std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) -
+            1;
+        int nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        mpi_manager.Barrier();
+
+        int nDevices = 0; // Number of GPU devices per node
+        cudaGetDeviceCount(&nDevices);
+        CHECK(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
 
         const auto h = PrecisionT{0.809}; // half of the golden ratio
 
@@ -421,6 +500,19 @@ template <typename TypeList> void testHamiltonianBase() {
                 auto ham1 = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
 
                 REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
+            }
+
+            DYNAMIC_SECTION("applyInPlace must fail - "
+                            << StateVectorMPIToName<StateVectorT>::name) {
+                auto ham =
+                    HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
+
+                StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
+                                    nGlobalIndexBits, nLocalIndexBits);
+                sv_mpi.initSV_MPI();
+
+                REQUIRE_THROWS_AS(ham->applyInPlace(sv_mpi),
+                                  LightningException);
             }
         }
         testHamiltonianBase<typename TypeList::Next>();
