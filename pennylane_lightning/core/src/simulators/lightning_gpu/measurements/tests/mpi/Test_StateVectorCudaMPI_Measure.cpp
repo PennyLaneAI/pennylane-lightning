@@ -37,7 +37,7 @@ using Pennylane::Util::createNonTrivialState;
 }; // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -49,6 +49,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -58,6 +59,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -190,12 +192,15 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
+                   double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
     using StateVectorT = StateVectorCudaMPI<TestType>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t numqubits = 4;
     size_t mpi_buffersize = 1;
 
@@ -225,6 +230,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", double) {
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -294,7 +300,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -306,6 +312,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -315,6 +322,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -404,7 +412,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
+TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {
@@ -420,6 +428,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -429,6 +438,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

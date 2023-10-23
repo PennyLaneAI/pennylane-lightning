@@ -36,6 +36,7 @@ TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
     using cp_t = std::complex<PrecisionT>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();
@@ -79,6 +80,8 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
     using cp_t = std::complex<PrecisionT>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();
 
@@ -132,6 +135,8 @@ TEMPLATE_TEST_CASE("MPIManager::Reduce", "[MPIManager]", float, double) {
     using cp_t = std::complex<PrecisionT>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();
 
@@ -170,6 +175,8 @@ TEMPLATE_TEST_CASE("MPIManager::Allreduce", "[MPIManager]", float, double) {
     using cp_t = std::complex<PrecisionT>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();
 
@@ -216,6 +223,8 @@ TEMPLATE_TEST_CASE("MPIManager::Bcast", "[MPIManager]", float, double) {
     using cp_t = std::complex<PrecisionT>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     int rank = mpi_manager.getRank();
 
     SECTION("Apply Bcast scalar") {
@@ -265,6 +274,7 @@ TEMPLATE_TEST_CASE("MPIManager::Sendrecv", "[MPIManager]", float, double) {
 
 TEST_CASE("MPIManager::split") {
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
     int rank = mpi_manager.getRank();
     int color = rank % 2;
     int key = rank;

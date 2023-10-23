@@ -172,6 +172,8 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
     using Hamiltonian = Hamiltonian<StateVectorCudaManaged<PrecisionT>>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t num_qubits = 8;
     size_t mpi_buffersize = 1;
     size_t nGlobalIndexBits =
@@ -191,6 +193,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
