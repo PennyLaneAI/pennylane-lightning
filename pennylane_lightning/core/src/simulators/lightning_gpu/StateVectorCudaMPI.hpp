@@ -186,7 +186,7 @@ class StateVectorCudaMPI
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
-        initSV_MPI();
+        BaseType::initSV();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -239,15 +239,6 @@ class StateVectorCudaMPI
      */
     auto getSwapWorker() -> custatevecSVSwapWorkerDescriptor_t {
         return svSegSwapWorker_.get();
-    }
-    /**
-     * @brief Init |00....0>.
-     */
-    void initSV_MPI(bool async = false) {
-        size_t index = 0;
-        const std::complex<Precision> value = {1, 0};
-        BaseType::getDataBuffer().zeroInit();
-        setBasisState(value, index, async);
     }
 
     /**

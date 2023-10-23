@@ -58,7 +58,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliX[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -75,7 +75,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliY[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -92,7 +92,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliZ[1])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -131,7 +131,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -182,7 +182,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 

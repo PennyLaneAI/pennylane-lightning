@@ -72,7 +72,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -130,7 +130,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -183,7 +183,7 @@ TEST_CASE(
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -250,7 +250,7 @@ TEST_CASE(
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -313,7 +313,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
@@ -374,7 +374,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliX",
@@ -453,7 +453,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -521,7 +521,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
