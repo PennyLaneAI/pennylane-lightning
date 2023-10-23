@@ -49,6 +49,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -58,6 +59,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -197,6 +199,8 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
     using StateVectorT = StateVectorCudaMPI<TestType>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t numqubits = 4;
     size_t mpi_buffersize = 1;
 
@@ -226,6 +230,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -307,6 +312,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", float, double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -316,6 +322,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", float, double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -421,6 +428,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", float, double) {
     size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -430,6 +438,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", float, double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

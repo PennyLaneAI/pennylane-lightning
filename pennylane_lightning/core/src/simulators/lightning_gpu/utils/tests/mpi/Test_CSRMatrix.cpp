@@ -42,6 +42,7 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
                                   int64_t>::type;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();

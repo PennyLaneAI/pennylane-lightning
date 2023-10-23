@@ -47,6 +47,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
@@ -66,6 +67,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -104,6 +106,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
@@ -124,6 +127,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -167,6 +171,7 @@ TEST_CASE(
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -177,6 +182,7 @@ TEST_CASE(
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -234,6 +240,7 @@ TEST_CASE(
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -244,6 +251,7 @@ TEST_CASE(
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -297,6 +305,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -307,6 +316,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -358,6 +368,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -368,6 +379,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -436,6 +448,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -446,6 +459,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -504,6 +518,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     std::vector<double> jacobian2_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -514,6 +529,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
