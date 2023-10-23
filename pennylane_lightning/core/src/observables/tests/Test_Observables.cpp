@@ -484,6 +484,11 @@ template <typename TypeList> void testSparseHamiltonianBase() {
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
+        DYNAMIC_SECTION("getWires - "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});
+        }
+
         DYNAMIC_SECTION("getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getObsName() ==
