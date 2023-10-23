@@ -426,7 +426,6 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 #ifdef _ENABLE_PLGPU
-    // cuSparse required index type
     using IdxT =
         typename std::conditional<std::is_same<PrecisionT, float>::value,
                                   int32_t, int64_t>::type;
@@ -505,10 +504,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
         ss << "SparseHamiltonian: {\n'data' : \n";
-        for (const auto &d : data_) { // Note that for LGPU backend, ComplexT is
-                                      // std::complex as of 0.33
-            // release Need to revisit it once we set ComplexT as cuComplex
-            // later
+        for (const auto &d : data_) {
             ss << "{" << d.real() << ", " << d.imag() << "}, ";
         }
         ss << ",\n'indices' : \n";

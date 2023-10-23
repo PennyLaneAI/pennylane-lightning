@@ -30,8 +30,8 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
-
 using Pennylane::Util::createProductState;
+using Pennylane::Util::createRandomStateVectorData;
 using Pennylane::Util::createZeroState;
 using Pennylane::Util::isApproxEqual;
 using Pennylane::Util::LightningException;
@@ -41,7 +41,6 @@ using Pennylane::Util::TestVector;
 
 #ifdef _ENABLE_PLQUBIT
 constexpr bool BACKEND_FOUND = true;
-constexpr bool SPARSE_HAM_SUPPORTED = false;
 
 #include "TestHelpersStateVectors.hpp" // TestStateVectorBackends, StateVectorToName
 
@@ -53,7 +52,6 @@ using namespace Pennylane::LightningQubit::Util;
 
 #elif _ENABLE_PLKOKKOS == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool SPARSE_HAM_SUPPORTED = true;
 
 #include "TestHelpersStateVectors.hpp" // TestStateVectorBackends, StateVectorToName
 
@@ -65,7 +63,6 @@ using namespace Pennylane::LightningKokkos::Util;
 
 #elif _ENABLE_PLGPU == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool SPARSE_HAM_SUPPORTED = true;
 
 #include "TestHelpersStateVectors.hpp"
 
@@ -77,7 +74,6 @@ using namespace Pennylane::LightningGPU::Util;
 
 #else
 constexpr bool BACKEND_FOUND = false;
-constexpr bool SPARSE_HAM_SUPPORTED = false;
 using TestStateVectorBackends = Pennylane::Util::TypeList<void>;
 
 template <class StateVector> struct StateVectorToName {};
@@ -484,12 +480,12 @@ template <typename TypeList> void testSparseHamiltonianBase() {
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
-        DYNAMIC_SECTION("getWires - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - getWires - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});
         }
 
-        DYNAMIC_SECTION("getObsName - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getObsName() ==
                     "SparseHamiltonian: {\n"
@@ -503,7 +499,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
                     "}");
         }
 
-        DYNAMIC_SECTION("applyInPlace must fail - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlace must fail - "
                         << StateVectorToName<StateVectorT>::name) {
 
             auto init_state =
@@ -521,7 +517,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
 TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
           "[SparseHamiltonianBase]") {
-    if constexpr (SPARSE_HAM_SUPPORTED) {
+    if constexpr (BACKEND_FOUND) {
         testSparseHamiltonianBase<TestStateVectorBackends>();
     }
 }
