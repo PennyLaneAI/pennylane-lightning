@@ -14,5 +14,6 @@ Directly importing the device class:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python3
+
     from pennylane_lightning.lightning_gpu import LightningGPU
 

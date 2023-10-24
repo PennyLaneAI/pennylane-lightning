@@ -1,4 +1,3 @@
-#################
 Lightning Plugins
 #################
 
@@ -45,7 +44,6 @@ PennyLane supports Python 3.9 and above.
 .. header-end-inclusion-marker-do-not-remove
 
 
-********
 Features
 ********
 
@@ -77,7 +75,6 @@ The following platforms are supported:
 .. installation_LQubit-start-inclusion-marker-do-not-remove
 
 
-************
 Installation
 ************
 
@@ -129,8 +126,8 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
     $ brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to `Lightning-GPU`_ section below.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos`_ section below.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to `Lightning-GPU <lightning-gpu>`_ section below.
+Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos <lightning-kokkos>`_ section below.
 
 Development installation
 ------------------------
@@ -205,7 +202,6 @@ Supported options are
 - ``-DENABLE_OPENMP:BOOL=ON``
 - ``-DENABLE_CLANG_TIDY:BOOL=ON``
 
-*******
 Testing
 *******
 
@@ -228,7 +224,8 @@ The C++ code can be tested with
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
-*************
+.. _lightning-gpu:
+
 Lightning-GPU
 *************
 
@@ -262,7 +259,7 @@ The wheel can then be installed with:
 
     python -m pip install ./dist/PennyLane_Lightning_GPU-*.whl
 
-To simplify the build, we recommend using the containerized build process described in section `Docker support`_.
+To simplify the build, we recommend using the containerized build process described in section `Docker support <docker-support>`_.
 
 Build Lightning-GPU with MPI
 ----------------------------
@@ -321,7 +318,8 @@ The C++ code is tested with
 
 .. installation_LKokkos-start-inclusion-marker-do-not-remove
 
-****************
+.. _lightning-kokkos:
+
 Lightning-Kokkos
 ****************
 
@@ -388,7 +386,8 @@ Note that "THREADS" backend is not recommended since `Kokkos <https://github.com
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
-**************
+.. _docker-support:
+
 Docker support
 **************
 
@@ -410,7 +409,6 @@ where ``${TARGET}`` is one of the following
 * wheel-lightning-gpu
 * wheel-lightning-kokkos-rocm
 
-************
 Contributing
 ************
 
@@ -431,7 +429,6 @@ The Python code is statically analyzed with `Pylint <https://pylint.readthedocs.
 We set up a pre-commit hook (see `Git hooks <https://git-scm.com/docs/githooks>`_) to run both of these on `git commit`.
 Please make your best effort to comply with `black` and `pylint` before using disabling pragmas (e.g. `# pylint: disable=missing-function-docstring`).
 
-*******
 Authors
 *******
 
@@ -446,7 +443,6 @@ If you are doing research using PennyLane and Lightning, please cite `our paper 
 
 .. support-start-inclusion-marker-do-not-remove
 
-*******
 Support
 *******
 
@@ -460,7 +456,6 @@ by asking a question in the forum.
 .. support-end-inclusion-marker-do-not-remove
 .. license-start-inclusion-marker-do-not-remove
 
-*******
 License
 *******
 
@@ -472,7 +467,6 @@ enable the device bindings to PennyLane, which are held to their own respective 
 .. license-end-inclusion-marker-do-not-remove
 .. acknowledgements-start-inclusion-marker-do-not-remove
 
-****************
 Acknowledgements
 ****************
 
