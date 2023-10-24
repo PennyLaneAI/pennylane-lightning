@@ -45,15 +45,15 @@ namespace Pennylane::LightningGPU::Util {
 template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
 inline void SparseMV_cuSparseMPI(
     MPIManager &mpi_manager, const size_t &length_local,
-    const index_type *csrOffsets_ptr, const index_type csrOffsets_size,
+    const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
     const index_type *columns_ptr, const std::complex<Precision> *values_ptr,
     CFP_t *X, CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
     cusparseHandle_t handle) {
     std::vector<std::vector<CSRMatrix<Precision, index_type>>> csrmatrix_blocks;
     if (mpi_manager.getRank() == 0) {
         csrmatrix_blocks = splitCSRMatrix<Precision, index_type>(
-            mpi_manager, csrOffsets_size - 1, csrOffsets_ptr, columns_ptr,
-            values_ptr);
+            mpi_manager, static_cast<size_t>(csrOffsets_size - 1),
+            csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
 
@@ -79,11 +79,11 @@ inline void SparseMV_cuSparseMPI(
             color = 1;
             SparseMV_cuSparse<index_type, Precision, CFP_t>(
                 localCSRMatrix.getCsrOffsets().data(),
-                localCSRMatrix.getCsrOffsets().size(),
+                static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
                 localCSRMatrix.getColumns().data(),
                 localCSRMatrix.getValues().data(),
-                localCSRMatrix.getValues().size(), X, d_res_per_block.getData(),
-                device_id, stream_id, handle);
+                static_cast<int64_t>(localCSRMatrix.getValues().size()), X,
+                d_res_per_block.getData(), device_id, stream_id, handle);
         }
 
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());

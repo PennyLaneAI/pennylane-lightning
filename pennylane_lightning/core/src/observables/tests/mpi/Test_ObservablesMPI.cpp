@@ -524,3 +524,67 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
         testHamiltonianBase<TestStateVectorMPIBackends>();
     }
 }
+
+template <typename TypeList> void testSparseHamiltonianBase() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        const std::size_t num_qubits = 3;
+        std::mt19937 re{1337};
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+
+        size_t mpi_buffersize = 1;
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        size_t subSvLength = 1 << nLocalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        std::vector<ComplexT> expected_sv(subSvLength);
+        std::vector<ComplexT> local_state(subSvLength);
+
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        mpi_manager.Scatter(init_state.data(), local_state.data(), subSvLength,
+                            0);
+        mpi_manager.Barrier();
+
+        DYNAMIC_SECTION("applyInPlace must fail - "
+                        << StateVectorMPIToName<StateVectorT>::name) {
+
+            auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+
+            StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
+                                nGlobalIndexBits, nLocalIndexBits);
+
+            sv_mpi.CopyHostDataToGpu(local_state, false);
+
+            REQUIRE_THROWS_AS(sparseH->applyInPlace(sv_mpi),
+                              LightningException);
+        }
+
+        testSparseHamiltonianBase<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHamiltonianBase<TestStateVectorMPIBackends>();
+    }
+}

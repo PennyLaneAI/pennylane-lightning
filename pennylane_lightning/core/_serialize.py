@@ -25,6 +25,8 @@ from pennylane import (
     Identity,
     StatePrep,
     Rot,
+    Hamiltonian,
+    SparseHamiltonian,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -52,6 +54,7 @@ class QuantumScriptSerializer:
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
+        self.device_name = device_name
         if device_name == "lightning.qubit":
             try:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
@@ -75,6 +78,7 @@ class QuantumScriptSerializer:
                 ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+        self.statevector_c64 = lightning_ops.StateVectorC64
         self.statevector_c128 = lightning_ops.StateVectorC128
         self.named_obs_c64 = lightning_ops.observables.NamedObsC64
         self.named_obs_c128 = lightning_ops.observables.NamedObsC128
@@ -84,20 +88,25 @@ class QuantumScriptSerializer:
         self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
+        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
         self._use_mpi = False
 
         if use_mpi:
             self._use_mpi = use_mpi
-            self.statevectormpi_c128 = lightning_ops.StateVectorMPIC128
-            self.named_obsmpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
-            self.named_obsmpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
-            self.hermitian_obsmpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
-            self.hermitian_obsmpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
-            self.tensor_prod_obsmpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
-            self.tensor_prod_obsmpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
-            self.hamiltonianmpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
-            self.hamiltonianmpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+            self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
+            self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
+            self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
+            self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
+            self.hermitian_obs_mpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
+            self.hermitian_obs_mpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
+            self.tensor_prod_obs_mpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
+            self.tensor_prod_obs_mpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
+            self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
+            self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+
+            self._mpi_manager = lightning_ops.MPIManager
 
     @property
     def ctype(self):
@@ -113,36 +122,43 @@ class QuantumScriptSerializer:
     def sv_type(self):
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
-            return self.statevectormpi_c128
-        return self.statevector_c128
+            return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
+        return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
     @property
     def named_obs(self):
         """Named observable matching ``use_csingle`` precision."""
         if self._use_mpi:
-            return self.named_obsmpi_c64 if self.use_csingle else self.named_obsmpi_c128
+            return self.named_obs_mpi_c64 if self.use_csingle else self.named_obs_mpi_c128
         return self.named_obs_c64 if self.use_csingle else self.named_obs_c128
 
     @property
     def hermitian_obs(self):
         """Hermitian observable matching ``use_csingle`` precision."""
         if self._use_mpi:
-            return self.hermitian_obsmpi_c64 if self.use_csingle else self.hermitian_obsmpi_c128
+            return self.hermitian_obs_mpi_c64 if self.use_csingle else self.hermitian_obs_mpi_c128
         return self.hermitian_obs_c64 if self.use_csingle else self.hermitian_obs_c128
 
     @property
     def tensor_obs(self):
         """Tensor product observable matching ``use_csingle`` precision."""
         if self._use_mpi:
-            return self.tensor_prod_obsmpi_c64 if self.use_csingle else self.tensor_prod_obsmpi_c128
+            return (
+                self.tensor_prod_obs_mpi_c64 if self.use_csingle else self.tensor_prod_obs_mpi_c128
+            )
         return self.tensor_prod_obs_c64 if self.use_csingle else self.tensor_prod_obs_c128
 
     @property
     def hamiltonian_obs(self):
         """Hamiltonian observable matching ``use_csingle`` precision."""
         if self._use_mpi:
-            return self.hamiltonianmpi_c64 if self.use_csingle else self.hamiltonianmpi_c128
+            return self.hamiltonian_mpi_c64 if self.use_csingle else self.hamiltonian_mpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
+
+    @property
+    def sparse_hamiltonian_obs(self):
+        """SparseHamiltonian observable matching ``use_csingle`` precision."""
+        return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
     def _named_obs(self, observable, wires_map: dict):
         """Serializes a Named observable"""
@@ -167,6 +183,37 @@ class QuantumScriptSerializer:
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in observable.ops]
         return self.hamiltonian_obs(coeffs, terms)
+
+    def _sparse_hamiltonian(self, observable, wires_map: dict):
+        """Serialize an observable (Sparse Hamiltonian)
+
+        Args:
+            observable (Observable): the input observable (Sparse Hamiltonian)
+            wire_map (dict): a dictionary mapping input wires to the device's backend wires
+
+        Returns:
+            sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
+        """
+
+        if self._use_mpi:
+            Hmat = Hamiltonian([1.0], [Identity(0)]).sparse_matrix()
+            H_sparse = SparseHamiltonian(Hmat, wires=range(1))
+            spm = H_sparse.sparse_matrix()
+            # Only root 0 needs the overall sparsematrix data
+            if self._mpi_manager().getRank() == 0:
+                spm = observable.sparse_matrix()
+            self._mpi_manager().Barrier()
+        else:
+            spm = observable.sparse_matrix()
+        data = np.array(spm.data).astype(self.ctype)
+        indices = np.array(spm.indices).astype(np.int64)
+        offsets = np.array(spm.indptr).astype(np.int64)
+
+        wires = []
+        wires_list = observable.wires.tolist()
+        wires.extend([wires_map[w] for w in wires_list])
+
+        return self.sparse_hamiltonian_obs(data, indices, offsets, wires)
 
     def _pauli_word(self, observable, wires_map: dict):
         """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
@@ -195,6 +242,8 @@ class QuantumScriptSerializer:
             return self._tensor_ob(observable, wires_map)
         if observable.name == "Hamiltonian":
             return self._hamiltonian(observable, wires_map)
+        if observable.name == "SparseHamiltonian":
+            return self._sparse_hamiltonian(observable, wires_map)
         if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
             return self._named_obs(observable, wires_map)
         if observable._pauli_rep is not None:

@@ -191,10 +191,13 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = std::size_t;
-    using np_arr_sparse_ind =
-        py::array_t<sparse_index_type,
-                    py::array::c_style | py::array::forcecast>;
+    using sparse_index_type =
+        typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
+                                  int64_t>::type;
+    using np_arr_sparse_ind = typename std::conditional<
+        std::is_same<ParamT, float>::value,
+        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
+        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
 
     pyclass
         .def("expval",
@@ -209,10 +212,10 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<int64_t>(row_map.request().size),
                     static_cast<sparse_index_type *>(entries.request().ptr),
                     static_cast<ComplexT *>(values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<int64_t>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
         .def(
@@ -254,10 +257,10 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
+                    static_cast<int64_t>(row_map.request().size),
                     static_cast<sparse_index_type *>(entries.request().ptr),
                     static_cast<ComplexT *>(values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<int64_t>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.");
 }
