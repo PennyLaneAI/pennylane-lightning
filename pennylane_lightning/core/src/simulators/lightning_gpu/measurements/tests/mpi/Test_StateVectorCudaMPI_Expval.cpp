@@ -53,7 +53,6 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
     auto ONE = TestType(1);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -63,7 +62,6 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -71,7 +69,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
 
     StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                     nLocalIndexBits);
-    sv.initSV_MPI();
+    sv.initSV();
 
     auto m = MeasurementsMPI(sv);
 
@@ -93,7 +91,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         auto ONE = TestType(1);
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -103,7 +100,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -112,7 +108,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
 
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
@@ -126,7 +122,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Plus states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -138,7 +134,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Minus states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations(
                 {{"PauliX"},
@@ -166,7 +162,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         auto PI = TestType(M_PI);
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -176,7 +171,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -185,7 +179,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                {{0}, {0, 1}, {1, 2}},
@@ -198,7 +192,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Plus i states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -211,7 +205,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Minus i states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -234,7 +228,6 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaMPI_Expval]", float, double) {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -244,7 +237,6 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaMPI_Expval]", float, double) {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -274,7 +266,6 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -284,7 +275,6 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -293,7 +283,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV_MPI();
+            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperation("PauliX", {0});
             auto ob = NamedObsMPI<StateVectorT>("Hadamard", {0});
@@ -309,7 +299,6 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
     using ComplexT = StateVectorT::ComplexT;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t num_qubits = 3;
     size_t mpi_buffersize = 1;
@@ -320,7 +309,6 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -357,7 +345,6 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
     using ComplexT = StateVectorT::ComplexT;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t num_qubits = 3;
     size_t mpi_buffersize = 1;
@@ -368,7 +355,6 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -398,12 +384,11 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
-                   "[StateVectorCudaMPI_Expval]", float, double) {
+                   "[StateVectorCudaMPI_Expval]", double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = StateVectorT::ComplexT;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t num_qubits = 3;
     size_t mpi_buffersize = 1;
@@ -414,7 +399,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

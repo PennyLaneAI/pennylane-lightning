@@ -1,3 +1,13 @@
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+// Licensed under the Apache License, Version 2.0 (the License);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an AS IS BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <algorithm>
 #include <cmath>
 #include <complex>
@@ -47,7 +57,6 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
@@ -67,14 +76,13 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -106,7 +114,6 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
@@ -127,21 +134,21 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
 
-        auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+        auto ops =
+            OpsData<StateVectorT>({test_ops}, {{param[0]}}, {{0}}, {false});
 
         JacobianDataMPI<StateVectorT> tape{
             param.size(), psi, {obs1, obs2}, ops, tp};
@@ -171,7 +178,6 @@ TEST_CASE(
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -182,14 +188,13 @@ TEST_CASE(
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -240,7 +245,6 @@ TEST_CASE(
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -251,14 +255,13 @@ TEST_CASE(
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -305,7 +308,6 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -316,14 +318,13 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
@@ -368,7 +369,6 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -379,14 +379,13 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliX",
@@ -448,7 +447,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -459,7 +457,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -467,7 +464,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
             "PauliZ", std::vector<size_t>{0});
@@ -518,7 +515,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     std::vector<double> jacobian2_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -529,7 +525,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -537,7 +532,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV_MPI();
+        psi.initSV();
 
         auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
             std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",

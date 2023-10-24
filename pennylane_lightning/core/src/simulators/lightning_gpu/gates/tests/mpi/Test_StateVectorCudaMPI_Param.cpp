@@ -1,3 +1,16 @@
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -63,7 +76,6 @@ using namespace Pennylane::LightningGPU::MPI;
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
-        CHECK(mpi_manager.getSize() == 2);                                     \
         size_t mpi_buffersize = 1;                                             \
         size_t nGlobalIndexBits =                                              \
             std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;    \
@@ -82,7 +94,6 @@ using namespace Pennylane::LightningGPU::MPI;
         mpi_manager.Barrier();                                                 \
         int nDevices = 0;                                                      \
         cudaGetDeviceCount(&nDevices);                                         \
-        CHECK(nDevices >= 2);                                                  \
         int deviceId = mpi_manager.getRank() % nDevices;                       \
         cudaSetDevice(deviceId);                                               \
         DevTag<int> dt_local(deviceId, 0);                                     \
@@ -364,7 +375,7 @@ TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
         std::string obs = "paulix";
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
         PL_CHECK_THROWS_MATCHES(sv.applyOperation(obs, {0}), LightningException,
                                 "Currently unsupported gate: paulix");
     }

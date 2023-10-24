@@ -1,3 +1,16 @@
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+
+//     http://www.apache.org/licenses/LICENSE-2.0
+
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -90,7 +103,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -133,7 +145,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -167,7 +178,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -196,7 +206,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -223,7 +232,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         using cp_t = std::complex<TestType>;                                   \
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
-        CHECK(mpi_manager.getSize() == 2);                                     \
         size_t mpi_buffersize = 1;                                             \
         size_t nGlobalIndexBits =                                              \
             std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;    \
@@ -242,7 +250,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         mpi_manager.Barrier();                                                 \
         int nDevices = 0;                                                      \
         cudaGetDeviceCount(&nDevices);                                         \
-        CHECK(nDevices >= 2);                                                  \
         int deviceId = mpi_manager.getRank() % nDevices;                       \
         cudaSetDevice(deviceId);                                               \
         DevTag<int> dt_local(deviceId, 0);                                     \
@@ -290,7 +297,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         }                                                                      \
     }
 
-TEMPLATE_TEST_CASE("StateVectorCudaMPI::applyHadamard",
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hadamard",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
     PLGPU_MPI_TEST_GATE_OPS_NONPARAM(TestType, num_qubits, applyHadamard,
                                      "Hadamard", lsb_1qbit);

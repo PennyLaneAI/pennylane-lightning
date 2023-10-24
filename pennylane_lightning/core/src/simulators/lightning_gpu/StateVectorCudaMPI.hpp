@@ -186,7 +186,7 @@ class StateVectorCudaMPI
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
-        initSV_MPI();
+        BaseType::initSV();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -239,15 +239,6 @@ class StateVectorCudaMPI
      */
     auto getSwapWorker() -> custatevecSVSwapWorkerDescriptor_t {
         return svSegSwapWorker_.get();
-    }
-    /**
-     * @brief Init 00....0>.
-     */
-    void initSV_MPI(bool async = false) {
-        size_t index = 0;
-        const std::complex<Precision> value = {1, 0};
-        BaseType::getDataBuffer().zeroInit();
-        setBasisState(value, index, async);
     }
 
     /**
@@ -1168,24 +1159,12 @@ class StateVectorCudaMPI
         }
 
         auto expect = mpi_manager_.allreduce<double>(expect_local, "sum");
-        std::complex<Precision> result{0, 0};
+        std::complex<PrecisionT> result{0, 0};
 
-        if constexpr (std::is_same_v<Precision, double>) {
-            for (std::size_t idx = 0; idx < expect.size(); idx++) {
-                result += expect[idx] * coeffs[idx];
-            }
-            return std::real(result);
-        } else {
-            std::vector<Precision> expect_cast(expect.size());
-            std::transform(expect.begin(), expect.end(), expect_cast.begin(),
-                           [](double x) { return static_cast<float>(x); });
-
-            for (std::size_t idx = 0; idx < expect_cast.size(); idx++) {
-                result += expect_cast[idx] * coeffs[idx];
-            }
-
-            return std::real(result);
+        for (std::size_t idx = 0; idx < expect.size(); idx++) {
+            result += static_cast<PrecisionT>(expect[idx]) * coeffs[idx];
         }
+        return std::real(result);
     }
 
   private:
@@ -1867,7 +1846,6 @@ class StateVectorCudaMPI
         // LCOV_EXCL_STOP
 
         cuDoubleComplex expect_;
-
         // compute expectation
         PL_CUSTATEVEC_IS_SUCCESS(custatevecComputeExpectation(
             /* custatevecHandle_t */ handle_.get(),
@@ -1894,6 +1872,13 @@ class StateVectorCudaMPI
         expect.y = static_cast<PrecisionT>(expect_.y);
     }
 
+    /**
+     * @brief Get expectation of a given host or device defined array.
+     *
+     * @param matrix Host or device defined row-major order gate matrix array.
+     * @param tgts Target qubits.
+     * @return auto Expectation value.
+     */
     auto getExpectationValueDeviceMatrix(const CFP_t *matrix,
                                          const std::vector<std::size_t> &tgts) {
         std::vector<int> tgtsInt(tgts.size());

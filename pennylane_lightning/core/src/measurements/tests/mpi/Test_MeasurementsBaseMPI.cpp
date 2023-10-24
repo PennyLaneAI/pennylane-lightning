@@ -68,7 +68,6 @@ template <typename TypeList> void testProbabilities() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -78,7 +77,6 @@ template <typename TypeList> void testProbabilities() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -129,7 +127,6 @@ template <typename TypeList> void testNamedObsExpval() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -139,7 +136,6 @@ template <typename TypeList> void testNamedObsExpval() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -201,7 +197,6 @@ template <typename TypeList> void testHermitianObsExpval() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -211,7 +206,6 @@ template <typename TypeList> void testHermitianObsExpval() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -255,10 +249,11 @@ template <typename TypeList> void testHermitianObsExpval() {
         DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<std::vector<size_t>> wires_list = {
-                {0, 1}, {0, 2}, {1, 2}};
+                {0, 1}, {0, 2}, {1, 2}, {2, 1}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
-                0.5874490024807637, 0.44170554255359035, 0.3764821318486682};
+                0.5874490024807637, 0.44170554255359035, 0.3764821318486682,
+                0.5021569932};
 
             MatrixT Hermitian_matrix(16);
             Hermitian_matrix[0] = real_term;
@@ -300,7 +295,6 @@ template <typename TypeList> void testNamedObsVar() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -310,7 +304,6 @@ template <typename TypeList> void testNamedObsVar() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -373,7 +366,6 @@ template <typename TypeList> void testHermitianObsVar() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -383,7 +375,6 @@ template <typename TypeList> void testHermitianObsVar() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
@@ -480,7 +471,6 @@ template <typename TypeList> void testSamples() {
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         size_t mpi_buffersize = 1;
 
@@ -490,7 +480,6 @@ template <typename TypeList> void testSamples() {
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);

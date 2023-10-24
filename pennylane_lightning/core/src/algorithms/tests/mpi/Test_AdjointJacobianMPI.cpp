@@ -58,7 +58,6 @@ template <typename TypeList> void testAdjointJacobian() {
         using ComplexT = typename StateVectorT::ComplexT;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
 
         const std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
 
@@ -82,14 +81,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -133,14 +131,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -184,14 +181,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -241,7 +237,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -297,14 +293,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -349,14 +344,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
