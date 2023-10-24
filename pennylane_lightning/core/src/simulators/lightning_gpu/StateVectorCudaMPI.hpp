@@ -74,7 +74,7 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
  * @tparam Precision Floating-point precision type.
  */
 template <class Precision = double>
-class StateVectorCudaMPI
+class StateVectorCudaMPI final
     : public StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>> {
   private:
     using BaseType = StateVectorCudaBase<Precision, StateVectorCudaMPI>;
@@ -209,7 +209,7 @@ class StateVectorCudaMPI
         mpi_manager_.Barrier();
     }
 
-    ~StateVectorCudaMPI() = default;
+    ~StateVectorCudaMPI() final = default;
 
     /**
      * @brief Get MPI manager
@@ -1980,10 +1980,10 @@ class StateVectorCudaMPI
         // the main loop of index bit swaps
         //
         constexpr size_t nLoops = 2;
-        for (size_t loop = 0; loop < nLoops; ++loop) {
+        for (size_t loop = 0; loop < nLoops; loop++) {
             for (int swapBatchIndex = 0;
                  swapBatchIndex < static_cast<int>(nSwapBatches);
-                 ++swapBatchIndex) {
+                 swapBatchIndex++) {
                 // get parameters
                 custatevecSVSwapParameters_t parameters;
                 PL_CUSTATEVEC_IS_SUCCESS(

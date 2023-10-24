@@ -56,7 +56,7 @@ template <typename TypeList> void testAdjointJacobian() {
         using ComplexT = typename StateVectorT::ComplexT;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
+        REQUIRE(mpi_manager.getSize() == 2);
 
         const std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
 
@@ -80,7 +80,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
@@ -131,7 +131,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
@@ -182,7 +182,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
@@ -233,7 +233,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
@@ -296,7 +296,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
@@ -348,7 +348,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             int nDevices = 0; // Number of GPU devices per node
             cudaGetDeviceCount(&nDevices);
-            CHECK(nDevices >= 2);
+            REQUIRE(nDevices >= 2);
             int deviceId = mpi_manager.getRank() % nDevices;
             cudaSetDevice(deviceId);
             DevTag<int> dt_local(deviceId, 0);
