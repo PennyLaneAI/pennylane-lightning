@@ -100,17 +100,19 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
+    ~pennylane.ops.op_math.Exp
     ~pennylane.Hadamard
+    ~pennylane.Hamiltonian
+    ~pennylane.Hermitian
     ~pennylane.Identity
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
-    ~pennylane.Hamiltonian
+    ~pennylane.ops.op_math.Prod
+    ~pennylane.Projector
     ~pennylane.SparseHamiltonian
-    ~pennylane.Hermitian
-    ~pennylane.Sum
-    ~pennylane.Prod
-    ~pennylane.SProd
+    ~pennylane.ops.op_math.SProd
+    ~pennylane.ops.op_math.Sum
 
 .. raw:: html
 
