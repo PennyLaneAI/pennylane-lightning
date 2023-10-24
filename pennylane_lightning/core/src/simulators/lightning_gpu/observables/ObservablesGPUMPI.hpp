@@ -283,33 +283,8 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
         }
         using CFP_t = typename StateVectorT::CFP_t;
 
-        /*
-        // Distribute sparse matrix across multi-nodes/multi-gpus
-        size_t num_rows = size_t{1} << sv.getTotalNumQubits();
-        size_t local_num_rows = size_t{1} << sv.getNumLocalQubits();
-
-        std::vector<std::vector<CSRMatrix<PrecisionT, IdxT>>> csrmatrix_blocks;
-
-        if (mpi_manager.getRank() == 0) {
-            csrmatrix_blocks = splitCSRMatrix<PrecisionT, IdxT>(
-                mpi_manager, num_rows, this->offsets_.data(),
-                this->indices_.data(), this->data_.data());
-        }
-        mpi_manager.Barrier();
-
-        std::vector<CSRMatrix<PrecisionT, IdxT>> localCSRMatVector;
-        for (size_t i = 0; i < mpi_manager.getSize(); i++) {
-            auto localCSRMat = scatterCSRMatrix<PrecisionT, IdxT>(
-                mpi_manager, csrmatrix_blocks[i], local_num_rows, 0);
-            localCSRMatVector.push_back(localCSRMat);
-        }
-
-        mpi_manager.Barrier();
-        */
-
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
-        // cusparseHandle_t handle = sv.getCusparseHandle();
 
         const size_t length_local = size_t{1} << sv.getNumLocalQubits();
 
@@ -326,57 +301,6 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
             this->data_.data(), const_cast<CFP_t *>(sv.getData()),
             d_sv_prime->getData(), device_id, stream_id,
             sv.getCusparseHandle());
-
-        /*
-        std::unique_ptr<DataBuffer<CFP_t>> d_tmp =
-            std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
-                                                stream_id, true);
-
-        for (size_t i = 0; i < mpi_manager.getSize(); i++) {
-            size_t color = 0;
-            auto &localCSRMatrix = localCSRMatVector[i];
-
-            if (localCSRMatrix.getValues().size() != 0) {
-                color = 1;
-                SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
-                    localCSRMatrix.getCsrOffsets().data(),
-                    static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
-                    localCSRMatrix.getColumns().data(),
-                    localCSRMatrix.getValues().data(),
-                    static_cast<int64_t>(localCSRMatrix.getValues().size()),
-        sv.getData(), d_sv_prime->getData(), device_id, stream_id, handle);
-            }
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager.Barrier();
-
-            if (mpi_manager.getRank() == i) {
-                color = 1;
-                if (localCSRMatrix.getValues().size() == 0) {
-                    d_tmp->zeroInit();
-                }
-            }
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager.Barrier();
-
-            auto new_mpi_manager =
-                mpi_manager.split(color, mpi_manager.getRank());
-            int reduce_root_rank = -1;
-
-            if (mpi_manager.getRank() == i) {
-                reduce_root_rank = new_mpi_manager.getRank();
-            }
-
-            mpi_manager.template Bcast<int>(reduce_root_rank, i);
-
-            if (new_mpi_manager.getComm() != MPI_COMM_NULL) {
-                new_mpi_manager.template Reduce<CFP_t>(
-                    d_tmp->getData(), d_sv_prime->getData(), length_local,
-                    reduce_root_rank, "sum");
-            }
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager.Barrier();
-        }
-        */
 
         sv.CopyGpuDataToGpuIn(d_sv_prime->getData(), d_sv_prime->getLength());
         mpi_manager.Barrier();
