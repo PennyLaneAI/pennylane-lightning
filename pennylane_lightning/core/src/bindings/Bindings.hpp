@@ -628,7 +628,6 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     /* Observables submodule */
     py::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    // registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
     registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
     registerBackendSpecificObservables<StateVectorT>(obs_submodule);
 

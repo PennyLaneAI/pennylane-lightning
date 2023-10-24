@@ -17,10 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-
   builddeps:
-    needs: ["test_lightning_kokkos"]
     runs-on:
       - self-hosted
       - ubuntu-22.04

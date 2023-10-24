@@ -454,16 +454,16 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
      * @brief Create a SparseHamiltonianBase from data, indices and offsets in
      * CSR format.
      *
-     * @param arg1 Arguments to construct data
-     * @param arg2 Arguments to construct indices
-     * @param arg3 Arguments to construct offsets
-     * @param arg4 Arguments to construct wires
+     * @param data Arguments to construct data
+     * @param indices Arguments to construct indices
+     * @param offsets Arguments to construct offsets
+     * @param wires Arguments to construct wires
      */
     template <typename T1, typename T2, typename T3 = T2,
               typename T4 = std::vector<std::size_t>>
-    SparseHamiltonianBase(T1 &&arg1, T2 &&arg2, T3 &&arg3, T4 &&arg4)
-        : data_{std::forward<T1>(arg1)}, indices_{std::forward<T2>(arg2)},
-          offsets_{std::forward<T3>(arg3)}, wires_{std::forward<T4>(arg4)} {
+    SparseHamiltonianBase(T1 &&data, T2 &&indices, T3 &&offsets, T4 &&wires)
+        : data_{std::forward<T1>(data)}, indices_{std::forward<T2>(indices)},
+          offsets_{std::forward<T3>(offsets)}, wires_{std::forward<T4>(wires)} {
         PL_ASSERT(data_.size() == indices_.size());
     }
 
@@ -474,21 +474,21 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
      * This function is useful as std::make_shared does not handle
      * brace-enclosed initializer list correctly.
      *
-     * @param arg1 Argument to construct data
-     * @param arg2 Argument to construct indices
-     * @param arg3 Argument to construct offsets
-     * @param arg4 Argument to construct wires
+     * @param data Argument to construct data
+     * @param indices Argument to construct indices
+     * @param offsets Argument to construct offsets
+     * @param wires Argument to construct wires
      */
-    static auto create(std::initializer_list<ComplexT> arg1,
-                       std::initializer_list<IdxT> arg2,
-                       std::initializer_list<IdxT> arg3,
-                       std::initializer_list<std::size_t> arg4)
+    static auto create(std::initializer_list<ComplexT> data,
+                       std::initializer_list<IdxT> indices,
+                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> wires)
         -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
         // NOLINTBEGIN(*-move-const-arg)
         return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
             new SparseHamiltonianBase<StateVectorT>{
-                std::move(arg1), std::move(arg2), std::move(arg3),
-                std::move(arg4)});
+                std::move(data), std::move(indices), std::move(offsets),
+                std::move(wires)});
         // NOLINTEND(*-move-const-arg)
     }
 
