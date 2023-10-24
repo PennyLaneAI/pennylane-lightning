@@ -154,6 +154,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
+    using StateVectorT = TestType;
+    using SparseHamiltonianT = SparseHamiltonian<StateVectorT>;
+
+    SECTION("Copy constructibility") {
+        REQUIRE(std::is_copy_constructible_v<SparseHamiltonianT>);
+    }
+
+    SECTION("Move constructibility") {
+        REQUIRE(std::is_move_constructible_v<SparseHamiltonianT>);
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasher", "[Observables]",
                            (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
