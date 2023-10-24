@@ -85,10 +85,10 @@ class QuantumScriptSerializer:
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
-        self.use_mpi = False
+        self._use_mpi = False
 
         if use_mpi:
-            self.use_mpi = use_mpi
+            self._use_mpi = use_mpi
             self.statevectormpi_c128 = lightning_ops.StateVectorMPIC128
             self.named_obsmpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
             self.named_obsmpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
@@ -112,35 +112,35 @@ class QuantumScriptSerializer:
     @property
     def sv_type(self):
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.statevectormpi_c128
         return self.statevector_c128
 
     @property
     def named_obs(self):
         """Named observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.named_obsmpi_c64 if self.use_csingle else self.named_obsmpi_c128
         return self.named_obs_c64 if self.use_csingle else self.named_obs_c128
 
     @property
     def hermitian_obs(self):
         """Hermitian observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.hermitian_obsmpi_c64 if self.use_csingle else self.hermitian_obsmpi_c128
         return self.hermitian_obs_c64 if self.use_csingle else self.hermitian_obs_c128
 
     @property
     def tensor_obs(self):
         """Tensor product observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.tensor_prod_obsmpi_c64 if self.use_csingle else self.tensor_prod_obsmpi_c128
         return self.tensor_prod_obs_c64 if self.use_csingle else self.tensor_prod_obs_c128
 
     @property
     def hamiltonian_obs(self):
         """Hamiltonian observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.hamiltonianmpi_c64 if self.use_csingle else self.hamiltonianmpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
