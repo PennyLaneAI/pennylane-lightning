@@ -359,6 +359,7 @@ TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
                    double) {
     using StateVectorT = StateVectorCudaMPI<double>;
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -369,6 +370,7 @@ TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
 
     int nDevices = 0; // Number of GPU devices per node
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

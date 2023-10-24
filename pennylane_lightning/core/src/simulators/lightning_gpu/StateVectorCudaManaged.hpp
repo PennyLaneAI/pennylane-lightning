@@ -81,7 +81,6 @@ class StateVectorCudaManaged
     using CFP_t =
         typename StateVectorCudaBase<Precision,
                                      StateVectorCudaManaged<Precision>>::CFP_t;
-    using GateType = CFP_t *;
 
     StateVectorCudaManaged() = delete;
     StateVectorCudaManaged(size_t num_qubits)
