@@ -1,4 +1,4 @@
-name: Testing::LKokkos::CUDA
+name: Testing::LKokkos::GPU
 on:
   pull_request:
   push:
