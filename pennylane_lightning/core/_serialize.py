@@ -78,6 +78,7 @@ class QuantumScriptSerializer:
                 ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+        self.statevector_c64 = lightning_ops.StateVectorC64
         self.statevector_c128 = lightning_ops.StateVectorC128
         self.named_obs_c64 = lightning_ops.observables.NamedObsC64
         self.named_obs_c128 = lightning_ops.observables.NamedObsC128
@@ -94,6 +95,7 @@ class QuantumScriptSerializer:
 
         if use_mpi:
             self._use_mpi = use_mpi
+            self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
             self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
             self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
             self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
@@ -120,8 +122,8 @@ class QuantumScriptSerializer:
     def sv_type(self):
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
-            return self.statevector_mpi_c128
-        return self.statevector_c128
+            return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
+        return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
     @property
     def named_obs(self):
@@ -203,7 +205,6 @@ class QuantumScriptSerializer:
             self._mpi_manager().Barrier()
         else:
             spm = observable.sparse_matrix()
-        spm = observable.sparse_matrix()
         data = np.array(spm.data).astype(self.ctype)
         indices = np.array(spm.indices).astype(np.int64)
         offsets = np.array(spm.indptr).astype(np.int64)

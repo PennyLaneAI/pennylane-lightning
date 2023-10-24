@@ -1,9 +1,9 @@
 name: Testing::Linux::x86_64::LGPU
 on:
-  workflow_run:
-    workflows: ["Testing::LKokkos::CUDA"]
-    types:
-      - completed
+  pull_request:
+  push:
+    branches:
+      - master
 
 env:
   CI_CUDA_ARCH: 86
