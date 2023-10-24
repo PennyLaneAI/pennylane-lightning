@@ -356,8 +356,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::DoubleExcitationPlus",
 }
 
 TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
-                   double) {
-    using StateVectorT = StateVectorCudaMPI<double>;
+                   float, double) {
+    using StateVectorT = StateVectorCudaMPI<TestType>;
     MPIManager mpi_manager(MPI_COMM_WORLD);
     CHECK(mpi_manager.getSize() == 2);
 
