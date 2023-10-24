@@ -91,10 +91,9 @@ class QuantumScriptSerializer:
         self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
         self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
-        self._use_mpi = False
+        self._use_mpi = use_mpi
 
-        if use_mpi:
-            self._use_mpi = use_mpi
+        if self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
             self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
             self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64

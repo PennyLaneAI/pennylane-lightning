@@ -173,12 +173,12 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout pennyLane-lightning-gpu
+      - name: Checkout pennyLane-lightning
         uses: actions/checkout@v3
         with:
           fetch-tags: true
 
-      - name: Switch to stable build of Lightning-GPU
+      - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
@@ -242,7 +242,7 @@ jobs:
           PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=mpicxx;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
-      - name: Run PennyLane-Lightning-GPU unit tests
+      - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           PL_DEVICE=lightning.gpu python -m pytest ./tests/ $COVERAGE_FLAGS
