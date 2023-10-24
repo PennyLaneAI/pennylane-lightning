@@ -19,7 +19,6 @@ from mpi4py import MPI
 import itertools
 import pytest
 from conftest import device_name, LightningDevice as ld
-from conftest import fixture_params
 
 import math
 from scipy.stats import unitary_group
@@ -32,6 +31,14 @@ I, X, Y, Z = (
     qml.PauliX.compute_matrix(),
     qml.PauliY.compute_matrix(),
     qml.PauliZ.compute_matrix(),
+)
+
+# Tuple passed to distributed device ctor
+# np.complex for data type and True or False
+# for enabling batched_obs.
+fixture_params = itertools.product(
+    [np.complex64, np.complex128],
+    [True, False],
 )
 
 

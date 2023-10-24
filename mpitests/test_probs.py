@@ -22,7 +22,6 @@ from conftest import (
     PHI,
     VARPHI,
     TOL_STOCHASTIC,
-    fixture_params,
     LightningDevice as ld,
     device_name,
 )
@@ -33,7 +32,6 @@ import pennylane as qml
 from pennylane import DeviceError
 
 numQubits = 8
-
 
 def create_random_init_state(numWires, R_DTYPE, seed_value=48):
     np.random.seed(seed_value)

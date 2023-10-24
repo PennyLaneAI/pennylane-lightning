@@ -27,6 +27,13 @@ import pennylane as qml
 
 numQubits = 8
 
+# Tuple passed to distributed device ctor
+# np.complex for data type and True or False
+# for enabling batched_obs.
+fixture_params = itertools.product(
+    [np.complex64, np.complex128],
+    [True, False],
+)
 
 def create_random_init_state(numWires, R_DTYPE, seed_value=48):
     np.random.seed(seed_value)
