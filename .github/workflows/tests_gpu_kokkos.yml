@@ -1,6 +1,9 @@
-name: Testing (GPU)
+name: Testing::LKokkos::CUDA
 on:
-  workflow_call:
+  pull_request:
+  push:
+    branches:
+      - master
 
 env:
   CI_CUDA_ARCH: 86
