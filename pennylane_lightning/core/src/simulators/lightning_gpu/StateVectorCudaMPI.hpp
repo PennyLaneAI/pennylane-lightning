@@ -1872,7 +1872,7 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Get expectation of a given host or device defined array.
+     * @brief Get expectation value of a given host or device defined array.
      *
      * @param matrix Host or device defined row-major order gate matrix array.
      * @param tgts Target qubits.
