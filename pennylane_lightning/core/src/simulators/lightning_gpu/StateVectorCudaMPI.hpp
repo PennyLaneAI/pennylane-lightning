@@ -1166,25 +1166,6 @@ class StateVectorCudaMPI
             result += static_cast<PrecisionT>(expect[idx]) * coeffs[idx];
         }
         return std::real(result);
-
-        /*
-        if constexpr (std::is_same_v<Precision, double>) {
-            for (std::size_t idx = 0; idx < expect.size(); idx++) {
-                result += expect[idx] * coeffs[idx];
-            }
-            return std::real(result);
-        } else {
-            std::vector<Precision> expect_cast(expect.size());
-            std::transform(expect.begin(), expect.end(), expect_cast.begin(),
-                           [](double x) { return static_cast<float>(x); });
-
-            for (std::size_t idx = 0; idx < expect_cast.size(); idx++) {
-                result += expect_cast[idx] * coeffs[idx];
-            }
-
-            return std::real(result);
-        }
-        */
     }
 
   private:

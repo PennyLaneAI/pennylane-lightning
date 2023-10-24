@@ -46,9 +46,6 @@
 
 ### Improvements
 
-* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
-  [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
-
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
