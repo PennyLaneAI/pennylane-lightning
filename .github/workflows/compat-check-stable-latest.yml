@@ -7,13 +7,19 @@ on:
 
 jobs:
   tests_linux:
-    name: Lightning-Kokkos Compatibility test (tests_linux) - stable/latest
+    name: Lightning Compatibility test (tests_linux) - stable/latest
     uses: ./.github/workflows/tests_linux.yml
     with:
       lightning-version: stable
       pennylane-version: latest
+  tests_gpu:
+    name: Lightning Compatibility test (tests_gpu) - stable/latest
+    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    with:
+      lightning-version: stable
+      pennylane-version: latest
   tests_without_binary:
-    name: Lightning-Kokkos Compatibility test (tests_without_binary) - stable/latest
+    name: Lightning Compatibility test (tests_without_binary) - stable/latest
     uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: stable
