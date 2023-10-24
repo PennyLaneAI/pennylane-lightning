@@ -17,7 +17,14 @@ from mpi4py import MPI
 import pytest
 import itertools
 
-from conftest import THETA, PHI, VARPHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
+from conftest import (
+    THETA,
+    PHI,
+    VARPHI,
+    TOL_STOCHASTIC,
+    LightningDevice as ld,
+    device_name,
+)
 
 import math
 import numpy as np
@@ -31,13 +38,17 @@ fixture_params = itertools.product(
 
 numQubits = 8
 
+
 def create_random_init_state(numWires, R_DTYPE, seed_value=48):
     np.random.seed(seed_value)
     num_elements = 1 << numWires
-    init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(num_elements).astype(R_DTYPE)
+    init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
+        num_elements
+    ).astype(R_DTYPE)
     scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(R_DTYPE)
     init_state = init_state / scale_sum
     return init_state
+
 
 def apply_probs_nonparam(tol, operation, GateWires, Wires, C_DTYPE):
     num_wires = numQubits
@@ -119,6 +130,7 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE):
     if rank == 0:
         assert np.allclose(probs_mpi, probs_cpu, atol=tol, rtol=0)
     comm.Barrier()
+
 
 class TestProbs:
     @pytest.mark.parametrize(
@@ -282,7 +294,8 @@ class TestProbs:
         apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE)
 
     @pytest.mark.parametrize(
-        "operation", [qml.DoubleExcitation, qml.DoubleExcitationMinus, qml.DoubleExcitationPlus]
+        "operation",
+        [qml.DoubleExcitation, qml.DoubleExcitationMinus, qml.DoubleExcitationPlus],
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
     @pytest.mark.parametrize(

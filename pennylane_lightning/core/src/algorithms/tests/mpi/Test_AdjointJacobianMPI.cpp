@@ -87,7 +87,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -137,7 +137,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -187,7 +187,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -237,7 +237,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -299,7 +299,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{0});
@@ -350,7 +350,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV_MPI();
+            psi.initSV();
 
             auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(

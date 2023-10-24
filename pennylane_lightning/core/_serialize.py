@@ -51,7 +51,7 @@ class QuantumScriptSerializer:
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -118,6 +118,7 @@ class QuantumScriptSerializer:
 
     @property
     def sv_type(self):
+        """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self.use_mpi:
             return self.statevector_mpi_c128
         return self.statevector_c128

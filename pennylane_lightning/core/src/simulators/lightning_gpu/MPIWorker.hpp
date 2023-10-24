@@ -28,10 +28,11 @@
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
-} // namespace
-/// @endcond
 
-namespace Pennylane::LightningGPU::MPI {
+using SharedLocalStream =
+    std::shared_ptr<std::remove_pointer<cudaStream_t>::type>;
+using SharedMPIWorker = std::shared_ptr<
+    std::remove_pointer<custatevecSVSwapWorkerDescriptor_t>::type>;
 
 inline size_t mebibyteToBytes(const size_t mebibytes) {
     return mebibytes * size_t{1024 * 1024};
@@ -41,6 +42,10 @@ inline double bytesToMebibytes(const size_t bytes) {
     return static_cast<double>(bytes) / (1024.0 * 1024.0);
 }
 
+} // namespace
+/// @endcond
+
+namespace Pennylane::LightningGPU::MPI {
 /**
  * @brief Utility function object to tell std::shared_ptr how to
  * release/destroy various custatevecSVSwapWorker related objects.
@@ -73,11 +78,6 @@ struct MPIWorkerDeleter {
     }
 };
 
-using SharedLocalStream =
-    std::shared_ptr<std::remove_pointer<cudaStream_t>::type>;
-using SharedMPIWorker = std::shared_ptr<
-    std::remove_pointer<custatevecSVSwapWorkerDescriptor_t>::type>;
-
 /**
  * @brief Creates a SharedLocalStream (a shared pointer to a cuda stream)
  */
@@ -99,7 +99,7 @@ inline SharedLocalStream make_shared_local_stream() {
  * @param localStream Local cuda stream.
  */
 template <typename CFP_t>
-inline SharedMPIWorker
+SharedMPIWorker
 make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
                        const size_t mpi_buf_size, CFP_t *sv,
                        const size_t numLocalQubits, cudaStream_t localStream) {

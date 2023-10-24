@@ -78,7 +78,88 @@ class MPIManager final {
     size_t version_;
     size_t subversion_;
 
-  private:
+    /**
+     * @brief Find C++ data type's corresponding MPI data type.
+     *
+     * @tparam T C++ data type.
+     */
+    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
+        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
+        if (it != cpp_mpi_type_map.end()) {
+            return it->second;
+        } else {
+            throw std::runtime_error("Type not supported");
+        }
+    }
+
+    /**
+     * @brief Find operation string's corresponding MPI_Op type.
+     *
+     * @param op_str std::string of MPI_Op name.
+     */
+    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
+        auto it = cpp_mpi_op_map.find(op_str);
+        if (it != cpp_mpi_op_map.end()) {
+            return it->second;
+        } else {
+            throw std::runtime_error("Op not supported");
+        }
+    }
+
+    /**
+     * @brief Map of std::string and MPI_Op.
+     */
+    std::unordered_map<std::string, MPI_Op> cpp_mpi_op_map = {
+        {"op_null", MPI_OP_NULL}, {"max", MPI_MAX},
+        {"min", MPI_MIN},         {"sum", MPI_SUM},
+        {"prod", MPI_PROD},       {"land", MPI_LAND},
+        {"band", MPI_BAND},       {"lor", MPI_LOR},
+        {"bor", MPI_BOR},         {"lxor", MPI_LXOR},
+        {"bxor", MPI_BXOR},       {"minloc", MPI_MINLOC},
+        {"maxloc", MPI_MAXLOC},   {"replace", MPI_REPLACE},
+    };
+
+    /**
+     * @brief Map of std::string and MPI_Datatype.
+     */
+    std::unordered_map<std::string, MPI_Datatype> cpp_mpi_type_map = {
+        {cppTypeToString<char>(), MPI_CHAR},
+        {cppTypeToString<signed char>(), MPI_SIGNED_CHAR},
+        {cppTypeToString<unsigned char>(), MPI_UNSIGNED_CHAR},
+        {cppTypeToString<wchar_t>(), MPI_WCHAR},
+        {cppTypeToString<short>(), MPI_SHORT},
+        {cppTypeToString<unsigned short>(), MPI_UNSIGNED_SHORT},
+        {cppTypeToString<int>(), MPI_INT},
+        {cppTypeToString<unsigned int>(), MPI_UNSIGNED},
+        {cppTypeToString<long>(), MPI_LONG},
+        {cppTypeToString<unsigned long>(), MPI_UNSIGNED_LONG},
+        {cppTypeToString<long long>(), MPI_LONG_LONG_INT},
+        {cppTypeToString<float>(), MPI_FLOAT},
+        {cppTypeToString<double>(), MPI_DOUBLE},
+        {cppTypeToString<long double>(), MPI_LONG_DOUBLE},
+        {cppTypeToString<int8_t>(), MPI_INT8_T},
+        {cppTypeToString<int16_t>(), MPI_INT16_T},
+        {cppTypeToString<int32_t>(), MPI_INT32_T},
+        {cppTypeToString<int64_t>(), MPI_INT64_T},
+        {cppTypeToString<uint8_t>(), MPI_UINT8_T},
+        {cppTypeToString<uint16_t>(), MPI_UINT16_T},
+        {cppTypeToString<uint32_t>(), MPI_UINT32_T},
+        {cppTypeToString<uint64_t>(), MPI_UINT64_T},
+        {cppTypeToString<bool>(), MPI_C_BOOL},
+        {cppTypeToString<std::complex<float>>(), MPI_C_FLOAT_COMPLEX},
+        {cppTypeToString<std::complex<double>>(), MPI_C_DOUBLE_COMPLEX},
+        {cppTypeToString<std::complex<long double>>(),
+         MPI_C_LONG_DOUBLE_COMPLEX},
+        {cppTypeToString<float2>(), MPI_C_FLOAT_COMPLEX},
+        {cppTypeToString<cuComplex>(), MPI_C_FLOAT_COMPLEX},
+        {cppTypeToString<cuFloatComplex>(), MPI_C_FLOAT_COMPLEX},
+        {cppTypeToString<double2>(), MPI_C_DOUBLE_COMPLEX},
+        {cppTypeToString<cuDoubleComplex>(), MPI_C_DOUBLE_COMPLEX},
+        {cppTypeToString<custatevecIndex_t>(), MPI_INT64_T},
+        // cuda related types
+        {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
+        {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
+
     /**
      * @brief Set the MPI vendor.
      */
@@ -95,7 +176,7 @@ class MPIManager final {
         } else if (version_str.find("MPICH") != std::string::npos) {
             vendor_ = "MPICH";
         } else {
-            throw std::runtime_error("Unsupported MPI implementation.\n");
+            PL_ABORT("Unsupported MPI implementation.\n");
         }
     }
 
@@ -144,6 +225,12 @@ class MPIManager final {
 
   public:
     MPIManager() : communicator_(MPI_COMM_WORLD) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
+
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -160,6 +247,11 @@ class MPIManager final {
     }
 
     MPIManager(MPI_Comm communicator) : communicator_(communicator) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         int rank_int;
         int size_int;
@@ -176,7 +268,11 @@ class MPIManager final {
     }
 
     MPIManager(int argc, char **argv) {
-        PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(&argc, &argv));
+        }
         isExternalComm_ = false;
         communicator_ = MPI_COMM_WORLD;
         int rank_int;
@@ -194,6 +290,11 @@ class MPIManager final {
     }
 
     MPIManager(const MPIManager &other) {
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
+        }
         isExternalComm_ = true;
         rank_ = other.rank_;
         size_ = other.size_;
@@ -710,88 +811,5 @@ class MPIManager final {
             MPI_Comm_split(this->getComm(), colorInt, keyInt, &newcomm));
         return MPIManager(newcomm);
     }
-
-  private:
-    /**
-     * @brief Find C++ data type's corresponding MPI data type.
-     *
-     * @tparam T C++ data type.
-     */
-    template <typename T> auto getMPIDatatype() -> MPI_Datatype {
-        auto it = cpp_mpi_type_map.find(cppTypeToString<T>());
-        if (it != cpp_mpi_type_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Type not supported");
-        }
-    }
-
-    /**
-     * @brief Find operation string's corresponding MPI_Op type.
-     *
-     * @param op_str std::string of MPI_Op name.
-     */
-    auto getMPIOpType(const std::string &op_str) -> MPI_Op {
-        auto it = cpp_mpi_op_map.find(op_str);
-        if (it != cpp_mpi_op_map.end()) {
-            return it->second;
-        } else {
-            throw std::runtime_error("Op not supported");
-        }
-    }
-
-    /**
-     * @brief Map of std::string and MPI_Op.
-     */
-    std::unordered_map<std::string, MPI_Op> cpp_mpi_op_map = {
-        {"op_null", MPI_OP_NULL}, {"max", MPI_MAX},
-        {"min", MPI_MIN},         {"sum", MPI_SUM},
-        {"prod", MPI_PROD},       {"land", MPI_LAND},
-        {"band", MPI_BAND},       {"lor", MPI_LOR},
-        {"bor", MPI_BOR},         {"lxor", MPI_LXOR},
-        {"bxor", MPI_BXOR},       {"minloc", MPI_MINLOC},
-        {"maxloc", MPI_MAXLOC},   {"replace", MPI_REPLACE},
-    };
-
-    /**
-     * @brief Map of std::string and MPI_Datatype.
-     */
-    std::unordered_map<std::string, MPI_Datatype> cpp_mpi_type_map = {
-        {cppTypeToString<char>(), MPI_CHAR},
-        {cppTypeToString<signed char>(), MPI_SIGNED_CHAR},
-        {cppTypeToString<unsigned char>(), MPI_UNSIGNED_CHAR},
-        {cppTypeToString<wchar_t>(), MPI_WCHAR},
-        {cppTypeToString<short>(), MPI_SHORT},
-        {cppTypeToString<unsigned short>(), MPI_UNSIGNED_SHORT},
-        {cppTypeToString<int>(), MPI_INT},
-        {cppTypeToString<unsigned int>(), MPI_UNSIGNED},
-        {cppTypeToString<long>(), MPI_LONG},
-        {cppTypeToString<unsigned long>(), MPI_UNSIGNED_LONG},
-        {cppTypeToString<long long>(), MPI_LONG_LONG_INT},
-        {cppTypeToString<float>(), MPI_FLOAT},
-        {cppTypeToString<double>(), MPI_DOUBLE},
-        {cppTypeToString<long double>(), MPI_LONG_DOUBLE},
-        {cppTypeToString<int8_t>(), MPI_INT8_T},
-        {cppTypeToString<int16_t>(), MPI_INT16_T},
-        {cppTypeToString<int32_t>(), MPI_INT32_T},
-        {cppTypeToString<int64_t>(), MPI_INT64_T},
-        {cppTypeToString<uint8_t>(), MPI_UINT8_T},
-        {cppTypeToString<uint16_t>(), MPI_UINT16_T},
-        {cppTypeToString<uint32_t>(), MPI_UINT32_T},
-        {cppTypeToString<uint64_t>(), MPI_UINT64_T},
-        {cppTypeToString<bool>(), MPI_C_BOOL},
-        {cppTypeToString<std::complex<float>>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<std::complex<double>>(), MPI_C_DOUBLE_COMPLEX},
-        {cppTypeToString<std::complex<long double>>(),
-         MPI_C_LONG_DOUBLE_COMPLEX},
-        {cppTypeToString<float2>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<cuComplex>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<cuFloatComplex>(), MPI_C_FLOAT_COMPLEX},
-        {cppTypeToString<double2>(), MPI_C_DOUBLE_COMPLEX},
-        {cppTypeToString<cuDoubleComplex>(), MPI_C_DOUBLE_COMPLEX},
-        {cppTypeToString<custatevecIndex_t>(), MPI_INT64_T},
-        // cuda related types
-        {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
-        {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};
 };
 } // namespace Pennylane::LightningGPU::MPI

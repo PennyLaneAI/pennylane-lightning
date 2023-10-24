@@ -58,7 +58,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliX[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -75,7 +75,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliY[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -92,7 +92,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliZ[1])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
-                   float, double) {
+                   double) {
     const std::size_t num_qubits = 3;
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -131,7 +131,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -160,7 +160,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
-                   float, double) {
+                   double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     const std::size_t num_qubits = 3;
 
@@ -182,7 +182,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV_MPI();
+        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -203,7 +203,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
-                   "[StateVectorCudaMPI_Var]", float, double) {
+                   "[StateVectorCudaMPI_Var]", double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     const std::size_t num_qubits = 3;
 

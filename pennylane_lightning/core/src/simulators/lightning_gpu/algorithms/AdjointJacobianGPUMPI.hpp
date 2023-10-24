@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc. and contributors.
+// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -224,9 +224,9 @@ class AdjointJacobianMPI final
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
+     * @param ref_data Reference to a `%StateVectorT` object.
      * @param apply_operations Indicate whether to apply operations to psi prior
      * to calculation.
-     * @param dev_tag Device tag represents the device id and stream id.
      */
     void adjointJacobian(std::span<PrecisionT> jac,
                          const JacobianDataMPI<StateVectorT> &jd,

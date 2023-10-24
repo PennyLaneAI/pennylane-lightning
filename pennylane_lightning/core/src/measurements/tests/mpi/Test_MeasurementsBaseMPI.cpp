@@ -249,10 +249,11 @@ template <typename TypeList> void testHermitianObsExpval() {
         DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<std::vector<size_t>> wires_list = {
-                {0, 1}, {0, 2}, {1, 2}};
+                {0, 1}, {0, 2}, {1, 2}, {2, 1}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
-                0.5874490024807637, 0.44170554255359035, 0.3764821318486682};
+                0.5874490024807637, 0.44170554255359035, 0.3764821318486682,
+                0.5021569932};
 
             MatrixT Hermitian_matrix(16);
             Hermitian_matrix[0] = real_term;

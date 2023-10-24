@@ -78,9 +78,6 @@ if(ENABLE_NATIVE)
     target_compile_options(lightning_compile_options INTERFACE -march=native)
 endif()
 
-if(ENABLE_MPI)
-    set(ENABLE_OPENMP OFF)
-endif()
 
 if(PLLGPU_DISABLE_CUDA_SAFETY)
     target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
