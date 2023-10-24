@@ -1162,7 +1162,6 @@ class StateVectorCudaMPI
         std::complex<PrecisionT> result{0, 0};
 
         for (std::size_t idx = 0; idx < expect.size(); idx++) {
-
             result += static_cast<PrecisionT>(expect[idx]) * coeffs[idx];
         }
         return std::real(result);
