@@ -71,7 +71,7 @@ class Measurements final
     GateCache<PrecisionT> gate_cache_;
 
   public:
-    explicit Measurements(const StateVectorT &statevector)
+    explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||

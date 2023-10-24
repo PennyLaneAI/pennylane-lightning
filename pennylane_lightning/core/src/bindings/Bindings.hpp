@@ -636,7 +636,11 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
+#ifdef _ENABLE_PLGPU
+    pyclass_measurements.def(py::init<StateVectorT &>());
+#else
     pyclass_measurements.def(py::init<const StateVectorT &>());
+#endif
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 
