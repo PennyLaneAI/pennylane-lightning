@@ -41,7 +41,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     const std::size_t num_qubits = 2;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
+    REQUIRE(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -51,7 +51,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
+    REQUIRE(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
     using ComplexT = typename StateVectorT::ComplexT;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
+    REQUIRE(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -126,7 +126,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
+    REQUIRE(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
     const std::size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
+    REQUIRE(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -179,7 +179,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
+    REQUIRE(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -214,7 +214,7 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
     const std::size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2);
+    REQUIRE(mpi_manager.getSize() == 2);
 
     size_t mpi_buffersize = 1;
 
@@ -224,7 +224,7 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2);
+    REQUIRE(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);

@@ -255,7 +255,7 @@ template <typename TypeList> void testTensorProdObsBase() {
 
             SECTION("Test using |1+0>") {
                 MPIManager mpi_manager(MPI_COMM_WORLD);
-                CHECK(mpi_manager.getSize() == 2);
+                REQUIRE(mpi_manager.getSize() == 2);
 
                 const size_t num_qubits = 3;
                 size_t mpi_buffersize = 1;
@@ -269,7 +269,7 @@ template <typename TypeList> void testTensorProdObsBase() {
 
                 int nDevices = 0; // Number of GPU devices per node
                 cudaGetDeviceCount(&nDevices);
-                CHECK(nDevices >= 2);
+                REQUIRE(nDevices >= 2);
                 int deviceId = mpi_manager.getRank() % nDevices;
                 cudaSetDevice(deviceId);
                 DevTag<int> dt_local(deviceId, 0);
@@ -302,7 +302,7 @@ template <typename TypeList> void testTensorProdObsBase() {
 
             SECTION("Test using |+-01>") {
                 MPIManager mpi_manager(MPI_COMM_WORLD);
-                CHECK(mpi_manager.getSize() == 2);
+                REQUIRE(mpi_manager.getSize() == 2);
 
                 const size_t num_qubits = 4;
                 size_t mpi_buffersize = 1;
@@ -316,7 +316,7 @@ template <typename TypeList> void testTensorProdObsBase() {
 
                 int nDevices = 0; // Number of GPU devices per node
                 cudaGetDeviceCount(&nDevices);
-                CHECK(nDevices >= 2);
+                REQUIRE(nDevices >= 2);
                 int deviceId = mpi_manager.getRank() % nDevices;
                 cudaSetDevice(deviceId);
                 DevTag<int> dt_local(deviceId, 0);
@@ -368,7 +368,7 @@ template <typename TypeList> void testHamiltonianBase() {
         using HamiltonianT = HamiltonianBase<StateVectorT>;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
-        CHECK(mpi_manager.getSize() == 2);
+        REQUIRE(mpi_manager.getSize() == 2);
 
         const size_t num_qubits = 3;
         size_t mpi_buffersize = 1;
@@ -381,7 +381,7 @@ template <typename TypeList> void testHamiltonianBase() {
 
         int nDevices = 0; // Number of GPU devices per node
         cudaGetDeviceCount(&nDevices);
-        CHECK(nDevices >= 2);
+        REQUIRE(nDevices >= 2);
         int deviceId = mpi_manager.getRank() % nDevices;
         cudaSetDevice(deviceId);
         DevTag<int> dt_local(deviceId, 0);
