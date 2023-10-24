@@ -698,9 +698,7 @@ class TestGenerateSample:
         comm = MPI.COMM_WORLD
 
         dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE)
-        # Explicitly resetting is necessary as the internal
-        # state is set to None in __init__ and only properly
-        # initialized during reset
+        dev.reset()
         dev.apply([qml.RX(1.5708, wires=[0])])
         dev._wires_measured = {0}
         dev._samples = dev.generate_samples()
@@ -722,9 +720,7 @@ class TestGenerateSample:
         dev_mpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
         )
-        # Explicitly resetting is necessary as the internal
-        # state is set to None in __init__ and only properly
-        # initialized during reset
+        dev_mpi.reset()
 
         @qml.qnode(dev_mpi)
         def circuit():
