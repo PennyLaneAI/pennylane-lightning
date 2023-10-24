@@ -480,6 +480,31 @@ template <typename TypeList> void testSparseHamiltonianBase() {
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
+        DYNAMIC_SECTION("SparseHamiltonianBase - isEqual - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto sparseH0 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+            auto sparseH1 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+            auto sparseH2 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {8, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+
+            REQUIRE(*sparseH0 == *sparseH1);
+            REQUIRE(*sparseH0 != *sparseH2);
+        }
+
         DYNAMIC_SECTION("SparseHamiltonianBase - getWires - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});

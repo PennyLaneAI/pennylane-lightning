@@ -439,15 +439,13 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     std::vector<std::size_t> wires_;
 
   private:
-    // LCOV_EXCL_START
     [[nodiscard]] bool
     isEqual(const Observable<StateVectorT> &other) const override {
         const auto &other_cast =
             static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
-        return data_ != other_cast.data_ || indices_ != other_cast.indices_ ||
-               offsets_ != other_cast.offsets_;
+        return data_ == other_cast.data_ && indices_ == other_cast.indices_ &&
+               offsets_ == other_cast.offsets_ && (wires_ == other_cast.wires_);
     }
-    // LCOV_EXCL_STOP
 
   public:
     /**
