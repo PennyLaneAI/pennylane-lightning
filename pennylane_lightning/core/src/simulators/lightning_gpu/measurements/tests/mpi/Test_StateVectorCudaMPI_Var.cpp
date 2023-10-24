@@ -209,7 +209,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
 }
 
 TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
-                   "[StateVectorCudaMPI_Var]", double) {
+                   "[StateVectorCudaMPI_Var]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     const std::size_t num_qubits = 3;
 

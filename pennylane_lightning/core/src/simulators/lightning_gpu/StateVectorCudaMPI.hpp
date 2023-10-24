@@ -97,7 +97,6 @@ class StateVectorCudaMPI
                                      StateVectorCudaMPI<Precision>>::CFP_t;
     using PrecisionT = Precision;
     using ComplexT = std::complex<PrecisionT>;
-    using GateType = CFP_t *;
 
     StateVectorCudaMPI() = delete;
 

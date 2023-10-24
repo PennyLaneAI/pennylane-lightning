@@ -90,10 +90,10 @@ class QuantumScriptSerializer:
         self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
         self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
-        self.use_mpi = False
+        self._use_mpi = False
 
         if use_mpi:
-            self.use_mpi = use_mpi
+            self._use_mpi = use_mpi
             self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
             self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
             self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
@@ -119,28 +119,28 @@ class QuantumScriptSerializer:
     @property
     def sv_type(self):
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.statevector_mpi_c128
         return self.statevector_c128
 
     @property
     def named_obs(self):
         """Named observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.named_obs_mpi_c64 if self.use_csingle else self.named_obs_mpi_c128
         return self.named_obs_c64 if self.use_csingle else self.named_obs_c128
 
     @property
     def hermitian_obs(self):
         """Hermitian observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.hermitian_obs_mpi_c64 if self.use_csingle else self.hermitian_obs_mpi_c128
         return self.hermitian_obs_c64 if self.use_csingle else self.hermitian_obs_c128
 
     @property
     def tensor_obs(self):
         """Tensor product observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return (
                 self.tensor_prod_obs_mpi_c64 if self.use_csingle else self.tensor_prod_obs_mpi_c128
             )
@@ -149,7 +149,7 @@ class QuantumScriptSerializer:
     @property
     def hamiltonian_obs(self):
         """Hamiltonian observable matching ``use_csingle`` precision."""
-        if self.use_mpi:
+        if self._use_mpi:
             return self.hamiltonian_mpi_c64 if self.use_csingle else self.hamiltonian_mpi_c128
         return self.hamiltonian_c64 if self.use_csingle else self.hamiltonian_c128
 
@@ -193,7 +193,7 @@ class QuantumScriptSerializer:
             sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
         """
 
-        if self.use_mpi:
+        if self._use_mpi:
             Hmat = Hamiltonian([1.0], [Identity(0)]).sparse_matrix()
             H_sparse = SparseHamiltonian(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()

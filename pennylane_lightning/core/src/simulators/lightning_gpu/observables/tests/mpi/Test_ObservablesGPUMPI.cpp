@@ -11,15 +11,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <catch2/catch.hpp>
+
 #include "MPIManager.hpp"
 #include "ObservablesGPU.hpp"
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TestHelpers.hpp"
-
-#include <catch2/catch.hpp>
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU::Observables;

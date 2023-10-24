@@ -37,7 +37,7 @@ using Pennylane::Util::createNonTrivialState;
 }; // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", double) {
+TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
