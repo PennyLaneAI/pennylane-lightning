@@ -796,7 +796,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
                 observable_wires = self.map_wires(observable.wires)
-                if len(observable_wires) > self._num_local_wires and self._mpi:
+                if self._mpi and len(observable_wires) > self._num_local_wires:
                     raise RuntimeError(
                         "MPI backend does not support Hermitian with number of target wires larger than local wire number."
                     )

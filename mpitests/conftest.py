@@ -60,8 +60,8 @@ supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 def get_device():
     """Return the pennylane lightning device.
 
-    The device is ``lightning.qubit`` by default.
-    Allowed values are: "lightning.kokkos" and "lightning.qubit".
+    The device is ``lightning.gpu`` by default.
+    Allowed values are: "lightning.gpu".
     An underscore can also be used instead of a dot.
     If the environment variable ``PL_DEVICE`` is defined, its value is used.
     Underscores are replaced by dots upon exiting.

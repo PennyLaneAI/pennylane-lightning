@@ -101,6 +101,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
     const size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t mpi_buffersize = 128;
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
@@ -118,6 +120,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -157,6 +160,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
     const size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t mpi_buffersize = 1;
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
@@ -174,6 +179,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
@@ -217,6 +223,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyOperations",
     const size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
+    CHECK(mpi_manager.getSize() == 2);
+
     size_t mpi_buffersize = 1;
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
@@ -234,6 +242,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyOperations",
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
