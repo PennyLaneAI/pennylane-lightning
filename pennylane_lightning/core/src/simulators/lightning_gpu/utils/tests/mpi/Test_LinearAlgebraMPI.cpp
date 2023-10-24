@@ -42,7 +42,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     using CFP_t = StateVectorT::CFP_t;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
-    CHECK(mpi_manager.getSize() == 2)
+    CHECK(mpi_manager.getSize() == 2);
 
     std::size_t num_qubits = 3;
 
@@ -80,7 +80,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
-    CHECK(nDevices >= 2)
+    CHECK(nDevices >= 2);
     int deviceId = mpi_manager.getRank() % nDevices;
     cudaSetDevice(deviceId);
     DevTag<int> dt_local(deviceId, 0);
