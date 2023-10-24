@@ -16,7 +16,6 @@
  * Export C++ functions to Python using Pybind.
  */
 #include "Bindings.hpp"
-
 #include "pybind11/pybind11.h"
 
 // Defining the module name.

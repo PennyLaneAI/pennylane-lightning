@@ -1,9 +1,13 @@
 # Release 0.33.0-dev
 
 ### New features since last release
+
 * Add docs to `lightning_gpu` with single-GPU features.
   [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
-  
+
+* Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
+  [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
+
 * Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
   [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
 
@@ -18,10 +22,10 @@
 
 ### Breaking changes
 
-* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12.
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 
-* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.
   [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.

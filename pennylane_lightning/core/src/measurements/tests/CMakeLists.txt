@@ -41,3 +41,28 @@ target_link_libraries(measurements_test_runner PRIVATE  measurements_tests)
 catch_discover_tests(measurements_test_runner)
 
 install(TARGETS measurements_test_runner DESTINATION bin)
+
+if(ENABLE_MPI)
+    add_library(measurements_tests_mpi INTERFACE)
+    target_link_libraries(measurements_tests_mpi INTERFACE     Catch2::Catch2)
+    foreach(BACKEND ${PL_BACKEND})
+        target_link_libraries(measurements_tests_mpi INTERFACE  ${BACKEND}
+                                                            "${BACKEND}_gates"
+                                                            "${BACKEND}_measurements"
+                                                            "${BACKEND}_observables"
+        )
+    endforeach()
+
+    ProcessTestOptions(measurements_tests_mpi)
+
+    target_sources(measurements_tests_mpi INTERFACE ./mpi/runner_measurements_mpi.cpp)
+
+    ################################################################################
+    # Define targets
+    ################################################################################
+    set(TEST_SOURCES    ./mpi/Test_MeasurementsBaseMPI.cpp)
+
+    add_executable(measurements_test_runner_mpi ${TEST_SOURCES})
+    target_link_libraries(measurements_test_runner_mpi PRIVATE measurements_tests_mpi)
+    catch_discover_tests(measurements_test_runner_mpi)
+endif()
