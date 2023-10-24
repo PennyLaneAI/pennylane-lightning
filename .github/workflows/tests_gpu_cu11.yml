@@ -17,7 +17,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+
+  # Workflow call to avoid toe stepping
+  test_lightning_kokkos:    
+    name: "Test Lightning-Kokkos"
+    uses: ./.github/workflows/tests_gpu_kokkos.yml
+
   builddeps:
+    needs: ["test_lightning_kokkos"]
     runs-on:
       - self-hosted
       - ubuntu-22.04

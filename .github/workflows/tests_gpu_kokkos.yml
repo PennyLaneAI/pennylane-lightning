@@ -1,9 +1,6 @@
 name: Testing (GPU)
 on:
-  pull_request:
-  push:
-    branches:
-      - master
+  workflow_call:
 
 env:
   CI_CUDA_ARCH: 86
