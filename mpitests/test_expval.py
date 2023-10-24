@@ -105,8 +105,6 @@ class TestExpval:
         """Test that Hadamard expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])

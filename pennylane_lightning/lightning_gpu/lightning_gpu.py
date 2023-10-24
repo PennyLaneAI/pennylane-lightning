@@ -361,23 +361,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
         @property
         def create_ops_list(self):
             """Returns create_ops_list function of the matching precision."""
-            if not self._mpi:
-                return create_ops_listC64 if self.use_csingle else create_ops_listC128
-            return create_ops_listMPIC64 if self.use_csingle else create_ops_listMPIC128
+            if self._mpi:
+                return create_ops_listMPIC64 if self.use_csingle else create_ops_listMPIC128
+            return create_ops_listC64 if self.use_csingle else create_ops_listC128
 
         @property
         def measurements(self):
             """Returns Measurements constructor of the matching precision."""
-            if not self._mpi:
+            if self._mpi:
                 return (
-                    MeasurementsC64(self._gpu_state)
+                    MeasurementsMPIC64(self._gpu_state)
                     if self.use_csingle
-                    else MeasurementsC128(self._gpu_state)
+                    else MeasurementsMPIC128(self._gpu_state)
                 )
             return (
-                MeasurementsMPIC64(self._gpu_state)
+                MeasurementsC64(self._gpu_state)
                 if self.use_csingle
-                else MeasurementsMPIC128(self._gpu_state)
+                else MeasurementsC128(self._gpu_state)
             )
 
         def syncD2H(self, state_vector, use_async=False):
