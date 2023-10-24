@@ -982,7 +982,7 @@ def test_adjoint_SparseHamiltonian(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
 
-    dev_kokkos = qml.device(device_name, wires=custom_wires)
+    dev = qml.device(device_name, wires=custom_wires)
     dev_default = qml.device("default.qubit", wires=custom_wires)
 
     def circuit(params):
@@ -993,13 +993,13 @@ def test_adjoint_SparseHamiltonian(returns):
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
-    qnode_kokkos = qml.QNode(circuit, dev_kokkos, diff_method="adjoint")
+    qnode = qml.QNode(circuit, dev, diff_method="adjoint")
     qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
 
-    j_kokkos = qml.jacobian(qnode_kokkos)(params)
+    j_device = qml.jacobian(qnode)(params)
     j_default = qml.jacobian(qnode_default)(params)
 
-    assert np.allclose(j_kokkos, j_default)
+    assert np.allclose(j_device, j_default)
 
 
 @pytest.mark.parametrize(
