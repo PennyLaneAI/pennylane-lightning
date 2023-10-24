@@ -22,6 +22,7 @@ from conftest import (
     PHI,
     VARPHI,
     TOL_STOCHASTIC,
+    fixture_params,
     LightningDevice as ld,
     device_name,
 )
@@ -30,11 +31,6 @@ import math
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
-
-fixture_params = itertools.product(
-    [np.complex64, np.complex128],
-    [True, False],
-)
 
 numQubits = 8
 

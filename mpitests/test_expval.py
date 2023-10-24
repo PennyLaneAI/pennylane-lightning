@@ -211,7 +211,7 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(g, expected_grad)
 
     def test_sum(self, diff_method):
-        """Test the `Sum` class with lightning qubit."""
+        """Test the `Sum` class with Lightning."""
 
         dev = qml.device(device_name, mpi=True, wires=2)
 

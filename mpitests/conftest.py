@@ -15,6 +15,9 @@ import pennylane as qml
 
 import itertools
 
+# Tuple passed to distributed device ctor
+# np.complex for data type and True or False
+# for enabling MPI or not.
 fixture_params = itertools.product(
     [np.complex64, np.complex128],
     [True, False],
@@ -85,7 +88,12 @@ if device_name not in qml.plugin_devices:
     )
 
 # Device specification
-from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+if device_name == "lightning.gpu":
+    from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+else:
+    raise qml.DeviceError(
+        f"The MPI tests do not apply to the {device_name} device."
+    )
 
 
 # General qubit_device fixture, for any number of wires.

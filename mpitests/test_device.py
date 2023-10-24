@@ -40,7 +40,7 @@ def test_create_device():
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    not ld._CPP_BINARY_AVAILABLE,
     reason="Only lightning.gpu has a kwarg mpi_buf_size.",
 )
 def test_unsupported_mpi_buf_size():

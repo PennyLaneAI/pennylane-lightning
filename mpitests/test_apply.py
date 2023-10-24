@@ -19,15 +19,11 @@ from mpi4py import MPI
 import pytest
 import itertools
 
-from conftest import TOL_STOCHASTIC, device_name
+from conftest import TOL_STOCHASTIC, device_name, fixture_params
 
 import numpy as np
 import pennylane as qml
 
-fixture_params = itertools.product(
-    [np.complex64, np.complex128],
-    [True, False],
-)
 
 numQubits = 8
 
