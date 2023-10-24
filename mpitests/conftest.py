@@ -91,9 +91,7 @@ if device_name not in qml.plugin_devices:
 if device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
 else:
-    raise qml.DeviceError(
-        f"The MPI tests do not apply to the {device_name} device."
-    )
+    raise qml.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 
 
 # General qubit_device fixture, for any number of wires.
