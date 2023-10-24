@@ -21,17 +21,17 @@ The Lightning ecosystem provides the following devices:
 .. title-card::
     :name: 'lightning.qubit'
     :description: A fast state-vector qubit simulator written in C++
-    :link: lightning_qubit/device.html
+    :link: lightning_qubit/device/index.html
 
 .. title-card::
     :name: 'lightning.kokkos'
     :description: A heterogeneous backend state-vector simulator with Kokkos library support.
-    :link: lightning_kokkos/device.html
+    :link: lightning_kokkos/device/index.html
 
 .. title-card::
     :name: 'lightning.gpu'
     :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
-    :link: lightning_gpu/device.html
+    :link: lightning_gpu/device/index.html
 
 .. raw:: html
 
