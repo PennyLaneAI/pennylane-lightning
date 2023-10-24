@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Integrate cpp backend of distributed Lightning-GPU into the Lightning monorepo.
+* Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
 * Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.

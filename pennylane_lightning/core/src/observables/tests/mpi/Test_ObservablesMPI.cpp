@@ -11,17 +11,17 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include "Error.hpp" // LightningException
-#include "Observables.hpp"
-#include "TestHelpers.hpp" // isApproxEqual, createZeroState, createProductState
-#include "TypeList.hpp"
-#include "Util.hpp" // TestVector
-
 #include <catch2/catch.hpp>
 
 #include <complex>
 #include <memory>
 #include <vector>
+
+#include "Error.hpp" // LightningException
+#include "Observables.hpp"
+#include "TestHelpers.hpp" // isApproxEqual, createZeroState, createProductState
+#include "TypeList.hpp"
+#include "Util.hpp" // TestVector
 /**
  * @file
  *  Tests for Base Observable classes.

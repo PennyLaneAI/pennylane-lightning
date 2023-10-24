@@ -24,7 +24,6 @@
 #include "Observables.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "Util.hpp"
-#include "cuError.hpp"
 
 /// @cond DEV
 namespace {
