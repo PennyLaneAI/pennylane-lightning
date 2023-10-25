@@ -205,8 +205,16 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane-Lightning-GPU device.
+
+        A GPU-backed Lightning device using NVIDIA cuQuantum SDK.
+
+        Use of this device requires pre-built binaries or compilation from source. Check out the
+        :doc:`/lightning_gpu/installation` guide for more details.
+
         Args:
             wires (int): the number of wires to initialize the device with
+            mpi (bool): enable MPI support. MPI support will be enabled if ``mpi`` is set as``True``.
+            mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
             sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
             shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -216,7 +224,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
         """
 
-        name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK"
+        name = "Lightning GPU PennyLane plugin"
         short_name = "lightning.gpu"
 
         operations = allowed_operations
@@ -283,6 +291,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._create_basis_state(0)
 
         def _mpi_init_helper(self, num_wires):
+            """Set up MPI checks."""
             if not MPI_SUPPORT:
                 raise ImportError("MPI related APIs are not found.")
             # initialize MPIManager and config check in the MPIManager ctor
@@ -545,6 +554,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
+            """Applies a list of operations to the state tensor."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -635,6 +645,12 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return self._gpu_state
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+            """Implements the adjoint method outlined in
+            `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
+
+            After a forward pass, the circuit is reversed by iteratively applying adjoint
+            gates to scan backwards through the circuit.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -697,7 +713,42 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
-            """Generate the processing function required to compute the vector-Jacobian products of a tape."""
+            """Generate the processing function required to compute the vector-Jacobian products
+            of a tape.
+
+            This function can be used with multiple expectation values or a quantum state.
+            When a quantum state is given,
+
+            .. code-block:: python
+
+                vjp_f = dev.vjp([qml.state()], grad_vec)
+                vjp = vjp_f(tape)
+
+            computes :math:`w = (w_1,\\cdots,w_m)` where
+
+            .. math::
+
+                w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
+
+            Here, :math:`m` is the total number of trainable parameters,
+            :math:`\\pmb{\\theta}` is the vector of trainable parameters and
+            :math:`\\psi_{\\pmb{\\theta}}` is the output quantum state.
+
+            Args:
+                measurements (list): List of measurement processes for vector-Jacobian product.
+                    Now it must be expectation values or a quantum state.
+                grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
+                    shape of the corresponding tape, i.e. number of measurements if the return
+                    type is expectation or :math:`2^N` if the return type is statevector
+                starting_state (tensor_like): post-forward pass state to start execution with.
+                    It should be complex-valued. Takes precedence over ``use_device_state``.
+                use_device_state (bool): use current device state to initialize.
+                    A forward pass of the same circuit should be the last thing the device
+                    has executed. If a ``starting_state`` is provided, that takes precedence.
+
+            Returns:
+                The processing function required to compute the vector-Jacobian products of a tape.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -742,6 +793,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
+            """Return samples of an observable."""
             if observable.name != "PauliZ":
                 self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
@@ -763,6 +815,19 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
+            """Expectation value of the supplied observable.
+
+            Args:
+                observable: A PennyLane observable.
+                shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                    to use. If not specified, all samples are used.
+                bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                    returns the measurement statistic separately over each bin. If not
+                    provided, the entire shot range is treated as a single bin.
+
+            Returns:
+                Expectation value of the observable
+            """
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
@@ -814,6 +879,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return self.measurements.expval(observable.name, observable_wires)
 
         def probability_lightning(self, wires=None):
+            """Return the probability of each computational basis state.
+
+            Args:
+                wires (Iterable[Number, str], Number, str, Wires): wires to return
+                    marginal probabilities for. Wires not provided are traced out of the system.
+
+            Returns:
+                array[float]: list of the probabilities
+            """
             # translate to wire labels used by device
             observable_wires = self.map_wires(wires)
             # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
@@ -825,6 +899,19 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
+            """Variance of the supplied observable.
+
+            Args:
+                observable: A PennyLane observable.
+                shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                    to use. If not specified, all samples are used.
+                bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                    returns the measurement statistic separately over each bin. If not
+                    provided, the entire shot range is treated as a single bin.
+
+            Returns:
+                Variance of the observable
+            """
             if self.shots is not None:
                 # estimate the var
                 # Lightning doesn't support sampling yet
@@ -858,7 +945,7 @@ else:  # LGPU_CPP_BINARY_AVAILABLE:
 
     class LightningGPU(LightningBaseFallBack):  # pragma: no cover
         # pylint: disable=missing-class-docstring, too-few-public-methods
-        name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK: [No binaries found - Fallback: default.qubit]"
+        name = "Lightning GPU PennyLane plugin: [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.gpu"
 
         def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
