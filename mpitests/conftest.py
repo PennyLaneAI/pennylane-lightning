@@ -1,3 +1,9 @@
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
 #     http://www.apache.org/licenses/LICENSE-2.0
 
 # Unless required by applicable law or agreed to in writing, software
@@ -10,12 +16,12 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 """
 # pylint: disable=missing-function-docstring,wrong-import-order,unused-import
 
+import itertools
 import os
 import pytest
+
 from pennylane import numpy as np
 import pennylane as qml
-
-import itertools
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False

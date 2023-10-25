@@ -104,6 +104,8 @@ class QuantumScriptSerializer:
             self.tensor_prod_obs_mpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
             self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
+            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
             self._mpi_manager = lightning_ops.MPIManager
 
@@ -157,6 +159,12 @@ class QuantumScriptSerializer:
     @property
     def sparse_hamiltonian_obs(self):
         """SparseHamiltonian observable matching ``use_csingle`` precision."""
+        if self._use_mpi:
+            return (
+                self.sparse_hamiltonian_mpi_c64
+                if self.use_csingle
+                else self.sparse_hamiltonian_mpi_c128
+            )
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
     def _named_obs(self, observable, wires_map: dict):
