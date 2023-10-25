@@ -313,7 +313,6 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
                   const std::complex<Precision> *values_ptr,
                   const int64_t numNNZ, CFP_t *X, CFP_t *Y, DevTypeID device_id,
                   cudaStream_t stream_id, cusparseHandle_t handle) {
-
     const int64_t num_rows =
         csrOffsets_size -
         1; // int64_t is required for num_rows by cusparseCreateCsr

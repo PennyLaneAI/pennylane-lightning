@@ -561,7 +561,6 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
         DYNAMIC_SECTION("applyInPlace must fail - "
                         << StateVectorMPIToName<StateVectorT>::name) {
-
             auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},

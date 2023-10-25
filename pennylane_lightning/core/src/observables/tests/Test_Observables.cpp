@@ -526,7 +526,6 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
         DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlace must fail - "
                         << StateVectorToName<StateVectorT>::name) {
-
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
