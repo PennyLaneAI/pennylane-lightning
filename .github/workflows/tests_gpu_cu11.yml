@@ -51,7 +51,7 @@ jobs:
           nvidia-smi
 
   cpptestswithLGPU_cu11:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ github.event_name != 'workflow_call' }}
     needs: [builddeps]
     strategy:
       matrix:
@@ -63,7 +63,6 @@ jobs:
       - ${{ matrix.os }}
       - self-hosted
       - gpu
-
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -119,10 +118,6 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install ninja cmake custatevec-cu11
-      
-      - name: Install Latest PennyLane
-        if: inputs.pennylane-version == 'latest'
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
       - name: Build and run unit tests
         run: |
@@ -170,7 +165,6 @@ jobs:
       - ${{ matrix.os }}
       - self-hosted
       - gpu
-
 
     steps:
       - name: Validate GPU version and installed compiler
