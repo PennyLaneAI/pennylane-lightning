@@ -10,26 +10,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
+Unit tests for the :mod:`pennylane_lightning.LightningGPU` device (MPI).
 """
-# pylint: disable=protected-access,cell-var-from-loop
+# pylint: disable=missing-function-docstring,unnecessary-comprehension,missing-function-docstring,too-many-arguments,wrong-import-order,unused-variable
 from mpi4py import MPI
 import pytest
-import itertools
 
 from conftest import (
-    THETA,
-    PHI,
-    VARPHI,
-    TOL_STOCHASTIC,
-    LightningDevice as ld,
     device_name,
 )
 
-import math
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 
 numQubits = 8
 
@@ -52,7 +44,7 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, C_DTYPE):
     commSize = comm.Get_size()
 
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
-    dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
+    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=C_DTYPE)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.R_DTYPE)
     comm.Bcast(state_vector, root=0)
@@ -93,7 +85,7 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE):
     commSize = comm.Get_size()
 
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
-    dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
+    dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=C_DTYPE)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.R_DTYPE)
     comm.Bcast(state_vector, root=0)
@@ -128,6 +120,8 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE):
 
 
 class TestProbs:
+    """Tests for the probability method."""
+
     @pytest.mark.parametrize(
         "operation", [qml.PauliX, qml.PauliY, qml.PauliZ, qml.Hadamard, qml.S, qml.T]
     )

@@ -14,6 +14,8 @@
 """
 Unit tests for Sparse Measurements Lightning devices.
 """
+# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments
+
 import pytest
 from conftest import device_name, LightningDevice as ld
 from mpi4py import MPI
