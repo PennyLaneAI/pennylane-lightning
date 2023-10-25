@@ -246,19 +246,27 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 Installing from source
 ======================
 
-To build a wheel from the package sources using the direct SDK path:
+To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
+
+.. code-block:: console
+
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    pip install -r requirements.txt
+    PL_BACKEND="lightning_qubit" pip install -e . -vv
+
+Then the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
     python -m pip install wheel custatevec-cu11
-    python setup.py build_ext --cuquantum=<path to sdk>
-    python setup.py bdist_wheel
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
 
-The wheel can then be installed with:
+The Lightning-GPU can then be installed with ``pip``:
 
 .. code-block:: console
 
-    python -m pip install ./dist/PennyLane_Lightning_GPU-*.whl
+    PL_BACKEND="lightning_gpu" python -m pip install -e .
 
 To simplify the build, we recommend using the containerized build process described in section `Docker support <docker-support>`_.
 
@@ -273,41 +281,13 @@ It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python 
 Please consult the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
 `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
 
-To build a wheel with MPI support using the direct SDK path:
+Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly.
+Then Lightning-GPU with MPI support can then be installed with ``pip``:
 
 .. code-block:: console
 
-    python -m pip install wheel 
-    python setup.py build_ext --define="ENABLE_MPI=ON" --cuquantum=<path to sdk>
-    python setup.py bdist_wheel
+    CMAKE_ARGS="-DENABLE_MPI=ON"  PL_BACKEND="lightning_gpu" python -m pip install -e .
 
-If cuStateVec is installed with ``pip``, you may set ``--cuquantum=${CUQUANTUM_SDK}`` where
-
-.. code-block:: console
-
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-
-The wheel can then be installed as:
-
-.. code-block:: console
-
-    python -m pip install ./dist/PennyLane_Lightning_GPU-*.whl
-
-The simplest way to install Lightning-GPU with MPI support through ``pip``. Lightning-Qubit is required to be 
-installed before Lightning-GPU.
-.. code-block:: console
-
-   PL_BACKEND="lightning_qubit" python -m pip install -e .
-
-Then we need to set an environment variable `CUQUANTUM_SDK` with the path to `cuStateVec` as follows:
-
-.. code-block:: console
-
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-
-.. code-block:: console
-
-   CMAKE_ARGS="-DENABLE_MPI=ON" PL_BACKEND="lightning_gpu" python -m pip install -e .
 
 Testing
 =======
