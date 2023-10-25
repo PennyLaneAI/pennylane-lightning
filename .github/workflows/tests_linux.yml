@@ -318,6 +318,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
@@ -403,6 +404,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
           pwd
@@ -544,6 +546,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
