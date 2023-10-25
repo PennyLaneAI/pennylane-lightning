@@ -14,41 +14,44 @@
 """
 Unit tests for Lightning devices creation.
 """
-# pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
+# pylint: disable=protected-access,c-extension-no-member
+
+from mpi4py import MPI
+import pennylane as qml
 
 import pytest
 from conftest import device_name, LightningDevice as ld
 
-import pennylane as qml
-from mpi4py import MPI
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 def test_create_device():
+    """Tests whether the device count is sufficient."""
     if MPI.COMM_WORLD.Get_size() > 2:
         with pytest.raises(
             ValueError,
             match="Number of devices should be larger than or equal to the number of processes on each node.",
         ):
-            dev = qml.device(device_name, mpi=True, wires=4)
+            _ = qml.device(device_name, mpi=True, wires=4)
     else:
-        dev = qml.device(device_name, mpi=True, wires=4)
+        _ = qml.device(device_name, mpi=True, wires=4)
 
 
 def test_unsupported_mpi_buf_size():
+    """Tests mpi_buf_size parameter handling."""
     with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
-        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
+        _ = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
     with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
-        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=3)
+        _ = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=3)
     with pytest.warns(
         RuntimeWarning,
         match="The MPI buffer size is larger than the local state vector size",
     ):
-        dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=2**4)
+        _ = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=2**4)
     with pytest.raises(
         ValueError,
         match="Number of processes should be smaller than the number of statevector elements",
     ):
-        dev = qml.device(device_name, mpi=True, wires=1)
+        _ = qml.device(device_name, mpi=True, wires=1)

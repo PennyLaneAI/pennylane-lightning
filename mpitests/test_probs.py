@@ -12,16 +12,16 @@
 """
 Unit tests for the :mod:`pennylane_lightning.LightningGPU` device (MPI).
 """
-# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
+# pylint: disable=c-extension-no-member,too-many-arguments,missing-function-docstring
 from mpi4py import MPI
+import numpy as np
+import pennylane as qml
 import pytest
 
 from conftest import (
     device_name,
 )
 
-import numpy as np
-import pennylane as qml
 
 numQubits = 8
 
@@ -41,7 +41,6 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, C_DTYPE):
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    commSize = comm.Get_size()
 
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
     dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=C_DTYPE)
@@ -66,7 +65,6 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, C_DTYPE):
 
     if rank == 0:
         probs_mpi = np.zeros(1 << len(Wires)).astype(dev_mpi.R_DTYPE)
-        displacements = [i for i in range(commSize)]
     else:
         probs_mpi = None
         probs_cpu = None
@@ -82,7 +80,6 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, C_DTYPE):
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
-    commSize = comm.Get_size()
 
     dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
     dev_mpi = qml.device(device_name, wires=num_wires, mpi=True, c_dtype=C_DTYPE)

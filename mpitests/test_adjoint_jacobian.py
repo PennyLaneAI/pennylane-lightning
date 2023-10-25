@@ -18,13 +18,14 @@ Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
 import itertools
 import math
 from mpi4py import MPI
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 from scipy.stats import unitary_group
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
+
+import pytest
+from conftest import device_name, LightningDevice as ld
+
 
 I, X, Y, Z = (
     np.eye(2),

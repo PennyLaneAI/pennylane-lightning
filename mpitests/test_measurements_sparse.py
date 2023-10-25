@@ -14,15 +14,15 @@
 """
 Unit tests for Sparse Measurements Lightning devices.
 """
-# pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments
+# pylint: disable=protected-access,unused-import
 
-import pytest
-from conftest import device_name, LightningDevice as ld
 from mpi4py import MPI
-
 import numpy as np
 import pennylane as qml
 from pennylane import qchem
+
+import pytest
+from conftest import device_name, LightningDevice as ld
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -33,6 +33,7 @@ class TestSparseExpval:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
+        """Returns a device of the given precision."""
         return qml.device(device_name, mpi=True, wires=2, c_dtype=request.param)
 
     @pytest.mark.parametrize(
@@ -98,7 +99,7 @@ class TestSparseExpval:
         assert np.allclose(circuit_var(), cases[2], atol=tol, rtol=0)
 
 
-class TestSparseExpvalQChem:
+class TestSparseExpvalQChem:  # pylint: disable=too-few-public-methods
     """Tests for the expval function with qchem workflow"""
 
     symbols = ["Li", "H"]
@@ -132,7 +133,9 @@ class TestSparseExpvalQChem:
             ],
         ],
     )
-    def test_sparse_Pauli_words(self, qubits, wires, H, hf_state, excitations, tol, request):
+    def test_sparse_Pauli_words(  # pylint: disable=too-many-arguments
+        self, qubits, wires, H, hf_state, excitations, tol, request
+    ):
         """Test expval of some simple sparse Hamiltonian"""
 
         H_sparse = H.sparse_matrix(wires)

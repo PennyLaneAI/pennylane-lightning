@@ -17,12 +17,11 @@ Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 from mpi4py import MPI
+import numpy as np
+import pennylane as qml
 import pytest
 
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
-
-import numpy as np
-import pennylane as qml
 
 
 numQubits = 8
