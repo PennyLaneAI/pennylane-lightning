@@ -21,6 +21,7 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "LinearAlg.hpp"
+#include "MPILinearAlg.hpp"
 #include "Observables.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "Util.hpp"
@@ -210,6 +211,99 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
         }
 
         sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
+    }
+};
+
+/**
+ * @brief Sparse representation of Hamiltonian<StateVectorT>
+ *
+ */
+template <class StateVectorT>
+class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    // cuSparse required index type
+    using IdxT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
+
+  private:
+    using BaseType = SparseHamiltonianBase<StateVectorT>;
+
+  public:
+    /**
+     * @brief Create a SparseHamiltonianMPI from data, indices and offsets in
+     * CSR format.
+     *
+     * @param data Arguments to construct data
+     * @param indices Arguments to construct indices
+     * @param offsets Arguments to construct offsets
+     * @param wires Arguments to construct wires
+     */
+    template <typename T1, typename T2, typename T3 = T2, typename T4>
+    explicit SparseHamiltonianMPI(T1 &&data, T2 &&indices, T3 &&offsets,
+                                  T4 &&wires)
+        : BaseType{data, indices, offsets, wires} {}
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param data Argument to construct data
+     * @param indices Argument to construct indices
+     * @param offsets Argument to construct ofsets
+     * @param wires Argument to construct wires
+     */
+    static auto create(std::initializer_list<ComplexT> data,
+                       std::initializer_list<IdxT> indices,
+                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> wires)
+        -> std::shared_ptr<SparseHamiltonianMPI<StateVectorT>> {
+        return std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>(
+            new SparseHamiltonianMPI<StateVectorT>{
+                std::move(data), std::move(indices), std::move(offsets),
+                std::move(wires)});
+    }
+
+    /**
+     * @brief Updates the statevector SV:->SV', where SV' = a*H*SV, and where H
+     * is a sparse Hamiltonian.
+     *
+     */
+    void applyInPlace(StateVectorT &sv) const override {
+        auto mpi_manager = sv.getMPIManager();
+        if (mpi_manager.getRank() == 0) {
+            PL_ABORT_IF_NOT(
+                this->wires_.size() == sv.getTotalNumQubits(),
+                "SparseH wire count does not match state-vector size");
+        }
+        using CFP_t = typename StateVectorT::CFP_t;
+
+        auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
+
+        const size_t length_local = size_t{1} << sv.getNumLocalQubits();
+
+        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
+            std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
+                                                stream_id, true);
+        d_sv_prime->zeroInit();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager.Barrier();
+
+        cuUtil::SparseMV_cuSparseMPI<IdxT, PrecisionT, CFP_t>(
+            mpi_manager, length_local, this->offsets_.data(),
+            static_cast<int64_t>(this->offsets_.size()), this->indices_.data(),
+            this->data_.data(), const_cast<CFP_t *>(sv.getData()),
+            d_sv_prime->getData(), device_id, stream_id,
+            sv.getCusparseHandle());
+
+        sv.CopyGpuDataToGpuIn(d_sv_prime->getData(), d_sv_prime->getLength());
+        mpi_manager.Barrier();
     }
 };
 

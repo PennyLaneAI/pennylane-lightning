@@ -154,6 +154,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
+    using StateVectorT = TestType;
+    using SparseHamiltonianT = SparseHamiltonian<StateVectorT>;
+
+    SECTION("Copy constructibility") {
+        REQUIRE(std::is_copy_constructible_v<SparseHamiltonianT>);
+    }
+
+    SECTION("Move constructibility") {
+        REQUIRE(std::is_move_constructible_v<SparseHamiltonianT>);
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasher", "[Observables]",
                            (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
@@ -256,4 +270,32 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
                                   expected.data(), expected.size()));
         }
     }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
+                           (StateVectorCudaManaged), (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    const std::size_t num_qubits = 3;
+    std::mt19937 re{1337};
+
+    auto sparseH = SparseHamiltonian<StateVectorT>::create(
+        {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+         ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+         ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+        {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
+
+    auto init_state = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    StateVectorT state_vector(init_state.data(), init_state.size());
+
+    sparseH->applyInPlace(state_vector);
+
+    std::reverse(init_state.begin(), init_state.end());
+
+    REQUIRE(isApproxEqual(state_vector.getDataVector().data(),
+                          state_vector.getDataVector().size(),
+                          init_state.data(), init_state.size()));
 }

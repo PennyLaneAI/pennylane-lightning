@@ -18,4 +18,4 @@ repos:
           "-sn", # Don't display the score
           "--rcfile=.pylintrc", # Link to your config file
         ]
-      exclude: ^(bin/|doc/|scripts/|setup.py|tests/)
+      exclude: ^(bin/|doc/|scripts/|setup.py|tests/|mpitests/)

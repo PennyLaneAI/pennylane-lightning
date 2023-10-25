@@ -30,8 +30,8 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
-
 using Pennylane::Util::createProductState;
+using Pennylane::Util::createRandomStateVectorData;
 using Pennylane::Util::createZeroState;
 using Pennylane::Util::isApproxEqual;
 using Pennylane::Util::LightningException;
@@ -462,5 +462,86 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
           "[HamiltonianBase]") {
     if constexpr (BACKEND_FOUND) {
         testHamiltonianBase<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testSparseHamiltonianBase() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        const std::size_t num_qubits = 3;
+        std::mt19937 re{1337};
+
+        auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
+            {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+            {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - isEqual - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto sparseH0 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+            auto sparseH1 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+            auto sparseH2 = SparseHamiltonianBase<StateVectorT>::create(
+                {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                 ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+                {8, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
+                {0, 1, 2});
+
+            REQUIRE(*sparseH0 == *sparseH1);
+            REQUIRE(*sparseH0 != *sparseH2);
+        }
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - getWires - "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});
+        }
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - getObsName - "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE(sparseH->getObsName() ==
+                    "SparseHamiltonian: {\n"
+                    "'data' : \n"
+                    "{1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, "
+                    "{1, 0}, ,\n"
+                    "'indices' : \n"
+                    "7, 6, 5, 4, 3, 2, 1, 0, ,\n"
+                    "'offsets' : \n"
+                    "0, 1, 2, 3, 4, 5, 6, 7, 8, \n"
+                    "}");
+        }
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlace must fail - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+
+            REQUIRE_THROWS_AS(sparseH->applyInPlace(state_vector),
+                              LightningException);
+        }
+
+        testSparseHamiltonianBase<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHamiltonianBase<TestStateVectorBackends>();
     }
 }
