@@ -261,17 +261,14 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         raise TypeError(
                             f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
                         )
-                    else:
-                        # Memory size in bytes
-                        sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
-                        if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                            w_msg = (
-                                "The MPI buffer size is larger than the local state vector size."
-                            )
-                            warn(
-                                w_msg,
-                                RuntimeWarning,
-                            )
+                    # Memory size in bytes
+                    sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
+                    if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
+                        w_msg = "The MPI buffer size is larger than the local state vector size."
+                        warn(
+                            w_msg,
+                            RuntimeWarning,
+                        )
 
                 self._gpu_state = _gpu_dtype(c_dtype, mpi)(
                     self._mpi_manager,

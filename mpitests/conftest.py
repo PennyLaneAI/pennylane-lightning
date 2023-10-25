@@ -8,6 +8,8 @@
 """
 Pytest configuration file for PennyLane-Lightning-GPU test suite.
 """
+# pylint: disable=missing-function-docstring,wrong-import-order,unused-import
+
 import os
 import pytest
 from pennylane import numpy as np
