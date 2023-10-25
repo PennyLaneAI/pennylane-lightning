@@ -14,13 +14,13 @@
 """
 Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
 """
-# pylint: disable=protected-access,cell-var-from-loop
-from mpi4py import MPI
+# pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
+import math
+from mpi4py import MPI
 import pytest
 from conftest import device_name, LightningDevice as ld
 
-import math
 from scipy.stats import unitary_group
 import pennylane as qml
 from pennylane import numpy as np
@@ -75,11 +75,12 @@ def Rz(theta):
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
 
 
-class TestAdjointJacobian:
+class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
+        """Returns a PennyLane device."""
         return qml.device(
             device_name,
             wires=8,
@@ -292,7 +293,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
+    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]  # pylint: disable=no-member
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     def test_multiple_rx_gradient_expval_hermitian(self, tol, dev):
@@ -325,7 +326,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
+    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]  # pylint: disable=no-member
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
@@ -372,7 +373,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
+    qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]  # pylint: disable=no-member
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     @pytest.mark.parametrize("obs", [qml.PauliX, qml.PauliY])
@@ -397,7 +398,7 @@ class TestAdjointJacobian:
             qml.RX(0.543, wires=0)
             qml.CNOT(wires=[0, 1])
 
-            op
+            op  # pylint: disable=pointless-statement
 
             qml.Rot(1.3, -2.3, 0.5, wires=[0])
             qml.RZ(-0.5, wires=0)
@@ -411,6 +412,7 @@ class TestAdjointJacobian:
 
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
+        # pylint: disable=unnecessary-direct-lambda-call
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
@@ -455,6 +457,7 @@ class TestAdjointJacobian:
 
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
+        # pylint: disable=unnecessary-direct-lambda-call
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
         grad_D = dev.adjoint_jacobian(tape)
 
@@ -639,6 +642,7 @@ class TestAdjointJacobianQNode:
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
+        """Returns a PennyLane device."""
         return qml.device(
             device_name,
             wires=8,
@@ -708,7 +712,9 @@ class TestAdjointJacobianQNode:
 
     @pytest.mark.parametrize("reused_p", thetas**3 / 19)
     @pytest.mark.parametrize("other_p", thetas**2 / 1)
-    def test_fanout_multiple_params(self, reused_p, other_p, tol, mocker, dev):
+    def test_fanout_multiple_params(
+        self, reused_p, other_p, tol, mocker, dev
+    ):  # pylint: disable=too-many-arguments
         """Tests that the correct gradient is computed for qnodes which
         use the same parameter in multiple gates."""
 
@@ -843,7 +849,6 @@ class TestAdjointJacobianQNode:
         params2 = torch.tensor(0.4, requires_grad=True)
 
         h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
@@ -866,7 +871,7 @@ class TestAdjointJacobianQNode:
 
         jax = pytest.importorskip("jax")
         if dev.R_DTYPE == np.float64:
-            from jax.config import config
+            from jax.config import config  # pylint: disable=import-outside-toplevel
 
             config.update("jax_enable_x64", True)
 
@@ -1131,15 +1136,6 @@ def test_batching_H(returns):
     qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
     qnode_gpu_default = qml.QNode(circuit, dev_gpu_default, diff_method="adjoint")
 
-    def convert_to_array_cpu(params):
-        return np.hstack(qnode_cpu(params))
-
-    def convert_to_array_gpu(params):
-        return np.hstack(qnode_gpu(params))
-
-    def convert_to_array_gpu_default(params):
-        return np.hstack(qnode_gpu_default(params))
-
     j_cpu = qml.jacobian(qnode_cpu)(params)
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_gpu_default = qml.jacobian(qnode_gpu_default)(params)
@@ -1150,6 +1146,7 @@ def test_batching_H(returns):
 
 @pytest.fixture(scope="session")
 def create_xyz_file(tmp_path_factory):
+    """Creates a coordinate file for an H2 molecule in the XYZ format."""
     directory = tmp_path_factory.mktemp("tmp")
     file = directory / "h2.xyz"
     file.write_text("""2\nH2, Unoptimized\nH  1.0 0.0 0.0\nH -1.0 0.0 0.0""")
@@ -1160,8 +1157,10 @@ def create_xyz_file(tmp_path_factory):
     "batches",
     [False, True, 1, 2, 3, 4],
 )
-def test_integration_H2_Hamiltonian(create_xyz_file, batches):
-    skipp_condn = pytest.importorskip("openfermionpyscf")
+def test_integration_H2_Hamiltonian(
+    create_xyz_file, batches
+):  # pylint: disable=redefined-outer-name
+    """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
     n_electrons = 2
     np.random.seed(1337)
 
@@ -1177,7 +1176,7 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
         outpath=str(str_path.parent),
     )
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
-    singles, doubles = qml.qchem.excitations(n_electrons, qubits)
+    _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
     # Choose different batching supports here
     dev = qml.device(device_name, wires=qubits, mpi=True, batch_obs=batches)
