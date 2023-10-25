@@ -1161,6 +1161,8 @@ def test_integration_H2_Hamiltonian(
     create_xyz_file, batches
 ):  # pylint: disable=redefined-outer-name
     """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
+    skipp_condn = pytest.importorskip("openfermionpyscf")
+
     n_electrons = 2
     np.random.seed(1337)
 
