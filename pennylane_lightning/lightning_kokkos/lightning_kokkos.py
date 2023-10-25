@@ -195,7 +195,7 @@ if LK_CPP_BINARY_AVAILABLE:
             shots=None,
             batch_obs=False,
             kokkos_args=None,
-        ):  # pylint: disable=unused-argument, too-many-arguments
+        ):  # pylint: disable=unused-argument
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             if kokkos_args is None:

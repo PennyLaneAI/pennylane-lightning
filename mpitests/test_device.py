@@ -24,9 +24,6 @@ from mpi4py import MPI
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name != "lightning.gpu":
-    pytest.skip("Only lightning.gpu supports MPI. Skipping.", allow_module_level=True)
-
 
 def test_create_device():
     if MPI.COMM_WORLD.Get_size() > 2:
@@ -39,10 +36,6 @@ def test_create_device():
         dev = qml.device(device_name, mpi=True, wires=4)
 
 
-@pytest.mark.skipif(
-    not ld._CPP_BINARY_AVAILABLE,
-    reason="Only lightning.gpu has a kwarg mpi_buf_size.",
-)
 def test_unsupported_mpi_buf_size():
     with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
