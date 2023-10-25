@@ -14,10 +14,10 @@
 """
 Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
 """
-# pylint: disable=protected-access,cell-var-from-loop
+# pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
+import itertools
 from mpi4py import MPI
 import pytest
-import itertools
 
 from conftest import TOL_STOCHASTIC, device_name, fixture_params
 
@@ -37,6 +37,7 @@ fixture_params = itertools.product(
 
 
 def create_random_init_state(numWires, R_DTYPE, seed_value=48):
+    """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)
     num_elements = 1 << numWires
     init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
@@ -48,6 +49,7 @@ def create_random_init_state(numWires, R_DTYPE, seed_value=48):
 
 
 def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
+    """Wrapper applying a parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     commSize = comm.Get_size()
@@ -85,6 +87,7 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
 
 
 def apply_operation_gates_apply_param(tol, dev_mpi, operation, par, Wires):
+    """Wrapper applying a parametric gate with the apply method."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     commSize = comm.Get_size()
@@ -112,7 +115,7 @@ def apply_operation_gates_apply_param(tol, dev_mpi, operation, par, Wires):
         operation(*params, wires=Wires)
         return qml.state()
 
-    expected_output_cpu = circuit(*par).astype(c_dtype)
+    expected_output_cpu = np.array(circuit(*par)).astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     dev_mpi.syncH2D(local_state_vector)
@@ -123,6 +126,7 @@ def apply_operation_gates_apply_param(tol, dev_mpi, operation, par, Wires):
 
 
 def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
+    """Wrapper applying a non-parametric gate with QNode function."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     commSize = comm.Get_size()
@@ -160,6 +164,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
 
 
 def apply_operation_gates_apply_nonparam(tol, dev_mpi, operation, Wires):
+    """Wrapper applying a non-parametric gate with the apply method."""
     num_wires = numQubits
     comm = MPI.COMM_WORLD
     commSize = comm.Get_size()
@@ -187,7 +192,7 @@ def apply_operation_gates_apply_nonparam(tol, dev_mpi, operation, Wires):
         operation(wires=Wires)
         return qml.state()
 
-    expected_output_cpu = circuit().astype(c_dtype)
+    expected_output_cpu = np.array(circuit()).astype(c_dtype)
     comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
     dev_mpi.syncH2D(local_state_vector)
@@ -197,7 +202,9 @@ def apply_operation_gates_apply_nonparam(tol, dev_mpi, operation, Wires):
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-class TestApply:
+class TestApply:  # pylint: disable=missing-function-docstring,too-many-arguments
+    """Tests whether the device can apply supported quantum gates."""
+
     @pytest.fixture(params=fixture_params)
     def dev_mpi(self, request):
         return qml.device(
@@ -272,7 +279,7 @@ class TestApply:
     @pytest.mark.parametrize("operation", [qml.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("Wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
-    def test_apply_operation_1gatequbit_3param_gate_qnode_param(
+    def test_apply_operation_1gatequbit_3param_cgate_qnode_param(
         self, tol, operation, par, Wires, dev_mpi
     ):
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
@@ -361,31 +368,32 @@ class TestApply:
 
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
-    test_qubit_state_prep = [
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [0]),
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [1]),
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [2]),
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [3]),
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [4]),
-        (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [5]),
-        (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [1, 0]),
-        (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [0, 1]),
-        (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [0, 2]),
-        (
-            np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
-            [numQubits - 2, numQubits - 1],
-        ),
-        (
-            np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
-            [0, numQubits - 1],
-        ),
-        (
-            np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
-            [0, numQubits - 2],
-        ),
-    ]
-
-    @pytest.mark.parametrize("par, Wires", test_qubit_state_prep)
+    @pytest.mark.parametrize(
+        "par, Wires",
+        [
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [0]),
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [1]),
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [2]),
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [3]),
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [4]),
+            (np.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), [5]),
+            (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [1, 0]),
+            (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [0, 1]),
+            (np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]), [0, 2]),
+            (
+                np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
+                [numQubits - 2, numQubits - 1],
+            ),
+            (
+                np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
+                [0, numQubits - 1],
+            ),
+            (
+                np.array([0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)]),
+                [0, numQubits - 2],
+            ),
+        ],
+    )
     def test_qubit_state_prep(self, tol, par, Wires, dev_mpi):
         num_wires = numQubits
         comm = MPI.COMM_WORLD
@@ -465,11 +473,11 @@ class TestApply:
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-class TestSparseHamExpval:
+class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
     @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
-    def test_sparse_hamiltonian_expectation(self, C_DTYPE, tol):
+    def test_sparse_hamiltonian_expectation(self, C_DTYPE):
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
         num_global_wires = commSize.bit_length() - 1
@@ -569,10 +577,9 @@ class TestExpval:
             qml.PauliZ(numQubits - 2) @ qml.PauliZ(numQubits - 1),
         ],
     )
-    def test_expval_multiple_obs(self, obs, request, tol, C_DTYPE):
+    def test_expval_multiple_obs(self, obs, tol, C_DTYPE):
         """Test expval with Hamiltonian"""
         num_wires = numQubits
-        comm = MPI.COMM_WORLD
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
         dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
@@ -618,7 +625,6 @@ class TestExpval:
     def test_expval_hamiltonian(self, obs, coeffs, tol, C_DTYPE):
         """Test expval with Hamiltonian"""
         num_wires = numQubits
-        comm = MPI.COMM_WORLD
 
         ham = qml.Hamiltonian(coeffs, obs)
 
@@ -636,7 +642,7 @@ class TestExpval:
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
     def test_expval_non_pauli_word_hamiltionian(self, tol):
-        comm = MPI.COMM_WORLD
+        """Tests expectation values of non-Pauli word Hamiltonians."""
         dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True)
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
@@ -667,7 +673,6 @@ class TestGenerateSample:
         the correct dimensions
         """
         num_wires = numQubits
-        comm = MPI.COMM_WORLD
 
         dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE)
 
@@ -699,7 +704,6 @@ class TestGenerateSample:
         the correct values
         """
         num_wires = numQubits
-        comm = MPI.COMM_WORLD
 
         dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE)
         dev.reset()
@@ -719,7 +723,6 @@ class TestGenerateSample:
         the correct values
         """
         num_wires = numQubits
-        comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
@@ -741,7 +744,6 @@ class TestGenerateSample:
         the correct dimensions
         """
         num_wires = 3
-        comm = MPI.COMM_WORLD
 
         dev_gpumpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
@@ -761,7 +763,6 @@ class TestGenerateSample:
     def test_paulix_pauliy(self, C_DTYPE, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
-        comm = MPI.COMM_WORLD
 
         dev_gpumpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
@@ -804,7 +805,6 @@ class TestGenerateSample:
     def test_pauliz_hadamard(self, C_DTYPE, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        comm = MPI.COMM_WORLD
 
         dev_gpumpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
@@ -851,7 +851,6 @@ class TestTensorVar:
     def test_paulix_pauliy(self, C_DTYPE, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         num_wires = 3
-        comm = MPI.COMM_WORLD
 
         dev_gpumpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
@@ -886,7 +885,6 @@ class TestTensorVar:
     def test_pauliz_hadamard(self, C_DTYPE, tol=TOL_STOCHASTIC):
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         num_wires = 3
-        comm = MPI.COMM_WORLD
         dev_gpumpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
         )
@@ -917,7 +915,11 @@ class TestTensorVar:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.StatePrep(unitary_group.rvs(2**numQubits, random_state=0)[0], wires=wires)
+    # pylint: disable=undefined-variable
+    qml.StatePrep(
+        unitary_group.rvs(2**numQubits, random_state=0)[0],
+        wires=wires,
+    )
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))
@@ -977,7 +979,6 @@ def test_integration(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = numQubits
-    comm = MPI.COMM_WORLD
     dev_default = qml.device("lightning.qubit", wires=range(num_wires))
     dev_gpu = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=np.complex128)
 
@@ -1022,7 +1023,6 @@ custom_wires = ["alice", 3.14, -1, 0, "bob", "l", "m", "n"]
 def test_integration_custom_wires(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations and when using custom wire labels"""
-    comm = MPI.COMM_WORLD
     dev_lightning = qml.device("lightning.qubit", wires=custom_wires)
     dev_gpu = qml.device("lightning.gpu", wires=custom_wires, mpi=True, c_dtype=np.complex128)
 
