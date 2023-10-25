@@ -33,6 +33,7 @@ from pennylane import DeviceError
 
 numQubits = 8
 
+
 def create_random_init_state(numWires, R_DTYPE, seed_value=48):
     np.random.seed(seed_value)
     num_elements = 1 << numWires

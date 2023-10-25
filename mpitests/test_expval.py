@@ -105,7 +105,6 @@ class TestExpval:
         """Test that Hadamard expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
 
-
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])
 

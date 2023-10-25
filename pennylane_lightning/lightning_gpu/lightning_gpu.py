@@ -117,14 +117,14 @@ if LGPU_CPP_BINARY_AVAILABLE:
     def _gpu_dtype(dtype, mpi=False):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
-        if not mpi:
-            return StateVectorC128 if dtype == np.complex128 else StateVectorC64
-        return StateVectorMPIC128 if dtype == np.complex128 else StateVectorMPIC64
+        if mpi:
+            return StateVectorMPIC128 if dtype == np.complex128 else StateVectorMPIC64
+        return StateVectorC128 if dtype == np.complex128 else StateVectorC64
 
     def _adj_dtype(use_csingle, mpi=False):
-        if not mpi:
-            return AdjointJacobianC64 if use_csingle else AdjointJacobianC128
-        return AdjointJacobianMPIC64 if use_csingle else AdjointJacobianMPIC128
+        if mpi:
+            return AdjointJacobianMPIC64 if use_csingle else AdjointJacobianMPIC128
+        return AdjointJacobianC64 if use_csingle else AdjointJacobianC128
 
     def _mebibytesToBytes(mebibytes):
         return mebibytes * 1024 * 1024
@@ -261,16 +261,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         raise TypeError(
                             f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
                         )
-
-                if mpi_buf_size:
-                    # Memory size in bytes
-                    sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
-                    if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                        w_msg = "The MPI buffer size is larger than the local state vector size."
-                        warn(
-                            w_msg,
-                            RuntimeWarning,
-                        )
+                    else:
+                        # Memory size in bytes
+                        sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
+                        if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
+                            w_msg = (
+                                "The MPI buffer size is larger than the local state vector size."
+                            )
+                            warn(
+                                w_msg,
+                                RuntimeWarning,
+                            )
 
                 self._gpu_state = _gpu_dtype(c_dtype, mpi)(
                     self._mpi_manager,
@@ -771,22 +772,19 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return np.squeeze(np.mean(samples, axis=0))
 
             if observable.name in ["SparseHamiltonian"]:
-                if not self._mpi:
+                if self._mpi:
+                    # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                    # host(cpu) memory requirements
+                    obs = qml.Identity(0)
+                    Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+                    H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+                    CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                    # CSR_SparseHamiltonian for rank == 0
+                    if self._mpi_manager.getRank() == 0:
+                        CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+                else:
                     CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-                    return self.measurements.expval(
-                        CSR_SparseHamiltonian.indptr,
-                        CSR_SparseHamiltonian.indices,
-                        CSR_SparseHamiltonian.data,
-                    )
-                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                # host(cpu) memory requirements
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
-                # CSR_SparseHamiltonian for rank == 0
-                if self._mpi_manager.getRank() == 0:
-                    CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+
                 return self.measurements.expval(
                     CSR_SparseHamiltonian.indptr,
                     CSR_SparseHamiltonian.indices,
