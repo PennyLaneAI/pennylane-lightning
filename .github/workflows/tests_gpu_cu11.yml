@@ -79,7 +79,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
-          fetch-depth: 2
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -117,8 +116,10 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu11
-
+          cd main
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11
+      
       - name: Build and run unit tests
         run: |
           cd main
@@ -232,12 +233,6 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install cmake custatevec-cu11 openfermionpyscf
-
-      - name: Install Stable PennyLane
-        if: inputs.pennylane-version == 'stable'
-        run: |
-          cd main
-          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Build and install package
         env: 
