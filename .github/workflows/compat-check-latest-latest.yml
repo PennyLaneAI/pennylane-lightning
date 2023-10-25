@@ -14,13 +14,13 @@ jobs:
       lightning-version: latest
       pennylane-version: latest
   tests_lkokkos_gpu:
-    name: Lightning Compatibility test (tests_gpu) - latest/latest
+    name: Lightning Compatibility test (tests_gpu_kokkos) - latest/latest
     uses: ./.github/workflows/tests_gpu_kokkos.yml
     with:
       lightning-version: latest
       pennylane-version: latest
   tests_lgpu_gpu:
-    name: Lightning Compatibility test (tests_gpu) - latest/latest
+    name: Lightning Compatibility test (tests_gpu_cu11) - latest/latest
     uses: ./.github/workflows/tests_gpu_cu11.yml
     with:
       lightning-version: latest
