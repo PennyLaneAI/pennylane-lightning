@@ -7,27 +7,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  # tests_linux:
-  #   name: Lightning Compatibility test (tests_linux) - latest/latest
-  #   uses: ./.github/workflows/tests_linux.yml
-  #   with:
-  #     lightning-version: latest
-  #     pennylane-version: latest
-  # tests_lkokkos_gpu:
-  #   name: Lightning Compatibility test (tests_gpu) - latest/latest
-  #   uses: ./.github/workflows/tests_gpu_kokkos.yml
-  #   with:
-  #     lightning-version: latest
-  #     pennylane-version: latest
+  tests_linux:
+    name: Lightning Compatibility test (tests_linux) - latest/latest
+    uses: ./.github/workflows/tests_linux.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
+  tests_lkokkos_gpu:
+    name: Lightning Compatibility test (tests_gpu) - latest/latest
+    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
   tests_lgpu_gpu:
     name: Lightning Compatibility test (tests_gpu) - latest/latest
     uses: ./.github/workflows/tests_gpu_cu11.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-  # tests_without_binary:
-  #   name: Lightning Compatibility test (tests_without_binary) - latest/latest
-  #   uses: ./.github/workflows/tests_without_binary.yml
-  #   with:
-  #     lightning-version: latest
-  #     pennylane-version: latest
+  tests_without_binary:
+    name: Lightning Compatibility test (tests_without_binary) - latest/latest
+    uses: ./.github/workflows/tests_without_binary.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
