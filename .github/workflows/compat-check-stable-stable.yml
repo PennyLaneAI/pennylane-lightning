@@ -13,9 +13,21 @@ jobs:
     with:
       lightning-version: stable
       pennylane-version: stable
-  tests_gpu:
-    name: Lightning Compatibility test (tests_gpu) - stable/stable
+  tests_lkokkos_gpu:
+    name: Lightning Compatibility test (tests_lkokkos_gpu) - stable/stable
     uses: ./.github/workflows/tests_gpu_kokkos.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+  tests_lgpu_gpu:
+    name: Lightning Compatibility test (tests_lgpu_gpu) - stable/stable
+    uses: ./.github/workflows/tests_gpu_cu11.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+  tests_lgpu_gpu_mpi:
+    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - stable/stable
+    uses: ./.github/workflows/tests_linux_x86_mpi.yml
     with:
       lightning-version: stable
       pennylane-version: stable
