@@ -59,7 +59,11 @@ jobs:
         pl_backend: ["lightning_gpu"]
 
     name: C++ tests (Lightning-GPU)
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      - ${{ matrix.os }}
+      - self-hosted
+      - gpu
+
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -162,7 +166,11 @@ jobs:
         default_backend: ["lightning_qubit"]
 
     name: Python tests with LGPU
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      - ${{ matrix.os }}
+      - self-hosted
+      - gpu
+
 
     steps:
       - name: Validate GPU version and installed compiler
