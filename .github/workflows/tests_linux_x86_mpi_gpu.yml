@@ -228,8 +228,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-dev.txt
-          python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py openfermionpyscf
+          python -m pip install cmake custatevec-cu11 mpi4py openfermionpyscf
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Install Stable PennyLane
