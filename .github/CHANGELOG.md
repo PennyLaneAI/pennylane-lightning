@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add docs to `lightning_gpu` with single-GPU features.
+* Add docs to the `lightning_gpu` backend.
   [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
 
 * Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
