@@ -1161,7 +1161,7 @@ def test_integration_H2_Hamiltonian(
     create_xyz_file, batches
 ):  # pylint: disable=redefined-outer-name
     """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
-    skipp_condn = pytest.importorskip("openfermionpyscf")  # pylint: disable=unused-variable
+    _ = pytest.importorskip("openfermionpyscf")
 
     n_electrons = 2
     np.random.seed(1337)
@@ -1173,9 +1173,11 @@ def test_integration_H2_Hamiltonian(
         symbols,
         coordinates,
         method="pyscf",
+        basis="6-31G",
         active_electrons=n_electrons,
         name="h2",
         outpath=str(str_path.parent),
+        load_data=True,
     )
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
     _, doubles = qml.qchem.excitations(n_electrons, qubits)

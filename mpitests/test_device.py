@@ -14,7 +14,7 @@
 """
 Unit tests for Lightning devices creation.
 """
-# pylint: disable=protected-access,unused-variable,missing-function-docstring
+# pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
 import pytest
 from conftest import device_name, LightningDevice as ld

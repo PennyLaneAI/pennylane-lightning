@@ -12,7 +12,7 @@
 """
 Unit tests for the :mod:`pennylane_lightning.LightningGPU` device (MPI).
 """
-# pylint: disable=missing-function-docstring,unnecessary-comprehension,missing-function-docstring,too-many-arguments,wrong-import-order,unused-variable
+# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
 from mpi4py import MPI
 import pytest
 

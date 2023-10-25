@@ -1273,7 +1273,7 @@ def create_xyz_file(tmp_path_factory):
     [False, True, 1, 2, 3, 4],
 )
 def test_integration_H2_Hamiltonian(create_xyz_file, batches):
-    skipp_condn = pytest.importorskip("openfermionpyscf")
+    _ = pytest.importorskip("openfermionpyscf")
     n_electrons = 2
     np.random.seed(1337)
 
@@ -1287,9 +1287,10 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
         active_electrons=n_electrons,
         name="h2",
         outpath=str(str_path.parent),
+        load_data=True,
     )
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
-    singles, doubles = qml.qchem.excitations(n_electrons, qubits)
+    _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
     # Choose different batching supports here
     dev = qml.device(device_name, wires=qubits, batch_obs=batches)
