@@ -21,12 +21,10 @@ build:
     - libopenblas-base
     - libopenblas-dev
     - graphviz
+    - nvidia-cuda-toolkit
   jobs:
     pre_install:
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
-      - wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
-      - dpkg -i cuda-keyring_1.0-1_all.deb
-      - apt-get update && apt install cuda-11.8
     post_install:
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
       - rm -rf ./build && PATH=$PATH:/usr/local/cuda/bin PL_BACKEND="lightning_GPU" python setup.py bdist_wheel
