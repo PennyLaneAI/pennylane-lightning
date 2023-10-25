@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: ${{ github.event_name != 'pull_request' }} && contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner')
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on:
       - self-hosted
       - linux
