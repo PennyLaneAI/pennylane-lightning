@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `SparseHamiltonian` support for Lightning-GPU.
+* Add `SparseHamiltonian` support for Lightning-Qubit and Lightning-GPU.
   [(#526)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/526)
 
 * Add `SparseHamiltonian` support for Lightning-Kokkos.
