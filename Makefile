@@ -110,7 +110,7 @@ format-cpp:
 	./bin/format $(CHECK) --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning
 
 format-python:
-	black -l 100 ./pennylane_lightning/ ./tests $(CHECK)
+	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
 
 .PHONY: check-tidy
 check-tidy:

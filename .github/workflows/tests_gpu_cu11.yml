@@ -65,7 +65,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
-          fetch-depth: 2
 
       - uses: actions/setup-python@v4
         name: Install Python
@@ -103,12 +102,10 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu11
+          cd main
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11
       
-      - name: Install Latest PennyLane
-        if: inputs.pennylane-version == 'latest'
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
       - name: Build and run unit tests
         run: |
           cd main
@@ -204,15 +201,11 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install Latest PennyLane
-        # We want to install the latest PL on non workflow_call events
-        if: inputs.pennylane-version == 'latest'  || inputs.pennylane-version == ''
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
       - name: Install required packages
         run: |
-          python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov
+          cd main
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11 openfermionpyscf
 
       - name: Build and install package
         env: 

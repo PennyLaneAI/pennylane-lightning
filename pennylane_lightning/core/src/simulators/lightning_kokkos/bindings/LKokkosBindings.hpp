@@ -24,6 +24,7 @@
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
 #include "MeasurementsKokkos.hpp"
+#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
@@ -33,6 +34,7 @@ namespace {
 using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::Util::exp2;
@@ -212,6 +214,58 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.");
+}
+
+/**
+ * @brief Register observable classes.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables(py::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+
+    std::string class_name;
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    py::class_<SparseHamiltonian<StateVectorT>,
+               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str(),
+                                         py::module_local())
+        .def(py::init([](const np_arr_c &data,
+                         const std::vector<std::size_t> &indices,
+                         const std::vector<std::size_t> &indptr,
+                         const std::vector<std::size_t> &wires) {
+            using ComplexT = typename StateVectorT::ComplexT;
+            const py::buffer_info buffer_data = data.request();
+            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
+
+            return SparseHamiltonian<StateVectorT>{
+                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
+                indices, indptr, wires};
+        }))
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonian<StateVectorT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 }
 
 /**

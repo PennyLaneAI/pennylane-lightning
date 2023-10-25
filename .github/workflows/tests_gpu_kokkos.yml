@@ -1,4 +1,4 @@
-name: Testing (GPU)
+name: Testing::LKokkos::GPU
 on:
   pull_request:
   push:
@@ -237,6 +237,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
 
       - name: Install ML libraries for interfaces
         run: |

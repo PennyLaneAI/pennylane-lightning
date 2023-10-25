@@ -91,13 +91,15 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu11
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11
 
       - name: Validate GPU version and installed compiler
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/11.8
           which -a nvcc
           nvcc --version
+
       - name: Validate Multi-GPU packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
@@ -107,9 +109,6 @@ jobs:
           which -a mpicxx
           mpicxx --version
           module unload ${{ matrix.mpilib }}
-      - name: Install Latest PennyLane
-        if: inputs.pennylane-version == 'latest'
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
       - name: Build and run unit tests
         run: |
@@ -157,6 +156,107 @@ jobs:
           rm -rf * .git .gitignore .github
           pip cache purge
 
+
+  python_tests:
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+      - ubuntu-22.04
+      - multi-gpu
+    strategy:
+      max-parallel: 1
+      matrix:
+        mpilib: ["mpich", "openmpi"]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout pennyLane-lightning
+        uses: actions/checkout@v3
+        with:
+          fetch-tags: true
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          git fetch tags --force
+          git checkout $(git tag | sort -V | tail -1)
+
+      - uses: actions/setup-python@v4
+        id: setup_python
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      # Since the self-hosted runner can be re-used. It is best to set up all package
+      # installations in a virtual environment that gets cleaned at the end of each workflow run
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install required packages
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11 mpi4py openfermionpyscf
+          SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
+
+      - name: Build and install package
+        env:
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
+
+      - name: Run unit tests for MPI-enabled lightning.gpu device
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
+          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
+          # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun --oversubscribe -n 4 pytest -s -x mpitests/test_device.py -k test_create_device $COVERAGE_FLAGS
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-*.xml
+          if-no-files-found: error
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
   upload-to-codecov-linux-cpp:
     needs: ["cpp_tests"]
     name: Upload coverage data to codecov
@@ -177,6 +277,33 @@ jobs:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
       
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
+  upload-to-codecov-linux-python:
+    needs: ["python_tests"]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
       - name: Cleanup
         if: always()
         run: |

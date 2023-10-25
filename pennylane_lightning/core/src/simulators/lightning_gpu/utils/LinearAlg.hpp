@@ -307,20 +307,19 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  * @param handle cuSparse handle.
  */
 template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
-inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
-                              const index_type csrOffsets_size,
-                              const index_type *columns_ptr,
-                              const std::complex<Precision> *values_ptr,
-                              const index_type numNNZ, CFP_t *X, CFP_t *Y,
-                              DevTypeID device_id, cudaStream_t stream_id,
-                              cusparseHandle_t handle) {
-    const int64_t num_rows = static_cast<int64_t>(
+inline void
+SparseMV_cuSparse(const index_type *csrOffsets_ptr,
+                  const int64_t csrOffsets_size, const index_type *columns_ptr,
+                  const std::complex<Precision> *values_ptr,
+                  const int64_t numNNZ, CFP_t *X, CFP_t *Y, DevTypeID device_id,
+                  cudaStream_t stream_id, cusparseHandle_t handle) {
+    const int64_t num_rows =
         csrOffsets_size -
-        1); // int64_t is required for num_rows by cusparseCreateCsr
-    const int64_t num_cols = static_cast<int64_t>(
-        num_rows); // int64_t is required for num_cols by cusparseCreateCsr
-    const int64_t nnz = static_cast<int64_t>(
-        numNNZ); // int64_t is required for nnz by cusparseCreateCsr
+        1; // int64_t is required for num_rows by cusparseCreateCsr
+    const int64_t num_cols =
+        num_rows; // int64_t is required for num_cols by cusparseCreateCsr
+    const int64_t nnz =
+        numNNZ; // int64_t is required for nnz by cusparseCreateCsr
 
     const CFP_t alpha = {1.0, 0.0};
     const CFP_t beta = {0.0, 0.0};
@@ -338,13 +337,15 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     d_values.CopyHostDataToGpu(values_ptr, d_values.getLength(), false);
 
     cudaDataType_t data_type;
-    cusparseIndexType_t compute_type = CUSPARSE_INDEX_64I;
+    cusparseIndexType_t compute_type;
 
     if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                   std::is_same_v<CFP_t, double2>) {
         data_type = CUDA_C_64F;
+        compute_type = CUSPARSE_INDEX_64I;
     } else {
         data_type = CUDA_C_32F;
+        compute_type = CUSPARSE_INDEX_32I;
     }
 
     // CUSPARSE APIs
@@ -394,8 +395,7 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
         /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
         /* size_t* */ &bufferSize));
 
-    DataBuffer<cudaDataType_t, int> dBuffer{bufferSize, device_id, stream_id,
-                                            true};
+    DataBuffer<CFP_t, int> dBuffer{bufferSize, device_id, stream_id, true};
 
     // execute SpMV
     PL_CUSPARSE_IS_SUCCESS(cusparseSpMV(
@@ -439,19 +439,19 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
  */
 template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
 inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
-                              const index_type csrOffsets_size,
+                              const int64_t csrOffsets_size,
                               const index_type *columns_ptr,
                               const std::complex<Precision> *values_ptr,
-                              const index_type numNNZ, const CFP_t *X, CFP_t *Y,
+                              const int64_t numNNZ, const CFP_t *X, CFP_t *Y,
                               DevTypeID device_id, cudaStream_t stream_id,
                               cusparseHandle_t handle) {
-    const int64_t num_rows = static_cast<int64_t>(
+    const int64_t num_rows =
         csrOffsets_size -
-        1); // int64_t is required for num_rows by cusparseCreateCsr
-    const int64_t num_cols = static_cast<int64_t>(
-        num_rows); // int64_t is required for num_cols by cusparseCreateCsr
-    const int64_t nnz = static_cast<int64_t>(
-        numNNZ); // int64_t is required for nnz by cusparseCreateCsr
+        1; // int64_t is required for num_rows by cusparseCreateCsr
+    const int64_t num_cols =
+        num_rows; // int64_t is required for num_cols by cusparseCreateCsr
+    const int64_t nnz =
+        numNNZ; // int64_t is required for nnz by cusparseCreateCsr
 
     const CFP_t alpha = {1.0, 0.0};
     const CFP_t beta = {0.0, 0.0};
