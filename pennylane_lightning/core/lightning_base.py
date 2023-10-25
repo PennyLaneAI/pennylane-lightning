@@ -61,7 +61,7 @@ class LightningBase(QubitDevice):
             OpenMP.
     """
 
-    pennylane_requires = ">=0.30"
+    pennylane_requires = ">=0.32"
     version = __version__
     author = "Xanadu Inc."
     short_name = "lightning.base"
@@ -394,7 +394,7 @@ class LightningBase(QubitDevice):
 
 class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     # pylint: disable=missing-class-docstring, too-few-public-methods
-    pennylane_requires = ">=0.30"
+    pennylane_requires = ">=0.32"
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
