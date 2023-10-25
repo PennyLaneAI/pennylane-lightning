@@ -3,6 +3,7 @@
 source = pennylane_lightning
 omit =
     tests*
+    mpitests*
 
 [report]
 # Regexes for lines to exclude from consideration
