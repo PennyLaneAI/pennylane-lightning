@@ -2,6 +2,15 @@
 
 ### New features since last release
 
+* Add `SparseHamiltonian` support for Lightning-Qubit and Lightning-GPU.
+  [(#526)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/526)
+
+* Add `SparseHamiltonian` support for Lightning-Kokkos.
+  [(#527)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/527)
+
+* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
+  [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
+
 * Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
@@ -45,6 +54,9 @@
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 ### Improvements
+
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+  [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
 
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)

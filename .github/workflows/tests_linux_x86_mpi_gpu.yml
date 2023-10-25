@@ -175,12 +175,12 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout pennyLane-lightning-gpu
+      - name: Checkout pennyLane-lightning
         uses: actions/checkout@v3
         with:
           fetch-tags: true
 
-      - name: Switch to stable build of Lightning-GPU
+      - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
@@ -229,7 +229,7 @@ jobs:
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-dev.txt
           python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py
+          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py openfermionpyscf
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Install Stable PennyLane
@@ -243,22 +243,21 @@ jobs:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_BACKEND=lightning_gpu python setup.py build_ext -i --define="CMAKE_CXX_COMPILER=mpicxx;ENABLE_MPI=ON;CMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc;CMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }};Python_EXECUTABLE=${{ steps.python_path.outputs.python }}"
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
-      - name: Run PennyLane-Lightning-GPU unit tests
+      - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu python -m pytest ./tests/ $COVERAGE_FLAGS
           PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
+          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
           # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun --oversubscribe -n 4 pytest -s -x mpitests/test_device.py -k test_create_device $COVERAGE_FLAGS
-          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.xml
+          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-*.xml
           if-no-files-found: error
 
       - name: Cleanup

@@ -1,4 +1,4 @@
-name: Testing::LKokkos::CUDA
+name: Testing::LKokkos::GPU
 on:
   workflow_call:
     inputs:
@@ -257,6 +257,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'

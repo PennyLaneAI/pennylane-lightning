@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <complex>
 #include <cstddef>
 #include <cstdlib>
 #include <string>
@@ -170,7 +171,7 @@ class StateVectorKokkos final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(ComplexT *hostdata_, size_t length,
+    StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
@@ -178,12 +179,20 @@ class StateVectorKokkos final
         HostToDevice(hostdata_, length);
     }
 
+    StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
+    }
+
     /**
      * @brief Create a new state vector from data on the host.
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(const ComplexT *hostdata_, size_t length,
+    StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
@@ -692,7 +701,7 @@ class StateVectorKokkos final
      * @param new_data data pointer to new data.
      * @param new_size size of underlying data storage.
      */
-    void updateData(ComplexT *new_data, size_t new_size) {
+    void updateData(ComplexT *new_data, std::size_t new_size) {
         updateData(KokkosVector(new_data, new_size));
     }
 
@@ -744,7 +753,7 @@ class StateVectorKokkos final
      * @brief Copy data from the host space to the device space.
      *
      */
-    inline void HostToDevice(ComplexT *sv, size_t length) {
+    inline void HostToDevice(ComplexT *sv, std::size_t length) {
         Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
     }
 
@@ -752,7 +761,7 @@ class StateVectorKokkos final
      * @brief Copy data from the device space to the host space.
      *
      */
-    inline void DeviceToHost(ComplexT *sv, size_t length) const {
+    inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
         Kokkos::deep_copy(UnmanagedComplexHostView(sv, length), *data_);
     }
 
