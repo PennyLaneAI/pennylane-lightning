@@ -41,7 +41,6 @@ The Lightning plugin ecosystem provides fast state-vector simulators written in 
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
 PennyLane supports Python 3.9 and above.
 
-.. header-end-inclusion-marker-do-not-remove
 
 
 Features
@@ -53,7 +52,9 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
 * ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html>`_ programming models.
 
-The following platforms are supported:
+.. header-end-inclusion-marker-do-not-remove
+
+The following table summarizes the supported platforms and the primary installation mode:
 
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+
 |           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |
@@ -386,6 +387,8 @@ Note that "THREADS" backend is not recommended since `Kokkos <https://github.com
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
+.. docker-start-inclusion-marker-do-not-remove
+
 .. _docker-support:
 
 Docker support
@@ -403,11 +406,13 @@ Briefly, one can build the Docker Lightning images using:
 
 where ``${TARGET}`` is one of the following
 
-* wheel-lightning-qubit
-* wheel-lightning-kokkos-openmp
-* wheel-lightning-kokkos-cuda
-* wheel-lightning-gpu
-* wheel-lightning-kokkos-rocm
+* ``wheel-lightning-qubit``
+* ``wheel-lightning-gpu``
+* ``wheel-lightning-kokkos-openmp``
+* ``wheel-lightning-kokkos-cuda``
+* ``wheel-lightning-kokkos-rocm``
+
+.. docker-end-inclusion-marker-do-not-remove
 
 Contributing
 ************
