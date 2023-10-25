@@ -47,6 +47,7 @@ using namespace Pennylane;
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using namespace Pennylane::LightningGPU::Observables;
+using namespace Pennylane::LightningGPU::MPI;
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using Pennylane::LightningGPU::StateVectorCudaManaged;
 using namespace Pennylane::Util;
@@ -366,10 +367,10 @@ class MeasurementsMPI final
      * @return auto Expectation value.
      */
     template <class index_type>
-    auto expval(const index_type *csrOffsets_ptr,
-                const index_type csrOffsets_size, const index_type *columns_ptr,
+    auto expval(const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
+                const index_type *columns_ptr,
                 const std::complex<PrecisionT> *values_ptr,
-                const index_type numNNZ) -> PrecisionT {
+                const int64_t numNNZ) -> PrecisionT {
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
                 static_cast<size_t>(csrOffsets_size - 1) ==
@@ -657,10 +658,10 @@ class MeasurementsMPI final
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
     template <class index_type>
-    PrecisionT
-    var(const index_type *csrOffsets_ptr, const index_type csrOffsets_size,
-        const index_type *columns_ptr,
-        const std::complex<PrecisionT> *values_ptr, const index_type numNNZ) {
+    PrecisionT var(const index_type *csrOffsets_ptr,
+                   const int64_t csrOffsets_size, const index_type *columns_ptr,
+                   const std::complex<PrecisionT> *values_ptr,
+                   const int64_t numNNZ) {
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
                 static_cast<size_t>(csrOffsets_size - 1) ==

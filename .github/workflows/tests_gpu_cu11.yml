@@ -229,8 +229,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
-          python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu11
+          python -m pip install cmake custatevec-cu11 openfermionpyscf
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'

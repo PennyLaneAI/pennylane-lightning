@@ -209,4 +209,87 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
     }
 };
 
+/**
+ * @brief Sparse representation of Hamiltonian<StateVectorT>
+ *
+ */
+template <class StateVectorT>
+class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
+  private:
+    using BaseType = SparseHamiltonianBase<StateVectorT>;
+
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    // cuSparse required index type
+    using IdxT = typename BaseType::IdxT;
+
+    /**
+     * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
+     * format.
+     *
+     * @param data Arguments to construct data
+     * @param indices Arguments to construct indices
+     * @param offsets Arguments to construct offsets
+     * @param wires Arguments to construct wires
+     */
+    template <typename T1, typename T2, typename T3 = T2, typename T4>
+    explicit SparseHamiltonian(T1 &&data, T2 &&indices, T3 &&offsets,
+                               T4 &&wires)
+        : BaseType{data, indices, offsets, wires} {}
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param data Argument to construct data
+     * @param indices Argument to construct indices
+     * @param offsets Argument to construct ofsets
+     * @param wires Argument to construct wires
+     */
+    static auto create(std::initializer_list<ComplexT> data,
+                       std::initializer_list<IdxT> indices,
+                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> wires)
+        -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
+        return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
+            new SparseHamiltonian<StateVectorT>{
+                std::move(data), std::move(indices), std::move(offsets),
+                std::move(wires)});
+    }
+
+    /**
+     * @brief Updates the statevector SV:->SV', where SV' = a*H*SV, and where H
+     * is a sparse Hamiltonian.
+     *
+     */
+    void applyInPlace(StateVectorT &sv) const override {
+        PL_ABORT_IF_NOT(this->wires_.size() == sv.getNumQubits(),
+                        "SparseH wire count does not match state-vector size");
+        using CFP_t = typename StateVectorT::CFP_t;
+
+        const std::size_t nIndexBits = sv.getNumQubits();
+        const std::size_t length = std::size_t{1} << nIndexBits;
+
+        auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
+
+        cusparseHandle_t handle = sv.getCusparseHandle();
+
+        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
+            std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
+                                                true);
+
+        SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
+            this->offsets_.data(), static_cast<int64_t>(this->offsets_.size()),
+            this->indices_.data(), this->data_.data(),
+            static_cast<int64_t>(this->data_.size()), sv.getData(),
+            d_sv_prime->getData(), device_id, stream_id, handle);
+        sv.updateData(std::move(d_sv_prime));
+    }
+};
+
 } // namespace Pennylane::LightningGPU::Observables

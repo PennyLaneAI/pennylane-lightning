@@ -28,3 +28,6 @@ template class Observables::TensorProdObs<StateVectorKokkos<double>>;
 
 template class Observables::Hamiltonian<StateVectorKokkos<float>>;
 template class Observables::Hamiltonian<StateVectorKokkos<double>>;
+
+template class Observables::SparseHamiltonian<StateVectorKokkos<float>>;
+template class Observables::SparseHamiltonian<StateVectorKokkos<double>>;

@@ -68,7 +68,7 @@ class TestApply:
         assert dev.state.dtype == dev.C_DTYPE
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+        device_name in ["lightning.kokkos", "lightning.gpu"],
         reason="Only meaningful for lightning_qubit",
     )
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
@@ -1187,7 +1187,7 @@ class TestLightningDeviceIntegration:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+    device_name in ["lightning.kokkos", "lightning.gpu"],
     reason="lightning.kokkos/gpu does not support apply with rotations.",
 )
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
@@ -1267,7 +1267,7 @@ class TestTensorExpval:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+    device_name in ["lightning.kokkos", "lightning.gpu"],
     reason="lightning.kokkos/gpu does not support apply with rotations.",
 )
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
@@ -1333,7 +1333,7 @@ class TestTensorVar:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+    device_name in ["lightning.kokkos", "lightning.gpu"],
     reason="lightning.kokkos/lightning.gpu does not support apply with rotations.",
 )
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
