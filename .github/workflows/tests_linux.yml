@@ -140,7 +140,7 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          python -m pip uninstall -y pennylane && python -m pip install . -vv
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -289,7 +289,7 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          python -m pip uninstall -y pennylane && python -m pip install . -vv
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -482,7 +482,7 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          python -m pip uninstall -y pennylane && python -m pip install . -vv
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
