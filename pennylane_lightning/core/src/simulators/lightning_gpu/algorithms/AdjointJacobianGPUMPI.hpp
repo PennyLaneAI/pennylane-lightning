@@ -90,7 +90,7 @@ class AdjointJacobianMPI final
                                sv1.getDataBuffer().getDevTag().getDeviceID(),
                                sv1.getDataBuffer().getDevTag().getStreamID(),
                                sv1.getCublasCaller(), &result);
-
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto jac_single_param =
             sv2.getMPIManager().template allreduce<CFP_t>(result, "sum");
 
@@ -235,6 +235,8 @@ class AdjointJacobianMPI final
         if (!jd.hasTrainableParams()) {
             return;
         }
+        MPIManager mpi_manager_(jd.getMPIManager());
+
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
