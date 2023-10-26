@@ -41,8 +41,6 @@ The Lightning plugin ecosystem provides fast state-vector simulators written in 
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
 PennyLane supports Python 3.9 and above.
 
-
-
 Features
 ********
 
@@ -75,15 +73,11 @@ The following table summarizes the supported platforms and the primary installat
 
 .. installation_LQubit-start-inclusion-marker-do-not-remove
 
+Lightning-Qubit installation
+****************************
 
-Installation
-************
-
-Pip installation
-================
-
-PyPI wheels
------------
+PyPI wheels (pip)
+=================
 
 Lightning plugins can be installed using ``pip`` as follows
 
@@ -100,8 +94,8 @@ In order to install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends, yo
     $ pip install pennylane-lightning[kokkos]
 
 
-Installing from source
-----------------------
+Install from source
+===================
 
 To build Lightning plugins from source you can run
 
@@ -131,7 +125,7 @@ The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-
 Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos <lightning-kokkos>`_ section below.
 
 Development installation
-------------------------
+========================
 
 For development and testing, you can install by cloning the repository:
 
@@ -160,8 +154,8 @@ or with ``build_ext`` and the ``--define`` flag as follows:
 
 where ``-D`` must not be included before ``;``-separated options.
 
-Compile on Windows with MSVC
-----------------------------
+Compile MSVC (Windows)
+======================
 
 Lightning-Qubit can be compiled on Windows using the
 `Microsoft Visual C++ <https://visualstudio.microsoft.com/vs/features/cplusplus/>`_ compiler.
@@ -204,7 +198,7 @@ Supported options are
 - ``-DENABLE_CLANG_TIDY:BOOL=ON``
 
 Testing
-*******
+=======
 
 To test that a plugin is working correctly, test the Python code with:
 
@@ -220,18 +214,14 @@ The C++ code can be tested with
 
     $ PL_BACKEND=${PL_BACKEND} make test-cpp
 
-
 .. installation_LQubit-end-inclusion-marker-do-not-remove
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
 .. _lightning-gpu:
 
-Lightning-GPU
-*************
-
-PyPI wheels
-===========
+Lightning-GPU installation
+**************************
 
 Lightning-GPU can be installed using ``pip``:
 
@@ -243,8 +233,8 @@ Lightning-GPU requires the `cuQuantum SDK <https://developer.nvidia.com/cuquantu
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
 
-Installing from source
-======================
+Install L-GPU from source
+=========================
 
 To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
 
@@ -270,8 +260,8 @@ The Lightning-GPU can then be installed with ``pip``:
 
 To simplify the build, we recommend using the containerized build process described in section `Docker support <docker-support>`_.
 
-Build Lightning-GPU with MPI
-----------------------------
+Install L-GPU with MPI
+======================
 
 Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu11 <https://pypi.org/project/cuquantum-cu11/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
 ``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
@@ -289,11 +279,8 @@ Then Lightning-GPU with MPI support can then be installed with ``pip``:
     CMAKE_ARGS="-DENABLE_MPI=ON"  PL_BACKEND="lightning_gpu" python -m pip install -e .
 
 
-Testing
-=======
-
-Test Lightning-GPU with MPI support
------------------------------------
+Test L-GPU with MPI
+===================
 
 You may test the Python layer of the MPI enabled plugin as follows:
 
@@ -317,25 +304,22 @@ The C++ code is tested with
 
 .. _lightning-kokkos:
 
-Lightning-Kokkos
-****************
+Lightning-Kokkos installation
+*****************************
 
-PyPI wheels
-===========
-
-On linux systems, `lightning.kokkos` and be installed with the OpenMP backend by providing the optional ``[kokkos]`` tag:
+On linux systems, `lightning.kokkos` with the OpenMP backend can be installed by providing the optional ``[kokkos]`` tag:
 
 .. code-block:: console
 
     $ pip install pennylane-lightning[kokkos]
 
-Installing from source
-======================
+Install L-Kokkos from source
+============================
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, `lightning.kokkos` can be built to support any of these platforms when building from source.
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
-For example,
+For example, the following will build Kokkos for NVIDIA A100 cards
 
 .. code-block:: console
 

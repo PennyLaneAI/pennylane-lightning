@@ -14,7 +14,7 @@ Lightning plugins
 
 
 Devices
--------
+*******
 
 The Lightning ecosystem provides the following devices:
 

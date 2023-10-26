@@ -1,5 +1,5 @@
-pennylane_lightning
-===================
+Python API
+==========
 
 This section contains the API documentation for the Lightning packages.
 

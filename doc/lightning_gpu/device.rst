@@ -1,4 +1,4 @@
-Lightning-GPU device
+Lightning GPU device
 ======================
 
 The ``lightning.gpu`` device is an extension of PennyLane's built-in ``lightning.qubit`` device.

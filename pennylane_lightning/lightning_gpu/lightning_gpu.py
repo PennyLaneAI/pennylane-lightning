@@ -204,7 +204,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     }
 
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
-        """PennyLane-Lightning-GPU device.
+        """PennyLane Lightning GPU device.
 
         A GPU-backed Lightning device using NVIDIA cuQuantum SDK.
 
