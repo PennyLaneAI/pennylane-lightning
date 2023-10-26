@@ -140,7 +140,8 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -r ~/.cache/pip/selfcheck/ && python -m pip install . -vv --no-deps
+          rm -fr $(python -m pip cache dir)/selfcheck/
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -289,7 +290,8 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -r ~/.cache/pip/selfcheck/ && python -m pip install . -vv --no-deps
+          rm -fr $(python -m pip cache dir)/selfcheck/
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -324,7 +326,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-  build_and_cache_Kokkos:    
+  build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
@@ -482,7 +484,8 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -r ~/.cache/pip/selfcheck/ && python -m pip install . -vv --no-deps
+          rm -fr $(python -m pip cache dir)/selfcheck/
+          python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
