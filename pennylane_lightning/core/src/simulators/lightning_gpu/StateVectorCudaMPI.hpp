@@ -390,6 +390,7 @@ class StateVectorCudaMPI final
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
                 tgts_local, adjoint);
         }
+        mpi_manager_.Barrier();
     }
 
     /**
