@@ -18,16 +18,15 @@ This section contains the API documentation for the Lightning packages.
    :description: API documentation for the lightning_qubit package
    :link: ../lightning_qubit/package.html
 
+.. title-card::
+   :name: lightning_gpu
+   :description: API documentation for the lightning_gpu package
+   :link: ../lightning_gpu/package.html
 
 .. title-card::
    :name: lightning_kokkos
    :description: API documentation for the lightning_kokkos package
    :link: ../lightning_kokkos/package.html
-
-.. title-card::
-   :name: lightning_gpu
-   :description: API documentation for the lightning_gpu package
-   :link: ../lightning_gpu/package.html
 
 .. raw:: html
 
@@ -38,5 +37,5 @@ This section contains the API documentation for the Lightning packages.
    :hidden:
 
    ../lightning_qubit/package
-   ../lightning_kokkos/package
    ../lightning_gpu/package
+   ../lightning_kokkos/package

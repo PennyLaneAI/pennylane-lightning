@@ -27,5 +27,5 @@ Each device in the Lightning ecosystem is a separate Python package. Select the 
    :hidden:
 
    lightning_qubit/installation
-   lightning_kokkos/installation
    lightning_gpu/installation
+   lightning_kokkos/installation
