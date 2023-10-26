@@ -1223,6 +1223,9 @@ def test_integration_H2_Hamiltonian(
                 qml.SingleExcitation(params[i], wires=excitation)
         return qml.expval(H)
 
+    jac_func = qml.jacobian(circuit)
+    jac_func_comp = qml.jacobian(circuit_compare)
+
     params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
 
     jacs = jac_func(params, excitations=doubles)
