@@ -1149,7 +1149,7 @@ def create_xyz_file(tmp_path_factory):
     """Creates a coordinate file for an H2 molecule in the XYZ format."""
     directory = tmp_path_factory.mktemp("tmp")
     file = directory / "h2.xyz"
-    file.write_text("""2\nH2, Unoptimized\nH  0.799 0.0 0.0\nH -0.599 0.0 0.0""")
+    file.write_text("""2\nH2, Unoptimized\nH  1.0 0.0 0.0\nH -1.0 0.0 0.0""")
     yield file
 
 
@@ -1210,15 +1210,9 @@ def test_integration_H2_Hamiltonian(
     jac_func = qml.jacobian(circuit)
     jac_func_comp = qml.jacobian(circuit_compare)
 
-    # np.random.seed(1337)
-    # params = 1.0e-3 * np.random.rand(len(doubles))
-    comm = MPI.COMM_WORLD
-    # params = comm.bcast(params, root=0)
     params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
-
     jacs = jac_func(params, excitations=doubles)
     jacs_comp = jac_func_comp(params, excitations=doubles)
-    comm.Barrier()
 
     assert np.allclose(jacs, jacs_comp)
 
