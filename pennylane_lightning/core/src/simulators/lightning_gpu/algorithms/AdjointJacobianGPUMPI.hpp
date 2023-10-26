@@ -160,6 +160,9 @@ class AdjointJacobianMPI final
             // Create observable-applied state-vectors
             H_lambda.updateData(lambda_ref);
 
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+            mpi_manager_.Barrier();
+
             BaseType::applyObservable(H_lambda, *obs[obs_idx]);
 
             size_t trainableParamNumber = tp_size - 1;
@@ -304,6 +307,10 @@ class AdjointJacobianMPI final
                 break; // All done
             }
             mu.updateData(lambda);
+
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+            mpi_manager_.Barrier();
+
             BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
@@ -327,6 +334,10 @@ class AdjointJacobianMPI final
                 }
                 current_param_idx--;
             }
+
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+            mpi_manager_.Barrier();
+
             for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);
             }
