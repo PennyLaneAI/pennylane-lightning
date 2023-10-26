@@ -14,7 +14,7 @@ on:
   push:
     branches:
       - main
-  #pull_request:
+  pull_request:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -28,7 +28,8 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    #if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    if: ${{ github.sha == 'xxxxxxxx' }}
     runs-on:
       - self-hosted
       - linux
