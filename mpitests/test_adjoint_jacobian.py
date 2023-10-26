@@ -1163,22 +1163,37 @@ def test_integration_H2_Hamiltonian(
     """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
     _ = pytest.importorskip("openfermionpyscf")
 
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+
     n_electrons = 2
     np.random.seed(1337)
 
-    str_path = create_xyz_file
-    symbols, coordinates = qml.qchem.read_structure(str(str_path), outpath=str(str_path.parent))
+    if rank == 0:
+        str_path = create_xyz_file
+        symbols, coordinates = qml.qchem.read_structure(str(str_path), outpath=str(str_path.parent))
 
-    H, qubits = qml.qchem.molecular_hamiltonian(
-        symbols,
-        coordinates,
-        method="pyscf",
-        basis="6-31G",
-        active_electrons=n_electrons,
-        name="h2",
-        outpath=str(str_path.parent),
-        load_data=True,
-    )
+        H, qubits = qml.qchem.molecular_hamiltonian(
+            symbols,
+            coordinates,
+            method="pyscf",
+            basis="6-31G",
+            active_electrons=n_electrons,
+            name="h2",
+            outpath=str(str_path.parent),
+            load_data=True,
+        )
+    else:
+        symbols = None
+        coordinates = None
+        H = None
+        qubits = None
+
+    symbols = comm.bcast(symbols, root=0)
+    coordinates = comm.bcast(coordinates, root=0)
+    H = comm.bcast(H, root=0)
+    qubits = comm.bcast(qubits, root=0)
+
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
     _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
@@ -1211,6 +1226,7 @@ def test_integration_H2_Hamiltonian(
     jac_func_comp = qml.jacobian(circuit_compare)
 
     params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
+
     jacs = jac_func(params, excitations=doubles)
     jacs_comp = jac_func_comp(params, excitations=doubles)
 
