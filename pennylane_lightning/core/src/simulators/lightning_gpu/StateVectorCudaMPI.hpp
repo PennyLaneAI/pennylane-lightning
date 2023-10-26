@@ -353,7 +353,7 @@ class StateVectorCudaMPI final
                                              wires.begin() + ctrl_offset};
         const std::vector<std::size_t> tgts{wires.begin() + ctrl_offset,
                                             wires.end()};
-        
+
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
 
@@ -1646,6 +1646,8 @@ class StateVectorCudaMPI final
             PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
@@ -1802,6 +1804,8 @@ class StateVectorCudaMPI final
             PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
@@ -1926,6 +1930,8 @@ class StateVectorCudaMPI final
             PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         auto expect = mpi_manager_.allreduce<CFP_t>(local_expect, "sum");
         return expect;
     }
