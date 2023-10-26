@@ -1230,6 +1230,8 @@ def test_integration_H2_Hamiltonian(
     jacs = jac_func(params, excitations=doubles)
     jacs_comp = jac_func_comp(params, excitations=doubles)
 
+    comm.Barrier()
+
     assert np.allclose(jacs, jacs_comp)
 
 
@@ -1288,6 +1290,8 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
+
+    comm.Barrier()
 
     assert np.allclose(j_cpu, j_gpu)
 
@@ -1376,5 +1380,7 @@ def test_adjoint_SparseHamiltonian(returns):
 
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
+
+    comm.Barrier()
 
     assert np.allclose(j_cpu, j_gpu)
