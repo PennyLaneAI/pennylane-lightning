@@ -1,5 +1,5 @@
-pennylane_lightning
-===================
+Python API
+==========
 
 This section contains the API documentation for the Lightning packages.
 
@@ -18,6 +18,10 @@ This section contains the API documentation for the Lightning packages.
    :description: API documentation for the lightning_qubit package
    :link: ../lightning_qubit/package.html
 
+.. title-card::
+   :name: lightning_gpu
+   :description: API documentation for the lightning_gpu package
+   :link: ../lightning_gpu/package.html
 
 .. title-card::
    :name: lightning_kokkos
@@ -33,4 +37,5 @@ This section contains the API documentation for the Lightning packages.
    :hidden:
 
    ../lightning_qubit/package
+   ../lightning_gpu/package
    ../lightning_kokkos/package
