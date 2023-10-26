@@ -1,7 +1,6 @@
 name: Compat Check w/PL - latest/latest
 
 on:
-  pull_request:
   schedule:
     - cron: "0 0 * * 1-5"  # Run daily at 0am Mon-Fri
   workflow_dispatch:
