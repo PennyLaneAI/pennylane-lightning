@@ -51,7 +51,7 @@ jobs:
           nvidia-smi
 
   cpptestswithLGPU_cu11:
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name != 'workflow_call' }}
     needs: [builddeps]
     strategy:
       matrix:
