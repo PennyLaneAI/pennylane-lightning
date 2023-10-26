@@ -1149,7 +1149,7 @@ def create_xyz_file(tmp_path_factory):
     """Creates a coordinate file for an H2 molecule in the XYZ format."""
     directory = tmp_path_factory.mktemp("tmp")
     file = directory / "h2.xyz"
-    file.write_text("""2\nH2, Unoptimized\nH  1.0 0.0 0.0\nH -1.0 0.0 0.0""")
+    file.write_text("""2\nH2, Unoptimized\nH  0.799 0.0 0.0\nH -0.599 0.0 0.0""")
     yield file
 
 
