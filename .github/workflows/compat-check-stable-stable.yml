@@ -25,12 +25,6 @@ jobs:
     with:
       lightning-version: stable
       pennylane-version: stable
-  tests_lgpu_gpu_mpi:
-    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - stable/stable
-    uses: ./.github/workflows/tests_linux_x86_mpi.yml
-    with:
-      lightning-version: stable
-      pennylane-version: stable
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - stable/stable
     uses: ./.github/workflows/tests_without_binary.yml

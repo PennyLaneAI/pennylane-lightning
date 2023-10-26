@@ -17,7 +17,7 @@ on:
 
 env:
   CI_CUDA_ARCH: 86
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage_lkokkos_gpu.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   KOKKOS_VERSION: e542e989af99cb87881ee2a0d06916541ee76006
   TF_VERSION: 2.10.0
@@ -291,7 +291,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=None
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 2> /dev/null || echo Something went wrong with Pytest
-          mv coverage_lkokkos_gpu.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -316,7 +316,7 @@ jobs:
           PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage_lkokkos_gpu.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
