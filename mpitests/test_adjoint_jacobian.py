@@ -1161,7 +1161,6 @@ def test_integration_H2_Hamiltonian(
     create_xyz_file, batches
 ):  # pylint: disable=redefined-outer-name
     """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
-    comm = MPI.COMM_WORLD
     _ = pytest.importorskip("openfermionpyscf")
 
     comm = MPI.COMM_WORLD
@@ -1194,7 +1193,6 @@ def test_integration_H2_Hamiltonian(
     coordinates = comm.bcast(coordinates, root=0)
     H = comm.bcast(H, root=0)
     qubits = comm.bcast(qubits, root=0)
-
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
     _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
