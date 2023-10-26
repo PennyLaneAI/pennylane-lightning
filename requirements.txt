@@ -5,3 +5,4 @@ pybind11
 pytest
 pytest-cov
 pytest-mock
+custatevec-cu11
