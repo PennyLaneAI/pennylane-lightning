@@ -127,15 +127,21 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
         run: |
-          git clone https://github.com/PennyLaneAI/pennylane.git
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
           rm -fr $(python -m pip cache dir)/selfcheck/
-          python -m pip uninstall -y pennylane && python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0-rc0 
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -271,15 +277,21 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
         run: |
-          git clone https://github.com/PennyLaneAI/pennylane.git
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
           rm -fr $(python -m pip cache dir)/selfcheck/
-          python -m pip uninstall -y pennylane && python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0-rc0 
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -459,15 +471,21 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
         run: |
-          git clone https://github.com/PennyLaneAI/pennylane.git
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
           rm -fr $(python -m pip cache dir)/selfcheck/
-          python -m pip uninstall -y pennylane && python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0-rc0 
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
