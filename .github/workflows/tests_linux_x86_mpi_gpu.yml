@@ -17,7 +17,6 @@ on:
   #pull_request:
 
 env:
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage_lgpu_mpi.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   CI_CUDA_ARCH: 86
@@ -167,7 +166,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich", "openmpi"]
+        mpilib: ["openmpi"]
     timeout-minutes: 30
 
     steps:
@@ -244,8 +243,14 @@ jobs:
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
-          mv coverage_lgpu_mpi.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
+          cat > runscript<<EOF
+python -m pytest ./mpitests \
+--cov=pennylane_lightning --no-flaky-report -p no:warnings --tb=native --cov-report=term-missing \
+--cov-report=xml:./coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-\$OMPI_COMM_WORLD_RANK.xml
+EOF
+          cat runscript
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 runscript
+          # mv coverage_lgpu_mpi.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
           # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun --oversubscribe -n 4 pytest -s -x mpitests/test_device.py -k test_create_device $COVERAGE_FLAGS
 
       - name: Upload code coverage results
