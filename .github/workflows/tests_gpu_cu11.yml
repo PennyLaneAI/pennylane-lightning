@@ -17,7 +17,7 @@ on:
 
 env:
   CI_CUDA_ARCH: 86
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage_lgpu.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
@@ -264,7 +264,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv coverage_lgpu.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -293,7 +293,7 @@ jobs:
           PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.gpu --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.gpu --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv coverage_lgpu.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
