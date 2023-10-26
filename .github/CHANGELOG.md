@@ -85,6 +85,8 @@
 ### Documentation
 
 ### Bug fixes
+* Fix IO data read racing for MPI python unit tests for `H2 Hamiltonian` adjoint tests.
+  [(#533)](https://github.com/PennyLaneAI/pennylane-lightning/pull/533)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
