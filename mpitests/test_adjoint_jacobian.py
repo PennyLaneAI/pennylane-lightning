@@ -1212,12 +1212,13 @@ def test_integration_H2_Hamiltonian(
 
     # np.random.seed(1337)
     # params = 1.0e-3 * np.random.rand(len(doubles))
-    # comm = MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
     # params = comm.bcast(params, root=0)
     params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
 
     jacs = jac_func(params, excitations=doubles)
     jacs_comp = jac_func_comp(params, excitations=doubles)
+    comm.Barrier()
 
     assert np.allclose(jacs, jacs_comp)
 

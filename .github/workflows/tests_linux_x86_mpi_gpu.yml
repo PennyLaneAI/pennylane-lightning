@@ -244,10 +244,10 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           cat > runscript<<EOF
-python -m pytest ./mpitests \
---cov=pennylane_lightning --no-flaky-report -p no:warnings --tb=native --cov-report=term-missing \
---cov-report=xml:./coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-\$OMPI_COMM_WORLD_RANK.xml
-EOF
+          python -m pytest ./mpitests \
+          --cov=pennylane_lightning --no-flaky-report -p no:warnings --tb=native --cov-report=term-missing \
+          --cov-report=xml:./coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-\$OMPI_COMM_WORLD_RANK.xml
+          EOF
           cat runscript
           PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 runscript
           # mv coverage_lgpu_mpi.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
