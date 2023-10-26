@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add documentation updates for the `lightning_gpu` backend.
+  [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
+
 * Add `SparseHamiltonian` support for Lightning-Qubit and Lightning-GPU.
   [(#526)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/526)
 
@@ -28,10 +31,10 @@
 
 ### Breaking changes
 
-* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12.
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 
-* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.
   [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
