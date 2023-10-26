@@ -192,6 +192,9 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
         auto mpi_manager = sv.getMPIManager();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager.Barrier();
+
         using CFP_t = typename StateVectorT::CFP_t;
         DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
                                       sv.getDataBuffer().getDevTag());
@@ -287,6 +290,8 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                 this->wires_.size() == sv.getTotalNumQubits(),
                 "SparseH wire count does not match state-vector size");
         }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager.Barrier();
         using CFP_t = typename StateVectorT::CFP_t;
 
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
