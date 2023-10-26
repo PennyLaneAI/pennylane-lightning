@@ -1161,6 +1161,7 @@ def test_integration_H2_Hamiltonian(
     create_xyz_file, batches
 ):  # pylint: disable=redefined-outer-name
     """Tests getting the total energy and its derivatives for an H2 Hamiltonian."""
+    comm = MPI.COMM_WORLD
     _ = pytest.importorskip("openfermionpyscf")
 
     n_electrons = 2
@@ -1213,6 +1214,8 @@ def test_integration_H2_Hamiltonian(
     params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
     jacs = jac_func(params, excitations=doubles)
     jacs_comp = jac_func_comp(params, excitations=doubles)
+
+    comm.Barrier()
 
     assert np.allclose(jacs, jacs_comp)
 
@@ -1272,6 +1275,8 @@ def test_adjoint_SparseHamiltonian_custom_wires(returns):
 
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
+
+    comm.Barrier()
 
     assert np.allclose(j_cpu, j_gpu)
 
@@ -1360,5 +1365,7 @@ def test_adjoint_SparseHamiltonian(returns):
 
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_cpu = qml.jacobian(qnode_cpu)(params)
+
+    comm.Barrier()
 
     assert np.allclose(j_cpu, j_gpu)
