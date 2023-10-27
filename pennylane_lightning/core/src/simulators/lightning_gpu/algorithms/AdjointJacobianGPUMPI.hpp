@@ -90,7 +90,6 @@ class AdjointJacobianMPI final
                                sv1.getDataBuffer().getDevTag().getDeviceID(),
                                sv1.getDataBuffer().getDevTag().getStreamID(),
                                sv1.getCublasCaller(), &result);
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto jac_single_param =
             sv2.getMPIManager().template allreduce<CFP_t>(result, "sum");
 
@@ -159,9 +158,6 @@ class AdjointJacobianMPI final
 
             // Create observable-applied state-vectors
             H_lambda.updateData(lambda_ref);
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager_.Barrier();
 
             BaseType::applyObservable(H_lambda, *obs[obs_idx]);
 
@@ -238,7 +234,6 @@ class AdjointJacobianMPI final
         if (!jd.hasTrainableParams()) {
             return;
         }
-        MPIManager mpi_manager_(jd.getMPIManager());
 
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -308,9 +303,6 @@ class AdjointJacobianMPI final
             }
             mu.updateData(lambda);
 
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager_.Barrier();
-
             BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
@@ -334,9 +326,6 @@ class AdjointJacobianMPI final
                 }
                 current_param_idx--;
             }
-
-            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-            mpi_manager_.Barrier();
 
             for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);

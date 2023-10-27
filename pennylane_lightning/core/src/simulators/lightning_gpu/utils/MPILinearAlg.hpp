@@ -116,7 +116,6 @@ inline void SparseMV_cuSparseMPI(
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
     }
-    mpi_manager.Barrier();
 }
 
 } // namespace Pennylane::LightningGPU::Util

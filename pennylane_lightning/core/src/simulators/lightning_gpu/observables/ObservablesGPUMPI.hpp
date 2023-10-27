@@ -192,15 +192,10 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
         auto mpi_manager = sv.getMPIManager();
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager.Barrier();
-
         using CFP_t = typename StateVectorT::CFP_t;
         DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
                                       sv.getDataBuffer().getDevTag());
         buffer.zeroInit();
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager.Barrier();
 
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
             DevTag<int> dt_local(sv.getDataBuffer().getDevTag());
@@ -215,10 +210,8 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
                 tmp.getDataBuffer().getDevTag().getStreamID(),
                 tmp.getCublasCaller());
         }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager.Barrier();
-
         sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
     }
 };
@@ -290,8 +283,6 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                 this->wires_.size() == sv.getTotalNumQubits(),
                 "SparseH wire count does not match state-vector size");
         }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager.Barrier();
         using CFP_t = typename StateVectorT::CFP_t;
 
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
