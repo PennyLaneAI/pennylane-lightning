@@ -4,6 +4,7 @@ ninja
 flaky
 pybind11
 pytest
+pytest-benchmark
 pytest-cov
 pytest-mock
 pre-commit>=2.19.0

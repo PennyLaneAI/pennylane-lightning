@@ -140,7 +140,6 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
@@ -290,7 +289,6 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
@@ -484,7 +482,6 @@ jobs:
           cd pennylane
           git fetch --all
           git checkout $(git branch -a --list origin/v*rc* | tail -1)
-          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
