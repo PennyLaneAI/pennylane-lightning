@@ -233,8 +233,8 @@ Lightning-GPU requires the `cuQuantum SDK <https://developer.nvidia.com/cuquantu
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK`_ install guide for more information.
 
-Install L-GPU from source
-=========================
+Install Lightning-GPU from source
+=================================
 
 To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
 
@@ -260,8 +260,8 @@ The Lightning-GPU can then be installed with ``pip``:
 
 To simplify the build, we recommend using the containerized build process described in section `Docker support <docker-support>`_.
 
-Install L-GPU with MPI
-======================
+Install Lightning-GPU with MPI
+==============================
 
 Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu11 <https://pypi.org/project/cuquantum-cu11/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
 ``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
@@ -313,8 +313,8 @@ On linux systems, ``lightning.kokkos`` with the OpenMP backend can be installed 
 
     $ pip install pennylane-lightning[kokkos]
 
-Install L-Kokkos from source
-============================
+Install Lightning-Kokkos from source
+====================================
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
