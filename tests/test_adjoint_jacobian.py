@@ -1265,7 +1265,7 @@ def create_xyz_file(tmp_path_factory):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    not ld._CPP_BINARY_AVAILABLE,
     reason="Tests only for lightning.gpu",
 )
 @pytest.mark.parametrize(
