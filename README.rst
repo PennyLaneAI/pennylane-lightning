@@ -111,7 +111,7 @@ On Debian-based systems, this can be installed via ``apt``:
 
 .. code-block:: console
 
-    $ sudo apt -y update && 
+    $ sudo apt -y update &&
     $ sudo apt install g++ libomp-dev
 
 where ``libomp-dev`` is included to also install OpenMP.
@@ -121,8 +121,8 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
     $ brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to `Lightning-GPU <lightning-gpu>`_ section below.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos <lightning-kokkos>`_ section below.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to `Lightning-GPU <lightning-gpu-installation>`_ section below.
+Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos <lightning-kokkos-installation>`_ section below.
 
 Development installation
 ========================
@@ -218,7 +218,7 @@ The C++ code can be tested with
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
-.. _lightning-gpu:
+.. _lightning-gpu-installation:
 
 Lightning-GPU installation
 **************************
@@ -302,12 +302,12 @@ The C++ code is tested with
 
 .. installation_LKokkos-start-inclusion-marker-do-not-remove
 
-.. _lightning-kokkos:
+.. _lightning-kokkos-installation:
 
 Lightning-Kokkos installation
 *****************************
 
-On linux systems, `lightning.kokkos` with the OpenMP backend can be installed by providing the optional ``[kokkos]`` tag:
+On linux systems, ``lightning.kokkos`` with the OpenMP backend can be installed by providing the optional ``[kokkos]`` tag:
 
 .. code-block:: console
 
@@ -316,7 +316,7 @@ On linux systems, `lightning.kokkos` with the OpenMP backend can be installed by
 Install L-Kokkos from source
 ============================
 
-As Kokkos enables support for many different HPC-targeted hardware platforms, `lightning.kokkos` can be built to support any of these platforms when building from source.
+As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards
@@ -355,12 +355,13 @@ To build the plugin directly with CMake as above:
    cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPL_BACKEND=lightning_kokkos -G Ninja
    cmake --build build
 
-The supported backend options are "SERIAL", "OPENMP", "THREADS", "HIP" and "CUDA" and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
-One can activate simultaneously one serial, one parallel CPU host (e.g. "OPENMP", "THREADS") and one parallel GPU device backend (e.g. "HIP", "CUDA"), but not two of any category at the same time.
-For "HIP" and "CUDA", the appropriate software stacks are required to enable compilation and subsequent use.
+
+The supported backend options are ``SERIAL``, ``OPENMP``, ``THREADS``, ``HIP`` and ``CUDA`` and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
+One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
+For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
 A list of the architectures is found on the `Kokkos wiki <https://github.com/kokkos/kokkos/wiki/Macros#architectures>`_.
-Note that "THREADS" backend is not recommended since `Kokkos <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_ does not guarantee its safety.
+Note that ``THREADS`` backend is not recommended since `Kokkos does not guarantee its safety <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_.
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
 
