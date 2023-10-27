@@ -95,16 +95,17 @@ jobs:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
+      - name: Upload wheels to PyPI
+        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'pull_request' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+
       - uses: actions/download-artifact@v3
         if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'pull_request' }}
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: dist
 
-      - name: Upload wheels to PyPI
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository-url: https://test.pypi.org/legacy/
