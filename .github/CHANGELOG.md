@@ -67,7 +67,7 @@
 * Update `setup.py` to allow for multi-package co-existence. The `PennyLane_Lightning` package now is the responsible for the core functionality, and will be depended upon by all other extensions.
   [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
-* Refactor Lightning-Kokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
+* Redesign Lightning-Kokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
 
 * Refactor Lightning-Kokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
