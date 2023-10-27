@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+# Patch to not ship CUDA system libraries
+# Follows https://github.com/DIPlib/diplib/tree/master/tools/travis
+import sys
+
+from auditwheel.main import main
+from auditwheel.policy import _POLICIES as POLICIES
+
+# Do not include licensed dynamic libraries
+libs = [
+    "libcudart.so.11.0",
+    "libcublasLt.so.11",
+    "libcublas.so.11",
+    "libcusparse.so.11",
+    "libcustatevec.so.1",
+]
+
+print(f"Excluding {libs}")
+
+for p in POLICIES:
+    p["lib_whitelist"].extend(libs)
+
+if __name__ == "__main__":
+    sys.exit(main())
