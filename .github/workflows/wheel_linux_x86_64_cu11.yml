@@ -117,7 +117,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_gpu"]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master'}}
     steps:
