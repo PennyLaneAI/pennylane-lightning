@@ -231,7 +231,7 @@ Lightning-GPU can be installed using ``pip``:
 
 Lightning-GPU requires the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library is required).
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
-Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
+Please see the `cuQuantum SDK`_ install guide for more information.
 
 Install L-GPU from source
 =========================
@@ -245,7 +245,7 @@ To install Lightning-GPU from the package sources using the direct SDK path, Lig
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" pip install -e . -vv
 
-Then the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
@@ -268,7 +268,7 @@ Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (curr
 Both the ``MPICH`` and ``OpenMPI`` libraries are supported, provided they are compiled with CUDA support.
 The path to ``libmpi.so`` should be found in ``LD_LIBRARY_PATH``.
 It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python package within ``pip`` or ``conda`` inside a virtual environment.
-Please consult the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
+Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
 `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
 
 Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly.

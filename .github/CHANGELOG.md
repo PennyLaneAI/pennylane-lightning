@@ -34,7 +34,7 @@
 * Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12.
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 
-* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. Lightning-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.
   [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
@@ -92,7 +92,7 @@
 * Re-add support for `pip install pennylane-lightning[gpu]`.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
-* Switch most L-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in L-Kokkos.
+* Switch most Lightning-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in Lightning-Kokkos.
   [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
 
 * Fix RTD builds by removing unsupported `system_packages` configuration option.
