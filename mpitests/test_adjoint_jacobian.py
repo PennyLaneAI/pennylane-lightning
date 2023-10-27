@@ -1170,21 +1170,27 @@ def test_integration_H2_Hamiltonian(
     if comm.Get_rank() == 0:
         str_path = create_xyz_file
         symbols, coordinates = qml.qchem.read_structure(str(str_path), outpath=str(str_path.parent))
+        H, qubits = qml.qchem.molecular_hamiltonian(
+            symbols,
+            coordinates,
+            method="pyscf",
+            basis="6-31G",
+            active_electrons=n_electrons,
+            name="h2",
+            outpath=str(str_path.parent),
+            load_data=True,
+        )
     else:
         symbols = None
         coordinates = None
+        H = None
+        qubits = None
+
     symbols = comm.bcast(symbols, root=0)
     coordinates = comm.bcast(coordinates, root=0)
-    H, qubits = qml.qchem.molecular_hamiltonian(
-        symbols,
-        coordinates,
-        method="pyscf",
-        basis="6-31G",
-        active_electrons=n_electrons,
-        name="h2",
-        outpath=str(str_path.parent),
-        load_data=True,
-    )
+    H = comm.bcast(H, root=0)
+    qubits = comm.bcast(qubits, root=0)
+
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
     _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
