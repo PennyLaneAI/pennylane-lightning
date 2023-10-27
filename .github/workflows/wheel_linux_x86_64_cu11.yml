@@ -87,7 +87,7 @@ jobs:
             LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:$CUQUANTUM_SDK \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
