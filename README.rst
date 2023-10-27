@@ -121,8 +121,8 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
     $ brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to `Lightning-GPU <lightning-gpu-installation>`_ section below.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos <lightning-kokkos-installation>`_ section below.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to Lightning-GPU installation section.
+Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the Lightning-Kokkos installation section.
 
 Development installation
 ========================
@@ -218,8 +218,6 @@ The C++ code can be tested with
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
-.. _lightning-gpu-installation:
-
 Lightning-GPU installation
 **************************
 
@@ -258,7 +256,7 @@ The Lightning-GPU can then be installed with ``pip``:
 
     PL_BACKEND="lightning_gpu" python -m pip install -e .
 
-To simplify the build, we recommend using the containerized build process described in section `Docker support <docker-support>`_.
+To simplify the build, we recommend using the containerized build process described in Docker support section.
 
 Install Lightning-GPU with MPI
 ==============================
@@ -301,8 +299,6 @@ The C++ code is tested with
 .. installation_LGPU-end-inclusion-marker-do-not-remove
 
 .. installation_LKokkos-start-inclusion-marker-do-not-remove
-
-.. _lightning-kokkos-installation:
 
 Lightning-Kokkos installation
 *****************************
@@ -369,8 +365,6 @@ Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/li
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
 .. docker-start-inclusion-marker-do-not-remove
-
-.. _docker-support:
 
 Docker support
 **************
