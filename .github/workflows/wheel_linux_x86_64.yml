@@ -153,7 +153,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: |
-            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+            python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@master
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
           CIBW_TEST_COMMAND: |
