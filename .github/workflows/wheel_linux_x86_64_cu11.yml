@@ -114,6 +114,10 @@ jobs:
 
   upload-pypi:
     needs: linux-wheels-x86-64
+    strategy:
+      matrix:
+        arch: [x86_64]
+        pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master'}}
     steps:
