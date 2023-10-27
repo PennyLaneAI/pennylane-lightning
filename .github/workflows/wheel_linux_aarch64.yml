@@ -6,7 +6,6 @@ name: Wheel::Linux::ARM
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
   push:
     branches:
       - master
@@ -164,7 +163,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
@@ -177,7 +176,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/master'}}
+    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
       - uses: actions/download-artifact@v3
         with:
