@@ -9,11 +9,11 @@
 * Add the MPI test CI workflows of Lightning-GPU in compatibility cron jobs.
   [(#536)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/536)
 
-* Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
-  [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
-
 * Add release option in compatibility cron jobs to test the release candidates of PennyLane and the Lightning plugins against one another.
   [(#531)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/531)
+
+* Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
+  [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
 
 ### Documentation
 
@@ -25,7 +25,9 @@ This release contains contributions from (in alphabetical order):
 
 Vincent Michaud-Rioux
 
-# Release 0.33.0-dev
+---
+
+# Release 0.33.0
 
 ### New features since last release
 
