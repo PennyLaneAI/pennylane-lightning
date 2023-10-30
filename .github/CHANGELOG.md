@@ -1,3 +1,33 @@
+# Release 0.34.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Add more MPI synchronization for safter MPI calls.
+  [(#530)](https://github.com/PennyLaneAI/pennylane-lightning/pull/530)
+
+* Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
+  [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
+
+* Add release option in compatibility cron jobs to test the release candidates of PennyLane and the Lightning plugins against one another.
+  [(#531)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/531)
+
+### Documentation
+
+### Bug fixes
+
+* Fix MPI python unit tests for adjoint method.
+  [(#530)](https://github.com/PennyLaneAI/pennylane-lightning/pull/530)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux, Shuli Shu
+
 # Release 0.33.0
 
 ### New features since last release
@@ -88,6 +118,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix CI issues running py-cov with MPI. 
+  [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)

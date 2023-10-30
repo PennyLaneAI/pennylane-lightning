@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
   push:
     branches:
@@ -97,6 +97,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -119,6 +126,21 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -224,6 +246,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -246,6 +275,21 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -280,7 +324,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-  build_and_cache_Kokkos:    
+  build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
@@ -380,6 +424,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -417,6 +468,21 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
