@@ -6,6 +6,24 @@
 
 ### Improvements
 
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.33.0
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
 * Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
   [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
 
