@@ -1,6 +1,7 @@
 name: Compat Check w/PL - release/release
 
 on:
+  pull_request:
   schedule:
     - cron: "0 4 * * 1-5"  # Run daily at 0am Mon-Fri
   workflow_dispatch:
@@ -21,6 +22,12 @@ jobs:
   tests_lgpu_gpu:
     name: Lightning Compatibility test (tests_lgpu_gpu) - release/release
     uses: ./.github/workflows/tests_gpu_cu11.yml
+    with:
+      lightning-version: release
+      pennylane-version: release
+  tests_lgpu_gpu_mpi:
+    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - release/release
+    uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
     with:
       lightning-version: release
       pennylane-version: release
