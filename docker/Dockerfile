@@ -85,7 +85,7 @@ RUN python setup.py bdist_wheel
 FROM base-runtime AS wheel-lightning-qubit
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
+RUN pip install --no-cache-dir -U pennylane
 
 # Download Kokkos release and build OpenMP backend
 FROM base-build as build-kokkos-openmp
@@ -121,7 +121,7 @@ FROM base-runtime AS wheel-lightning-kokkos-openmp
 COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
+RUN pip install --no-cache-dir -U pennylane
 
 # Install CUDA-12 in build venv image
 FROM base-build-python as base-build-cuda
@@ -181,7 +181,7 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
+RUN pip install --no-cache-dir -U pennylane
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
@@ -209,7 +209,7 @@ RUN pip install --no-cache-dir custatevec-cu12
 ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.10/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
 COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
 RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
+RUN pip install --no-cache-dir -U pennylane
 
 # Install ROCm in build venv image
 FROM base-build-python as base-build-rocm
@@ -272,4 +272,4 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
+RUN pip install --no-cache-dir -U pennylane
