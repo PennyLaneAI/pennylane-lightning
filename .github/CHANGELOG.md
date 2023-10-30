@@ -9,11 +9,11 @@
 * Add more MPI synchronization for safter MPI calls.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
-* Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
-  [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
-
 * Add release option in compatibility cron jobs to test the release candidates of PennyLane and the Lightning plugins against one another.
   [(#531)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/531)
+
+* Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
+  [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
 
 ### Documentation
 
