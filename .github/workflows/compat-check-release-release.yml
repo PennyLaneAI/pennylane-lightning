@@ -7,33 +7,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  # tests_linux:
-  #   name: Lightning Compatibility test (tests_linux) - release/release
-  #   uses: ./.github/workflows/tests_linux.yml
-  #   with:
-  #     lightning-version: release
-  #     pennylane-version: release
-  # tests_lkokkos_gpu:
-  #   name: Lightning Compatibility test (tests_lkokkos_gpu) - release/release
-  #   uses: ./.github/workflows/tests_gpu_kokkos.yml
-  #   with:
-  #     lightning-version: release
-  #     pennylane-version: release
-  # tests_lgpu_gpu:
-  #   name: Lightning Compatibility test (tests_lgpu_gpu) - release/release
-  #   uses: ./.github/workflows/tests_gpu_cu11.yml
-  #   with:
-  #     lightning-version: release
-  #     pennylane-version: release
+  tests_linux:
+    name: Lightning Compatibility test (tests_linux) - release/release
+    uses: ./.github/workflows/tests_linux.yml
+    with:
+      lightning-version: release
+      pennylane-version: release
+  tests_lkokkos_gpu:
+    name: Lightning Compatibility test (tests_lkokkos_gpu) - release/release
+    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    with:
+      lightning-version: release
+      pennylane-version: release
+  tests_lgpu_gpu:
+    name: Lightning Compatibility test (tests_lgpu_gpu) - release/release
+    uses: ./.github/workflows/tests_gpu_cu11.yml
+    with:
+      lightning-version: release
+      pennylane-version: release
   tests_lgpu_gpu_mpi:
     name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - release/release
     uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
     with:
       lightning-version: release
       pennylane-version: release
-  # tests_without_binary:
-  #   name: Lightning Compatibility test (tests_without_binary) - release/release
-  #   uses: ./.github/workflows/tests_without_binary.yml
-  #   with:
-  #     lightning-version: release
-  #     pennylane-version: release
+  tests_without_binary:
+    name: Lightning Compatibility test (tests_without_binary) - release/release
+    uses: ./.github/workflows/tests_without_binary.yml
+    with:
+      lightning-version: release
+      pennylane-version: release

@@ -14,7 +14,7 @@ on:
   push:
     branches:
       - main
-  #pull_request:
+  pull_request:
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && contains(fromJSON('["push", "release"]'), github.event_name)
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     runs-on:
       - self-hosted
       - linux
@@ -159,7 +159,7 @@ jobs:
 
 
   python_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["pull_request"]'), github.event_name)
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["workflow_call"]'), github.event_name) }}
     runs-on:
       - self-hosted
       - linux
