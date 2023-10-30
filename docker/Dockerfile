@@ -21,7 +21,7 @@ ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG GCC_VERSION=11
 ARG KOKKOS_VERSION=4.1.00
-ARG LIGHTNING_VERSION=0.32.0
+ARG LIGHTNING_VERSION=0.33.0
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -135,7 +135,7 @@ FROM base-build-cuda as build-kokkos-cuda
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
 # RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 # RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
+RUN git clone --branch develop https://github.com/kokkos/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
 RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
     -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
@@ -182,19 +182,11 @@ RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm 
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
-WORKDIR /opt/pennylane-lightning-gpu
-ENV VIRTUAL_ENV=/opt/venv
-RUN python3 -m venv $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN wget --progress=dot:giga https://github.com/PennyLaneAI/pennylane-lightning-gpu/archive/refs/tags/v${LIGHTNING_VERSION}.tar.gz
-RUN tar -zxf v${LIGHTNING_VERSION}.tar.gz && ls -l
-RUN mv pennylane-lightning-gpu-${LIGHTNING_VERSION}/* /opt/pennylane-lightning-gpu
-RUN pip uninstall -y pennylane-lightning-gpu
+WORKDIR /opt/pennylane-lightning
 RUN pip install --no-cache-dir wheel custatevec-cu12
-RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    pip install --no-cache-dir -r requirements.txt
-RUN python setup.py build_ext --cuquantum=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-RUN python setup.py bdist_wheel
+RUN pip uninstall -y pennylane-lightning
+RUN PL_BACKEND=lightning_gpu python setup.py build_ext --cuquantum=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+RUN PL_BACKEND=lightning_gpu python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
