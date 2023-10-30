@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Add more MPI synchronization for safter MPI calls.
+* Add MPI synchronization in places to safely handle communicated data.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
 * Add release option in compatibility cron jobs to test the release candidates of PennyLane and the Lightning plugins against one another.
@@ -19,7 +19,7 @@
 
 ### Bug fixes
 
-* Fix MPI python unit tests for adjoint method.
+* Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
 ### Contributors

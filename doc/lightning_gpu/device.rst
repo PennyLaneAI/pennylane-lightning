@@ -1,5 +1,5 @@
 Lightning GPU device
-======================
+====================
 
 The ``lightning.gpu`` device is an extension of PennyLane's built-in ``lightning.qubit`` device.
 It extends the CPU-focused Lightning simulator to run using the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum state-vector evolution.
