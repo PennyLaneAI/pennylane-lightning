@@ -7,7 +7,7 @@
 ### Improvements
 
 * Add more MPI synchronization for safter MPI calls.
-  [(#530)](https://github.com/PennyLaneAI/pennylane-lightning/pull/530)
+  [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
 * Add GPU workflows in compatibility cron jobs to test Lightning-GPU and Lightning-Kokkos with the Kokkos CUDA backend.
   [(#528)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/528)
@@ -20,7 +20,7 @@
 ### Bug fixes
 
 * Fix MPI python unit tests for adjoint method.
-  [(#530)](https://github.com/PennyLaneAI/pennylane-lightning/pull/530)
+  [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
 ### Contributors
 
