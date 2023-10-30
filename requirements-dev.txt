@@ -7,6 +7,7 @@ pytest
 pytest-benchmark
 pytest-cov
 pytest-mock
+pytest-xdist
 pre-commit>=2.19.0
 black==23.7.0
 clang-format==14

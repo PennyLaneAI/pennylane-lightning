@@ -28,7 +28,8 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    if: ${{ github.sha == 'xxxxxxxx' }}
+    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
     runs-on:
       - self-hosted
       - linux
@@ -168,7 +169,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["openmpi"]
+        mpilib: ["mpich", "openmpi"]
     timeout-minutes: 30
 
     steps:
@@ -239,16 +240,8 @@ jobs:
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          cat > runscript<<EOF
-          python -m pytest ./mpitests \
-          --cov=pennylane_lightning --no-flaky-report -p no:warnings --tb=native --cov-report=term-missing \
-          --cov-report=xml:./coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-\$OMPI_COMM_WORLD_RANK.xml
-          EOF
-          cat runscript
-          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 bash runscript
-          # source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
-          # mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
+          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
           # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun --oversubscribe -n 4 pytest -s -x mpitests/test_device.py -k test_create_device $COVERAGE_FLAGS
 
       - name: Upload code coverage results
