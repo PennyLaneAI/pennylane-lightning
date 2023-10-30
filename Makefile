@@ -145,17 +145,17 @@ docker-build:
 docker-push:
 	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
 docker-build-all:
+	$(MAKE) docker-build target=lightning-qubit
 	$(MAKE) docker-build target=lightning-gpu
+	$(MAKE) docker-build target=lightning-kokkos-openmp
 	$(MAKE) docker-build target=lightning-kokkos-cuda
 	$(MAKE) docker-build target=lightning-kokkos-rocm
-	$(MAKE) docker-build target=lightning-kokkos-openmp
-	$(MAKE) docker-build target=lightning-qubit
 docker-push-all:
+	$(MAKE) docker-push target=lightning-qubit
 	$(MAKE) docker-push target=lightning-gpu
+	$(MAKE) docker-push target=lightning-kokkos-openmp
 	$(MAKE) docker-push target=lightning-kokkos-cuda
 	$(MAKE) docker-push target=lightning-kokkos-rocm
-	$(MAKE) docker-push target=lightning-kokkos-openmp
-	$(MAKE) docker-push target=lightning-qubit
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all

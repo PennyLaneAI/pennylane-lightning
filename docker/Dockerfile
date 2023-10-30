@@ -78,13 +78,14 @@ RUN pip install --no-cache-dir -r doc/requirements.txt
 FROM base-build-python AS build-wheel-lightning-qubit
 WORKDIR /opt/pennylane-lightning
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext --define="ENABLE_KOKKOS=OFF"
+RUN python setup.py build_ext
 RUN python setup.py bdist_wheel
 
 # Install lightning-qubit backend
 FROM base-runtime AS wheel-lightning-qubit
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
+RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
 
 # Download Kokkos release and build OpenMP backend
 FROM base-build as build-kokkos-openmp
@@ -120,6 +121,7 @@ FROM base-runtime AS wheel-lightning-kokkos-openmp
 COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
+RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
 
 # Install CUDA-12 in build venv image
 FROM base-build-python as base-build-cuda
@@ -135,7 +137,7 @@ FROM base-build-cuda as build-kokkos-cuda
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
 # RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 # RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN git clone --branch develop https://github.com/kokkos/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
+RUN git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
 RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
     -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
@@ -179,13 +181,14 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
+RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
 WORKDIR /opt/pennylane-lightning
 RUN pip install --no-cache-dir wheel custatevec-cu12
 RUN pip uninstall -y pennylane-lightning
-RUN PL_BACKEND=lightning_gpu python setup.py build_ext --cuquantum=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") PL_BACKEND=lightning_gpu python setup.py build_ext
 RUN PL_BACKEND=lightning_gpu python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
@@ -203,8 +206,10 @@ ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip install --no-cache-dir custatevec-cu12
-COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning-gpu/dist/ /
+ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.10/site-packages/cuquantum/lib:$LD_LIBRARY_PATH"
+COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
 RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
+RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
 
 # Install ROCm in build venv image
 FROM base-build-python as base-build-rocm
@@ -267,3 +272,4 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
+RUN pip install --no-cache-dir pennylane==$LIGHTNING_VERSION
