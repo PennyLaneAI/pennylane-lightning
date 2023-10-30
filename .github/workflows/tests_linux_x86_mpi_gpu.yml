@@ -28,8 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: ${{ github.sha == 'xxxxxxxx' }}
-    # if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || (inputs.lightning-version != '' && inputs.pennylane-version != '')
     runs-on:
       - self-hosted
       - linux
@@ -237,6 +236,8 @@ jobs:
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
+      # There are issues running py-cov with MPI. A solution is to use coverage as reported
+      # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
