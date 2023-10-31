@@ -32,7 +32,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### New features since last release
 
-* Add documentation updates for the `lightning_gpu` backend.
+* Add documentation updates for the `lightning.gpu` backend.
   [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
 
 * Add `SparseHamiltonian` support for Lightning-Qubit and Lightning-GPU.
@@ -47,7 +47,7 @@ Vincent Michaud-Rioux, Shuli Shu
 * Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
-* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
+* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning.gpu` and includes all single-GPU features.
   [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
 
 * Build Linux wheels for Lightning-GPU (CUDA-11).
@@ -119,7 +119,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### Bug fixes
 
-* Fix CI issues running py-cov with MPI. 
+* Fix CI issues running python-cov with MPI. 
   [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
@@ -143,7 +143,7 @@ Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ### New features since last release
 
-* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12).
+* The `lightning.kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12).
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.

@@ -10,5 +10,6 @@ pytest-mock
 pre-commit>=2.19.0
 black==23.7.0
 clang-format==14
+cmake
 custatevec-cu11
 pylint
