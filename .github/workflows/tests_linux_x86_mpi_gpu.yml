@@ -91,13 +91,15 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu11
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu11
 
       - name: Validate GPU version and installed compiler
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/11.8
           which -a nvcc
           nvcc --version
+
       - name: Validate Multi-GPU packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
@@ -107,9 +109,6 @@ jobs:
           which -a mpicxx
           mpicxx --version
           module unload ${{ matrix.mpilib }}
-      - name: Install Latest PennyLane
-        if: inputs.pennylane-version == 'latest'
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
       - name: Build and run unit tests
         run: |
@@ -222,16 +221,11 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install Latest PennyLane
-        # We want to install the latest PL on non workflow_call events
-        if: inputs.pennylane-version == 'latest'  || inputs.pennylane-version == ''
-        run: python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
-
       - name: Install required packages
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          python -m pip install pip~=22.0
-          python -m pip install ninja cmake custatevec-cu11 pytest pytest-mock flaky pytest-cov mpi4py openfermionpyscf
+          python -m pip install -r requirements-dev.txt
+          python -m pip install custatevec-cu11 mpi4py openfermionpyscf
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package
@@ -242,12 +236,15 @@ jobs:
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
+      # There are issues running py-cov with MPI. A solution is to use coverage as reported
+      # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 python -m pytest ./mpitests $COVERAGE_FLAGS
-          mv coverage.xml coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
-          # PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun --oversubscribe -n 4 pytest -s -x mpitests/test_device.py -k test_create_device $COVERAGE_FLAGS
+          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 \
+          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
+          coverage combine
+          coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3

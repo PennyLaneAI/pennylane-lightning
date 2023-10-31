@@ -87,7 +87,7 @@ jobs:
             LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:$CUQUANTUM_SDK \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
@@ -114,6 +114,10 @@ jobs:
 
   upload-pypi:
     needs: linux-wheels-x86-64
+    strategy:
+      matrix:
+        arch: [x86_64]
+        pl_backend: ["lightning_gpu"]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
