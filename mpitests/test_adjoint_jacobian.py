@@ -189,7 +189,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
 
         tape = qml.tape.QuantumScript(
-            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [stateprep(random_state, 0)]
+            [stateprep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
         )
 
         tape.trainable_params = {1}
