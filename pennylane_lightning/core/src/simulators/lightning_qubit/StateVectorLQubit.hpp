@@ -240,14 +240,24 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                   params);
     }
 
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Matrix data (in row-major format).
+     */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
-                        const std::vector<ComplexT> &gate_matrix) {
-        if (gate_matrix.size() > 0) {
-            applyMatrix(gate_matrix.data(), wires, inverse);
-        } else {
+                        const std::vector<ComplexT> &matrix) {
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        if (dispatcher.hasGateOp(opName)) {
             applyOperation(opName, wires, inverse, params);
+        } else {
+            applyMatrix(matrix.data(), wires, inverse);
         }
     }
 

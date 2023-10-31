@@ -225,6 +225,16 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Returns true if the gate operation exists
+     *
+     * @param gate_name Gate name
+     */
+    [[nodiscard]] auto hasGateOp(const std::string &gate_name) const
+        -> bool {
+        return str_to_gates_.contains(gate_name);
+    }
+
+    /**
      * @brief Generator name to generator operation
      *
      * @param gntr_name Generator name without "Generator" prefix
