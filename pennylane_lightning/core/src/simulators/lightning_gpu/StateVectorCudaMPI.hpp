@@ -339,6 +339,31 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
+     * @param matrix Matrix representation of gate.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adjoint,
+                        const std::vector<Precision> &params,
+                        [[maybe_unused]] const std::vector<ComplexT> &matrix) {
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, wires, adjoint, params, matrix_cu);
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector. Offloads to custatevec
+     * specific API calls if available. If unable, attempts to use prior cached
+     * gate values on the device. Lastly, accepts a host-provided matrix if
+     * otherwise, and caches on the device for later reuse.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Matrix representation of gate.
      */
     void applyOperation(
@@ -417,13 +442,12 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply gate to.
      * @param adjoint Indicate whether inverse should be taken.
      */
-    void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
+    void applyMatrix(const ComplexT *gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::string opName = {};
         size_t n = size_t{1} << wires.size();
-        const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
-                                                           gate_matrix + n * n);
+        const std::vector<ComplexT> matrix(gate_matrix, gate_matrix + n * n);
         std::vector<CFP_t> matrix_cu(matrix.size());
         std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
@@ -441,7 +465,7 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply gate to.
      * @param adjoint Indicate whether inverse should be taken.
      */
-    void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
+    void applyMatrix(const std::vector<ComplexT> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
@@ -998,10 +1022,10 @@ class StateVectorCudaMPI final
     /**
      * @brief Get a host data copy.
      *
-     * @return std::vector<std::complex<PrecisionT>>
+     * @return std::vector<ComplexT>
      */
-    auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
-        std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
+    auto getDataVector() -> std::vector<ComplexT> {
+        std::vector<ComplexT> data_host(BaseType::getLength());
         this->CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;
     }
@@ -1159,7 +1183,7 @@ class StateVectorCudaMPI final
         }
 
         auto expect = mpi_manager_.allreduce<double>(expect_local, "sum");
-        std::complex<PrecisionT> result{0, 0};
+        ComplexT result{0, 0};
 
         for (std::size_t idx = 0; idx < expect.size(); idx++) {
             result += static_cast<PrecisionT>(expect[idx]) * coeffs[idx];

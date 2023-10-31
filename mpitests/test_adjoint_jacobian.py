@@ -1381,3 +1381,49 @@ def test_adjoint_SparseHamiltonian(returns):
     comm.Barrier()
 
     assert np.allclose(j_cpu, j_gpu)
+
+
+@pytest.mark.parametrize("nuni", [1, 2])
+def test_qubit_unitary(nuni):
+    np.random.seed(1337)
+    n_wires = 6
+    dev = qml.device("lightning.gpu", wires=n_wires, mpi=True)
+    dev_def = qml.device("default.qubit", wires=n_wires)
+
+    par = 2 * np.pi * np.random.rand(n_wires)
+    U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
+    U, _ = np.linalg.qr(U)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    comm = MPI.COMM_WORLD
+    par = comm.bcast(par, root=0)
+    U = comm.bcast(U, root=0)
+    init_state = comm.bcast(init_state, root=0)
+
+    def circuit(x):
+        qml.StatePrep(init_state, wires=range(n_wires))
+        for i in range(n_wires // 2):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        qml.QubitUnitary(U, wires=range(nuni))
+        for i in range(n_wires // 2, n_wires):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        return qml.expval(qml.PauliZ(0))
+
+    circ = qml.QNode(circuit, dev, diff_method="adjoint")
+    circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    jac = qml.jacobian(circ)(par)
+    jac_ps = qml.jacobian(circ_ps)(par)
+    jac_def = qml.jacobian(circ_def)(par)
+
+    comm.Barrier()
+
+    assert jac.size == n_wires
+    assert not np.allclose(jac, 0.0)
+    assert np.allclose(jac, jac_ps)
+    assert np.allclose(jac, jac_def)

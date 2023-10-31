@@ -89,18 +89,13 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Run clang-tidy compilation
-        uses: nick-fields/retry@v2
-        with:
-          timeout_minutes: 30
-          max_attempts: 3
-          retry_on: error
-          command: |
-            cmake -BBuild -G Ninja . \
-              -DENABLE_CLANG_TIDY=ON \
-              -DCLANG_TIDY_BINARY=clang-tidy-14 \
-              -DBUILD_TESTS=ON \
-              -DENABLE_WARNINGS=ON \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER="$(which g++-11)" \
-              -DCMAKE_C_COMPILER="$(which gcc-11)" \
-            && cmake --build ./Build
+        run: |
+          cmake -BBuild -G Ninja . \
+            -DENABLE_CLANG_TIDY=ON \
+            -DCLANG_TIDY_BINARY=clang-tidy-14 \
+            -DBUILD_TESTS=ON \
+            -DENABLE_WARNINGS=ON \
+            -DPL_BACKEND=${{ matrix.pl_backend }} \
+            -DCMAKE_CXX_COMPILER="$(which g++-11)" \
+            -DCMAKE_C_COMPILER="$(which gcc-11)"
+          cmake --build ./Build
