@@ -90,7 +90,6 @@ class AdjointJacobianMPI final
                                sv1.getDataBuffer().getDevTag().getDeviceID(),
                                sv1.getDataBuffer().getDevTag().getStreamID(),
                                sv1.getCublasCaller(), &result);
-
         auto jac_single_param =
             sv2.getMPIManager().template allreduce<CFP_t>(result, "sum");
 
@@ -235,6 +234,7 @@ class AdjointJacobianMPI final
         if (!jd.hasTrainableParams()) {
             return;
         }
+
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
@@ -302,6 +302,7 @@ class AdjointJacobianMPI final
                 break; // All done
             }
             mu.updateData(lambda);
+
             BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
@@ -325,6 +326,7 @@ class AdjointJacobianMPI final
                 }
                 current_param_idx--;
             }
+
             for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);
             }

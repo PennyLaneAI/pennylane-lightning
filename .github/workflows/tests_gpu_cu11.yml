@@ -51,7 +51,7 @@ jobs:
           nvidia-smi
 
   cpptestswithLGPU_cu11:
-    if: ${{ github.event_name != 'workflow_call' }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     needs: [builddeps]
     strategy:
       matrix:
@@ -79,7 +79,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: main
-          fetch-depth: 2
 
       - uses: actions/setup-python@v4
         name: Install Python

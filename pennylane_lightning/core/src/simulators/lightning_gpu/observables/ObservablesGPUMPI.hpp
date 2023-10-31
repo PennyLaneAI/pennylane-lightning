@@ -191,6 +191,7 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
 
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
+        auto mpi_manager = sv.getMPIManager();
         using CFP_t = typename StateVectorT::CFP_t;
         DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
                                       sv.getDataBuffer().getDevTag());
@@ -209,8 +210,9 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
                 tmp.getDataBuffer().getDevTag().getStreamID(),
                 tmp.getCublasCaller());
         }
-
         sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager.Barrier();
     }
 };
 

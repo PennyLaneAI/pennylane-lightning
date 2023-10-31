@@ -140,9 +140,6 @@ If you are computing a large number of expectation values, or if you are using a
     import pennylane as qml
     dev = qml.device("lightning.qubit", wires=2, batch_obs=True)
 
-.. raw:: html
-
-    </div>
 
 **Markov Chain Monte Carlo sampling support:**
 
