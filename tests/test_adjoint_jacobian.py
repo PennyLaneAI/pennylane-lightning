@@ -1328,16 +1328,18 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="Only lightning.qubit supports QubitUnitary",
+    device_name not in ["lightning.kokkos", "lightning.qubit"],
+    reason="Only lightning.kokkos/qubit supports QubitUnitary",
 )
-def test_qubit_unitary():
+@pytest.mark.parametrize("nuni", [1, 2])
+def test_qubit_unitary(nuni):
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
 
     par = 2 * np.pi * np.random.rand(n_wires)
-    U = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
+    U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
+    U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
@@ -1347,7 +1349,7 @@ def test_qubit_unitary():
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
             qml.CNOT(wires=[i, (i + 1) % n_wires])
-        qml.QubitUnitary(U, wires=0)
+        qml.QubitUnitary(U, wires=range(nuni))
         for i in range(n_wires // 2, n_wires):
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
@@ -1361,6 +1363,7 @@ def test_qubit_unitary():
     jac_ps = qml.jacobian(circ_ps)(par)
     jac_def = qml.jacobian(circ_def)(par)
 
+    assert jac.size == n_wires
     assert not np.allclose(jac, 0.0)
     assert np.allclose(jac, jac_ps)
     assert np.allclose(jac, jac_def)
