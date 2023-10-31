@@ -79,7 +79,8 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         state.applyOperation(operations.getOpsName()[op_idx],
                              operations.getOpsWires()[op_idx],
                              !operations.getOpsInverses()[op_idx],
-                             operations.getOpsParams()[op_idx]);
+                             operations.getOpsParams()[op_idx],
+                             operations.getOpsMatrices()[op_idx]);
     }
 
     /**

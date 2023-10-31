@@ -240,6 +240,17 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                   params);
     }
 
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse,
+                        const std::vector<PrecisionT> &params,
+                        const std::vector<ComplexT> &gate_matrix) {
+        if (gate_matrix.size() > 0) {
+            applyMatrix(gate_matrix.data(), wires, inverse);
+        } else {
+            applyOperation(opName, wires, inverse, params);
+        }
+    }
+
     /**
      * @brief Apply a single generator to the state-vector using a given kernel.
      *

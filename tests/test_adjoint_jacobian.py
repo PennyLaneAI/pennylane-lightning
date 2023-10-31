@@ -1325,3 +1325,42 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     jacs_comp = jac_func_comp(params, excitations=doubles)
 
     assert np.allclose(jacs, jacs_comp)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="Only lightning.qubit supports QubitUnitary",
+)
+def test_qubit_unitary():
+    n_wires = 6
+    dev = qml.device(device_name, wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
+
+    par = 2 * np.pi * np.random.rand(n_wires)
+    U = 1 / np.sqrt(2) * np.array([[1, 1], [1, -1]])
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit(x):
+        qml.StatePrep(init_state, wires=range(n_wires))
+        for i in range(n_wires // 2):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        qml.QubitUnitary(U, wires=0)
+        for i in range(n_wires // 2, n_wires):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        return qml.expval(qml.PauliZ(0))
+
+    circ = qml.QNode(circuit, dev, diff_method="adjoint")
+    circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    jac = qml.jacobian(circ)(par)
+    jac_ps = qml.jacobian(circ_ps)(par)
+    jac_def = qml.jacobian(circ_def)(par)
+
+    assert not np.allclose(jac, 0.0)
+    assert np.allclose(jac, jac_ps)
+    assert np.allclose(jac, jac_def)
