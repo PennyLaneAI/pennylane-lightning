@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Update Dockerfile and rewrite the `build-wheel-lightning-gpu` stage to build Lightning-GPU from the `pennylane-lightning` monorepo.
+  [(#539)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/539)
+
 * Add the MPI test CI workflows of Lightning-GPU in compatibility cron jobs.
   [(#536)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/536)
 
@@ -91,7 +94,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### Improvements
 
-* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.
   [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
 
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
@@ -122,7 +125,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### Bug fixes
 
-* Fix CI issues running python-cov with MPI. 
+* Fix CI issues running python-cov with MPI.
   [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
