@@ -1327,10 +1327,6 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     assert np.allclose(jacs, jacs_comp)
 
 
-@pytest.mark.skipif(
-    device_name not in ["lightning.kokkos", "lightning.qubit"],
-    reason="Only lightning.kokkos/qubit supports QubitUnitary",
-)
 @pytest.mark.parametrize("nuni", [1, 2])
 def test_qubit_unitary(nuni):
     n_wires = 6
