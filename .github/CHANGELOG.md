@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Add the MPI test CI workflows of Lightning-GPU in compatibility cron jobs.
+  [(#536)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/536)
+
 * Add MPI synchronization in places to safely handle communicated data.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
