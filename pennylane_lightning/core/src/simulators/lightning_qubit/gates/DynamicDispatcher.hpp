@@ -229,8 +229,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      *
      * @param gate_name Gate name
      */
-    [[nodiscard]] auto hasGateOp(const std::string &gate_name) const
-        -> bool {
+    [[nodiscard]] auto hasGateOp(const std::string &gate_name) const -> bool {
         return str_to_gates_.contains(gate_name);
     }
 

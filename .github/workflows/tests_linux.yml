@@ -124,6 +124,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
@@ -273,6 +274,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
@@ -466,6 +468,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
