@@ -138,6 +138,9 @@ if(ENABLE_PYTHON)
                                                         )
 
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    if("${PL_BACKEND}" STREQUAL "lightning_gpu")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
+    endif()
 
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})
 endif()
