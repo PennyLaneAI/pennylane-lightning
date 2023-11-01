@@ -1,5 +1,5 @@
 lightning_gpu
-================
+=============
 
 .. automodapi:: pennylane_lightning.lightning_gpu
     :no-heading:

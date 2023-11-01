@@ -1,5 +1,5 @@
 pip==23.0
-git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0
+git+https://github.com/PennyLaneAI/pennylane.git@master
 ninja
 flaky
 pybind11
@@ -10,5 +10,6 @@ pytest-mock
 pre-commit>=2.19.0
 black==23.7.0
 clang-format==14
+cmake
 custatevec-cu11
 pylint
