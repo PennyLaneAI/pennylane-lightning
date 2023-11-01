@@ -17,12 +17,8 @@
 
 #pragma once
 
-#include <chrono>
 #include <future>
-#include <omp.h>
 #include <span>
-#include <thread>
-#include <variant>
 
 #include "AdjointJacobianBase.hpp"
 #include "DevTag.hpp"

@@ -17,12 +17,10 @@
 
 #pragma once
 
-#include <chrono>
 #include <future>
 #include <omp.h>
 #include <span>
 #include <thread>
-#include <variant>
 
 #include "AdjointJacobianBase.hpp"
 #include "DevTag.hpp"
@@ -134,7 +132,6 @@ class AdjointJacobian final
         const size_t tp_size = trainableParams.size();
 
         // Create a vector of threads for separate GPU executions
-        using namespace std::chrono_literals;
         std::vector<std::thread> threads;
         threads.reserve(num_gpus);
 
