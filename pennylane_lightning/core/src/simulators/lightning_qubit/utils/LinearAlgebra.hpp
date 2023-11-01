@@ -83,9 +83,9 @@ inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
               std::complex<T> &result, const size_t data_size) {
 #if defined(_OPENMP)
-#pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
-                                  ConstSum(omp_out, omp_in))                   \
-    initializer(omp_priv = std::complex<T>{0, 0})
+#pragma omp declare \
+            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
+            initializer(omp_priv=std::complex<T> {0, 0})
 
     size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
@@ -93,7 +93,8 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
     }
 
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
-    shared(v1, v2, data_size) reduction(sm : result)
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMult(*(v1 + i), *(v2 + i)));
@@ -153,9 +154,9 @@ inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
                std::complex<T> &result, const size_t data_size) {
 #if defined(_OPENMP)
-#pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
-                                  ConstSum(omp_out, omp_in))                   \
-    initializer(omp_priv = std::complex<T>{0, 0})
+#pragma omp declare \
+            reduction (sm:std::complex<T>:omp_out=ConstSum(omp_out, omp_in)) \
+            initializer(omp_priv=std::complex<T> {0, 0})
 #endif
 
 #if defined(_OPENMP)
@@ -167,7 +168,8 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 
 #if defined(_OPENMP)
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
-    shared(v1, v2, data_size) reduction(sm : result)
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMultConj(*(v1 + i), *(v2 + i)));

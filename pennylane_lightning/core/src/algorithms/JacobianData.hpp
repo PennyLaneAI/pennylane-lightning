@@ -70,8 +70,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<ComplexT>> ops_matrices)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_{std::move(ops_matrices)} {
+          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
+                                                      std::move(ops_matrices)} {
         for (const auto &p : ops_params) {
             if (!p.empty()) {
                 num_par_ops_++;
@@ -95,8 +95,8 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<size_t>> ops_wires,
             std::vector<bool> ops_inverses)
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)},
+          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
+                                                ops_inverses)},
           ops_matrices_(ops_name.size()) {
         for (const auto &p : ops_params) {
             if (p.size() > 0) {
