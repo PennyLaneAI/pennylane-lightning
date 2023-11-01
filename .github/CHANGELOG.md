@@ -31,7 +31,7 @@ This release contains contributions from (in alphabetical order):
 
 Vincent Michaud-Rioux, Shuli Shu
 
---
+---
 
 # Release 0.33.1
 
@@ -55,11 +55,8 @@ Lee J. O'Riordan
 
 ### New features since last release
 
-* Add documentation updates for the `lightning_gpu` backend.
+* Add documentation updates for the `lightning.gpu` backend.
   [(#525)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/525)
-
-
-### New features since last release
 
 * Add `SparseHamiltonian` support for Lightning-Qubit and Lightning-GPU.
   [(#526)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/526)
@@ -73,7 +70,7 @@ Lee J. O'Riordan
 * Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
   [(#514)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/514)
 
-* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning_gpu` and includes all single-GPU features.
+* Integrate Lightning-GPU into the Lightning monorepo. The new backend is named `lightning.gpu` and includes all single-GPU features.
   [(#499)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/499)
 
 * Build Linux wheels for Lightning-GPU (CUDA-11).
@@ -87,10 +84,10 @@ Lee J. O'Riordan
 
 ### Breaking changes
 
-* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12. 
+* Add `tests_gpu.yml` workflow to test the Lightning-Kokkos backend with CUDA-12.
   [(#494)](https://github.com/PennyLaneAI/pennylane-lightning/pull/494)
 
-* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. L-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.  
+* Implement `LM::GeneratorDoubleExcitation`, `LM::GeneratorDoubleExcitationMinus`, `LM::GeneratorDoubleExcitationPlus` kernels. Lightning-Qubit default kernels are now strictly from the `LM` implementation, which requires less memory and is faster for large state vectors.
   [(#512)](https://github.com/PennyLaneAI/pennylane-lightning/pull/512)
 
 * Add workflows validating compatibility between PennyLane and Lightning's most recent stable releases and development (latest) versions.
@@ -103,7 +100,7 @@ Lee J. O'Riordan
 * Cast integral-valued arrays to the device's complex type on entry in `_preprocess_state_vector` to ensure the state is correctly represented with floating-point numbers.
   [(#501)](https://github.com/PennyLaneAI/pennylane-lightning/pull/501)
 
-* Update DefaultQubit to DefaultQubitLegacy on Lightning fallback.
+* Update `DefaultQubit` to `DefaultQubitLegacy` on Lightning fallback.
   [(#500)](https://github.com/PennyLaneAI/pennylane-lightning/pull/500)
 
 * Enums defined in `GateOperation.hpp` start at `1` (previously `0`). `::BEGIN` is introduced in a few places where it was assumed `0` accordingly.
@@ -120,16 +117,16 @@ Lee J. O'Riordan
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
-* Update setup.py to allow for multi-package co-existence. The PennyLane_Lightning package now is the responsible for the core functionality, and will be depended upon by all other extensions.
+* Update `setup.py` to allow for multi-package co-existence. The `PennyLane_Lightning` package now is the responsible for the core functionality, and will be depended upon by all other extensions.
   [(#504)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/504)
 
-* Refactor LKokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
+* Redesign Lightning-Kokkos `StateVectorKokkos` class to use Kokkos `RangePolicy` together with special functors in `applyMultiQubitOp` to apply 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#490)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/490)
 
-* Refactor LKokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
+* Redesign Lightning-Kokkos `Measurements` class to use Kokkos `RangePolicy` together with special functors to obtain the expectation value of 1- to 4-wire generic unitary gates. For more than 4 wires, the general implementation using Kokkos `TeamPolicy` is employed to yield the best all-around performance.
   [(#489)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/489)
 
-* Add tests to increase LKokkos coverage.
+* Add tests to increase Lightning-Kokkos coverage.
   [(#485)](https://github.com/PennyLaneAI/pennylane-lightning/pull/485)
 
 * Add memory locality tag reporting and adjoint diff dispatch for `lightning.qubit` statevector classes.
@@ -145,13 +142,16 @@ Lee J. O'Riordan
 
 ### Bug fixes
 
+* Fix CI issues running python-cov with MPI. 
+  [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
+
 * Re-add support for `pip install pennylane-lightning[gpu]`.
   [(#515)](https://github.com/PennyLaneAI/pennylane-lightning/pull/515)
 
-* Switch most L-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in L-Kokkos.
+* Switch most Lightning-Qubit default kernels to `LM`. Add `LM::multiQubitOp` tests, failing when targeting out-of-order wires clustered close to `num_qubits-1`. Fix the `LM::multiQubitOp` kernel implementation by introducing a generic `revWireParity` routine and replacing the `bitswap`-based implementation. Mimic the changes fixing the corresponding `multiQubitOp` and `expval` functors in Lightning-Kokkos.
   [(#511)](https://github.com/PennyLaneAI/pennylane-lightning/pull/511)
 
-* Fix RTD builds by removing unsupported `sytem_packages` configuration option.
+* Fix RTD builds by removing unsupported `system_packages` configuration option.
   [(#491)](https://github.com/PennyLaneAI/pennylane-lightning/pull/491)
 
 ### Contributors
@@ -166,7 +166,7 @@ Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ### New features since last release
 
-* The `lightning_kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12).
+* The `lightning.kokkos` backend supports Nvidia GPU execution (with Kokkos v4 and CUDA v12).
   [(#477)](https://github.com/PennyLaneAI/pennylane-lightning/pull/477)
 
 * Complete overhaul of repository structure to facilitates integration of multiple backends. Refactoring efforts we directed to improve development performance, code reuse and decrease overall overhead to propagate changes through backends. New C++ modular build strategy allows for faster test builds restricted to a module. Update CI/CD actions concurrency strategy. Change minimal Python version to 3.9.
