@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* 1,2-qubit `qml.QubitUnitary` operators can be included in circuit differentiated with the adjoint method. 
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
+
 ### Breaking changes
 
 ### Improvements
