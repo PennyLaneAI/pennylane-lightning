@@ -42,22 +42,11 @@ jobs:
       - name: Run formatter
         run: PATH=$PATH:$(dirname $(which python3)) ./bin/format --check ./pennylane_lightning/core/src
 
-  build_and_cache_Kokkos:
-    name: "Build and cache Kokkos"
-    uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
-    with:
-      os: ubuntu-22.04
-
   tidy-cpp:
-    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-        exclude:
-          - exec_model: OPENMP
 
     name: Tidy (C++)
     runs-on: ${{ matrix.os }}
@@ -70,18 +59,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        run: |
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
         run: sudo apt update && sudo apt -y install cmake gcc-11 g++-11 ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt
