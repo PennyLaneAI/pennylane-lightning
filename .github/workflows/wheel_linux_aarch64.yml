@@ -6,9 +6,6 @@ name: Wheel::Linux::ARM
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
-    branches:
-      - v0.*
   push:
     branches:
       - master
