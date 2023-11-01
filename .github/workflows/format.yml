@@ -63,13 +63,18 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install software-properties-common
-          sudo add-apt-repository -y 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main'
-          sudo apt update
-          sudo apt -y install cmake clang-16 ninja-build libomp-dev
+          sudo apt -y install cmake ninja-build libomp-dev
           python -m pip install -r requirements-dev.txt
         env:
           DEBIAN_FRONTEND: noninteractive
+
+      - name: add custom deb repository
+        uses: myci-actions/add-deb-repo@11
+        with:
+          repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main
+          repo-name: llvm
+          keys-asc: https://apt.llvm.org/llvm-snapshot.gpg.key
+          install: clang-16
 
       - name: Run clang-tidy compilation
         run: |
