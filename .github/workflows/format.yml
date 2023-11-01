@@ -86,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt -y install cmake gcc-11 g++-11 ninja-build libomp-dev
+          sudo apt -y install cmake gcc-11 g++-11 libgcc-11-dev ninja-build libomp-dev
           python -m pip install -r requirements-dev.txt
           ls -la /usr/lib/gcc/x86_64-linux-gnu/11
           find /usr -name omp.h
