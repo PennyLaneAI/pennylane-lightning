@@ -158,7 +158,6 @@ class AdjointJacobian final
                     // Ensure No OpenMP threads spawned;
                     // to be resolved with streams in future releases
                     omp_set_num_threads(1);
-
                     // Grab a GPU index, and set a device tag
                     const auto id = dp.acquireDevice();
                     DevTag<int> dt_local(id, 0);
@@ -283,7 +282,7 @@ class AdjointJacobian final
             H_lambda.emplace_back(lambda.getNumQubits(), dt_local, true,
                                   cusvhandle, cublascaller, cusparsehandle);
         }
-        this->applyObservables(H_lambda, lambda, obs);
+        BaseType::applyObservables(H_lambda, lambda, obs);
 
         StateVectorT mu(lambda.getNumQubits(), dt_local, true, cusvhandle,
                         cublascaller, cusparsehandle);

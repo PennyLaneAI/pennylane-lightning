@@ -37,13 +37,6 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 /// @endcond
 
 namespace Pennylane::LightningGPU {
-// declarations of external functions (defined in initSV.cu).
-extern void setBasisState_CUDA(cuComplex *sv, cuComplex &value,
-                               const size_t index, bool async,
-                               cudaStream_t stream_id);
-extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
-                               const size_t index, bool async,
-                               cudaStream_t stream_id);
 /**
  * @brief CRTP-enabled base class for CUDA-capable state-vector simulators.
  *
@@ -209,11 +202,9 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      */
     void initSV(bool async = false) {
         size_t index = 0;
-        CFP_t value = {1, 0};
-        data_buffer_->zeroInit();
-        setBasisState_CUDA(data_buffer_->getData(), value, index, async,
-                           data_buffer_->getStream());
-    }
+        const std::complex<Precision> value(1, 0);
+        static_cast<Derived *>(this)->setBasisState(value, index, async);
+    };
 
   protected:
     using ParFunc = std::function<void(const std::vector<size_t> &, bool,

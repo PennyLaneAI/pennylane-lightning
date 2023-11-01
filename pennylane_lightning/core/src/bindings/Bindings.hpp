@@ -287,7 +287,8 @@ void registerInfo(py::module_ &m) {
  * @tparam StateVectorT
  * @param m Pybind module
  */
-template <class StateVectorT> void registerObservables(py::module_ &m) {
+template <class StateVectorT>
+void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
@@ -627,7 +628,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     /* Observables submodule */
     py::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerObservables<StateVectorT>(obs_submodule);
+    registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
+    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
 
     //***********************************************************************//
     //                             Measurements
@@ -636,7 +638,11 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
+#ifdef _ENABLE_PLGPU
+    pyclass_measurements.def(py::init<StateVectorT &>());
+#else
     pyclass_measurements.def(py::init<const StateVectorT &>());
+#endif
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 

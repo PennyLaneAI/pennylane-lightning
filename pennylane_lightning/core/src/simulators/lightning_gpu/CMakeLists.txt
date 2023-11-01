@@ -23,13 +23,16 @@ endif()
 set(LGPU_FILES  StateVectorCudaManaged.cpp initSV.cu
                 CACHE INTERNAL "" FORCE)
 
+if(ENABLE_MPI)
+    list(APPEND LGPU_FILES StateVectorCudaMPI.cpp)
+endif()
 
 add_library(${PL_BACKEND} STATIC ${LGPU_FILES})
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU=1")
 
 if(ENABLE_MPI)
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_MPI=1")
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU_MPI=1")
 endif()
 
 ##########################

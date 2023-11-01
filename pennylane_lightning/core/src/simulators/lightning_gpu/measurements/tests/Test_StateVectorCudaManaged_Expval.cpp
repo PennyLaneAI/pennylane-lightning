@@ -332,10 +332,12 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
+    using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
+                                           int32_t, int64_t>::type;
 
     SECTION("Sparse expval") {
         std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
@@ -344,17 +346,18 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
         StateVectorT sv{init_state.data(), init_state.size()};
         auto m = Measurements(sv);
 
-        std::vector<size_t> index_ptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-        std::vector<size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
-                                       4, 7, 5, 6, 5, 6, 4, 7};
+        std::vector<IdxT> index_ptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
+        std::vector<IdxT> indices = {0, 3, 1, 2, 1, 2, 0, 3,
+                                     4, 7, 5, 6, 5, 6, 4, 7};
         std::vector<ComplexT> values = {
             {3.1415, 0.0},  {0.0, -3.1415}, {3.1415, 0.0}, {0.0, 3.1415},
             {0.0, -3.1415}, {3.1415, 0.0},  {0.0, 3.1415}, {3.1415, 0.0},
             {3.1415, 0.0},  {0.0, -3.1415}, {3.1415, 0.0}, {0.0, 3.1415},
             {0.0, -3.1415}, {3.1415, 0.0},  {0.0, 3.1415}, {3.1415, 0.0}};
 
-        auto result = m.expval(index_ptr.data(), index_ptr.size(),
-                               indices.data(), values.data(), values.size());
+        auto result = m.expval(
+            index_ptr.data(), static_cast<int64_t>(index_ptr.size()),
+            indices.data(), values.data(), static_cast<int64_t>(values.size()));
         auto expected = TestType(3.1415);
         CHECK(expected == Approx(result).epsilon(1e-7));
     }
@@ -372,22 +375,23 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
         // measurements.
         Measurements<StateVectorT> Measurer(sv);
         const size_t num_qubits = 3;
-        const size_t data_size = Pennylane::Util::exp2(num_qubits);
+        size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<size_t> row_map;
-        std::vector<size_t> entries;
+        std::vector<IdxT> row_map;
+        std::vector<IdxT> entries;
         std::vector<ComplexT> values;
-        write_CSR_vectors(row_map, entries, values, data_size);
+        write_CSR_vectors<ComplexT, IdxT>(row_map, entries, values,
+                                          static_cast<IdxT>(data_size));
 
-        PrecisionT exp_values =
-            Measurer.expval(row_map.data(), row_map.size(), entries.data(),
-                            values.data(), values.size());
+        PrecisionT exp_values = Measurer.expval(
+            row_map.data(), static_cast<int64_t>(row_map.size()),
+            entries.data(), values.data(), static_cast<int64_t>(values.size()));
         PrecisionT exp_values_ref = 0.5930885;
         REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
 
-        PrecisionT var_values =
-            Measurer.var(row_map.data(), row_map.size(), entries.data(),
-                         values.data(), values.size());
+        PrecisionT var_values = Measurer.var(
+            row_map.data(), static_cast<int64_t>(row_map.size()),
+            entries.data(), values.data(), static_cast<int64_t>(values.size()));
         PrecisionT var_values_ref = 2.4624654;
         REQUIRE(var_values == Approx(var_values_ref).margin(1e-6));
     }

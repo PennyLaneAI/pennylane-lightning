@@ -6,3 +6,5 @@ pybind11
 sphinx
 sphinx-automodapi
 pennylane-sphinx-theme
+custatevec-cu11
+wheel

@@ -40,6 +40,21 @@ try:
         DevPool,
     )
 
+    try:
+        # pylint: disable=no-name-in-module
+        from pennylane_lightning.lightning_gpu_ops import (
+            StateVectorMPIC128,
+            StateVectorMPIC64,
+            MeasurementsMPIC128,
+            MeasurementsMPIC64,
+            MPIManager,
+            DevTag,
+        )
+
+        MPI_SUPPORT = True
+    except ImportError:
+        MPI_SUPPORT = False
+
     from ctypes.util import find_library
     from importlib import util as imp_util
 
@@ -91,10 +106,28 @@ if LGPU_CPP_BINARY_AVAILABLE:
         create_ops_listC128,
     )
 
-    def _gpu_dtype(dtype):
+    if MPI_SUPPORT:
+        from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
+            AdjointJacobianMPIC64,
+            create_ops_listMPIC64,
+            AdjointJacobianMPIC128,
+            create_ops_listMPIC128,
+        )
+
+    def _gpu_dtype(dtype, mpi=False):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
+        if mpi:
+            return StateVectorMPIC128 if dtype == np.complex128 else StateVectorMPIC64
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64
+
+    def _adj_dtype(use_csingle, mpi=False):
+        if mpi:
+            return AdjointJacobianMPIC64 if use_csingle else AdjointJacobianMPIC128
+        return AdjointJacobianC64 if use_csingle else AdjointJacobianC128
+
+    def _mebibytesToBytes(mebibytes):
+        return mebibytes * 1024 * 1024
 
     allowed_operations = {
         "Identity",
@@ -170,10 +203,18 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "SProd",
     }
 
-    class LightningGPU(LightningBase):
-        """PennyLane-Lightning-GPU device.
+    class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
+        """PennyLane Lightning GPU device.
+
+        A GPU-backed Lightning device using NVIDIA cuQuantum SDK.
+
+        Use of this device requires pre-built binaries or compilation from source. Check out the
+        :doc:`/lightning_gpu/installation` guide for more details.
+
         Args:
             wires (int): the number of wires to initialize the device with
+            mpi (bool): enable MPI support. MPI support will be enabled if ``mpi`` is set as``True``.
+            mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
             sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
             shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -183,7 +224,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
         """
 
-        name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK"
+        name = "Lightning GPU PennyLane plugin"
         short_name = "lightning.gpu"
 
         operations = allowed_operations
@@ -194,11 +235,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self,
             wires,
             *,
+            mpi: bool = False,
+            mpi_buf_size: int = 0,
             sync=False,
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
-        ):  # pylint: disable=unused-argument
+        ):  # pylint: disable=too-many-arguments
             if c_dtype is np.complex64:
                 self.use_csingle = True
             elif c_dtype is np.complex128:
@@ -209,13 +252,72 @@ if LGPU_CPP_BINARY_AVAILABLE:
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             self._dp = DevPool()
+
+            if not mpi:
+                self._mpi = False
+                self._num_local_wires = self.num_wires
+                self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)
+            else:
+                self._mpi = True
+                self._mpi_init_helper(self.num_wires)
+
+                if mpi_buf_size < 0:
+                    raise TypeError(f"Unsupported mpi_buf_size value: {mpi_buf_size}")
+
+                if mpi_buf_size:
+                    if mpi_buf_size & (mpi_buf_size - 1):
+                        raise TypeError(
+                            f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
+                        )
+                    # Memory size in bytes
+                    sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
+                    if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
+                        w_msg = "The MPI buffer size is larger than the local state vector size."
+                        warn(
+                            w_msg,
+                            RuntimeWarning,
+                        )
+
+                self._gpu_state = _gpu_dtype(c_dtype, mpi)(
+                    self._mpi_manager,
+                    self._devtag,
+                    mpi_buf_size,
+                    self._num_global_wires,
+                    self._num_local_wires,
+                )
+
             self._sync = sync
             self._batch_obs = batch_obs
-
-            self._num_local_wires = self.num_wires
-            self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)
-
             self._create_basis_state(0)
+
+        def _mpi_init_helper(self, num_wires):
+            """Set up MPI checks."""
+            if not MPI_SUPPORT:
+                raise ImportError("MPI related APIs are not found.")
+            # initialize MPIManager and config check in the MPIManager ctor
+            self._mpi_manager = MPIManager()
+            # check if number of GPUs per node is larger than
+            # number of processes per node
+            numDevices = self._dp.getTotalDevices()
+            numProcsNode = self._mpi_manager.getSizeNode()
+            if numDevices < numProcsNode:
+                raise ValueError(
+                    "Number of devices should be larger than or equal to the number of processes on each node."
+                )
+            # check if the process number is larger than number of statevector elements
+            if self._mpi_manager.getSize() > (1 << (num_wires - 1)):
+                raise ValueError(
+                    "Number of processes should be smaller than the number of statevector elements."
+                )
+            # set the number of global and local wires
+            commSize = self._mpi_manager.getSize()
+            self._num_global_wires = commSize.bit_length() - 1
+            self._num_local_wires = num_wires - self._num_global_wires
+            # set GPU device
+            rank = self._mpi_manager.getRank()
+            deviceid = rank % numProcsNode
+            self._dp.setDeviceID(deviceid)
+            self._devtag = DevTag(deviceid)
 
         @staticmethod
         def _asarray(arr, dtype=None):
@@ -266,11 +368,19 @@ if LGPU_CPP_BINARY_AVAILABLE:
         @property
         def create_ops_list(self):
             """Returns create_ops_list function of the matching precision."""
+            if self._mpi:
+                return create_ops_listMPIC64 if self.use_csingle else create_ops_listMPIC128
             return create_ops_listC64 if self.use_csingle else create_ops_listC128
 
         @property
         def measurements(self):
             """Returns Measurements constructor of the matching precision."""
+            if self._mpi:
+                return (
+                    MeasurementsMPIC64(self._gpu_state)
+                    if self.use_csingle
+                    else MeasurementsMPIC128(self._gpu_state)
+                )
             return (
                 MeasurementsC64(self._gpu_state)
                 if self.use_csingle
@@ -345,6 +455,11 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 if self.num_wires == self._num_local_wires:
                     self.syncH2D(self._reshape(state, output_shape))
                     return
+                local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
+                self._mpi_manager.Scatter(state, local_state, 0)
+                # Initialize the entire device state with the input state
+                self.syncH2D(self._reshape(local_state, output_shape))
+                return
 
             # generate basis states on subset of qubits via the cartesian product
             basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
@@ -439,6 +554,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):
+            """Applies a list of operations to the state tensor."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
                 if isinstance(operations[0], StatePrep):
@@ -529,6 +645,12 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return self._gpu_state
 
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
+            """Implements the adjoint method outlined in
+            `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
+
+            After a forward pass, the circuit is reversed by iteratively applying adjoint
+            gates to scan backwards through the circuit.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -550,7 +672,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # Check adjoint diff support
             self._check_adjdiff_supported_operations(tape.operations)
 
-            processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+            processed_data = self._process_jacobian_tape(
+                tape, starting_state, use_device_state, self._mpi
+            )
 
             if not processed_data:  # training_params is empty
                 return np.array([], dtype=self.state.dtype)
@@ -565,7 +689,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             - Evenly distribute the observables over all available GPUs (`batch_obs=True`): This will evenly split the data into ceil(num_obs/num_gpus) chunks, and allocate enough space on each GPU up-front before running through them concurrently. This relies on C++ threads to handle the orchestration.
             - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
             """
-            adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
+            adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
             if self._batch_obs:
                 adjoint_jacobian = adjoint_jacobian.batched
@@ -589,7 +713,42 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
         def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
-            """Generate the processing function required to compute the vector-Jacobian products of a tape."""
+            """Generate the processing function required to compute the vector-Jacobian products
+            of a tape.
+
+            This function can be used with multiple expectation values or a quantum state.
+            When a quantum state is given,
+
+            .. code-block:: python
+
+                vjp_f = dev.vjp([qml.state()], grad_vec)
+                vjp = vjp_f(tape)
+
+            computes :math:`w = (w_1,\\cdots,w_m)` where
+
+            .. math::
+
+                w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
+
+            Here, :math:`m` is the total number of trainable parameters,
+            :math:`\\pmb{\\theta}` is the vector of trainable parameters and
+            :math:`\\psi_{\\pmb{\\theta}}` is the output quantum state.
+
+            Args:
+                measurements (list): List of measurement processes for vector-Jacobian product.
+                    Now it must be expectation values or a quantum state.
+                grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
+                    shape of the corresponding tape, i.e. number of measurements if the return
+                    type is expectation or :math:`2^N` if the return type is statevector
+                starting_state (tensor_like): post-forward pass state to start execution with.
+                    It should be complex-valued. Takes precedence over ``use_device_state``.
+                use_device_state (bool): use current device state to initialize.
+                    A forward pass of the same circuit should be the last thing the device
+                    has executed. If a ``starting_state`` is provided, that takes precedence.
+
+            Returns:
+                The processing function required to compute the vector-Jacobian products of a tape.
+            """
             if self.shots is not None:
                 warn(
                     "Requested adjoint differentiation to be computed with finite shots."
@@ -634,6 +793,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
+            """Return samples of an observable."""
             if observable.name != "PauliZ":
                 self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
@@ -655,13 +815,38 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
         # pylint: disable=protected-access, missing-function-docstring
         def expval(self, observable, shot_range=None, bin_size=None):
+            """Expectation value of the supplied observable.
+
+            Args:
+                observable: A PennyLane observable.
+                shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                    to use. If not specified, all samples are used.
+                bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                    returns the measurement statistic separately over each bin. If not
+                    provided, the entire shot range is treated as a single bin.
+
+            Returns:
+                Expectation value of the observable
+            """
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.mean(samples, axis=0))
 
             if observable.name in ["SparseHamiltonian"]:
-                CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+                if self._mpi:
+                    # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                    # host(cpu) memory requirements
+                    obs = qml.Identity(0)
+                    Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+                    H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+                    CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                    # CSR_SparseHamiltonian for rank == 0
+                    if self._mpi_manager.getRank() == 0:
+                        CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+                else:
+                    CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
+
                 return self.measurements.expval(
                     CSR_SparseHamiltonian.indptr,
                     CSR_SparseHamiltonian.indices,
@@ -671,6 +856,10 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # use specialized functors to compute expval(Hermitian)
             if observable.name == "Hermitian":
                 observable_wires = self.map_wires(observable.wires)
+                if self._mpi and len(observable_wires) > self._num_local_wires:
+                    raise RuntimeError(
+                        "MPI backend does not support Hermitian with number of target wires larger than local wire number."
+                    )
                 matrix = observable.matrix()
                 return self.measurements.expval(matrix, observable_wires)
 
@@ -679,9 +868,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, self._mpi
+                )._ob(observable, self.wire_map)
                 return self.measurements.expval(ob_serialized)
 
             # translate to wire labels used by device
@@ -690,15 +879,39 @@ if LGPU_CPP_BINARY_AVAILABLE:
             return self.measurements.expval(observable.name, observable_wires)
 
         def probability_lightning(self, wires=None):
+            """Return the probability of each computational basis state.
+
+            Args:
+                wires (Iterable[Number, str], Number, str, Wires): wires to return
+                    marginal probabilities for. Wires not provided are traced out of the system.
+
+            Returns:
+                array[float]: list of the probabilities
+            """
             # translate to wire labels used by device
             observable_wires = self.map_wires(wires)
             # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
             local_prob = self.measurements.probs(observable_wires)
-            num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
-            return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
+            if len(local_prob) > 0:
+                num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
+                return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
+            return local_prob
 
         # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
+            """Variance of the supplied observable.
+
+            Args:
+                observable: A PennyLane observable.
+                shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
+                    to use. If not specified, all samples are used.
+                bin_size (int): Divides the shot range into bins of size ``bin_size``, and
+                    returns the measurement statistic separately over each bin. If not
+                    provided, the entire shot range is treated as a single bin.
+
+            Returns:
+                Variance of the observable
+            """
             if self.shots is not None:
                 # estimate the var
                 # Lightning doesn't support sampling yet
@@ -718,9 +931,9 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, self._mpi
+                )._ob(observable, self.wire_map)
                 return self.measurements.var(ob_serialized)
 
             # translate to wire labels used by device
@@ -732,7 +945,7 @@ else:  # LGPU_CPP_BINARY_AVAILABLE:
 
     class LightningGPU(LightningBaseFallBack):  # pragma: no cover
         # pylint: disable=missing-class-docstring, too-few-public-methods
-        name = "PennyLane plugin for GPU-backed Lightning device using NVIDIA cuQuantum SDK: [No binaries found - Fallback: default.qubit]"
+        name = "Lightning GPU PennyLane plugin: [No binaries found - Fallback: default.qubit]"
         short_name = "lightning.gpu"
 
         def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):

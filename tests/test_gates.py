@@ -374,6 +374,10 @@ def test_controlled_qubit_gates(operation, n_qubits, tol):
             assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="N-controlled operations only implemented in lightning.qubit.",
+)
 def test_controlled_qubit_unitary_from_op(tol):
     n_qubits = 10
     dev_def = qml.device("default.qubit", wires=n_qubits)
@@ -391,6 +395,10 @@ def test_controlled_qubit_unitary_from_op(tol):
     assert np.allclose(circ(par), circ_def(par), tol)
 
 
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="N-controlled operations only implemented in lightning.qubit.",
+)
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))
 def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):

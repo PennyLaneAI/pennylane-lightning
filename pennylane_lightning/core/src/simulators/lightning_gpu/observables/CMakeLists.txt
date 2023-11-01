@@ -3,6 +3,11 @@ cmake_minimum_required(VERSION 3.20)
 project(${PL_BACKEND}_observables LANGUAGES CXX)
 
 set(OBSERVABLES_FILES ObservablesGPU.cpp CACHE INTERNAL "" FORCE)
+
+if(ENABLE_MPI)
+    list(APPEND OBSERVABLES_FILES ObservablesGPUMPI.cpp)
+endif()
+
 add_library(${PL_BACKEND}_observables STATIC ${OBSERVABLES_FILES})
 
 target_include_directories(${PL_BACKEND}_observables INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

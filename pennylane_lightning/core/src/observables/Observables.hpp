@@ -414,4 +414,112 @@ class HamiltonianBase : public Observable<StateVectorT> {
     }
 };
 
+/**
+ * @brief Sparse representation of SparseHamiltonian<T>
+ *
+ * @tparam T Floating-point precision.
+ */
+template <class StateVectorT>
+class SparseHamiltonianBase : public Observable<StateVectorT> {
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+#ifdef _ENABLE_PLGPU
+    using IdxT =
+        typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                  int32_t, int64_t>::type;
+#else
+    using IdxT = std::size_t;
+#endif
+
+  protected:
+    std::vector<ComplexT> data_;
+    std::vector<IdxT> indices_;
+    std::vector<IdxT> offsets_;
+    std::vector<std::size_t> wires_;
+
+  private:
+    [[nodiscard]] bool
+    isEqual(const Observable<StateVectorT> &other) const override {
+        const auto &other_cast =
+            static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
+        return data_ == other_cast.data_ && indices_ == other_cast.indices_ &&
+               offsets_ == other_cast.offsets_ && (wires_ == other_cast.wires_);
+    }
+
+  public:
+    /**
+     * @brief Create a SparseHamiltonianBase from data, indices and offsets in
+     * CSR format.
+     *
+     * @param data Arguments to construct data
+     * @param indices Arguments to construct indices
+     * @param offsets Arguments to construct offsets
+     * @param wires Arguments to construct wires
+     */
+    template <typename T1, typename T2, typename T3 = T2,
+              typename T4 = std::vector<std::size_t>>
+    SparseHamiltonianBase(T1 &&data, T2 &&indices, T3 &&offsets, T4 &&wires)
+        : data_{std::forward<T1>(data)}, indices_{std::forward<T2>(indices)},
+          offsets_{std::forward<T3>(offsets)}, wires_{std::forward<T4>(wires)} {
+        PL_ASSERT(data_.size() == indices_.size());
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param data Argument to construct data
+     * @param indices Argument to construct indices
+     * @param offsets Argument to construct offsets
+     * @param wires Argument to construct wires
+     */
+    static auto create(std::initializer_list<ComplexT> data,
+                       std::initializer_list<IdxT> indices,
+                       std::initializer_list<IdxT> offsets,
+                       std::initializer_list<std::size_t> wires)
+        -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
+        // NOLINTBEGIN(*-move-const-arg)
+        return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
+            new SparseHamiltonianBase<StateVectorT>{
+                std::move(data), std::move(indices), std::move(offsets),
+                std::move(wires)});
+        // NOLINTEND(*-move-const-arg)
+    }
+
+    void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
+        PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
+                 "must be "
+                 "defined at the backend level.");
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Pennylane::Util::operator<<;
+        std::ostringstream ss;
+        ss << "SparseHamiltonian: {\n'data' : \n";
+        for (const auto &d : data_) {
+            ss << "{" << d.real() << ", " << d.imag() << "}, ";
+        }
+        ss << ",\n'indices' : \n";
+        for (const auto &i : indices_) {
+            ss << i << ", ";
+        }
+        ss << ",\n'offsets' : \n";
+        for (const auto &o : offsets_) {
+            ss << o << ", ";
+        }
+        ss << "\n}";
+        return ss.str();
+    }
+    /**
+     * @brief Get the wires the observable applies to.
+     */
+    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+        return wires_;
+    };
+};
+
 } // namespace Pennylane::Observables

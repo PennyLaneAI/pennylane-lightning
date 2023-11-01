@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
   push:
     branches:
@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpptests:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -97,6 +97,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -118,6 +125,22 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -153,7 +176,7 @@ jobs:
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
   cpptestswithOpenBLAS:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -223,6 +246,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -244,6 +274,22 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -278,14 +324,14 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-  build_and_cache_Kokkos:    
+  build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
 
   cpptestswithKokkos:
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
@@ -316,6 +362,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
@@ -377,6 +424,13 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
@@ -401,6 +455,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
           pwd
@@ -412,6 +467,22 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -511,7 +582,7 @@ jobs:
 
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
-    if: ${{ github.event_name != 'workflow_call' || (inputs.lightning-version == 'latest' &&  inputs.pennylane-version == 'latest') }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
@@ -541,6 +612,7 @@ jobs:
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
+          rm -rf Kokkos
           mkdir Kokkos/
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 

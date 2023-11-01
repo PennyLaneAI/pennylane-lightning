@@ -20,5 +20,5 @@ Lightning Qubit
 .. toctree::
    :hidden:
 
-   avx_kernels/index
    add_gate_kernel
+   avx_kernels/index

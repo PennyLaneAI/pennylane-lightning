@@ -25,6 +25,7 @@ from pennylane import numpy as np
 from pennylane import QNode, qnode
 from pennylane import qchem
 
+
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -185,7 +186,7 @@ class TestAdjointJacobian:
         )
 
         tape = qml.tape.QuantumScript(
-            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [stateprep(random_state, 0)]
+            [stateprep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
         )
 
         tape.trainable_params = {1}
@@ -892,7 +893,10 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Lightning binary required",
+)
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -942,6 +946,60 @@ def test_tape_qchem_sparse(tol):
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+custom_wires = ["alice", 3.14, -1, 0]
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.parametrize(
+    "returns",
+    [
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [0.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[1])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [2.0],
+                [qml.PauliX(wires=custom_wires[2]) @ qml.PauliZ(wires=custom_wires[0])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [1.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[2])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+    ],
+)
+def test_adjoint_SparseHamiltonian(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+
+    dev = qml.device(device_name, wires=custom_wires)
+    dev_default = qml.device("default.qubit", wires=custom_wires)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return qml.expval(returns)
+
+    n_params = 30
+    np.random.seed(1337)
+    params = np.random.rand(n_params)
+
+    qnode = qml.QNode(circuit, dev, diff_method="adjoint")
+    qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
+
+    j_device = qml.jacobian(qnode)(params)
+    j_default = qml.jacobian(qnode_default)(params)
+
+    assert np.allclose(j_device, j_default)
 
 
 @pytest.mark.parametrize(
@@ -1022,9 +1080,6 @@ def test_integration_chunk_observables():
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
-
-
-custom_wires = ["alice", 3.14, -1, 0]
 
 
 @pytest.mark.parametrize(
@@ -1210,7 +1265,7 @@ def create_xyz_file(tmp_path_factory):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    not ld._CPP_BINARY_AVAILABLE,
     reason="Tests only for lightning.gpu",
 )
 @pytest.mark.parametrize(
@@ -1218,7 +1273,7 @@ def create_xyz_file(tmp_path_factory):
     [False, True, 1, 2, 3, 4],
 )
 def test_integration_H2_Hamiltonian(create_xyz_file, batches):
-    skipp_condn = pytest.importorskip("openfermionpyscf")
+    _ = pytest.importorskip("openfermionpyscf")
     n_electrons = 2
     np.random.seed(1337)
 
@@ -1232,9 +1287,10 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
         active_electrons=n_electrons,
         name="h2",
         outpath=str(str_path.parent),
+        load_data=True,
     )
     hf_state = qml.qchem.hf_state(n_electrons, qubits)
-    singles, doubles = qml.qchem.excitations(n_electrons, qubits)
+    _, doubles = qml.qchem.excitations(n_electrons, qubits)
 
     # Choose different batching supports here
     dev = qml.device(device_name, wires=qubits, batch_obs=batches)

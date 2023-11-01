@@ -71,7 +71,7 @@ class Measurements final
     GateCache<PrecisionT> gate_cache_;
 
   public:
-    explicit Measurements(const StateVectorT &statevector)
+    explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
@@ -259,10 +259,10 @@ class Measurements final
      * @return auto Expectation value.
      */
     template <class index_type>
-    auto expval(const index_type *csrOffsets_ptr,
-                const index_type csrOffsets_size, const index_type *columns_ptr,
+    auto expval(const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
+                const index_type *columns_ptr,
                 const std::complex<PrecisionT> *values_ptr,
-                const index_type numNNZ) -> PrecisionT {
+                const int64_t numNNZ) -> PrecisionT {
         const std::size_t nIndexBits = this->_statevector.getNumQubits();
         const std::size_t length = std::size_t{1} << nIndexBits;
 
@@ -580,10 +580,10 @@ class Measurements final
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
     template <class index_type>
-    PrecisionT
-    var(const index_type *csrOffsets_ptr, const index_type csrOffsets_size,
-        const index_type *columns_ptr,
-        const std::complex<PrecisionT> *values_ptr, const index_type numNNZ) {
+    PrecisionT var(const index_type *csrOffsets_ptr,
+                   const int64_t csrOffsets_size, const index_type *columns_ptr,
+                   const std::complex<PrecisionT> *values_ptr,
+                   const int64_t numNNZ) {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (size_t(csrOffsets_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");

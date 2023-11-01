@@ -14,7 +14,7 @@ Lightning plugins
 
 
 Devices
--------
+*******
 
 The Lightning ecosystem provides the following devices:
 
@@ -22,6 +22,11 @@ The Lightning ecosystem provides the following devices:
     :name: 'lightning.qubit'
     :description: A fast state-vector qubit simulator written in C++
     :link: lightning_qubit/device.html
+
+.. title-card::
+    :name: 'lightning.gpu'
+    :description: A heterogeneous backend state-vector simulator with NVIDIA cuQuantum library support.
+    :link: lightning_gpu/device.html
 
 .. title-card::
     :name: 'lightning.kokkos'
@@ -39,6 +44,7 @@ The Lightning ecosystem provides the following devices:
    :hidden:
 
    installation
+   docker
    support
 
 .. toctree::
@@ -47,6 +53,7 @@ The Lightning ecosystem provides the following devices:
    :hidden:
 
    lightning_qubit/device
+   lightning_gpu/device
    lightning_kokkos/device
 
 .. toctree::
