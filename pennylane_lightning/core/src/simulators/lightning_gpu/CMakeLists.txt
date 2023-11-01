@@ -44,13 +44,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Ensure the libraries can see additional libs at same level;
-# Required for external deps when loading in Python
-set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
-set(CMAKE_INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
-
 #########################
 ## Set Default Options ##
 #########################
