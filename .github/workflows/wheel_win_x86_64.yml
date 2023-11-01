@@ -130,7 +130,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: |
-            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0-rc0
+            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@v0.33.0
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
