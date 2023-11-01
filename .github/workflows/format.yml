@@ -42,22 +42,11 @@ jobs:
       - name: Run formatter
         run: PATH=$PATH:$(dirname $(which python3)) ./bin/format --check ./pennylane_lightning/core/src
 
-  build_and_cache_Kokkos:
-    name: "Build and cache Kokkos"
-    uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
-    with:
-      os: ubuntu-22.04
-
   tidy-cpp:
-    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-        exclude:
-          - exec_model: OPENMP
 
     name: Tidy (C++)
     runs-on: ${{ matrix.os }}
@@ -71,37 +60,25 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        run: |
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
-
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt -y install cmake gcc-11 g++-11 libgcc-11-dev ninja-build libomp-dev
+          sudo apt -y install cmake gcc-13 g++-13 libgcc-13-dev ninja-build libomp-dev
           python -m pip install -r requirements-dev.txt
-          ls -la /usr/lib/gcc/x86_64-linux-gnu/11
+          ls -la /usr/lib/gcc/x86_64-linux-gnu/13
           find /usr/lib/gcc/x86_64-linux-gnu -name omp.h
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Run clang-tidy compilation
         run: |
-          CFLAGS="-I/usr/lib/gcc/x86_64-linux-gnu/11/include" cmake -BBuild -G Ninja . \
+          CFLAGS="-I/usr/lib/gcc/x86_64-linux-gnu/13/include" cmake -BBuild -G Ninja . \
             -DENABLE_CLANG_TIDY=ON \
             -DCLANG_TIDY_BINARY=$(dirname $(which python))/clang-tidy \
             -DBUILD_TESTS=ON \
             -DENABLE_WARNINGS=ON \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER="$(which g++-11)" \
-            -DCMAKE_C_COMPILER="$(which gcc-11)" \
-            -DOpenMP_ROOT=/usr/lib/gcc/x86_64-linux-gnu/11
+            -DCMAKE_CXX_COMPILER="$(which g++-13)" \
+            -DCMAKE_C_COMPILER="$(which gcc-13)" \
+            -DOpenMP_ROOT=/usr/lib/gcc/x86_64-linux-gnu/13
           cmake --build ./Build
