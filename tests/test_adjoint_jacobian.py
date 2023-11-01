@@ -1364,3 +1364,47 @@ def test_qubit_unitary(nuni):
     assert not np.allclose(jac, 0.0)
     assert np.allclose(jac, jac_ps)
     assert np.allclose(jac, jac_def)
+
+
+@pytest.mark.parametrize("nuni", [1])
+def test_diff_qubit_unitary(nuni):
+    """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
+    n_wires = 6
+    dev = qml.device(device_name, wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
+    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+    tol = h
+
+    par = 2 * np.pi * np.random.rand(n_wires)
+    U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
+    U, _ = np.linalg.qr(U)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+    def circuit(x, u_mat):
+        qml.StatePrep(init_state, wires=range(n_wires))
+        for i in range(n_wires // 2):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        qml.QubitUnitary(u_mat, wires=range(nuni))
+        for i in range(n_wires // 2, n_wires):
+            qml.CNOT(wires=[(i - 1) % n_wires, i])
+            qml.RZ(x[i], wires=i)
+            qml.CNOT(wires=[i, (i + 1) % n_wires])
+        return qml.expval(qml.PauliZ(0))
+
+    circ = qml.QNode(circuit, dev, diff_method="adjoint")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", h=h)
+    circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+    jacs = qml.jacobian(circ)(par, U)
+    jacs_def = qml.jacobian(circ_def)(par, U)
+    jacs_fd = qml.jacobian(circ_fd)(par, U)
+    jacs_ps = qml.jacobian(circ_ps)(par, U)
+
+    for jac, jac_def, jac_fd, jac_ps in zip(jacs, jacs_def, jacs_fd, jacs_ps):
+        assert not np.allclose(jac, 0.0)
+        assert np.allclose(jac, jac_fd)
+        assert np.allclose(jac, jac_ps)
+        assert np.allclose(jac, jac_def)
