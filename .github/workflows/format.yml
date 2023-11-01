@@ -97,5 +97,6 @@ jobs:
             -DENABLE_WARNINGS=ON \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER="$(which g++-11)" \
-            -DCMAKE_C_COMPILER="$(which gcc-11)"
+            -DCMAKE_C_COMPILER="$(which gcc-11)" \
+            -DOpenMP_ROOT=/usr/lib/x86_64-linux-gnu
           cmake --build ./Build
