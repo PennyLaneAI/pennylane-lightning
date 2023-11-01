@@ -1,3 +1,10 @@
+# Release 0.33.1
+
+### Bug fixes
+
+* The pybind11 compiled module RPATH linkage has been restored to pre-0.33 behaviour.
+  [(#543)](https://github.com/PennyLaneAI/pennylane-lightning/pull/543)
+
 # Release 0.33.0
 
 ### New features since last release
