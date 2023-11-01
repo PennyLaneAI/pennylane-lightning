@@ -1329,6 +1329,7 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
 
 @pytest.mark.parametrize("nuni", [1, 2])
 def test_qubit_unitary(nuni):
+    """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)

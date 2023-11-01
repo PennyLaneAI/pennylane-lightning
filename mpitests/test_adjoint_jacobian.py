@@ -1385,6 +1385,7 @@ def test_adjoint_SparseHamiltonian(returns):
 
 @pytest.mark.parametrize("nuni", [1, 2])
 def test_qubit_unitary(nuni):
+    """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     np.random.seed(1337)
     n_wires = 6
     dev = qml.device("lightning.gpu", wires=n_wires, mpi=True)
