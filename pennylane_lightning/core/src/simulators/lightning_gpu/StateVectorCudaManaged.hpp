@@ -304,12 +304,13 @@ class StateVectorCudaManaged
      * @param wires Wires to apply gate to.
      * @param adjoint Indicate whether inverse should be taken.
      */
-    void applyMatrix(const ComplexT *gate_matrix,
+    void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::string opName = {};
         size_t n = size_t{1} << wires.size();
-        const std::vector<ComplexT> matrix(gate_matrix, gate_matrix + n * n);
+        const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
+                                                           gate_matrix + n * n);
         std::vector<CFP_t> matrix_cu(matrix.size());
         std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
@@ -327,7 +328,7 @@ class StateVectorCudaManaged
      * @param wires Wires to apply gate to.
      * @param adjoint Indicate whether inverse should be taken.
      */
-    void applyMatrix(const std::vector<ComplexT> &gate_matrix,
+    void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
                      const std::vector<size_t> &wires, bool adjoint = false) {
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
@@ -884,10 +885,10 @@ class StateVectorCudaManaged
     /**
      * @brief Get a host data copy.
      *
-     * @return std::vector<ComplexT>
+     * @return std::vector<std::complex<PrecisionT>>
      */
-    auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_host(BaseType::getLength());
+    auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
+        std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
         BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;
     }
