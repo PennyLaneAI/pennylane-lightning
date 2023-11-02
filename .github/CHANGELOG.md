@@ -43,6 +43,26 @@ This release contains contributions from (in alphabetical order):
 
 Vincent Michaud-Rioux, Shuli Shu
 
+---
+
+# Release 0.33.1
+
+* pip-installed CUDA runtime libraries can now be accessed from a virtualenv.
+  [(#543)](https://github.com/PennyLaneAI/pennylane-lightning/pull/543)
+
+### Bug fixes
+
+* The pybind11 compiled module RPATH linkage has been restored to pre-0.33 behaviour.
+  [(#543)](https://github.com/PennyLaneAI/pennylane-lightning/pull/543)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Lee J. O'Riordan
+
+---
+
 # Release 0.33.0
 
 ### New features since last release
