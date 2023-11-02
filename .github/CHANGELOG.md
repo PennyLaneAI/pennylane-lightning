@@ -2,12 +2,18 @@
 
 ### New features since last release
 
-* 1,2-qubit `qml.QubitUnitary` operators can be included in circuit differentiated with the adjoint method. 
+* 1,2-qubit `qml.QubitUnitary` operators can be included in circuit differentiated with the adjoint method.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Breaking changes
 
+* Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
+
 ### Improvements
+
+* Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Add the MPI test CI workflows of Lightning-GPU in compatibility cron jobs.
   [(#536)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/536)
@@ -24,6 +30,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
@@ -94,7 +103,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### Improvements
 
-* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.
   [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
 
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
@@ -125,7 +134,7 @@ Vincent Michaud-Rioux, Shuli Shu
 
 ### Bug fixes
 
-* Fix CI issues running python-cov with MPI. 
+* Fix CI issues running python-cov with MPI.
   [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
