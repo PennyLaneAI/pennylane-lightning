@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   cpptests:
-    timeout-minutes: 30
+    timeout-minutes: 45
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -97,7 +97,7 @@ jobs:
         os: [windows-latest]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     name: Kokkos core (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
 
@@ -151,7 +151,7 @@ jobs:
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
-    timeout-minutes: 30
+    timeout-minutes: 45
     name: C++ tests (Windows, Kokkos)
     runs-on: ${{ matrix.os }}
 
