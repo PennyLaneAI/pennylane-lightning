@@ -1383,8 +1383,8 @@ def test_adjoint_SparseHamiltonian(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
-@pytest.mark.parametrize("nuni", [1, 2])
-def test_qubit_unitary(nuni):
+@pytest.mark.parametrize("n_targets", [1, 2])
+def test_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     np.random.seed(1337)
     n_wires = 6
@@ -1392,7 +1392,9 @@ def test_qubit_unitary(nuni):
     dev_def = qml.device("default.qubit", wires=n_wires)
 
     par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
@@ -1408,7 +1410,7 @@ def test_qubit_unitary(nuni):
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
             qml.CNOT(wires=[i, (i + 1) % n_wires])
-        qml.QubitUnitary(U, wires=range(nuni))
+        qml.QubitUnitary(U, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
@@ -1430,8 +1432,8 @@ def test_qubit_unitary(nuni):
     assert np.allclose(jac, jac_def)
 
 
-@pytest.mark.parametrize("nuni", [1])
-def test_diff_qubit_unitary(nuni):
+@pytest.mark.parametrize("n_targets", [1])
+def test_diff_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
@@ -1439,7 +1441,9 @@ def test_diff_qubit_unitary(nuni):
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
     par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
@@ -1455,7 +1459,7 @@ def test_diff_qubit_unitary(nuni):
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
             qml.CNOT(wires=[i, (i + 1) % n_wires])
-        qml.QubitUnitary(u_mat, wires=range(nuni))
+        qml.QubitUnitary(u_mat, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
             qml.CNOT(wires=[(i - 1) % n_wires, i])
             qml.RZ(x[i], wires=i)
