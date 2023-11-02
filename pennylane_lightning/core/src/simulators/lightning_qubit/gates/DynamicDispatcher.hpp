@@ -524,11 +524,11 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
     }
 
-    void applyControlledGenerator(KernelType kernel, CFP_t *data,
+    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
                                   size_t num_qubits, const std::string &op_name,
                                   const std::vector<size_t> &controlled_wires,
                                   const std::vector<size_t> &wires,
-                                  bool inverse) const {
+                                  bool inverse) const -> PrecisionT {
         const auto iter = controlled_generator_kernels_.find(
             std::make_pair(strToControlledGeneratorOp(op_name), kernel));
         if (iter == controlled_generator_kernels_.cend()) {

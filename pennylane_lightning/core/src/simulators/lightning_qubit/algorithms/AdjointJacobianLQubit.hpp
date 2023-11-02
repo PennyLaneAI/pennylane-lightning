@@ -308,6 +308,7 @@ class AdjointJacobian final
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
                         mu.applyGenerator(ops_name[op_idx],
+                                          ops.getOpsControlledWires()[op_idx],
                                           ops.getOpsWires()[op_idx],
                                           !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);

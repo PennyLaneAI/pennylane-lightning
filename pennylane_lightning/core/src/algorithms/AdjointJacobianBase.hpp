@@ -57,6 +57,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
             state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsControlledWires()[op_idx],
                                  operations.getOpsWires()[op_idx],
                                  operations.getOpsInverses()[op_idx] ^ adj,
                                  operations.getOpsParams()[op_idx]);
@@ -77,6 +78,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                   const OpsData<StateVectorT> &operations,
                                   size_t op_idx) {
         state.applyOperation(operations.getOpsName()[op_idx],
+                             operations.getOpsControlledWires()[op_idx],
                              operations.getOpsWires()[op_idx],
                              !operations.getOpsInverses()[op_idx],
                              operations.getOpsParams()[op_idx]);
@@ -113,6 +115,13 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                const std::vector<size_t> &wires, const bool adj)
         -> PrecisionT {
         return sv.applyGenerator(op_name, wires, adj);
+    }
+
+    inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
+                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<size_t> &wires, const bool adj)
+        -> PrecisionT {
+        return sv.applyGenerator(op_name, controlled_wires, wires, adj);
     }
 
     /**

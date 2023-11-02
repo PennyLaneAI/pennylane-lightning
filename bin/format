@@ -79,7 +79,7 @@ def fmt(args, command) -> int:
 
     sys.stderr.write(f"Formatting {len(files)} files in {args.paths}.\n")
 
-    ret = subprocess.run(cmd, capture_output=True, universal_newlines=True)
+    ret = subprocess.run(cmd, universal_newlines=True)
     if ret.returncode != 0:
         sys.stderr.write(ret.stderr)
         return 1
@@ -95,7 +95,7 @@ def check(args, command) -> int:
 
     for src_file in files:
         ret = subprocess.run(
-            (*cmd, src_file), capture_output=True, universal_newlines=True
+            (*cmd, src_file), universal_newlines=True
         )
 
         if ret.returncode != 0:

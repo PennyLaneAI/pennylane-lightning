@@ -323,6 +323,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                   params);
     }
 
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<PrecisionT> &params = {}) {
+        auto *arr = this->getData();
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToControlledGateOp(opName);
+        dispatcher.applyControlledGate(
+            getKernelForControlledGate(gate_op), arr, this->getNumQubits(),
+            opName, controlled_wires, wires, inverse, params);
+    }
+
     /**
      * @brief Apply a single generator to the state-vector using a given kernel.
      *
@@ -356,6 +368,17 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         return dispatcher.applyGenerator(getKernelForGenerator(gen_op), arr,
                                          this->getNumQubits(), opName, wires,
                                          adj);
+    }
+
+    [[nodiscard]] auto applyGenerator(
+        const std::string &opName, const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
+        auto *arr = this->getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gen_op = dispatcher.strToGeneratorOp(opName);
+        return dispatcher.applyControlledGenerator(
+            getKernelForGenerator(gen_op), arr, this->getNumQubits(), opName,
+            controlled_wires, wires, adj);
     }
 
     inline void
