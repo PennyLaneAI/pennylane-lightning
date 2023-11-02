@@ -83,8 +83,7 @@ jobs:
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
             PATH=$PATH:/usr/local/cuda/bin \
-            CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") \
-            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64:$CUQUANTUM_SDK \
+            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64 \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
