@@ -86,12 +86,11 @@ endif()
 if(ENABLE_OPENMP)
     message(STATUS "ENABLE_OPENMP is ON.")
     find_package(OpenMP)
-
     if(NOT OpenMP_CXX_FOUND)
         message(FATAL_ERROR "OpenMP is enabled but not found.\n"
             "Install OpenMP or set ENABLE_OPENMP OFF.")
     endif()
-
+    target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_OMP=1")
     target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
 else()
     message(STATUS "ENABLE_OPENMP is OFF.")
