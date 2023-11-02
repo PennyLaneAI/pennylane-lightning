@@ -1437,7 +1437,6 @@ def test_diff_qubit_unitary(nuni):
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-    tol = h
 
     par = 2 * np.pi * np.random.rand(n_wires)
     U = np.random.rand(2**nuni, 2**nuni) + 1j * np.random.rand(2**nuni, 2**nuni)
