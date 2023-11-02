@@ -106,7 +106,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI / 7}}, // params
             {{0, 1}, {1}},    // wires
             {false, false},   // inverses
-            {}                // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -124,7 +123,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {theta}},  // params
             {{0, 1}, {1}},  // wires
             {false, false}, // inverses
-            {}              // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -183,7 +181,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{0, 1}, {1}, {1, 0}, {0}, {0, 1}, {1}, {1, 0}, {0}},     // wires
             {false, false, false, false, false, false, false,
              false}, // inverses
-            {}       // matrices
         };
 
         std::vector<ComplexT> expected_der0 = {
@@ -250,7 +247,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI / 7}}, // params
             {{0, 1}, {1}},    // wires
             {false, false},   // inverses
-            {}                // matrices
         };
 
         auto dy1 = std::vector<ComplexT>{
@@ -261,7 +257,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {-M_PI / 7}}, // params
             {{0, 1}, {1}},     // wires
             {false, false},    // inverses
-            {}                 // matrices
         };
 
         auto dy2 = std::vector<ComplexT>{
