@@ -102,11 +102,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
     SECTION("Do nothing if the tape does not have trainable parameters") {
         std::vector<ComplexT> vjp(1);
         OpsData<StateVectorT> ops_data{
-            {"CNOT", "RX"},                       // names
-            {{}, {M_PI / 7}},                     // params
-            {{0, 1}, {1}},                        // wires
-            {false, false},                       // inverses
-            std::vector<std::vector<ComplexT>>(2) // matrices
+            {"CNOT", "RX"},   // names
+            {{}, {M_PI / 7}}, // params
+            {{0, 1}, {1}},    // wires
+            {false, false},   // inverses
+            {}                // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -120,11 +120,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
     SECTION("CNOT RX1") {
         const PrecisionT theta = std::numbers::pi_v<PrecisionT> / 7;
         OpsData<StateVectorT> ops_data{
-            {"CNOT", "RX"},                       // names
-            {{}, {theta}},                        // params
-            {{0, 1}, {1}},                        // wires
-            {false, false},                       // inverses
-            std::vector<std::vector<ComplexT>>(2) // matrices
+            {"CNOT", "RX"}, // names
+            {{}, {theta}},  // params
+            {{0, 1}, {1}},  // wires
+            {false, false}, // inverses
+            {}              // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -182,8 +182,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI}, {}, {M_PI}, {}, {M_PI}, {}, {M_PI}},         // params
             {{0, 1}, {1}, {1, 0}, {0}, {0, 1}, {1}, {1, 0}, {0}},     // wires
             {false, false, false, false, false, false, false,
-             false},                              // inverses
-            std::vector<std::vector<ComplexT>>(8) // matrices
+             false}, // inverses
+            {}       // matrices
         };
 
         std::vector<ComplexT> expected_der0 = {
@@ -246,22 +246,22 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
     SECTION("Test complex dy") {
         OpsData<StateVectorT> ops_data1{
-            {"CNOT", "RX"},                       // names
-            {{}, {M_PI / 7}},                     // params
-            {{0, 1}, {1}},                        // wires
-            {false, false},                       // inverses
-            std::vector<std::vector<ComplexT>>(2) // matrices
+            {"CNOT", "RX"},   // names
+            {{}, {M_PI / 7}}, // params
+            {{0, 1}, {1}},    // wires
+            {false, false},   // inverses
+            {}                // matrices
         };
 
         auto dy1 = std::vector<ComplexT>{
             {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4}};
 
         OpsData<StateVectorT> ops_data2{
-            {"CNOT", "RX"},                       // names
-            {{}, {-M_PI / 7}},                    // params
-            {{0, 1}, {1}},                        // wires
-            {false, false},                       // inverses
-            std::vector<std::vector<ComplexT>>(2) // matrices
+            {"CNOT", "RX"},    // names
+            {{}, {-M_PI / 7}}, // params
+            {{0, 1}, {1}},     // wires
+            {false, false},    // inverses
+            {}                 // matrices
         };
 
         auto dy2 = std::vector<ComplexT>{
