@@ -536,11 +536,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                         const std::vector<size_t> &controlled_wires,
                         const std::vector<size_t> &wires, Func core_function) {
         constexpr std::size_t one{1};
+        const std::size_t n_wires = wires.size();
+        PL_ASSERT(n_wires == 1);
+
         const std::size_t n_contr =
             (has_controls) ? controlled_wires.size() : 0;
-        const std::size_t n_wires = wires.size();
-        const std::size_t nw_tot = n_contr + n_wires;
-        PL_ASSERT(n_wires == 1);
+        const std::size_t nw_tot = (has_controls) ? n_contr + n_wires : 1;
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
