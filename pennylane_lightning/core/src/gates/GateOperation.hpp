@@ -119,6 +119,17 @@ enum class ControlledMatrixOperation : uint32_t {
     /* END (placeholder) */
     END
 };
+
+/**
+ * @brief Enum class for all controlled gate generators
+ */
+enum class ControlledGeneratorOperation : uint32_t {
+    BEGIN = 0,
+    NCGeneratorPhaseShift = 0,
+    /* END (placeholder) */
+    END
+};
+
 enum class ControlledGateOperation : uint32_t {
     BEGIN = 0,
     NCPauliX = 0,

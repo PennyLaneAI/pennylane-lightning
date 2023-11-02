@@ -142,6 +142,27 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
     }
 }
 /**
+ * @brief Internal recursion function for constructGateOpsFunctorTuple
+ */
+template <class PrecisionT, class GateImplementation, size_t gntr_idx>
+constexpr auto constructControlledGeneratorOpsFunctorTupleIter() {
+    if constexpr (gntr_idx ==
+                  GateImplementation::implemented_controlled_generators
+                      .size()) {
+        return std::tuple{};
+    } else if (gntr_idx <
+               GateImplementation::implemented_controlled_generators.size()) {
+        constexpr auto gntr_op =
+            GateImplementation::implemented_controlled_generators[gntr_idx];
+        return prepend_to_tuple(
+            std::pair{gntr_op,
+                      Gates::ControlledGeneratorOpToMemberFuncPtr<
+                          PrecisionT, GateImplementation, gntr_op>::value},
+            constructControlledGeneratorOpsFunctorTupleIter<
+                PrecisionT, GateImplementation, gntr_idx + 1>());
+    }
+}
+/**
  * @brief Internal recursive function for constructMatrixOpsFunctorTuple
  */
 template <class PrecisionT, class GateImplementation, size_t mat_idx>
@@ -224,6 +245,11 @@ template <class PrecisionT, class GateImplementation>
 constexpr auto controlled_matrix_op_functor_tuple =
     constructControlledMatrixOpsFunctorTupleIter<PrecisionT, GateImplementation,
                                                  0>();
+
+template <class PrecisionT, class GateImplementation>
+constexpr auto controlled_generator_op_functor_tuple =
+    constructControlledGeneratorOpsFunctorTupleIter<PrecisionT,
+                                                    GateImplementation, 0>();
 
 template <class PrecisionT, class ParamT, class GateImplementation>
 constexpr auto controlled_gate_op_functor_tuple =
@@ -330,6 +356,26 @@ void registerAllImplementedControlledMatrixOps() {
         controlled_matrix_op_functor_tuple<PrecisionT, GateImplementation>);
 }
 
+template <class PrecisionT, class GateImplementation>
+void registerAllImplementedControlledGeneratorOps() {
+    auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    auto registerControlledGeneratorToDispatcher =
+        [&dispatcher](const auto &generator_op_func_pair) {
+            const auto &[generator_op, func] = generator_op_func_pair;
+            dispatcher.registerControlledGeneratorOperation(
+                generator_op, GateImplementation::kernel_id, func);
+            return generator_op;
+        };
+
+    [[maybe_unused]] const auto registered_generator_ops = std::apply(
+        [&registerControlledGeneratorToDispatcher](auto... elem) {
+            return std::make_tuple(
+                registerControlledGeneratorToDispatcher(elem)...);
+        },
+        controlled_generator_op_functor_tuple<PrecisionT, GateImplementation>);
+}
+
 template <class PrecisionT, class ParamT, class GateImplementation>
 void registerAllImplementedControlledGateOps() {
     auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -360,6 +406,8 @@ void registerKernel() {
     registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
     registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
     registerAllImplementedControlledMatrixOps<PrecisionT, GateImplementation>();
+    registerAllImplementedControlledGeneratorOps<PrecisionT,
+                                                 GateImplementation>();
     registerAllImplementedControlledGateOps<PrecisionT, ParamT,
                                             GateImplementation>();
 

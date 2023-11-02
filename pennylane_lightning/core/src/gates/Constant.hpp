@@ -163,6 +163,19 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledMatrixOperation, std::string_view>{
         ControlledMatrixOperation::NCMultiQubitOp, "NCMultiQubitOp"},
 };
+
+/**
+ * @brief Generator names.
+ *
+ * Note that a name of generators must be "Generator" +
+ * the name of the corresponding gate.
+ */
+[[maybe_unused]] constexpr std::array controlled_generator_names = {
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::NCGeneratorPhaseShift,
+        "NCGeneratorPhaseShift"},
+};
+
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::NCPauliX, "NCPauliX"},
@@ -295,6 +308,11 @@ namespace Pennylane::Gates::Constant {
     std::pair<GateOperation, size_t>{GateOperation::DoubleExcitationPlus, 1},
     std::pair<GateOperation, size_t>{GateOperation::CSWAP, 0},
     std::pair<GateOperation, size_t>{GateOperation::MultiRZ, 1},
+};
+
+[[maybe_unused]] constexpr std::array controlled_generator_wires = {
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::NCGeneratorPhaseShift, 1},
 };
 
 /**

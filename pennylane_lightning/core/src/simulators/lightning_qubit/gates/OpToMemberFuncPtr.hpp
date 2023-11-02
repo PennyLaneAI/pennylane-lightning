@@ -438,6 +438,20 @@ struct ControlledMatrixOpToMemberFuncPtr<
         &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
 };
 
+template <class PrecisionT, class GateImplementation,
+          ControlledGeneratorOperation mat_op>
+struct ControlledGeneratorOpToMemberFuncPtr {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+                  "Unrecognized generator operation");
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledGeneratorOpToMemberFuncPtr<
+    PrecisionT, GateImplementation,
+    ControlledGeneratorOperation::NCGeneratorPhaseShift> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCGeneratorPhaseShift<PrecisionT>;
+};
+
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
 struct ControlledGateOpToMemberFuncPtr {
@@ -586,6 +600,15 @@ template <class PrecisionT> struct GeneratorFuncPtr {
 };
 
 /**
+ * @brief Pointer type for a controlled generator operation
+ */
+template <class PrecisionT> struct ControlledGeneratorFuncPtr {
+    using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
+                                const std::vector<size_t> &,
+                                const std::vector<size_t> &, bool);
+};
+
+/**
  * @brief Pointer type for a matrix operation
  */
 template <class PrecisionT> struct MatrixFuncPtr {
@@ -638,6 +661,13 @@ using GateFuncPtrT =
  */
 template <class PrecisionT>
 using GeneratorFuncPtrT = typename Internal::GeneratorFuncPtr<PrecisionT>::Type;
+
+/**
+ * @brief Convenient type alias for ControlledGeneratorFuncPtr.
+ */
+template <class PrecisionT>
+using ControlledGeneratorFuncPtrT =
+    typename Internal::ControlledGeneratorFuncPtr<PrecisionT>::Type;
 
 /**
  * @brief Convenient type alias for MatrixfuncPtr.
@@ -747,6 +777,21 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                                    const std::vector<size_t> &controlled_wires,
                                    const std::vector<size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, controlled_wires, wires, adj);
+}
+
+/**
+ * @brief Call a controlled generator operation.
+ *
+ * @tparam PrecisionT Floating point type for the state-vector.
+ * @return Scaling factor
+ */
+template <class PrecisionT>
+inline PrecisionT callGeneratorOps(GeneratorFuncPtrT<PrecisionT> func,
+                                   std::complex<PrecisionT> *data,
+                                   size_t num_qubits,
+                                   const std::vector<size_t> &controlled_wires,
+                                   const std::vector<size_t> &wires, bool adj) {
+    return func(data, num_qubits, controlled_wires, wires, adj);
 }
 
 /**

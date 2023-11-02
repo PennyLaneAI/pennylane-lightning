@@ -90,6 +90,8 @@ template <typename PrecisionT> class DynamicDispatcher {
     using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
     using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
     using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
+    using ControlledGeneratorFunc =
+        Gates::ControlledGeneratorFuncPtrT<PrecisionT>;
     using ControlledGateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
         const std::vector<size_t> & /*controlled_wires*/,
@@ -101,6 +103,8 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::string, ControlledGateOperation>
         str_to_controlled_gates_;
     std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_;
+    std::unordered_map<std::string, ControlledGeneratorOperation>
+        str_to_controlled_gntrs_;
 
     std::unordered_map<std::pair<GateOperation, KernelType>, GateFunc, PairHash>
         gate_kernels_;
@@ -116,6 +120,10 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
                        ControlledMatrixFunc, PairHash>
         controlled_matrix_kernels_;
+
+    std::unordered_map<std::pair<ControlledGeneratorOperation, KernelType>,
+                       ControlledGeneratorFunc, PairHash>
+        controlled_generator_kernels_;
 
     std::unordered_map<std::pair<ControlledGateOperation, KernelType>,
                        ControlledGateFunc, PairHash>
@@ -248,6 +256,19 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     [[nodiscard]] auto
+    registeredControlledGeneratorsForKernel(KernelType kernel) const
+        -> std::unordered_set<ControlledGeneratorOperation> {
+        std::unordered_set<ControlledGeneratorOperation> generators;
+
+        for (const auto &[key, val] : controlled_generator_kernels_) {
+            if (key.second == kernel) {
+                generators.emplace(key.first);
+            }
+        }
+        return generators;
+    }
+
+    [[nodiscard]] auto
     registeredControlledGatesForKernel(KernelType kernel) const
         -> std::unordered_set<ControlledGateOperation> {
         std::unordered_set<ControlledGateOperation> gates;
@@ -283,6 +304,12 @@ template <typename PrecisionT> class DynamicDispatcher {
     [[nodiscard]] auto strToGeneratorOp(const std::string &gntr_name) const
         -> GeneratorOperation {
         return str_to_gntrs_.at(gntr_name);
+    }
+
+    [[nodiscard]] auto
+    strToControlledGeneratorOp(const std::string &gntr_name) const
+        -> ControlledGeneratorOperation {
+        return str_to_controlled_gntrs_.at(gntr_name);
     }
 
     /**
@@ -324,6 +351,13 @@ template <typename PrecisionT> class DynamicDispatcher {
                                            ControlledMatrixFunc func) {
         controlled_matrix_kernels_.emplace(std::make_pair(mat_op, kernel),
                                            func);
+    }
+    void
+    registerControlledGeneratorOperation(ControlledGeneratorOperation mat_op,
+                                         KernelType kernel,
+                                         ControlledGeneratorFunc func) {
+        controlled_generator_kernels_.emplace(std::make_pair(mat_op, kernel),
+                                              func);
     }
     void registerControlledGateOperation(ControlledGateOperation mat_op,
                                          KernelType kernel,
@@ -378,6 +412,11 @@ template <typename PrecisionT> class DynamicDispatcher {
                       KernelType kernel) const {
         return controlled_matrix_kernels_.find(std::make_pair(
                    mat_op, kernel)) != controlled_matrix_kernels_.cend();
+    }
+    bool isRegistered(ControlledGeneratorOperation mat_op,
+                      KernelType kernel) const {
+        return controlled_generator_kernels_.find(std::make_pair(
+                   mat_op, kernel)) != controlled_generator_kernels_.cend();
     }
     bool isRegistered(ControlledGateOperation mat_op, KernelType kernel) const {
         return controlled_gate_kernels_.find(std::make_pair(mat_op, kernel)) !=
@@ -483,6 +522,21 @@ template <typename PrecisionT> class DynamicDispatcher {
             applyOperation(kernel, data, num_qubits, ops[i], wires[i],
                            inverse[i], {});
         }
+    }
+
+    void applyControlledGenerator(KernelType kernel, CFP_t *data,
+                                  size_t num_qubits, const std::string &op_name,
+                                  const std::vector<size_t> &controlled_wires,
+                                  const std::vector<size_t> &wires,
+                                  bool inverse) const {
+        const auto iter = controlled_generator_kernels_.find(
+            std::make_pair(strToControlledGeneratorOp(op_name), kernel));
+        if (iter == controlled_generator_kernels_.cend()) {
+            PL_ABORT("Cannot find a registered kernel for a given generator "
+                     "and kernel pair");
+        }
+        return (iter->second)(data, num_qubits, controlled_wires, wires,
+                              inverse);
     }
 
     void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,

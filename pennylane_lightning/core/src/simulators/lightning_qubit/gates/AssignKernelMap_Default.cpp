@@ -236,6 +236,14 @@ void assignKernelsForControlledMatrixOp_Default() {
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }
+void assignKernelsForControlledGeneratorOp_Default() {
+    auto &instance =
+        OperationKernelMap<ControlledGeneratorOperation>::getInstance();
+
+    instance.assignKernelForOp(
+        ControlledGeneratorOperation::NCGeneratorPhaseShift, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
+}
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
 

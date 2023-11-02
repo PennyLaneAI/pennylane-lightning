@@ -149,6 +149,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
         MatrixOperation::MultiQubitOp};
 
+    constexpr static std::array implemented_controlled_generators = {
+        ControlledGeneratorOperation::NCGeneratorPhaseShift};
+
     constexpr static std::array implemented_controlled_matrices = {
         ControlledMatrixOperation::NCMultiQubitOp};
 
@@ -1385,17 +1388,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     /* Define generators */
     template <class PrecisionT>
+    [[nodiscard]] static auto applyNCGeneratorPhaseShift(
+        [[maybe_unused]] std::complex<PrecisionT> *arr,
+        [[maybe_unused]] size_t num_qubits,
+        [[maybe_unused]] const std::vector<size_t> &controlled_wires,
+        [[maybe_unused]] const std::vector<size_t> &wires,
+        [[maybe_unused]] const bool adj) -> PrecisionT {
+        // using ParamT = PrecisionT;
+        // auto core_function = [](std::complex<PrecisionT> *arr,
+        //                         std::size_t i0,
+        //                         [[maybe_unused]] const std::size_t i1) {
+        //     arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
+        // };
+        // if (controlled_wires.size() > 0) {
+        //     applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        //         arr, num_qubits, controlled_wires, wires, core_function);
+        // } else {
+        //     applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+        //         arr, num_qubits, controlled_wires, wires, core_function);
+        // }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    template <class PrecisionT>
     [[nodiscard]] static auto
     applyGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool adj) -> PrecisionT {
         using ParamT = PrecisionT;
-        auto core_function = [](std::complex<PrecisionT> *arr,
-                                [[maybe_unused]] std::size_t i0,
+        auto core_function = [](std::complex<PrecisionT> *arr, std::size_t i0,
                                 [[maybe_unused]] const std::size_t i1) {
             arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
         };
-        applyNC<PrecisionT, ParamT, decltype(core_function)>(
+        applyNC<PrecisionT, ParamT, decltype(core_function), false>(
             arr, num_qubits, {}, wires, core_function);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return static_cast<PrecisionT>(1.0);
@@ -2007,6 +2033,14 @@ extern template void
 GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
+
+/* Controlled generators */
+extern template auto GateImplementationsLM::applyNCGeneratorPhaseShift(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+extern template auto GateImplementationsLM::applyNCGeneratorPhaseShift(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
 
 /* Generators */
 extern template auto GateImplementationsLM::applyGeneratorPhaseShift(

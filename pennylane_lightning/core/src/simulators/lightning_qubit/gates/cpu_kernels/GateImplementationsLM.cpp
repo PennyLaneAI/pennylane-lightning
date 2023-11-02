@@ -577,6 +577,13 @@ template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
 
+/* N-controlled generators */
+template auto GateImplementationsLM::applyNCGeneratorPhaseShift<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorPhaseShift<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
 /* N-controlled gates */
 template void
 GateImplementationsLM::applyNCPauliX<float>(std::complex<float> *, size_t,
