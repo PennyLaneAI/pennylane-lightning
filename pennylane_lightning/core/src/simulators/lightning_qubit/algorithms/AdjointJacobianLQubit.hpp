@@ -18,6 +18,8 @@
  */
 #pragma once
 
+#include <iostream>
+
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -246,6 +248,7 @@ class AdjointJacobian final
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
+
             this->applyOperations(lambda, ops);
         }
 
@@ -306,6 +309,7 @@ class AdjointJacobian final
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     // if current parameter is a trainable parameter
+
                     const PrecisionT scalingFactor =
                         mu.applyGenerator(ops_name[op_idx],
                                           ops.getOpsControlledWires()[op_idx],

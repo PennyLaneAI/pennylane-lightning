@@ -138,7 +138,6 @@ template <typename TypeList> void testAdjointJacobian() {
                         << StateVectorToName<StateVectorT>::name) {
             const std::vector<size_t> tp{0};
 
-            const size_t num_qubits = 1;
             const size_t num_params = 3;
             const size_t num_obs = 1;
             const auto obs = std::make_shared<NamedObs<StateVectorT>>(
@@ -149,9 +148,8 @@ template <typename TypeList> void testAdjointJacobian() {
                 auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}}, {{0}},
                                                  {false});
 
-                std::vector<ComplexT> cdata(1U << num_qubits);
-                cdata[0] = ComplexT{INVSQRT2<PrecisionT>(), 0};
-                cdata[1] = ComplexT{INVSQRT2<PrecisionT>(), 0};
+                std::vector<ComplexT> cdata{INVSQRT2<PrecisionT>(),
+                                            INVSQRT2<PrecisionT>()};
 
                 StateVectorT psi(cdata.data(), cdata.size());
 
@@ -159,211 +157,208 @@ template <typename TypeList> void testAdjointJacobian() {
                     num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
                 adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-                // CAPTURE(jacobian);
-                // CHECK(sin(p) == Approx(jacobian[0]));
+                CAPTURE(jacobian);
+                CHECK(cos(p) == Approx(jacobian[0]));
             }
         }
 
-        // DYNAMIC_SECTION("Op=RX, Obs=Z - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     const std::vector<size_t> tp{0};
+        DYNAMIC_SECTION("Op=RX, Obs=Z - "
+                        << StateVectorToName<StateVectorT>::name) {
+            const std::vector<size_t> tp{0};
 
-        //     const size_t num_qubits = 1;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
-        //     const auto obs = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            const size_t num_qubits = 1;
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
+            const auto obs = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     for (const auto &p : param) {
-        //         auto ops = OpsData<StateVectorT>({"RX"}, {{p}}, {{0}},
-        //         {false});
+            for (const auto &p : param) {
+                auto ops = OpsData<StateVectorT>({"RX"}, {{p}}, {{0}}, {false});
 
-        //         std::vector<ComplexT> cdata(1U << num_qubits);
-        //         cdata[0] = ComplexT{1, 0};
+                std::vector<ComplexT> cdata(1U << num_qubits);
+                cdata[0] = ComplexT{1, 0};
 
-        //         StateVectorT psi(cdata.data(), cdata.size());
+                StateVectorT psi(cdata.data(), cdata.size());
 
-        //         JacobianData<StateVectorT> tape{
-        //             num_params, psi.getLength(), psi.getData(), {obs}, ops,
-        //             tp};
-        //         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+                JacobianData<StateVectorT> tape{
+                    num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+                adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //         CAPTURE(jacobian);
-        //         CHECK(-sin(p) == Approx(jacobian[0]));
-        //     }
-        // }
+                CAPTURE(jacobian);
+                CHECK(-sin(p) == Approx(jacobian[0]));
+            }
+        }
 
-        // DYNAMIC_SECTION("Op=RY, Obs=X - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<size_t> tp{0};
-        //     const size_t num_qubits = 1;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
+        DYNAMIC_SECTION("Op=RY, Obs=X - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<size_t> tp{0};
+            const size_t num_qubits = 1;
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
 
-        //     const auto obs = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliX", std::vector<size_t>{0});
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            const auto obs = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     for (const auto &p : param) {
-        //         auto ops = OpsData<StateVectorT>({"RY"}, {{p}}, {{0}},
-        //         {false});
+            for (const auto &p : param) {
+                auto ops = OpsData<StateVectorT>({"RY"}, {{p}}, {{0}}, {false});
 
-        //         std::vector<ComplexT> cdata(1U << num_qubits);
-        //         cdata[0] = ComplexT{1, 0};
+                std::vector<ComplexT> cdata(1U << num_qubits);
+                cdata[0] = ComplexT{1, 0};
 
-        //         StateVectorT psi(cdata.data(), cdata.size());
+                StateVectorT psi(cdata.data(), cdata.size());
 
-        //         JacobianData<StateVectorT> tape{
-        //             num_params, psi.getLength(), psi.getData(), {obs}, ops,
-        //             tp};
-        //         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+                JacobianData<StateVectorT> tape{
+                    num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+                adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //         CAPTURE(jacobian);
-        //         CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
-        //     }
-        // }
-        // DYNAMIC_SECTION("Op=RX, Obs=[Z,Z] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<size_t> tp{0};
-        //     const size_t num_qubits = 2;
-        //     const size_t num_params = 1;
-        //     const size_t num_obs = 2;
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+                CAPTURE(jacobian);
+                CHECK(cos(p) == Approx(jacobian[0]).margin(1e-7));
+            }
+        }
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
+        DYNAMIC_SECTION("Op=RX, Obs=[Z,Z] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<size_t> tp{0};
+            const size_t num_qubits = 2;
+            const size_t num_params = 1;
+            const size_t num_obs = 2;
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
 
-        //     const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{1});
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     auto ops =
-        //         OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+            const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
 
-        //     JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
-        //                                     psi.getData(), {obs1, obs2},
-        //                                     ops,           tp};
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            auto ops =
+                OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        //     CAPTURE(jacobian);
-        //     CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        //     CHECK(0.0 == Approx(jacobian[1 * num_obs - 1]).margin(1e-7));
-        // }
+            JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
+                                            psi.getData(), {obs1, obs2},
+                                            ops,           tp};
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        // DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<size_t> tp{0, 1, 2};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 3;
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            CAPTURE(jacobian);
+            CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+            CHECK(0.0 == Approx(jacobian[1 * num_obs - 1]).margin(1e-7));
+        }
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
+        DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<size_t> tp{0, 1, 2};
+            const size_t num_qubits = 3;
+            const size_t num_params = 3;
+            const size_t num_obs = 3;
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
 
-        //     const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{1});
-        //     const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{2});
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
-        //         {{0}, {1}, {2}}, {false, false, false});
+            const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{2});
 
-        //     JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
-        //                                     psi.getData(), {obs1, obs2,
-        //                                     obs3}, ops,           tp};
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            auto ops = OpsData<StateVectorT>(
+                {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+                {{0}, {1}, {2}}, {false, false, false});
 
-        //     CAPTURE(jacobian);
-        //     CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        //     CHECK(-sin(param[1]) ==
-        //           Approx(jacobian[1 * num_params + 1]).margin(1e-7));
-        //     CHECK(-sin(param[2]) ==
-        //           Approx(jacobian[2 * num_params + 2]).margin(1e-7));
-        // }
+            JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
+                                            psi.getData(), {obs1, obs2, obs3},
+                                            ops,           tp};
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        // DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z], TParams=[0,2] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> t_params{0, 2};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 3;
-        //     std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
+            CAPTURE(jacobian);
+            CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+            CHECK(-sin(param[1]) ==
+                  Approx(jacobian[1 * num_params + 1]).margin(1e-7));
+            CHECK(-sin(param[2]) ==
+                  Approx(jacobian[2 * num_params + 2]).margin(1e-7));
+        }
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+        DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z], TParams=[0,2] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> t_params{0, 2};
+            const size_t num_qubits = 3;
+            const size_t num_params = 3;
+            const size_t num_obs = 3;
+            std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-        //     const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{1});
-        //     const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{2});
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
-        //         {{0}, {1}, {2}}, {false, false, false});
+            const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            const auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{2});
 
-        //     JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
-        //                                     psi.getData(), {obs1, obs2,
-        //                                     obs3}, ops,           t_params};
+            auto ops = OpsData<StateVectorT>(
+                {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+                {{0}, {1}, {2}}, {false, false, false});
 
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
+                                            psi.getData(), {obs1, obs2, obs3},
+                                            ops,           t_params};
 
-        //     CAPTURE(jacobian);
-        //     CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        //     CHECK(0 == Approx(jacobian[1 * t_params.size() +
-        //     1]).margin(1e-7)); CHECK(-sin(param[2]) ==
-        //           Approx(jacobian[2 * t_params.size() + 1]).margin(1e-7));
-        // }
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        // DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[ZZZ] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> tp{0, 1, 2};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            CAPTURE(jacobian);
+            CHECK(-sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+            CHECK(0 == Approx(jacobian[1 * t_params.size() + 1]).margin(1e-7));
+            CHECK(-sin(param[2]) ==
+                  Approx(jacobian[2 * t_params.size() + 1]).margin(1e-7));
+        }
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+        DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[ZZZ] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> tp{0, 1, 2};
+            const size_t num_qubits = 3;
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{0}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{1}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{2}));
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
-        //         {{0}, {1}, {2}}, {false, false, false});
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     JacobianData<StateVectorT> tape{
-        //         num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+            const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{0}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{1}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{2}));
+            auto ops = OpsData<StateVectorT>(
+                {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+                {{0}, {1}, {2}}, {false, false, false});
 
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            JacobianData<StateVectorT> tape{
+                num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-        //     CAPTURE(jacobian);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //     // Computed with parameter shift
-        //     CHECK(-0.1755096592645253 == Approx(jacobian[0]).margin(1e-7));
-        //     CHECK(0.26478810666384334 == Approx(jacobian[1]).margin(1e-7));
-        //     CHECK(-0.6312451595102775 == Approx(jacobian[2]).margin(1e-7));
-        // }
+            CAPTURE(jacobian);
+
+            // Computed with parameter shift
+            CHECK(-0.1755096592645253 == Approx(jacobian[0]).margin(1e-7));
+            CHECK(0.26478810666384334 == Approx(jacobian[1]).margin(1e-7));
+            CHECK(-0.6312451595102775 == Approx(jacobian[2]).margin(1e-7));
+        }
 
         // DYNAMIC_SECTION("Op=Mixed, Obs=[XXX] - "
         //                 << StateVectorToName<StateVectorT>::name) {
@@ -543,118 +538,116 @@ template <typename TypeList> void testAdjointJacobian() {
         //     CHECK(expected[2] == Approx(jacobian[2]));
         // }
 
-        // DYNAMIC_SECTION("Op=RX, Obs=Ham[Z0+Z1] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> tp{0};
-        //     const size_t num_qubits = 2;
-        //     const size_t num_params = 1;
-        //     const size_t num_obs = 1;
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+        DYNAMIC_SECTION("Op=RX, Obs=Ham[Z0+Z1] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> tp{0};
+            const size_t num_qubits = 2;
+            const size_t num_params = 1;
+            const size_t num_obs = 1;
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{1});
+            const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            const auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
 
-        //     auto ham =
-        //         Hamiltonian<StateVectorT>::create({0.3, 0.7}, {obs1, obs2});
+            auto ham =
+                Hamiltonian<StateVectorT>::create({0.3, 0.7}, {obs1, obs2});
 
-        //     auto ops =
-        //         OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
+            auto ops =
+                OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
 
-        //     JacobianData<StateVectorT> tape{
-        //         num_params, psi.getLength(), psi.getData(), {ham}, ops, tp};
+            JacobianData<StateVectorT> tape{
+                num_params, psi.getLength(), psi.getData(), {ham}, ops, tp};
 
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //     CAPTURE(jacobian);
-        //     CHECK(-0.3 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
-        // }
+            CAPTURE(jacobian);
+            CHECK(-0.3 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7));
+        }
 
-        // DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], TParams=[0,2] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> t_params{0, 2};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
-        //     std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
+        DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], TParams=[0,2] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> t_params{0, 2};
+            const size_t num_qubits = 3;
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
+            std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
-        //     auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{1});
-        //     auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{2});
+            auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            auto obs2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs3 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{2});
 
-        //     auto ham = Hamiltonian<StateVectorT>::create({0.47, 0.32, 0.96},
-        //                                                  {obs1, obs2, obs3});
+            auto ham = Hamiltonian<StateVectorT>::create({0.47, 0.32, 0.96},
+                                                         {obs1, obs2, obs3});
 
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
-        //         {{0}, {1}, {2}}, {false, false, false});
+            auto ops = OpsData<StateVectorT>(
+                {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+                {{0}, {1}, {2}}, {false, false, false});
 
-        //     JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
-        //                                     psi.getData(), {ham},
-        //                                     ops,           t_params};
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            JacobianData<StateVectorT> tape{num_params,    psi.getLength(),
+                                            psi.getData(), {ham},
+                                            ops,           t_params};
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //     CAPTURE(jacobian);
-        //     CHECK((-0.47 * sin(param[0]) ==
-        //     Approx(jacobian[0]).margin(1e-7))); CHECK((-0.96 * sin(param[2])
-        //     == Approx(jacobian[1]).margin(1e-7)));
-        // }
+            CAPTURE(jacobian);
+            CHECK((-0.47 * sin(param[0]) == Approx(jacobian[0]).margin(1e-7)));
+            CHECK((-0.96 * sin(param[2]) == Approx(jacobian[1]).margin(1e-7)));
+        }
 
-        // DYNAMIC_SECTION("HermitianObs - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> t_params{0, 2};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
-        //     std::vector<PrecisionT> jacobian1(num_obs * t_params.size(), 0);
-        //     std::vector<PrecisionT> jacobian2(num_obs * t_params.size(), 0);
+        DYNAMIC_SECTION("HermitianObs - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> t_params{0, 2};
+            const size_t num_qubits = 3;
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
+            std::vector<PrecisionT> jacobian1(num_obs * t_params.size(), 0);
+            std::vector<PrecisionT> jacobian2(num_obs * t_params.size(), 0);
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     auto obs1 = std::make_shared<TensorProdObs<StateVectorT>>(
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{0}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{1}));
-        //     auto obs2 = std::make_shared<HermitianObs<StateVectorT>>(
-        //         std::vector<ComplexT>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0,
-        //         0,
-        //                               0, 0, 1},
-        //         std::vector<size_t>{0, 1});
+            auto obs1 = std::make_shared<TensorProdObs<StateVectorT>>(
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{0}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{1}));
+            auto obs2 = std::make_shared<HermitianObs<StateVectorT>>(
+                std::vector<ComplexT>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0,
+                                      0, 0, 1},
+                std::vector<size_t>{0, 1});
 
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
-        //         {{0}, {1}, {2}}, {false, false, false});
+            auto ops = OpsData<StateVectorT>(
+                {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
+                {{0}, {1}, {2}}, {false, false, false});
 
-        //     JacobianData<StateVectorT> tape1{num_params,    psi.getLength(),
-        //                                      psi.getData(), {obs1},
-        //                                      ops,           t_params};
+            JacobianData<StateVectorT> tape1{num_params,    psi.getLength(),
+                                             psi.getData(), {obs1},
+                                             ops,           t_params};
 
-        //     JacobianData<StateVectorT> tape2{num_params,    psi.getLength(),
-        //                                      psi.getData(), {obs2},
-        //                                      ops,           t_params};
-        //     adj.adjointJacobian(std::span{jacobian1}, tape1, psi, true);
-        //     adj.adjointJacobian(std::span{jacobian2}, tape2, psi, true);
+            JacobianData<StateVectorT> tape2{num_params,    psi.getLength(),
+                                             psi.getData(), {obs2},
+                                             ops,           t_params};
+            adj.adjointJacobian(std::span{jacobian1}, tape1, psi, true);
+            adj.adjointJacobian(std::span{jacobian2}, tape2, psi, true);
 
-        //     CHECK((jacobian1 == PLApprox(jacobian2).margin(1e-7)));
-        // }
+            CHECK((jacobian1 == PLApprox(jacobian2).margin(1e-7)));
+        }
 
         testAdjointJacobian<typename TypeList::Next>();
     }

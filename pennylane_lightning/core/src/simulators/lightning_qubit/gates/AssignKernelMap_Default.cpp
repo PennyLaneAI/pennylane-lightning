@@ -240,9 +240,18 @@ void assignKernelsForControlledGeneratorOp_Default() {
     auto &instance =
         OperationKernelMap<ControlledGeneratorOperation>::getInstance();
 
-    instance.assignKernelForOp(
-        ControlledGeneratorOperation::NCGeneratorPhaseShift, all_threading,
-        all_memory_model, all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::PhaseShift,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::RX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::RY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::RZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
@@ -265,16 +274,16 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::NCT, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCPhaseShift,
+    instance.assignKernelForOp(ControlledGateOperation::PhaseShift,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCRX, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::RX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCRY, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::RY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCRZ, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::RZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
 }

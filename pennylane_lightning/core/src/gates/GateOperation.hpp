@@ -125,7 +125,10 @@ enum class ControlledMatrixOperation : uint32_t {
  */
 enum class ControlledGeneratorOperation : uint32_t {
     BEGIN = 0,
-    NCGeneratorPhaseShift = 0,
+    PhaseShift = 0,
+    RX,
+    RY,
+    RZ,
     /* END (placeholder) */
     END
 };
@@ -138,10 +141,10 @@ enum class ControlledGateOperation : uint32_t {
     NCHadamard,
     NCS,
     NCT,
-    NCPhaseShift,
-    NCRX,
-    NCRY,
-    NCRZ,
+    PhaseShift,
+    RX,
+    RY,
+    RZ,
     /* END (placeholder) */
     END
 };

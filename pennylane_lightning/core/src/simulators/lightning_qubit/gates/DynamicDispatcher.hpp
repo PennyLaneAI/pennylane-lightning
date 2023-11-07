@@ -145,6 +145,10 @@ template <typename PrecisionT> class DynamicDispatcher {
              GateConstant::controlled_gate_names) {
             str_to_controlled_gates_.emplace(gate_name, gate_op);
         }
+        for (const auto &[gntr_op, gntr_name] :
+             GateConstant::controlled_generator_names) {
+            str_to_controlled_gntrs_.emplace(gntr_name, gntr_op);
+        }
     }
 
   public:

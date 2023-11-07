@@ -121,7 +121,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitation,
         GateOperation::DoubleExcitationMinus,
         GateOperation::DoubleExcitationPlus,
-        GateOperation::MultiRZ};
+        GateOperation::MultiRZ,
+    };
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::PhaseShift,
@@ -146,14 +147,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     };
 
     constexpr static std::array implemented_matrices = {
-        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
-        MatrixOperation::MultiQubitOp};
+        MatrixOperation::SingleQubitOp,
+        MatrixOperation::TwoQubitOp,
+        MatrixOperation::MultiQubitOp,
+    };
 
     constexpr static std::array implemented_controlled_generators = {
-        ControlledGeneratorOperation::NCGeneratorPhaseShift};
+        ControlledGeneratorOperation::PhaseShift,
+        ControlledGeneratorOperation::RX,
+        ControlledGeneratorOperation::RY,
+        ControlledGeneratorOperation::RZ,
+    };
 
     constexpr static std::array implemented_controlled_matrices = {
-        ControlledMatrixOperation::NCMultiQubitOp};
+        ControlledMatrixOperation::NCMultiQubitOp,
+    };
 
     constexpr static std::array implemented_controlled_gates = {
         ControlledGateOperation::NCPauliX,
@@ -162,10 +170,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::NCHadamard,
         ControlledGateOperation::NCS,
         ControlledGateOperation::NCT,
-        ControlledGateOperation::NCPhaseShift,
-        ControlledGateOperation::NCRX,
-        ControlledGateOperation::NCRY,
-        ControlledGateOperation::NCRZ};
+        ControlledGateOperation::PhaseShift,
+        ControlledGateOperation::RX,
+        ControlledGateOperation::RY,
+        ControlledGateOperation::RZ,
+    };
 
     /**
      * @brief Computes the array of indices to apply the gate corresponding to
@@ -714,11 +723,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyNCPhaseShift(std::complex<PrecisionT> *arr,
-                                  const size_t num_qubits,
-                                  const std::vector<size_t> &controlled_wires,
-                                  const std::vector<size_t> &wires,
-                                  const bool inverse, ParamT angle) {
+    static void applyNCPhaseShift(
+        std::complex<PrecisionT> *arr, const size_t num_qubits,
+        [[maybe_unused]] const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, const bool inverse, ParamT angle) {
         const std::complex<PrecisionT> s =
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
                     : std::exp(std::complex<PrecisionT>(0, angle));
@@ -1388,11 +1396,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     /* Define generators */
     template <class PrecisionT>
-    [[nodiscard]] static auto
-    applyNCGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
-                               const std::vector<size_t> &controlled_wires,
-                               const std::vector<size_t> &wires,
-                               [[maybe_unused]] const bool adj) -> PrecisionT {
+    [[nodiscard]] static auto applyNCGeneratorPhaseShift(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        [[maybe_unused]] const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, [[maybe_unused]] const bool adj)
+        -> PrecisionT {
         constexpr std::size_t one{1};
         constexpr std::complex<PrecisionT> zero{0.0};
 
@@ -1435,16 +1443,135 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                              const std::vector<size_t> &wires,
                              [[maybe_unused]] bool adj) -> PrecisionT {
         return applyNCGeneratorPhaseShift(arr, num_qubits, {}, wires, adj);
-        // using ParamT = PrecisionT;
-        // auto core_function = [](std::complex<PrecisionT> *arr, std::size_t
-        // i0,
-        //                         [[maybe_unused]] const std::size_t i1) {
-        //     arr[i0] = std::complex<PrecisionT>{0.0, 0.0};
-        // };
-        // applyNC<PrecisionT, ParamT, decltype(core_function), false>(
-        //     arr, num_qubits, {}, wires, core_function);
-        // // NOLINTNEXTLINE(readability-magic-numbers)
-        // return static_cast<PrecisionT>(1.0);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyNCGeneratorRX(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::vector<size_t> &controlled_wires,
+                       const std::vector<size_t> &wires, const bool adj)
+        -> PrecisionT {
+        constexpr std::size_t one{1};
+        constexpr std::complex<PrecisionT> zero{0.0};
+
+        const std::size_t n_contr = controlled_wires.size();
+        const std::size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(n_wires == 1);
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+
+        const std::size_t dim = one << all_wires.size();
+        std::vector<std::size_t> indices(dim);
+
+        for (std::size_t k = 0; k < exp2(num_qubits - all_wires.size()); k++) {
+            indices = parity2indices(k, parity, rev_wire_shifts);
+            for (std::size_t i = 0; i < dim - 2; i++) {
+                arr[indices[i]] = zero;
+            }
+        }
+        applyNCPauliX(arr, num_qubits, controlled_wires, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyNCGeneratorRY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::vector<size_t> &controlled_wires,
+                       const std::vector<size_t> &wires, const bool adj)
+        -> PrecisionT {
+        constexpr std::size_t one{1};
+        constexpr std::complex<PrecisionT> zero{0.0};
+
+        const std::size_t n_contr = controlled_wires.size();
+        const std::size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(n_wires == 1);
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+
+        const std::size_t dim = one << all_wires.size();
+        std::vector<std::size_t> indices(dim);
+
+        for (std::size_t k = 0; k < exp2(num_qubits - all_wires.size()); k++) {
+            indices = parity2indices(k, parity, rev_wire_shifts);
+            for (std::size_t i = 0; i < dim - 2; i++) {
+                arr[indices[i]] = zero;
+            }
+        }
+        applyNCPauliY(arr, num_qubits, controlled_wires, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyNCGeneratorRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::vector<size_t> &controlled_wires,
+                       const std::vector<size_t> &wires, const bool adj)
+        -> PrecisionT {
+        constexpr std::size_t one{1};
+        constexpr std::complex<PrecisionT> zero{0.0};
+
+        const std::size_t n_contr = controlled_wires.size();
+        const std::size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(n_wires == 1);
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            rev_wire_shifts[k] = (one << rev_wires[k]);
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+
+        const std::size_t dim = one << all_wires.size();
+        std::vector<std::size_t> indices(dim);
+
+        for (std::size_t k = 0; k < exp2(num_qubits - all_wires.size()); k++) {
+            indices = parity2indices(k, parity, rev_wire_shifts);
+            for (std::size_t i = 0; i < dim - 2; i++) {
+                arr[indices[i]] = zero;
+            }
+        }
+        applyNCPauliZ(arr, num_qubits, controlled_wires, wires, adj);
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
     }
 
     template <class PrecisionT>
@@ -2062,6 +2189,24 @@ extern template auto GateImplementationsLM::applyNCGeneratorPhaseShift(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool) -> float;
 extern template auto GateImplementationsLM::applyNCGeneratorPhaseShift(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+extern template auto GateImplementationsLM::applyNCGeneratorRX(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+extern template auto GateImplementationsLM::applyNCGeneratorRX(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+extern template auto GateImplementationsLM::applyNCGeneratorRY(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+extern template auto GateImplementationsLM::applyNCGeneratorRY(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+extern template auto GateImplementationsLM::applyNCGeneratorRZ(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+extern template auto GateImplementationsLM::applyNCGeneratorRZ(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool) -> double;
 

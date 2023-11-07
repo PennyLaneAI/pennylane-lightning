@@ -172,8 +172,13 @@ namespace Pennylane::Gates::Constant {
  */
 [[maybe_unused]] constexpr std::array controlled_generator_names = {
     std::pair<ControlledGeneratorOperation, std::string_view>{
-        ControlledGeneratorOperation::NCGeneratorPhaseShift,
-        "NCGeneratorPhaseShift"},
+        ControlledGeneratorOperation::PhaseShift, "PhaseShift"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::RX, "RX"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::RY, "RY"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::RZ, "RZ"},
 };
 
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -190,13 +195,13 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::NCT, "NCT"},
     std::pair<ControlledGateOperation, std::string_view>{
-        ControlledGateOperation::NCPhaseShift, "NCPhaseShift"},
+        ControlledGateOperation::PhaseShift, "PhaseShift"},
     std::pair<ControlledGateOperation, std::string_view>{
-        ControlledGateOperation::NCRX, "NCRX"},
+        ControlledGateOperation::RX, "RX"},
     std::pair<ControlledGateOperation, std::string_view>{
-        ControlledGateOperation::NCRY, "NCRY"},
+        ControlledGateOperation::RY, "RY"},
     std::pair<ControlledGateOperation, std::string_view>{
-        ControlledGateOperation::NCRZ, "NCRZ"},
+        ControlledGateOperation::RZ, "RZ"},
 };
 
 /**
@@ -312,7 +317,13 @@ namespace Pennylane::Gates::Constant {
 
 [[maybe_unused]] constexpr std::array controlled_generator_wires = {
     std::pair<ControlledGeneratorOperation, std::size_t>{
-        ControlledGeneratorOperation::NCGeneratorPhaseShift, 1},
+        ControlledGeneratorOperation::PhaseShift, 1},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::RX, 1},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::RY, 1},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::RZ, 1},
 };
 
 /**
@@ -330,12 +341,9 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCS, 0},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCT, 0},
     std::pair<ControlledGateOperation, size_t>{
-        ControlledGateOperation::NCPhaseShift, 1},
-    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRX,
-                                               1},
-    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRY,
-                                               1},
-    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::NCRZ,
-                                               1},
+        ControlledGateOperation::PhaseShift, 1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RX, 1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RY, 1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RZ, 1},
 };
 } // namespace Pennylane::Gates::Constant

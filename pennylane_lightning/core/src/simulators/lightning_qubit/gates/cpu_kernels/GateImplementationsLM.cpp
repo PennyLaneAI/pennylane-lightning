@@ -584,6 +584,25 @@ template auto GateImplementationsLM::applyNCGeneratorPhaseShift<float>(
 template auto GateImplementationsLM::applyNCGeneratorPhaseShift<double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRX<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRX<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRY<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRY<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRZ<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRZ<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+
 /* N-controlled gates */
 template void
 GateImplementationsLM::applyNCPauliX<float>(std::complex<float> *, size_t,
