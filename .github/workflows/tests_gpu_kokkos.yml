@@ -345,3 +345,4 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
