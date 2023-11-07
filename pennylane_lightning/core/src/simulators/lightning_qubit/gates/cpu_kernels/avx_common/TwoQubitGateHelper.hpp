@@ -353,9 +353,9 @@ class TwoQubitGateWithoutParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
-        -> ReturnType
-        requires SymmetricTwoQubitGateWithoutParam<AVXImpl>
-    {
+        // clang-format off
+        -> ReturnType requires SymmetricTwoQubitGateWithoutParam<AVXImpl> {
+        // clang-format on
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -402,9 +402,9 @@ class TwoQubitGateWithoutParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse) const
-        -> ReturnType
-        requires AsymmetricTwoQubitGateWithoutParam<AVXImpl>
-    {
+        // clang-format off
+        -> ReturnType requires AsymmetricTwoQubitGateWithoutParam<AVXImpl> {
+        // clang-format on
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -479,9 +479,10 @@ class TwoQubitGateWithParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires SymmetricTwoQubitGateWithParam<AVXImpl>
-    {
+                    ParamT angle) const
+        // clang-format off
+        -> ReturnType requires SymmetricTwoQubitGateWithParam<AVXImpl> {
+        // clang-format on
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
@@ -528,9 +529,10 @@ class TwoQubitGateWithParamHelper {
      */
     auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
                     const std::vector<size_t> &wires, bool inverse,
-                    ParamT angle) const -> ReturnType
-        requires AsymmetricTwoQubitGateWithParam<AVXImpl>
-    {
+                    ParamT angle) const
+        // clang-format off
+        -> ReturnType requires AsymmetricTwoQubitGateWithParam<AVXImpl> {
+        // clang-format on
         PL_ASSERT(wires.size() == 2);
 
         constexpr static size_t internal_wires =
