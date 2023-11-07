@@ -269,6 +269,47 @@ class Measurements final
     }
 
     /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param ob Observable
+     * @param shots Vector of shot number to measurement
+     * @return Floating point expected value of the observable.
+     */
+
+    auto expval(const Observable<StateVectorT> &ob, size_t &num_shots,
+                std::vector<size_t> &shot_range, size_t &bin_size)
+        -> PrecisionT {
+        auto name = ob.getObsName();
+        auto wires = ob.getWires();
+        const size_t num_qubits = this->_statevector.getNumQubits();
+        std::vector<size_t> full_samples = generate_samples(num_shots);
+        std::vector<size_t> sub_full_samples;
+        std::vector<size_t> obs_samples(num_shots, 0);
+
+        PrecisionT result = 0;
+
+        if (shot_range.empty()) {
+            sub_full_samples = full_samples;
+        } else {
+            // Get a slice of samples based on the shot_range vector
+            for (auto &i : shot_range) {
+                for (int j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
+                    sub_full_samples.push_back(full_samples[j]);
+                }
+            }
+        }
+
+        if (name == "PauliX" || name == "PauliY" || name == "PauliZ" ||
+            name == "Hadamard") {
+            for (int i = 0; i < num_shots; i++) {
+                result += 1 - 2 * sub_full_samples[i * num_qubits + wires[0]];
+            }
+        }
+
+        return result / num_shots;
+    }
+
+    /**
      * @brief Variance value for a general Observable
      *
      * @param ob Observable
