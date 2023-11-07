@@ -25,11 +25,14 @@
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
+* Update Lightning requirements.
+  [(#553)](https://github.com/PennyLaneAI/pennylane-lightning/pull/553)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
@@ -111,7 +114,7 @@ Lee J. O'Riordan
 
 ### Improvements
 
-* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.   
+* Improve Python testing for Lightning-GPU (+MPI) by adding jobs in Actions files and adding Python tests to increase code coverage.
   [(#522)](https://github.com/PennyLaneAI/pennylane-lightning/pull/522)
 
 * Add support for `pip install pennylane-lightning[kokkos]` for the OpenMP backend.
@@ -142,7 +145,7 @@ Lee J. O'Riordan
 
 ### Bug fixes
 
-* Fix CI issues running python-cov with MPI. 
+* Fix CI issues running python-cov with MPI.
   [(#535)](https://github.com/PennyLaneAI/pennylane-lightning/pull/535)
 
 * Re-add support for `pip install pennylane-lightning[gpu]`.
