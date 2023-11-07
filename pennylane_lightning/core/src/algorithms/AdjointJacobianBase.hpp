@@ -56,11 +56,18 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                 bool adj = false) {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
-            state.applyOperation(operations.getOpsName()[op_idx],
-                                 operations.getOpsControlledWires()[op_idx],
-                                 operations.getOpsWires()[op_idx],
-                                 operations.getOpsInverses()[op_idx] ^ adj,
-                                 operations.getOpsParams()[op_idx]);
+            if (operations.getOpsControlledWires()[op_idx].empty()) {
+                state.applyOperation(operations.getOpsName()[op_idx],
+                                     operations.getOpsWires()[op_idx],
+                                     operations.getOpsInverses()[op_idx] ^ adj,
+                                     operations.getOpsParams()[op_idx]);
+            } else {
+                state.applyOperation(operations.getOpsName()[op_idx],
+                                     operations.getOpsControlledWires()[op_idx],
+                                     operations.getOpsWires()[op_idx],
+                                     operations.getOpsInverses()[op_idx] ^ adj,
+                                     operations.getOpsParams()[op_idx]);
+            }
         }
     }
 
@@ -77,11 +84,18 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
     inline void applyOperationAdj(UpdatedStateVectorT &state,
                                   const OpsData<StateVectorT> &operations,
                                   size_t op_idx) {
-        state.applyOperation(operations.getOpsName()[op_idx],
-                             operations.getOpsControlledWires()[op_idx],
-                             operations.getOpsWires()[op_idx],
-                             !operations.getOpsInverses()[op_idx],
-                             operations.getOpsParams()[op_idx]);
+        if (operations.getOpsControlledWires()[op_idx].empty()) {
+            state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsWires()[op_idx],
+                                 !operations.getOpsInverses()[op_idx],
+                                 operations.getOpsParams()[op_idx]);
+        } else {
+            state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsControlledWires()[op_idx],
+                                 operations.getOpsWires()[op_idx],
+                                 !operations.getOpsInverses()[op_idx],
+                                 operations.getOpsParams()[op_idx]);
+        }
     }
 
     /**

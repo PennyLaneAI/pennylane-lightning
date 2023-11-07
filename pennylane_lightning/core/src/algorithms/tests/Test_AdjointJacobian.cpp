@@ -137,19 +137,25 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("Op=PhaseShift, Obs=Y - "
                         << StateVectorToName<StateVectorT>::name) {
             const std::vector<size_t> tp{0};
+            const size_t num_qubits = GENERATE(2, 3, 4);
 
             const size_t num_params = 3;
             const size_t num_obs = 1;
             const auto obs = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<size_t>{num_qubits - 1});
             std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            auto matrices = std::vector<std::vector<ComplexT>>(1);
 
             for (const auto &p : param) {
-                auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}}, {{0}},
-                                                 {false});
+                std::vector<std::vector<size_t>> controls(num_qubits - 1);
+                std::iota(controls[0].begin(), controls[0].end(), 0);
+                auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}},
+                                                 {{num_qubits - 1}}, {false},
+                                                 matrices, controls);
 
-                std::vector<ComplexT> cdata{INVSQRT2<PrecisionT>(),
-                                            INVSQRT2<PrecisionT>()};
+                std::vector<ComplexT> cdata(1U << num_qubits);
+                cdata[0] = INVSQRT2<PrecisionT>();
+                cdata[1] = INVSQRT2<PrecisionT>();
 
                 StateVectorT psi(cdata.data(), cdata.size());
 
@@ -360,183 +366,174 @@ template <typename TypeList> void testAdjointJacobian() {
             CHECK(-0.6312451595102775 == Approx(jacobian[2]).margin(1e-7));
         }
 
-        // DYNAMIC_SECTION("Op=Mixed, Obs=[XXX] - "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
-        //     const size_t num_qubits = 3;
-        //     const size_t num_params = 6;
-        //     const size_t num_obs = 1;
-        //     std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+        DYNAMIC_SECTION("Op=Mixed, Obs=[XXX] - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
+            const size_t num_qubits = 3;
+            const size_t num_params = 6;
+            const size_t num_obs = 1;
+            std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //     std::vector<ComplexT> cdata(1U << num_qubits);
-        //     cdata[0] = ComplexT{1, 0};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata(1U << num_qubits);
+            cdata[0] = ComplexT{1, 0};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliX", std::vector<size_t>{0}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliX", std::vector<size_t>{1}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliX", std::vector<size_t>{2}));
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
-        //         {{param[0]},
-        //          {param[1]},
-        //          {param[2]},
-        //          {},
-        //          {},
-        //          {param[0]},
-        //          {param[1]},
-        //          {param[2]}},
-        //         {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
-        //         {false, false, false, false, false, false, false, false});
+            const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliX", std::vector<size_t>{0}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliX", std::vector<size_t>{1}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliX", std::vector<size_t>{2}));
+            auto ops = OpsData<StateVectorT>(
+                {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
+                {{param[0]},
+                 {param[1]},
+                 {param[2]},
+                 {},
+                 {},
+                 {param[0]},
+                 {param[1]},
+                 {param[2]}},
+                {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
+                {false, false, false, false, false, false, false, false});
 
-        //     JacobianData<StateVectorT> tape{
-        //         num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+            JacobianData<StateVectorT> tape{
+                num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
 
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //     CAPTURE(jacobian);
+            CAPTURE(jacobian);
 
-        //     // Computed with PennyLane using default.qubit.adjoint_jacobian
-        //     CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
-        //     CHECK(-0.674214427 == Approx(jacobian[1]).margin(1e-7));
-        //     CHECK(0.275139672 == Approx(jacobian[2]).margin(1e-7));
-        //     CHECK(0.275139672 == Approx(jacobian[3]).margin(1e-7));
-        //     CHECK(-0.0129093062 == Approx(jacobian[4]).margin(1e-7));
-        //     CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
-        // }
+            // Computed with PennyLane using default.qubit.adjoint_jacobian
+            CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
+            CHECK(-0.674214427 == Approx(jacobian[1]).margin(1e-7));
+            CHECK(0.275139672 == Approx(jacobian[2]).margin(1e-7));
+            CHECK(0.275139672 == Approx(jacobian[3]).margin(1e-7));
+            CHECK(-0.0129093062 == Approx(jacobian[4]).margin(1e-7));
+            CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
+        }
 
-        // DYNAMIC_SECTION("Decomposed Rot gate, non computational basis state -
-        // "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     const std::vector<size_t> tp{0, 1, 2};
-        //     const size_t num_params = 3;
-        //     const size_t num_obs = 1;
+        DYNAMIC_SECTION("Decomposed Rot gate, non computational basis state - "
+                        << StateVectorToName<StateVectorT>::name) {
+            const std::vector<size_t> tp{0, 1, 2};
+            const size_t num_params = 3;
+            const size_t num_obs = 1;
 
-        //     PrecisionT limit = 2 * M_PI;
-        //     const std::vector<PrecisionT> thetas = linspace(-limit, limit,
-        //     7);
+            PrecisionT limit = 2 * M_PI;
+            const std::vector<PrecisionT> thetas = linspace(-limit, limit, 7);
 
-        //     std::vector<std::vector<PrecisionT>> expec_results{
-        //         {0, -9.90819496e-01, 0},
-        //         {-8.18996553e-01, 1.62526544e-01, 0},
-        //         {-0.203949, 0.48593716, 0},
-        //         {0, 1, 0},
-        //         {-2.03948985e-01, 4.85937177e-01, 0},
-        //         {-8.18996598e-01, 1.62526487e-01, 0},
-        //         {0, -9.90819511e-01, 0}};
+            std::vector<std::vector<PrecisionT>> expec_results{
+                {0, -9.90819496e-01, 0},
+                {-8.18996553e-01, 1.62526544e-01, 0},
+                {-0.203949, 0.48593716, 0},
+                {0, 1, 0},
+                {-2.03948985e-01, 4.85937177e-01, 0},
+                {-8.18996598e-01, 1.62526487e-01, 0},
+                {0, -9.90819511e-01, 0}};
 
-        //     const auto obs = std::make_shared<NamedObs<StateVectorT>>(
-        //         "PauliZ", std::vector<size_t>{0});
+            const auto obs = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
 
-        //     for (size_t i = 0; i < thetas.size(); i++) {
-        //         const PrecisionT theta = thetas[i];
-        //         std::vector<PrecisionT> local_params{
-        //             theta, std::pow(theta, (PrecisionT)3),
-        //             Pennylane::Util::SQRT2<PrecisionT>() * theta};
-        //         std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
+            for (size_t i = 0; i < thetas.size(); i++) {
+                const PrecisionT theta = thetas[i];
+                std::vector<PrecisionT> local_params{
+                    theta, std::pow(theta, (PrecisionT)3),
+                    Pennylane::Util::SQRT2<PrecisionT>() * theta};
+                std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-        //         std::vector<ComplexT> cdata{
-        //             Pennylane::Util::INVSQRT2<PrecisionT>(),
-        //             -Pennylane::Util::INVSQRT2<PrecisionT>()};
-        //         StateVectorT psi(cdata.data(), cdata.size());
+                std::vector<ComplexT> cdata{
+                    Pennylane::Util::INVSQRT2<PrecisionT>(),
+                    -Pennylane::Util::INVSQRT2<PrecisionT>()};
+                StateVectorT psi(cdata.data(), cdata.size());
 
-        //         auto ops = OpsData<StateVectorT>(
-        //             {"RZ", "RY", "RZ"},
-        //             {{local_params[0]}, {local_params[1]},
-        //             {local_params[2]}},
-        //             {{0}, {0}, {0}}, {false, false, false});
+                auto ops = OpsData<StateVectorT>(
+                    {"RZ", "RY", "RZ"},
+                    {{local_params[0]}, {local_params[1]}, {local_params[2]}},
+                    {{0}, {0}, {0}}, {false, false, false});
 
-        //         JacobianData<StateVectorT> tape{
-        //             num_params, psi.getLength(), psi.getData(), {obs}, ops,
-        //             tp};
-        //         adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+                JacobianData<StateVectorT> tape{
+                    num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
+                adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //         CAPTURE(theta);
-        //         CAPTURE(jacobian);
+                CAPTURE(theta);
+                CAPTURE(jacobian);
 
-        //         // Computed with PennyLane using default.qubit
-        //         CHECK(expec_results[i][0] ==
-        //         Approx(jacobian[0]).margin(1e-4)); CHECK(expec_results[i][1]
-        //         == Approx(jacobian[1]).margin(1e-4));
-        //         CHECK(expec_results[i][2] ==
-        //         Approx(jacobian[2]).margin(1e-4));
-        //     }
-        // }
+                // Computed with PennyLane using default.qubit
+                CHECK(expec_results[i][0] == Approx(jacobian[0]).margin(1e-4));
+                CHECK(expec_results[i][1] == Approx(jacobian[1]).margin(1e-4));
+                CHECK(expec_results[i][2] == Approx(jacobian[2]).margin(1e-4));
+            }
+        }
 
-        // DYNAMIC_SECTION("Mixed Ops, Obs and TParams- "
-        //                 << StateVectorToName<StateVectorT>::name) {
-        //     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-        //     const std::vector<size_t> t_params{1, 2, 3};
-        //     const size_t num_obs = 1;
+        DYNAMIC_SECTION("Mixed Ops, Obs and TParams - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+            const std::vector<size_t> t_params{1, 2, 3};
+            const size_t num_obs = 1;
 
-        //     PrecisionT limit = 2 * M_PI;
-        //     const std::vector<PrecisionT> thetas = linspace(-limit, limit,
-        //     8);
+            PrecisionT limit = 2 * M_PI;
+            const std::vector<PrecisionT> thetas = linspace(-limit, limit, 8);
 
-        //     std::vector<PrecisionT> local_params{0.543, 0.54, 0.1,  0.5, 1.3,
-        //                                          -2.3,  0.5,  -0.5, 0.5};
-        //     std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
+            std::vector<PrecisionT> local_params{0.543, 0.54, 0.1,  0.5, 1.3,
+                                                 -2.3,  0.5,  -0.5, 0.5};
+            std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-        //     std::vector<ComplexT> cdata{Pennylane::Util::ONE<PrecisionT>(),
-        //                                 Pennylane::Util::ZERO<PrecisionT>(),
-        //                                 Pennylane::Util::ZERO<PrecisionT>(),
-        //                                 Pennylane::Util::ZERO<PrecisionT>()};
-        //     StateVectorT psi(cdata.data(), cdata.size());
+            std::vector<ComplexT> cdata{Pennylane::Util::ONE<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>(),
+                                        Pennylane::Util::ZERO<PrecisionT>()};
+            StateVectorT psi(cdata.data(), cdata.size());
 
-        //     const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliX", std::vector<size_t>{0}),
-        //         std::make_shared<NamedObs<StateVectorT>>(
-        //             "PauliZ", std::vector<size_t>{1}));
+            const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliX", std::vector<size_t>{0}),
+                std::make_shared<NamedObs<StateVectorT>>(
+                    "PauliZ", std::vector<size_t>{1}));
 
-        //     auto ops = OpsData<StateVectorT>(
-        //         {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ", "RY",
-        //         "RZ",
-        //          "RZ", "RY", "CNOT"},
-        //         {{},
-        //          {local_params[0]},
-        //          {},
-        //          {local_params[1]},
-        //          {local_params[2]},
-        //          {local_params[3]},
-        //          {local_params[4]},
-        //          {local_params[5]},
-        //          {local_params[6]},
-        //          {local_params[7]},
-        //          {local_params[8]},
-        //          {}},
-        //         {{0},
-        //          {0},
-        //          {0, 1},
-        //          {0},
-        //          {0},
-        //          {0},
-        //          {0},
-        //          {0},
-        //          {0},
-        //          {0},
-        //          {1},
-        //          {0, 1}},
-        //         {false, false, false, false, false, false, false, false,
-        //         false,
-        //          false, false, false});
+            auto ops = OpsData<StateVectorT>(
+                {"Hadamard", "RX", "CNOT", "RZ", "RY", "RZ", "RZ", "RY", "RZ",
+                 "RZ", "RY", "CNOT"},
+                {{},
+                 {local_params[0]},
+                 {},
+                 {local_params[1]},
+                 {local_params[2]},
+                 {local_params[3]},
+                 {local_params[4]},
+                 {local_params[5]},
+                 {local_params[6]},
+                 {local_params[7]},
+                 {local_params[8]},
+                 {}},
+                {{0},
+                 {0},
+                 {0, 1},
+                 {0},
+                 {0},
+                 {0},
+                 {0},
+                 {0},
+                 {0},
+                 {0},
+                 {1},
+                 {0, 1}},
+                {false, false, false, false, false, false, false, false, false,
+                 false, false, false});
 
-        //     JacobianData<StateVectorT> tape{
-        //         t_params.size(), psi.getLength(), psi.getData(), {obs}, ops,
-        //         t_params};
-        //     adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+            JacobianData<StateVectorT> tape{
+                t_params.size(), psi.getLength(), psi.getData(), {obs}, ops,
+                t_params};
+            adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
 
-        //     std::vector<PrecisionT> expected{-0.71429188, 0.04998561,
-        //                                      -0.71904837};
-        //     // Computed with PennyLane using default.qubit
-        //     CHECK(expected[0] == Approx(jacobian[0]));
-        //     CHECK(expected[1] == Approx(jacobian[1]));
-        //     CHECK(expected[2] == Approx(jacobian[2]));
-        // }
+            std::vector<PrecisionT> expected{-0.71429188, 0.04998561,
+                                             -0.71904837};
+            // Computed with PennyLane using default.qubit
+            CHECK(expected[0] == Approx(jacobian[0]));
+            CHECK(expected[1] == Approx(jacobian[1]));
+            CHECK(expected[2] == Approx(jacobian[2]));
+        }
 
         DYNAMIC_SECTION("Op=RX, Obs=Ham[Z0+Z1] - "
                         << StateVectorToName<StateVectorT>::name) {

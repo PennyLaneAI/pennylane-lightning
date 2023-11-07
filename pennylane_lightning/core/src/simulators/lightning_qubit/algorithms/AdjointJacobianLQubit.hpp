@@ -18,8 +18,6 @@
  */
 #pragma once
 
-#include <iostream>
-
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -311,11 +309,17 @@ class AdjointJacobian final
                     // if current parameter is a trainable parameter
 
                     const PrecisionT scalingFactor =
-                        mu.applyGenerator(ops_name[op_idx],
-                                          ops.getOpsControlledWires()[op_idx],
-                                          ops.getOpsWires()[op_idx],
-                                          !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? mu.applyGenerator(ops_name[op_idx],
+                                                ops.getOpsWires()[op_idx],
+                                                !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : mu.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     const size_t mat_row_idx =
                         trainableParamNumber * num_observables;
