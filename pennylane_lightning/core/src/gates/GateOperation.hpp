@@ -135,6 +135,7 @@ enum class ControlledGeneratorOperation : uint32_t {
 
 enum class ControlledGateOperation : uint32_t {
     BEGIN = 0,
+    /* Single-qubit gates */
     PauliX = 0,
     PauliY,
     PauliZ,
@@ -145,6 +146,15 @@ enum class ControlledGateOperation : uint32_t {
     RX,
     RY,
     RZ,
+    /* Two-qubit gates */
+    SWAP,
+    IsingXX,
+    IsingXY,
+    IsingYY,
+    IsingZZ,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
     /* END (placeholder) */
     END
 };

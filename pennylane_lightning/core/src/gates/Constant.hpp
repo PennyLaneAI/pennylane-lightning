@@ -202,6 +202,24 @@ namespace Pennylane::Gates::Constant {
         ControlledGateOperation::RY, "RY"},
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::RZ, "RZ"},
+
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::SWAP, "SWAP"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::IsingXX, "IsingXX"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::IsingXY, "IsingXY"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::IsingYY, "IsingYY"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::IsingZZ, "IsingZZ"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::SingleExcitation, "SingleExcitation"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::SingleExcitationMinus,
+        "SingleExcitationMinus"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::SingleExcitationPlus, "SingleExcitationPlus"},
 };
 
 /**
@@ -345,5 +363,23 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RX, 1},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RY, 1},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RZ, 1},
+
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::SWAP,
+                                               0},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::IsingXX,
+                                               1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::IsingXY,
+                                               1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::IsingYY,
+                                               1},
+    std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::IsingZZ,
+                                               1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::SingleExcitation, 1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::SingleExcitationMinus, 1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::SingleExcitationPlus, 1},
+
 };
 } // namespace Pennylane::Gates::Constant

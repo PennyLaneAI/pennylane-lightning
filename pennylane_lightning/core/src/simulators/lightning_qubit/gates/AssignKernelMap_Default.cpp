@@ -286,5 +286,30 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::RZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+
+    instance.assignKernelForOp(ControlledGateOperation::SWAP, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::IsingXX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::IsingXY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::IsingYY, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::IsingZZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::SingleExcitation,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::SingleExcitationMinus,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::SingleExcitationPlus,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal

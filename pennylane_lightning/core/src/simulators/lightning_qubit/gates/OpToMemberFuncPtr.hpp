@@ -535,6 +535,60 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyNCRZ<PrecisionT, ParamT>;
 };
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::SWAP> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSWAP<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::IsingXX> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCIsingXX<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::IsingXY> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCIsingXY<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::IsingYY> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCIsingYY<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::IsingZZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCIsingZZ<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<
+    PrecisionT, ParamT, GateImplementation,
+    ControlledGateOperation::SingleExcitation> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSingleExcitation<PrecisionT,
+                                                              ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<
+    PrecisionT, ParamT, GateImplementation,
+    ControlledGateOperation::SingleExcitationMinus> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSingleExcitationMinus<PrecisionT,
+                                                                   ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<
+    PrecisionT, ParamT, GateImplementation,
+    ControlledGateOperation::SingleExcitationPlus> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSingleExcitationPlus<PrecisionT,
+                                                                  ParamT>;
+};
 
 /// @cond DEV
 namespace Internal {
