@@ -135,12 +135,12 @@ enum class ControlledGeneratorOperation : uint32_t {
 
 enum class ControlledGateOperation : uint32_t {
     BEGIN = 0,
-    NCPauliX = 0,
-    NCPauliY,
-    NCPauliZ,
-    NCHadamard,
-    NCS,
-    NCT,
+    PauliX = 0,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    S,
+    T,
     PhaseShift,
     RX,
     RY,

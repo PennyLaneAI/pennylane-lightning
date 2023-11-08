@@ -144,14 +144,13 @@ template <typename TypeList> void testAdjointJacobian() {
             const auto obs = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliY", std::vector<size_t>{num_qubits - 1});
             std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
-            auto matrices = std::vector<std::vector<ComplexT>>(1);
 
             for (const auto &p : param) {
                 std::vector<std::vector<size_t>> controls(num_qubits - 1);
                 std::iota(controls[0].begin(), controls[0].end(), 0);
                 auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}},
                                                  {{num_qubits - 1}}, {false},
-                                                 matrices, controls);
+                                                 {{}}, controls);
 
                 std::vector<ComplexT> cdata(1U << num_qubits);
                 cdata[0] = INVSQRT2<PrecisionT>();

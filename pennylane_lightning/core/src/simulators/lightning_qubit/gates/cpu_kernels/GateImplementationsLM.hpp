@@ -164,16 +164,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     };
 
     constexpr static std::array implemented_controlled_gates = {
-        ControlledGateOperation::NCPauliX,
-        ControlledGateOperation::NCPauliY,
-        ControlledGateOperation::NCPauliZ,
-        ControlledGateOperation::NCHadamard,
-        ControlledGateOperation::NCS,
-        ControlledGateOperation::NCT,
-        ControlledGateOperation::PhaseShift,
-        ControlledGateOperation::RX,
-        ControlledGateOperation::RY,
-        ControlledGateOperation::RZ,
+        ControlledGateOperation::PauliX,     ControlledGateOperation::PauliY,
+        ControlledGateOperation::PauliZ,     ControlledGateOperation::Hadamard,
+        ControlledGateOperation::S,          ControlledGateOperation::T,
+        ControlledGateOperation::PhaseShift, ControlledGateOperation::RX,
+        ControlledGateOperation::RY,         ControlledGateOperation::RZ,
     };
 
     /**

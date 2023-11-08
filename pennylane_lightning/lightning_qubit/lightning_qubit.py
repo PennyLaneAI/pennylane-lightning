@@ -370,7 +370,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     basename = (
                         "PauliX" if operation.name == "MultiControlledX" else operation.base.name
                     )
-                    method = getattr(sim, f"NC{basename}", None)
+                    method = getattr(sim, f"{basename}", None)
                     if method is None:
                         raise ValueError(f"Method {operation.name} not implemented.")
                     control_wires = self.wires.indices(operation.control_wires)

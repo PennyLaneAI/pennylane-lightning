@@ -477,37 +477,37 @@ struct ControlledGateOpToMemberFuncPtr {
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCPauliX> {
+                                       ControlledGateOperation::PauliX> {
     constexpr static auto value =
         &GateImplementation::template applyNCPauliX<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCPauliY> {
+                                       ControlledGateOperation::PauliY> {
     constexpr static auto value =
         &GateImplementation::template applyNCPauliY<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCPauliZ> {
+                                       ControlledGateOperation::PauliZ> {
     constexpr static auto value =
         &GateImplementation::template applyNCPauliZ<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCHadamard> {
+                                       ControlledGateOperation::Hadamard> {
     constexpr static auto value =
         &GateImplementation::template applyNCHadamard<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCS> {
+                                       ControlledGateOperation::S> {
     constexpr static auto value =
         &GateImplementation::template applyNCS<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::NCT> {
+                                       ControlledGateOperation::T> {
     constexpr static auto value =
         &GateImplementation::template applyNCT<PrecisionT>;
 };

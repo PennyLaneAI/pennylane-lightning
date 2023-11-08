@@ -256,22 +256,22 @@ void assignKernelsForControlledGeneratorOp_Default() {
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
 
-    instance.assignKernelForOp(ControlledGateOperation::NCPauliX, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::PauliX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCPauliY, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::PauliY, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCPauliZ, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::PauliZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCHadamard,
-                               all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCS, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::Hadamard, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::NCT, all_threading,
+    instance.assignKernelForOp(ControlledGateOperation::S, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::T, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::PhaseShift,
