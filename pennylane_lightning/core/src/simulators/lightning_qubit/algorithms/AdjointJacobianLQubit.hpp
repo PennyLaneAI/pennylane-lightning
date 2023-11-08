@@ -17,7 +17,6 @@
  * method.
  */
 #pragma once
-
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -243,7 +242,6 @@ class AdjointJacobian final
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorLQubitManaged<PrecisionT> lambda(jd.getPtrStateVec(),
                                                     jd.getSizeStateVec());
-
         // Apply given operations to statevector if requested
         if (apply_operations) {
 
@@ -307,7 +305,6 @@ class AdjointJacobian final
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     // if current parameter is a trainable parameter
-
                     const PrecisionT scalingFactor =
                         (ops.getOpsControlledWires()[op_idx].empty())
                             ? mu.applyGenerator(ops_name[op_idx],

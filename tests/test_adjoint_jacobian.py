@@ -223,6 +223,28 @@ class TestAdjointJacobian:
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_phaseshift_gradient(self, n_qubits, par, tol):
+        """Test that the gradient of the phaseshift gate matches the exact analytic formula."""
+        par = np.array(par)
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+        init_state = np.zeros(2**n_qubits)
+        init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
+
+        with qml.tape.QuantumTape() as tape:
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.ctrl(qml.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
+            qml.expval(qml.PauliY(n_qubits - 1))
+
+        tape.trainable_params = {1}
+
+        exact = np.cos(par)
+        grad_A = dev.adjoint_jacobian(tape)
+
+        # different methods must agree
+        assert np.allclose(grad_A, exact, atol=tol, rtol=0)
+
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""

@@ -17,7 +17,6 @@
  * method.
  */
 #pragma once
-
 #include <span>
 
 #include "JacobianData.hpp"

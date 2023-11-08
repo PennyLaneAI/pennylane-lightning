@@ -356,17 +356,21 @@ template <typename PrecisionT> class DynamicDispatcher {
         controlled_matrix_kernels_.emplace(std::make_pair(mat_op, kernel),
                                            func);
     }
+
+    template <typename FunctionType>
     void
-    registerControlledGeneratorOperation(ControlledGeneratorOperation mat_op,
+    registerControlledGeneratorOperation(ControlledGeneratorOperation gen_op,
                                          KernelType kernel,
-                                         ControlledGeneratorFunc func) {
-        controlled_generator_kernels_.emplace(std::make_pair(mat_op, kernel),
-                                              func);
+                                         FunctionType &&func) {
+        controlled_generator_kernels_.emplace(std::make_pair(gen_op, kernel),
+                                              std::forward<FunctionType>(func));
     }
-    void registerControlledGateOperation(ControlledGateOperation mat_op,
+    template <typename FunctionType>
+    void registerControlledGateOperation(ControlledGateOperation gate_op,
                                          KernelType kernel,
-                                         ControlledGateFunc func) {
-        controlled_gate_kernels_.emplace(std::make_pair(mat_op, kernel), func);
+                                         FunctionType &&func) {
+        controlled_gate_kernels_.emplace(std::make_pair(gate_op, kernel),
+                                         std::forward<FunctionType>(func));
     }
 
     /**
@@ -417,13 +421,14 @@ template <typename PrecisionT> class DynamicDispatcher {
         return controlled_matrix_kernels_.find(std::make_pair(
                    mat_op, kernel)) != controlled_matrix_kernels_.cend();
     }
-    bool isRegistered(ControlledGeneratorOperation mat_op,
+    bool isRegistered(ControlledGeneratorOperation gen_op,
                       KernelType kernel) const {
         return controlled_generator_kernels_.find(std::make_pair(
-                   mat_op, kernel)) != controlled_generator_kernels_.cend();
+                   gen_op, kernel)) != controlled_generator_kernels_.cend();
     }
-    bool isRegistered(ControlledGateOperation mat_op, KernelType kernel) const {
-        return controlled_gate_kernels_.find(std::make_pair(mat_op, kernel)) !=
+    bool isRegistered(ControlledGateOperation gate_op,
+                      KernelType kernel) const {
+        return controlled_gate_kernels_.find(std::make_pair(gate_op, kernel)) !=
                controlled_gate_kernels_.cend();
     }
 

@@ -533,6 +533,9 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << ", 'controlled_wires': "
+                           << ops.getOpsControlledWires()[op];
+                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
                 ops_stream << "}";
                 if (op < ops.getSize() - 1) {
                     ops_stream << ",";
@@ -574,10 +577,10 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
         function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
            const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<size_t>> &ops_controlled_wires,
            const std::vector<std::vector<size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<size_t>> &ops_controlled_wires) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
             for (size_t op = 0; op < ops_name.size(); op++) {

@@ -356,7 +356,7 @@ def test_controlled_qubit_gates(operation, n_qubits, tol):
         if n_perms > threshold:
             wire_lists = wire_lists[0 :: (n_perms // threshold)]
         for all_wires in wire_lists:
-            target_wires = all_wires[0]
+            target_wires = all_wires[0:1]
             control_wires = all_wires[1:]
             init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
             init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))

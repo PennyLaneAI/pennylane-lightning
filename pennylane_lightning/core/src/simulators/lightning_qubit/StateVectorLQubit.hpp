@@ -158,14 +158,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_controlled_matrices_.at(mat_op);
     }
     [[nodiscard]] inline auto
-    getKernelForControlledGenerator(ControlledGeneratorOperation mat_op) const
+    getKernelForControlledGenerator(ControlledGeneratorOperation gen_op) const
         -> KernelType {
-        return kernel_for_controlled_generators_.at(mat_op);
+        return kernel_for_controlled_generators_.at(gen_op);
     }
     [[nodiscard]] inline auto
-    getKernelForControlledGate(ControlledGateOperation mat_op) const
+    getKernelForControlledGate(ControlledGateOperation gate_op) const
         -> KernelType {
-        return kernel_for_controlled_gates_.at(mat_op);
+        return kernel_for_controlled_gates_.at(gate_op);
     }
 
     /**
