@@ -856,6 +856,11 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_adjoint, grad_fd, atol=tol)
 
+    def test_dotWithBraReal(self):
+        dev_gpu = qml.device("lightning.gpu", wires=3, batch_obs=True)
+        actual = dev_gpu._gpu_state.dotWithBraReal(dev_gpu._gpu_state)
+        assert np.isclose(actual, 1)
+
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""

@@ -168,7 +168,16 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
                                   matrix_cu);
             },
-            "Apply operation via the gate matrix");
+            "Apply operation via the gate matrix")
+        .def(
+            "dotWithBraReal",
+            [](StateVectorT &sv,
+               const StateVectorT &bra) {
+                // Real only
+                return (sv.innerProductWithSV(bra)).x;
+            },
+            "Calculate the dot product of the statevector with another bra "
+            "statevector and take the real value only.");
 }
 
 /**
