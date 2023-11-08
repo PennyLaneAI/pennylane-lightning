@@ -20,6 +20,8 @@
 #include <catch2/catch.hpp>
 
 #include "MeasurementsLQubit.hpp"
+#include "Observables.hpp"
+#include "../../observables/ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -34,6 +36,7 @@ using namespace Pennylane::Util;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
+using namespace Pennylane::LightningQubit::Observables;
 
 }; // namespace
 /// @endcond
@@ -115,7 +118,19 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
+
+    SECTION("Testing for expval with obs & shots"){
+        NamedObs<StateVectorT> obs("PauliX", {0});
+        size_t num_shots = 10000000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.492725;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(1e-2));
+    }
 }
+
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),

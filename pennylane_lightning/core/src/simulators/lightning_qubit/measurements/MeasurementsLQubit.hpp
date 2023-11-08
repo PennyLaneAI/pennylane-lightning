@@ -44,6 +44,16 @@ using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
+
+/*
+auto sample_to_str(std::vector<size_t> &sample) -> std::string {
+    std::string str;
+    for (auto &element : sample) {
+        str += std::to_string(element);
+    }
+    return str;
+}
+*/
 } // namespace
 /// @endcond
 
@@ -277,36 +287,19 @@ class Measurements final
      */
 
     auto expval(const Observable<StateVectorT> &ob, size_t &num_shots,
-                std::vector<size_t> &shot_range, size_t &bin_size)
+                std::vector<size_t> &shot_range)
         -> PrecisionT {
-        auto name = ob.getObsName();
-        auto wires = ob.getWires();
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        std::vector<size_t> full_samples = generate_samples(num_shots);
-        std::vector<size_t> sub_full_samples;
-        std::vector<size_t> obs_samples(num_shots, 0);
-
         PrecisionT result = 0;
+        std::vector<size_t> short_range = {};
+        auto obs_samples = _samples(ob, num_shots, shot_range);
 
-        if (shot_range.empty()) {
-            sub_full_samples = full_samples;
-        } else {
-            // Get a slice of samples based on the shot_range vector
-            for (auto &i : shot_range) {
-                for (int j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
-                    sub_full_samples.push_back(full_samples[j]);
-                }
-            }
+        size_t num_elements = 0;
+        for (auto element : obs_samples) {
+            result += element;
+            num_elements++;
         }
 
-        if (name == "PauliX" || name == "PauliY" || name == "PauliZ" ||
-            name == "Hadamard") {
-            for (int i = 0; i < num_shots; i++) {
-                result += 1 - 2 * sub_full_samples[i * num_qubits + wires[0]];
-            }
-        }
-
-        return result / num_shots;
+        return result / num_elements;
     }
 
     /**
@@ -688,5 +681,86 @@ class Measurements final
         }
         return init_idx;
     }
+
+    /**
+     * @brief Return samples of a observable
+     *
+     * @param obs The observable to sample
+     * @param num_shots Number of shots used to generate samples
+     * @param shot_range The range of samples to use. If it's empty, all samples
+     * are used.
+     * @param bin_size  Divides the shot range into bins of size ``bin_size``,
+     * and returns the measurement statistic separately over each bin.
+     * @param counts Whether count("True") or raw samples ("False") should be
+     * retruned
+     *
+     * @return std::vector<size_t> samples in std::vector
+     */
+    auto _samples(const Observable<StateVectorT> &ob, size_t &num_shots,
+                  std::vector<size_t> &shot_range, [[maybe_unused]] size_t bin_size = 0,
+                  [[maybe_unused]] bool counts = false) {
+        auto name = ob.getObsName();
+        auto wires = ob.getWires();
+        const size_t num_qubits = this->_statevector.getNumQubits();
+        std::vector<size_t> samples = generate_samples(num_shots);
+        std::vector<size_t> sub_samples;
+        std::vector<int> obs_samples(num_shots * wires.size(), 0);
+
+        if (shot_range.empty()) {
+            sub_samples = samples;
+        } else {
+            // Get a slice of samples based on the shot_range vector
+            for (auto &i : shot_range) {
+                for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
+                    sub_samples.push_back(samples[j]);
+                }
+            }
+        }
+
+        //if ((name == "PauliX") || (name == "PauliY") || (name == "PauliZ") ||
+        //    (name == "Hadamard")) {
+            for (size_t i = 0; i < num_shots; i++) {
+                for (size_t j = 0; j < wires.size(); j++) {
+                    obs_samples[i * wires.size() + j] = 1-2*sub_samples[i * num_qubits + num_qubits - 1 - wires[j]];
+                }
+            }
+        //}
+        return obs_samples;
+    }
+
+    /**
+     * @brief Groups the samples into a dictionary showing number of occurences
+     * for each possible outcome.
+     *
+     * @param samples A vector of samples with size of ``num_shots *
+     * num_obs_wires``
+     * @param num_wires number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
+     * num_occurences}``
+     */
+    /*
+    auto _samples_to_counts(std::vector<size_t> &samples, size_t &num_shots,
+                            size_t &num_obs_wires)
+        -> std::unordered_map<std::string, size_t> {
+        std::unordered_map<std::string, size_t> outcome_map;
+
+        for (size_t i = 0; i < num_shots; i++) {
+            auto local_sample =
+                std::vector(samples.begin() + i * num_obs_wires,
+                            samples.begin() + (i + 1) * num_obs_wires - 1);
+            std::string key = sample_to_str(local_sample);
+
+            auto it = outcome_map.find(key);
+
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
+    }
+    */
 }; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
