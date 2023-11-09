@@ -290,6 +290,7 @@ class QuantumScriptSerializer:
         """
         names = []
         params = []
+        controlled_wires = []
         wires = []
         mats = []
 
@@ -306,6 +307,26 @@ class QuantumScriptSerializer:
 
             for single_op in op_list:
                 name = single_op.name
+
+                if operation.name[0:2] == "C(" or (
+                    operation.name == "MultiControlledX"
+                    and all(char == "1" for char in operation.hyperparameters["control_values"])
+                ):
+                    basename = (
+                        "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+                    )
+                    if not hasattr(self.sv_type, basename):
+                        raise ValueError(f"N-controlled {basename} not implemented.")
+                    name = basename
+                    controlled_wires_list = operation.control_wires
+                    if operation.name == "MultiControlledX":
+                        wires_list = list(set(operation.wires) - set(controlled_wires_list))
+                    else:
+                        wires_list = operation.target_wires
+                else:
+                    wires_list = single_op.wires.tolist()
+                    controlled_wires_list = []
+
                 names.append(name)
 
                 if not hasattr(self.sv_type, name):
@@ -316,8 +337,8 @@ class QuantumScriptSerializer:
                     params.append(single_op.parameters)
                     mats.append([])
 
-                wires_list = single_op.wires.tolist()
+                controlled_wires.append([wires_map[w] for w in controlled_wires_list])
                 wires.append([wires_map[w] for w in wires_list])
 
         inverses = [False] * len(names)
-        return (names, params, wires, inverses, mats), uses_stateprep
+        return (names, params, wires, inverses, mats, controlled_wires), uses_stateprep

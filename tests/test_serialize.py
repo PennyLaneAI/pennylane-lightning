@@ -429,6 +429,7 @@ class TestSerializeOps:
                 [[0], [1], [0, 1]],
                 [False, False, False],
                 [[], [], []],
+                [[], [], []],
             ),
             False,
         )
@@ -452,6 +453,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
+                [[], [], []],
                 [[], [], []],
             ),
             True,
@@ -503,6 +505,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False],
+                [[], [], [], [], [], []],
                 [[], [], [], [], [], []],
             ),
             False,

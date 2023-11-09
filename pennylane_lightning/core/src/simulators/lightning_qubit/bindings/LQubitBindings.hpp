@@ -61,8 +61,8 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
-          ControlledMatrixKernelMap, ControlledGateKernelMap] =
-        sv.getSupportedKernels();
+          ControlledMatrixKernelMap, ControlledGeneratorKernelMap,
+          ControlledGateKernelMap] = sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -88,6 +88,14 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
     for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
         const auto key =
             std::string(lookup(Constant::controlled_matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledGeneratorKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_generator_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
 
         res_map[key.c_str()] = value;
@@ -139,8 +147,8 @@ void registerControlledGate(PyClass &pyclass) {
                             const std::vector<size_t> &controlled_wires,
                             const std::vector<size_t> &wires, bool inverse,
                             const std::vector<ParamT> &params) {
-                sv.applyControlledGate(gate_name, controlled_wires, wires,
-                                       inverse, params);
+                sv.applyOperation(gate_name, controlled_wires, wires, inverse,
+                                  params);
             };
             pyclass.def(gate_name.c_str(), func, doc.c_str());
         });

@@ -37,6 +37,10 @@ int assignKernelsForControlledMatrixOp() {
     assignKernelsForControlledMatrixOp_Default();
     return 1;
 }
+int assignKernelsForControlledGeneratorOp() {
+    assignKernelsForControlledGeneratorOp_Default();
+    return 1;
+}
 int assignKernelsForControlledGateOp() {
     assignKernelsForControlledGateOp_Default();
     return 1;

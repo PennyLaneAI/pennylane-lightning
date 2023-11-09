@@ -71,6 +71,9 @@ class GateImplementationsAVXCommon
     constexpr static std::array<ControlledMatrixOperation, 0>
         implemented_controlled_matrices{};
 
+    constexpr static std::array<ControlledGeneratorOperation, 0>
+        implemented_controlled_generators{};
+
     constexpr static std::array<ControlledGateOperation, 0>
         implemented_controlled_gates{};
 

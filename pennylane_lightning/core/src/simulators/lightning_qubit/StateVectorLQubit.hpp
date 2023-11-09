@@ -70,6 +70,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
     using ControlledMatrixKernelMap =
         std::unordered_map<ControlledMatrixOperation, KernelType>;
+    using ControlledGeneratorKernelMap =
+        std::unordered_map<ControlledGeneratorOperation, KernelType>;
     using ControlledGateKernelMap =
         std::unordered_map<ControlledGateOperation, KernelType>;
 
@@ -77,6 +79,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
     ControlledMatrixKernelMap kernel_for_controlled_matrices_;
+    ControlledGeneratorKernelMap kernel_for_controlled_generators_;
     ControlledGateKernelMap kernel_for_controlled_gates_;
 
     /**
@@ -102,6 +105,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_controlled_matrices_ =
             OperationKernelMap<ControlledMatrixOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_generators_ =
+            OperationKernelMap<ControlledGeneratorOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
         kernel_for_controlled_gates_ =
             OperationKernelMap<ControlledGateOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
@@ -119,6 +125,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get a kernel for a controlled gate operation.
+     *
+     * @param gate_op Gate operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledGate(ControlledGateOperation gate_op) const
+        -> KernelType {
+        return kernel_for_controlled_gates_.at(gate_op);
+    }
+
+    /**
      * @brief Get a kernel for a generator operation.
      *
      * @param gen_op Generator operation
@@ -127,6 +145,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto
     getKernelForGenerator(GeneratorOperation gen_op) const -> KernelType {
         return kernel_for_generators_.at(gen_op);
+    }
+
+    /**
+     * @brief Get a kernel for a controlled generator operation.
+     *
+     * @param gen_op Generator operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledGenerator(ControlledGeneratorOperation gen_op) const
+        -> KernelType {
+        return kernel_for_controlled_generators_.at(gen_op);
     }
 
     /**
@@ -151,11 +181,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         -> KernelType {
         return kernel_for_controlled_matrices_.at(mat_op);
     }
-    [[nodiscard]] inline auto
-    getKernelForControlledGate(ControlledGateOperation mat_op) const
-        -> KernelType {
-        return kernel_for_controlled_gates_.at(mat_op);
-    }
 
     /**
      * @brief Get kernels for all gate operations.
@@ -170,6 +195,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get kernels for all controlled gate operations.
+     */
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() const & -> const ControlledGateKernelMap & {
+        return kernel_for_controlled_gates_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() && -> ControlledGateKernelMap {
+        return kernel_for_controlled_gates_;
+    }
+
+    /**
      * @brief Get kernels for all generator operations.
      */
     [[nodiscard]] inline auto
@@ -179,6 +217,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
     [[nodiscard]] inline auto getGeneratorKernelMap() && -> GeneratorKernelMap {
         return kernel_for_generators_;
+    }
+
+    /**
+     * @brief Get kernels for all controlled generator operations.
+     */
+    [[nodiscard]] inline auto getControlledGeneratorKernelMap() const & -> const
+        ControlledGeneratorKernelMap & {
+        return kernel_for_controlled_generators_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledGeneratorKernelMap() && -> ControlledGeneratorKernelMap {
+        return kernel_for_controlled_generators_;
     }
 
     /**
@@ -204,15 +255,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto
     getControlledMatrixKernelMap() && -> ControlledMatrixKernelMap {
         return kernel_for_controlled_matrices_;
-    }
-    [[nodiscard]] inline auto
-    getControlledGateKernelMap() const & -> const ControlledGateKernelMap & {
-        return kernel_for_controlled_gates_;
-    }
-
-    [[nodiscard]] inline auto
-    getControlledGateKernelMap() && -> ControlledGateKernelMap {
-        return kernel_for_controlled_gates_;
     }
 
   protected:
@@ -243,17 +285,24 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
         const GateKernelMap &, const GeneratorKernelMap &,
         const MatrixKernelMap &, const ControlledMatrixKernelMap &,
-        const ControlledGateKernelMap &> {
-        return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap(), getControlledMatrixKernelMap(),
+        const ControlledGeneratorKernelMap &, const ControlledGateKernelMap &> {
+        return {getGateKernelMap(),
+                getGeneratorKernelMap(),
+                getMatrixKernelMap(),
+                getControlledMatrixKernelMap(),
+                getControlledGeneratorKernelMap(),
                 getControlledGateKernelMap()};
     }
 
     [[nodiscard]] auto getSupportedKernels() && -> std::tuple<
         GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&,
-        ControlledMatrixKernelMap &&, ControlledGateKernelMap &&> {
-        return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap(), getControlledMatrixKernelMap(),
+        ControlledMatrixKernelMap &&, ControlledGeneratorKernelMap &&,
+        ControlledGateKernelMap &&> {
+        return {getGateKernelMap(),
+                getGeneratorKernelMap(),
+                getMatrixKernelMap(),
+                getControlledMatrixKernelMap(),
+                getControlledGeneratorKernelMap(),
                 getControlledGateKernelMap()};
     }
 
@@ -295,6 +344,28 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<PrecisionT> &params = {}) {
+        auto *arr = this->getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToControlledGateOp(opName);
+        const auto kernel = getKernelForControlledGate(gate_op);
+        dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
+                                       opName, controlled_wires, wires, inverse,
+                                       params);
+    }
+
+    /**
      * @brief Apply a single generator to the state-vector using a given kernel.
      *
      * @param kernel Kernel to run the operation.
@@ -329,18 +400,24 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                          adj);
     }
 
-    inline void
-    applyControlledGate(const std::string &opName,
-                        const std::vector<size_t> &controlled_wires,
-                        const std::vector<size_t> &wires, bool inverse = false,
-                        const std::vector<PrecisionT> &params = {}) {
+    /**
+     * @brief Apply a single generator to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param wires Wires the gate applies to.
+     * @param adj Indicates whether to use adjoint of operator.
+     */
+    [[nodiscard]] auto applyGenerator(
+        const std::string &opName, const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        const auto gate_op = dispatcher.strToControlledGateOp(opName);
-        const auto kernel = getKernelForControlledGate(gate_op);
-        dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
-                                       opName, controlled_wires, wires, inverse,
-                                       params);
+        const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
+        const auto kernel = getKernelForControlledGenerator(generator_op);
+        return dispatcher.applyControlledGenerator(
+            kernel, arr, this->getNumQubits(), opName, controlled_wires, wires,
+            adj);
     }
 
     /**

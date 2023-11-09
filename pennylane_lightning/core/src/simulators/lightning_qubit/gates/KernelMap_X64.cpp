@@ -90,6 +90,12 @@ int assignKernelsForControlledMatrixOp() {
     // LCOV_EXCL_STOP
     return 1;
 }
+int assignKernelsForControlledGeneratorOp() {
+    assignKernelsForControlledGeneratorOp_Default();
+
+    // LCOV_EXCL_STOP
+    return 1;
+}
 int assignKernelsForControlledGateOp() {
     assignKernelsForControlledGateOp_Default();
 

@@ -17,7 +17,6 @@
  * method.
  */
 #pragma once
-
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -243,9 +242,9 @@ class AdjointJacobian final
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorLQubitManaged<PrecisionT> lambda(jd.getPtrStateVec(),
                                                     jd.getSizeStateVec());
-
         // Apply given operations to statevector if requested
         if (apply_operations) {
+
             this->applyOperations(lambda, ops);
         }
 
@@ -307,10 +306,17 @@ class AdjointJacobian final
                 if (current_param_idx == *tp_it) {
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
-                        mu.applyGenerator(ops_name[op_idx],
-                                          ops.getOpsWires()[op_idx],
-                                          !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? mu.applyGenerator(ops_name[op_idx],
+                                                ops.getOpsWires()[op_idx],
+                                                !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : mu.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     const size_t mat_row_idx =
                         trainableParamNumber * num_observables;

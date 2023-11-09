@@ -268,6 +268,26 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param params Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF(controlled_wires.size() > 0,
+                    "Controlled kernels not implemented.");
+        applyOperation(opName, wires, inverse, params, gate_matrix);
+    }
+
+    /**
      * @brief Apply a multi qubit operator to the state vector using a matrix
      *
      * @param matrix Kokkos gate matrix in the device space
