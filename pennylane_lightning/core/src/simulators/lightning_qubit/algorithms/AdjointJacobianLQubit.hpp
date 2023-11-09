@@ -244,7 +244,6 @@ class AdjointJacobian final
                                                     jd.getSizeStateVec());
         // Apply given operations to statevector if requested
         if (apply_operations) {
-
             this->applyOperations(lambda, ops);
         }
 
