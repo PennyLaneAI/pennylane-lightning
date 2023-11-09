@@ -197,6 +197,22 @@ namespace Pennylane::Gates::Constant {
         ControlledGeneratorOperation::RY, "RY"},
     std::pair<ControlledGeneratorOperation, std::string_view>{
         ControlledGeneratorOperation::RZ, "RZ"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::IsingXX, "IsingXX"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::IsingXY, "IsingXY"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::IsingYY, "IsingYY"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::IsingZZ, "IsingZZ"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::SingleExcitation, "SingleExcitation"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::SingleExcitationMinus,
+        "SingleExcitationMinus"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::SingleExcitationPlus,
+        "SingleExcitationPlus"},
 };
 
 /**
@@ -330,6 +346,20 @@ namespace Pennylane::Gates::Constant {
         ControlledGeneratorOperation::RY, 1},
     std::pair<ControlledGeneratorOperation, std::size_t>{
         ControlledGeneratorOperation::RZ, 1},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::IsingXX, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::IsingXY, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::IsingYY, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::IsingZZ, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::SingleExcitation, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::SingleExcitationMinus, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::SingleExcitationPlus, 2},
 };
 
 /**

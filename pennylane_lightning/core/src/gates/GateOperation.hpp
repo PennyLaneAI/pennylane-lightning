@@ -130,6 +130,13 @@ enum class ControlledGeneratorOperation : uint32_t {
     RX,
     RY,
     RZ,
+    IsingXX,
+    IsingXY,
+    IsingYY,
+    IsingZZ,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
     /* END (placeholder) */
     END
 };

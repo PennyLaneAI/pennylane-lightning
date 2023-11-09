@@ -252,6 +252,27 @@ void assignKernelsForControlledGeneratorOp_Default() {
     instance.assignKernelForOp(ControlledGeneratorOperation::RZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::IsingXX,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::IsingXY,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::IsingYY,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::IsingZZ,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::SingleExcitation,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(
+        ControlledGeneratorOperation::SingleExcitationMinus, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(
+        ControlledGeneratorOperation::SingleExcitationPlus, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
 }
 void assignKernelsForControlledGateOp_Default() {
     auto &instance = OperationKernelMap<ControlledGateOperation>::getInstance();
