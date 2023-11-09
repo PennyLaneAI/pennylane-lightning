@@ -224,7 +224,7 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
