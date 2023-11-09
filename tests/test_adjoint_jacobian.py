@@ -697,6 +697,10 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_A, grad_F, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize(
         "operation",
         [
@@ -713,7 +717,7 @@ class TestAdjointJacobianQNode:
             # qml.SingleExcitationPlus,
         ],
     )
-    @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
+    @pytest.mark.parametrize("n_qubits", range(1, 6))
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_controlled_jacobian(self, par, n_qubits, operation, tol):
         """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
@@ -723,9 +727,15 @@ class TestAdjointJacobianQNode:
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
+        if operation.num_wires > n_qubits:
+            return
+
         def circuit(p):
             qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.ctrl(operation(p, wires=n_qubits - 1), range(0, n_qubits - 1))
+            qml.ctrl(
+                operation(p, wires=range(n_qubits - operation.num_wires, n_qubits)),
+                range(0, n_qubits - operation.num_wires),
+            )
             return qml.expval(qml.PauliY(n_qubits - 1))
 
         circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
