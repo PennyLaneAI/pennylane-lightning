@@ -697,6 +697,45 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_A, grad_F, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PhaseShift,
+            qml.RX,
+            qml.RY,
+            qml.RZ,
+            # qml.IsingXX,
+            # qml.IsingXY,
+            # qml.IsingYY,
+            # qml.IsingZZ,
+            # qml.SingleExcitation,
+            # qml.SingleExcitationMinus,
+            # qml.SingleExcitationPlus,
+        ],
+    )
+    @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_controlled_jacobian(self, par, n_qubits, operation, tol):
+        """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
+        par = np.array(par)
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+        np.random.seed(1337)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit(p):
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.ctrl(operation(p, wires=n_qubits - 1), range(0, n_qubits - 1))
+            return qml.expval(qml.PauliY(n_qubits - 1))
+
+        circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
+        circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+        jac_ad = np.array(qml.jacobian(circ_ad)(par)).ravel()
+        jac_ps = np.array(qml.jacobian(circ_ps)(par)).ravel()
+
+        # different methods must agree
+        assert np.allclose(jac_ad, jac_ps, atol=tol, rtol=0)
+
     thetas = np.linspace(-2 * np.pi, 2 * np.pi, 8)
 
     @pytest.mark.parametrize("reused_p", thetas**3 / 19)

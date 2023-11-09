@@ -625,6 +625,30 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    static void
+    applyPauliX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                const std::vector<size_t> &wires, const bool inverse) {
+        applyNCPauliX(arr, num_qubits, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void
+    applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
+              const std::vector<size_t> &wires, const bool inverse) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCPauliX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+    }
+
+    template <class PrecisionT>
+    static void applyToffoli(std::complex<PrecisionT> *arr, size_t num_qubits,
+                             const std::vector<size_t> &wires,
+                             [[maybe_unused]] bool inverse) {
+        PL_ASSERT(wires.size() == 3);
+        applyNCPauliX(arr, num_qubits, {wires[0], wires[1]}, {wires[2]},
+                      inverse);
+    }
+
+    template <class PrecisionT>
     static void applyNCPauliY(std::complex<PrecisionT> *arr,
                               const size_t num_qubits,
                               const std::vector<size_t> &controlled_wires,
@@ -648,6 +672,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    static void
+    applyPauliY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                const std::vector<size_t> &wires, const bool inverse) {
+        applyNCPauliY(arr, num_qubits, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCPauliY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+    }
+
+    template <class PrecisionT>
     static void applyNCPauliZ(std::complex<PrecisionT> *arr,
                               const size_t num_qubits,
                               const std::vector<size_t> &controlled_wires,
@@ -664,6 +702,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
+    }
+
+    template <class PrecisionT>
+    static void
+    applyPauliZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                const std::vector<size_t> &wires, const bool inverse) {
+        applyNCPauliZ(arr, num_qubits, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCPauliZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
     }
 
     template <class PrecisionT>
@@ -691,6 +743,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    static void
+    applyHadamard(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse) {
+        applyNCHadamard(arr, num_qubits, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
     static void applyNCS(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &controlled_wires,
                          const std::vector<size_t> &wires, const bool inverse) {
@@ -710,6 +769,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
+    }
+
+    template <class PrecisionT>
+    static void applyS(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                       const std::vector<size_t> &wires, const bool inverse) {
+        applyNCS(arr, num_qubits, {}, wires, inverse);
     }
 
     template <class PrecisionT>
@@ -734,6 +799,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
+    template <class PrecisionT>
+    static void applyT(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                       const std::vector<size_t> &wires, const bool inverse) {
+        applyNCT(arr, num_qubits, {}, wires, inverse);
+    }
+
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyNCPhaseShift(
         std::complex<PrecisionT> *arr, const size_t num_qubits,
@@ -752,6 +823,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyPhaseShift(std::complex<PrecisionT> *arr,
+                                const size_t num_qubits,
+                                const std::vector<size_t> &wires,
+                                const bool inverse, ParamT angle) {
+        applyNCPhaseShift(arr, num_qubits, {}, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
+                                          const size_t num_qubits,
+                                          const std::vector<size_t> &wires,
+                                          [[maybe_unused]] bool inverse,
+                                          ParamT angle) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCPhaseShift(arr, num_qubits, {wires[0]}, {wires[1]}, inverse,
+                          angle);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -782,6 +872,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse,
+                        ParamT angle) {
+        applyNCRX(arr, num_qubits, {}, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyCRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                         const std::vector<size_t> &wires, const bool inverse,
+                         ParamT angle) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCRX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
     static void applyNCRY(std::complex<PrecisionT> *arr,
                           const size_t num_qubits,
                           const std::vector<size_t> &controlled_wires,
@@ -806,6 +911,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse,
+                        ParamT angle) {
+        applyNCRY(arr, num_qubits, {}, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                         const std::vector<size_t> &wires, const bool inverse,
+                         ParamT angle) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCRY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -835,6 +955,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
     }
 
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse,
+                        ParamT angle) {
+        applyNCRZ(arr, num_qubits, {}, wires, inverse, angle);
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                         const std::vector<size_t> &wires, const bool inverse,
+                         ParamT angle) {
+        PL_ASSERT(wires.size() == 2);
+        applyNCRZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+    }
+
     template <class PrecisionT>
     static void applyIdentity(std::complex<PrecisionT> *arr,
                               const size_t num_qubits,
@@ -844,75 +979,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         static_cast<void>(arr);        // No-op
         static_cast<void>(num_qubits); // No-op
         static_cast<void>(wires);      // No-op
-    }
-
-    template <class PrecisionT>
-    static void
-    applyPauliX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                const std::vector<size_t> &wires, const bool inverse) {
-        applyNCPauliX(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT>
-    static void
-    applyPauliY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                const std::vector<size_t> &wires, const bool inverse) {
-        applyNCPauliY(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT>
-    static void
-    applyPauliZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                const std::vector<size_t> &wires, const bool inverse) {
-        applyNCPauliZ(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT>
-    static void
-    applyHadamard(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                  const std::vector<size_t> &wires, const bool inverse) {
-        applyNCHadamard(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT>
-    static void applyS(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                       const std::vector<size_t> &wires, const bool inverse) {
-        applyNCS(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT>
-    static void applyT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                       const std::vector<size_t> &wires, const bool inverse) {
-        applyNCT(arr, num_qubits, {}, wires, inverse);
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyPhaseShift(std::complex<PrecisionT> *arr,
-                                const size_t num_qubits,
-                                const std::vector<size_t> &wires,
-                                const bool inverse, ParamT angle) {
-        applyNCPhaseShift(arr, num_qubits, {}, wires, inverse, angle);
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse,
-                        ParamT angle) {
-        applyNCRX(arr, num_qubits, {}, wires, inverse, angle);
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse,
-                        ParamT angle) {
-        applyNCRY(arr, num_qubits, {}, wires, inverse, angle);
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse,
-                        ParamT angle) {
-        applyNCRZ(arr, num_qubits, {}, wires, inverse, angle);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -926,72 +992,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                       : getRot<std::complex, PrecisionT>(phi, theta, omega);
 
         applySingleQubitOp(arr, num_qubits, rotMat.data(), wires);
-    }
-
-    template <class PrecisionT>
-    static void
-    applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-              const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
-    }
-
-    template <class PrecisionT>
-    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
-    }
-
-    template <class PrecisionT>
-    static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
-    }
-
-    template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
-                                          const size_t num_qubits,
-                                          const std::vector<size_t> &wires,
-                                          [[maybe_unused]] bool inverse,
-                                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPhaseShift(arr, num_qubits, {wires[0]}, {wires[1]}, inverse,
-                          angle);
-    }
-
-    template <class PrecisionT, class ParamT>
-    static void applyCRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, const bool inverse,
-                         ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
-    }
-
-    template <class PrecisionT, class ParamT>
-    static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, const bool inverse,
-                         ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
-    }
-
-    template <class PrecisionT, class ParamT>
-    static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, const bool inverse,
-                         ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
-    }
-
-    template <class PrecisionT>
-    static void applyToffoli(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
-                             [[maybe_unused]] bool inverse) {
-        PL_ASSERT(wires.size() == 3);
-        applyNCPauliX(arr, num_qubits, {wires[0], wires[1]}, {wires[2]},
-                      inverse);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -1039,51 +1039,51 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 2U);
         PL_ASSERT(num_qubits >= nw_tot);
-        // if constexpr (has_controls) {
-        std::vector<std::size_t> all_wires;
-        all_wires.reserve(nw_tot);
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-        all_wires.insert(all_wires.begin() + wires.size(),
-                         controlled_wires.begin(), controlled_wires.end());
-        std::vector<std::size_t> rev_wires(nw_tot);
-        std::vector<std::size_t> rev_wire_shifts(nw_tot);
-        for (std::size_t k = 0; k < nw_tot; k++) {
-            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-            rev_wire_shifts[k] = (one << rev_wires[k]);
-        }
-        const std::vector<std::size_t> parity =
-            Pennylane::Util::revWireParity(rev_wires);
-        for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t i00 = (k & parity[0]);
-            for (std::size_t i = 1; i < parity.size(); i++) {
-                i00 |= ((k << i) & parity[i]);
+        if constexpr (has_controls) {
+            std::vector<std::size_t> all_wires;
+            all_wires.reserve(nw_tot);
+            all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+            all_wires.insert(all_wires.begin() + wires.size(),
+                             controlled_wires.begin(), controlled_wires.end());
+            std::vector<std::size_t> rev_wires(nw_tot);
+            std::vector<std::size_t> rev_wire_shifts(nw_tot);
+            for (std::size_t k = 0; k < nw_tot; k++) {
+                rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+                rev_wire_shifts[k] = (one << rev_wires[k]);
             }
-            for (std::size_t i = 0; i < n_contr; i++) {
-                i00 |= rev_wire_shifts[i];
+            const std::vector<std::size_t> parity =
+                Pennylane::Util::revWireParity(rev_wires);
+            for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+                std::size_t i00 = (k & parity[0]);
+                for (std::size_t i = 1; i < parity.size(); i++) {
+                    i00 |= ((k << i) & parity[i]);
+                }
+                for (std::size_t i = 0; i < n_contr; i++) {
+                    i00 |= rev_wire_shifts[i];
+                }
+                const std::size_t i01 = i00 | rev_wire_shifts[n_contr];
+                const std::size_t i10 = i00 | rev_wire_shifts[n_contr + 1];
+                const std::size_t i11 = i00 | rev_wire_shifts[n_contr] |
+                                        rev_wire_shifts[n_contr + 1];
+                core_function(arr, i00, i01, i10, i11);
             }
-            const std::size_t i01 = i00 | rev_wire_shifts[n_contr];
-            const std::size_t i10 = i00 | rev_wire_shifts[n_contr + 1];
-            const std::size_t i11 =
-                i00 | rev_wire_shifts[n_contr] | rev_wire_shifts[n_contr + 1];
-            core_function(arr, i00, i01, i10, i11);
+        } else {
+            const size_t rev_wire0 = num_qubits - wires[1] - 1;
+            const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
+            const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
+            const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+            const auto [parity_high, parity_middle, parity_low] =
+                revWireParity(rev_wire0, rev_wire1);
+            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+                const size_t i00 = ((k << 2U) & parity_high) |
+                                   ((k << 1U) & parity_middle) |
+                                   (k & parity_low);
+                const size_t i10 = i00 | rev_wire1_shift;
+                const size_t i01 = i00 | rev_wire0_shift;
+                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+                core_function(arr, i00, i01, i10, i11);
+            }
         }
-        // } else {
-        // const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        // const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        // const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        // const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        // const auto [parity_high, parity_middle, parity_low] =
-        //     revWireParity(rev_wire0, rev_wire1);
-        //     for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-        //     const size_t i00 = ((k << 2U) & parity_high) |
-        //                        ((k << 1U) & parity_middle) | (k &
-        //                        parity_low);
-        //     const size_t i10 = i00 | rev_wire1_shift;
-        //     const size_t i01 = i00 | rev_wire0_shift;
-        //     const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-        //     core_function(arr, i00, i01, i10, i11);
-        //     }
-        // }
     }
 
     template <class PrecisionT>
@@ -1091,13 +1091,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                             const std::vector<size_t> &controlled_wires,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
+        using ParamT = PrecisionT;
         auto core_function = [](std::complex<PrecisionT> *arr,
                                 [[maybe_unused]] std::size_t i00,
                                 const std::size_t i01, const std::size_t i10,
                                 [[maybe_unused]] const std::size_t i11) {
             std::swap(arr[i10], arr[i01]);
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT>
@@ -1140,7 +1147,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = ComplexT{cr * v11.real() + sj * v00.imag(),
                                 cr * v11.imag() - sj * v00.real()};
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1175,7 +1188,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 cr * v10.imag() + sj * v01.real()};
             arr[i11] = ComplexT{v11.real(), v11.imag()};
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1211,7 +1230,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = ComplexT{cr * v11.real() - sj * v00.imag(),
                                 cr * v11.imag() + sj * v00.real()};
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1243,7 +1268,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] *= shifts[1];
             arr[i11] *= shifts[0];
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1272,7 +1303,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i01] = c * v01 - s * v10;
             arr[i10] = s * v01 + c * v10;
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1305,7 +1342,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] = s * v01 + c * v10;
             arr[i11] *= e;
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1339,7 +1382,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] = s * v01 + c * v10;
             arr[i11] *= e;
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.size() > 0) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT, class ParamT>
@@ -1507,8 +1556,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-        all_wires.insert(all_wires.begin() + wires.size(),
-                         controlled_wires.begin(), controlled_wires.end());
+        all_wires.insert(all_wires.begin(), controlled_wires.begin(),
+                         controlled_wires.end());
         std::vector<std::size_t> rev_wires(nw_tot);
         std::vector<std::size_t> rev_wire_shifts(nw_tot);
         for (std::size_t k = 0; k < nw_tot; k++) {
@@ -1518,10 +1567,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
 
-        const std::size_t dim = one << all_wires.size();
+        const std::size_t dim = one << nw_tot;
         std::vector<std::size_t> indices(dim);
 
-        for (std::size_t k = 0; k < exp2(num_qubits - all_wires.size()); k++) {
+        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
             indices = parity2indices(k, parity, rev_wire_shifts);
             for (std::size_t i = 0; i < dim - 2; i++) {
                 arr[indices[i]] = zero;
@@ -1555,6 +1604,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorControlledPhaseShift(
+        std::complex<PrecisionT> *arr, size_t num_qubits,
+        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        -> PrecisionT {
+        return applyNCGeneratorPhaseShift(arr, num_qubits, {wires[0]},
+                                          {wires[1]}, adj);
+    }
+
+    template <class PrecisionT>
     [[nodiscard]] static auto
     applyNCGeneratorRX(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::vector<size_t> &controlled_wires,
@@ -1568,6 +1626,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr, num_qubits, controlled_wires, wires, core_function);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::vector<size_t> &wires,
+                      [[maybe_unused]] bool adj) -> PrecisionT {
+        return applyNCGeneratorRX(arr, num_qubits, {wires[0]}, {wires[1]}, adj);
     }
 
     template <class PrecisionT>
@@ -1591,6 +1657,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
+    applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::vector<size_t> &wires,
+                      [[maybe_unused]] bool adj) -> PrecisionT {
+        return applyNCGeneratorRY(arr, num_qubits, {wires[0]}, {wires[1]}, adj);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
     applyNCGeneratorRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::vector<size_t> &controlled_wires,
                        const std::vector<size_t> &wires,
@@ -1602,6 +1676,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr, num_qubits, controlled_wires, wires, core_function);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyGeneratorCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::vector<size_t> &wires,
+                      [[maybe_unused]] bool adj) -> PrecisionT {
+        return applyNCGeneratorRZ(arr, num_qubits, {wires[0]}, {wires[1]}, adj);
     }
 
     template <class PrecisionT>
@@ -1712,107 +1794,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
-    }
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
-    applyGeneratorCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
-                      [[maybe_unused]] bool adj) -> PrecisionT {
-        using ComplexT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            arr[i00] = ComplexT{};
-            arr[i01] = ComplexT{};
-
-            std::swap(arr[i10], arr[i11]);
-        }
-
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
-    applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
-                      [[maybe_unused]] bool adj) -> PrecisionT {
-        using ComplexT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            arr[i00] = ComplexT{};
-            arr[i01] = ComplexT{};
-
-            const auto v0 = arr[i10];
-
-            arr[i10] = ComplexT{std::imag(arr[i11]), -std::real(arr[i11])};
-            arr[i11] = ComplexT{-std::imag(v0), std::real(v0)};
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto
-    applyGeneratorCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
-                      [[maybe_unused]] bool adj) -> PrecisionT {
-        using ComplexT = std::complex<PrecisionT>;
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i01 = i00 | rev_wire0_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-            arr[i00] = ComplexT{};
-            arr[i01] = ComplexT{};
-            arr[i11] *= -1;
-        }
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return -static_cast<PrecisionT>(0.5);
-    }
-
-    template <class PrecisionT>
-    [[nodiscard]] static auto applyGeneratorControlledPhaseShift(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
-        -> PrecisionT {
-        return applyNCGeneratorPhaseShift(arr, num_qubits, {wires[0]},
-                                          {wires[1]}, adj);
     }
 
     template <class PrecisionT>
