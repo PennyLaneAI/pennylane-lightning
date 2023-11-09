@@ -153,8 +153,8 @@ template <typename TypeList> void testAdjointJacobian() {
                                                  {{}}, controls);
 
                 std::vector<ComplexT> cdata(1U << num_qubits);
-                cdata[0] = INVSQRT2<PrecisionT>();
-                cdata[1] = INVSQRT2<PrecisionT>();
+                cdata[0] = Pennylane::Util::INVSQRT2<PrecisionT>();
+                cdata[1] = Pennylane::Util::INVSQRT2<PrecisionT>();
 
                 StateVectorT psi(cdata.data(), cdata.size());
 

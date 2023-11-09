@@ -1813,28 +1813,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         -> PrecisionT {
         return applyNCGeneratorPhaseShift(arr, num_qubits, {wires[0]},
                                           {wires[1]}, adj);
-        // using ComplexT = std::complex<PrecisionT>;
-        // PL_ASSERT(wires.size() == 2);
-        // const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        // const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-        // const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        // const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        // const auto [parity_high, parity_middle, parity_low] =
-        //     revWireParity(rev_wire0, rev_wire1);
-
-        // for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-        //     const size_t i00 = ((k << 2U) & parity_high) |
-        //                        ((k << 1U) & parity_middle) | (k &
-        //                        parity_low);
-        //     const size_t i01 = i00 | rev_wire0_shift;
-        //     const size_t i10 = i00 | rev_wire1_shift;
-
-        //     arr[i00] = ComplexT{};
-        //     arr[i01] = ComplexT{};
-        //     arr[i10] = ComplexT{};
-        // }
-        // // NOLINTNEXTLINE(readability-magic-numbers)
-        // return static_cast<PrecisionT>(1);
     }
 
     template <class PrecisionT>

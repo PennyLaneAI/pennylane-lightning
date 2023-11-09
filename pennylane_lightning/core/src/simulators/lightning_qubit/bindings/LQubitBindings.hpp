@@ -147,8 +147,8 @@ void registerControlledGate(PyClass &pyclass) {
                             const std::vector<size_t> &controlled_wires,
                             const std::vector<size_t> &wires, bool inverse,
                             const std::vector<ParamT> &params) {
-                sv.applyControlledGate(gate_name, controlled_wires, wires,
-                                       inverse, params);
+                sv.applyOperation(gate_name, controlled_wires, wires, inverse,
+                                  params);
             };
             pyclass.def(gate_name.c_str(), func, doc.c_str());
         });

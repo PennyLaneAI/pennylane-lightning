@@ -222,56 +222,11 @@ template <typename PrecisionT> class DynamicDispatcher {
         return gates;
     }
 
-    [[nodiscard]] auto registeredGeneratorsForKernel(KernelType kernel) const
-        -> std::unordered_set<GeneratorOperation> {
-        std::unordered_set<GeneratorOperation> gntrs;
-
-        for (const auto &[key, val] : generator_kernels_) {
-            if (key.second == kernel) {
-                gntrs.emplace(key.first);
-            }
-        }
-        return gntrs;
-    }
-
-    [[nodiscard]] auto registeredMatricesForKernel(KernelType kernel) const
-        -> std::unordered_set<MatrixOperation> {
-        std::unordered_set<MatrixOperation> matrices;
-
-        for (const auto &[key, val] : matrix_kernels_) {
-            if (key.second == kernel) {
-                matrices.emplace(key.first);
-            }
-        }
-        return matrices;
-    }
-
-    [[nodiscard]] auto
-    registeredControlledMatricesForKernel(KernelType kernel) const
-        -> std::unordered_set<ControlledMatrixOperation> {
-        std::unordered_set<ControlledMatrixOperation> matrices;
-
-        for (const auto &[key, val] : controlled_matrix_kernels_) {
-            if (key.second == kernel) {
-                matrices.emplace(key.first);
-            }
-        }
-        return matrices;
-    }
-
-    [[nodiscard]] auto
-    registeredControlledGeneratorsForKernel(KernelType kernel) const
-        -> std::unordered_set<ControlledGeneratorOperation> {
-        std::unordered_set<ControlledGeneratorOperation> generators;
-
-        for (const auto &[key, val] : controlled_generator_kernels_) {
-            if (key.second == kernel) {
-                generators.emplace(key.first);
-            }
-        }
-        return generators;
-    }
-
+    /**
+     * @brief Get registered controlled gates for the given kernel
+     *
+     * @param kernel Kernel
+     */
     [[nodiscard]] auto
     registeredControlledGatesForKernel(KernelType kernel) const
         -> std::unordered_set<ControlledGateOperation> {
@@ -286,6 +241,76 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Get registered generators for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto registeredGeneratorsForKernel(KernelType kernel) const
+        -> std::unordered_set<GeneratorOperation> {
+        std::unordered_set<GeneratorOperation> gntrs;
+
+        for (const auto &[key, val] : generator_kernels_) {
+            if (key.second == kernel) {
+                gntrs.emplace(key.first);
+            }
+        }
+        return gntrs;
+    }
+
+    /**
+     * @brief Get registered controlled generators for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto
+    registeredControlledGeneratorsForKernel(KernelType kernel) const
+        -> std::unordered_set<ControlledGeneratorOperation> {
+        std::unordered_set<ControlledGeneratorOperation> generators;
+
+        for (const auto &[key, val] : controlled_generator_kernels_) {
+            if (key.second == kernel) {
+                generators.emplace(key.first);
+            }
+        }
+        return generators;
+    }
+
+    /**
+     * @brief Get registered matrix operations for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto registeredMatricesForKernel(KernelType kernel) const
+        -> std::unordered_set<MatrixOperation> {
+        std::unordered_set<MatrixOperation> matrices;
+
+        for (const auto &[key, val] : matrix_kernels_) {
+            if (key.second == kernel) {
+                matrices.emplace(key.first);
+            }
+        }
+        return matrices;
+    }
+
+    /**
+     * @brief Get registered controlled matrix operations for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto
+    registeredControlledMatricesForKernel(KernelType kernel) const
+        -> std::unordered_set<ControlledMatrixOperation> {
+        std::unordered_set<ControlledMatrixOperation> matrices;
+
+        for (const auto &[key, val] : controlled_matrix_kernels_) {
+            if (key.second == kernel) {
+                matrices.emplace(key.first);
+            }
+        }
+        return matrices;
+    }
+
+    /**
      * @brief Gate name to gate operation
      *
      * @param gate_name Gate name
@@ -295,6 +320,11 @@ template <typename PrecisionT> class DynamicDispatcher {
         return str_to_gates_.at(gate_name);
     }
 
+    /**
+     * @brief Gate name to controlled gate operation
+     *
+     * @param gate_name Gate name
+     */
     [[nodiscard]] auto strToControlledGateOp(const std::string &gate_name) const
         -> ControlledGateOperation {
         return str_to_controlled_gates_.at(gate_name);
@@ -310,6 +340,11 @@ template <typename PrecisionT> class DynamicDispatcher {
         return str_to_gntrs_.at(gntr_name);
     }
 
+    /**
+     * @brief Generator name to controlled generator operation
+     *
+     * @param gntr_name Generator name without "Generator" prefix
+     */
     [[nodiscard]] auto
     strToControlledGeneratorOp(const std::string &gntr_name) const
         -> ControlledGeneratorOperation {
@@ -328,6 +363,18 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Register a new controlled gate operation for the operation. Can
+     * pass a custom kernel
+     */
+    template <typename FunctionType>
+    void registerControlledGateOperation(ControlledGateOperation gate_op,
+                                         KernelType kernel,
+                                         FunctionType &&func) {
+        controlled_gate_kernels_.emplace(std::make_pair(gate_op, kernel),
+                                         std::forward<FunctionType>(func));
+    }
+
+    /**
      * @brief Register a new gate generator for the operation. Can pass a custom
      * kernel
      */
@@ -336,6 +383,19 @@ template <typename PrecisionT> class DynamicDispatcher {
                                     KernelType kernel, FunctionType &&func) {
         generator_kernels_.emplace(std::make_pair(gntr_op, kernel),
                                    std::forward<FunctionType>(func));
+    }
+
+    /**
+     * @brief Register a new controlled gate generator for the operation. Can
+     * pass a custom kernel
+     */
+    template <typename FunctionType>
+    void
+    registerControlledGeneratorOperation(ControlledGeneratorOperation gen_op,
+                                         KernelType kernel,
+                                         FunctionType &&func) {
+        controlled_generator_kernels_.emplace(std::make_pair(gen_op, kernel),
+                                              std::forward<FunctionType>(func));
     }
 
     /**
@@ -357,22 +417,6 @@ template <typename PrecisionT> class DynamicDispatcher {
                                            func);
     }
 
-    template <typename FunctionType>
-    void
-    registerControlledGeneratorOperation(ControlledGeneratorOperation gen_op,
-                                         KernelType kernel,
-                                         FunctionType &&func) {
-        controlled_generator_kernels_.emplace(std::make_pair(gen_op, kernel),
-                                              std::forward<FunctionType>(func));
-    }
-    template <typename FunctionType>
-    void registerControlledGateOperation(ControlledGateOperation gate_op,
-                                         KernelType kernel,
-                                         FunctionType &&func) {
-        controlled_gate_kernels_.emplace(std::make_pair(gate_op, kernel),
-                                         std::forward<FunctionType>(func));
-    }
-
     /**
      * @brief Check if a kernel function is registered for the given
      * gate operation and kernel.
@@ -387,6 +431,19 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     /**
      * @brief Check if a kernel function is registered for the given
+     * controlled gate operation and kernel.
+     *
+     * @param gate_op Gate operation
+     * @param kernel Kernel
+     */
+    bool isRegistered(ControlledGateOperation gate_op,
+                      KernelType kernel) const {
+        return controlled_gate_kernels_.find(std::make_pair(gate_op, kernel)) !=
+               controlled_gate_kernels_.cend();
+    }
+
+    /**
+     * @brief Check if a kernel function is registered for the given
      * generator operation and kernel.
      *
      * @param gntr_op Generator operation
@@ -395,6 +452,19 @@ template <typename PrecisionT> class DynamicDispatcher {
     bool isRegistered(GeneratorOperation gntr_op, KernelType kernel) const {
         return generator_kernels_.find(std::make_pair(gntr_op, kernel)) !=
                generator_kernels_.cend();
+    }
+
+    /**
+     * @brief Check if a kernel function is registered for the given
+     * controlled generator operation and kernel.
+     *
+     * @param gntr_op Generator operation
+     * @param kernel Kernel
+     */
+    bool isRegistered(ControlledGeneratorOperation gen_op,
+                      KernelType kernel) const {
+        return controlled_generator_kernels_.find(std::make_pair(
+                   gen_op, kernel)) != controlled_generator_kernels_.cend();
     }
 
     /**
@@ -420,16 +490,6 @@ template <typename PrecisionT> class DynamicDispatcher {
                       KernelType kernel) const {
         return controlled_matrix_kernels_.find(std::make_pair(
                    mat_op, kernel)) != controlled_matrix_kernels_.cend();
-    }
-    bool isRegistered(ControlledGeneratorOperation gen_op,
-                      KernelType kernel) const {
-        return controlled_generator_kernels_.find(std::make_pair(
-                   gen_op, kernel)) != controlled_generator_kernels_.cend();
-    }
-    bool isRegistered(ControlledGateOperation gate_op,
-                      KernelType kernel) const {
-        return controlled_gate_kernels_.find(std::make_pair(gate_op, kernel)) !=
-               controlled_gate_kernels_.cend();
     }
 
     /**
@@ -477,6 +537,34 @@ template <typename PrecisionT> class DynamicDispatcher {
                      "and kernel pair");
         }
         (iter->second)(data, num_qubits, wires, inverse, params);
+    }
+
+    /**
+     * @brief Apply a single controlled gate to the state-vector using the given
+     * kernel.
+     *
+     * @param kernel Kernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param gate_op Gate operation.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
+                             const std::string &op_name,
+                             const std::vector<size_t> &controlled_wires,
+                             const std::vector<size_t> &wires, bool inverse,
+                             const std::vector<PrecisionT> &params = {}) const {
+        const auto iter = controlled_gate_kernels_.find(
+            std::make_pair(strToControlledGateOp(op_name), kernel));
+        if (iter == controlled_gate_kernels_.cend()) {
+            PL_ABORT("Cannot find a registered kernel for a given gate "
+                     "and kernel pair");
+        }
+        (iter->second)(data, num_qubits, controlled_wires, wires, inverse,
+                       params);
     }
 
     /**
@@ -531,68 +619,6 @@ template <typename PrecisionT> class DynamicDispatcher {
             applyOperation(kernel, data, num_qubits, ops[i], wires[i],
                            inverse[i], {});
         }
-    }
-
-    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
-                                  size_t num_qubits, const std::string &op_name,
-                                  const std::vector<size_t> &controlled_wires,
-                                  const std::vector<size_t> &wires,
-                                  bool inverse) const -> PrecisionT {
-        const auto iter = controlled_generator_kernels_.find(
-            std::make_pair(strToControlledGeneratorOp(op_name), kernel));
-        if (iter == controlled_generator_kernels_.cend()) {
-            PL_ABORT("Cannot find a registered kernel for a given generator "
-                     "and kernel pair");
-        }
-        return (iter->second)(data, num_qubits, controlled_wires, wires,
-                              inverse);
-    }
-
-    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
-                             const std::string &op_name,
-                             const std::vector<size_t> &controlled_wires,
-                             const std::vector<size_t> &wires, bool inverse,
-                             const std::vector<PrecisionT> &params = {}) const {
-        const auto iter = controlled_gate_kernels_.find(
-            std::make_pair(strToControlledGateOp(op_name), kernel));
-        if (iter == controlled_gate_kernels_.cend()) {
-            PL_ABORT("Cannot find a registered kernel for a given gate "
-                     "and kernel pair");
-        }
-        (iter->second)(data, num_qubits, controlled_wires, wires, inverse,
-                       params);
-    }
-
-    /**
-     * @brief Apply a given matrix and controls directly to the statevector.
-     *
-     * @param kernel Kernel to use for this operation
-     * @param data Pointer to the statevector.
-     * @param num_qubits Number of qubits.
-     * @param matrix Perfect square matrix in row-major order.
-     * @param wires Control wires.
-     * @param wires Wires the gate applies to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    void applyControlledMatrix(KernelType kernel, CFP_t *data,
-                               size_t num_qubits,
-                               const std::complex<PrecisionT> *matrix,
-                               const std::vector<size_t> &controlled_wires,
-                               const std::vector<size_t> &wires,
-                               bool inverse) const {
-        PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
-        const auto mat_op = ControlledMatrixOperation::NCMultiQubitOp;
-
-        const auto iter =
-            controlled_matrix_kernels_.find(std::make_pair(mat_op, kernel));
-
-        if (iter == controlled_matrix_kernels_.end()) {
-            PL_ABORT(std::string(lookup(GateConstant::controlled_matrix_names,
-                                        mat_op)) +
-                     " is not registered for the given kernel");
-        }
-        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
-                       inverse);
     }
 
     /**
@@ -651,6 +677,38 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Apply a given matrix and controls directly to the statevector.
+     *
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Control wires.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    void applyControlledMatrix(KernelType kernel, CFP_t *data,
+                               size_t num_qubits,
+                               const std::complex<PrecisionT> *matrix,
+                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<size_t> &wires,
+                               bool inverse) const {
+        PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
+        const auto mat_op = ControlledMatrixOperation::NCMultiQubitOp;
+
+        const auto iter =
+            controlled_matrix_kernels_.find(std::make_pair(mat_op, kernel));
+
+        if (iter == controlled_matrix_kernels_.end()) {
+            PL_ABORT(std::string(lookup(GateConstant::controlled_matrix_names,
+                                        mat_op)) +
+                     " is not registered for the given kernel");
+        }
+        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
+                       inverse);
+    }
+
+    /**
      * @brief Apply a single generator to the state-vector using the given
      * kernel.
      *
@@ -674,6 +732,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         }
         return (iter->second)(data, num_qubits, wires, adj);
     }
+
     /**
      * @brief Apply a single generator to the state-vector using the given
      * kernel.
@@ -696,6 +755,33 @@ template <typename PrecisionT> class DynamicDispatcher {
                      "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
+    }
+
+    /**
+     * @brief Apply a single controlled generator to the state-vector using the
+     * given kernel.
+     *
+     * @param kernel Kernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param op_name Gate operation name.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param adj Indicates whether to use adjoint of gate.
+     */
+    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
+                                  size_t num_qubits, const std::string &op_name,
+                                  const std::vector<size_t> &controlled_wires,
+                                  const std::vector<size_t> &wires,
+                                  bool inverse) const -> PrecisionT {
+        const auto iter = controlled_generator_kernels_.find(
+            std::make_pair(strToControlledGeneratorOp(op_name), kernel));
+        if (iter == controlled_generator_kernels_.cend()) {
+            PL_ABORT("Cannot find a registered kernel for a given generator "
+                     "and kernel pair");
+        }
+        return (iter->second)(data, num_qubits, controlled_wires, wires,
+                              inverse);
     }
 };
 } // namespace Pennylane::LightningQubit

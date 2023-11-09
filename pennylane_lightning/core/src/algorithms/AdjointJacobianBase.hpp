@@ -130,6 +130,17 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         return sv.applyGenerator(op_name, wires, adj);
     }
 
+    /**
+     * @brief Applies the gate generator for a given parametric gate. Returns
+     * the associated scaling coefficient.
+     *
+     * @param sv Statevector data to operate upon.
+     * @param op_name Name of parametric gate.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to operate upon.
+     * @param adj Indicate whether to take the adjoint of the operation.
+     * @return PrecisionT Generator scaling coefficient.
+     */
     inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
                                const std::vector<size_t> &controlled_wires,
                                const std::vector<size_t> &wires, const bool adj)

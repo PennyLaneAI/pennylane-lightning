@@ -69,6 +69,32 @@ enum class GateOperation : uint32_t {
     END
 };
 
+enum class ControlledGateOperation : uint32_t {
+    BEGIN = 0,
+    /* Single-qubit gates */
+    PauliX = 0,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    S,
+    T,
+    PhaseShift,
+    RX,
+    RY,
+    RZ,
+    /* Two-qubit gates */
+    SWAP,
+    IsingXX,
+    IsingXY,
+    IsingYY,
+    IsingZZ,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
+    /* END (placeholder) */
+    END
+};
+
 /**
  * @brief Enum class for all gate generators
  */
@@ -98,6 +124,16 @@ enum class GeneratorOperation : uint32_t {
     END
 };
 
+enum class ControlledGeneratorOperation : uint32_t {
+    BEGIN = 0,
+    PhaseShift = 0,
+    RX,
+    RY,
+    RZ,
+    /* END (placeholder) */
+    END
+};
+
 /**
  * @brief Enum class for matrix operation
  */
@@ -110,51 +146,9 @@ enum class MatrixOperation : uint32_t {
     END
 };
 
-/**
- * @brief Enum class for controlled matrix operation
- */
 enum class ControlledMatrixOperation : uint32_t {
     BEGIN = 0,
     NCMultiQubitOp = 0,
-    /* END (placeholder) */
-    END
-};
-
-/**
- * @brief Enum class for all controlled gate generators
- */
-enum class ControlledGeneratorOperation : uint32_t {
-    BEGIN = 0,
-    PhaseShift = 0,
-    RX,
-    RY,
-    RZ,
-    /* END (placeholder) */
-    END
-};
-
-enum class ControlledGateOperation : uint32_t {
-    BEGIN = 0,
-    /* Single-qubit gates */
-    PauliX = 0,
-    PauliY,
-    PauliZ,
-    Hadamard,
-    S,
-    T,
-    PhaseShift,
-    RX,
-    RY,
-    RZ,
-    /* Two-qubit gates */
-    SWAP,
-    IsingXX,
-    IsingXY,
-    IsingYY,
-    IsingZZ,
-    SingleExcitation,
-    SingleExcitationMinus,
-    SingleExcitationPlus,
     /* END (placeholder) */
     END
 };
