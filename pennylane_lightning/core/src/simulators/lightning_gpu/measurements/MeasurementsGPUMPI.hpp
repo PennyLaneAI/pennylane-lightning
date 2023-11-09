@@ -219,7 +219,7 @@ class MeasurementsMPI final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {        
+    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
         double epsilon = 1e-15;
         size_t nSubSvs = 1UL << (this->_statevector.getNumGlobalQubits());
         std::vector<double> rand_nums(num_samples);
@@ -508,7 +508,6 @@ class MeasurementsMPI final
         mpi_manager_.Barrier();
         return result;
     }
-
 
     /**
      * @brief Expected value of an observable.

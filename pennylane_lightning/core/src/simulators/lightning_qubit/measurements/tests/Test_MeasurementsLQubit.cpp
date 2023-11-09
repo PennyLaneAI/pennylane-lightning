@@ -19,10 +19,7 @@
 #include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
 
-#include "MeasurementsBase.hpp"
 #include "MeasurementsLQubit.hpp"
-#include "Observables.hpp"
-#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -34,12 +31,9 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using namespace Pennylane::Measures;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
-using namespace Pennylane::LightningQubit::Observables;
-
 }; // namespace
 /// @endcond
 

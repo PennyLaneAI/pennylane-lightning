@@ -21,8 +21,6 @@
 
 #include <catch2/catch.hpp>
 
-#include "ObservablesGPU.hpp"
-#include "ObservablesGPUMPI.hpp"
 #include "MPIManager.hpp"
 #include "MeasurementsGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"

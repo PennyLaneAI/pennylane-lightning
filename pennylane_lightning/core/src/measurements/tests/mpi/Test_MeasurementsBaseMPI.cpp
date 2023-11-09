@@ -226,14 +226,15 @@ template <typename TypeList> void testNamedObsExpvalShot() {
         MeasurementsMPI<StateVectorT> Measurer(sv);
 
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
-        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ", "Hadamard"};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
+                                             "Hadamard"};
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::vector<PrecisionT>> exp_values_ref = {
             {0.49272486, 0.42073549, 0.28232124},
             {-0.64421768, -0.47942553, -0.29552020},
             {0.58498357, 0.77015115, 0.91266780},
             {0.7620549436, 0.8420840225, 0.8449848566}};
-        
+
         size_t num_shots = 10000;
         std::vector<size_t> shots_range = {};
 
@@ -246,7 +247,8 @@ template <typename TypeList> void testNamedObsExpvalShot() {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
-                    PrecisionT result = Measurer.expval(obs, num_shots, shots_range);
+                    PrecisionT result =
+                        Measurer.expval(obs, num_shots, shots_range);
                     REQUIRE(expected == Approx(result).margin(2e-2));
                 }
             }

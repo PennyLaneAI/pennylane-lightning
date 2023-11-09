@@ -179,7 +179,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         } else if (obs_name.find("Hadamard") != std::string::npos) {
             const PrecisionT theta = -M_PI / 4.0;
             sv.applyOperation("RY", obs_wires, false, {theta});
-        } else if (obs_name.find("PauliZ")!= std::string::npos) {
+        } else if (obs_name.find("PauliZ") != std::string::npos) {
         }
 
         Derived measure(sv);
@@ -219,7 +219,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * num_occurences}``
      */
     auto samples_to_counts(std::vector<size_t> &samples, size_t &num_shots,
-                            size_t &num_obs_wires)
+                           size_t &num_obs_wires)
         -> std::unordered_map<std::string, size_t> {
         std::unordered_map<std::string, size_t> outcome_map;
 
