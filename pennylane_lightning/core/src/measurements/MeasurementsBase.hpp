@@ -24,6 +24,15 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+
+auto sample_to_str(std::vector<size_t> &sample) -> std::string {
+    std::string str;
+    for (auto &element : sample) {
+        str += std::to_string(element);
+    }
+    return str;
+}
+
 } // namespace
 /// @endcond
 
@@ -196,6 +205,39 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                              sub_samples[i * num_qubits + obs_wires[0]]));
         }
         return obs_samples;
+    }
+
+    /**
+     * @brief Groups the samples into a dictionary showing number of occurences
+     * for each possible outcome.
+     *
+     * @param samples A vector of samples with size of ``num_shots *
+     * num_obs_wires``
+     * @param num_wires number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
+     * num_occurences}``
+     */
+    auto samples_to_counts(std::vector<size_t> &samples, size_t &num_shots,
+                            size_t &num_obs_wires)
+        -> std::unordered_map<std::string, size_t> {
+        std::unordered_map<std::string, size_t> outcome_map;
+
+        for (size_t i = 0; i < num_shots; i++) {
+            auto local_sample =
+                std::vector(samples.begin() + i * num_obs_wires,
+                            samples.begin() + (i + 1) * num_obs_wires - 1);
+            std::string key = sample_to_str(local_sample);
+
+            auto it = outcome_map.find(key);
+
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
     }
 };
 
