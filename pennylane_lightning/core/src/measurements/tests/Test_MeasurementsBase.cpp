@@ -187,9 +187,59 @@ template <typename TypeList> void testNamedObsExpval() {
     }
 }
 
-TEST_CASE("Expval - NamedObs", "[MeasurementsBase][Observables]") {
+TEST_CASE("Expval Shot - NamedObs", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testNamedObsExpval<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testNamedObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ", "Hadamard"};
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::vector<PrecisionT>> exp_values_ref = {
+            {0.49272486, 0.42073549, 0.28232124},
+            {-0.64421768, -0.47942553, -0.29552020},
+            {0.58498357, 0.77015115, 0.91266780},
+            {0.7620549436, 0.8420840225, 0.8449848566}};
+        
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " - Varying wires"
+                            << StateVectorToName<StateVectorT>::name) {
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    PrecisionT result = Measurer.expval(obs, num_shots, shots_range);
+                    REQUIRE(expected == Approx(result).margin(2e-2));
+                }
+            }
+        }
+        testNamedObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testNamedObsExpvalShot<TestStateVectorBackends>();
     }
 }
 
