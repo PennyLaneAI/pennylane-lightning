@@ -286,15 +286,14 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &ob, size_t &num_shots,
-                std::vector<size_t> &shot_range)
-        -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs, size_t &num_shots,
+                std::vector<size_t> &shot_range) -> PrecisionT {
         PrecisionT result = 0;
         std::vector<size_t> short_range = {};
-        auto obs_samples = _samples(ob, num_shots, shot_range);
+        auto obs_samples = samples(obs, num_shots, shot_range);
 
         size_t num_elements = 0;
-        for (auto element : obs_samples) {
+        for (int element : obs_samples) {
             result += element;
             num_elements++;
         }
@@ -682,6 +681,7 @@ class Measurements final
         return init_idx;
     }
 
+  public:
     /**
      * @brief Return samples of a observable
      *
@@ -696,15 +696,33 @@ class Measurements final
      *
      * @return std::vector<size_t> samples in std::vector
      */
-    auto _samples(const Observable<StateVectorT> &ob, size_t &num_shots,
-                  std::vector<size_t> &shot_range, [[maybe_unused]] size_t bin_size = 0,
-                  [[maybe_unused]] bool counts = false) {
-        auto name = ob.getObsName();
-        auto wires = ob.getWires();
+    auto samples(const Observable<StateVectorT> &obs, size_t &num_shots,
+                 std::vector<size_t> &shot_range,
+                 [[maybe_unused]] size_t bin_size = 0,
+                 [[maybe_unused]] bool counts = false) {
+        auto obs_name = obs.getObsName();
+        auto obs_wires = obs.getWires();
         const size_t num_qubits = this->_statevector.getNumQubits();
-        std::vector<size_t> samples = generate_samples(num_shots);
+
+        StateVectorT sv(this->_statevector);
+
+        if (obs_name.find("PauliX") != std::string::npos) {
+            sv.applyOperation("Hadamard", {obs_wires[0]}, false);
+        } else if (obs_name.find("PauliY") != std::string::npos) {
+            sv.applyOperation("PauliZ", {obs_wires[0]}, false);
+            sv.applyOperation("S", {obs_wires[0]}, false);
+            sv.applyOperation("Hadamard", {obs_wires[0]}, false);
+        } else if (obs_name.find("Hadamard") != std::string::npos) {
+            const PrecisionT theta = -M_PI / 4.0;
+            sv.applyOperation("RY", obs_wires, false, {theta});
+        } else if (obs_name.find("PauliZ")) {
+        }
+
+        Measurements<StateVectorT> measure(sv);
+
+        std::vector<size_t> samples = measure.generate_samples(num_shots);
         std::vector<size_t> sub_samples;
-        std::vector<int> obs_samples(num_shots * wires.size(), 0);
+        std::vector<PrecisionT> obs_samples(num_shots * obs_wires.size(), 0);
 
         if (shot_range.empty()) {
             sub_samples = samples;
@@ -717,14 +735,11 @@ class Measurements final
             }
         }
 
-        //if ((name == "PauliX") || (name == "PauliY") || (name == "PauliZ") ||
-        //    (name == "Hadamard")) {
-            for (size_t i = 0; i < num_shots; i++) {
-                for (size_t j = 0; j < wires.size(); j++) {
-                    obs_samples[i * wires.size() + j] = 1-2*sub_samples[i * num_qubits + num_qubits - 1 - wires[j]];
-                }
-            }
-        //}
+        for (size_t i = 0; i < num_shots; i++) {
+            obs_samples[i] =
+                (1 - 2 * static_cast<PrecisionT>(
+                             sub_samples[i * num_qubits + obs_wires[0]]));
+        }
         return obs_samples;
     }
 
