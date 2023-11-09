@@ -223,6 +223,10 @@ class TestAdjointJacobian:
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol):
