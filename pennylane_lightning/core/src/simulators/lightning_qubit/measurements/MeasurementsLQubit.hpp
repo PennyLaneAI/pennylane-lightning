@@ -288,6 +288,7 @@ class Measurements final
 
     auto expval(const Observable<StateVectorT> &obs, size_t &num_shots,
                 std::vector<size_t> &shot_range) -> PrecisionT {
+        /*
         PrecisionT result = 0;
         std::vector<size_t> short_range = {};
         auto obs_samples = samples(obs, num_shots, shot_range);
@@ -299,6 +300,9 @@ class Measurements final
         }
 
         return result / num_elements;
+        */
+
+        return BaseType::expval(obs, num_shots, shot_range);
     }
 
     /**
@@ -696,6 +700,7 @@ class Measurements final
      *
      * @return std::vector<size_t> samples in std::vector
      */
+    /*
     auto samples(const Observable<StateVectorT> &obs, size_t &num_shots,
                  std::vector<size_t> &shot_range,
                  [[maybe_unused]] size_t bin_size = 0,
@@ -707,11 +712,11 @@ class Measurements final
         StateVectorT sv(this->_statevector);
 
         if (obs_name.find("PauliX") != std::string::npos) {
-            sv.applyOperation("Hadamard", {obs_wires[0]}, false);
+            sv.applyOperation("Hadamard", obs_wires, false);
         } else if (obs_name.find("PauliY") != std::string::npos) {
-            sv.applyOperation("PauliZ", {obs_wires[0]}, false);
-            sv.applyOperation("S", {obs_wires[0]}, false);
-            sv.applyOperation("Hadamard", {obs_wires[0]}, false);
+            sv.applyOperation("PauliZ", obs_wires, false);
+            sv.applyOperation("S", obs_wires, false);
+            sv.applyOperation("Hadamard", obs_wires, false);
         } else if (obs_name.find("Hadamard") != std::string::npos) {
             const PrecisionT theta = -M_PI / 4.0;
             sv.applyOperation("RY", obs_wires, false, {theta});
@@ -742,6 +747,7 @@ class Measurements final
         }
         return obs_samples;
     }
+    */
 
     /**
      * @brief Groups the samples into a dictionary showing number of occurences

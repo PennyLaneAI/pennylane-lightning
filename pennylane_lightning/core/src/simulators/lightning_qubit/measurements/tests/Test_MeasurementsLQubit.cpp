@@ -19,9 +19,10 @@
 #include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
 
-#include "../../observables/ObservablesLQubit.hpp"
+#include "MeasurementsBase.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "Observables.hpp"
+#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -33,6 +34,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
+using namespace Pennylane::Measures;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
@@ -240,7 +242,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
     }
 
-    SECTION("Testing for expval with obs & shots Hadamard[1]") {
+    SECTION("Testing for expval with obs & shots Hadamard[2]") {
         NamedObs<StateVectorT> obs("Hadamard", {2});
         size_t num_shots = 10000;
         std::vector<size_t> shots_range = {};
