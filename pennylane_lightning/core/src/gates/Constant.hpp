@@ -116,7 +116,6 @@ namespace Pennylane::Gates::Constant {
         ControlledGateOperation::RY, "RY"},
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::RZ, "RZ"},
-
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::SWAP, "SWAP"},
     std::pair<ControlledGateOperation, std::string_view>{
@@ -421,7 +420,6 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RX, 1},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RY, 1},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::RZ, 1},
-
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::SWAP,
                                                0},
     std::pair<ControlledGateOperation, size_t>{ControlledGateOperation::IsingXX,
@@ -438,6 +436,5 @@ namespace Pennylane::Gates::Constant {
         ControlledGateOperation::SingleExcitationMinus, 1},
     std::pair<ControlledGateOperation, size_t>{
         ControlledGateOperation::SingleExcitationPlus, 1},
-
 };
 } // namespace Pennylane::Gates::Constant
