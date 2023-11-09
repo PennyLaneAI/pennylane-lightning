@@ -121,6 +121,138 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", float, double) {
                                 LightningException,
                                 "Currently unsupported observable");
     }
+
+    SECTION("Testing for expval with obs & shots PauliX[0]") {
+        NamedObs<StateVectorT> obs("PauliX", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.49272486;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliX[1]") {
+        NamedObs<StateVectorT> obs("PauliX", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.42073549;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliX[2]") {
+        NamedObs<StateVectorT> obs("PauliX", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.28232124;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[0]") {
+        NamedObs<StateVectorT> obs("PauliY", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.64421768;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[1]") {
+        NamedObs<StateVectorT> obs("PauliY", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.47942553;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[2]") {
+        NamedObs<StateVectorT> obs("PauliY", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.29552020;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[0]") {
+        NamedObs<StateVectorT> obs("PauliZ", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.58498357;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[1]") {
+        NamedObs<StateVectorT> obs("PauliZ", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.77015115;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[2]") {
+        NamedObs<StateVectorT> obs("PauliZ", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.91266780;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[0]") {
+        NamedObs<StateVectorT> obs("Hadamard", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.7620549436;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[1]") {
+        NamedObs<StateVectorT> obs("Hadamard", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.8420840225;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[2]") {
+        NamedObs<StateVectorT> obs("Hadamard", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.8420840225;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
 }
 
 TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {

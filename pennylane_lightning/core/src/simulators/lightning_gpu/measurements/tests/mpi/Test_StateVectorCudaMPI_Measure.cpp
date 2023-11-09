@@ -21,6 +21,8 @@
 
 #include <catch2/catch.hpp>
 
+#include "ObservablesGPU.hpp"
+#include "ObservablesGPUMPI.hpp"
 #include "MPIManager.hpp"
 #include "MeasurementsGPU.hpp"
 #include "MeasurementsGPUMPI.hpp"
@@ -186,6 +188,239 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
         PL_CHECK_THROWS_MATCHES(Measurer.expval(gate_matrix, {0}),
                                 LightningException,
                                 "Currently unsupported observable");
+    }
+    
+    SECTION("Testing for expval with obs & shots PauliX[0]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliX", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        mpi_manager.Barrier();
+
+        PrecisionT expval_ref = 0.49272486;
+
+        CHECK((expval_shot) == Approx(expval_ref).margin(5e-2));
+    }
+
+    
+    SECTION("Testing for expval with obs & shots PauliX[1]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliX", {1});
+
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.42073549;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliX[2]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliX", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.28232124;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[0]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliY", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.64421768;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[1]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliY", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.47942553;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliY[2]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliY", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = -0.29552020;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[0]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliZ", {0});
+
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.58498357;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[1]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliZ", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.77015115;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots PauliZ[2]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("PauliZ", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.91266780;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[0]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("Hadamard", {0});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.7620549436;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[1]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("Hadamard", {1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.8420840225;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
+    }
+
+    SECTION("Testing for expval with obs & shots Hadamard[2]") {
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        NamedObsMPI<StateVectorT> obs("Hadamard", {2});
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+        mpi_manager.Barrier();
+
+        auto expval_shot = Measurer.expval(obs, num_shots, shots_range);
+        PrecisionT expval_ref = 0.8420840225;
+
+        CHECK(expval_shot == Approx(expval_ref).margin(5e-2));
     }
 }
 

@@ -151,13 +151,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return std::vector<size_t> samples in std::vector
      */
-    auto samples(const Observable<StateVectorT> &obs, size_t &num_shots,
-                 std::vector<size_t> &shot_range,
+    auto samples(const Observable<StateVectorT> &obs, const size_t &num_shots,
+                 const std::vector<size_t> &shot_range,
                  [[maybe_unused]] size_t bin_size = 0,
                  [[maybe_unused]] bool counts = false) {
         auto obs_name = obs.getObsName();
         auto obs_wires = obs.getWires();
-        const size_t num_qubits = _statevector.getNumQubits();
+        const size_t num_qubits = _statevector.getTotalNumQubits();
 
         StateVectorT sv(_statevector);
 
@@ -170,10 +170,10 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         } else if (obs_name.find("Hadamard") != std::string::npos) {
             const PrecisionT theta = -M_PI / 4.0;
             sv.applyOperation("RY", obs_wires, false, {theta});
-        } else if (obs_name.find("PauliZ")) {
+        } else if (obs_name.find("PauliZ")!= std::string::npos) {
         }
 
-        MeasurementsBase<StateVectorT, Derived> measure(sv);
+        Derived measure(sv);
 
         std::vector<size_t> samples = measure.generate_samples(num_shots);
         std::vector<size_t> sub_samples;

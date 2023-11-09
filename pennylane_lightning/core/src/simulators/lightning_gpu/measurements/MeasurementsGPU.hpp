@@ -351,6 +351,19 @@ class Measurements final
     }
 
     /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs Observable.
+     * @param shots Vector of shot number to measurement
+     * @return Floating point expected value of the observable.
+     */
+
+    auto expval(const Observable<StateVectorT> &obs, size_t &num_shots,
+                std::vector<size_t> &shot_range) -> PrecisionT {
+        return BaseType::expval(obs, num_shots, shot_range);
+    }
+
+    /**
      * @brief Expected value of an observable.
      *
      * @param matrix Square matrix in row-major order.

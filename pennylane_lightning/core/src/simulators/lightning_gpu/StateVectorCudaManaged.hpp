@@ -142,6 +142,13 @@ class StateVectorCudaManaged
     ~StateVectorCudaManaged() = default;
 
     /**
+     * @brief Get the total number of wires.
+     */
+    auto getTotalNumQubits() const -> size_t {
+        return BaseType::getNumQubits();
+    }
+
+    /**
      * @brief Set value for a single element of the state-vector on device. This
      * method is implemented by cudaMemcpy.
      *

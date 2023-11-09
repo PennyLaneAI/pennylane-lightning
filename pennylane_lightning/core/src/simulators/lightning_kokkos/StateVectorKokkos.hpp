@@ -113,6 +113,13 @@ class StateVectorKokkos final
     };
 
     /**
+     * @brief Get the total number of wires.
+     */
+    auto getTotalNumQubits() const -> size_t {
+        return BaseType::getNumQubits();
+    }
+
+    /**
      * @brief Init zeros for the state-vector on device.
      */
     void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }

@@ -139,6 +139,13 @@ class StateVectorLQubitManaged final
 
     ~StateVectorLQubitManaged() = default;
 
+    /**
+     * @brief Get the total number of wires.
+     */
+    auto getTotalNumQubits() const -> size_t {
+        return BaseType::getNumQubits();
+    }
+
     [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }
 
     [[nodiscard]] auto getData() const -> const ComplexT * {

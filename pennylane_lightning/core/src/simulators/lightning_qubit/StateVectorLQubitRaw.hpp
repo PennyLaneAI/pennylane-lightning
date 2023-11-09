@@ -87,6 +87,13 @@ class StateVectorLQubitRaw final
     }
 
     /**
+     * @brief Get the total number of wires.
+     */
+    auto getTotalNumQubits() const -> size_t {
+        return BaseType::getNumQubits();
+    }
+
+    /**
      * @brief Get the underlying data pointer.
      *
      * @return const ComplexT* Pointer to statevector data.
