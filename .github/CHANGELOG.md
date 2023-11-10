@@ -15,6 +15,9 @@
 * Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
+* Update Dockerfile and rewrite the `build-wheel-lightning-gpu` stage to build Lightning-GPU from the `pennylane-lightning` monorepo.
+  [(#539)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/539)
+
 * Add the MPI test CI workflows of Lightning-GPU in compatibility cron jobs.
   [(#536)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/536)
 
