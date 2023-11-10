@@ -136,3 +136,15 @@ def qubit_device(request):
         return qml.device(device_name, wires=wires, c_dtype=request.param)
 
     return _device
+
+
+# General qubit_device fixture, for any number of wires.
+@pytest.fixture(
+    scope="function",
+    params=[np.complex64, np.complex128],
+)
+def qubit_device_shots(request):
+    def _device(wires):
+        return qml.device(device_name, wires=wires, c_dtype=request.param, shots=10000)
+
+    return _device

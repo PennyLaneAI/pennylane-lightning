@@ -41,6 +41,22 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
+    def test_pauliz_expectation(self, theta, phi, qubit_device_shots):
+        """Test that PauliZ expectation value is correct"""
+        TOL = 5e-2
+        dev = qubit_device_shots(wires=3)
+
+        O1 = qml.PauliZ(wires=[0])
+        O2 = qml.PauliZ(wires=[1])
+
+        dev.apply(
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), atol=TOL)
+
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliZ expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -73,6 +89,24 @@ class TestExpval:
             res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
         )
 
+    def test_paulix_expectation(self, theta, phi, qubit_device_shots):
+        """Test that PauliX expectation value is correct"""
+        TOL = 5e-2
+        dev = qubit_device_shots(wires=3)
+
+        O1 = qml.PauliX(wires=[0])
+        O2 = qml.PauliX(wires=[1])
+
+        dev.apply(
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
+        assert np.allclose(
+            res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), atol=TOL
+        )
+
     def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliY expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -87,6 +121,22 @@ class TestExpval:
 
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
+
+    def test_pauliy_expectation(self, theta, phi, qubit_device_shots):
+        """Test that PauliY expectation value is correct"""
+        TOL = 5e-2
+        dev = qubit_device_shots(wires=3)
+
+        O1 = qml.PauliY(wires=[0])
+        O2 = qml.PauliY(wires=[1])
+
+        dev.apply(
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), atol=TOL)
 
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
@@ -105,6 +155,25 @@ class TestExpval:
             [np.sin(theta) * np.sin(phi) + np.cos(theta), np.cos(theta) * np.cos(phi) + np.sin(phi)]
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
+
+    def test_hadamard_expectation(self, theta, phi, qubit_device_shots):
+        """Test that Hadamard expectation value is correct"""
+        TOL = 5e-2
+        dev = qubit_device_shots(wires=3)
+
+        O1 = qml.Hadamard(wires=[0])
+        O2 = qml.Hadamard(wires=[1])
+
+        dev.apply(
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        expected = np.array(
+            [np.sin(theta) * np.sin(phi) + np.cos(theta), np.cos(theta) * np.cos(phi) + np.sin(phi)]
+        ) / np.sqrt(2)
+        assert np.allclose(res, expected, atol=TOL)
 
     @pytest.mark.parametrize("n_wires", range(1, 7))
     def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):

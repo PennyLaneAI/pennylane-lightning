@@ -131,8 +131,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(const Observable<StateVectorT> &obs, size_t &num_shots,
-                std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
+                const std::vector<size_t> &shot_range) -> PrecisionT {
         PrecisionT result = 0;
         std::vector<size_t> short_range = {};
         auto obs_samples = samples(obs, num_shots, shot_range);

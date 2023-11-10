@@ -830,8 +830,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             if self.shots is not None:
                 # estimate the expectation value
-                samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
-                return np.squeeze(np.mean(samples, axis=0))
+                if observable.name in ["PauliX", "PauliY", "PauliZ", "Hadamard"]:
+                    obs = QuantumScriptSerializer(self.short_name, self.use_csingle, self._mpi)._ob(
+                        observable, self.wire_map
+                    )
+
+                    if shot_range is None:
+                        return self.measurements.expval(obs, self.shots)
+                    else:
+                        return self.measurements.expval(obs, self.shots, shot_range)
+                else:
+                    raise RuntimeError(f"{observable.name} obs does not support.")
 
             if observable.name in ["SparseHamiltonian"]:
                 if self._mpi:

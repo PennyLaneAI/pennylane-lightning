@@ -501,8 +501,8 @@ class MeasurementsMPI final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, size_t &num_shots,
-                std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
+                const std::vector<size_t> &shot_range) -> PrecisionT {
         mpi_manager_.Barrier();
         PrecisionT result = BaseType::expval(obs, num_shots, shot_range);
         mpi_manager_.Barrier();

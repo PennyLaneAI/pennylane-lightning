@@ -270,6 +270,23 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
             },
             "Expected value of an observable object.")
         .def(
+            "expval",
+            [](MeasurementsMPI<StateVectorT> &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob,
+               const size_t &num_shots) {
+                const std::vector<size_t> &shot_range = {};
+                return M.expval(*ob, num_shots, shot_range);
+            },
+            "Expected value of an observable object.")
+        .def(
+            "expval",
+            [](MeasurementsMPI<StateVectorT> &M,
+               const std::shared_ptr<Observable<StateVectorT>> &ob,
+               const size_t &num_shots, const std::vector<size_t> &shot_range) {
+                return M.expval(*ob, num_shots, shot_range);
+            },
+            "Expected value of an observable object.")
+        .def(
             "var",
             [](MeasurementsMPI<StateVectorT> &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
