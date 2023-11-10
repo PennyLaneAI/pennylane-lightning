@@ -1327,33 +1327,34 @@ def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     assert np.allclose(jacs, jacs_comp)
 
 
-@pytest.mark.parametrize("n_targets", [1, 2])
+@pytest.mark.parametrize("n_targets", range(1, 6))
 def test_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
-    dev_def = qml.device("default.qubit", wires=n_wires)
+    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
 
-    par = 2 * np.pi * np.random.rand(n_wires)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
         2**n_targets, 2**n_targets
     )
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    U = np.array(U, requires_grad=False)
+
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
+    par = 2 * np.pi * np.random.rand(n_wires)
 
     def circuit(x):
         qml.StatePrep(init_state, wires=range(n_wires))
         for i in range(n_wires // 2):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
+            qml.RY(x[i], wires=i)
         qml.QubitUnitary(U, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
-        return qml.expval(qml.PauliZ(0))
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
@@ -1368,35 +1369,35 @@ def test_qubit_unitary(n_targets):
     assert np.allclose(jac, jac_def)
 
 
-@pytest.mark.parametrize("n_targets", [1])
+@pytest.mark.parametrize("n_targets", [1, 2])
 def test_diff_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-    tol = h
 
-    par = 2 * np.pi * np.random.rand(n_wires)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
         2**n_targets, 2**n_targets
     )
     U, _ = np.linalg.qr(U)
-    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    U = np.array(U, requires_grad=False)
+
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
+    par = 2 * np.pi * np.random.rand(n_wires)
 
     def circuit(x, u_mat):
         qml.StatePrep(init_state, wires=range(n_wires))
         for i in range(n_wires // 2):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
+            qml.RY(x[i], wires=i)
         qml.QubitUnitary(u_mat, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
-        return qml.expval(qml.PauliZ(0))
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
