@@ -837,10 +837,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
                     if shot_range is None:
                         return self.measurements.expval(obs, self.shots)
-                    else:
-                        return self.measurements.expval(obs, self.shots, shot_range)
-                else:
-                    raise RuntimeError(f"{observable.name} obs does not support.")
+                    return self.measurements.expval(obs, self.shots, shot_range)
+                raise RuntimeError(f"{observable.name} obs does not support.")
 
             if observable.name in ["SparseHamiltonian"]:
                 if self._mpi:
