@@ -107,7 +107,7 @@ endif
 format: format-cpp format-python
 
 format-cpp:
-	./bin/format $(CHECK) --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning
+	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
 	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
