@@ -31,8 +31,6 @@ class TestExpval:
     def test_identity_expectation(self, theta, phi, tol):
         """Test that identity expectation value (i.e. the trace) is 1"""
         dev = qml.device(device_name, mpi=True, wires=3)
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.Identity(wires=[0])
         O2 = qml.Identity(wires=[1])
@@ -49,9 +47,6 @@ class TestExpval:
         """Test that PauliZ expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
 
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
-
         O1 = qml.PauliZ(wires=[0])
         O2 = qml.PauliZ(wires=[1])
 
@@ -63,12 +58,25 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
+    def test_pauliz_expectation_shots(self, theta, phi, tol):
+        """Test that PauliZ expectation value is correct"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+
+        O1 = qml.PauliZ(wires=[0])
+        O2 = qml.PauliZ(wires=[1])
+
+        dev.apply(
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), atol=TOL)
+
     def test_paulix_expectation(self, theta, phi, tol):
         """Test that PauliX expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.PauliX(wires=[0])
         O2 = qml.PauliX(wires=[1])
@@ -85,12 +93,45 @@ class TestExpval:
             tol * 10,
         )
 
+    def test_paulix_expectation_shots(self, theta, phi, tol):
+        """Test that PauliX expectation value is correct"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+
+        O1 = qml.PauliX(wires=[0])
+        O2 = qml.PauliX(wires=[1])
+
+        dev.apply(
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
+        assert np.allclose(
+            res,
+            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE),
+            atol=TOL,
+        )
+
+    def test_pauliy_expectation_shots(self, theta, phi, tol):
+        """Test that PauliY expectation value is correct"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+
+        O1 = qml.PauliY(wires=[0])
+        O2 = qml.PauliY(wires=[1])
+
+        dev.apply(
+            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), atol=TOL)
+
     def test_pauliy_expectation(self, theta, phi, tol):
         """Test that PauliY expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
-
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
 
         O1 = qml.PauliY(wires=[0])
         O2 = qml.PauliY(wires=[1])
@@ -124,14 +165,35 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
+    def test_hadamard_expectation_shot(self, theta, phi, tol):
+        """Test that Hadamard expectation value is correct"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+
+        O1 = qml.Hadamard(wires=[0])
+        O2 = qml.Hadamard(wires=[1])
+
+        dev.apply(
+            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+        )
+
+        res = np.array([dev.expval(O1), dev.expval(O2)])
+        expected = np.array(
+            [
+                np.sin(theta) * np.sin(phi) + np.cos(theta),
+                np.cos(theta) * np.cos(phi) + np.sin(phi),
+            ]
+        ) / np.sqrt(2)
+        assert np.allclose(res, expected, atol=TOL)
+
     @pytest.mark.parametrize("n_wires", range(1, 8))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(device_name, mpi=True, wires=n_qubits)
-        if device_name == "lightning.gpu" and dev.R_DTYPE == np.float32:
-            pytest.skip("Skipped FP32 tests for expval in lightning.gpu")
+
         comm = MPI.COMM_WORLD
 
         m = 2**n_wires

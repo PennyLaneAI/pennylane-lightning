@@ -470,7 +470,7 @@ if LK_CPP_BINARY_AVAILABLE:
             if self.shots is not None:
                 # estimate the expectation value
                 if observable.name in ["PauliX", "PauliY", "PauliZ", "Hadamard"]:
-                    obs = QuantumScriptSerializer(self.short_name, self.use_csingle, self._mpi)._ob(
+                    obs = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
                         observable, self.wire_map
                     )
 
