@@ -138,7 +138,7 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := 0.33.0
+    VERSION := 0.33.1
 endif
 docker-build:
 	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) --build-arg='LIGHTNING_VERSION=$(VERSION)' .
