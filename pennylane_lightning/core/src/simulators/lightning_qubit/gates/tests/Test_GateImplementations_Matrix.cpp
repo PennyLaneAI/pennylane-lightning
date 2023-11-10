@@ -853,67 +853,12 @@ void testApplySingleQubitOpInverse() {
     std::mt19937 re{1337};
     const int num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
+    const size_t wire = GENERATE(0, 1, 2, 3);
 
     DYNAMIC_SECTION(GateImplementation::name
-                    << ", wires = {0} - "
+                    << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
-        const std::vector<size_t> wires{0};
-
-        const auto ini_st =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-
-        const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
-
-        auto st = ini_st;
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, false);
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, true);
-        REQUIRE(st == approx(ini_st).margin(margin));
-    }
-
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", wires = {1} - "
-                    << PrecisionToName<PrecisionT>::value) {
-        const std::vector<size_t> wires{1};
-
-        const auto ini_st =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-
-        const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
-
-        auto st = ini_st;
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, false);
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, true);
-
-        REQUIRE(st == approx(ini_st).margin(margin));
-    }
-
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", wires = {2} - "
-                    << PrecisionToName<PrecisionT>::value) {
-        const std::vector<size_t> wires{2};
-
-        const auto ini_st =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-
-        const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
-
-        auto st = ini_st;
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, false);
-        GateImplementation::applySingleQubitOp(st.data(), num_qubits,
-                                               matrix.data(), wires, true);
-
-        REQUIRE(st == approx(ini_st).margin(margin));
-    }
-
-    DYNAMIC_SECTION(GateImplementation::name
-                    << ", wires = {3} - "
-                    << PrecisionToName<PrecisionT>::value) {
-        const std::vector<size_t> wires{3};
+        const std::vector<size_t> wires{wire};
 
         const auto ini_st =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);

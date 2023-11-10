@@ -16,6 +16,7 @@ FetchAndIncludeCatch()
 
 add_library(lightning_qubit_gates_tests INTERFACE)
 target_link_libraries(lightning_qubit_gates_tests INTERFACE Catch2::Catch2
+                                                            lightning_qubit
                                                             lightning_gates 
                                                             lightning_qubit_gates
                                                             )

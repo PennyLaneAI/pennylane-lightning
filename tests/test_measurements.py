@@ -29,6 +29,19 @@ from pennylane.measurements import (
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.qubit":
+    import pennylane_lightning.lightning_qubit_ops as lightning_ops
+elif device_name == "lightning.kokkos":
+    import pennylane_lightning.lightning_kokkos_ops as lightning_ops
+elif device_name == "lightning.gpu":
+    import pennylane_lightning.lightning_gpu_ops as lightning_ops
+
+
+def test_measurements():
+    dev = qml.device(device_name, wires=2)
+    m = dev.measurements
+    assert isinstance(m, (lightning_ops.MeasurementsC64, lightning_ops.MeasurementsC128))
+
 
 def test_no_measure():
     """Test that failing to specify a measurement

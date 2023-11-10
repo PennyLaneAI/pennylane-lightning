@@ -435,6 +435,37 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
+    def test_basic_circuit_not_implemented_ctrl_ops(self):
+        """Test expected serialization for a simple circuit"""
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=0)
+            qml.RY(0.6, wires=1)
+            qml.ctrl(qml.OrbitalRotation(0.1234, wires=range(4)), [4, 5])
+
+        with pytest.raises(ValueError, match=f"N-controlled OrbitalRotation not implemented."):
+            s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+
+    def test_multicontrolledx(self):
+        """Test expected serialization for a simple circuit"""
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=0)
+            qml.RY(0.6, wires=1)
+            qml.ctrl(qml.PauliX(wires=0), [1, 2, 3])
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s_expected = (
+            (
+                ["RX", "RY", "PauliX"],
+                [np.array([0.4]), np.array([0.6]), []],
+                [[0], [1], [0]],
+                [False, False, False],
+                [[], [], []],
+                [[], [], [1, 2, 3]],
+            ),
+            False,
+        )
+        assert s == s_expected
+
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_skips_prep_circuit(self, stateprep):
         """Test expected serialization for a simple circuit with state preparation, such that

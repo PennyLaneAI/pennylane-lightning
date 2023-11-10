@@ -291,7 +291,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Returns a Measurements object matching ``use_csingle`` precision."""
             ket = np.ravel(self._state)
             state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-            # state_vector = self.state_vector
             return (
                 MeasurementsC64(state_vector)
                 if self.use_csingle
