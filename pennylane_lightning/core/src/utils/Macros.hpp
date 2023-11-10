@@ -51,10 +51,6 @@
 [[maybe_unused]] static constexpr bool use_avx512f = false;
 #endif
 
-#if defined(_OPENMP)
-#define PL_USE_OMP 1
-#endif
-
 #if (_OPENMP >= 202011)
 #define PL_UNROLL_LOOP _Pragma("omp unroll(8)")
 #elif defined(__GNUC__)
