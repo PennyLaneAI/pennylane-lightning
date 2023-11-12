@@ -359,8 +359,9 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots",
     }
 }
 
-TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots with Identity",
-                   "[StateVectorCudaManaged_Expval]", float, double) {
+TEMPLATE_TEST_CASE(
+    "Test expectation value of TensorProdObs shots with Identity",
+    "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
     SECTION("Using expval") {

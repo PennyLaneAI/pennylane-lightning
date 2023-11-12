@@ -17,16 +17,17 @@
  */
 #pragma once
 
-#include <vector>
 #include <regex>
 #include <string>
+#include <vector>
 
 #include "Observables.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
-void parse_obs2ops(const std::string& obs_name, std::vector<std::string>& ops, std::vector<std::vector<size_t>>& wires){
+void parse_obs2ops(const std::string &obs_name, std::vector<std::string> &ops,
+                   std::vector<std::vector<size_t>> &wires) {
     std::regex regex(R"((Pauli[XYZ]|Hadamard|Identity)\[(\d+)\])");
     // Use std::sregex_iterator to iterate over matches in the obs_name string
     auto it = std::sregex_iterator(obs_name.begin(), obs_name.end(), regex);
@@ -190,19 +191,20 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         size_t num_identity_obs = 0;
 
-        for(size_t i = 0; i < ops.size(); i++){
+        for (size_t i = 0; i < ops.size(); i++) {
             auto ops_name = ops[i];
-            if(ops_name == "PauliX"){
+            if (ops_name == "PauliX") {
                 sv.applyOperation("Hadamard", wires_list[i], false);
-            }else if (ops_name == "PauliY"){
-                sv.applyOperations({"PauliZ", "S", "Hadamard"},
-                               {wires_list[i], wires_list[i], wires_list[i]},
-                               {false, false, false});
-            }else if (ops_name == "Hadamard"){
+            } else if (ops_name == "PauliY") {
+                sv.applyOperations(
+                    {"PauliZ", "S", "Hadamard"},
+                    {wires_list[i], wires_list[i], wires_list[i]},
+                    {false, false, false});
+            } else if (ops_name == "Hadamard") {
                 const PrecisionT theta = -M_PI / 4.0;
                 sv.applyOperation("RY", wires_list[i], false, {theta});
-            }else if (ops_name == "PauliZ"){
-            }else if (ops_name == "Identity"){
+            } else if (ops_name == "PauliZ") {
+            } else if (ops_name == "Identity") {
                 std::swap(obs_wires[num_identity_obs], obs_wires[i]);
                 num_identity_obs++;
             }
@@ -227,17 +229,20 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         for (size_t i = 0; i < num_shots; i++) {
             std::vector<size_t> local_sample(obs_wires.size());
-            for(size_t j = 0; j < obs_wires.size(); j++){
+            for (size_t j = 0; j < obs_wires.size(); j++) {
                 local_sample[j] = sub_samples[i * num_qubits + obs_wires[j]];
             }
 
-            if(num_identity_obs != obs_wires.size()){
-                if(std::reduce(local_sample.begin() + num_identity_obs, local_sample.end())%2 == 1){
+            if (num_identity_obs != obs_wires.size()) {
+                if (std::reduce(local_sample.begin() + num_identity_obs,
+                                local_sample.end()) %
+                        2 ==
+                    1) {
                     obs_samples[i] = -1;
-                }else{
+                } else {
                     obs_samples[i] = 1;
                 }
-            }else{
+            } else {
                 obs_samples[i] = 1;
             }
         }
