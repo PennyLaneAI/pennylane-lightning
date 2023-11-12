@@ -188,6 +188,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         std::vector<std::vector<size_t>> wires_list;
         parse_obs2ops(obs_name, ops, wires_list);
 
+        size_t num_identity_obs = 0;
+
         for(size_t i = 0; i < ops.size(); i++){
             auto ops_name = ops[i];
             if(ops_name == "PauliX"){
@@ -200,6 +202,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 const PrecisionT theta = -M_PI / 4.0;
                 sv.applyOperation("RY", wires_list[i], false, {theta});
             }else if (ops_name == "PauliZ"){
+            }else if (ops_name == "Identity"){
+                std::swap(obs_wires[num_identity_obs], obs_wires[i]);
+                num_identity_obs++;
             }
         }
 
@@ -225,9 +230,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             for(size_t j = 0; j < obs_wires.size(); j++){
                 local_sample[j] = sub_samples[i * num_qubits + obs_wires[j]];
             }
-            
-            if(std::reduce(local_sample.begin(), local_sample.end())%2 == 1){
-                obs_samples[i] = -1;
+
+            if(num_identity_obs != obs_wires.size()){
+                if(std::reduce(local_sample.begin() + num_identity_obs, local_sample.end())%2 == 1){
+                    obs_samples[i] = -1;
+                }else{
+                    obs_samples[i] = 1;
+                }
             }else{
                 obs_samples[i] = 1;
             }
