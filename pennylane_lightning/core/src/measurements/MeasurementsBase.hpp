@@ -18,12 +18,26 @@
 #pragma once
 
 #include <vector>
+#include <regex>
+#include <string>
 
 #include "Observables.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+void parse_obs2ops(const std::string& obs_name, std::vector<std::string>& ops, std::vector<std::vector<size_t>>& wires){
+    std::regex regex(R"((Pauli[XYZ]|Hadamard|Identity)\[(\d+)\])");
+    // Use std::sregex_iterator to iterate over matches in the obs_name string
+    auto it = std::sregex_iterator(obs_name.begin(), obs_name.end(), regex);
+    auto end = std::sregex_iterator();
+
+    for (; it != end; ++it) {
+        std::smatch match = *it;
+        ops.push_back(match[1].str());
+        wires.push_back({std::stoul(match[2].str())});
+    }
+}
 
 auto sample_to_str(std::vector<size_t> &sample) -> std::string {
     std::string str;
@@ -170,23 +184,30 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         StateVectorT sv(_statevector);
 
-        if (obs_name.find("PauliX") != std::string::npos) {
-            sv.applyOperation("Hadamard", obs_wires, false);
-        } else if (obs_name.find("PauliY") != std::string::npos) {
-            sv.applyOperation("PauliZ", obs_wires, false);
-            sv.applyOperation("S", obs_wires, false);
-            sv.applyOperation("Hadamard", obs_wires, false);
-        } else if (obs_name.find("Hadamard") != std::string::npos) {
-            const PrecisionT theta = -M_PI / 4.0;
-            sv.applyOperation("RY", obs_wires, false, {theta});
-        } else if (obs_name.find("PauliZ") != std::string::npos) {
+        std::vector<std::string> ops;
+        std::vector<std::vector<size_t>> wires_list;
+        parse_obs2ops(obs_name, ops, wires_list);
+
+        for(size_t i = 0; i < ops.size(); i++){
+            auto ops_name = ops[i];
+            if(ops_name == "PauliX"){
+                sv.applyOperation("Hadamard", wires_list[i], false);
+            }else if (ops_name == "PauliY"){
+                sv.applyOperations({"PauliZ", "S", "Hadamard"},
+                               {wires_list[i], wires_list[i], wires_list[i]},
+                               {false, false, false});
+            }else if (ops_name == "Hadamard"){
+                const PrecisionT theta = -M_PI / 4.0;
+                sv.applyOperation("RY", wires_list[i], false, {theta});
+            }else if (ops_name == "PauliZ"){
+            }
         }
 
         Derived measure(sv);
 
         std::vector<size_t> samples = measure.generate_samples(num_shots);
         std::vector<size_t> sub_samples;
-        std::vector<PrecisionT> obs_samples(num_shots * obs_wires.size(), 0);
+        std::vector<PrecisionT> obs_samples(num_shots, 0);
 
         if (shot_range.empty()) {
             sub_samples = samples;
@@ -200,9 +221,16 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
 
         for (size_t i = 0; i < num_shots; i++) {
-            obs_samples[i] =
-                (1 - 2 * static_cast<PrecisionT>(
-                             sub_samples[i * num_qubits + obs_wires[0]]));
+            std::vector<size_t> local_sample(obs_wires.size());
+            for(size_t j = 0; j < obs_wires.size(); j++){
+                local_sample[j] = sub_samples[i * num_qubits + obs_wires[j]];
+            }
+            
+            if(std::reduce(local_sample.begin(), local_sample.end())%2 == 1){
+                obs_samples[i] = -1;
+            }else{
+                obs_samples[i] = 1;
+            }
         }
         return obs_samples;
     }
