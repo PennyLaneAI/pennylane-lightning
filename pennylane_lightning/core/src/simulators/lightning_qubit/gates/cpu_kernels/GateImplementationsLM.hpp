@@ -622,11 +622,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 const std::size_t i1) {
             std::swap(arr[i0], arr[i1]);
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -669,11 +669,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i0] = {std::imag(v1), -std::real(v1)};
             arr[i1] = {-std::imag(v0), std::real(v0)};
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -702,11 +702,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         auto core_function = [](std::complex<PrecisionT> *arr,
                                 [[maybe_unused]] std::size_t i0,
                                 const std::size_t i1) { arr[i1] *= -1; };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -740,11 +740,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i0] = isqrt2 * v0 + isqrt2 * v1;
             arr[i1] = isqrt2 * v0 - isqrt2 * v1;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -769,11 +769,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                      const std::size_t i1) {
             arr[i1] *= shift;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -797,11 +797,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                      const std::size_t i1) {
             arr[i1] *= shift;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -823,11 +823,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         auto core_function = [s](std::complex<PrecisionT> *arr,
                                  [[maybe_unused]] std::size_t i0,
                                  const std::size_t i1) { arr[i1] *= s; };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -869,11 +869,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i1] = std::complex<PrecisionT>{-imag(v0) * js, real(v0) * js} +
                       c * v1;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -911,11 +911,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i1] = std::complex<PrecisionT>{s * real(v0) + c * real(v1),
                                                s * imag(v0) + c * imag(v1)};
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -953,11 +953,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i0] *= shifts[0];
             arr[i1] *= shifts[1];
         };
-        if (controlled_wires.size() > 0) {
-            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1105,11 +1105,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 [[maybe_unused]] const std::size_t i11) {
             std::swap(arr[i10], arr[i01]);
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1154,11 +1154,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = ComplexT{cr * v11.real() + sj * v00.imag(),
                                 cr * v11.imag() - sj * v00.real()};
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1195,11 +1195,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 cr * v10.imag() + sj * v01.real()};
             arr[i11] = ComplexT{v11.real(), v11.imag()};
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1237,11 +1237,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = ComplexT{cr * v11.real() - sj * v00.imag(),
                                 cr * v11.imag() + sj * v00.real()};
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1275,11 +1275,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] *= shifts[1];
             arr[i11] *= shifts[0];
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1310,11 +1310,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i01] = c * v01 - s * v10;
             arr[i10] = s * v01 + c * v10;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1349,11 +1349,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] = s * v01 + c * v10;
             arr[i11] *= e;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }
@@ -1389,11 +1389,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i10] = s * v01 + c * v10;
             arr[i11] *= e;
         };
-        if (controlled_wires.size() > 0) {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }

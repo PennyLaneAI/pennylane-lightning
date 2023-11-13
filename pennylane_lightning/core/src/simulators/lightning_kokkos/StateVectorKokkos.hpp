@@ -282,7 +282,7 @@ class StateVectorKokkos final
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF(controlled_wires.size() > 0,
+        PL_ABORT_IF(!controlled_wires.empty(),
                     "Controlled kernels not implemented.");
         applyOperation(opName, wires, inverse, params, gate_matrix);
     }

@@ -134,7 +134,7 @@ template <class StateVectorT> class OpsData {
           ops_matrices_(ops_name.size()),
           ops_controlled_wires_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
+            if (!p.empty()) {
                 num_par_ops_++;
             }
         }
