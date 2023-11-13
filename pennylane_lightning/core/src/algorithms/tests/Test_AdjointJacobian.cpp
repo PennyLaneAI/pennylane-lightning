@@ -151,18 +151,20 @@ template <typename TypeList> void testAdjointJacobian() {
                 std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
                 for (const auto &p : param) {
-                    std::vector<std::vector<size_t>> controls(num_qubits - 1);
+                    std::vector<std::vector<size_t>> controls{
+                        std::vector<size_t>(num_qubits - 1)};
                     std::iota(controls[0].begin(), controls[0].end(), 0);
                     auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}},
                                                      {{num_qubits - 1}},
                                                      {false}, {{}}, controls);
 
                     std::vector<ComplexT> cdata(1U << num_qubits);
-                    cdata[0] = Pennylane::Util::INVSQRT2<PrecisionT>();
-                    cdata[1] = Pennylane::Util::INVSQRT2<PrecisionT>();
+                    cdata[cdata.size() - 2] =
+                        Pennylane::Util::INVSQRT2<PrecisionT>();
+                    cdata[cdata.size() - 1] =
+                        Pennylane::Util::INVSQRT2<PrecisionT>();
 
                     StateVectorT psi(cdata.data(), cdata.size());
-
                     JacobianData<StateVectorT> tape{
                         num_params, psi.getLength(), psi.getData(), {obs}, ops,
                         tp};
