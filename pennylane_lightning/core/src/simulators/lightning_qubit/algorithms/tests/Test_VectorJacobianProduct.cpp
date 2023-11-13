@@ -277,6 +277,54 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
         REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
     }
 
+    SECTION("Test controlled complex dy") {
+        OpsData<StateVectorT> ops_data1{
+            {"PauliX", "RX"}, // names
+            {{}, {M_PI / 7}}, // params
+            {{1}, {1}},       // wires
+            {false, false},   // inverses
+            {{}, {}},         // inverses
+            {{0, 2}, {2}},    // inverses
+        };
+
+        auto dy1 = std::vector<ComplexT>{{0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}};
+
+        OpsData<StateVectorT> ops_data2{
+            {"PauliX", "RX"},  // names
+            {{}, {-M_PI / 7}}, // params
+            {{1}, {1}},        // wires
+            {false, false},    // inverses
+            {{}, {}},          // inverses
+            {{0, 2}, {2}},     // inverses
+        };
+
+        auto dy2 = std::vector<ComplexT>{{0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}};
+
+        std::vector<ComplexT> ini_st{{isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}, {0.0, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}};
+
+        JacobianData<StateVectorT> jd1{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data1,     {0}};
+        JacobianData<StateVectorT> jd2{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data2,     {0}};
+
+        std::vector<ComplexT> vjp1(1);
+        std::vector<ComplexT> vjp2(1);
+
+        vector_jacobian_product(std::span{vjp1}, jd1,
+                                std::span<const ComplexT>{dy1}, true);
+
+        vector_jacobian_product(std::span{vjp2}, jd2,
+                                std::span<const ComplexT>{dy2}, true);
+
+        REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
+    }
+
     SECTION(
         "Check the result is consistent with adjoint diff with observables") {
         using VectorT = TestVector<ComplexT>;
