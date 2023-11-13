@@ -1,7 +1,7 @@
-name: Testing::LKokkos::GPU
+name: Tests::Linux::x86_64::LGPU::MPI
 on:
   workflow_run:
-    workflows: ["Testing::LKokkos::CUDA"]
+    workflows: ["Testing::LKokkos::GPU"]
     types:
       - completed
   workflow_call:
