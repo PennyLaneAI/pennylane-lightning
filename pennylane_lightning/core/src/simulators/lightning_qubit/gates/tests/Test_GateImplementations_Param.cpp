@@ -2284,9 +2284,8 @@ TEMPLATE_TEST_CASE(
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyOperation("ControlledPhaseShift", {control, wire}, inverse,
                                {param});
@@ -2305,9 +2304,8 @@ TEMPLATE_TEST_CASE(
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyOperation("CRX", {control, wire}, inverse, {param});
             sv1.applyOperation("RX", std::vector<size_t>{control},
@@ -2325,9 +2323,8 @@ TEMPLATE_TEST_CASE(
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyOperation("CRY", {control, wire}, inverse, {param});
             sv1.applyOperation("RY", std::vector<size_t>{control},
@@ -2345,9 +2342,8 @@ TEMPLATE_TEST_CASE(
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyOperation("CRZ", {control, wire}, inverse, {param});
             sv1.applyOperation("RZ", std::vector<size_t>{control},
@@ -2395,9 +2391,8 @@ TEMPLATE_TEST_CASE(
             auto matrix = getIsingXX<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingXX", std::vector<size_t>{control},
@@ -2418,9 +2413,8 @@ TEMPLATE_TEST_CASE(
             auto matrix = getIsingXY<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingXY", std::vector<size_t>{control},
@@ -2441,9 +2435,8 @@ TEMPLATE_TEST_CASE(
             auto matrix = getIsingYY<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingYY", std::vector<size_t>{control},
@@ -2464,9 +2457,8 @@ TEMPLATE_TEST_CASE(
             auto matrix = getIsingZZ<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingZZ", std::vector<size_t>{control},
@@ -2487,9 +2479,8 @@ TEMPLATE_TEST_CASE(
             auto matrix = getSingleExcitation<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("SingleExcitation", std::vector<size_t>{control},
@@ -2511,9 +2502,8 @@ TEMPLATE_TEST_CASE(
                 getSingleExcitationMinus<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation(
@@ -2535,9 +2525,8 @@ TEMPLATE_TEST_CASE(
                 getSingleExcitationPlus<std::complex, PrecisionT>(param);
             std::vector<ComplexT> cmatrix = getControlledGate(matrix);
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            auto st1 = st0;
             sv0.updateData(st0);
-            sv1.updateData(st1);
+            sv1.updateData(st0);
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation(
