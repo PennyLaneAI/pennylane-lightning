@@ -4,6 +4,10 @@ on:
     branches:
       - master
   pull_request:
+    paths:
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_qubit/**
+      - tests/**
 
 concurrency:
   group: tests_windows-${{ github.ref }}
