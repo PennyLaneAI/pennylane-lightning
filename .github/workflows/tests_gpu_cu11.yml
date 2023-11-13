@@ -1,4 +1,4 @@
-name: Tests::Linux::x86_64::LGPU
+name: Testing::Linux::x86_64::LGPU
 on:
   workflow_call:
     inputs:
@@ -319,7 +319,8 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-  
+          if-no-files-found: error
+
   upload-to-codecov-linux-python:
     needs: [pythontestswithLGPU]
     name: Upload coverage data to codecov

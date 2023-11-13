@@ -174,6 +174,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   cpptestswithOpenBLAS:
     if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
@@ -323,6 +324,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
@@ -512,7 +514,7 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -541,6 +543,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   upload-to-codecov-linux-python:
     needs: [pythontests, pythontestswithOpenBLAS, pythontestswithKokkos]
