@@ -370,16 +370,21 @@ if LQ_CPP_BINARY_AVAILABLE:
                 method = getattr(sim, operation.name, None)
                 wires = self.wires.indices(operation.wires)
 
-                if operation.name[0:2] == "C(" or (
+                if method is not None:  # apply specialized gate
+                    inv = False
+                    param = operation.parameters
+                    method(wires, inv, param)
+                elif (
+                    (operation.name[0:2] == "C(" or operation.name == "ControlledQubitUnitary")
+                    and all(operation.control_values)
+                ) or (
                     operation.name == "MultiControlledX"
                     and all(char == "1" for char in operation.hyperparameters["control_values"])
-                ):
+                ):  # apply n-controlled gate
                     basename = (
                         "PauliX" if operation.name == "MultiControlledX" else operation.base.name
                     )
                     method = getattr(sim, f"{basename}", None)
-                    if method is None:
-                        raise ValueError(f"Method {operation.name} not implemented.")
                     control_wires = self.wires.indices(operation.control_wires)
                     if operation.name == "MultiControlledX":
                         target_wires = list(
@@ -387,11 +392,11 @@ if LQ_CPP_BINARY_AVAILABLE:
                         )
                     else:
                         target_wires = self.wires.indices(operation.target_wires)
-                    inv = False
-                    param = operation.parameters
-                    method(control_wires, target_wires, inv, param)
-                elif method is None:
-                    if operation.name == "ControlledQubitUnitary":
+                    if method is not None:  # apply n-controlled specialized gate
+                        inv = False
+                        param = operation.parameters
+                        method(control_wires, target_wires, inv, param)
+                    else:  # apply gate as an n-controlled matrix
                         method = getattr(sim, "applyControlledMatrix")
                         control_wires = self.wires.indices(operation.control_wires)
                         target_wires = self.wires.indices(operation.target_wires)
@@ -400,19 +405,15 @@ if LQ_CPP_BINARY_AVAILABLE:
                         except AttributeError:  # pragma: no cover
                             # To support older versions of PL
                             method(operation.base.matrix, control_wires, target_wires, False)
-                    else:
-                        # Inverse can be set to False since qml.matrix(operation) is already in
-                        # inverted form
-                        method = getattr(sim, "applyMatrix")
-                        try:
-                            method(qml.matrix(operation), wires, False)
-                        except AttributeError:  # pragma: no cover
-                            # To support older versions of PL
-                            method(operation.matrix, wires, False)
-                else:
-                    inv = False
-                    param = operation.parameters
-                    method(wires, inv, param)
+                else:  # apply gate as a matrix
+                    # Inverse can be set to False since qml.matrix(operation) is already in
+                    # inverted form
+                    method = getattr(sim, "applyMatrix")
+                    try:
+                        method(qml.matrix(operation), wires, False)
+                    except AttributeError:  # pragma: no cover
+                        # To support older versions of PL
+                        method(operation.matrix, wires, False)
 
             return np.reshape(state_vector, state.shape)
 

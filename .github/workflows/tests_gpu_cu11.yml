@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64::LGPU
+name: Testing::LKokkos::GPU
 on:
   workflow_run:
     workflows: ["Testing::LKokkos::CUDA"]
