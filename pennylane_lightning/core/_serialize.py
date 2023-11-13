@@ -27,7 +27,6 @@ from pennylane import (
     Rot,
     Hamiltonian,
     SparseHamiltonian,
-    QubitUnitary,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -310,7 +309,7 @@ class QuantumScriptSerializer:
                 names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
-                if isinstance(single_op, QubitUnitary):
+                if name == "QubitUnitary":
                     params.append([0.0])
                     mats.append(matrix(single_op))
                 elif not hasattr(self.sv_type, name):
