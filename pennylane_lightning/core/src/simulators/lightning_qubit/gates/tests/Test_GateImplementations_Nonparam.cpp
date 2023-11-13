@@ -674,7 +674,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
@@ -707,7 +706,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
@@ -726,7 +724,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
@@ -763,7 +760,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             auto st1 = st0;
             sv0.updateData(st0);
             sv1.updateData(st1);
-
             sv0.applyOperation("CSWAP", {control, wire0, wire1});
             sv1.applyOperation("SWAP", std::vector<size_t>{control},
                                std::vector<size_t>{wire0, wire1});

@@ -2304,7 +2304,6 @@ TEMPLATE_TEST_CASE(
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
@@ -2325,7 +2324,6 @@ TEMPLATE_TEST_CASE(
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
@@ -2346,7 +2344,6 @@ TEMPLATE_TEST_CASE(
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         if (control != wire) {
-
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = st0;
             sv0.updateData(st0);
