@@ -345,14 +345,45 @@ if LQ_CPP_BINARY_AVAILABLE:
             num = self._get_basis_state_index(state, wires)
             self._state = self._create_basis_state(num)
 
+        def _apply_lightning_controlled(self, sim, operation):
+            """Apply an arbitrary controlled operation to the state tensor.
+
+            Args:
+                sim (StateVectorC64, StateVectorC128): a state vector simulator
+                operation (~pennylane.operation.Operation): operation to apply
+
+            Returns:
+                array[complex]: the output state tensor
+            """
+            basename = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+            if basename == "Identity":
+                return
+            method = getattr(sim, f"{basename}", None)
+            control_wires = self.wires.indices(operation.control_wires)
+            if operation.name == "MultiControlledX":
+                target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
+            else:
+                target_wires = self.wires.indices(operation.target_wires)
+            if method is not None:  # apply n-controlled specialized gate
+                inv = False
+                param = operation.parameters
+                method(control_wires, target_wires, inv, param)
+            else:  # apply gate as an n-controlled matrix
+                method = getattr(sim, "applyControlledMatrix")
+                control_wires = self.wires.indices(operation.control_wires)
+                target_wires = self.wires.indices(operation.target_wires)
+                try:
+                    method(qml.matrix(operation.base), control_wires, target_wires, False)
+                except AttributeError:  # pragma: no cover
+                    # To support older versions of PL
+                    method(operation.base.matrix, control_wires, target_wires, False)
+
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.
 
             Args:
                 state (array[complex]): the input state tensor
                 operations (list[~pennylane.operation.Operation]): operations to apply
-                dtype (type): Type of numpy ``complex`` to be used. Can be important
-                to specify for large systems for memory allocation purposes.
 
             Returns:
                 array[complex]: the output state tensor
@@ -381,30 +412,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     operation.name == "MultiControlledX"
                     and all(char == "1" for char in operation.hyperparameters["control_values"])
                 ):  # apply n-controlled gate
-                    basename = (
-                        "PauliX" if operation.name == "MultiControlledX" else operation.base.name
-                    )
-                    method = getattr(sim, f"{basename}", None)
-                    control_wires = self.wires.indices(operation.control_wires)
-                    if operation.name == "MultiControlledX":
-                        target_wires = list(
-                            set(self.wires.indices(operation.wires)) - set(control_wires)
-                        )
-                    else:
-                        target_wires = self.wires.indices(operation.target_wires)
-                    if method is not None:  # apply n-controlled specialized gate
-                        inv = False
-                        param = operation.parameters
-                        method(control_wires, target_wires, inv, param)
-                    else:  # apply gate as an n-controlled matrix
-                        method = getattr(sim, "applyControlledMatrix")
-                        control_wires = self.wires.indices(operation.control_wires)
-                        target_wires = self.wires.indices(operation.target_wires)
-                        try:
-                            method(qml.matrix(operation.base), control_wires, target_wires, False)
-                        except AttributeError:  # pragma: no cover
-                            # To support older versions of PL
-                            method(operation.base.matrix, control_wires, target_wires, False)
+                    self._apply_lightning_controlled(sim, operation)
                 else:  # apply gate as a matrix
                     # Inverse can be set to False since qml.matrix(operation) is already in
                     # inverted form
