@@ -169,7 +169,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                     result_per_term += element;
                     num_elements++;
                 }
-                result += result_per_term / num_elements;
+                result += coeffs[obs_term_idx] * result_per_term / num_elements;
             }
         } else {
             auto obs_samples = samples(obs, num_shots, shot_range);
