@@ -151,14 +151,18 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         PrecisionT result = 0;
         std::vector<size_t> short_range = {};
 
-        if(obs.getObsName().find("SparseHamiltonian") != std::string::npos){
-            PL_ABORT("For SparseHamiltonian Observables, expval calculation is not supported by shots");
-        }else if(obs.getObsName().find("Hermintian") != std::string::npos){
-            PL_ABORT("For Hermintian Observables, expval calculation is not supported by shots");
-        }else if (obs.getObsName().find("Hamiltonian") != std::string::npos){
+        if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
+            PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
+                     "not supported by shots");
+        } else if (obs.getObsName().find("Hermintian") != std::string::npos) {
+            PL_ABORT("For Hermintian Observables, expval calculation is not "
+                     "supported by shots");
+        } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
-            for(size_t obs_term_idx = 0;  obs_term_idx < coeffs.size(); obs_term_idx++){
-                auto obs_samples = samples(obs, num_shots, shot_range, obs_term_idx);
+            for (size_t obs_term_idx = 0; obs_term_idx < coeffs.size();
+                 obs_term_idx++) {
+                auto obs_samples =
+                    samples(obs, num_shots, shot_range, obs_term_idx);
                 size_t num_elements = 0;
                 PrecisionT result_per_term = 0.0;
                 for (int element : obs_samples) {
@@ -167,7 +171,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 }
                 result += result_per_term / num_elements;
             }
-        } else{
+        } else {
             auto obs_samples = samples(obs, num_shots, shot_range);
             size_t num_elements = 0;
             for (int element : obs_samples) {
@@ -175,7 +179,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 num_elements++;
             }
             result = result / num_elements;
-
         }
 
         return result;
@@ -200,17 +203,16 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                  const size_t term_idx = 0,
                  [[maybe_unused]] size_t bin_size = 0,
                  [[maybe_unused]] bool counts = false) {
-        std::vector<size_t> obs_wires; //for Hamiltonian this obs_wires should be calculated based on terms
+        std::vector<size_t> obs_wires; // for Hamiltonian this obs_wires should
+                                       // be calculated based on terms
         const size_t num_qubits = _statevector.getTotalNumQubits();
-        
+
         bool shots = true;
         std::vector<size_t> identify_wires;
 
         StateVectorT sv(_statevector);
 
-        
         obs.applyInPlace(sv, shots, identify_wires, obs_wires, term_idx);
-        
 
         Derived measure(sv);
 
@@ -228,10 +230,10 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 }
             }
         }
-        
-        size_t num_identity_obs = identify_wires.size(); 
-        if(!identify_wires.empty()){       
-            size_t identity_obs_idx = 0; 
+
+        size_t num_identity_obs = identify_wires.size();
+        if (!identify_wires.empty()) {
+            size_t identity_obs_idx = 0;
             for (size_t i = 0; i < obs_wires.size(); i++) {
                 if (identify_wires[identity_obs_idx] == obs_wires[i]) {
                     std::swap(obs_wires[identity_obs_idx], obs_wires[i]);
@@ -239,7 +241,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 }
             }
         }
-        
+
         for (size_t i = 0; i < num_shots; i++) {
             std::vector<size_t> local_sample(obs_wires.size());
             for (size_t j = 0; j < obs_wires.size(); j++) {

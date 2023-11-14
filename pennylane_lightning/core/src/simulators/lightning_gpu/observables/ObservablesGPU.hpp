@@ -209,9 +209,13 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
     }
 
     // to work with
-    void applyInPlace(StateVectorT &sv, bool shots,  std::vector<size_t>& identify_wires, std::vector<size_t>& ob_wires, const size_t term_idx) const override {
-      ob_wires.clear();
-      this->obs_[term_idx]->applyInPlace(sv, shots, identify_wires, ob_wires, term_idx);      
+    void applyInPlace(StateVectorT &sv, bool shots,
+                      std::vector<size_t> &identify_wires,
+                      std::vector<size_t> &ob_wires,
+                      const size_t term_idx) const override {
+        ob_wires.clear();
+        this->obs_[term_idx]->applyInPlace(sv, shots, identify_wires, ob_wires,
+                                           term_idx);
     }
 };
 
