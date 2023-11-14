@@ -829,15 +829,23 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 Expectation value of the observable
             """
             if self.shots is not None:
+                obs = QuantumScriptSerializer(self.short_name, self.use_csingle, self._mpi)._ob(
+                    observable, self.wire_map)
                 # estimate the expectation value
-                if observable.name in ["PauliX", "PauliY", "PauliZ", "Hadamard"]:
-                    obs = QuantumScriptSerializer(self.short_name, self.use_csingle, self._mpi)._ob(
-                        observable, self.wire_map
-                    )
-
+                if observable.name in ["PauliX", "PauliY", "PauliZ", "Hadamard", "Identity"]:
                     if shot_range is None:
                         return self.measurements.expval(obs, self.shots)
                     return self.measurements.expval(obs, self.shots, shot_range)
+                elif isinstance(observable, Tensor):
+                    if shot_range is None:
+                        return self.measurements.expval(obs, self.shots)
+                    return self.measurements.expval(obs, self.shots, shot_range)
+                elif observable.name in ["Hamiltonian"]:
+                    if shot_range is None:
+                        return self.measurements.expval(obs, self.shots)
+                    return self.measurements.expval(obs, self.shots, shot_range)
+
+                
                 raise RuntimeError(f"{observable.name} obs does not support.")
 
             if observable.name in ["SparseHamiltonian"]:

@@ -165,7 +165,7 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    def test_hadamard_expectation_shot(self, theta, phi, tol):
+    def test_hadamard_expectation_shots(self, theta, phi, tol):
         """Test that Hadamard expectation value is correct"""
         TOL = 5e-2
         dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
@@ -347,6 +347,29 @@ class TestTensorExpval:
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
 
         assert np.allclose(res, expected, atol=tol)
+    
+    def test_paulix_pauliy_shots(self, theta, phi, varphi):
+        """Test that a tensor product involving PauliX and PauliY works
+        correctly"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+        obs = qml.PauliX(0) @ qml.PauliY(2)
+
+        dev.apply(
+            [
+                qml.RX(theta, wires=[0]),
+                qml.RX(phi, wires=[1]),
+                qml.RX(varphi, wires=[2]),
+                qml.CNOT(wires=[0, 1]),
+                qml.CNOT(wires=[1, 2]),
+            ],
+            rotations=obs.diagonalizing_gates(),
+        )
+        res = dev.expval(obs)
+
+        expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+
+        assert np.allclose(res, expected, atol=TOL)
 
     def test_pauliz_identity(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliZ and Identity works
@@ -370,6 +393,30 @@ class TestTensorExpval:
         expected = np.cos(varphi) * np.cos(phi)
 
         assert np.allclose(res, expected, tol)
+    
+    def test_pauliz_identity_shots(self, theta, phi, varphi):
+        """Test that a tensor product involving PauliZ and Identity works
+        correctly"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+        obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
+
+        dev.apply(
+            [
+                qml.RX(theta, wires=[0]),
+                qml.RX(phi, wires=[1]),
+                qml.RX(varphi, wires=[2]),
+                qml.CNOT(wires=[0, 1]),
+                qml.CNOT(wires=[1, 2]),
+            ],
+            rotations=obs.diagonalizing_gates(),
+        )
+
+        res = dev.expval(obs)
+
+        expected = np.cos(varphi) * np.cos(phi)
+
+        assert np.allclose(res, expected, atol=TOL)
 
     def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, tol):
         """Test that a tensor product involving PauliZ and PauliY and Hadamard
@@ -392,3 +439,26 @@ class TestTensorExpval:
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
 
         assert np.allclose(res, expected, tol)
+    
+    def test_pauliz_hadamard_pauliy_shots(self, theta, phi, varphi):
+        """Test that a tensor product involving PauliZ and PauliY and Hadamard
+        works correctly"""
+        TOL = 5e-2
+        dev = qml.device(device_name, mpi=True, wires=3, shots=1000)
+        obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
+
+        dev.apply(
+            [
+                qml.RX(theta, wires=[0]),
+                qml.RX(phi, wires=[1]),
+                qml.RX(varphi, wires=[2]),
+                qml.CNOT(wires=[0, 1]),
+                qml.CNOT(wires=[1, 2]),
+            ],
+            rotations=obs.diagonalizing_gates(),
+        )
+
+        res = dev.expval(obs)
+        expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
+
+        assert np.allclose(res, expected, atol=TOL)
