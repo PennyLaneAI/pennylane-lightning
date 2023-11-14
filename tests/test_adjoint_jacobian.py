@@ -1334,6 +1334,7 @@ def test_qubit_unitary(n_targets):
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit.legacy", wires=n_wires)
 
+    np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
@@ -1377,6 +1378,7 @@ def test_diff_qubit_unitary(n_targets):
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
+    np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)

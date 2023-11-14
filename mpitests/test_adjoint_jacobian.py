@@ -42,6 +42,18 @@ fixture_params = itertools.product(
 )
 
 
+@pytest.fixture(params=fixture_params)
+def dev(request):
+    """Returns a PennyLane device."""
+    return qml.device(
+        device_name,
+        wires=8,
+        mpi=True,
+        c_dtype=request.param[0],
+        batch_obs=request.param[1],
+    )
+
+
 def Rx(theta):
     r"""One-qubit rotation about the x axis.
 
@@ -77,17 +89,6 @@ def Rz(theta):
 
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
-
-    @pytest.fixture(params=fixture_params)
-    def dev(self, request):
-        """Returns a PennyLane device."""
-        return qml.device(
-            device_name,
-            wires=8,
-            mpi=True,
-            c_dtype=request.param[0],
-            batch_obs=request.param[1],
-        )
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -1383,14 +1384,15 @@ def test_adjoint_SparseHamiltonian(returns):
     assert np.allclose(j_cpu, j_gpu)
 
 
-@pytest.mark.parametrize("n_targets", [1, 2])
-def test_qubit_unitary(n_targets):
+@pytest.mark.parametrize("n_targets", range(1, 5))
+def test_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
-    np.random.seed(1337)
-    n_wires = 6
-    dev = qml.device("lightning.gpu", wires=n_wires, mpi=True)
-    dev_def = qml.device("default.qubit", wires=n_wires)
+    n_wires = len(dev.wires)
+    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+    c_dtype = np.complex64 if dev.R_DTYPE == np.float32 else np.complex128
 
+    np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
         2**n_targets, 2**n_targets
@@ -1404,18 +1406,18 @@ def test_qubit_unitary(n_targets):
     U = comm.bcast(U, root=0)
     init_state = comm.bcast(init_state, root=0)
 
+    init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
+    U = np.array(U, requires_grad=False, dtype=c_dtype)
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
     def circuit(x):
         qml.StatePrep(init_state, wires=range(n_wires))
         for i in range(n_wires // 2):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
+            qml.RY(x[i], wires=i)
         qml.QubitUnitary(U, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
-        return qml.expval(qml.PauliZ(0))
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
@@ -1426,20 +1428,21 @@ def test_qubit_unitary(n_targets):
 
     comm.Barrier()
 
-    assert jac.size == n_wires
+    assert len(jac) == n_wires
     assert not np.allclose(jac, 0.0)
-    assert np.allclose(jac, jac_ps)
-    assert np.allclose(jac, jac_def)
+    assert np.allclose(jac, jac_ps, atol=h, rtol=0)
+    assert np.allclose(jac, jac_def, atol=h, rtol=0)
 
 
-@pytest.mark.parametrize("n_targets", [1])
-def test_diff_qubit_unitary(n_targets):
+@pytest.mark.parametrize("n_targets", [1, 2])
+def test_diff_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
-    n_wires = 6
-    dev = qml.device(device_name, wires=n_wires)
+    n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+    c_dtype = np.complex64 if dev.R_DTYPE == np.float32 else np.complex128
 
+    np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
         2**n_targets, 2**n_targets
@@ -1453,18 +1456,18 @@ def test_diff_qubit_unitary(n_targets):
     U = comm.bcast(U, root=0)
     init_state = comm.bcast(init_state, root=0)
 
+    init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
+    U = np.array(U, requires_grad=False, dtype=c_dtype)
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
     def circuit(x, u_mat):
         qml.StatePrep(init_state, wires=range(n_wires))
         for i in range(n_wires // 2):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
+            qml.RY(x[i], wires=i)
         qml.QubitUnitary(u_mat, wires=range(n_targets))
         for i in range(n_wires // 2, n_wires):
-            qml.CNOT(wires=[(i - 1) % n_wires, i])
-            qml.RZ(x[i], wires=i)
-            qml.CNOT(wires=[i, (i + 1) % n_wires])
-        return qml.expval(qml.PauliZ(0))
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
@@ -1479,6 +1482,6 @@ def test_diff_qubit_unitary(n_targets):
 
     for jac, jac_def, jac_fd, jac_ps in zip(jacs, jacs_def, jacs_fd, jacs_ps):
         assert not np.allclose(jac, 0.0)
-        assert np.allclose(jac, jac_fd)
-        assert np.allclose(jac, jac_ps)
-        assert np.allclose(jac, jac_def)
+        assert np.allclose(jac, jac_fd, atol=h, rtol=0)
+        assert np.allclose(jac, jac_ps, atol=h, rtol=0)
+        assert np.allclose(jac, jac_def, atol=h, rtol=0)
