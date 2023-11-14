@@ -150,15 +150,35 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 const std::vector<size_t> &shot_range) -> PrecisionT {
         PrecisionT result = 0;
         std::vector<size_t> short_range = {};
-        auto obs_samples = samples(obs, num_shots, shot_range);
 
-        size_t num_elements = 0;
-        for (int element : obs_samples) {
-            result += element;
-            num_elements++;
+        if(obs.getObsName().find("SparseHamiltonian") != std::string::npos){
+            PL_ABORT("For SparseHamiltonian Observables, expval calculation is not supported by shots");
+        }else if(obs.getObsName().find("Hermintian") != std::string::npos){
+            PL_ABORT("For Hermintian Observables, expval calculation is not supported by shots");
+        }else if (obs.getObsName().find("Hamiltonian") != std::string::npos){
+            auto coeffs = obs.getCoeffs();
+            for(size_t obs_term_idx = 0;  obs_term_idx < coeffs.size(); obs_term_idx++){
+                auto obs_samples = samples(obs, num_shots, shot_range, obs_term_idx);
+                size_t num_elements = 0;
+                PrecisionT result_per_term = 0.0;
+                for (int element : obs_samples) {
+                    result_per_term += element;
+                    num_elements++;
+                }
+                result += result_per_term / num_elements;
+            }
+        } else{
+            auto obs_samples = samples(obs, num_shots, shot_range);
+            size_t num_elements = 0;
+            for (int element : obs_samples) {
+                result += element;
+                num_elements++;
+            }
+            result = result / num_elements;
+
         }
 
-        return result / num_elements;
+        return result;
     }
 
     /**
@@ -177,38 +197,20 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto samples(const Observable<StateVectorT> &obs, const size_t &num_shots,
                  const std::vector<size_t> &shot_range,
+                 const size_t term_idx = 0,
                  [[maybe_unused]] size_t bin_size = 0,
                  [[maybe_unused]] bool counts = false) {
-        auto obs_name = obs.getObsName();
-        auto obs_wires = obs.getWires();
+        std::vector<size_t> obs_wires; //for Hamiltonian this obs_wires should be calculated based on terms
         const size_t num_qubits = _statevector.getTotalNumQubits();
+        
+        bool shots = true;
+        std::vector<size_t> identify_wires;
 
         StateVectorT sv(_statevector);
 
-        std::vector<std::string> ops;
-        std::vector<std::vector<size_t>> wires_list;
-        parse_obs2ops(obs_name, ops, wires_list);
-
-        size_t num_identity_obs = 0;
-
-        for (size_t i = 0; i < ops.size(); i++) {
-            auto ops_name = ops[i];
-            if (ops_name == "PauliX") {
-                sv.applyOperation("Hadamard", wires_list[i], false);
-            } else if (ops_name == "PauliY") {
-                sv.applyOperations(
-                    {"PauliZ", "S", "Hadamard"},
-                    {wires_list[i], wires_list[i], wires_list[i]},
-                    {false, false, false});
-            } else if (ops_name == "Hadamard") {
-                const PrecisionT theta = -M_PI / 4.0;
-                sv.applyOperation("RY", wires_list[i], false, {theta});
-            } else if (ops_name == "PauliZ") {
-            } else if (ops_name == "Identity") {
-                std::swap(obs_wires[num_identity_obs], obs_wires[i]);
-                num_identity_obs++;
-            }
-        }
+        
+        obs.applyInPlace(sv, shots, identify_wires, obs_wires, term_idx);
+        
 
         Derived measure(sv);
 
@@ -226,7 +228,18 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 }
             }
         }
-
+        
+        size_t num_identity_obs = identify_wires.size(); 
+        if(!identify_wires.empty()){       
+            size_t identity_obs_idx = 0; 
+            for (size_t i = 0; i < obs_wires.size(); i++) {
+                if (identify_wires[identity_obs_idx] == obs_wires[i]) {
+                    std::swap(obs_wires[identity_obs_idx], obs_wires[i]);
+                    identity_obs_idx++;
+                }
+            }
+        }
+        
         for (size_t i = 0; i < num_shots; i++) {
             std::vector<size_t> local_sample(obs_wires.size());
             for (size_t j = 0; j < obs_wires.size(); j++) {
