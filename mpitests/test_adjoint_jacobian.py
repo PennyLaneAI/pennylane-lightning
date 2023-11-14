@@ -42,8 +42,8 @@ fixture_params = itertools.product(
 )
 
 
-@pytest.fixture(params=fixture_params)
-def dev(request):
+@pytest.fixture(name="dev", params=fixture_params)
+def fixture_dev(request):
     """Returns a PennyLane device."""
     return qml.device(
         device_name,
