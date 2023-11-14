@@ -18,7 +18,7 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 
 from warnings import warn
-import numpy as np
+from pennylane import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
@@ -202,6 +202,33 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "Prod",
         "SProd",
     }
+
+
+    class L2Loss(qml.measurements.StateMeasurement):
+        """Measurement process that computes the L2 loss based on the state probabilities and target values.
+
+        Args:
+            target (array): A flat array of the target values.
+        """
+        def __init__(self, target):
+            super().__init__()
+            self.target = target
+
+        def process_state(self, state, wire_order):
+            with qml.queuing.QueuingManager.stop_recording():
+                prob = qml.probs(wires=self.wires).process_state(state=state, wire_order=wire_order)
+            return np.linalg.norm(self.target - prob)
+
+        @property
+        def return_type(self):
+            return Expectation
+
+
+    def loss(target, loss_type="L2"):
+        if loss_type == "L2":
+            return L2Loss(target)
+        raise Exception(f"Unsupported loss type {loss_type}")
+
 
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane Lightning GPU device.
@@ -673,6 +700,11 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # Check adjoint diff support
             self._check_adjdiff_supported_operations(tape.operations)
 
+            use_adjoint_jacobian_for_loss_function = any(isinstance(m, L2Loss) for m in tape.measurements)
+            if use_adjoint_jacobian_for_loss_function:
+                return self._adjoint_jacobian_for_loss_function(tape, starting_state)
+
+
             processed_data = self._process_jacobian_tape(
                 tape, starting_state, use_device_state, self._mpi, self._batch_obs
             )
@@ -986,6 +1018,52 @@ if LGPU_CPP_BINARY_AVAILABLE:
             observable_wires = self.map_wires(observable.wires)
 
             return self.measurements.var(observable.name, observable_wires)
+
+        def _adjoint_jacobian_for_loss_function(self, tape, starting_state):
+            def adjoint_common(prepare_bra):
+                complex_type = np.complex128
+                dev_bra = qml.device("lightning.gpu", wires=self.wires, c_dtype=complex_type)
+                dev_ket = qml.device("lightning.gpu", wires=self.wires, c_dtype=complex_type)
+                dev_ket.apply(tape.operations)
+
+                bra, bra_norm = prepare_bra(dev_ket.state)
+
+                dev_bra.syncH2D(bra)
+                grads = []
+                for op in reversed(tape.operations):
+                    adj_op = qml.adjoint(op)
+                    dev_ket.apply([adj_op])
+
+                    if op.num_params != 0:
+                        dU = qml.operation.operation_derivative(op)
+                        _qu = qml.QubitUnitary(dU, op.wires)
+
+                        use_async = False
+                        self._gpu_state.DeviceToDevice(dev_ket._gpu_state, use_async)
+                        self.apply([_qu])
+
+                        dM = -2 * bra_norm * self._gpu_state.dotWithBraReal(dev_bra._gpu_state)
+
+                        # A more reliable way to reset _gpu_state
+                        # TODO raise a bug report to Pennylane
+                        self._gpu_state = _gpu_dtype(complex_type)(self._num_local_wires)
+
+                        grads.append(dM)
+                    dev_bra.apply([adj_op])
+
+                return grads[::-1]
+
+            def prepare_bra(ket):
+                # TODO generalize
+                assert len(tape.measurements) == 1
+                target_probs = tape.measurements[0].target
+                sqrt_loss_vec = target_probs - np.abs(ket) ** 2
+                bra = 2 * sqrt_loss_vec * ket
+                bra_norm = np.linalg.norm(bra)
+                bra /= bra_norm
+                return bra, bra_norm
+            return adjoint_common(prepare_bra)
+
 
 else:  # LGPU_CPP_BINARY_AVAILABLE:
 
