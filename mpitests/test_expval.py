@@ -58,7 +58,6 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
-
     def test_paulix_expectation(self, theta, phi, tol):
         """Test that PauliX expectation value is correct"""
         dev = qml.device(device_name, mpi=True, wires=3)
@@ -77,7 +76,6 @@ class TestExpval:
             np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE),
             tol * 10,
         )
-
 
     def test_pauliy_expectation(self, theta, phi, tol):
         """Test that PauliY expectation value is correct"""
@@ -121,7 +119,6 @@ class TestExpval:
         n_qubits = 7
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(device_name, mpi=True, wires=n_qubits)
-
         comm = MPI.COMM_WORLD
 
         m = 2**n_wires
