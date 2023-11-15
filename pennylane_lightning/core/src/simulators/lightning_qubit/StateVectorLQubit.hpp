@@ -284,26 +284,31 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
         const GateKernelMap &, const GeneratorKernelMap &,
-        const MatrixKernelMap &, const ControlledMatrixKernelMap &,
-        const ControlledGeneratorKernelMap &, const ControlledGateKernelMap &> {
-        return {getGateKernelMap(),
-                getGeneratorKernelMap(),
-                getMatrixKernelMap(),
-                getControlledMatrixKernelMap(),
-                getControlledGeneratorKernelMap(),
-                getControlledGateKernelMap()};
+        const MatrixKernelMap &, const ControlledGateKernelMap &,
+        const ControlledGeneratorKernelMap &,
+        const ControlledMatrixKernelMap &> {
+        return {
+            getGateKernelMap(),
+            getGeneratorKernelMap(),
+            getMatrixKernelMap(),
+            getControlledGateKernelMap(),
+            getControlledGeneratorKernelMap(),
+            getControlledMatrixKernelMap(),
+        };
     }
 
     [[nodiscard]] auto getSupportedKernels() && -> std::tuple<
         GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&,
-        ControlledMatrixKernelMap &&, ControlledGeneratorKernelMap &&,
-        ControlledGateKernelMap &&> {
-        return {getGateKernelMap(),
-                getGeneratorKernelMap(),
-                getMatrixKernelMap(),
-                getControlledMatrixKernelMap(),
-                getControlledGeneratorKernelMap(),
-                getControlledGateKernelMap()};
+        ControlledGateKernelMap &&, ControlledGeneratorKernelMap &&,
+        ControlledMatrixKernelMap &&> {
+        return {
+            getGateKernelMap(),
+            getGeneratorKernelMap(),
+            getMatrixKernelMap(),
+            getControlledGateKernelMap(),
+            getControlledGeneratorKernelMap(),
+            getControlledMatrixKernelMap(),
+        };
     }
 
     /**

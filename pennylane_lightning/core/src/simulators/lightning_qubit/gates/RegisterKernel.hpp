@@ -453,11 +453,11 @@ void registerKernel() {
     registerAllImplementedGateOps<PrecisionT, ParamT, GateImplementation>();
     registerAllImplementedGeneratorOps<PrecisionT, GateImplementation>();
     registerAllImplementedMatrixOps<PrecisionT, GateImplementation>();
-    registerAllImplementedControlledMatrixOps<PrecisionT, GateImplementation>();
-    registerAllImplementedControlledGeneratorOps<PrecisionT,
-                                                 GateImplementation>();
     registerAllImplementedControlledGateOps<PrecisionT, ParamT,
                                             GateImplementation>();
+    registerAllImplementedControlledGeneratorOps<PrecisionT,
+                                                 GateImplementation>();
+    registerAllImplementedControlledMatrixOps<PrecisionT, GateImplementation>();
 
     DynamicDispatcher<PrecisionT>::getInstance().registerKernelName(
         GateImplementation::kernel_id, std::string{GateImplementation::name});
