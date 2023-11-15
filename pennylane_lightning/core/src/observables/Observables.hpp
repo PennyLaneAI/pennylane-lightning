@@ -66,7 +66,7 @@ template <class StateVectorT> class Observable {
      */
     virtual void applyInPlace(StateVectorT &sv, bool shots,
                               std::vector<size_t> &identify_wires,
-                              std::vector<size_t> &ob_wires = {},
+                              std::vector<size_t> &ob_wires,
                               const size_t term_idx = 0) const = 0;
 
     /**
@@ -159,9 +159,11 @@ class NamedObsBase : public Observable<StateVectorT> {
     void
     applyInPlace(StateVectorT &sv, bool shots,
                  std::vector<size_t> &identify_wire,
-                 std::vector<size_t> &ob_wires = {},
+                 std::vector<size_t> &ob_wires,
                  [[maybe_unused]] const size_t term_idx = 0) const override {
-        ob_wires = getWires();
+        ob_wires.clear();
+        identify_wire.clear();
+        ob_wires.push_back(wires_[0]);
         if (shots) {
             if (obs_name_ == "PauliX") {
                 sv.applyOperation("Hadamard", wires_, false);
@@ -360,10 +362,11 @@ class TensorProdObsBase : public Observable<StateVectorT> {
                  std::vector<size_t> &ob_wires,
                  [[maybe_unused]] const size_t term_idx = 0) const override {
         identify_wires.clear();
+        ob_wires.clear();
         if (shots) {
             for (const auto &ob : obs_) {
-                std::vector<size_t> identity_wire = {};
-                std::vector<size_t> ob_wire = {};
+                std::vector<size_t> identity_wire;
+                std::vector<size_t> ob_wire;
                 ob->applyInPlace(sv, shots, identity_wire, ob_wire);
                 if (!identity_wire.empty()) {
                     identify_wires.push_back(identity_wire[0]);

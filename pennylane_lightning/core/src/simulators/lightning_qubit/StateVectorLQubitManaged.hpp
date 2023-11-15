@@ -143,7 +143,7 @@ class StateVectorLQubitManaged final
      * @brief Get the total number of wires.
      */
     auto getTotalNumQubits() const -> size_t {
-        return BaseType::getNumQubits();
+        return log2PerfectPower(data_.size());
     }
 
     [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }

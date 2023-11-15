@@ -115,9 +115,7 @@ class StateVectorKokkos final
     /**
      * @brief Get the total number of wires.
      */
-    auto getTotalNumQubits() const -> size_t {
-        return BaseType::getNumQubits();
-    }
+    auto getTotalNumQubits() const -> size_t { return this->getNumQubits(); }
 
     /**
      * @brief Init zeros for the state-vector on device.

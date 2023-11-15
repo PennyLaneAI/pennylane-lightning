@@ -17,29 +17,19 @@
  */
 #pragma once
 
-#include <regex>
 #include <string>
 #include <vector>
 
 #include "Observables.hpp"
 
+#ifdef _ENABLE_PLQUBIT
+#include "CPUMemoryModel.hpp"
+#endif
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
-void parse_obs2ops(const std::string &obs_name, std::vector<std::string> &ops,
-                   std::vector<std::vector<size_t>> &wires) {
-    std::regex regex(R"((Pauli[XYZ]|Hadamard|Identity)\[(\d+)\])");
-    // Use std::sregex_iterator to iterate over matches in the obs_name string
-    auto it = std::sregex_iterator(obs_name.begin(), obs_name.end(), regex);
-    auto end = std::sregex_iterator();
-
-    for (; it != end; ++it) {
-        std::smatch match = *it;
-        ops.push_back(match[1].str());
-        wires.push_back({std::stoul(match[2].str())});
-    }
-}
-
+/*
 auto sample_to_str(std::vector<size_t> &sample) -> std::string {
     std::string str;
     for (auto &element : sample) {
@@ -47,6 +37,7 @@ auto sample_to_str(std::vector<size_t> &sample) -> std::string {
     }
     return str;
 }
+*/
 
 } // namespace
 /// @endcond
@@ -203,20 +194,41 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                  const size_t term_idx = 0,
                  [[maybe_unused]] size_t bin_size = 0,
                  [[maybe_unused]] bool counts = false) {
-        std::vector<size_t> obs_wires; // for Hamiltonian this obs_wires should
-                                       // be calculated based on terms
+        std::vector<size_t> obs_wires; 
         const size_t num_qubits = _statevector.getTotalNumQubits();
-
         bool shots = true;
         std::vector<size_t> identify_wires;
 
+        std::vector<size_t> samples;
+
+#ifdef _ENABLE_PLQUBIT
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
+            StateVectorT sv(_statevector);
+            obs.applyInPlace(sv, shots, identify_wires, obs_wires, term_idx);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
+
+            std::vector<ComplexT> data_storage(_statevector.getData(),
+                                               _statevector.getData() +
+                                                   _statevector.getLength());
+
+            StateVectorT sv(data_storage.data(), data_storage.size());
+
+            obs.applyInPlace(sv, shots, identify_wires, obs_wires, term_idx);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        }
+#else
         StateVectorT sv(_statevector);
-
         obs.applyInPlace(sv, shots, identify_wires, obs_wires, term_idx);
-
         Derived measure(sv);
+        samples = measure.generate_samples(num_shots);
+#endif
 
-        std::vector<size_t> samples = measure.generate_samples(num_shots);
         std::vector<size_t> sub_samples;
         std::vector<PrecisionT> obs_samples(num_shots, 0);
 
@@ -243,16 +255,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
 
         for (size_t i = 0; i < num_shots; i++) {
-            std::vector<size_t> local_sample(obs_wires.size());
-            for (size_t j = 0; j < obs_wires.size(); j++) {
-                local_sample[j] = sub_samples[i * num_qubits + obs_wires[j]];
+            std::vector<size_t> local_sample;
+            for (auto& obs_wire : obs_wires){
+                local_sample.push_back(sub_samples[i * num_qubits + obs_wire]);
             }
 
             if (num_identity_obs != obs_wires.size()) {
-                if (std::reduce(local_sample.begin() + num_identity_obs,
-                                local_sample.end()) %
-                        2 ==
-                    1) {
+                if((std::accumulate(local_sample.begin() + num_identity_obs, local_sample.end(), 0) & 1) == 1){
                     obs_samples[i] = -1;
                 } else {
                     obs_samples[i] = 1;
@@ -275,27 +284,29 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
      * num_occurences}``
      */
-    auto samples_to_counts(std::vector<size_t> &samples, size_t &num_shots,
-                           size_t &num_obs_wires)
-        -> std::unordered_map<std::string, size_t> {
-        std::unordered_map<std::string, size_t> outcome_map;
+    /*
+   auto samples_to_counts(std::vector<size_t> &samples, size_t &num_shots,
+                          size_t &num_obs_wires)
+       -> std::unordered_map<std::string, size_t> {
+       std::unordered_map<std::string, size_t> outcome_map;
 
-        for (size_t i = 0; i < num_shots; i++) {
-            auto local_sample =
-                std::vector(samples.begin() + i * num_obs_wires,
-                            samples.begin() + (i + 1) * num_obs_wires - 1);
-            std::string key = sample_to_str(local_sample);
+       for (size_t i = 0; i < num_shots; i++) {
+           auto local_sample =
+               std::vector(samples.begin() + i * num_obs_wires,
+                           samples.begin() + (i + 1) * num_obs_wires - 1);
+           std::string key = sample_to_str(local_sample);
 
-            auto it = outcome_map.find(key);
+           auto it = outcome_map.find(key);
 
-            if (it != outcome_map.end()) {
-                it->second += 1;
-            } else {
-                outcome_map[key] = 1;
-            }
-        }
-        return outcome_map;
-    }
+           if (it != outcome_map.end()) {
+               it->second += 1;
+           } else {
+               outcome_map[key] = 1;
+           }
+       }
+       return outcome_map;
+   }
+   */
 };
 
 } // namespace Pennylane::Measures

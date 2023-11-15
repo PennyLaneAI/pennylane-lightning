@@ -90,7 +90,8 @@ class StateVectorLQubitRaw final
      * @brief Get the total number of wires.
      */
     auto getTotalNumQubits() const -> size_t {
-        return BaseType::getNumQubits();
+        return log2PerfectPower(length_);
+        ;
     }
 
     /**

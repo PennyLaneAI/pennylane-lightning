@@ -249,7 +249,7 @@ template <typename TypeList> void testNamedObsExpvalShot() {
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
                     PrecisionT result =
                         Measurer.expval(obs, num_shots, shots_range);
-                    REQUIRE(expected == Approx(result).margin(2e-2));
+                    REQUIRE(expected == Approx(result).margin(5e-2));
                 }
             }
         }

@@ -20,6 +20,7 @@
 #include <catch2/catch.hpp>
 
 #include "MeasurementsLQubit.hpp"
+#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -31,9 +32,11 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
+using namespace Pennylane::Observables;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
+using namespace Pennylane::LightningQubit::Observables;
 }; // namespace
 /// @endcond
 
@@ -113,6 +116,64 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of TensorProdObs shots",
+                           "[StateVectorLQubit_Expval]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = StateVectorT::ComplexT;
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                         {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT sv{init_state.data(), init_state.size()};
+        auto m = Measurements(sv);
+
+        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        size_t num_shots = 10000;
+        std::vector<size_t> shot_range = {};
+
+        auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
+        auto res = m.expval(*ob, num_shots, shot_range);
+        auto expected = PrecisionT(-0.36);
+
+        REQUIRE(expected == Approx(res).margin(5e-2));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of HamiltonianObs shot",
+                           "[StateVectorLQubit_Expval]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = StateVectorT::ComplexT;
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                         {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT sv{init_state.data(), init_state.size()};
+        auto m = Measurements(sv);
+
+        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shot_range = {};
+        auto res = m.expval(*ob, num_shots, shot_range);
+        auto expected = PrecisionT(-0.086);
+        REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
 
