@@ -55,6 +55,7 @@ template <class StateVectorT, class RandomEngine>
 auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
     -> OpsData<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
     using namespace Pennylane::LightningQubit::Gates;
 
     std::array gates_to_use = {Pennylane::Gates::GateOperation::RX,
@@ -79,7 +80,12 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
         ops_wires.emplace_back(createWires(gate_op, wires));
     }
 
-    return {ops_names, ops_params, ops_wires, ops_inverses};
+    return {ops_names,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            std::vector<std::vector<ComplexT>>(length),
+            std::vector<std::vector<size_t>>(length)};
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",

@@ -271,6 +271,7 @@ class QuantumScriptSerializer:
 
         return [self._ob(observable, wires_map) for observable in tape.observables]
 
+    # pylint: disable=too-many-branches
     def serialize_ops(
         self, tape: QuantumTape, wires_map: dict
     ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
@@ -325,11 +326,14 @@ class QuantumScriptSerializer:
                     controlled_wires_list = []
 
                 names.append(name)
-
-                if not hasattr(self.sv_type, name):
+                # QubitUnitary is a special case, it has a parameter which is not differentiable.
+                # We thus pass a dummy 0.0 parameter which will not be referenced
+                if name == "QubitUnitary":
+                    params.append([0.0])
+                    mats.append(matrix(single_op))
+                elif not hasattr(self.sv_type, name):
                     params.append([])
                     mats.append(matrix(single_op))
-
                 else:
                     params.append(single_op.parameters)
                     mats.append([])

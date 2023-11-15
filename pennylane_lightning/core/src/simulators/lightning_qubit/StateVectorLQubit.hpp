@@ -369,9 +369,60 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                        opName, controlled_wires, wires, inverse,
                                        params);
     }
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Matrix data (in row-major format).
+     */
+    template <typename Alloc>
+    void applyOperation(
+        [[maybe_unused]] const std::string &opName,
+        const std::vector<size_t> &wires, bool inverse,
+        const std::vector<PrecisionT> &params,
+        [[maybe_unused]] const std::vector<ComplexT, Alloc> &matrix) {
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        if (dispatcher.hasGateOp(opName)) {
+            applyOperation(opName, wires, inverse, params);
+        } else {
+            applyMatrix(matrix, wires, inverse);
+        }
+    }
 
     /**
-     * @brief Apply a single generator to the state-vector using a given kernel.
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Matrix data (in row-major format).
+     */
+    template <typename Alloc>
+    void applyOperation(
+        [[maybe_unused]] const std::string &opName,
+        const std::vector<size_t> &controlled_wires,
+        const std::vector<size_t> &wires, bool inverse,
+        const std::vector<PrecisionT> &params,
+        [[maybe_unused]] const std::vector<ComplexT, Alloc> &matrix) {
+        if (!controlled_wires.empty()) {
+            applyOperation(opName, controlled_wires, wires, inverse, params);
+            return;
+        }
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        if (dispatcher.hasGateOp(opName)) {
+            applyOperation(opName, wires, inverse, params);
+        } else {
+            applyMatrix(matrix, wires, inverse);
+        }
+    }
+
+    /**
+     * @brief Apply a single generator to the state-vector using a given
+     * kernel.
      *
      * @param kernel Kernel to run the operation.
      * @param opName Name of gate to apply.
@@ -426,8 +477,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given controlled-matrix directly to the statevector using
-     * a given kernel.
+     * @brief Apply a given controlled-matrix directly to the statevector
+     * using a given kernel.
      *
      * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data (in row-major format).

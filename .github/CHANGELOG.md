@@ -5,9 +5,18 @@
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
 
+* `qml.QubitUnitary` operators can be included in a circuit differentiated with the adjoint method. Lightning handles circuits with arbitrary non-differentiable `qml.QubitUnitary` operators. 1,2-qubit `qml.QubitUnitary` operators with differentiable parameters can be differentiated using decomposition.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
+
 ### Breaking changes
 
+* Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
+
 ### Improvements
+
+* Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Update Dockerfile and rewrite the `build-wheel-lightning-gpu` stage to build Lightning-GPU from the `pennylane-lightning` monorepo.
   [(#539)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/539)
@@ -27,6 +36,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)

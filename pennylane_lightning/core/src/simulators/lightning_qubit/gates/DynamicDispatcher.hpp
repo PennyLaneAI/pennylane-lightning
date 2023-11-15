@@ -82,21 +82,23 @@ namespace Pennylane::LightningQubit {
 template <typename PrecisionT> class DynamicDispatcher {
   public:
     using CFP_t = std::complex<PrecisionT>;
+
     using GateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
         const std::vector<size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
-
-    using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
-    using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
-    using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
-    using ControlledGeneratorFunc =
-        Gates::ControlledGeneratorFuncPtrT<PrecisionT>;
     using ControlledGateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
         const std::vector<size_t> & /*controlled_wires*/,
         const std::vector<size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
+
+    using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
+    using ControlledGeneratorFunc =
+        Gates::ControlledGeneratorFuncPtrT<PrecisionT>;
+
+    using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
+    using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
 
   private:
     std::unordered_map<std::string, GateOperation> str_to_gates_;
@@ -117,17 +119,17 @@ template <typename PrecisionT> class DynamicDispatcher {
                        PairHash>
         matrix_kernels_;
 
-    std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
-                       ControlledMatrixFunc, PairHash>
-        controlled_matrix_kernels_;
+    std::unordered_map<std::pair<ControlledGateOperation, KernelType>,
+                       ControlledGateFunc, PairHash>
+        controlled_gate_kernels_;
 
     std::unordered_map<std::pair<ControlledGeneratorOperation, KernelType>,
                        ControlledGeneratorFunc, PairHash>
         controlled_generator_kernels_;
 
-    std::unordered_map<std::pair<ControlledGateOperation, KernelType>,
-                       ControlledGateFunc, PairHash>
-        controlled_gate_kernels_;
+    std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
+                       ControlledMatrixFunc, PairHash>
+        controlled_matrix_kernels_;
 
     std::unordered_map<KernelType, std::string> kernel_names_;
 
@@ -328,6 +330,15 @@ template <typename PrecisionT> class DynamicDispatcher {
     [[nodiscard]] auto strToControlledGateOp(const std::string &gate_name) const
         -> ControlledGateOperation {
         return str_to_controlled_gates_.at(gate_name);
+    }
+
+    /**
+     * @brief Returns true if the gate operation exists
+     *
+     * @param gate_name Gate name
+     */
+    [[nodiscard]] auto hasGateOp(const std::string &gate_name) const -> bool {
+        return str_to_gates_.contains(gate_name);
     }
 
     /**

@@ -202,6 +202,32 @@ class StateVectorCudaManaged
      * @param wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
+     * @param matrix Gate data (in row-major format).
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adjoint,
+                        const std::vector<Precision> &params,
+                        const std::vector<ComplexT> &matrix) {
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, wires, adjoint, params, matrix_cu);
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector. Offloads to custatevec
+     * specific API calls if available. If unable, attempts to use prior cached
+     * gate values on the device. Lastly, accepts a host-provided matrix if
+     * otherwise, and caches on the device for later reuse.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Gate data (in row-major format).
      */
     void applyOperation(
         const std::string &opName, const std::vector<size_t> &wires,
@@ -264,11 +290,13 @@ class StateVectorCudaManaged
      * @param params Optional parameter list for parametric gates.
      * @param params Optional std gate matrix if opName doesn't exist.
      */
-    void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &controlled_wires,
-                        const std::vector<size_t> &wires, bool inverse = false,
-                        const std::vector<Precision> &params = {0.0},
-                        const std::vector<CFP_t> &gate_matrix = {}) {
+    template <template <typename...> class complex_t>
+    void
+    applyOperation(const std::string &opName,
+                   const std::vector<std::size_t> &controlled_wires,
+                   const std::vector<std::size_t> &wires, bool inverse = false,
+                   const std::vector<Precision> &params = {0.0},
+                   const std::vector<complex_t<Precision>> &gate_matrix = {}) {
         PL_ABORT_IF(!controlled_wires.empty(),
                     "Controlled kernels not implemented.");
         applyOperation(opName, wires, inverse, params, gate_matrix);
