@@ -68,12 +68,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using GeneratorKernelMap =
         std::unordered_map<GeneratorOperation, KernelType>;
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
-    using ControlledMatrixKernelMap =
-        std::unordered_map<ControlledMatrixOperation, KernelType>;
-    using ControlledGeneratorKernelMap =
-        std::unordered_map<ControlledGeneratorOperation, KernelType>;
     using ControlledGateKernelMap =
         std::unordered_map<ControlledGateOperation, KernelType>;
+    using ControlledGeneratorKernelMap =
+        std::unordered_map<ControlledGeneratorOperation, KernelType>;
+    using ControlledMatrixKernelMap =
+        std::unordered_map<ControlledMatrixOperation, KernelType>;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
