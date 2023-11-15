@@ -194,7 +194,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                  const size_t term_idx = 0,
                  [[maybe_unused]] size_t bin_size = 0,
                  [[maybe_unused]] bool counts = false) {
-        std::vector<size_t> obs_wires; 
+        std::vector<size_t> obs_wires;
         const size_t num_qubits = _statevector.getTotalNumQubits();
         bool shots = true;
         std::vector<size_t> identify_wires;
@@ -256,12 +256,14 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         for (size_t i = 0; i < num_shots; i++) {
             std::vector<size_t> local_sample;
-            for (auto& obs_wire : obs_wires){
+            for (auto &obs_wire : obs_wires) {
                 local_sample.push_back(sub_samples[i * num_qubits + obs_wire]);
             }
 
             if (num_identity_obs != obs_wires.size()) {
-                if((std::accumulate(local_sample.begin() + num_identity_obs, local_sample.end(), 0) & 1) == 1){
+                if ((std::accumulate(local_sample.begin() + num_identity_obs,
+                                     local_sample.end(), 0) &
+                     1) == 1) {
                     obs_samples[i] = -1;
                 } else {
                     obs_samples[i] = 1;
