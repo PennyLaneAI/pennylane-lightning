@@ -110,7 +110,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 .getKernelMap(num_qubits, threading, memory_model);
         kernel_for_controlled_matrices_ =
             OperationKernelMap<ControlledMatrixOperation>::getInstance()
-                .getKernelMap(num_qubits, threading, memory_model);```
+                .getKernelMap(num_qubits, threading, memory_model);
     }
 
     /**

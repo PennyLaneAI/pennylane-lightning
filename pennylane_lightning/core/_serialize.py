@@ -312,9 +312,7 @@ class QuantumScriptSerializer:
                     operation.name == "MultiControlledX"
                     and all(char == "1" for char in operation.hyperparameters["control_values"])
                 ):
-                    name = (
-                        "PauliX" if operation.name == "MultiControlledX" else operation.base.name
-                    )
+                    name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
                     if not hasattr(self.sv_type, name):
                         raise ValueError(f"N-controlled {name} not implemented.")
                     controlled_wires_list = operation.control_wires
