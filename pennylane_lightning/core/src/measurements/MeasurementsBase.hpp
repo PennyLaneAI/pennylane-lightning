@@ -154,22 +154,17 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                  obs_term_idx++) {
                 auto obs_samples = measure_with_samples(
                     obs, num_shots, shot_range, obs_term_idx);
-                size_t num_elements = 0;
-                PrecisionT result_per_term = 0.0;
-                for (int element : obs_samples) {
-                    result_per_term += element;
-                    num_elements++;
-                }
-                result += coeffs[obs_term_idx] * result_per_term / num_elements;
+                PrecisionT result_per_term = std::accumulate(
+                    obs_samples.begin(), obs_samples.end(), 0.0);
+
+                result +=
+                    coeffs[obs_term_idx] * result_per_term / obs_samples.size();
             }
         } else {
             auto obs_samples = measure_with_samples(obs, num_shots, shot_range);
-            size_t num_elements = 0;
-            for (int element : obs_samples) {
-                result += element;
-                num_elements++;
-            }
-            result = result / num_elements;
+            result =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
+            result = result / obs_samples.size();
         }
 
         return result;
@@ -240,8 +235,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param obs The observable to sample
      * @param num_shots Number of shots used to generate samples
-     * @param shot_range The range of samples to use. If it's empty, all samples
-     * are used.
+     * @param shot_range The range of samples to use. All samples are used by
+     * default.
      *
      * @return std::vector<size_t> samples in std::vector
      */
@@ -296,8 +291,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param obs The observable to sample
      * @param num_shots Number of shots used to generate samples
-     * @param shot_range The range of samples to use. If it's empty, all samples
-     * are used.
+     * @param shot_range The range of samples to use. All samples are used by
+     * default.
      * @param obs_wires Observable wires.
      * @param identity_wires Wires of Identity gates
      * @param term_idx Index of a Hamiltonian term
