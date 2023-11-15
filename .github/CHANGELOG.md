@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `LM` kernel to apply arbitrary controlled operations efficiently.
+* Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
 
 ### Breaking changes
