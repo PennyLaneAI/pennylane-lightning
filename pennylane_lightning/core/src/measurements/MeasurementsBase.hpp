@@ -138,9 +138,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Expectation value with respect to the given observable.
      */
     auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+                const std::vector<size_t> &shot_range = {}) -> PrecisionT {
         PrecisionT result = 0;
-        std::vector<size_t> short_range = {};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
             PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
@@ -287,6 +286,44 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
    */
   private:
     /**
+     * @brief Return preprocess state with a observable
+     *
+     * @param obs The observable to sample
+     * @param obs_wires Observable wires.
+     * @param identity_wires Wires of Identity gates
+     * @param term_idx Index of a Hamiltonian term
+     *
+     * @return a StateVectorT object
+     */
+    auto _preprocess_state(const Observable<StateVectorT> &obs,
+                           std::vector<size_t> &obs_wires,
+                           std::vector<size_t> &identity_wires,
+                           const size_t &term_idx = 0) {
+#ifdef _ENABLE_PLQUBIT
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
+
+            std::vector<ComplexT> data_storage(_statevector.getData(),
+                                               _statevector.getData() +
+                                                   _statevector.getLength());
+
+            StateVectorT sv(data_storage.data(), data_storage.size());
+
+            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+        }
+#else
+        StateVectorT sv(_statevector);
+        obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+#endif
+        return sv;
+    }
+
+    /**
      * @brief Return samples of a observable
      *
      * @param obs The observable to sample
@@ -306,48 +343,22 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                        std::vector<size_t> &identity_wires,
                        const size_t &term_idx = 0) {
         const size_t num_qubits = _statevector.getTotalNumQubits();
-        std::vector<size_t> samples;
-
-#ifdef _ENABLE_PLQUBIT
-        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
-                                     MemoryStorageLocation::Internal>) {
-            StateVectorT sv(_statevector);
-            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-            Derived measure(sv);
-            samples = measure.generate_samples(num_shots);
-        } else if constexpr (std::is_same_v<
-                                 typename StateVectorT::MemoryStorageT,
-                                 MemoryStorageLocation::External>) {
-
-            std::vector<ComplexT> data_storage(_statevector.getData(),
-                                               _statevector.getData() +
-                                                   _statevector.getLength());
-
-            StateVectorT sv(data_storage.data(), data_storage.size());
-
-            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-            Derived measure(sv);
-            samples = measure.generate_samples(num_shots);
-        }
-#else
-        StateVectorT sv(_statevector);
-        obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+        auto sv = _preprocess_state(obs, obs_wires, identity_wires, term_idx);
         Derived measure(sv);
-        samples = measure.generate_samples(num_shots);
-#endif
-        std::vector<size_t> sub_samples;
+        auto samples = measure.generate_samples(num_shots);
 
         if (shot_range.empty()) {
-            sub_samples = samples;
+            return samples;
         } else {
+            std::vector<size_t> sub_samples;
             // Get a slice of samples based on the shot_range vector
             for (auto &i : shot_range) {
                 for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
                     sub_samples.push_back(samples[j]);
                 }
             }
+            return sub_samples;
         }
-        return sub_samples;
     }
 };
 
