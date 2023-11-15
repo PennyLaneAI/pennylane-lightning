@@ -78,9 +78,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
-    ControlledMatrixKernelMap kernel_for_controlled_matrices_;
-    ControlledGeneratorKernelMap kernel_for_controlled_generators_;
     ControlledGateKernelMap kernel_for_controlled_gates_;
+    ControlledGeneratorKernelMap kernel_for_controlled_generators_;
+    ControlledMatrixKernelMap kernel_for_controlled_matrices_;
 
     /**
      * @brief Internal function to set kernels for all operations depending on
