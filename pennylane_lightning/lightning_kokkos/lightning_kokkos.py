@@ -469,6 +469,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if self.shots is not None:
                 # estimate the expectation value
+                # LightningQubit doesn't support sampling yet
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.mean(samples, axis=0))
 

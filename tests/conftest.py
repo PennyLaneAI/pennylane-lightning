@@ -111,7 +111,6 @@ def get_device():
 
 
 device_name = get_device()
-# device_name = "lightning.kokkos"
 
 if device_name not in qml.plugin_devices:
     raise qml.DeviceError(
@@ -137,4 +136,3 @@ def qubit_device(request):
         return qml.device(device_name, wires=wires, c_dtype=request.param)
 
     return _device
-

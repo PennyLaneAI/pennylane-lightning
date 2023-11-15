@@ -88,7 +88,6 @@ class TestExpval:
         res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
-
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
         dev = qubit_device(wires=3)
