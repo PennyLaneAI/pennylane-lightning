@@ -437,13 +437,31 @@ class TestSerializeOps:
 
     def test_basic_circuit_not_implemented_ctrl_ops(self):
         """Test expected serialization for a simple circuit"""
+        ops = qml.OrbitalRotation(0.1234, wires=range(4))
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
-            qml.ctrl(qml.OrbitalRotation(0.1234, wires=range(4)), [4, 5])
+            qml.ctrl(ops, [4, 5])
 
-        with pytest.raises(ValueError, match=f"N-controlled OrbitalRotation not implemented."):
-            s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s_expected = (
+            (
+                ["RX", "RY", "QubitUnitary"],
+                [np.array([0.4]), np.array([0.6]), [0.0]],
+                [[0], [1], list(ops.wires)],
+                [False, False, False],
+                [[], [], [qml.matrix(ops)]],
+                [[], [], [4, 5]],
+            ),
+            False,
+        )
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
+        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
+        assert s[0][5] == s_expected[0][5]
+        assert s[1] == s_expected[1]
 
     def test_multicontrolledx(self):
         """Test expected serialization for a simple circuit"""

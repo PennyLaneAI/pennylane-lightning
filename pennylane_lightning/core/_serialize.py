@@ -27,6 +27,7 @@ from pennylane import (
     Rot,
     Hamiltonian,
     SparseHamiltonian,
+    QubitUnitary,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -271,7 +272,6 @@ class QuantumScriptSerializer:
 
         return [self._ob(observable, wires_map) for observable in tape.observables]
 
-    # pylint: disable=too-many-branches
     def serialize_ops(
         self, tape: QuantumTape, wires_map: dict
     ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
@@ -297,6 +297,26 @@ class QuantumScriptSerializer:
 
         uses_stateprep = False
 
+        def get_wires(operation, single_op):
+            if operation.name[0:2] == "C(" or (
+                operation.name == "MultiControlledX"
+                and all(char == "1" for char in operation.hyperparameters["control_values"])
+            ):
+                name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+                controlled_wires_list = operation.control_wires
+                if operation.name == "MultiControlledX":
+                    wires_list = list(set(operation.wires) - set(controlled_wires_list))
+                else:
+                    wires_list = operation.target_wires
+                if not hasattr(self.sv_type, name):
+                    single_op = QubitUnitary(matrix(single_op.base), single_op.base.wires)
+                    name = single_op.name
+            else:
+                name = single_op.name
+                wires_list = single_op.wires.tolist()
+                controlled_wires_list = []
+            return single_op, name, wires_list, controlled_wires_list
+
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
                 uses_stateprep = True
@@ -307,24 +327,7 @@ class QuantumScriptSerializer:
                 op_list = [operation]
 
             for single_op in op_list:
-                name = single_op.name
-
-                if operation.name[0:2] == "C(" or (
-                    operation.name == "MultiControlledX"
-                    and all(char == "1" for char in operation.hyperparameters["control_values"])
-                ):
-                    name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
-                    if not hasattr(self.sv_type, name):
-                        raise ValueError(f"N-controlled {name} not implemented.")
-                    controlled_wires_list = operation.control_wires
-                    if operation.name == "MultiControlledX":
-                        wires_list = list(set(operation.wires) - set(controlled_wires_list))
-                    else:
-                        wires_list = operation.target_wires
-                else:
-                    wires_list = single_op.wires.tolist()
-                    controlled_wires_list = []
-
+                single_op, name, wires_list, controlled_wires_list = get_wires(operation, single_op)
                 names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
