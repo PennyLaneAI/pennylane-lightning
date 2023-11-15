@@ -111,6 +111,7 @@ def get_device():
 
 
 device_name = get_device()
+# device_name = "lightning.kokkos"
 
 if device_name not in qml.plugin_devices:
     raise qml.DeviceError(
@@ -137,14 +138,3 @@ def qubit_device(request):
 
     return _device
 
-
-# General qubit_device fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def qubit_device_shots(request):
-    def _device(wires):
-        return qml.device(device_name, wires=wires, c_dtype=request.param, shots=10000)
-
-    return _device

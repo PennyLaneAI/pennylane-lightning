@@ -422,16 +422,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                 return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
-                # estimate the expectation value
-                if observable.name in ["PauliX", "PauliY", "PauliZ", "Hadamard"]:
-                    obs = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                        observable, self.wire_map
-                    )
-
-                    if shot_range is None:
-                        return self.measurements.expval(obs, self.shots)
-                    return self.measurements.expval(obs, self.shots, shot_range)
-                raise RuntimeError(f"{observable.name} obs does not support.")
+                samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
+                return np.squeeze(np.mean(samples, axis=0))
 
             # Initialization of state
             ket = np.ravel(self._pre_rotated_state)
