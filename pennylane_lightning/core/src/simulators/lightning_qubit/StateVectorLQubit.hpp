@@ -102,15 +102,15 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_matrices_ =
             OperationKernelMap<MatrixOperation>::getInstance().getKernelMap(
                 num_qubits, threading, memory_model);
-        kernel_for_controlled_matrices_ =
-            OperationKernelMap<ControlledMatrixOperation>::getInstance()
+        kernel_for_controlled_gates_ =
+            OperationKernelMap<ControlledGateOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
         kernel_for_controlled_generators_ =
             OperationKernelMap<ControlledGeneratorOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
-        kernel_for_controlled_gates_ =
-            OperationKernelMap<ControlledGateOperation>::getInstance()
-                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_matrices_ =
+            OperationKernelMap<ControlledMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);```
     }
 
     /**
