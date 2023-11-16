@@ -61,13 +61,14 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
-
+          if-no-files-found: error
+          
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-
+          if-no-files-found: error
 
   win-set-matrix-x86:
     name: Set builder matrix
@@ -218,12 +219,14 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+          if-no-files-found: error
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithkokkos]

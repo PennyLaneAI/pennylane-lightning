@@ -107,7 +107,7 @@ endif
 format: format-cpp format-python
 
 format-cpp:
-	./bin/format $(CHECK) --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning
+	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
 	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
@@ -138,24 +138,24 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := 0.32.0
+    VERSION := 0.33.1
 endif
 docker-build:
-	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) .
+	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) --build-arg='LIGHTNING_VERSION=$(VERSION)' .
 docker-push:
 	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
 docker-build-all:
+	$(MAKE) docker-build target=lightning-qubit
 	$(MAKE) docker-build target=lightning-gpu
+	$(MAKE) docker-build target=lightning-kokkos-openmp
 	$(MAKE) docker-build target=lightning-kokkos-cuda
 	$(MAKE) docker-build target=lightning-kokkos-rocm
-	$(MAKE) docker-build target=lightning-kokkos-openmp
-	$(MAKE) docker-build target=lightning-qubit
 docker-push-all:
+	$(MAKE) docker-push target=lightning-qubit
 	$(MAKE) docker-push target=lightning-gpu
+	$(MAKE) docker-push target=lightning-kokkos-openmp
 	$(MAKE) docker-push target=lightning-kokkos-cuda
 	$(MAKE) docker-push target=lightning-kokkos-rocm
-	$(MAKE) docker-push target=lightning-kokkos-openmp
-	$(MAKE) docker-push target=lightning-qubit
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all

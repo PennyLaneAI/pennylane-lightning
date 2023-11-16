@@ -307,11 +307,14 @@ class QuantumScriptSerializer:
             for single_op in op_list:
                 name = single_op.name
                 names.append(name)
-
-                if not hasattr(self.sv_type, name):
+                # QubitUnitary is a special case, it has a parameter which is not differentiable.
+                # We thus pass a dummy 0.0 parameter which will not be referenced
+                if name == "QubitUnitary":
+                    params.append([0.0])
+                    mats.append(matrix(single_op))
+                elif not hasattr(self.sv_type, name):
                     params.append([])
                     mats.append(matrix(single_op))
-
                 else:
                     params.append(single_op.parameters)
                     mats.append([])

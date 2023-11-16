@@ -537,7 +537,7 @@ class TestSerializeOps:
                     "DoubleExcitationMinus",
                     "DoubleExcitationPlus",
                 ],
-                [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
+                [[0.4], [0.6], [], [0.0], [], [0.555], [0.555], [0.555]],
                 [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
                 [False, False, False, False, False, False, False, False],
                 [
