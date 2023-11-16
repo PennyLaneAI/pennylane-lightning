@@ -503,7 +503,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
     }
 
     /**
-     * @brief Get the wires the observable applies to.
+     * @brief Get the coefficients of the observable.
      */
     [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> override {
         return coeffs_;

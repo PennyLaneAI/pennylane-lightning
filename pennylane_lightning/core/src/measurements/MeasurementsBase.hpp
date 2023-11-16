@@ -131,9 +131,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @brief Calculate the expectation value for a general Observable.
      *
      * @param obs Observable.
-     * @param num_shots Vector of shot number to measurement
-     * @param shot_range The range of samples to use. If it's empty, all samples
-     * are used.
+     * @param num_shots Number of shots used to generate samples
+     * @param shot_range The range of samples to use. All samples are used
+     * by default.
      *
      * @return Expectation value with respect to the given observable.
      */
@@ -144,8 +144,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
             PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
                      "not supported by shots");
-        } else if (obs.getObsName().find("Hermintian") != std::string::npos) {
-            PL_ABORT("For Hermintian Observables, expval calculation is not "
+        } else if (obs.getObsName().find("Hermitian") != std::string::npos) {
+            PL_ABORT("For Hermitian Observables, expval calculation is not "
                      "supported by shots");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();

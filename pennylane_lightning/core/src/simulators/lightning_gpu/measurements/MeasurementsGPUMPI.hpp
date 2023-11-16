@@ -497,7 +497,9 @@ class MeasurementsMPI final
      * @brief Expectation value for a Observable with shots
      *
      * @param obs Observable.
-     * @param shots Vector of shot number to measurement
+     * @param num_shots Number of shots used to generate samples.
+     * @param shot_range The range of samples to use. All samples are used
+     * by default.
      * @return Floating point expected value of the observable.
      */
 
