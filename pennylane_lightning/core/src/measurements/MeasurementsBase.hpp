@@ -201,8 +201,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 // eigen values are `1` and `-1` for PauliX, PauliY, PauliZ,
                 // Hadamard gates the eigen value for a eigen vector |00001> is
                 // -1 since sum of the value at each bit position is odd
-                if ((std::accumulate(local_sample.begin() + num_identity_obs,
-                                     local_sample.end(), 0) &
+                if ((static_cast<size_t>(std::accumulate(
+                         local_sample.begin() + num_identity_obs,
+                         local_sample.end(), 0)) &
                      1) == 1) {
                     obs_samples[i] = -1;
                 } else {
@@ -232,8 +233,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                            std::vector<size_t> &identity_wires,
                            const size_t &term_idx = 0) {
         if constexpr (std::is_same_v<
-                                 typename StateVectorT::MemoryStorageT,
-                                 Pennylane::Util::MemoryStorageLocation::External>) {
+                          typename StateVectorT::MemoryStorageT,
+                          Pennylane::Util::MemoryStorageLocation::External>) {
             StateVectorT sv(_statevector.getData(), _statevector.getLength());
             sv.updateData(_statevector.getData(), _statevector.getLength());
             obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
@@ -269,9 +270,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         Derived measure(sv);
         auto samples = measure.generate_samples(num_shots);
 
-        if (shot_range.empty()) {
-            return samples;
-        } else {
+        if (!shot_range.empty()) {
             std::vector<size_t> sub_samples;
             // Get a slice of samples based on the shot_range vector
             for (auto &i : shot_range) {
@@ -282,6 +281,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             }
             return sub_samples;
         }
+        return samples;
     }
 };
 } // namespace Pennylane::Measures
