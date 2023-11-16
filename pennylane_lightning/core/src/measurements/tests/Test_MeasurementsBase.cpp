@@ -209,21 +209,41 @@ template <typename TypeList> void testNamedObsExpvalShot() {
 
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
-                                             "Hadamard"};
+                                             "Hadamard", "Identity"};
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::vector<PrecisionT>> exp_values_ref = {
             {0.49272486, 0.42073549, 0.28232124},
             {-0.64421768, -0.47942553, -0.29552020},
             {0.58498357, 0.77015115, 0.91266780},
-            {0.7620549436, 0.8420840225, 0.8449848566}};
-
-        size_t num_shots = 10000;
-        std::vector<size_t> shots_range = {};
-
+            {0.7620549436, 0.8420840225, 0.8449848566},
+            {1.0, 1.0, 1.0}};
         for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                std::vector<size_t> shots_range = {};
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    PrecisionT result =
+                        Measurer.expval(obs, num_shots, shots_range);
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+        }
+
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " - Varying wires-with shots_range"
+                            << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                std::vector<size_t> shots_range;
+                for (size_t i = 0; i < num_shots; i += 2) {
+                    shots_range.push_back(i);
+                }
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
@@ -579,19 +599,18 @@ template <typename TypeList> void testSparseHObsExpvalShot() {
 
         auto sparseH = SparseHamiltonian<StateVectorT>::create(
             {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
-            ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
-            ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
-
 
         DYNAMIC_SECTION("Failed for SparseH "
                         << StateVectorToName<StateVectorT>::name) {
-                size_t num_shots = 1000;
-                std::vector<size_t> shots_range = {};
-                REQUIRE_THROWS_WITH(
-                    Measurer.expval(*sparseH, num_shots, shots_range),
-                    Catch::Matchers::Contains(
-                        "expval calculation is not supported by shots"));
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.expval(*sparseH, num_shots, shots_range),
+                Catch::Matchers::Contains(
+                    "expval calculation is not supported by shots"));
         }
 
         testSparseHObsExpvalShot<typename TypeList::Next>();

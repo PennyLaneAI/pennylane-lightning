@@ -178,7 +178,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         auto sub_samples = _sample_state(obs, num_shots, shot_range, obs_wires,
                                          identity_wires, term_idx);
 
-        std::vector<PrecisionT> obs_samples(num_shots, 0);
+        size_t num_samples = num_shots;
+        if (!shot_range.empty()) {
+            num_samples = shot_range.size();
+        }
+        std::vector<PrecisionT> obs_samples(num_samples, 0);
 
         size_t num_identity_obs = identity_wires.size();
         if (!identity_wires.empty()) {
@@ -191,7 +195,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             }
         }
 
-        for (size_t i = 0; i < num_shots; i++) {
+        for (size_t i = 0; i < num_samples; i++) {
             std::vector<size_t> local_sample(obs_wires.size());
             size_t idx = 0;
             for (auto &obs_wire : obs_wires) {
