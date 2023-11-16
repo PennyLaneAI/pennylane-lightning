@@ -75,7 +75,7 @@ template <class StateVectorT> class Observable {
     virtual void applyInPlaceShots(StateVectorT &sv,
                                    std::vector<size_t> &identify_wires,
                                    std::vector<size_t> &ob_wires,
-                                   const size_t term_idx = 0) const = 0;
+                                   size_t term_idx = 0) const = 0;
 
     /**
      * @brief Get the name of the observable
@@ -167,7 +167,7 @@ class NamedObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         StateVectorT &sv, std::vector<size_t> &identify_wire,
         std::vector<size_t> &ob_wires,
-        [[maybe_unused]] const size_t term_idx = 0) const override {
+        [[maybe_unused]] size_t term_idx = 0) const override {
         ob_wires.clear();
         identify_wire.clear();
         ob_wires.push_back(wires_[0]);
@@ -249,7 +249,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<size_t> &identify_wire,
         [[maybe_unused]] std::vector<size_t> &ob_wires,
-        [[maybe_unused]] const size_t term_idx = 0) const override {
+        [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT(
             "For Hermitian Observables with shots, the applyInPlace method is "
             "not supported.");
@@ -367,7 +367,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         StateVectorT &sv, std::vector<size_t> &identify_wires,
         std::vector<size_t> &ob_wires,
-        [[maybe_unused]] const size_t term_idx = 0) const override {
+        [[maybe_unused]] size_t term_idx = 0) const override {
         identify_wires.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
@@ -470,7 +470,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<size_t> &identify_wires,
         [[maybe_unused]] std::vector<size_t> &ob_wires,
-        [[maybe_unused]] const size_t term_idx = 0) const override {
+        [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT("For Hamiltonian Observables, the applyInPlace method must be "
                  "defined at the backend level.");
     }
@@ -596,7 +596,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<size_t> &identify_wire,
         [[maybe_unused]] std::vector<size_t> &ob_wires,
-        [[maybe_unused]] const size_t term_idx = 0) const override {
+        [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
                  "must be "
                  "defined at the backend level.");

@@ -170,7 +170,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     auto measure_with_samples(const Observable<StateVectorT> &obs,
                               const size_t &num_shots,
                               const std::vector<size_t> &shot_range,
-                              const size_t term_idx = 0) {
+                              size_t term_idx = 0) {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> obs_wires;
         std::vector<size_t> identity_wires;
@@ -192,9 +192,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
 
         for (size_t i = 0; i < num_shots; i++) {
-            std::vector<size_t> local_sample;
+            std::vector<size_t> local_sample(obs_wires.size());
+            size_t idx = 0;
             for (auto &obs_wire : obs_wires) {
-                local_sample.push_back(sub_samples[i * num_qubits + obs_wire]);
+                local_sample[idx] = sub_samples[i * num_qubits + obs_wire];
+                idx++;
             }
 
             if (num_identity_obs != obs_wires.size()) {
