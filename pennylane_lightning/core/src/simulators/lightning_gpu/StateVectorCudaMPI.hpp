@@ -38,6 +38,8 @@
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
 
+#include "CPUMemoryModel.hpp"
+
 #include "LinearAlg.hpp"
 
 /// @cond DEV
@@ -97,6 +99,7 @@ class StateVectorCudaMPI final
                                      StateVectorCudaMPI<Precision>>::CFP_t;
     using PrecisionT = Precision;
     using ComplexT = std::complex<PrecisionT>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaMPI() = delete;
 

@@ -22,9 +22,7 @@
 
 #include "Observables.hpp"
 
-#ifdef _ENABLE_PLQUBIT
 #include "CPUMemoryModel.hpp"
-#endif
 
 /// @cond DEV
 namespace {
@@ -233,26 +231,18 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                            std::vector<size_t> &obs_wires,
                            std::vector<size_t> &identity_wires,
                            const size_t &term_idx = 0) {
-#ifdef _ENABLE_PLQUBIT
-        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
-                                     MemoryStorageLocation::Internal>) {
-            StateVectorT sv(_statevector);
-            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-            return sv;
-        } else if constexpr (std::is_same_v<
+        if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
-                                 MemoryStorageLocation::External>) {
+                                 Pennylane::Util::MemoryStorageLocation::External>) {
             StateVectorT sv(_statevector.getData(), _statevector.getLength());
-
             sv.updateData(_statevector.getData(), _statevector.getLength());
             obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
             return sv;
+        } else {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+            return sv;
         }
-#else
-        StateVectorT sv(_statevector);
-        obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-        return sv;
-#endif
     }
 
     /**

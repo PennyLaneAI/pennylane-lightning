@@ -35,6 +35,8 @@
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
 
+#include "CPUMemoryModel.hpp"
+
 /// @cond DEV
 namespace {
 using Pennylane::Gates::GateOperation;
@@ -90,6 +92,7 @@ class StateVectorKokkos final
         Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
