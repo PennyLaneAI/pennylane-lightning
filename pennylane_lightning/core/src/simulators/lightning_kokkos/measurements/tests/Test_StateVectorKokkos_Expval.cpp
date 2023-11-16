@@ -381,6 +381,60 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
     }
 }
 
+TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots",
+                   "[StateVectorKokkos_Expval]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = StateVectorT::ComplexT;
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                         {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT sv{init_state.data(), init_state.size()};
+        auto m = Measurements(sv);
+
+        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        size_t num_shots = 10000;
+        std::vector<size_t> shot_range = {};
+
+        auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
+        auto res = m.expval(*ob, num_shots, shot_range);
+        auto expected = PrecisionT(-0.36);
+
+        REQUIRE(expected == Approx(res).margin(5e-2));
+    }
+}
+
+TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
+                   "[StateVectorKokkos_Expval]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = StateVectorT::ComplexT;
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                         {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT sv{init_state.data(), init_state.size()};
+        auto m = Measurements(sv);
+
+        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shot_range = {};
+        auto res = m.expval(*ob, num_shots, shot_range);
+        auto expected = PrecisionT(-0.086);
+        REQUIRE(expected == Approx(res).margin(5e-2));
+    }
+}
+
 TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
                    "[StateVectorKokkos_Expval]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;

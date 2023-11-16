@@ -62,7 +62,15 @@ template <class StateVectorT> class Observable {
     virtual void applyInPlace(StateVectorT &sv) const = 0;
 
     /**
-     * @brief Apply the observable to the given statevector in place.
+     * @brief Apply unitaries of an observable to the given statevector in
+     * place.
+     *
+     * @param sv Reference to StateVector object.
+     * @param identify_wires Reference to a std::vector object which stores
+     * wires of Identity gates in the observable.
+     * @param ob_wires Reference to a std::vector object which stores wires of
+     * the observable.
+     * @param term_idx Index of a Hamiltonian term.
      */
     virtual void applyInPlaceShots(StateVectorT &sv,
                                    std::vector<size_t> &identify_wires,
@@ -80,7 +88,7 @@ template <class StateVectorT> class Observable {
     [[nodiscard]] virtual auto getWires() const -> std::vector<size_t> = 0;
 
     /**
-     * @brief Get the wires the observable applies to.
+     * @brief Get the coefficients of a Hamiltonian observable.
      */
     [[nodiscard]] virtual auto getCoeffs() const -> std::vector<PrecisionT> {
         return {};
@@ -179,6 +187,9 @@ class NamedObsBase : public Observable<StateVectorT> {
             }
             identify_wire.push_back(wires_[0]);
         } else {
+            PL_ABORT("Provided NamedObs is not supported for shots "
+                     "calculation. Supported NamedObs are PauliX, PauliY, "
+                     "PauliZ, Identity and Hadamard.");
         }
     }
 };
