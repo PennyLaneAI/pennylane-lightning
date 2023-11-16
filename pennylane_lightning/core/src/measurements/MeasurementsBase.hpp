@@ -155,7 +155,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
             result = result / obs_samples.size();
         }
-
         return result;
     }
 
@@ -290,6 +289,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             // Get a slice of samples based on the shot_range vector
             for (auto &i : shot_range) {
                 for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
+                    //TODO some extra work to make it cache-friendly
                     sub_samples.push_back(samples[j]);
                 }
             }
@@ -297,5 +297,4 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
     }
 };
-
 } // namespace Pennylane::Measures
