@@ -217,11 +217,11 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
 
     // to work with
     void applyInPlaceShots(StateVectorT &sv,
-                           std::vector<size_t> &identify_wires,
+                           std::vector<size_t> &identity_wires,
                            std::vector<size_t> &ob_wires,
                            size_t term_idx) const override {
         ob_wires.clear();
-        this->obs_[term_idx]->applyInPlaceShots(sv, identify_wires, ob_wires,
+        this->obs_[term_idx]->applyInPlaceShots(sv, identity_wires, ob_wires,
                                                 term_idx);
     }
 };

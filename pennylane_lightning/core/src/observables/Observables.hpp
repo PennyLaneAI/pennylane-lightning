@@ -66,14 +66,14 @@ template <class StateVectorT> class Observable {
      * place.
      *
      * @param sv Reference to StateVector object.
-     * @param identify_wires Reference to a std::vector object which stores
+     * @param identity_wires Reference to a std::vector object which stores
      * wires of Identity gates in the observable.
      * @param ob_wires Reference to a std::vector object which stores wires of
      * the observable.
      * @param term_idx Index of a Hamiltonian term.
      */
     virtual void applyInPlaceShots(StateVectorT &sv,
-                                   std::vector<size_t> &identify_wires,
+                                   std::vector<size_t> &identity_wires,
                                    std::vector<size_t> &ob_wires,
                                    size_t term_idx = 0) const = 0;
 
@@ -165,11 +165,11 @@ class NamedObsBase : public Observable<StateVectorT> {
     }
 
     void
-    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identify_wire,
+    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identity_wire,
                       std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
         ob_wires.clear();
-        identify_wire.clear();
+        identity_wire.clear();
         ob_wires.push_back(wires_[0]);
 
         if (obs_name_ == "PauliX") {
@@ -182,7 +182,7 @@ class NamedObsBase : public Observable<StateVectorT> {
             sv.applyOperation("RY", wires_, false, {theta});
         } else if (obs_name_ == "PauliZ") {
         } else if (obs_name_ == "Identity") {
-            identify_wire.push_back(wires_[0]);
+            identity_wire.push_back(wires_[0]);
         } else {
             PL_ABORT("Provided NamedObs does not supported for shots "
                      "calculation. Supported NamedObs are PauliX, PauliY, "
@@ -244,7 +244,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
 
     void
     applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identify_wire,
+                      [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT("For Hermitian Observables, the applyInPlaceShots method is "
@@ -464,7 +464,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
 
     void
     applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identify_wires,
+                      [[maybe_unused]] std::vector<size_t> &identity_wires,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT("For Hamiltonian Observables, the applyInPlace method must be "
@@ -590,7 +590,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
 
     void
     applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identify_wire,
+                      [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
         PL_ABORT(

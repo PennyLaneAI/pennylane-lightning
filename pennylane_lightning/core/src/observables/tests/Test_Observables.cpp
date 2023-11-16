@@ -130,11 +130,11 @@ template <typename TypeList> void testNamedObsBase() {
             StateVectorT state_vector(init_state.data(), init_state.size());
             auto obs = NamedObsT("RY", {0}, {0.4});
 
-            std::vector<size_t> identify_wire;
+            std::vector<size_t> identity_wire;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, identify_wire, ob_wires),
+                obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
                 Catch::Matchers::Contains(
                     "Provided NamedObs does not supported for shots"));
         }
@@ -215,11 +215,11 @@ template <typename TypeList> void testHermitianObsBase() {
             auto obs =
                 HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
 
-            std::vector<size_t> identify_wire;
+            std::vector<size_t> identity_wire;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, identify_wire, ob_wires),
+                obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
                 Catch::Matchers::Contains(
                     "For Hermitian Observables, the applyInPlaceShots method "
                     "is not supported."));
@@ -584,11 +584,11 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             StateVectorT state_vector(init_state.data(), init_state.size());
 
-            std::vector<size_t> identify_wire;
+            std::vector<size_t> identity_wire;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                sparseH->applyInPlaceShots(state_vector, identify_wire,
+                sparseH->applyInPlaceShots(state_vector, identity_wire,
                                            ob_wires),
                 Catch::Matchers::Contains("For SparseHamiltonian Observables, "
                                           "the applyInPlaceShots method "
