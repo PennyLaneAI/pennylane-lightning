@@ -204,7 +204,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 if ((static_cast<size_t>(std::accumulate(
                          local_sample.begin() + num_identity_obs,
                          local_sample.end(), 0)) &
-                     1) == 1) {
+                     size_t{1}) == 1) {
                     obs_samples[i] = -1;
                 } else {
                     obs_samples[i] = 1;
@@ -271,13 +271,16 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         auto samples = measure.generate_samples(num_shots);
 
         if (!shot_range.empty()) {
-            std::vector<size_t> sub_samples;
+            std::vector<size_t> sub_samples(shot_range.size() * num_qubits);
             // Get a slice of samples based on the shot_range vector
-            for (auto &i : shot_range) {
+            size_t shot_idx = 0;
+            for (const auto &i : shot_range) {
                 for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
                     // TODO some extra work to make it cache-friendly
-                    sub_samples.push_back(samples[j]);
+                    sub_samples[shot_idx * num_qubits + j - i * num_qubits] =
+                        samples[j];
                 }
+                shot_idx++;
             }
             return sub_samples;
         }

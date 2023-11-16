@@ -89,7 +89,7 @@ class StateVectorLQubitRaw final
     /**
      * @brief Get the total number of wires.
      */
-    auto getTotalNumQubits() const -> size_t {
+    [[nodiscard]] auto getTotalNumQubits() const -> size_t {
         return log2PerfectPower(length_);
     }
 
