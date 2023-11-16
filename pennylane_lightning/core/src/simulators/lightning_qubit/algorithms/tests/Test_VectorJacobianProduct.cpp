@@ -289,8 +289,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI / 7}}, // params
             {{1}, {1}},       // wires
             {false, false},   // inverses
-            {{}, {}},         // inverses
-            {{0, 2}, {2}},    // inverses
+            {{}, {}},         // matrices
+            {{0, 2}, {2}},    // controlled wires
         };
 
         auto dy1 = std::vector<ComplexT>{{0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
