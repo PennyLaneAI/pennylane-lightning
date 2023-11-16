@@ -287,25 +287,16 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
         DYNAMIC_SECTION("Failed for Hermitian"
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
-            // Expected results calculated with Pennylane default.qubit:
-            std::vector<PrecisionT> exp_values_ref = {
-                0.644217687237691, 0.4794255386042027, 0.29552020666133955};
-
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
-                 ind_wires++) {
-                HermitianObs<StateVectorT> obs(Hermitian_matrix,
-                                               wires_list[ind_wires]);
-                size_t num_shots = 1000;
-                std::vector<size_t> shots_range = {};
-                REQUIRE_THROWS_WITH(
-                    Measurer.expval(obs, num_shots, shots_range),
-                    Catch::Matchers::Contains(
-                        "expval calculation is not supported by shots"));
-            }
+            HermitianObs<StateVectorT> obs(Hermitian_matrix, {0});
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.expval(obs, num_shots, shots_range),
+                Catch::Matchers::Contains(
+                    "expval calculation is not supported by shots"));
         }
 
         testHermitianObsExpvalShot<typename TypeList::Next>();
