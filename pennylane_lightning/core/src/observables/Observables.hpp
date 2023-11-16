@@ -182,12 +182,9 @@ class NamedObsBase : public Observable<StateVectorT> {
             sv.applyOperation("RY", wires_, false, {theta});
         } else if (obs_name_ == "PauliZ") {
         } else if (obs_name_ == "Identity") {
-            if (!identify_wire.empty()) {
-                identify_wire.clear();
-            }
             identify_wire.push_back(wires_[0]);
         } else {
-            PL_ABORT("Provided NamedObs is not supported for shots "
+            PL_ABORT("Provided NamedObs does not supported for shots "
                      "calculation. Supported NamedObs are PauliX, PauliY, "
                      "PauliZ, Identity and Hadamard.");
         }
@@ -250,9 +247,8 @@ class HermitianObsBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identify_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT(
-            "For Hermitian Observables with shots, the applyInPlace method is "
-            "not supported.");
+        PL_ABORT("For Hermitian Observables, the applyInPlaceShots method is "
+                 "not supported.");
     }
 };
 
@@ -365,17 +361,17 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     }
 
     void
-    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identify_wires,
+    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identity_wires,
                       std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        identify_wires.clear();
+        identity_wires.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
             std::vector<size_t> identity_wire;
             std::vector<size_t> ob_wire;
             ob->applyInPlaceShots(sv, identity_wire, ob_wire);
             if (!identity_wire.empty()) {
-                identify_wires.push_back(identity_wire[0]);
+                identity_wires.push_back(identity_wire[0]);
             }
             ob_wires.push_back(ob_wire[0]);
         }
@@ -597,9 +593,9 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identify_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
-                 "must be "
-                 "defined at the backend level.");
+        PL_ABORT(
+            "For SparseHamiltonian Observables, the applyInPlaceShots method "
+            "is not supported.");
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {

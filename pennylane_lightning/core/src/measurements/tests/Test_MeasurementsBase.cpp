@@ -297,6 +297,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
                 Measurer.expval(obs, num_shots, shots_range),
                 Catch::Matchers::Contains(
                     "expval calculation is not supported by shots"));
+            REQUIRE(obs.getCoeffs().size() == 0);
         }
 
         testHermitianObsExpvalShot<typename TypeList::Next>();

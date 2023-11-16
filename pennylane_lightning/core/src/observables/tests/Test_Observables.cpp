@@ -21,6 +21,7 @@
 
 #include <complex>
 #include <memory>
+#include <random>
 #include <vector>
 /**
  * @file
@@ -82,6 +83,7 @@ template <class StateVector> struct StateVectorToName {};
 template <typename TypeList> void testNamedObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
         using NamedObsT = NamedObsBase<StateVectorT>;
 
         DYNAMIC_SECTION("Name of the Observable must be correct - "
@@ -119,6 +121,24 @@ template <typename TypeList> void testNamedObsBase() {
             REQUIRE(ob1 != ob3);
         }
 
+        DYNAMIC_SECTION("Unsupported NamedObs for applyInPlaceShots") {
+            std::mt19937_64 re{1337};
+            const size_t num_qubits = 3;
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+            auto obs = NamedObsT("RY", {0}, {0.4});
+
+            std::vector<size_t> identify_wire;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                obs.applyInPlaceShots(state_vector, identify_wire, ob_wires),
+                Catch::Matchers::Contains(
+                    "Provided NamedObs does not supported for shots"));
+        }
+
         testNamedObsBase<typename TypeList::Next>();
     }
 }
@@ -133,6 +153,7 @@ template <typename TypeList> void testHermitianObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
         using HermitianObsT = HermitianObsBase<StateVectorT>;
 
         DYNAMIC_SECTION("HermitianObs only accepts correct arguments - "
@@ -181,6 +202,27 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
             REQUIRE(ob2 != ob3);
+        }
+
+        DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::mt19937_64 re{1337};
+            const size_t num_qubits = 3;
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+            auto obs =
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+
+            std::vector<size_t> identify_wire;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                obs.applyInPlaceShots(state_vector, identify_wire, ob_wires),
+                Catch::Matchers::Contains(
+                    "For Hermitian Observables, the applyInPlaceShots method "
+                    "is not supported."));
         }
 
         testHermitianObsBase<typename TypeList::Next>();
@@ -533,6 +575,24 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             REQUIRE_THROWS_AS(sparseH->applyInPlace(state_vector),
                               LightningException);
+        }
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlaceShots must fail - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+
+            std::vector<size_t> identify_wire;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                sparseH->applyInPlaceShots(state_vector, identify_wire,
+                                           ob_wires),
+                Catch::Matchers::Contains("For SparseHamiltonian Observables, "
+                                          "the applyInPlaceShots method "
+                                          "is not supported."));
         }
 
         testSparseHamiltonianBase<typename TypeList::Next>();
