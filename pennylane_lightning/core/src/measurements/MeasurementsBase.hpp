@@ -239,6 +239,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                                      MemoryStorageLocation::Internal>) {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+            return sv;
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
@@ -250,12 +251,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(data_storage.data(), data_storage.size());
 
             obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
+            return sv;
         }
 #else
         StateVectorT sv(_statevector);
         obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-#endif
         return sv;
+#endif
     }
 
     /**
