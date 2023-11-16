@@ -218,7 +218,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         return obs_samples;
     }
 
-
   private:
     /**
      * @brief Return preprocess state with a observable
@@ -243,13 +242,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
+            StateVectorT sv(_statevector.getData(), _statevector.getLength());
 
-            std::vector<ComplexT> data_storage(_statevector.getData(),
-                                               _statevector.getData() +
-                                                   _statevector.getLength());
-
-            StateVectorT sv(data_storage.data(), data_storage.size());
-
+            sv.updateData(_statevector.getData(), _statevector.getLength());
             obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
             return sv;
         }
@@ -291,7 +286,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             // Get a slice of samples based on the shot_range vector
             for (auto &i : shot_range) {
                 for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
-                    //TODO some extra work to make it cache-friendly
+                    // TODO some extra work to make it cache-friendly
                     sub_samples.push_back(samples[j]);
                 }
             }

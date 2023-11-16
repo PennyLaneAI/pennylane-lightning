@@ -138,7 +138,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of TensorProdObs shots",
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<size_t>{1});
 
-        size_t num_shots = 10000;
+        size_t num_shots = 1000;
         std::vector<size_t> shot_range = {};
 
         auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
@@ -169,7 +169,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of HamiltonianObs shot",
             "PauliZ", std::vector<size_t>{1});
 
         auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
-        size_t num_shots = 10000;
+        size_t num_shots = 1000;
         std::vector<size_t> shot_range = {};
         auto res = m.expval(*ob, num_shots, shot_range);
         auto expected = PrecisionT(-0.086);

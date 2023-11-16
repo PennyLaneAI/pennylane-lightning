@@ -248,7 +248,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<size_t> &identify_wire,
-        [[maybe_unused]] std::vector<size_t> &ob_wires = {},
+        [[maybe_unused]] std::vector<size_t> &ob_wires,
         [[maybe_unused]] const size_t term_idx = 0) const override {
         PL_ABORT(
             "For Hermitian Observables with shots, the applyInPlace method is "

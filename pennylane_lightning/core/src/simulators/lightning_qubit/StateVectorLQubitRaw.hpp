@@ -91,7 +91,6 @@ class StateVectorLQubitRaw final
      */
     auto getTotalNumQubits() const -> size_t {
         return log2PerfectPower(length_);
-        ;
     }
 
     /**
