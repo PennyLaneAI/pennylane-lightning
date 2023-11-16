@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add shots support for expectation value calculation for the observables (NamedObs, TensorProd and Hamiltonian) based on Pauli words, Identity and Hadamard in the C++ layer. All Lightning backends have this support now.
+[(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
+
 * `qml.QubitUnitary` operators can be included in a circuit differentiated with the adjoint method. Lightning handles circuits with arbitrary non-differentiable `qml.QubitUnitary` operators. 1,2-qubit `qml.QubitUnitary` operators with differentiable parameters can be differentiated using decomposition.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 

@@ -245,6 +245,59 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+template <typename TypeList> void testHermitianObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+        using MatrixT = std::vector<ComplexT>;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        const PrecisionT theta = M_PI / 2;
+        const PrecisionT real_term = std::cos(theta);
+        const PrecisionT imag_term = std::sin(theta);
+
+        DYNAMIC_SECTION("Failed for Hermitian"
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+            // Expected results calculated with Pennylane default.qubit:
+            std::vector<PrecisionT> exp_values_ref = {
+                0.644217687237691, 0.4794255386042027, 0.29552020666133955};
+
+            MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
+                                     ComplexT{0, -imag_term}, real_term};
+
+            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                 ind_wires++) {
+                HermitianObs<StateVectorT> obs(Hermitian_matrix,
+                                               wires_list[ind_wires]);
+                size_t num_shots = 1000;
+                std::vector<size_t> shots_range = {};
+                REQUIRE_THROWS_WITH(
+                    Measurer.expval(obs, num_shots, shots_range),
+                    Catch::Matchers::Contains(
+                        "expval calculation is not supported by shots"));
+            }
+        }
+
+        testHermitianObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHermitianObsExpvalShot<TestStateVectorBackends>();
+    }
+}
+
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -507,5 +560,46 @@ template <typename TypeList> void testSamples() {
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testSparseHObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        auto sparseH = SparseHamiltonian<StateVectorT>::create(
+            {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+            ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+            ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+            {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
+
+
+        DYNAMIC_SECTION("Failed for SparseH "
+                        << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 1000;
+                std::vector<size_t> shots_range = {};
+                REQUIRE_THROWS_WITH(
+                    Measurer.expval(*sparseH, num_shots, shots_range),
+                    Catch::Matchers::Contains(
+                        "expval calculation is not supported by shots"));
+        }
+
+        testSparseHObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHObsExpvalShot<TestStateVectorBackends>();
     }
 }
