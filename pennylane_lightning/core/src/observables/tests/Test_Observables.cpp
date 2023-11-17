@@ -220,9 +220,8 @@ template <typename TypeList> void testHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
-                Catch::Matchers::Contains(
-                    "For Hermitian Observables, the applyInPlaceShots method "
-                    "is not supported."));
+                Catch::Matchers::Contains("Hermitian observables do not "
+                                          "support applyInPlaceShots method."));
         }
 
         testHermitianObsBase<typename TypeList::Next>();
@@ -606,9 +605,8 @@ template <typename TypeList> void testSparseHamiltonianBase() {
             REQUIRE_THROWS_WITH(
                 sparseH->applyInPlaceShots(state_vector, identity_wire,
                                            ob_wires),
-                Catch::Matchers::Contains("For SparseHamiltonian Observables, "
-                                          "the applyInPlaceShots method "
-                                          "is not supported."));
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not the applyInPlaceShots method."));
         }
 
         testSparseHamiltonianBase<typename TypeList::Next>();

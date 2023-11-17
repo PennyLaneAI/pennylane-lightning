@@ -398,13 +398,13 @@ TEMPLATE_TEST_CASE(
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliX", std::vector<size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+        auto I1 = std::make_shared<NamedObs<StateVectorT>>(
             "Identity", std::vector<size_t>{1});
 
         size_t num_shots = 10000;
         std::vector<size_t> shot_range = {};
 
-        auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
+        auto ob = TensorProdObs<StateVectorT>::create({X0, I1});
         auto res_shots = m.expval(*ob, num_shots, shot_range);
         auto expected = m.expval(*ob);
 

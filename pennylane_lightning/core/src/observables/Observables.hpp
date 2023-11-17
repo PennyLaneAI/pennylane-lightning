@@ -247,8 +247,8 @@ class HermitianObsBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT("For Hermitian Observables, the applyInPlaceShots method is "
-                 "not supported.");
+        PL_ABORT("Hermitian observables do not support applyInPlaceShots "
+                 "method.");
     }
 };
 
@@ -593,9 +593,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT(
-            "For SparseHamiltonian Observables, the applyInPlaceShots method "
-            "is not supported.");
+        PL_ABORT("SparseHamiltonian observables do not the applyInPlaceShots "
+                 "method.");
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
