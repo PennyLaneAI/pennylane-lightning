@@ -496,6 +496,56 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shot",
     }
 }
 
+TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots with Identity",
+                   "[StateVectorCudaMPI_Expval]", float, double) {
+    using StateVectorT = StateVectorCudaMPI<TestType>;
+    using ComplexT = StateVectorT::ComplexT;
+
+    MPIManager mpi_manager(MPI_COMM_WORLD);
+    REQUIRE(mpi_manager.getSize() == 2);
+
+    size_t num_qubits = 3;
+    size_t mpi_buffersize = 1;
+
+    size_t nGlobalIndexBits =
+        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+    int nDevices = 0;
+    cudaGetDeviceCount(&nDevices);
+    REQUIRE(nDevices >= 2);
+    int deviceId = mpi_manager.getRank() % nDevices;
+    cudaSetDevice(deviceId);
+    DevTag<int> dt_local(deviceId, 0);
+    mpi_manager.Barrier();
+
+    SECTION("Using expval") {
+        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                         {0.3, 0.4}, {0.4, 0.5}};
+        auto local_init_sv = mpi_manager.scatter(init_state, 0);
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(local_init_sv.data(), local_init_sv.size(), false);
+
+        auto m = MeasurementsMPI(sv);
+
+        auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto I1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+            "Identity", std::vector<size_t>{1});
+
+        auto ob = TensorProdObsMPI<StateVectorT>::create({X0, I1});
+        size_t num_shots = 10000;
+        std::vector<size_t> shot_range = {};
+
+        auto res = m.expval(*ob, num_shots, shot_range);
+        auto expected = m.expval(*ob);
+        REQUIRE(expected == Approx(res).margin(5e-2));
+    }
+}
+
+
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaMPI_Expval]", double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;

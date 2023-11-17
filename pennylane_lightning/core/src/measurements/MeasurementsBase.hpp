@@ -130,6 +130,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         PrecisionT result{0.0};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
+            // SparseHamiltonian does not support samples in pennylane.
             PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
                      "not supported by shots");
         } else if (obs.getObsName().find("Hermitian") != std::string::npos) {
