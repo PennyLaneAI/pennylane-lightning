@@ -187,6 +187,82 @@ TEST_CASE("Expval - NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+template <typename TypeList> void testNamedObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data =
+            createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
+
+        size_t num_qubits = 3;
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+        REQUIRE(mpi_manager.getSize() == 2);
+
+        size_t mpi_buffersize = 1;
+
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        REQUIRE(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
+
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several measures.
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+
+        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
+                                             "Hadamard"};
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::vector<PrecisionT>> exp_values_ref = {
+            {0.49272486, 0.42073549, 0.28232124},
+            {-0.64421768, -0.47942553, -0.29552020},
+            {0.58498357, 0.77015115, 0.91266780},
+            {0.7620549436, 0.8420840225, 0.8449848566}};
+
+        size_t num_shots = 10000;
+        std::vector<size_t> shots_range = {};
+
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " - Varying wires"
+                            << StateVectorMPIToName<StateVectorT>::name) {
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
+                                                  wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    PrecisionT result =
+                        Measurer.expval(obs, num_shots, shots_range);
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+        }
+        testNamedObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testNamedObsExpvalShot<TestStateVectorMPIBackends>();
+    }
+}
+
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -286,6 +362,234 @@ template <typename TypeList> void testHermitianObsExpval() {
 TEST_CASE("Expval - HermitianObs", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHermitianObsExpval<TestStateVectorMPIBackends>();
+    }
+}
+
+template <typename TypeList> void testTensorProdObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using ComplexT = typename StateVectorT::ComplexT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        std::vector<ComplexT> statevector_data{
+            {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
+            {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+
+        size_t num_qubits = 3;
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+        REQUIRE(mpi_manager.getSize() == 2);
+
+        size_t mpi_buffersize = 1;
+
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        REQUIRE(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
+
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several measures.
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+
+        DYNAMIC_SECTION(" - Without shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" - With Identity but no shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With Identity and shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        testTensorProdObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testTensorProdObsExpvalShot<TestStateVectorMPIBackends>();
+    }
+}
+
+template <typename TypeList> void testHamiltonianObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using ComplexT = typename StateVectorT::ComplexT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        std::vector<ComplexT> statevector_data{
+            {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
+            {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+
+        size_t num_qubits = 3;
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+        REQUIRE(mpi_manager.getSize() == 2);
+
+        size_t mpi_buffersize = 1;
+
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        REQUIRE(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
+
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+        mpi_manager.Barrier();
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several measures.
+        MeasurementsMPI<StateVectorT> Measurer(sv);
+
+        DYNAMIC_SECTION(" - Without shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs =
+                HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
+            PrecisionT expected = PrecisionT(-0.086);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" - With Identity but no shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs =
+                HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs =
+                HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
+            PrecisionT expected = PrecisionT(-0.086);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With Identity and shots_range"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs =
+                HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        testHamiltonianObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- HamiltonianObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHamiltonianObsExpvalShot<TestStateVectorMPIBackends>();
     }
 }
 

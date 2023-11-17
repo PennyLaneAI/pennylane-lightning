@@ -193,6 +193,123 @@ TEST_CASE("Expval - NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+template <typename TypeList> void testNamedObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
+                                             "Hadamard", "Identity"};
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::vector<PrecisionT>> exp_values_ref = {
+            {0.49272486, 0.42073549, 0.28232124},
+            {-0.64421768, -0.47942553, -0.29552020},
+            {0.58498357, 0.77015115, 0.91266780},
+            {0.7620549436, 0.8420840225, 0.8449848566},
+            {1.0, 1.0, 1.0}};
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " - Varying wires"
+                            << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                std::vector<size_t> shots_range = {};
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    PrecisionT result =
+                        Measurer.expval(obs, num_shots, shots_range);
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+        }
+
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " - Varying wires-with shots_range"
+                            << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                std::vector<size_t> shots_range;
+                for (size_t i = 0; i < num_shots; i += 2) {
+                    shots_range.push_back(i);
+                }
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    PrecisionT result =
+                        Measurer.expval(obs, num_shots, shots_range);
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+        }
+        testNamedObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testNamedObsExpvalShot<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testHermitianObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+        using MatrixT = std::vector<ComplexT>;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        const PrecisionT theta = M_PI / 2;
+        const PrecisionT real_term = std::cos(theta);
+        const PrecisionT imag_term = std::sin(theta);
+
+        DYNAMIC_SECTION("Failed for Hermitian"
+                        << StateVectorToName<StateVectorT>::name) {
+            MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
+                                     ComplexT{0, -imag_term}, real_term};
+
+            HermitianObs<StateVectorT> obs(Hermitian_matrix, {0});
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.expval(obs, num_shots, shots_range),
+                Catch::Matchers::Contains(
+                    "expval calculation is not supported by shots"));
+            REQUIRE(obs.getCoeffs().size() == 0);
+        }
+
+        testHermitianObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHermitianObsExpvalShot<TestStateVectorBackends>();
+    }
+}
+
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -267,6 +384,95 @@ template <typename TypeList> void testHermitianObsExpval() {
 TEST_CASE("Expval - HermitianObs", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHermitianObsExpval<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testTensorProdObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        std::vector<ComplexT> statevector_data{
+            {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
+            {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        DYNAMIC_SECTION(" - Without shots_range"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" - With Identity but no shots_range"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With shots_range"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With Identity and shots_range"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
+            PrecisionT expected = Measurer.expval(*obs);
+            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        testTensorProdObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testTensorProdObsExpvalShot<TestStateVectorBackends>();
     }
 }
 
@@ -455,5 +661,102 @@ template <typename TypeList> void testSamples() {
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testHamiltonianObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        std::vector<ComplexT> statevector_data{
+            {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
+            {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliX", std::vector<size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+            "PauliZ", std::vector<size_t>{1});
+
+        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
+
+        DYNAMIC_SECTION("Without shots_range "
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+
+            auto res = Measurer.expval(*ob, num_shots, shots_range);
+            auto expected = PrecisionT(-0.086);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("With shots_range "
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range;
+            for (size_t i = 0; i < num_shots; i += 2) {
+                shots_range.push_back(i);
+            }
+
+            auto res = Measurer.expval(*ob, num_shots, shots_range);
+            auto expected = PrecisionT(-0.086);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        testHamiltonianObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHamiltonianObsExpvalShot<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testSparseHObsExpvalShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using ComplexT = typename StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        auto sparseH = SparseHamiltonian<StateVectorT>::create(
+            {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+             ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
+            {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
+
+        DYNAMIC_SECTION("Failed for SparseH "
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.expval(*sparseH, num_shots, shots_range),
+                Catch::Matchers::Contains(
+                    "expval calculation is not supported by shots"));
+        }
+
+        testSparseHObsExpvalShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Expval Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testSparseHObsExpvalShot<TestStateVectorBackends>();
     }
 }

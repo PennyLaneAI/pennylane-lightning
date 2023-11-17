@@ -87,6 +87,7 @@ class MeasurementsMPI final
         } else {
             data_type_ = CUDA_C_32F;
         }
+        mpi_manager_.Barrier();
     };
 
     /**
@@ -291,6 +292,7 @@ class MeasurementsMPI final
             precumulative = 0;
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
 
         // Ensure the 'custatevecSamplerApplySubSVOffset' function can be called
         // successfully without reducing accuracy.
@@ -320,6 +322,7 @@ class MeasurementsMPI final
         if (mpi_manager_.getRank() == 0) {
             preshotOffset = 0;
         }
+        mpi_manager_.Barrier();
 
         int nSubShots = shotOffset - preshotOffset;
         if (nSubShots > 0) {
@@ -341,6 +344,9 @@ class MeasurementsMPI final
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
         }
 
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
+
         mpi_manager_.Allreduce<custatevecIndex_t>(localBitStrings,
                                                   globalBitStrings, "sum");
 
@@ -350,6 +356,7 @@ class MeasurementsMPI final
                     (globalBitStrings[i] >> j) & 1U;
             }
         }
+        mpi_manager_.Barrier();
         return samples;
     }
 
@@ -484,6 +491,24 @@ class MeasurementsMPI final
         auto expect = mpi_manager_.allreduce<PrecisionT>(local_expect, "sum");
 
         return static_cast<PrecisionT>(expect);
+    }
+
+    /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs Observable.
+     * @param num_shots Number of shots used to generate samples.
+     * @param shot_range The range of samples to use. All samples are used
+     * by default.
+     * @return Floating point expected value of the observable.
+     */
+
+    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
+                const std::vector<size_t> &shot_range) -> PrecisionT {
+        mpi_manager_.Barrier();
+        PrecisionT result = BaseType::expval(obs, num_shots, shot_range);
+        mpi_manager_.Barrier();
+        return result;
     }
 
     /**
