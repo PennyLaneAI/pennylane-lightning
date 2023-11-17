@@ -414,8 +414,8 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{1});
             auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
-            PrecisionT expected = PrecisionT(-0.36);
-            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
 
@@ -445,8 +445,8 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
                 "PauliZ", std::vector<size_t>{1});
             auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
-            PrecisionT expected = PrecisionT(-0.36);
-            PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
+            auto expected = PrecisionT(-0.36);
+            auto result = Measurer.expval(*obs, num_shots, shots_range);
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
 

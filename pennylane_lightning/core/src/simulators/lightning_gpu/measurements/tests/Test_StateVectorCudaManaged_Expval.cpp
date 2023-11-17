@@ -308,32 +308,6 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         CHECK(expected == Approx(res));
     }
 }
-/*
-TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
-                   "[StateVectorCudaManaged_Expval]", float, double) {
-    using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-    SECTION("Using expval") {
-        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
-                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
-                                         {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorT sv{init_state.data(), init_state.size()};
-        auto m = Measurements(sv);
-
-        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
-
-        auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
-        size_t num_shots = 10000;
-        std::vector<size_t> shot_range = {};
-        auto res = m.expval(*ob, num_shots, shot_range);
-        auto expected = TestType(-0.086);
-        REQUIRE(expected == Approx(res).margin(5e-2));
-    }
-}
-*/
 
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
                    "[StateVectorCudaManaged_Expval]", float, double) {
@@ -357,62 +331,6 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         CHECK(expected == Approx(res));
     }
 }
-/*
-TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots",
-                   "[StateVectorCudaManaged_Expval]", float, double) {
-    using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-    SECTION("Using expval") {
-        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
-                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
-                                         {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorT sv{init_state.data(), init_state.size()};
-        auto m = Measurements(sv);
-
-        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
-
-        size_t num_shots = 10000;
-        std::vector<size_t> shot_range = {};
-
-        auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
-        auto res = m.expval(*ob, num_shots, shot_range);
-        auto expected = TestType(-0.36);
-
-        REQUIRE(expected == Approx(res).margin(5e-2));
-    }
-}
-
-TEMPLATE_TEST_CASE(
-    "Test expectation value of TensorProdObs shots with Identity",
-    "[StateVectorCudaManaged_Expval]", float, double) {
-    using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-    SECTION("Using expval") {
-        std::vector<ComplexT> init_state{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
-                                         {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
-                                         {0.3, 0.4}, {0.4, 0.5}};
-        StateVectorT sv{init_state.data(), init_state.size()};
-        auto m = Measurements(sv);
-
-        auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
-        auto I1 = std::make_shared<NamedObs<StateVectorT>>(
-            "Identity", std::vector<size_t>{1});
-
-        size_t num_shots = 10000;
-        std::vector<size_t> shot_range = {};
-
-        auto ob = TensorProdObs<StateVectorT>::create({X0, I1});
-        auto res_shots = m.expval(*ob, num_shots, shot_range);
-        auto expected = m.expval(*ob);
-
-        REQUIRE(expected == Approx(res_shots).margin(5e-2));
-    }
-}
-*/
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaManaged_Expval]", float, double) {

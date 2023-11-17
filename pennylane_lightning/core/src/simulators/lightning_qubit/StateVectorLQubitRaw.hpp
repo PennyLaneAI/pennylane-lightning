@@ -87,13 +87,6 @@ class StateVectorLQubitRaw final
     }
 
     /**
-     * @brief Get the total number of wires.
-     */
-    [[nodiscard]] auto getTotalNumQubits() const -> size_t {
-        return log2PerfectPower(length_);
-    }
-
-    /**
      * @brief Get the underlying data pointer.
      *
      * @return const ComplexT* Pointer to statevector data.
