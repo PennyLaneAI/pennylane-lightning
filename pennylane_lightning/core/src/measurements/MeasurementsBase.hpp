@@ -35,7 +35,6 @@ auto sample_to_str(std::vector<size_t> &sample) -> std::string {
     }
     return str;
 }
-
 } // namespace
 /// @endcond
 
@@ -309,12 +308,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return std::vector<size_t> samples in std::vector
      */
     auto sample(const size_t &num_shots) {
-        PL_ABORT_IF(
-            obs.getObsName().find("Hamiltonian") != std::string::npos,
-            "Hamiltonian and Sparse Hamiltonian do not support samples().");
-        std::vector<size_t> obs_wires;
-        std::vector<size_t> identity_wires;
-        std::vector<size_t> shot_range = {};
         Derived measure(_statevector);
         return measure.generate_samples(num_shots);
     }
@@ -337,8 +330,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         size_t num_obs_wires = obs.getWires();
         for (size_t i = 0; i < num_shots; i++) {
             auto local_sample =
-                std::vector(samples.begin() + i * num_obs_wires,
-                            samples.begin() + (i + 1) * num_obs_wires - 1);
+                std::vector(sample_data.begin() + i * num_obs_wires,
+                            sample_data.begin() + (i + 1) * num_obs_wires - 1);
             std::string key = sample_to_str(local_sample);
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
@@ -366,11 +359,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         Derived measure(_statevector);
         auto sample_data = measure.generate_samples(num_shots);
 
-        size_t num_obs_wires = obs.getWires();
+        size_t num_wires = _statevector.getTotalNumQubits();
         for (size_t i = 0; i < num_shots; i++) {
             auto local_sample =
-                std::vector(samples.begin() + i * num_obs_wires,
-                            samples.begin() + (i + 1) * num_obs_wires - 1);
+                std::vector(sample_data.begin() + i * num_wires,
+                            sample_data.begin() + (i + 1) * num_wires - 1);
             std::string key = sample_to_str(local_sample);
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
