@@ -20,7 +20,6 @@
 #include <catch2/catch.hpp>
 
 #include "MeasurementsLQubit.hpp"
-#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -32,11 +31,9 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using namespace Pennylane::Observables;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
-using namespace Pennylane::LightningQubit::Observables;
 }; // namespace
 /// @endcond
 
