@@ -380,7 +380,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         CHECK(expected == Approx(res));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots",
                    "[StateVectorKokkos_Expval]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
@@ -434,7 +434,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
         REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
-
+*/
 TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
                    "[StateVectorKokkos_Expval]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;

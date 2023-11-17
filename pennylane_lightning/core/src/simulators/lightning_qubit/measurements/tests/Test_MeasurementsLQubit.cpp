@@ -118,7 +118,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }
-
+/*
 TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of TensorProdObs shots",
                            "[StateVectorLQubit_Expval]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
@@ -176,6 +176,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Test expectation value of HamiltonianObs shot",
         REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
+*/
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),

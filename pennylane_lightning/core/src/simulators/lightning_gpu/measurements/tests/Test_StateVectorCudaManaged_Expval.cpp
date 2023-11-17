@@ -308,7 +308,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         CHECK(expected == Approx(res));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
                    "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
@@ -333,6 +333,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
         REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
+*/
 
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
                    "[StateVectorCudaManaged_Expval]", float, double) {
@@ -356,7 +357,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         CHECK(expected == Approx(res));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots",
                    "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
@@ -411,6 +412,7 @@ TEMPLATE_TEST_CASE(
         REQUIRE(expected == Approx(res_shots).margin(5e-2));
     }
 }
+*/
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaManaged_Expval]", float, double) {

@@ -350,7 +350,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         CHECK(expected == Approx(res));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
                    "[StateVectorCudaMPI_Expval]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
@@ -400,6 +400,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs shot",
         REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
+*/
 
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
                    "[StateVectorCudaMPI_Expval]", float, double) {
@@ -446,7 +447,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         CHECK(expected == Approx(res));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shot",
                    "[StateVectorCudaMPI_Expval]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
@@ -496,7 +497,8 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shot",
     }
 }
 
-TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots with Identity",
+TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots with
+Identity",
                    "[StateVectorCudaMPI_Expval]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     using ComplexT = StateVectorT::ComplexT;
@@ -544,7 +546,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs shots with Identity"
         REQUIRE(expected == Approx(res).margin(5e-2));
     }
 }
-
+*/
 
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
                    "[StateVectorCudaMPI_Expval]", double) {
