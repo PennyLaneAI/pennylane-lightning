@@ -27,6 +27,15 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+
+auto sample_to_str(std::vector<size_t> &sample) -> std::string {
+    std::string str;
+    for (auto &element : sample) {
+        str += std::to_string(element);
+    }
+    return str;
+}
+
 } // namespace
 /// @endcond
 
@@ -226,6 +235,151 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             }
         }
         return obs_samples;
+    }
+
+    /**
+     * @brief Probability of each computational basis state for an observable.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return Floating point std::vector with probabilities.
+     * The basis columns are rearranged according to wires.
+     */
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
+        auto square_mean = expval(obs, num_shots, {});
+        square_mean *= square_mean;
+
+        PrecisionT mean_square;
+
+        if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+            mean_square = 1;
+        } /*else{
+             //Need to verify for Hamiltonian
+             auto coeffs = obs.getCoeffs();
+         }
+         */
+        return mean_square - square_mean;
+    }
+
+    /**
+     * @brief Probability of each computational basis state for an observable.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return Floating point std::vector with probabilities.
+     * The basis columns are rearranged according to wires.
+     */
+    auto probs(const Observable<StateVectorT> &obs) {
+        PL_ABORT_IF(
+            obs.getObsName().find("Hamiltonian") != std::string::npos,
+            "Hamiltonian and Sparse Hamiltonian do not support samples().");
+        std::vector<size_t> obs_wires;
+        std::vector<size_t> identity_wires;
+        auto sv = _preprocess_state(obs, obs_wires, identity_wires);
+        Derived measure(sv);
+        return measure.probs(obs_wires);
+    }
+
+    /**
+     * @brief Return samples of a observable
+     *
+     * @param obs The observable to sample
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return std::vector<size_t> samples in std::vector
+     */
+    auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots) {
+        PL_ABORT_IF(
+            obs.getObsName().find("Hamiltonian") != std::string::npos,
+            "Hamiltonian and Sparse Hamiltonian do not support samples().");
+        std::vector<size_t> obs_wires;
+        std::vector<size_t> identity_wires;
+        std::vector<size_t> shot_range = {};
+        return _sample_state(obs, num_shots, shot_range, obs_wires,
+                             identity_wires);
+    }
+
+    /**
+     * @brief Return generated samples
+     *
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return std::vector<size_t> samples in std::vector
+     */
+    auto sample(const size_t &num_shots) {
+        PL_ABORT_IF(
+            obs.getObsName().find("Hamiltonian") != std::string::npos,
+            "Hamiltonian and Sparse Hamiltonian do not support samples().");
+        std::vector<size_t> obs_wires;
+        std::vector<size_t> identity_wires;
+        std::vector<size_t> shot_range = {};
+        Derived measure(_statevector);
+        return measure.generate_samples(num_shots);
+    }
+
+    /**
+     * @brief Groups the samples into a dictionary showing number of occurences
+     * for each possible outcome.
+     *
+     * @param obs The observable to sample
+     * @param num_shots number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
+     * num_occurences}``
+     */
+    auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> std::unordered_map<std::string, size_t> {
+        std::unordered_map<std::string, size_t> outcome_map;
+        std::vector<size_t> shot_range = {};
+        auto sample_data = sample(obs, num_shots, shot_range);
+        size_t num_obs_wires = obs.getWires();
+        for (size_t i = 0; i < num_shots; i++) {
+            auto local_sample =
+                std::vector(samples.begin() + i * num_obs_wires,
+                            samples.begin() + (i + 1) * num_obs_wires - 1);
+            std::string key = sample_to_str(local_sample);
+            auto it = outcome_map.find(key);
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
+    }
+
+    /**
+     * @brief Groups the samples into a dictionary showing number of occurences
+     * for each possible outcome.
+     *
+     * @param num_shots number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
+     * num_occurences}``
+     */
+    auto counts(const size_t &num_shots)
+        -> std::unordered_map<std::string, size_t> {
+        std::unordered_map<std::string, size_t> outcome_map;
+
+        Derived measure(_statevector);
+        auto sample_data = measure.generate_samples(num_shots);
+
+        size_t num_obs_wires = obs.getWires();
+        for (size_t i = 0; i < num_shots; i++) {
+            auto local_sample =
+                std::vector(samples.begin() + i * num_obs_wires,
+                            samples.begin() + (i + 1) * num_obs_wires - 1);
+            std::string key = sample_to_str(local_sample);
+            auto it = outcome_map.find(key);
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
     }
 
   private:
