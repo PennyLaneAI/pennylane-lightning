@@ -272,7 +272,8 @@ class Measurements final
      * @brief Expectation value for a Observable with shots
      *
      * @param obs Observable
-     * @param shots Vector of shot number to measurement
+     * @param num_shots Number of shots.
+     * @param shots_range Vector of shot number to measurement
      * @return Floating point expected value of the observable.
      */
 
