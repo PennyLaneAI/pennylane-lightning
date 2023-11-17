@@ -34,6 +34,7 @@ using namespace Pennylane::Util;
 
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Measures;
+
 }; // namespace
 /// @endcond
 
