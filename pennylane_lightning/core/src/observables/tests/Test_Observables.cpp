@@ -495,6 +495,22 @@ template <typename TypeList> void testHamiltonianBase() {
                 REQUIRE_THROWS_AS(ham->applyInPlace(state_vector),
                                   LightningException);
             }
+
+            DYNAMIC_SECTION("applyInPlaceShots must fail - "
+                            << StateVectorToName<StateVectorT>::name) {
+                auto ham =
+                    HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
+                auto st_data = createZeroState<ComplexT>(2);
+
+                StateVectorT state_vector(st_data.data(), st_data.size());
+
+                std::vector<size_t> identity_wires;
+                std::vector<size_t> ob_wires;
+
+                REQUIRE_THROWS_AS(ham->applyInPlaceShots(
+                                      state_vector, identity_wires, ob_wires),
+                                  LightningException);
+            }
         }
         testHamiltonianBase<typename TypeList::Next>();
     }
