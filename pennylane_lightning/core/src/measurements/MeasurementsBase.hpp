@@ -28,13 +28,15 @@
 namespace {
 using namespace Pennylane::Observables;
 
-auto sample_to_str(std::vector<size_t> &sample) -> std::string {
+/*
+auto sample_to_str(const std::vector<size_t> &sample) -> std::string {
     std::string str;
     for (auto &element : sample) {
         str += std::to_string(element);
     }
     return str;
 }
+*/
 } // namespace
 /// @endcond
 
@@ -246,19 +248,27 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * The basis columns are rearranged according to wires.
      */
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
-        auto square_mean = expval(obs, num_shots, {});
-        square_mean *= square_mean;
-
-        PrecisionT mean_square;
-
         if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
-            mean_square = 1;
-        } /*else{
-             //Need to verify for Hamiltonian
-             auto coeffs = obs.getCoeffs();
-         }
-         */
-        return mean_square - square_mean;
+            auto square_mean = expval(obs, num_shots, {});
+            PrecisionT result = 1 - square_mean * square_mean;
+            return result;
+        } else {
+            auto coeffs = obs.getCoeffs();
+            PrecisionT result{0.0};
+            size_t obs_term_idx = 0;
+            for (const auto &coeff : coeffs) {
+                std::vector<size_t> shot_range = {};
+                auto obs_samples = measure_with_samples(
+                    obs, num_shots, shot_range, obs_term_idx);
+                PrecisionT expval_per_term = std::accumulate(
+                    obs_samples.begin(), obs_samples.end(), 0.0);
+                auto term_mean = expval_per_term / obs_samples.size();
+
+                result += coeff * coeff * (1 - term_mean * term_mean);
+                obs_term_idx++;
+            }
+            return result;
+        }
     }
 
     /**
@@ -332,7 +342,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             auto local_sample =
                 std::vector(sample_data.begin() + i * num_obs_wires,
                             sample_data.begin() + (i + 1) * num_obs_wires - 1);
-            std::string key = sample_to_str(local_sample);
+            auto key = sample_to_str(local_sample);
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
                 it->second += 1;
@@ -364,7 +374,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             auto local_sample =
                 std::vector(sample_data.begin() + i * num_wires,
                             sample_data.begin() + (i + 1) * num_wires - 1);
-            std::string key = sample_to_str(local_sample);
+            auto key = sample_to_str(local_sample);
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
                 it->second += 1;

@@ -511,6 +511,20 @@ template <typename TypeList> void testNamedObsVar() {
                     REQUIRE(expected == Approx(result).margin(1e-6));
                 }
             }
+
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " Shots - Varying wires"
+                            << StateVectorToName<StateVectorT>::name) {
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    size_t num_shots = 10000;
+                    PrecisionT result = Measurer.var(obs, num_shots);
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
         }
         testNamedObsVar<typename TypeList::Next>();
     }
@@ -598,6 +612,58 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+template <typename TypeList> void testTensorProdObsVarShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        std::vector<ComplexT> statevector_data{
+            {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
+            {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        DYNAMIC_SECTION(" Without Identity"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
+            auto expected = Measurer.var(*obs);
+            auto result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" With Identity"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
+            PrecisionT expected = Measurer.var(*obs);
+            PrecisionT result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        testTensorProdObsVarShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testTensorProdObsVarShot<TestStateVectorBackends>();
+    }
+}
 template <typename TypeList> void testSamples() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -718,6 +784,61 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 TEST_CASE("Expval Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
         testHamiltonianObsExpvalShot<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testHamiltonianObsVarShot() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        // using PrecisionT = typename StateVectorT::PrecisionT;
+        // using ComplexT = typename StateVectorT::ComplexT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        DYNAMIC_SECTION("YZ" << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+
+            auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, Z1});
+
+            size_t num_shots = 10000;
+
+            auto res = Measurer.var(*ob, num_shots);
+            auto expected = Measurer.var(*ob);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("YI" << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto I1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{1});
+
+            auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, I1});
+
+            size_t num_shots = 10000;
+
+            auto res = Measurer.var(*ob, num_shots);
+            auto expected = Measurer.var(*ob);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        testHamiltonianObsVarShot<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Var Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHamiltonianObsVarShot<TestStateVectorBackends>();
     }
 }
 

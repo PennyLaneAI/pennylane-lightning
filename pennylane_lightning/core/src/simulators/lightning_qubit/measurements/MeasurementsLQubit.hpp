@@ -283,6 +283,20 @@ class Measurements final
     }
 
     /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs Observable
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point expected value of the observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
+    /**
      * @brief Variance value for a general Observable
      *
      * @param ob Observable
