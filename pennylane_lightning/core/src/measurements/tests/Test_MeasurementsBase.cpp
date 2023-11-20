@@ -147,6 +147,161 @@ TEST_CASE("Probabilities", "[MeasurementsBase]") {
     }
 }
 
+template <typename TypeList> void testProbabilitiesObs() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        const size_t num_qubits = 3;
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        StateVectorT sv(statevector_data.data(), statevector_data.size());
+
+        DYNAMIC_SECTION("Test PauliX"
+                        << StateVectorToName<StateVectorT>::name) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                NamedObs<StateVectorT> obs("PauliX", {i});
+                Measurements<StateVectorT> Measurer_shots(statevector);
+
+                sv.applyOperation("Hadamard", {i}, false);
+
+                Measurements<StateVectorT> Measurer(sv);
+
+                auto prob_shots = Measurer_shots.probs(obs);
+                auto prob = Measurer.probs({i});
+
+                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            }
+        }
+
+        DYNAMIC_SECTION("Test PauliY"
+                        << StateVectorToName<StateVectorT>::name) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                NamedObs<StateVectorT> obs("PauliY", {i});
+                Measurements<StateVectorT> Measurer_shots(statevector);
+
+                sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{i}, {i}, {i}},
+                                   {false, false, false});
+
+                Measurements<StateVectorT> Measurer(sv);
+
+                auto prob_shots = Measurer_shots.probs(obs);
+                auto prob = Measurer.probs({i});
+
+                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            }
+        }
+
+        DYNAMIC_SECTION("Test PauliZ"
+                        << StateVectorToName<StateVectorT>::name) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                NamedObs<StateVectorT> obs("PauliZ", {i});
+                Measurements<StateVectorT> Measurer_shots(statevector);
+
+                Measurements<StateVectorT> Measurer(sv);
+
+                auto prob_shots = Measurer_shots.probs(obs);
+                auto prob = Measurer.probs({i});
+
+                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            }
+        }
+
+        DYNAMIC_SECTION("Test Hadamard"
+                        << StateVectorToName<StateVectorT>::name) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                NamedObs<StateVectorT> obs("Hadamard", {i});
+                Measurements<StateVectorT> Measurer_shots(statevector);
+                const PrecisionT theta = -M_PI / 4.0;
+                sv.applyOperation("RY", {i}, false, {theta});
+
+                Measurements<StateVectorT> Measurer(sv);
+
+                auto prob_shots = Measurer_shots.probs(obs);
+                auto prob = Measurer.probs({i});
+
+                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            }
+        }
+
+        DYNAMIC_SECTION("Test Identity"
+                        << StateVectorToName<StateVectorT>::name) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                NamedObs<StateVectorT> obs("Identity", {i});
+                Measurements<StateVectorT> Measurer_shots(statevector);
+
+                Measurements<StateVectorT> Measurer(sv);
+
+                auto prob_shots = Measurer_shots.probs(obs);
+                auto prob = Measurer.probs({i});
+
+                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            }
+        }
+
+        DYNAMIC_SECTION("Test TensorProd XYZ"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto Y2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
+
+            Measurements<StateVectorT> Measurer_shots(statevector);
+
+            sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                               {{0}, {2}, {2}, {2}},
+                               {false, false, false, false});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            auto prob_shots = Measurer_shots.probs(*obs);
+            auto prob = Measurer.probs({0, 1, 2});
+
+            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+        }
+
+        DYNAMIC_SECTION("Test TensorProd YHI"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto I2 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
+
+            Measurements<StateVectorT> Measurer_shots(statevector);
+
+            sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
+                               {false, false, false});
+            const PrecisionT theta = -M_PI / 4.0;
+            sv.applyOperation("RY", {1}, false, {theta});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            auto prob_shots = Measurer_shots.probs(*obs);
+            auto prob = Measurer.probs({0, 1, 2});
+
+            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+        }
+
+        testProbabilitiesObs<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities Obs shots", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilitiesObs<TestStateVectorBackends>();
+    }
+}
+
 template <typename TypeList> void testNamedObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;

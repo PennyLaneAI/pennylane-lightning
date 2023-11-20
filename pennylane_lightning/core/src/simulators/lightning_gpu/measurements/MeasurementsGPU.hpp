@@ -154,6 +154,18 @@ class Measurements final
     }
 
     /**
+     * @brief Probabilities of each computational basis state.
+     *
+     * @param obs Observable
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs) {
+        return BaseType::probs(obs);
+    }
+
+    /**
      * @brief Utility method for samples.
      *
      * @param num_samples Number of Samples
@@ -630,6 +642,20 @@ class Measurements final
             2));
         return (mean_square - squared_mean);
     };
+
+    /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs Observable
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point expected value of the observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
 
   private:
     /**

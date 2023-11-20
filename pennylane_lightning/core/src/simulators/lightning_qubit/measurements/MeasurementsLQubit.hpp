@@ -135,6 +135,18 @@ class Measurements final
     }
 
     /**
+     * @brief Probabilities of each computational basis state.
+     *
+     * @param obs Observable
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs) {
+        return BaseType::probs(obs);
+    }
+
+    /**
      * @brief Expected value of an observable.
      *
      * @param matrix Square matrix in row-major order.
