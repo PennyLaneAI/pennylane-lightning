@@ -19,6 +19,8 @@ namespace {
 using Pennylane::Util::isApproxEqual;
 } // namespace
 /// @endcond
+#include <algorithm>
+#include <string>
 
 #ifdef _ENABLE_PLQUBIT
 constexpr bool BACKEND_FOUND = true;
@@ -914,7 +916,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             {1.0, 1.0, 1.0}};
         for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
-                            << " SampleObs - Varying wires"
+                            << " Sample Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
                 size_t num_shots = 10000;
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
@@ -935,7 +937,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             }
 
             DYNAMIC_SECTION(obs_name[ind_obs]
-                            << " CountsObs - Varying wires"
+                            << " Counts Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
                 size_t num_shots = 10000;
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
@@ -955,6 +957,142 @@ template <typename TypeList> void testSamplesCountsObs() {
                 }
             }
         }
+
+        DYNAMIC_SECTION("samples() without obs"
+                        << StateVectorToName<StateVectorT>::name) {
+            constexpr size_t twos[] = {
+                1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,
+                1U << 5U,  1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,
+                1U << 10U, 1U << 11U, 1U << 12U, 1U << 13U, 1U << 14U,
+                1U << 15U, 1U << 16U, 1U << 17U, 1U << 18U, 1U << 19U,
+                1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U, 1U << 24U,
+                1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+                1U << 30U, 1U << 31U};
+
+            // Defining the State Vector that will be measured.
+            auto statevector_data = createNonTrivialState<StateVectorT>();
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+
+            // Initializing the measurements class.
+            // This object attaches to the statevector allowing several
+            // measurements.
+            Measurements<StateVectorT> Measurer(statevector);
+
+            std::vector<PrecisionT> expected_probabilities = {
+                0.67078706, 0.03062806, 0.0870997,  0.00397696,
+                0.17564072, 0.00801973, 0.02280642, 0.00104134};
+
+            size_t num_qubits = 3;
+            size_t N = std::pow(2, num_qubits);
+            size_t num_samples = 100000;
+            auto &&samples = Measurer.sample(num_samples);
+
+            std::vector<size_t> counts(N, 0);
+            std::vector<size_t> samples_decimal(num_samples, 0);
+
+            // convert samples to decimal and then bin them in counts
+            for (size_t i = 0; i < num_samples; i++) {
+                for (size_t j = 0; j < num_qubits; j++) {
+                    if (samples[i * num_qubits + j] != 0) {
+                        samples_decimal[i] += twos[(num_qubits - 1 - j)];
+                    }
+                }
+                counts[samples_decimal[i]] += 1;
+            }
+
+            // compute estimated probabilities from histogram
+            std::vector<PrecisionT> probabilities(counts.size());
+            for (size_t i = 0; i < counts.size(); i++) {
+                probabilities[i] = counts[i] / (PrecisionT)num_samples;
+            }
+
+            DYNAMIC_SECTION("No Observable provided - "
+                            << StateVectorToName<StateVectorT>::name) {
+                REQUIRE_THAT(probabilities,
+                             Catch::Approx(expected_probabilities).margin(.05));
+            }
+        }
+
+        DYNAMIC_SECTION("counts() without obs"
+                        << StateVectorToName<StateVectorT>::name) {
+            constexpr size_t twos[] = {
+                1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,
+                1U << 5U,  1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,
+                1U << 10U, 1U << 11U, 1U << 12U, 1U << 13U, 1U << 14U,
+                1U << 15U, 1U << 16U, 1U << 17U, 1U << 18U, 1U << 19U,
+                1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U, 1U << 24U,
+                1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+                1U << 30U, 1U << 31U};
+
+            std::vector<std::string> expected_keys = {
+                "000", "001", "010", "011", "100", "101", "110", "111"};
+
+            // Defining the State Vector that will be measured.
+            auto statevector_data = createNonTrivialState<StateVectorT>();
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+
+            // Initializing the measurements class.
+            // This object attaches to the statevector allowing several
+            // measurements.
+            Measurements<StateVectorT> Measurer(statevector);
+
+            std::vector<PrecisionT> expected_probabilities = {
+                0.67078706, 0.03062806, 0.0870997,  0.00397696,
+                0.17564072, 0.00801973, 0.02280642, 0.00104134};
+
+            size_t num_qubits = 3;
+            size_t N = std::pow(2, num_qubits);
+            size_t num_samples = 100000;
+
+            auto &&counts_sample = Measurer.counts(num_samples);
+
+            std::vector<size_t> counts(N, 0);
+
+            // convert samples to decimal and then bin them in counts
+            for (auto &it : counts_sample) {
+                std::vector<size_t> localBits(num_qubits, 10);
+                auto key = it.first;
+
+                bool found = false;
+
+                auto iter =
+                    std::find(expected_keys.begin(), expected_keys.end(), key);
+
+                if (iter != expected_keys.end()) {
+                    found = true;
+                }
+
+                REQUIRE(found == true);
+
+                size_t idx = 0;
+                size_t decimal_idx = 0;
+                for (char &c : key) {
+                    if (c == '1') {
+                        localBits[idx] = 1;
+                        decimal_idx += twos[(num_qubits - 1 - idx)];
+                    } else if (c == '0') {
+                        localBits[idx] = 0;
+                    }
+                    idx++;
+                }
+                for (auto &bit : localBits) {
+                    REQUIRE(bit * (bit - 1) == 0);
+                }
+                counts[decimal_idx] = it.second;
+            }
+
+            // compute estimated probabilities from histogram
+            std::vector<PrecisionT> probabilities(counts.size());
+            for (size_t i = 0; i < counts.size(); i++) {
+                probabilities[i] = counts[i] / (PrecisionT)num_samples;
+            }
+
+            REQUIRE_THAT(probabilities,
+                         Catch::Approx(expected_probabilities).margin(.05));
+        }
+
         testSamplesCountsObs<typename TypeList::Next>();
     }
 }

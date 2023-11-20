@@ -27,16 +27,6 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
-
-/*
-auto sample_to_str(const std::vector<size_t> &sample) -> std::string {
-    std::string str;
-    for (auto &element : sample) {
-        str += std::to_string(element);
-    }
-    return str;
-}
-*/
 } // namespace
 /// @endcond
 
@@ -334,11 +324,10 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * num_occurences}``
      */
     auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
-        -> std::unordered_map<std::string, size_t> {
+        -> std::unordered_map<PrecisionT, size_t> {
         std::unordered_map<PrecisionT, size_t> outcome_map;
         std::vector<size_t> shot_range = {};
         auto sample_data = sample(obs, num_shots);
-        size_t num_obs_wires = obs.getWires();
         for (size_t i = 0; i < num_shots; i++) {
             auto key = sample_data[i];
             auto it = outcome_map.find(key);
@@ -371,8 +360,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         for (size_t i = 0; i < num_shots; i++) {
             auto local_sample =
                 std::vector(sample_data.begin() + i * num_wires,
-                            sample_data.begin() + (i + 1) * num_wires - 1);
-            auto key = sample_to_str(local_sample);
+                            sample_data.begin() + (i + 1) * num_wires);
+
+            std::string key;
+            for (auto &element : local_sample) {
+                key += std::to_string(element);
+            }
+
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
                 it->second += 1;
