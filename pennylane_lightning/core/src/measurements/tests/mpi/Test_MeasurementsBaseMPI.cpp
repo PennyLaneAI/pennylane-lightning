@@ -1185,7 +1185,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
-                                               wires_list[ind_wires]);
+                                                  wires_list[ind_wires]);
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
                     auto samples = Measurer.sample(obs, num_shots);
 
@@ -1206,7 +1206,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
-                                               wires_list[ind_wires]);
+                                                  wires_list[ind_wires]);
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
                     auto samples = Measurer.counts(obs, num_shots);
 
