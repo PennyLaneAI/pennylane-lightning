@@ -128,8 +128,6 @@ template <typename TypeList> void testProbabilitiesObs() {
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
 
-        size_t num_qubits = 3;
-
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
@@ -848,7 +846,7 @@ template <typename TypeList> void testNamedObsVar() {
                                                   wires_list[ind_wires]);
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
                     size_t num_shots = 10000;
-                    PrecisionT result = Measurer.var(obs);
+                    PrecisionT result = Measurer.var(obs, num_shots);
                     REQUIRE(expected == Approx(result).margin(5e-2));
                 }
             }
@@ -1133,8 +1131,10 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
 template <typename TypeList> void testHamiltonianObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
-        // using PrecisionT = typename StateVectorT::PrecisionT;
-        // using ComplexT = typename StateVectorT::ComplexT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        auto statevector_data =
+            createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
 
         // Defining the State Vector that will be measured.
         size_t num_qubits = 3;
