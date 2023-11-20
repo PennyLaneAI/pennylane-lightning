@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ExpValFunctorsLQubit.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"
@@ -38,12 +39,26 @@
 #include "TransitionKernels.hpp"
 #include "Util.hpp" //transpose_state_tensor, sorting_indices
 
+#include "BitUtil.hpp"
+#include <iostream>
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
+using namespace Pennylane::LightningQubit::Functors;
+using Pennylane::Util::INVSQRT2;
+enum class ExpValFunc : uint32_t {
+    BEGIN = 1,
+    Identity = 1,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    END
+};
 } // namespace
 /// @endcond
 
@@ -67,7 +82,63 @@ class Measurements final
 
   public:
     explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector} {};
+        : BaseType{statevector} {
+        init_expval_funcs_();
+    };
+
+    /**
+     * @brief Templated method that returns the expectation value of named
+     * observables using in-place operations, without creating extra copy of
+     * the statevector.
+     *
+     * @tparam functor_t Expectation value functor class for in-place
+     * operations.
+     * @tparam nqubits Number of wires.
+     * @param wires Wires to which the observable is applied.
+     * @return expectation value of the observable.
+     */
+    template <template <class> class functor_t, size_t num_wires>
+    PrecisionT applyExpValNamedFunctor(const std::vector<size_t> &wires) {
+        if constexpr (num_wires > 0) {
+            PL_ASSERT(wires.size() == num_wires);
+        }
+
+        const size_t num_qubits = this->_statevector.getNumQubits();
+        auto arr_data = this->_statevector.getData();
+
+        PrecisionT expval = 0.0;
+        functor_t(arr_data, num_qubits, wires)(expval);
+
+        /*
+        size_t rev_wire = num_qubits - wires[0] - 1;
+        size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        size_t wire_parity = fillTrailingOnes(rev_wire);
+        size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        // ======
+        // PauliX
+        // ======
+        size_t k, i0, i1;
+        PrecisionT tmp_val = 0.0;
+        double t_start = omp_get_wtime();
+        #if defined(_OPENMP)
+        #pragma omp parallel for default(none) \
+        shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,
+        arr_data) \ private(k, i0, i1) reduction(+ : tmp_val) #endif for (k = 0;
+        k < exp2(num_qubits - 1); k++) { i0 =
+                ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            i1 = i0 | rev_wire_shift;
+
+            tmp_val += real(conj(arr_data[i0]) * arr_data[i1]) +
+                       real(conj(arr_data[i1]) * arr_data[i0]);
+        }
+        double t_stop = omp_get_wtime();
+        double t_elapsed = t_stop - t_start;
+        std::cout << "t_kernel_direct: " << t_elapsed << std::endl;
+        */
+
+        return expval;
+    }
 
     /**
      * @brief Probabilities of each computational basis state.
@@ -175,6 +246,83 @@ class Measurements final
         ComplexT expected_value = innerProdC(this->_statevector.getData(),
                                              operator_statevector.getData(),
                                              this->_statevector.getLength());
+
+        std::cout << "Inside expval" << std::endl;
+        std::cout << "operation: " << operation << std::endl;
+        std::cout << "wires.size(): " << wires.size() << std::endl;
+        size_t data_size = this->_statevector.getLength();
+        size_t num_qubits = this->_statevector.getNumQubits();
+        std::cout << "data_size: " << data_size << std::endl;
+        std::cout << "exp2(num_qubits - 1): " << exp2(num_qubits - 1)
+                  << std::endl;
+
+        // In-place evaluation
+        PrecisionT expval_inplace = 0;
+
+        double t_start = omp_get_wtime();
+        switch (expval_funcs_[operation]) {
+        case ExpValFunc::Identity:
+            // return
+            // applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+            //                                0>(wires);
+
+            expval_inplace =
+                applyExpValNamedFunctor<getExpectationValueIdentityFunctor, 0>(
+                    wires);
+            break;
+
+        case ExpValFunc::PauliX:
+            // return applyExpValNamedFunctor<getExpectationValuePauliXFunctor,
+            // 1>(
+            //     wires);
+            expval_inplace =
+                applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
+                    wires);
+            break;
+
+        case ExpValFunc::PauliY:
+            // return applyExpValNamedFunctor<getExpectationValuePauliYFunctor,
+            // 1>(
+            //     wires);
+            expval_inplace =
+                applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
+                    wires);
+            break;
+
+        case ExpValFunc::PauliZ:
+            // return applyExpValNamedFunctor<getExpectationValuePauliZFunctor,
+            // 1>(
+            //     wires);
+
+            expval_inplace =
+                applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
+                    wires);
+            break;
+
+        case ExpValFunc::Hadamard:
+            // return
+            // applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
+            //                                1>(wires);
+
+            expval_inplace =
+                applyExpValNamedFunctor<getExpectationValueHadamardFunctor, 1>(
+                    wires);
+            break;
+
+        default:
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
+            break;
+        }
+        double t_stop = omp_get_wtime();
+        double duration = t_stop - t_start;
+        std::cout << "duration: " << duration << std::endl;
+
+        PrecisionT err_expval =
+            std::abs(std::real(expected_value) - expval_inplace);
+        std::cout << "err_expval: " << err_expval << std::endl;
+
         return std::real(expected_value);
     };
 
@@ -661,5 +809,22 @@ class Measurements final
         }
         return init_idx;
     }
+
+    std::unordered_map<std::string, ExpValFunc> expval_funcs_;
+
+    // clang-format off
+        /**
+        * @brief Register generator operations in the generators_indices_ attribute:
+        *        an unordered_map mapping strings to GateOperation enumeration keywords.
+        */
+        void init_expval_funcs_() {
+            expval_funcs_["Identity"] = ExpValFunc::Identity;
+            expval_funcs_["PauliX"]   = ExpValFunc::PauliX;
+            expval_funcs_["PauliY"]   = ExpValFunc::PauliY;
+            expval_funcs_["PauliZ"]   = ExpValFunc::PauliZ;
+            expval_funcs_["Hadamard"] = ExpValFunc::Hadamard;
+        }
+    // clang-format on
+
 }; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
