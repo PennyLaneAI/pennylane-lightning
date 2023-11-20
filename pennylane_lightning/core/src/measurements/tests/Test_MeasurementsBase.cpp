@@ -969,16 +969,6 @@ template <typename TypeList> void testSamplesCountsObs() {
                 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
                 1U << 30U, 1U << 31U};
 
-            // Defining the State Vector that will be measured.
-            auto statevector_data = createNonTrivialState<StateVectorT>();
-            StateVectorT statevector(statevector_data.data(),
-                                     statevector_data.size());
-
-            // Initializing the measurements class.
-            // This object attaches to the statevector allowing several
-            // measurements.
-            Measurements<StateVectorT> Measurer(statevector);
-
             std::vector<PrecisionT> expected_probabilities = {
                 0.67078706, 0.03062806, 0.0870997,  0.00397696,
                 0.17564072, 0.00801973, 0.02280642, 0.00104134};
@@ -1027,16 +1017,6 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             std::vector<std::string> expected_keys = {
                 "000", "001", "010", "011", "100", "101", "110", "111"};
-
-            // Defining the State Vector that will be measured.
-            auto statevector_data = createNonTrivialState<StateVectorT>();
-            StateVectorT statevector(statevector_data.data(),
-                                     statevector_data.size());
-
-            // Initializing the measurements class.
-            // This object attaches to the statevector allowing several
-            // measurements.
-            Measurements<StateVectorT> Measurer(statevector);
 
             std::vector<PrecisionT> expected_probabilities = {
                 0.67078706, 0.03062806, 0.0870997,  0.00397696,
