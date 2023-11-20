@@ -885,6 +885,86 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
     }
 }
 
+template <typename TypeList> void testSamplesCountsObs() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several
+        // measurements.
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
+                                             "Hadamard", "Identity"};
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::vector<PrecisionT>> exp_values_ref = {
+            {0.49272486, 0.42073549, 0.28232124},
+            {-0.64421768, -0.47942553, -0.29552020},
+            {0.58498357, 0.77015115, 0.91266780},
+            {0.7620549436, 0.8420840225, 0.8449848566},
+            {1.0, 1.0, 1.0}};
+        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " SampleObs - Varying wires"
+                            << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    auto samples = Measurer.sample(obs, num_shots);
+
+                    PrecisionT result = 0.0;
+                    for (auto &it : samples) {
+                        result += it;
+                    }
+                    result /= num_shots;
+
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+
+            DYNAMIC_SECTION(obs_name[ind_obs]
+                            << " CountsObs - Varying wires"
+                            << StateVectorToName<StateVectorT>::name) {
+                size_t num_shots = 10000;
+                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                     ind_wires++) {
+                    NamedObs<StateVectorT> obs(obs_name[ind_obs],
+                                               wires_list[ind_wires]);
+                    PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
+                    auto samples = Measurer.counts(obs, num_shots);
+
+                    PrecisionT result = 0.0;
+                    for (auto &it : samples) {
+                        result += it.first * it.second;
+                    }
+                    result /= num_shots;
+
+                    REQUIRE(expected == Approx(result).margin(5e-2));
+                }
+            }
+        }
+        testSamplesCountsObs<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Samples Obs", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSamplesCountsObs<TestStateVectorBackends>();
+    }
+}
+
 template <typename TypeList> void testHamiltonianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;

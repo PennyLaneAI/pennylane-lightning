@@ -306,8 +306,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         std::vector<size_t> obs_wires;
         std::vector<size_t> identity_wires;
         std::vector<size_t> shot_range = {};
-        return _sample_state(obs, num_shots, shot_range, obs_wires,
-                             identity_wires);
+        size_t term_idx = 0;
+
+        return measure_with_samples(obs, num_shots, shot_range, term_idx);
     }
 
     /**
@@ -334,15 +335,12 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
         -> std::unordered_map<std::string, size_t> {
-        std::unordered_map<std::string, size_t> outcome_map;
+        std::unordered_map<PrecisionT, size_t> outcome_map;
         std::vector<size_t> shot_range = {};
-        auto sample_data = sample(obs, num_shots, shot_range);
+        auto sample_data = sample(obs, num_shots);
         size_t num_obs_wires = obs.getWires();
         for (size_t i = 0; i < num_shots; i++) {
-            auto local_sample =
-                std::vector(sample_data.begin() + i * num_obs_wires,
-                            sample_data.begin() + (i + 1) * num_obs_wires - 1);
-            auto key = sample_to_str(local_sample);
+            auto key = sample_data[i];
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
                 it->second += 1;
