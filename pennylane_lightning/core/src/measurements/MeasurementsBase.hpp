@@ -229,20 +229,26 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Probability of each computational basis state for an observable.
+     * @brief Calculate the variance for an observable with the number of shots.
      *
      * @param obs An observable object.
      * @param num_shots Number of shots used to generate samples
      *
-     * @return Floating point std::vector with probabilities.
-     * The basis columns are rearranged according to wires.
+     * @return Variance of the given observable.
      */
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
         if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+            // Branch for NamedObs and TensorProd observables
             auto square_mean = expval(obs, num_shots, {});
-            PrecisionT result = 1 - square_mean * square_mean;
+            PrecisionT result =
+                1 - square_mean *
+                        square_mean; //`1` used here is because Eigenvalues for
+                                     // Paulis, Hadamard and Identity are {-1,
+                                     // 1}. Need to change based on eigen values
+                                     // when add Hermitian support.
             return result;
         }
+        // Branch for Hamiltonian observables
         auto coeffs = obs.getCoeffs();
         PrecisionT result{0.0};
         size_t obs_term_idx = 0;
@@ -254,7 +260,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
             auto term_mean = expval_per_term / obs_samples.size();
 
-            result += coeff * coeff * (1 - term_mean * term_mean);
+            result +=
+                coeff * coeff *
+                (1 - term_mean *
+                         term_mean); //`1` used here is because Eigenvalues for
+                                     // Paulis, Hadamard and Identity are {-1,
+                                     // 1}. Need to change based on eigen values
+                                     // when add Hermitian support.
             obs_term_idx++;
         }
         return result;
@@ -281,14 +293,15 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Return samples of a observable
+     * @brief Return samples drawn from eigenvalues of the observable
      *
-     * @param obs The observable to sample
+     * @param obs The observable object to sample
      * @param num_shots Number of shots used to generate samples
      *
-     * @return std::vector<size_t> samples in std::vector
+     * @return samples of eigenvalues of the observable
      */
-    auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots) {
+    auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
@@ -301,26 +314,26 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Return generated samples
+     * @brief Return the raw basis state samples
      *
      * @param num_shots Number of shots used to generate samples
      *
-     * @return std::vector<size_t> samples in std::vector
+     * @return the raw basis state samples
      */
-    auto sample(const size_t &num_shots) {
+    auto sample(const size_t &num_shots) -> std::vector<size_t> {
         Derived measure(_statevector);
         return measure.generate_samples(num_shots);
     }
 
     /**
-     * @brief Groups the samples into a dictionary showing number of occurences
-     * for each possible outcome.
+     * @brief Groups the eigen values of samples into a dictionary showing
+     * number of occurences for each possible outcome with the number of shots.
      *
      * @param obs The observable to sample
      * @param num_shots number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
-     * num_occurences}``
+     * @return std::unordered_map<PrecisionT, size_t> with format
+     * ``{'EigenValue': num_occurences}``
      */
     auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
         -> std::unordered_map<PrecisionT, size_t> {
@@ -341,7 +354,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
     /**
      * @brief Groups the samples into a dictionary showing number of occurences
-     * for each possible outcome.
+     * for each possible outcome with the number of shots.
      *
      * @param num_shots number of wires the sampled observable was performed on
      *

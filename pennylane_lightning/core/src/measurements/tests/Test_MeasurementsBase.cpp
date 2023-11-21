@@ -897,9 +897,14 @@ template <typename TypeList> void testSamplesCountsObs() {
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        // Initializing the measurements class.
-        // This object attaches to the statevector allowing several
-        // measurements.
+        constexpr size_t twos[] = {
+            1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
+            1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
+            1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
+            1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
+            1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+            1U << 30U, 1U << 31U};
+
         // Initializing the measures class.
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
@@ -960,15 +965,6 @@ template <typename TypeList> void testSamplesCountsObs() {
 
         DYNAMIC_SECTION("samples() without obs"
                         << StateVectorToName<StateVectorT>::name) {
-            constexpr size_t twos[] = {
-                1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,
-                1U << 5U,  1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,
-                1U << 10U, 1U << 11U, 1U << 12U, 1U << 13U, 1U << 14U,
-                1U << 15U, 1U << 16U, 1U << 17U, 1U << 18U, 1U << 19U,
-                1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U, 1U << 24U,
-                1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
-                1U << 30U, 1U << 31U};
-
             std::vector<PrecisionT> expected_probabilities = {
                 0.67078706, 0.03062806, 0.0870997,  0.00397696,
                 0.17564072, 0.00801973, 0.02280642, 0.00104134};
@@ -997,24 +993,12 @@ template <typename TypeList> void testSamplesCountsObs() {
                 probabilities[i] = counts[i] / (PrecisionT)num_samples;
             }
 
-            DYNAMIC_SECTION("No Observable provided - "
-                            << StateVectorToName<StateVectorT>::name) {
-                REQUIRE_THAT(probabilities,
-                             Catch::Approx(expected_probabilities).margin(.05));
-            }
+            REQUIRE_THAT(probabilities,
+                         Catch::Approx(expected_probabilities).margin(.05));
         }
 
         DYNAMIC_SECTION("counts() without obs"
                         << StateVectorToName<StateVectorT>::name) {
-            constexpr size_t twos[] = {
-                1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,
-                1U << 5U,  1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,
-                1U << 10U, 1U << 11U, 1U << 12U, 1U << 13U, 1U << 14U,
-                1U << 15U, 1U << 16U, 1U << 17U, 1U << 18U, 1U << 19U,
-                1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U, 1U << 24U,
-                1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
-                1U << 30U, 1U << 31U};
-
             std::vector<std::string> expected_keys = {
                 "000", "001", "010", "011", "100", "101", "110", "111"};
 
