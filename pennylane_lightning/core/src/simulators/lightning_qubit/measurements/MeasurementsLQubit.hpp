@@ -103,11 +103,11 @@ class Measurements final
             PL_ASSERT(wires.size() == num_wires);
         }
 
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        auto arr_data = this->_statevector.getData();
+        size_t num_qubits = this->_statevector.getNumQubits();
+        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
 
         PrecisionT expval = 0.0;
-        functor_t(arr_data, num_qubits, wires)(expval);
+        functor_t<PrecisionT>(arr_data, num_qubits, wires)(expval);
 
         /*
         size_t rev_wire = num_qubits - wires[0] - 1;

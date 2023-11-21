@@ -14,22 +14,22 @@
 #pragma once
 
 #include "BitUtil.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Pennylane::Util::INVSQRT2;
 } // namespace
 /// @endcond
 
 namespace Pennylane::LightningQubit::Functors {
 
 template <class PrecisionT> struct getExpectationValueIdentityFunctor {
-    std::complex<PrecisionT> *arr;
+    const std::complex<PrecisionT> *arr;
     size_t num_qubits;
 
     getExpectationValueIdentityFunctor(
-        std::complex<PrecisionT> *arr_,
+        const std::complex<PrecisionT> *arr_,
         [[maybe_unused]] std::size_t num_qubits_,
         [[maybe_unused]] const std::vector<size_t> &wires) {
         arr = arr_;
@@ -49,7 +49,7 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
-    std::complex<PrecisionT> *arr;
+    const std::complex<PrecisionT> *arr;
     size_t num_qubits;
 
     size_t rev_wire;
@@ -57,7 +57,7 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     size_t wire_parity;
     size_t wire_parity_inv;
 
-    getExpectationValuePauliXFunctor(std::complex<PrecisionT> *arr_,
+    getExpectationValuePauliXFunctor(const std::complex<PrecisionT> *arr_,
                                      std::size_t num_qubits_,
                                      const std::vector<size_t> &wires) {
         arr = arr_;
@@ -69,7 +69,9 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     }
 
     inline void operator()(PrecisionT &expval) const {
-        size_t k, i0, i1;
+        size_t k;
+        size_t i0;
+        size_t i1;
 #if defined(_OPENMP)
 #pragma omp parallel for default(none)                                         \
     shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,           \
@@ -86,7 +88,7 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliYFunctor {
-    std::complex<PrecisionT> *arr;
+    const std::complex<PrecisionT> *arr;
     size_t num_qubits;
 
     size_t rev_wire;
@@ -94,7 +96,7 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
     size_t wire_parity;
     size_t wire_parity_inv;
 
-    getExpectationValuePauliYFunctor(std::complex<PrecisionT> *arr_,
+    getExpectationValuePauliYFunctor(const std::complex<PrecisionT> *arr_,
                                      std::size_t num_qubits_,
                                      const std::vector<size_t> &wires) {
         arr = arr_;
@@ -106,8 +108,11 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
     }
 
     inline void operator()(PrecisionT &expval) const {
-        size_t k, i0, i1;
-        std::complex<PrecisionT> v0, v1;
+        size_t k;
+        size_t i0;
+        size_t i1;
+        std::complex<PrecisionT> v0;
+        std::complex<PrecisionT> v1;
 #if defined(_OPENMP)
 #pragma omp parallel for default(none)                                         \
     shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,           \
@@ -128,7 +133,7 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValuePauliZFunctor {
-    std::complex<PrecisionT> *arr;
+    const std::complex<PrecisionT> *arr;
     size_t num_qubits;
 
     size_t rev_wire;
@@ -136,7 +141,7 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
     size_t wire_parity;
     size_t wire_parity_inv;
 
-    getExpectationValuePauliZFunctor(std::complex<PrecisionT> *arr_,
+    getExpectationValuePauliZFunctor(const std::complex<PrecisionT> *arr_,
                                      std::size_t num_qubits_,
                                      const std::vector<size_t> &wires) {
         arr = arr_;
@@ -148,7 +153,9 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
     }
 
     inline void operator()(PrecisionT &expval) const {
-        size_t k, i0, i1;
+        size_t k;
+        size_t i0;
+        size_t i1;
 #if defined(_OPENMP)
 #pragma omp parallel for default(none)                                         \
     shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,           \
@@ -166,7 +173,7 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
 };
 
 template <class PrecisionT> struct getExpectationValueHadamardFunctor {
-    std::complex<PrecisionT> *arr;
+    const std::complex<PrecisionT> *arr;
     size_t num_qubits;
 
     size_t rev_wire;
@@ -174,9 +181,9 @@ template <class PrecisionT> struct getExpectationValueHadamardFunctor {
     size_t wire_parity;
     size_t wire_parity_inv;
 
-    constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
+    PrecisionT isqrt2 = INVSQRT2<PrecisionT>();
 
-    getExpectationValueHadamardFunctor(std::complex<PrecisionT> *arr_,
+    getExpectationValueHadamardFunctor(const std::complex<PrecisionT> *arr_,
                                        std::size_t num_qubits_,
                                        const std::vector<size_t> &wires) {
         arr = arr_;
@@ -188,8 +195,11 @@ template <class PrecisionT> struct getExpectationValueHadamardFunctor {
     }
 
     inline void operator()(PrecisionT &expval) const {
-        size_t k, i0, i1;
-        std::complex<PrecisionT> v0, v1;
+        size_t k;
+        size_t i0;
+        size_t i1;
+        std::complex<PrecisionT> v0;
+        std::complex<PrecisionT> v1;
 #if defined(_OPENMP)
 #pragma omp parallel for default(none)                                         \
     shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,           \
