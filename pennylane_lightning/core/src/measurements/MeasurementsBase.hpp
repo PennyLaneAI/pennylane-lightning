@@ -273,10 +273,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Probability of each computational basis state for an observable.
+     * @brief Probabilities of each computational basis state for an observable.
      *
      * @param obs An observable object.
-     * @param num_shots Number of shots used to generate samples
      *
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.

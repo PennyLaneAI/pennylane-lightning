@@ -458,12 +458,12 @@ class Measurements final
     };
 
     /**
-     * @brief Expectation value for a Observable with shots
+     * @brief Calculate the variance for an observable with the number of shots.
      *
-     * @param obs Observable
+     * @param obs An observable object.
      * @param num_shots Number of shots.
      *
-     * @return Floating point expected value of the observable.
+     * @return Variance of the given observable.
      */
 
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
@@ -607,9 +607,9 @@ class Measurements final
     }
 
     /**
-     * @brief Probabilities of each computational basis state.
+     * @brief Probabilities of each computational basis state for an observable.
      *
-     * @param obs Observable
+     * @param obs An observable object.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
