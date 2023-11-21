@@ -50,7 +50,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+Isaac De Vlugt, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
