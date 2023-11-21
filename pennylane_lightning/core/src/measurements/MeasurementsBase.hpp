@@ -242,23 +242,22 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             auto square_mean = expval(obs, num_shots, {});
             PrecisionT result = 1 - square_mean * square_mean;
             return result;
-        } else {
-            auto coeffs = obs.getCoeffs();
-            PrecisionT result{0.0};
-            size_t obs_term_idx = 0;
-            for (const auto &coeff : coeffs) {
-                std::vector<size_t> shot_range = {};
-                auto obs_samples = measure_with_samples(
-                    obs, num_shots, shot_range, obs_term_idx);
-                PrecisionT expval_per_term = std::accumulate(
-                    obs_samples.begin(), obs_samples.end(), 0.0);
-                auto term_mean = expval_per_term / obs_samples.size();
-
-                result += coeff * coeff * (1 - term_mean * term_mean);
-                obs_term_idx++;
-            }
-            return result;
         }
+        auto coeffs = obs.getCoeffs();
+        PrecisionT result{0.0};
+        size_t obs_term_idx = 0;
+        for (const auto &coeff : coeffs) {
+            std::vector<size_t> shot_range = {};
+            auto obs_samples =
+                measure_with_samples(obs, num_shots, shot_range, obs_term_idx);
+            PrecisionT expval_per_term =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
+            auto term_mean = expval_per_term / obs_samples.size();
+
+            result += coeff * coeff * (1 - term_mean * term_mean);
+            obs_term_idx++;
+        }
+        return result;
     }
 
     /**
