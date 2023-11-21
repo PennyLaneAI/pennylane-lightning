@@ -154,7 +154,7 @@ class Measurements final
     }
 
     /**
-     * @brief Probability of each computational basis state for an observable.
+     * @brief Probabilities of each computational basis state for an observable.
      *
      * @param obs An observable object.
      *

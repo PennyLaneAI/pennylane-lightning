@@ -1293,7 +1293,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                 if (iter != expected_keys.end()) {
                     found = true;
                 }
-
+                // keys in the map should be found in expected_keys
                 REQUIRE(found == true);
 
                 size_t idx = 0;
@@ -1308,6 +1308,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                     idx++;
                 }
                 for (auto &bit : localBits) {
+                    // bit values should be either 0 or 1
                     REQUIRE(bit * (bit - 1) == 0);
                 }
                 counts[decimal_idx] = it.second;
@@ -1341,7 +1342,6 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
 
-        // Defining the State Vector that will be measured.
         size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
