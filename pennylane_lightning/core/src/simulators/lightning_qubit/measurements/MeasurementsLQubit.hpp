@@ -236,94 +236,35 @@ class Measurements final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
-
-        operator_statevector.applyOperation(operation, wires);
-
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-
-        std::cout << "Inside expval" << std::endl;
-        std::cout << "operation: " << operation << std::endl;
-        std::cout << "wires.size(): " << wires.size() << std::endl;
-        size_t data_size = this->_statevector.getLength();
-        size_t num_qubits = this->_statevector.getNumQubits();
-        std::cout << "data_size: " << data_size << std::endl;
-        std::cout << "exp2(num_qubits - 1): " << exp2(num_qubits - 1)
-                  << std::endl;
-
-        // In-place evaluation
-        PrecisionT expval_inplace = 0;
-
-        double t_start = omp_get_wtime();
+        // In-place calculation of expval without creating duplicate of the
+        // statevector.
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            // return
-            // applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
-            //                                0>(wires);
-
-            expval_inplace =
-                applyExpValNamedFunctor<getExpectationValueIdentityFunctor, 0>(
-                    wires);
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+                                           0>(wires);
             break;
-
         case ExpValFunc::PauliX:
-            // return applyExpValNamedFunctor<getExpectationValuePauliXFunctor,
-            // 1>(
-            //     wires);
-            expval_inplace =
-                applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
-                    wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
+                wires);
             break;
-
         case ExpValFunc::PauliY:
-            // return applyExpValNamedFunctor<getExpectationValuePauliYFunctor,
-            // 1>(
-            //     wires);
-            expval_inplace =
-                applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
-                    wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
+                wires);
             break;
-
         case ExpValFunc::PauliZ:
-            // return applyExpValNamedFunctor<getExpectationValuePauliZFunctor,
-            // 1>(
-            //     wires);
-
-            expval_inplace =
-                applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
-                    wires);
+            return applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
+                wires);
             break;
-
         case ExpValFunc::Hadamard:
-            // return
-            // applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
-            //                                1>(wires);
-
-            expval_inplace =
-                applyExpValNamedFunctor<getExpectationValueHadamardFunctor, 1>(
-                    wires);
+            return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
+                                           1>(wires);
             break;
-
         default:
             PL_ABORT(
                 std::string("Expval does not exist for named observable ") +
                 operation);
             break;
         }
-        double t_stop = omp_get_wtime();
-        double duration = t_stop - t_start;
-        std::cout << "duration: " << duration << std::endl;
-
-        PrecisionT err_expval =
-            std::abs(std::real(expected_value) - expval_inplace);
-        std::cout << "err_expval: " << err_expval << std::endl;
-
-        return std::real(expected_value);
     };
 
     /**
