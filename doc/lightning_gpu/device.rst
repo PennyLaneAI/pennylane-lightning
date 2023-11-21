@@ -17,7 +17,7 @@ The ``lightning.gpu`` device also directly supports quantum circuit gradients us
 
 .. code-block:: python
 
-    qml.qnode(dev, diff_method="adjoint")
+    @qml.qnode(dev, diff_method="adjoint")
     def circuit(params):
         ...
 
