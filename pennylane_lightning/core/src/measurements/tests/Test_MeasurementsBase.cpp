@@ -162,12 +162,15 @@ template <typename TypeList> void testNamedObsExpval() {
         Measurements<StateVectorT> Measurer(statevector);
 
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
-        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ"};
+        std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
+                                             "Hadamard", "Identity"};
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::vector<PrecisionT>> exp_values_ref = {
             {0.49272486, 0.42073549, 0.28232124},
             {-0.64421768, -0.47942553, -0.29552020},
-            {0.58498357, 0.77015115, 0.91266780}};
+            {0.58498357, 0.77015115, 0.91266780},
+            {0.76205494, 0.84208402, 0.84498485},
+            {1.0, 1.0, 1.0}};
 
         for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
