@@ -255,14 +255,17 @@ class LightningBase(QubitDevice):
         return int(qml.math.dot(state, basis_states))
 
     # pylint: disable=too-many-function-args, assignment-from-no-return
-    def _process_jacobian_tape(self, tape, starting_state, use_device_state, use_mpi: bool = False):
+    def _process_jacobian_tape(
+        self, tape, starting_state, use_device_state, split_obs: bool = True, use_mpi: bool = False
+    ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
-        obs_serialized = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, use_mpi
+        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+            self.short_name, self.use_csingle, split_obs, use_mpi
         ).serialize_observables(tape, self.wire_map)
+
         ops_serialized, use_sp = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, use_mpi
+            self.short_name, self.use_csingle, split_obs, use_mpi
         ).serialize_ops(tape, self.wire_map)
 
         ops_serialized = self.create_ops_list(*ops_serialized)
@@ -300,6 +303,7 @@ class LightningBase(QubitDevice):
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
+            "obs_idx_offsets": obs_idx_offsets,
         }
 
     # pylint: disable=unnecessary-pass

@@ -52,9 +52,12 @@ class QuantumScriptSerializer:
     """
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
-    def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
+    def __init__(
+        self, device_name, use_csingle: bool = False, split_obs: bool = False, use_mpi: bool = False
+    ):
         self.use_csingle = use_csingle
         self.device_name = device_name
+        self.split_obs = split_obs
         if device_name == "lightning.qubit":
             try:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
@@ -189,6 +192,10 @@ class QuantumScriptSerializer:
     def _hamiltonian(self, observable, wires_map: dict):
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in observable.ops]
+
+        if self.split_obs:
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
+
         return self.hamiltonian_obs(coeffs, terms)
 
     def _sparse_hamiltonian(self, observable, wires_map: dict):
@@ -240,6 +247,9 @@ class QuantumScriptSerializer:
         pwords, coeffs = zip(*observable.items())
         terms = [self._pauli_word(pw, wires_map) for pw in pwords]
         coeffs = np.array(coeffs).astype(self.rtype)
+
+        if self.split_obs:
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access
@@ -269,7 +279,19 @@ class QuantumScriptSerializer:
                 the C++ backend
         """
 
-        return [self._ob(observable, wires_map) for observable in tape.observables]
+        serialized_obs = []
+        offset_indices = [0]
+
+        for observable in tape.observables:
+            ser_ob = self._ob(observable, wires_map)
+            if isinstance(ser_ob, list):
+                serialized_obs.extend(ser_ob)
+                offset_indices.append(offset_indices[-1] + len(ser_ob))
+            else:
+                serialized_obs.append(ser_ob)
+                offset_indices.append(offset_indices[-1] + 1)
+
+        return serialized_obs, offset_indices
 
     def serialize_ops(
         self, tape: QuantumTape, wires_map: dict

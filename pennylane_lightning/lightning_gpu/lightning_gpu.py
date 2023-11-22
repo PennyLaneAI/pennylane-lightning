@@ -694,12 +694,42 @@ if LGPU_CPP_BINARY_AVAILABLE:
             if self._batch_obs:
                 adjoint_jacobian = adjoint_jacobian.batched
 
-            jac = adjoint_jacobian(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
+            if self._batch_obs:
+                adjoint_jacobian = adjoint_jacobian.batched
+
+                if not self._mpi:
+                    num_obs = len(processed_data["obs_serialized"])
+                    batch_size = (
+                        num_obs
+                        if isinstance(self._batch_obs, bool)
+                        else self._batch_obs * self._dp.getTotalDevices()
+                    )
+                    jac = []
+                    for chunk in range(0, num_obs, batch_size):
+                        obs_chunk = processed_data["obs_serialized"][chunk : chunk + batch_size]
+                        jac_chunk = adjoint_jacobian(
+                            self._gpu_state,
+                            obs_chunk,
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+                        jac.extend(jac_chunk)
+                else:
+                    if self._batch_obs is True:
+                        jac = adjoint_jacobian(
+                            self._gpu_state,
+                            processed_data["obs_serialized"],
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+
+            else:
+                jac = adjoint_jacobian(
+                    processed_data["state_vector"],
+                    processed_data["obs_serialized"],
+                    processed_data["ops_serialized"],
+                    trainable_params,
+                )
 
             jac = np.array(jac)  # only for parameters differentiable with the adjoint method
             jac = jac.reshape(-1, len(trainable_params))
@@ -707,8 +737,29 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             jac_r[:, processed_data["record_tp_rows"]] = jac
 
-            if hasattr(qml, "active_return"):
-                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            # Reduce over decomposed expval(H), if required.
+            for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                if (
+                    processed_data["obs_idx_offsets"][idx + 1]
+                    - processed_data["obs_idx_offsets"][idx]
+                ) > 1:
+                    jac_r[idx, :] = np.sum(
+                        jac[
+                            processed_data["obs_idx_offsets"][idx] : processed_data[
+                                "obs_idx_offsets"
+                            ][idx + 1],
+                            :,
+                        ],
+                        axis=0,
+                    )
+                else:
+                    jac_r[idx, :] = jac[
+                        processed_data["obs_idx_offsets"][idx] : processed_data["obs_idx_offsets"][
+                            idx + 1
+                        ],
+                        :,
+                    ]
+
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
