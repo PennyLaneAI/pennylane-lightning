@@ -691,8 +691,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
-            if self._batch_obs:
-                if not self._mpi:
+            if self._batch_obs:  # Batching of Measurements
+                if not self._mpi:  # Single-node path, controlled batching over available GPUs
                     num_obs = len(processed_data["obs_serialized"])
                     batch_size = (
                         num_obs
@@ -709,18 +709,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
                             trainable_params,
                         )
                         jac.extend(jac_chunk)
-                else:
-                    if self._batch_obs is True:
-                        jac = adjoint_jacobian.batched(
-                            self._gpu_state,
-                            processed_data["obs_serialized"],
-                            processed_data["ops_serialized"],
-                            trainable_params,
-                        )
+                else:  # MPI path, restrict memory per known GPUs
+                    jac = adjoint_jacobian.batched(
+                        self._gpu_state,
+                        processed_data["obs_serialized"],
+                        processed_data["ops_serialized"],
+                        trainable_params,
+                    )
 
             else:
                 jac = adjoint_jacobian(
-                    processed_data["state_vector"],
+                    self._gpu_state,
                     processed_data["obs_serialized"],
                     processed_data["ops_serialized"],
                     trainable_params,
