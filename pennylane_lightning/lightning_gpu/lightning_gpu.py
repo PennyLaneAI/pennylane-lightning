@@ -673,7 +673,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._check_adjdiff_supported_operations(tape.operations)
 
             processed_data = self._process_jacobian_tape(
-                tape, starting_state, use_device_state, self._mpi
+                tape, starting_state, use_device_state, self._mpi, self._batch_obs
             )
 
             if not processed_data:  # training_params is empty
@@ -692,11 +692,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
             if self._batch_obs:
-                adjoint_jacobian = adjoint_jacobian.batched
-
-            if self._batch_obs:
-                adjoint_jacobian = adjoint_jacobian.batched
-
                 if not self._mpi:
                     num_obs = len(processed_data["obs_serialized"])
                     batch_size = (
@@ -716,7 +711,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         jac.extend(jac_chunk)
                 else:
                     if self._batch_obs is True:
-                        jac = adjoint_jacobian(
+                        jac = adjoint_jacobian.batched(
                             self._gpu_state,
                             processed_data["obs_serialized"],
                             processed_data["ops_serialized"],

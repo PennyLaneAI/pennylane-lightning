@@ -53,7 +53,7 @@ class QuantumScriptSerializer:
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(
-        self, device_name, use_csingle: bool = False, split_obs: bool = False, use_mpi: bool = False
+        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -290,7 +290,6 @@ class QuantumScriptSerializer:
             else:
                 serialized_obs.append(ser_ob)
                 offset_indices.append(offset_indices[-1] + 1)
-
         return serialized_obs, offset_indices
 
     def serialize_ops(

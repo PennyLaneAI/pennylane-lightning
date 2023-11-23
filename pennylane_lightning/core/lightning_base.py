@@ -256,16 +256,16 @@ class LightningBase(QubitDevice):
 
     # pylint: disable=too-many-function-args, assignment-from-no-return
     def _process_jacobian_tape(
-        self, tape, starting_state, use_device_state, split_obs: bool = True, use_mpi: bool = False
+        self, tape, starting_state, use_device_state, use_mpi: bool = False, split_obs: bool = False
     ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, split_obs, use_mpi
+            self.short_name, self.use_csingle, use_mpi, split_obs
         ).serialize_observables(tape, self.wire_map)
 
         ops_serialized, use_sp = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, split_obs, use_mpi
+            self.short_name, self.use_csingle, use_mpi, split_obs
         ).serialize_ops(tape, self.wire_map)
 
         ops_serialized = self.create_ops_list(*ops_serialized)
