@@ -185,7 +185,6 @@ else: # Allow ease of install during development
         version_dep = version.split("-", 2)[0]+".*"
         requirements += ["pennylane_lightning==" + version_dep]
 
-
 suffix = backend.replace("lightning_", "")
 if suffix == "gpu":
     suffix = suffix[0:].upper()
