@@ -39,9 +39,6 @@
 #include "TransitionKernels.hpp"
 #include "Util.hpp" //transpose_state_tensor, sorting_indices
 
-#include "BitUtil.hpp"
-#include <iostream>
-
 /// @cond DEV
 namespace {
 using namespace Pennylane::Measures;
@@ -108,34 +105,6 @@ class Measurements final
 
         PrecisionT expval = 0.0;
         functor_t<PrecisionT>(arr_data, num_qubits, wires)(expval);
-
-        /*
-        size_t rev_wire = num_qubits - wires[0] - 1;
-        size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        size_t wire_parity = fillTrailingOnes(rev_wire);
-        size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
-
-        // ======
-        // PauliX
-        // ======
-        size_t k, i0, i1;
-        PrecisionT tmp_val = 0.0;
-        double t_start = omp_get_wtime();
-        #if defined(_OPENMP)
-        #pragma omp parallel for default(none) \
-        shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift,
-        arr_data) \ private(k, i0, i1) reduction(+ : tmp_val) #endif for (k = 0;
-        k < exp2(num_qubits - 1); k++) { i0 =
-                ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            i1 = i0 | rev_wire_shift;
-
-            tmp_val += real(conj(arr_data[i0]) * arr_data[i1]) +
-                       real(conj(arr_data[i1]) * arr_data[i0]);
-        }
-        double t_stop = omp_get_wtime();
-        double t_elapsed = t_stop - t_start;
-        std::cout << "t_kernel_direct: " << t_elapsed << std::endl;
-        */
 
         return expval;
     }
@@ -242,23 +211,18 @@ class Measurements final
         case ExpValFunc::Identity:
             return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
                                            0>(wires);
-            break;
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);
-            break;
         case ExpValFunc::PauliY:
             return applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
                 wires);
-            break;
         case ExpValFunc::PauliZ:
             return applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
                 wires);
-            break;
         case ExpValFunc::Hadamard:
             return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
                                            1>(wires);
-            break;
         default:
             PL_ABORT(
                 std::string("Expval does not exist for named observable ") +
