@@ -702,7 +702,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     jac = []
                     for chunk in range(0, num_obs, batch_size):
                         obs_chunk = processed_data["obs_serialized"][chunk : chunk + batch_size]
-                        jac_chunk = adjoint_jacobian(
+                        jac_chunk = adjoint_jacobian.batched(
                             self._gpu_state,
                             obs_chunk,
                             processed_data["ops_serialized"],
@@ -733,7 +733,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             else:
                 # Reduce over decomposed expval(H), if required.
                 for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
-                    print(idx, processed_data["obs_idx_offsets"])
                     if (
                         processed_data["obs_idx_offsets"][idx + 1]
                         - processed_data["obs_idx_offsets"][idx]

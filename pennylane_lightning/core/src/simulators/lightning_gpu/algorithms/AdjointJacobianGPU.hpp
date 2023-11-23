@@ -201,8 +201,7 @@ class AdjointJacobian final
 
             auto jac_chunk = futures[i].get();
             for (std::size_t j = 0; j < jac_chunk.size(); j++) {
-                std::copy(jac_chunk.begin(), jac_chunk.end(),
-                          jac.begin() + first * tp_size);
+                jac[first + tp_size] = std::move(jac_chunk[j]);
             }
         }
         for (std::size_t t = 0; t < threads.size(); t++) {
