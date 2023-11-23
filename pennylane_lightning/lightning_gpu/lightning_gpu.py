@@ -727,32 +727,33 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             jac = np.array(jac)  # only for parameters differentiable with the adjoint method
             jac = jac.reshape(-1, len(trainable_params))
-            jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-
-            # Reduce over decomposed expval(H), if required.
-            for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
-                if (
-                    processed_data["obs_idx_offsets"][idx + 1]
-                    - processed_data["obs_idx_offsets"][idx]
-                ) > 1:
-                    jac_r[idx, :] = np.sum(
-                        jac[
+            jac_r = np.zeros((len(tape.observables), processed_data["all_params"]))
+            if not self._batch_obs:
+                jac_r[:, processed_data["record_tp_rows"]] = jac
+            else:
+                # Reduce over decomposed expval(H), if required.
+                for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                    print(idx, processed_data["obs_idx_offsets"])
+                    if (
+                        processed_data["obs_idx_offsets"][idx + 1]
+                        - processed_data["obs_idx_offsets"][idx]
+                    ) > 1:
+                        jac_r[idx, :] = np.sum(
+                            jac[
+                                processed_data["obs_idx_offsets"][idx] : processed_data[
+                                    "obs_idx_offsets"
+                                ][idx + 1],
+                                :,
+                            ],
+                            axis=0,
+                        )
+                    else:
+                        jac_r[idx, :] = jac[
                             processed_data["obs_idx_offsets"][idx] : processed_data[
                                 "obs_idx_offsets"
                             ][idx + 1],
                             :,
-                        ],
-                        axis=0,
-                    )
-                else:
-                    jac_r[idx, :] = jac[
-                        processed_data["obs_idx_offsets"][idx] : processed_data["obs_idx_offsets"][
-                            idx + 1
-                        ],
-                        :,
-                    ]
+                        ]
 
             return self._adjoint_jacobian_processing(jac_r)
 
