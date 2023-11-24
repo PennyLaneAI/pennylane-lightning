@@ -139,7 +139,7 @@ class AdjointJacobian final
         threads.reserve(num_gpus);
 
         // Hold results of threaded GPU executions
-        std::vector<std::future<std::vector<PrecisionT>>> futures;
+        std::vector<std::future<std::vector<PrecisionT>>> jac_futures;
 
         // Iterate over the chunked observables, and submit the Jacobian task
         // for execution
@@ -150,7 +150,7 @@ class AdjointJacobian final
                 std::ceil((obs.size() * (i + 1) / num_chunks) - 1));
 
             std::promise<std::vector<PrecisionT>> jac_subset_promise;
-            futures.emplace_back(jac_subset_promise.get_future());
+            jac_futures.emplace_back(jac_subset_promise.get_future());
 
             auto adj_lambda =
                 [&](std::promise<std::vector<PrecisionT>> j_promise,
@@ -195,13 +195,14 @@ class AdjointJacobian final
 
         /// Ensure the new local jacs are inserted and
         /// overwrite the 0 jacs values before returning
-        for (std::size_t i = 0; i < futures.size(); i++) {
+        for (std::size_t i = 0; i < jac_futures.size(); i++) {
             const auto first = static_cast<std::size_t>(
                 std::ceil(obs.size() * i / num_chunks));
 
-            auto jac_chunk = futures[i].get();
+            auto jac_chunk = jac_futures[i].get();
             for (std::size_t j = 0; j < jac_chunk.size(); j++) {
-                jac[first + tp_size] = std::move(jac_chunk[j]);
+                std::copy(jac_chunk.begin(), jac_chunk.end(), 
+                          jac.begin() + first * tp_size);
             }
         }
         for (std::size_t t = 0; t < threads.size(); t++) {
