@@ -162,7 +162,6 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
                arr) private(k, i0, i1) reduction(+ : expval)
 #endif
         for (k = 0; k < exp2(num_qubits - 1); k++) {
-
             i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             i1 = i0 | rev_wire_shift;
 

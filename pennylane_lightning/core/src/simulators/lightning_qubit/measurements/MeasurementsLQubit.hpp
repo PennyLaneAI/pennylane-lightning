@@ -730,6 +730,5 @@ class Measurements final
             expval_funcs_["Hadamard"] = ExpValFunc::Hadamard;
         }
     // clang-format on
-
 }; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
