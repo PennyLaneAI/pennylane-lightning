@@ -254,7 +254,7 @@ class LightningBase(QubitDevice):
         basis_states = qml.math.convert_like(basis_states, state)
         return int(qml.math.dot(state, basis_states))
 
-    # pylint: disable=too-many-function-args, assignment-from-no-return
+    # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
     def _process_jacobian_tape(
         self, tape, starting_state, use_device_state, use_mpi: bool = False, split_obs: bool = False
     ):

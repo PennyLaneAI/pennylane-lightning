@@ -644,6 +644,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 self.apply(tape.operations)
             return self._gpu_state
 
+        # pylint: disable=too-many-branches
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
             """Implements the adjoint method outlined in
             `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
