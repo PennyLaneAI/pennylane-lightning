@@ -201,7 +201,7 @@ class AdjointJacobian final
 
             auto jac_chunk = jac_futures[i].get();
             for (std::size_t j = 0; j < jac_chunk.size(); j++) {
-                std::copy(jac_chunk.begin(), jac_chunk.end(), 
+                std::copy(jac_chunk.begin(), jac_chunk.end(),
                           jac.begin() + first * tp_size);
             }
         }
