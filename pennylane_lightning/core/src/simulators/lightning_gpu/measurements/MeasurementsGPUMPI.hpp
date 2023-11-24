@@ -210,7 +210,7 @@ class MeasurementsMPI final
     }
 
     /**
-     * @brief Probabilities of each computational basis state for an observable.
+     * @brief Probabilities to measure rotated basis states.
      *
      * @param obs An observable object.
      *

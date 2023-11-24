@@ -472,7 +472,7 @@ class Measurements final
     }
 
     /**
-     * @brief Probabilities of each computational basis state.
+     * @brief Probabilities to measure rotated basis states.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
