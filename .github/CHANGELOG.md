@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Modify expval of named operators in LightningQubit for in-place computation of expectation value, to avoid creating an intermediate statevector
+  [(##565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
+
 * Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
