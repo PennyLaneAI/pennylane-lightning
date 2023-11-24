@@ -40,6 +40,9 @@
 
 ### Bug fixes
 
+* Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
+  [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
+
 * Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
@@ -50,7 +53,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Isaac De Vlugt, Vincent Michaud-Rioux, Shuli Shu
+Isaac De Vlugt, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
 
 ---
 

@@ -644,6 +644,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 self.apply(tape.operations)
             return self._gpu_state
 
+        # pylint: disable=too-many-branches
         def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
             """Implements the adjoint method outlined in
             `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
@@ -673,7 +674,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             self._check_adjdiff_supported_operations(tape.operations)
 
             processed_data = self._process_jacobian_tape(
-                tape, starting_state, use_device_state, self._mpi
+                tape, starting_state, use_device_state, self._mpi, self._batch_obs
             )
 
             if not processed_data:  # training_params is empty
@@ -691,24 +692,69 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
-            if self._batch_obs:
-                adjoint_jacobian = adjoint_jacobian.batched
+            if self._batch_obs:  # Batching of Measurements
+                if not self._mpi:  # Single-node path, controlled batching over available GPUs
+                    num_obs = len(processed_data["obs_serialized"])
+                    batch_size = (
+                        num_obs
+                        if isinstance(self._batch_obs, bool)
+                        else self._batch_obs * self._dp.getTotalDevices()
+                    )
+                    jac = []
+                    for chunk in range(0, num_obs, batch_size):
+                        obs_chunk = processed_data["obs_serialized"][chunk : chunk + batch_size]
+                        jac_chunk = adjoint_jacobian.batched(
+                            self._gpu_state,
+                            obs_chunk,
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+                        jac.extend(jac_chunk)
+                else:  # MPI path, restrict memory per known GPUs
+                    jac = adjoint_jacobian.batched(
+                        self._gpu_state,
+                        processed_data["obs_serialized"],
+                        processed_data["ops_serialized"],
+                        trainable_params,
+                    )
 
-            jac = adjoint_jacobian(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
+            else:
+                jac = adjoint_jacobian(
+                    self._gpu_state,
+                    processed_data["obs_serialized"],
+                    processed_data["ops_serialized"],
+                    trainable_params,
+                )
 
             jac = np.array(jac)  # only for parameters differentiable with the adjoint method
             jac = jac.reshape(-1, len(trainable_params))
-            jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+            jac_r = np.zeros((len(tape.observables), processed_data["all_params"]))
+            if not self._batch_obs:
+                jac_r[:, processed_data["record_tp_rows"]] = jac
+            else:
+                # Reduce over decomposed expval(H), if required.
+                for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                    if (
+                        processed_data["obs_idx_offsets"][idx + 1]
+                        - processed_data["obs_idx_offsets"][idx]
+                    ) > 1:
+                        jac_r[idx, :] = np.sum(
+                            jac[
+                                processed_data["obs_idx_offsets"][idx] : processed_data[
+                                    "obs_idx_offsets"
+                                ][idx + 1],
+                                :,
+                            ],
+                            axis=0,
+                        )
+                    else:
+                        jac_r[idx, :] = jac[
+                            processed_data["obs_idx_offsets"][idx] : processed_data[
+                                "obs_idx_offsets"
+                            ][idx + 1],
+                            :,
+                        ]
 
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-
-            if hasattr(qml, "active_return"):
-                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
