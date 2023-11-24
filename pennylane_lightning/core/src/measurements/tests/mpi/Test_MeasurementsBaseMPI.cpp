@@ -1282,36 +1282,8 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             // convert samples to decimal and then bin them in counts
             for (auto &it : counts_sample) {
-                std::vector<size_t> localBits(num_qubits, 10);
                 auto key = it.first;
-
-                bool found = false;
-
-                auto iter =
-                    std::find(expected_keys.begin(), expected_keys.end(), key);
-
-                if (iter != expected_keys.end()) {
-                    found = true;
-                }
-                // keys in the map should be found in expected_keys
-                REQUIRE(found == true);
-
-                size_t idx = 0;
-                size_t decimal_idx = 0;
-                for (char &c : key) {
-                    if (c == '1') {
-                        localBits[idx] = 1;
-                        decimal_idx += twos[(num_qubits - 1 - idx)];
-                    } else if (c == '0') {
-                        localBits[idx] = 0;
-                    }
-                    idx++;
-                }
-                for (auto &bit : localBits) {
-                    // bit values should be either 0 or 1
-                    REQUIRE(bit * (bit - 1) == 0);
-                }
-                counts[decimal_idx] = it.second;
+                counts[key] = it.second;
             }
 
             // compute estimated probabilities from histogram

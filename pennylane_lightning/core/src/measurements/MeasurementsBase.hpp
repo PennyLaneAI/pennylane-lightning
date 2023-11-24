@@ -337,7 +337,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
         -> std::unordered_map<PrecisionT, size_t> {
         std::unordered_map<PrecisionT, size_t> outcome_map;
-        std::vector<size_t> shot_range = {};
         auto sample_data = sample(obs, num_shots);
         for (size_t i = 0; i < num_shots; i++) {
             auto key = sample_data[i];
@@ -357,15 +356,12 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param num_shots number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<std::string, size_t> with format ``{'outcome':
+     * @return std::unordered_map<size_t, size_t> with format ``{'outcome':
      * num_occurences}``
      */
-    auto counts(const size_t &num_shots)
-        -> std::unordered_map<std::string, size_t> {
-        std::unordered_map<std::string, size_t> outcome_map;
-
-        Derived measure(_statevector);
-        auto sample_data = measure.generate_samples(num_shots);
+    auto counts(const size_t &num_shots) -> std::unordered_map<size_t, size_t> {
+        std::unordered_map<size_t, size_t> outcome_map;
+        auto sample_data = sample(num_shots);
 
         size_t num_wires = _statevector.getTotalNumQubits();
         for (size_t i = 0; i < num_shots; i++) {
@@ -373,9 +369,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 std::vector(sample_data.begin() + i * num_wires,
                             sample_data.begin() + (i + 1) * num_wires);
 
-            std::string key;
-            for (auto &element : local_sample) {
-                key += std::to_string(element);
+            size_t key = 0;
+            for (size_t i = 0; i < local_sample.size(); i++) {
+                key += local_sample[i] << (local_sample.size() - 1 - i);
             }
 
             auto it = outcome_map.find(key);
