@@ -35,6 +35,9 @@
 
 ### Documentation
 
+* Fixed a small typo in the documentation page for the PennyLane-Lightning GPU device.
+  [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
+
 ### Bug fixes
 
 * Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
@@ -47,7 +50,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+Isaac De Vlugt, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
