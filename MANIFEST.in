@@ -1,2 +1,4 @@
 include requirements.txt
 include CHANGELOG.rst
+include lightning.qubit.toml
+include lightning.kokkos.toml
