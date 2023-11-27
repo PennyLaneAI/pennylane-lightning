@@ -2539,7 +2539,7 @@ TEMPLATE_TEST_CASE(
 }
 
 TEMPLATE_TEST_CASE(
-    "StateVectorLQubitManaged::applyOperation param two-qubits with controls",
+    "StateVectorLQubitManaged::applyOperation param four-qubits with controls",
     "[StateVectorLQubitManaged]", float, double) {
     using PrecisionT = TestType;
     using ComplexT = std::complex<TestType>;
@@ -2569,7 +2569,8 @@ TEMPLATE_TEST_CASE(
 
     DYNAMIC_SECTION("N-controlled DoubleExcitation - "
                     << "controls = {" << control << "} "
-                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
                     << PrecisionToName<PrecisionT>::value) {
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
@@ -2585,6 +2586,62 @@ TEMPLATE_TEST_CASE(
             sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
                             inverse);
             sv1.applyOperation("DoubleExcitation", std::vector<size_t>{control},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitationMinus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix =
+                getDoubleExcitationMinus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitationMinus",
+                               std::vector<size_t>{control},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitationPlus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix =
+                getDoubleExcitationPlus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitationPlus",
+                               std::vector<size_t>{control},
                                std::vector<size_t>{wire0, wire1, wire2, wire3},
                                inverse, {param});
             REQUIRE(sv0.getDataVector() ==

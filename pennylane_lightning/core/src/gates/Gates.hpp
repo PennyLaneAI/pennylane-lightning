@@ -701,7 +701,7 @@ static auto getDoubleExcitation(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = ONE<ComplexT, T>();
     mat[34] = ONE<ComplexT, T>();
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = ONE<ComplexT, T>();
     mat[85] = ONE<ComplexT, T>();
     mat[102] = ONE<ComplexT, T>();
@@ -710,7 +710,7 @@ static auto getDoubleExcitation(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = ONE<ComplexT, T>();
     mat[170] = ONE<ComplexT, T>();
     mat[187] = ONE<ComplexT, T>();
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = ONE<ComplexT, T>();
     mat[238] = ONE<ComplexT, T>();
@@ -757,7 +757,7 @@ static auto getDoubleExcitationMinus(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -766,7 +766,7 @@ static auto getDoubleExcitationMinus(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -827,7 +827,7 @@ static auto getDoubleExcitationPlus(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -836,7 +836,7 @@ static auto getDoubleExcitationPlus(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
