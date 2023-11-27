@@ -29,7 +29,7 @@
 /// @cond DEV
 namespace {
 using Pennylane::Util::CPUMemoryModel;
-static constexpr uint32_t ThreadBitShift = 8U;
+constexpr uint32_t ThreadBitShift = 8U;
 } // namespace
 /// @endcond
 
