@@ -426,7 +426,7 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     template <template <typename...> class complex_t>
     void

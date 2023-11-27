@@ -248,7 +248,7 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
