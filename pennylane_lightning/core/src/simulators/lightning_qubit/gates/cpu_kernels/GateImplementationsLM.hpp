@@ -16,6 +16,7 @@
  * Defines kernel functions with less memory (and fast)
  */
 #pragma once
+#include <algorithm>
 #include <bit>
 #include <complex>
 #include <tuple>
@@ -214,7 +215,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::size_t n_contr = 0)
         -> std::array<std::size_t, static_cast<std::size_t>(1) << length> {
         constexpr std::size_t one{1};
-        const std::size_t dim = one << length;
+        constexpr std::size_t dim = one << length;
         std::array<std::size_t, dim> indices{};
         std::size_t idx = (k & parity[0]);
         for (std::size_t i = 1; i < parity.size(); i++) {
@@ -248,7 +249,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      */
     static auto parity2indices(const std::size_t k,
                                std::vector<std::size_t> parity,
-                               std::vector<std::size_t> rev_wire_shifts)
+                               std::vector<std::size_t> rev_wire_shifts,
+                               const std::size_t n_contr = 0)
         -> std::vector<std::size_t> {
         constexpr std::size_t one{1};
         const std::size_t dim = one << rev_wire_shifts.size();
@@ -257,12 +259,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (std::size_t i = 1; i < parity.size(); i++) {
             idx |= ((k << i) & parity[i]);
         }
+        for (std::size_t i = 0; i < n_contr; i++) {
+            idx |= rev_wire_shifts[i];
+        }
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
             idx = indices[0];
             for (std::size_t i = 0; i < rev_wire_shifts.size(); i++) {
                 if ((inner_idx & (one << i)) != 0) {
-                    idx |= rev_wire_shifts[i];
+                    idx |= rev_wire_shifts[i + n_contr];
                 }
             }
             indices[inner_idx] = idx;
@@ -1410,8 +1415,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT, class ParamT>
     static void applySingleExcitationPlus(std::complex<PrecisionT> *arr,
-                                          size_t num_qubits,
-                                          const std::vector<size_t> &wires,
+                                          std::size_t num_qubits,
+                                          const std::vector<std::size_t> &wires,
                                           bool inverse, ParamT angle) {
         applyNCSingleExcitationPlus(arr, num_qubits, {}, wires, inverse, angle);
     }
@@ -1419,16 +1424,19 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     /* Four-qubit gates*/
 
     template <class PrecisionT, class ParamT = PrecisionT, class Func,
-              bool has_controls = true>
-    static void applyNC4(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &controlled_wires,
-                         const std::vector<size_t> &wires, Func core_function) {
+              bool has_controls = true, bool compute_indices = true>
+    static void
+    applyNC4(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+             const std::vector<std::size_t> &controlled_wires,
+             const std::vector<std::size_t> &wires, Func core_function) {
         constexpr std::size_t one{1};
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 4);
         PL_ASSERT(num_qubits >= nw_tot);
+        std::array<std::size_t, 16> indices;
+        std::size_t i0000, i0011, i1100;
         if constexpr (has_controls) {
             std::vector<std::size_t> all_wires;
             all_wires.reserve(nw_tot);
@@ -1443,19 +1451,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
-            for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t i0000 = (k & parity[0]);
-                for (std::size_t i = 1; i < parity.size(); i++) {
-                    i0000 |= ((k << i) & parity[i]);
+            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+                if constexpr (compute_indices) {
+                    auto tmp =
+                        parity2indices(k, parity, rev_wire_shifts, n_contr);
+                    std::copy_n(tmp.begin(), 16, indices.begin());
+                } else {
+                    i0000 = (k & parity[0]);
+                    for (std::size_t i = 1; i < parity.size(); i++) {
+                        i0000 |= ((k << i) & parity[i]);
+                    }
+                    for (std::size_t i = 0; i < n_contr; i++) {
+                        i0000 |= rev_wire_shifts[i];
+                    }
+                    i0011 = i0000 | rev_wire_shifts[1] | rev_wire_shifts[0];
+                    i1100 = i0000 | rev_wire_shifts[3] | rev_wire_shifts[2];
                 }
-                for (std::size_t i = 0; i < n_contr; i++) {
-                    i0000 |= rev_wire_shifts[i];
-                }
-                const size_t i0011 =
-                    i0000 | rev_wire_shifts[1] | rev_wire_shifts[0];
-                const size_t i1100 =
-                    i0000 | rev_wire_shifts[3] | rev_wire_shifts[2];
-                core_function(arr, i0011, i1100);
+                core_function(arr, i0011, i1100, indices);
             }
         } else {
             const std::array<std::size_t, 4> rev_wires{
@@ -1466,40 +1478,42 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 one << rev_wires[3]};
             const auto parity = Pennylane::Util::revWireParity(rev_wires);
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                const std::size_t i0000 =
-                    ((k << 4U) & parity[4]) | ((k << 3U) & parity[3]) |
-                    ((k << 2U) & parity[2]) | ((k << 1U) & parity[1]) |
-                    (k & parity[0]);
-                const size_t i0011 =
-                    i0000 | rev_wire_shifts[1] | rev_wire_shifts[0];
-                const size_t i1100 =
-                    i0000 | rev_wire_shifts[3] | rev_wire_shifts[2];
-                core_function(arr, i0011, i1100);
+                if constexpr (compute_indices) {
+                    indices = parity2indices(k, parity, rev_wire_shifts);
+                } else {
+                    i0000 = ((k << 4U) & parity[4]) | ((k << 3U) & parity[3]) |
+                            ((k << 2U) & parity[2]) | ((k << 1U) & parity[1]) |
+                            (k & parity[0]);
+                    i0011 = i0000 | rev_wire_shifts[1] | rev_wire_shifts[0];
+                    i1100 = i0000 | rev_wire_shifts[3] | rev_wire_shifts[2];
+                }
+                core_function(arr, i0011, i1100, indices);
             }
         }
     }
 
     template <class PrecisionT, class ParamT>
     static void applyNCDoubleExcitation(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        [[maybe_unused]] const std::vector<size_t> &controlled_wires,
-        const std::vector<size_t> &wires, bool inverse, ParamT angle) {
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+        const std::vector<std::size_t> &wires, bool inverse, ParamT angle) {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
-        auto core_function = [cr, sj](std::complex<PrecisionT> *arr,
-                                      size_t i0011, size_t i1100) {
-            const std::complex<PrecisionT> v3 = arr[i0011];
-            const std::complex<PrecisionT> v12 = arr[i1100];
-            arr[i0011] = cr * v3 - sj * v12;
-            arr[i1100] = sj * v3 + cr * v12;
-        };
+        auto core_function =
+            [cr, sj](std::complex<PrecisionT> *arr, std::size_t i0011,
+                     std::size_t i1100,
+                     [[maybe_unused]] std::array<std::size_t, 16> indices) {
+                const std::complex<PrecisionT> v3 = arr[i0011];
+                const std::complex<PrecisionT> v12 = arr[i1100];
+                arr[i0011] = cr * v3 - sj * v12;
+                arr[i1100] = sj * v3 + cr * v12;
+            };
         if (controlled_wires.empty()) {
-            applyNC4<PrecisionT, ParamT, decltype(core_function), false>(
+            applyNC4<PrecisionT, ParamT, decltype(core_function), false, false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         } else {
-            applyNC4<PrecisionT, ParamT, decltype(core_function), true>(
+            applyNC4<PrecisionT, ParamT, decltype(core_function), true, false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
         }
     }

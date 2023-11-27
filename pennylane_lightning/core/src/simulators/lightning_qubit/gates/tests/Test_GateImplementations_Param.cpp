@@ -2537,3 +2537,58 @@ TEMPLATE_TEST_CASE(
         }
     }
 }
+
+TEMPLATE_TEST_CASE(
+    "StateVectorLQubitManaged::applyOperation param two-qubits with controls",
+    "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<TestType>;
+    std::mt19937 re{1337};
+    const int num_qubits = 5;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire0 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire1 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire2 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire3 = GENERATE(0, 1, 2, 3, 4);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 16; i++) {
+            cmatrix[i * 32 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 16; i++) {
+            for (std::size_t j = 0; j < 16; j++) {
+                cmatrix[(i + 16) * 32 + j + 16] = matrix[i * 16 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitation - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix = getDoubleExcitation<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitation", std::vector<size_t>{control},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
