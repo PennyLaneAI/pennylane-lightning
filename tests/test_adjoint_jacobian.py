@@ -715,6 +715,9 @@ class TestAdjointJacobianQNode:
             qml.SingleExcitation,
             qml.SingleExcitationMinus,
             qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
         ],
     )
     @pytest.mark.parametrize("n_qubits", range(1, 6))
@@ -742,6 +745,7 @@ class TestAdjointJacobianQNode:
         circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
         jac_ad = np.array(qml.jacobian(circ_ad)(par)).ravel()
         jac_ps = np.array(qml.jacobian(circ_ps)(par)).ravel()
+        # jac_ps = 0.5 * (circ_ps(par + np.pi / 2) - circ_ps(par - np.pi / 2))
 
         # different methods must agree
         assert np.allclose(jac_ad, jac_ps, atol=tol, rtol=0)
