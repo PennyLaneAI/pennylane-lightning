@@ -29,6 +29,7 @@
 /// @cond DEV
 namespace {
 using Pennylane::Util::CPUMemoryModel;
+static constexpr uint32_t ThreadBitShift = 8U;
 } // namespace
 /// @endcond
 
@@ -48,7 +49,7 @@ enum class Threading : uint8_t {
 constexpr uint32_t toDispatchKey(Threading threading,
                                  CPUMemoryModel memory_model) {
     /* Threading is in higher priority */
-    return (static_cast<uint32_t>(threading) << 8U) |
+    return (static_cast<uint32_t>(threading) << ThreadBitShift) |
            static_cast<uint32_t>(memory_model);
 }
 
