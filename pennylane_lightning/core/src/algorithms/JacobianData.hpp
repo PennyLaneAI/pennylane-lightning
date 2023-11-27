@@ -77,9 +77,7 @@ template <class StateVectorT> class OpsData {
           ops_matrices_{std::move(ops_matrices)},
           ops_controlled_wires_{std::move(ops_controlled_wires)} {
         for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -107,9 +105,7 @@ template <class StateVectorT> class OpsData {
           ops_matrices_{std::move(ops_matrices)},
           ops_controlled_wires_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -134,7 +130,7 @@ template <class StateVectorT> class OpsData {
           ops_matrices_(ops_name.size()),
           ops_controlled_wires_(ops_name.size()) {
         for (const auto &p : ops_params) {
-    num_par_ops_ += !p.empty() ? 1 : 0;
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
