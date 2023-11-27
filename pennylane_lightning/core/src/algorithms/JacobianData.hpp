@@ -58,12 +58,12 @@ template <class StateVectorT> class OpsData {
      *
      * @param ops_name Name of each operation to apply.
      * @param ops_params Parameters for a given operation ({} if optional).
-     * @param ops_controlled_wires Control wires
-     * @param ops_wires Wires upon which to apply operation
+     * @param ops_wires Wires upon which to apply operation.
      * @param ops_inverses Value to represent whether given operation is
      * adjoint.
      * @param ops_matrices Numerical representation of given matrix if not
      * supported.
+     * @param ops_controlled_wires Control wires
      */
     OpsData(std::vector<std::string> ops_name,
             const std::vector<std::vector<PrecisionT>> &ops_params,
