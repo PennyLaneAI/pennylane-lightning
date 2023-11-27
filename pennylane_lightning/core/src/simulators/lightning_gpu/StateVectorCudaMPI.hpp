@@ -38,6 +38,8 @@
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
 
+#include "CPUMemoryModel.hpp"
+
 #include "LinearAlg.hpp"
 
 /// @cond DEV
@@ -97,6 +99,7 @@ class StateVectorCudaMPI final
                                      StateVectorCudaMPI<Precision>>::CFP_t;
     using PrecisionT = Precision;
     using ComplexT = std::complex<PrecisionT>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaMPI() = delete;
 
@@ -204,6 +207,8 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               numLocalQubits_, localStream_.get())),
           gate_cache_(true, other.getDataBuffer().getDevTag()) {
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         BaseType::CopyGpuDataToGpuIn(other.getData(), other.getLength(), false);
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();

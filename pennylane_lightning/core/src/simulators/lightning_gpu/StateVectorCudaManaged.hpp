@@ -34,6 +34,8 @@
 #include "cuGates_host.hpp"
 #include "cuda_helpers.hpp"
 
+#include "CPUMemoryModel.hpp"
+
 #include "cuError.hpp"
 
 #include "LinearAlg.hpp"
@@ -81,6 +83,7 @@ class StateVectorCudaManaged
     using CFP_t =
         typename StateVectorCudaBase<Precision,
                                      StateVectorCudaManaged<Precision>>::CFP_t;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaManaged() = delete;
     StateVectorCudaManaged(size_t num_qubits)

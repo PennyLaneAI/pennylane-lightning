@@ -5,6 +5,9 @@
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
 
+* Add shots support for expectation value calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer by adding `measure_with_samples` to the measurement interface. All Lightning backends support this support feature.
+[(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
+
 * `qml.QubitUnitary` operators can be included in a circuit differentiated with the adjoint method. Lightning handles circuits with arbitrary non-differentiable `qml.QubitUnitary` operators. 1,2-qubit `qml.QubitUnitary` operators with differentiable parameters can be differentiated using decomposition.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
@@ -35,7 +38,13 @@
 
 ### Documentation
 
+* Fixed a small typo in the documentation page for the PennyLane-Lightning GPU device.
+  [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
+
 ### Bug fixes
+
+* Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
+  [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
 
 * Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
@@ -47,7 +56,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+Isaac De Vlugt, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
 
 ---
 
