@@ -40,6 +40,9 @@
 
 ### Bug fixes
 
+* Allow support for newer clang-tidy versions on non-x86_64 platforms.
+  [(#567)](https://github.com/PennyLaneAI/pennylane-lightning/pull/567)
+
 * Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
   [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
 
