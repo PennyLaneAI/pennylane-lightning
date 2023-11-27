@@ -18,6 +18,17 @@
 #pragma once
 #include <bitset>
 
+namespace {
+struct OffsetIndices {
+    static constexpr int AVX = 28;
+    static constexpr int AVX2 = 5;
+    static constexpr int FMA = 12;
+    static constexpr int AVX512F = 16;
+};
+static constexpr int BitWidth = 32;
+
+} // namespace
+
 namespace Pennylane::Util {
 /**
  * @brief This class is only usable in x86 or x86_64 architecture.
@@ -30,10 +41,10 @@ class RuntimeInfo {
 
         std::string vendor{};
         std::string brand{};
-        std::bitset<32> f_1_ecx{};
-        std::bitset<32> f_1_edx{};
-        std::bitset<32> f_7_ebx{};
-        std::bitset<32> f_7_ecx{};
+        std::bitset<BitWidth> f_1_ecx{};
+        std::bitset<BitWidth> f_1_edx{};
+        std::bitset<BitWidth> f_7_ebx{};
+        std::bitset<BitWidth> f_7_ecx{};
     };
     /// @endcond
 
@@ -44,20 +55,18 @@ class RuntimeInfo {
 
   public:
     static inline bool AVX() {
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return getInternalRuntimeInfo().f_1_ecx[28];
+        return getInternalRuntimeInfo().f_1_ecx[OffsetIndices::AVX];
     }
     static inline bool AVX2() {
-        // NOLINTNEXTLINE(readability-magic-numbers)
-        return getInternalRuntimeInfo().f_7_ebx[5];
+        return getInternalRuntimeInfo().f_7_ebx[OffsetIndices::AVX2];
     }
     static inline bool FMA() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return getInternalRuntimeInfo().f_1_ecx[12];
+        return getInternalRuntimeInfo().f_1_ecx[OffsetIndices::FMA];
     }
     static inline bool AVX512F() {
         // NOLINTNEXTLINE(readability-magic-numbers)
-        return getInternalRuntimeInfo().f_7_ebx[16];
+        return getInternalRuntimeInfo().f_7_ebx[OffsetIndices::AVX512F];
     }
     static const std::string &vendor() {
         return getInternalRuntimeInfo().vendor;
