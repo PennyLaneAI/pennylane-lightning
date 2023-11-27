@@ -93,21 +93,21 @@ template <typename PrecisionT> class DynamicDispatcher {
     using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
 
   private:
-    std::unordered_map<std::string, GateOperation> str_to_gates_;
-    std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_;
+    std::unordered_map<std::string, GateOperation> str_to_gates_{};
+    std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_{};
 
     std::unordered_map<std::pair<GateOperation, KernelType>, GateFunc, PairHash>
-        gate_kernels_;
+        gate_kernels_{};
 
     std::unordered_map<std::pair<GeneratorOperation, KernelType>, GeneratorFunc,
                        PairHash>
-        generator_kernels_;
+        generator_kernels_{};
 
     std::unordered_map<std::pair<MatrixOperation, KernelType>, MatrixFunc,
                        PairHash>
-        matrix_kernels_;
+        matrix_kernels_{};
 
-    std::unordered_map<KernelType, std::string> kernel_names_;
+    std::unordered_map<KernelType, std::string> kernel_names_{};
 
     DynamicDispatcher() {
         constexpr static auto gntr_names_without_prefix =
@@ -283,7 +283,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param gate_op Gate operation
      * @param kernel Kernel
      */
-    bool isRegistered(GateOperation gate_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(GateOperation gate_op,
+                                    KernelType kernel) const {
         return gate_kernels_.find(std::make_pair(gate_op, kernel)) !=
                gate_kernels_.cend();
     }
@@ -295,7 +296,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param gntr_op Generator operation
      * @param kernel Kernel
      */
-    bool isRegistered(GeneratorOperation gntr_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(GeneratorOperation gntr_op,
+                                    KernelType kernel) const {
         return generator_kernels_.find(std::make_pair(gntr_op, kernel)) !=
                generator_kernels_.cend();
     }
@@ -307,7 +309,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param mat_op Matrix operation
      * @param kernel Kernel
      */
-    bool isRegistered(MatrixOperation mat_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(MatrixOperation mat_op,
+                                    KernelType kernel) const {
         return matrix_kernels_.find(std::make_pair(mat_op, kernel)) !=
                matrix_kernels_.cend();
     }

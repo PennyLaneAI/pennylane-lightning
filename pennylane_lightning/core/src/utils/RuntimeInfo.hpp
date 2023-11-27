@@ -25,7 +25,7 @@ struct OffsetIndices {
     static constexpr int FMA = 12;
     static constexpr int AVX512F = 16;
 };
-static constexpr int BitWidth = 32;
+constexpr int BitWidth = 32;
 
 } // namespace
 
