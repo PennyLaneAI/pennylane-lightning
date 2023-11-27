@@ -714,6 +714,9 @@ class TestAdjointJacobianQNode:
             qml.SingleExcitation,
             qml.SingleExcitationMinus,
             qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
         ],
     )
     @pytest.mark.parametrize("n_qubits", range(2, 6))
@@ -740,7 +743,7 @@ class TestAdjointJacobianQNode:
             return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
 
         circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
-        circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+        circ_ps = qml.QNode(circuit, dev, diff_method="finite-diff")
         jac_ad = np.array(qml.jacobian(circ_ad)(par))
         jac_ps = np.array(qml.jacobian(circ_ps)(par))
 
