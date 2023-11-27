@@ -91,6 +91,9 @@ enum class ControlledGateOperation : uint32_t {
     SingleExcitation,
     SingleExcitationMinus,
     SingleExcitationPlus,
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
     /* END (placeholder) */
     END
 };
@@ -137,6 +140,9 @@ enum class ControlledGeneratorOperation : uint32_t {
     SingleExcitation,
     SingleExcitationMinus,
     SingleExcitationPlus,
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
     /* END (placeholder) */
     END
 };
