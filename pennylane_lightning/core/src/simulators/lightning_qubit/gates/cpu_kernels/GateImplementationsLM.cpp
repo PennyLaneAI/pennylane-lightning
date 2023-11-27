@@ -287,32 +287,6 @@ template void GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
 
-/* N-controlled generators */
-template auto GateImplementationsLM::applyNCGeneratorPhaseShift<float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> float;
-template auto GateImplementationsLM::applyNCGeneratorPhaseShift<double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> double;
-template auto GateImplementationsLM::applyNCGeneratorRX<float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> float;
-template auto GateImplementationsLM::applyNCGeneratorRX<double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> double;
-template auto GateImplementationsLM::applyNCGeneratorRY<float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> float;
-template auto GateImplementationsLM::applyNCGeneratorRY<double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> double;
-template auto GateImplementationsLM::applyNCGeneratorRZ<float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> float;
-template auto GateImplementationsLM::applyNCGeneratorRZ<double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &,
-    const std::vector<size_t> &, bool) -> double;
-
 /* N-controlled gates */
 template void
 GateImplementationsLM::applyNCPauliX<float>(std::complex<float> *, size_t,
@@ -382,6 +356,46 @@ template void GateImplementationsLM::applyNCRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
 template void GateImplementationsLM::applyNCRZ<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCSingleExcitation<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCSingleExcitation<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCSingleExcitationMinus<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void
+GateImplementationsLM::applyNCSingleExcitationMinus<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCSingleExcitationPlus<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void
+GateImplementationsLM::applyNCSingleExcitationPlus<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCDoubleExcitation<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyNCDoubleExcitation<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCDoubleExcitationMinus<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void
+GateImplementationsLM::applyNCDoubleExcitationMinus<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyNCDoubleExcitationPlus<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool, float);
+template void
+GateImplementationsLM::applyNCDoubleExcitationPlus<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
 
@@ -521,6 +535,76 @@ template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus<float>(
 template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus<double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, [[maybe_unused]] bool adj) -> double;
+
+/* N-controlled generators */
+template auto GateImplementationsLM::applyNCGeneratorPhaseShift<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorPhaseShift<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRX<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRX<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRY<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRY<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorRZ<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorRZ<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorSingleExcitation<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorSingleExcitation<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto
+GateImplementationsLM::applyNCGeneratorSingleExcitationMinus<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto
+GateImplementationsLM::applyNCGeneratorSingleExcitationMinus<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto
+GateImplementationsLM::applyNCGeneratorSingleExcitationPlus<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto
+GateImplementationsLM::applyNCGeneratorSingleExcitationPlus<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto GateImplementationsLM::applyNCGeneratorDoubleExcitation<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorDoubleExcitation<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto
+GateImplementationsLM::applyNCGeneratorDoubleExcitationMinus<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto
+GateImplementationsLM::applyNCGeneratorDoubleExcitationMinus<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
+template auto
+GateImplementationsLM::applyNCGeneratorDoubleExcitationPlus<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> float;
+template auto
+GateImplementationsLM::applyNCGeneratorDoubleExcitationPlus<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<size_t> &, bool) -> double;
 
 // Explicit instantiations ends
 

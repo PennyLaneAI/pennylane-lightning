@@ -133,6 +133,13 @@ namespace Pennylane::Gates::Constant {
         "SingleExcitationMinus"},
     std::pair<ControlledGateOperation, std::string_view>{
         ControlledGateOperation::SingleExcitationPlus, "SingleExcitationPlus"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::DoubleExcitation, "DoubleExcitation"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::DoubleExcitationMinus,
+        "DoubleExcitationMinus"},
+    std::pair<ControlledGateOperation, std::string_view>{
+        ControlledGateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
 };
 
 /**
@@ -212,6 +219,14 @@ namespace Pennylane::Gates::Constant {
     std::pair<ControlledGeneratorOperation, std::string_view>{
         ControlledGeneratorOperation::SingleExcitationPlus,
         "SingleExcitationPlus"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::DoubleExcitation, "DoubleExcitation"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::DoubleExcitationMinus,
+        "DoubleExcitationMinus"},
+    std::pair<ControlledGeneratorOperation, std::string_view>{
+        ControlledGeneratorOperation::DoubleExcitationPlus,
+        "DoubleExcitationPlus"},
 };
 
 /**
@@ -302,6 +317,12 @@ namespace Pennylane::Gates::Constant {
         ControlledGateOperation::SingleExcitationMinus, 2},
     std::pair<ControlledGateOperation, size_t>{
         ControlledGateOperation::SingleExcitationPlus, 2},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitation, 4},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitationMinus, 4},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitationPlus, 4},
 };
 
 /**
@@ -359,6 +380,12 @@ namespace Pennylane::Gates::Constant {
         ControlledGeneratorOperation::SingleExcitationMinus, 2},
     std::pair<ControlledGeneratorOperation, std::size_t>{
         ControlledGeneratorOperation::SingleExcitationPlus, 2},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::DoubleExcitation, 4},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::DoubleExcitationMinus, 4},
+    std::pair<ControlledGeneratorOperation, std::size_t>{
+        ControlledGeneratorOperation::DoubleExcitationPlus, 4},
 };
 
 /**
@@ -436,5 +463,11 @@ namespace Pennylane::Gates::Constant {
         ControlledGateOperation::SingleExcitationMinus, 1},
     std::pair<ControlledGateOperation, size_t>{
         ControlledGateOperation::SingleExcitationPlus, 1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitation, 1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitationMinus, 1},
+    std::pair<ControlledGateOperation, size_t>{
+        ControlledGateOperation::DoubleExcitationPlus, 1},
 };
 } // namespace Pennylane::Gates::Constant

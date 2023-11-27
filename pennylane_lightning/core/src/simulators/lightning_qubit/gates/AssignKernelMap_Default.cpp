@@ -286,6 +286,15 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::SingleExcitationPlus,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::DoubleExcitation,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::DoubleExcitationMinus,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::DoubleExcitationPlus,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
 }
 void assignKernelsForControlledGeneratorOp_Default() {
     auto &instance =
@@ -323,6 +332,15 @@ void assignKernelsForControlledGeneratorOp_Default() {
         all_memory_model, all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(
         ControlledGeneratorOperation::SingleExcitationPlus, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::DoubleExcitation,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(
+        ControlledGeneratorOperation::DoubleExcitationMinus, all_threading,
+        all_memory_model, all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(
+        ControlledGeneratorOperation::DoubleExcitationPlus, all_threading,
         all_memory_model, all_qubit_numbers, KernelType::LM);
 }
 void assignKernelsForControlledMatrixOp_Default() {
