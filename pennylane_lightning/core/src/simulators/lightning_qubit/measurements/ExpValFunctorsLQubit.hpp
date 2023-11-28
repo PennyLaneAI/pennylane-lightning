@@ -42,8 +42,8 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
 #pragma omp parallel for default(none) shared(num_qubits, arr) private(k)      \
     reduction(+ : expval)
 #endif
-        for (k = 0; k < exp2(num_qubits - 1); k++) {
-            expval += real(conj(arr[k] * arr[k]));
+        for (k = 0; k < exp2(num_qubits); k++) {
+            expval += real(conj(arr[k]) * arr[k]);
         }
     }
 };
