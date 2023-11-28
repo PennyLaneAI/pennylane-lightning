@@ -25,7 +25,7 @@ using namespace Pennylane::Util;
 
 #ifdef _ENABLE_PLQUBIT
 constexpr bool BACKEND_FOUND = true;
-constexpr bool WITH_CONTROLS = true;
+constexpr bool SUPPORTS_CTRL = true;
 
 #include "AdjointJacobianLQubit.hpp"
 #include "ObservablesLQubit.hpp"
@@ -41,7 +41,7 @@ using namespace Pennylane::LightningQubit::Observables;
 
 #elif _ENABLE_PLKOKKOS == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool WITH_CONTROLS = false;
+constexpr bool SUPPORTS_CTRL = false;
 
 #include "AdjointJacobianKokkos.hpp"
 #include "ObservablesKokkos.hpp"
@@ -57,7 +57,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 
 #elif _ENABLE_PLGPU == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool WITH_CONTROLS = false;
+constexpr bool SUPPORTS_CTRL = false;
 #include "AdjointJacobianGPU.hpp"
 #include "ObservablesGPU.hpp"
 #include "TestHelpersStateVectors.hpp"
@@ -72,7 +72,7 @@ using namespace Pennylane::LightningGPU::Observables;
 
 #else
 constexpr bool BACKEND_FOUND = false;
-constexpr bool WITH_CONTROLS = false;
+constexpr bool SUPPORTS_CTRL = false;
 using TestStateVectorBackends = Pennylane::Util::TypeList<void>;
 
 template <class StateVector> struct StateVectorToName {};
@@ -140,7 +140,7 @@ template <typename TypeList> void testAdjointJacobian() {
 
         DYNAMIC_SECTION("Op=PhaseShift, Obs=Y - "
                         << StateVectorToName<StateVectorT>::name) {
-            if (WITH_CONTROLS) {
+            if (SUPPORTS_CTRL) {
                 const std::vector<size_t> tp{0};
                 const size_t num_qubits = GENERATE(2, 3, 4);
 
