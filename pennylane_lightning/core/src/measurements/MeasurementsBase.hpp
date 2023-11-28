@@ -297,7 +297,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param obs The observable object to sample
      * @param num_shots Number of shots used to generate samples
      *
-     * @return samples of eigenvalues of the observable
+     * @return Samples of eigenvalues of the observable
      */
     auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots)
         -> std::vector<PrecisionT> {
@@ -317,7 +317,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param num_shots Number of shots used to generate samples
      *
-     * @return the raw basis state samples
+     * @return Raw basis state samples
      */
     auto sample(const size_t &num_shots) -> std::vector<size_t> {
         Derived measure(_statevector);
@@ -329,7 +329,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * number of occurences for each possible outcome with the number of shots.
      *
      * @param obs The observable to sample
-     * @param num_shots number of wires the sampled observable was performed on
+     * @param num_shots Number of wires the sampled observable was performed on
      *
      * @return std::unordered_map<PrecisionT, size_t> with format
      * ``{'EigenValue': num_occurences}``
@@ -354,7 +354,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @brief Groups the samples into a dictionary showing number of occurences
      * for each possible outcome with the number of shots.
      *
-     * @param num_shots number of wires the sampled observable was performed on
+     * @param num_shots Number of wires the sampled observable was performed on
      *
      * @return std::unordered_map<size_t, size_t> with format ``{'outcome':
      * num_occurences}``
@@ -365,13 +365,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         size_t num_wires = _statevector.getTotalNumQubits();
         for (size_t i = 0; i < num_shots; i++) {
-            auto local_sample =
-                std::vector(sample_data.begin() + i * num_wires,
-                            sample_data.begin() + (i + 1) * num_wires);
-
             size_t key = 0;
-            for (size_t i = 0; i < local_sample.size(); i++) {
-                key += local_sample[i] << (local_sample.size() - 1 - i);
+            for (size_t j = 0; j < num_wires; j++) {
+                key += sample_data[i * num_wires + j] << (num_wires - 1 - j);
             }
 
             auto it = outcome_map.find(key);
