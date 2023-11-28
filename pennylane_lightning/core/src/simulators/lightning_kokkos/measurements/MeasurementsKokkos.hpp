@@ -619,6 +619,17 @@ class Measurements final
     }
 
     /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(const size_t &num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
      * @brief  Inverse transform sampling method for samples.
      * Reference https://en.wikipedia.org/wiki/Inverse_transform_sampling
      *

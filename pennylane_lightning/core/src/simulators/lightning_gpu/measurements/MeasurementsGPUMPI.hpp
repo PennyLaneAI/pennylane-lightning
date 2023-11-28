@@ -222,6 +222,17 @@ class MeasurementsMPI final
     }
 
     /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(const size_t &num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
      * @brief Utility method for samples.
      *
      * @param num_samples Number of Samples

@@ -292,6 +292,28 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    auto probs(const size_t &num_shots) -> std::vector<PrecisionT> {
+        auto counts_map = counts(num_shots);
+
+        size_t num_wires = _statevector.getTotalNumQubits();
+
+        std::vector<PrecisionT> prob_shots(size_t{1} << num_wires, 0.0);
+
+        for (auto &it : counts_map) {
+            prob_shots[it.first] =
+                it.second / static_cast<PrecisionT>(num_shots);
+        }
+
+        return prob_shots;
+    }
+
+    /**
      * @brief Return samples drawn from eigenvalues of the observable
      *
      * @param obs The observable object to sample
