@@ -325,7 +325,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Groups the eigen values of samples into a dictionary showing
+     * @brief Groups the eigenvalues of samples into a dictionary showing
      * number of occurences for each possible outcome with the number of shots.
      *
      * @param obs The observable to sample
