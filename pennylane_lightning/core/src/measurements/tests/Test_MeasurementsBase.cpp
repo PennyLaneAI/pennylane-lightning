@@ -167,16 +167,16 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliX", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperation("Hadamard", {i}, false);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -184,17 +184,17 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliY", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{i}, {i}, {i}},
                                    {false, false, false});
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -202,14 +202,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliZ", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -217,16 +217,16 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Hadamard", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
                 const PrecisionT theta = -M_PI / 4.0;
                 sv.applyOperation("RY", {i}, false, {theta});
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -234,14 +234,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Identity", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -255,7 +255,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "PauliY", std::vector<size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
 
-            Measurements<StateVectorT> Measurer_shots(statevector);
+            Measurements<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
                                {{0}, {2}, {2}, {2}},
@@ -263,10 +263,10 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -279,7 +279,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "Identity", std::vector<size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
 
-            Measurements<StateVectorT> Measurer_shots(statevector);
+            Measurements<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
                                {false, false, false});
@@ -288,10 +288,10 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
