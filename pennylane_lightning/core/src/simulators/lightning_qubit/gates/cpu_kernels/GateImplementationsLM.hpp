@@ -285,46 +285,45 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
+     * @param controlled_wires Control wires.
      * @param wire A wire the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>
     static void
+    applyNCSingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                         const std::complex<PrecisionT> *matrix,
+                         const std::vector<size_t> &controlled_wires,
+                         const std::vector<size_t> &wires,
+                         bool inverse = false) {
+        constexpr std::size_t one{1};
+        constexpr std::size_t dim = one << 1U;
+        std::vector<std::complex<PrecisionT>> mat(matrix, matrix + dim * dim);
+        if (inverse) {
+            for (std::size_t i = 0; i < dim; i++) {
+                for (std::size_t j = 0; j < dim; j++) {
+                    mat[j * dim + i] = std::conj(matrix[i * dim + j]);
+                }
+            }
+        }
+        auto core_function = [mat](std::complex<PrecisionT> *arr,
+                                   const std::size_t i0, const std::size_t i1) {
+            const std::complex<PrecisionT> v0 = arr[i0];
+            const std::complex<PrecisionT> v1 = arr[i1];
+            arr[i0] = mat[0B00] * v0 +
+                      mat[0B01] * v1; // NOLINT(readability-magic-numbers)
+            arr[i1] = mat[0B10] * v0 +
+                      mat[0B11] * v1; // NOLINT(readability-magic-numbers)
+        };
+        applyNC1(arr, num_qubits, {}, wires, core_function);
+    }
+
+    template <class PrecisionT>
+    static void
     applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::complex<PrecisionT> *matrix,
                        const std::vector<size_t> &wires, bool inverse = false) {
-        PL_ASSERT(wires.size() == 1);
-        const size_t rev_wire = num_qubits - wires[0] - 1;
-        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        const auto [parity_high, parity_low] = revWireParity(rev_wire);
-
-        if (inverse) {
-            for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
-                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-                const size_t i1 = i0 | rev_wire_shift;
-                const std::complex<PrecisionT> v0 = arr[i0];
-                const std::complex<PrecisionT> v1 = arr[i1];
-                arr[i0] = std::conj(matrix[0B00]) * v0 +
-                          std::conj(matrix[0B10]) *
-                              v1; // NOLINT(readability-magic-numbers)
-                arr[i1] = std::conj(matrix[0B01]) * v0 +
-                          std::conj(matrix[0B11]) *
-                              v1; // NOLINT(readability-magic-numbers)
-            }
-        } else {
-            for (size_t k = 0; k < exp2(num_qubits - 1); k++) {
-                const size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-                const size_t i1 = i0 | rev_wire_shift;
-                const std::complex<PrecisionT> v0 = arr[i0];
-                const std::complex<PrecisionT> v1 = arr[i1];
-                arr[i0] =
-                    matrix[0B00] * v0 +
-                    matrix[0B01] * v1; // NOLINT(readability-magic-numbers)
-                arr[i1] =
-                    matrix[0B10] * v0 +
-                    matrix[0B11] * v1; // NOLINT(readability-magic-numbers)
-            }
-        }
+        applyNCSingleQubitOp(arr, num_qubits, matrix, {}, wires, inverse);
     }
 
     /**
@@ -333,83 +332,53 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
+     * @param controlled_wires Control wires.
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>
     static void
+    applyNCTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+                      const std::complex<PrecisionT> *matrix,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<size_t> &wires, bool inverse = false) {
+        constexpr std::size_t one{1};
+        constexpr std::size_t dim = one << 2U;
+        std::vector<std::complex<PrecisionT>> mat(matrix, matrix + dim * dim);
+        if (inverse) {
+            for (std::size_t i = 0; i < dim; i++) {
+                for (std::size_t j = 0; j < dim; j++) {
+                    mat[j * dim + i] = std::conj(matrix[i * dim + j]);
+                }
+            }
+        }
+        auto core_function = [mat](std::complex<PrecisionT> *arr,
+                                   const std::size_t i00, const std::size_t i01,
+                                   const std::size_t i10,
+                                   const std::size_t i11) {
+            const std::complex<PrecisionT> v00 = arr[i00];
+            const std::complex<PrecisionT> v01 = arr[i01];
+            const std::complex<PrecisionT> v10 = arr[i10];
+            const std::complex<PrecisionT> v11 = arr[i11];
+            // NOLINTBEGIN(readability-magic-numbers)
+            arr[i00] = mat[0B0000] * v00 + mat[0B0001] * v01 +
+                       mat[0B0010] * v10 + mat[0B0011] * v11;
+            arr[i01] = mat[0B0100] * v00 + mat[0B0101] * v01 +
+                       mat[0B0110] * v10 + mat[0B0111] * v11;
+            arr[i10] = mat[0B1000] * v00 + mat[0B1001] * v01 +
+                       mat[0B1010] * v10 + mat[0B1011] * v11;
+            arr[i11] = mat[0B1100] * v00 + mat[0B1101] * v01 +
+                       mat[0B1110] * v10 + mat[0B1111] * v11;
+        };
+        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+    }
+
+    template <class PrecisionT>
+    static void
     applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
-        PL_ASSERT(wires.size() == 2);
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
-        if (inverse) {
-            for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-                const size_t i00 = ((k << 2U) & parity_high) |
-                                   ((k << 1U) & parity_middle) |
-                                   (k & parity_low);
-                const size_t i10 = i00 | rev_wire1_shift;
-                const size_t i01 = i00 | rev_wire0_shift;
-                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-                const std::complex<PrecisionT> v00 = arr[i00];
-                const std::complex<PrecisionT> v01 = arr[i01];
-                const std::complex<PrecisionT> v10 = arr[i10];
-                const std::complex<PrecisionT> v11 = arr[i11];
-
-                // NOLINTBEGIN(readability-magic-numbers)
-                arr[i00] = std::conj(matrix[0b0000]) * v00 +
-                           std::conj(matrix[0b0100]) * v01 +
-                           std::conj(matrix[0b1000]) * v10 +
-                           std::conj(matrix[0b1100]) * v11;
-                arr[i01] = std::conj(matrix[0b0001]) * v00 +
-                           std::conj(matrix[0b0101]) * v01 +
-                           std::conj(matrix[0b1001]) * v10 +
-                           std::conj(matrix[0b1101]) * v11;
-                arr[i10] = std::conj(matrix[0b0010]) * v00 +
-                           std::conj(matrix[0b0110]) * v01 +
-                           std::conj(matrix[0b1010]) * v10 +
-                           std::conj(matrix[0b1110]) * v11;
-                arr[i11] = std::conj(matrix[0b0011]) * v00 +
-                           std::conj(matrix[0b0111]) * v01 +
-                           std::conj(matrix[0b1011]) * v10 +
-                           std::conj(matrix[0b1111]) * v11;
-                // NOLINTEND(readability-magic-numbers)
-            }
-        } else {
-            for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-                const size_t i00 = ((k << 2U) & parity_high) |
-                                   ((k << 1U) & parity_middle) |
-                                   (k & parity_low);
-                const size_t i10 = i00 | rev_wire1_shift;
-                const size_t i01 = i00 | rev_wire0_shift;
-                const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
-                const std::complex<PrecisionT> v00 = arr[i00];
-                const std::complex<PrecisionT> v01 = arr[i01];
-                const std::complex<PrecisionT> v10 = arr[i10];
-                const std::complex<PrecisionT> v11 = arr[i11];
-
-                // NOLINTBEGIN(readability-magic-numbers)
-                arr[i00] = matrix[0b0000] * v00 + matrix[0b0001] * v01 +
-                           matrix[0b0010] * v10 + matrix[0b0011] * v11;
-                arr[i01] = matrix[0b0100] * v00 + matrix[0b0101] * v01 +
-                           matrix[0b0110] * v10 + matrix[0b0111] * v11;
-                arr[i10] = matrix[0b1000] * v00 + matrix[0b1001] * v01 +
-                           matrix[0b1010] * v10 + matrix[0b1011] * v11;
-                arr[i11] = matrix[0b1100] * v00 + matrix[0b1101] * v01 +
-                           matrix[0b1110] * v10 + matrix[0b1111] * v11;
-                // NOLINTEND(readability-magic-numbers)
-            }
-        }
+        applyNCTwoQubitOp(arr, num_qubits, matrix, {}, wires, inverse);
     }
 
     /**
