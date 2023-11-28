@@ -260,7 +260,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
             auto prob_obs = Measurer_obs.probs(*obs);
-            auto prob = Measurer.probs(std::vector({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
             size_t num_shots = 10000;
             auto prob_shots = Measurer.probs(num_shots);
 
@@ -288,7 +288,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
             auto prob_obs = Measurer_obs.probs(*obs);
-            auto prob = Measurer.probs(std::vector({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
             size_t num_shots = 10000;
             auto prob_shots = Measurer.probs(num_shots);
 
