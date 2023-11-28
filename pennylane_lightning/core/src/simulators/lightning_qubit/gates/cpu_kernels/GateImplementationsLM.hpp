@@ -1436,7 +1436,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(n_wires == 4);
         PL_ASSERT(num_qubits >= nw_tot);
         std::array<std::size_t, 16> indices{};
-        std::size_t i0000 = 0, i0011 = 0, i1100 = 0;
+        std::size_t i0000 = 0;
+        std::size_t i0011 = 0;
+        std::size_t i1100 = 0;
         if constexpr (has_controls) {
             std::vector<std::size_t> all_wires;
             all_wires.reserve(nw_tot);
@@ -2052,7 +2054,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const std::size_t dim = one << nw_tot;
         std::vector<std::size_t> indices(dim);
-        std::size_t i0000 = 0, i0011 = 0, i1100 = 0;
+        std::size_t i0000 = 0;
+        std::size_t i0011 = 0;
+        std::size_t i1100 = 0;
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
             if constexpr (has_controls) {
                 indices = parity2indices(k, parity, rev_wire_shifts);
