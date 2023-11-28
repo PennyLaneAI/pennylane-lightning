@@ -112,7 +112,7 @@ class AdjointJacobian final
                     try {
                         states[h_i].updateData(reference_state.getData(),
                                                reference_state.getLength());
-                        this->applyObservable(states[h_i], *observables[h_i]);
+                        BaseType::applyObservable(states[h_i], *observables[h_i]);
                     } catch (...) {
                         #if defined(_OPENMP)
                             #pragma omp critical
@@ -136,7 +136,7 @@ class AdjointJacobian final
         } else {
             states[0].updateData(reference_state.getData(),
                                  reference_state.getLength());
-            this->applyObservable(states[0], *observables[0]);
+            BaseType::applyObservable(states[0], *observables[0]);
         }
     }
 
@@ -166,7 +166,7 @@ class AdjointJacobian final
         #endif
             for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
                 try {
-                    this->applyOperationAdj(states[st_idx], operations, op_idx);
+                    BaseType::applyOperationAdj(states[st_idx], operations, op_idx);
                 } catch (...) {
                     #if defined(_OPENMP)
                         #pragma omp critical
@@ -244,7 +244,7 @@ class AdjointJacobian final
                                                     jd.getSizeStateVec());
         // Apply given operations to statevector if requested
         if (apply_operations) {
-            this->applyOperations(lambda, ops);
+            BaseType::applyOperations(lambda, ops);
         }
 
         const auto tp_rend = tp.rend();
@@ -299,7 +299,7 @@ class AdjointJacobian final
                 break; // All done
             }
             mu.updateData(lambda.getData(), lambda.getLength());
-            this->applyOperationAdj(lambda, ops, op_idx);
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
