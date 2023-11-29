@@ -619,7 +619,7 @@ class Measurements final
     }
 
     /**
-     * @brief Probabilities to measure rotated basis states.
+     * @brief Probabilities with shot-noise.
      *
      * @param num_shots Number of shots.
      *
