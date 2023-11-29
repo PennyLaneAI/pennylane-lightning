@@ -5,8 +5,11 @@
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
 
+* Add shots support for variance value, probs, sample, counts calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer. All Lightning backends support this support feature.
+  [(#561)](https://github.com/PennyLaneAI/pennylane-lightning/pull/561)
+
 * Add shots support for expectation value calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer by adding `measure_with_samples` to the measurement interface. All Lightning backends support this support feature.
-[(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
+  [(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
 
 * `qml.QubitUnitary` operators can be included in a circuit differentiated with the adjoint method. Lightning handles circuits with arbitrary non-differentiable `qml.QubitUnitary` operators. 1,2-qubit `qml.QubitUnitary` operators with differentiable parameters can be differentiated using decomposition.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)

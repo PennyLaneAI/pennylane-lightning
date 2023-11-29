@@ -458,7 +458,21 @@ class Measurements final
     };
 
     /**
-     * @brief Probabilities of each computational basis state.
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
@@ -590,6 +604,18 @@ class Measurements final
 
             return probabilities;
         }
+    }
+
+    /**
+     * @brief Probabilities of each computational basis state for an observable.
+     *
+     * @param obs An observable object.
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs) {
+        return BaseType::probs(obs);
     }
 
     /**
