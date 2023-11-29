@@ -15,7 +15,7 @@
 Unit tests for Measurements in Lightning devices.
 """
 import pytest
-from conftest import device_name, LightningDevice as ld
+from conftest import device_name, LightningDevice as ld, lightning_ops
 
 import numpy as np
 import math
@@ -28,13 +28,6 @@ from pennylane.measurements import (
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-if device_name == "lightning.qubit":
-    import pennylane_lightning.lightning_qubit_ops as lightning_ops
-elif device_name == "lightning.kokkos":
-    import pennylane_lightning.lightning_kokkos_ops as lightning_ops
-elif device_name == "lightning.gpu":
-    import pennylane_lightning.lightning_gpu_ops as lightning_ops
 
 
 def test_measurements():

@@ -120,10 +120,13 @@ if device_name not in qml.plugin_devices:
 # Device specification
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
+    import pennylane_lightning.lightning_kokkos_ops as lightning_ops
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+    import pennylane_lightning.lightning_gpu_ops as lightning_ops
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
+    import pennylane_lightning.lightning_qubit_ops as lightning_ops
 
 
 # General qubit_device fixture, for any number of wires.
