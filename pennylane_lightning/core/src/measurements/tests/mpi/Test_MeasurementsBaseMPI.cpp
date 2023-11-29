@@ -112,7 +112,8 @@ template <typename TypeList> void testProbabilities() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             size_t num_shots = 1000;
             auto probabilities = Measurer.probs(num_shots);
-            REQUIRE_THAT(prob_local, Catch::Approx(probabilities).margin(5e-2));
+            REQUIRE_THAT(expected_prob,
+                         Catch::Approx(probabilities).margin(5e-2));
         }
 
         testProbabilities<typename TypeList::Next>();
