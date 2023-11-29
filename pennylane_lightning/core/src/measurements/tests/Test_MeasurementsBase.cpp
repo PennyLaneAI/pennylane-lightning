@@ -296,9 +296,10 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test shots" << StateVectorToName<StateVectorT>::name) {
             Measurements<StateVectorT> Measurer(sv);
+            Measurements<StateVectorT> Measurer_shots(sv);
 
             size_t num_shots = 10000;
-            auto prob_shots = Measurer.probs(num_shots);
+            auto prob_shots = Measurer_shots.probs(num_shots);
             auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
             REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(5e-2));
