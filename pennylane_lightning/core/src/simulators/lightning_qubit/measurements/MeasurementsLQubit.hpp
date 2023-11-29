@@ -76,6 +76,8 @@ class Measurements final
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
+    const std::unordered_map<std::string, ExpValFunc> expval_funcs_;
+
   public:
     explicit Measurements(const StateVectorT &statevector)
         : BaseType{statevector},
@@ -633,8 +635,6 @@ class Measurements final
     }
 
   private:
-    const std::unordered_map<std::string, ExpValFunc> expval_funcs_;
-
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.

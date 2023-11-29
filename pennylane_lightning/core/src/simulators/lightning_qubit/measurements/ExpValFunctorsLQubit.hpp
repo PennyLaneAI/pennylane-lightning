@@ -38,7 +38,7 @@ namespace Pennylane::LightningQubit::Functors {
  *
  * @tparam PrecisionT precision data type of the statevector.
  */
-template <class PrecisionT> struct getExpectationValueIdentityFunctor {
+template <class PrecisionT> class getExpectationValueIdentityFunctor {
   private:
     const std::complex<PrecisionT> *arr;
     size_t num_qubits;
@@ -80,7 +80,7 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
  *
  * @tparam PrecisionT precision data type of the statevector.
  */
-template <class PrecisionT> struct getExpectationValuePauliXFunctor {
+template <class PrecisionT> class getExpectationValuePauliXFunctor {
   private:
     const std::complex<PrecisionT> *arr;
     size_t num_qubits;
@@ -137,7 +137,7 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
  *
  * @tparam PrecisionT precision data type of the statevector.
  */
-template <class PrecisionT> struct getExpectationValuePauliYFunctor {
+template <class PrecisionT> class getExpectationValuePauliYFunctor {
   private:
     const std::complex<PrecisionT> *arr;
     size_t num_qubits;
@@ -200,7 +200,7 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
  *
  * @tparam PrecisionT precision data type of the statevector.
  */
-template <class PrecisionT> struct getExpectationValuePauliZFunctor {
+template <class PrecisionT> class getExpectationValuePauliZFunctor {
   private:
     const std::complex<PrecisionT> *arr;
     size_t num_qubits;
@@ -257,7 +257,7 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
  *
  * @tparam PrecisionT precision data type of the statevector.
  */
-template <class PrecisionT> struct getExpectationValueHadamardFunctor {
+template <class PrecisionT> class getExpectationValueHadamardFunctor {
   private:
     const std::complex<PrecisionT> *arr;
     size_t num_qubits;
