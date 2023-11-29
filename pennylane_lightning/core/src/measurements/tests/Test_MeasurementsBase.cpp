@@ -145,7 +145,7 @@ template <typename TypeList> void testProbabilities() {
             size_t num_shots = 10000;
             probabilities = Measurer.probs(num_shots);
             REQUIRE_THAT(input[0].second,
-                             Catch::Approx(probabilities).margin(5e-2));
+                         Catch::Approx(probabilities).margin(5e-2));
         }
 
         testProbabilities<typename TypeList::Next>();
