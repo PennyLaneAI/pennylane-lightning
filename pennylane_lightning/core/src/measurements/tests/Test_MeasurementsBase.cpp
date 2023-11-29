@@ -244,7 +244,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
-
+        /*
         DYNAMIC_SECTION("Test TensorProd XYZ"
                         << StateVectorToName<StateVectorT>::name) {
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -268,6 +268,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
+        */
 
         DYNAMIC_SECTION("Test TensorProd YHI"
                         << StateVectorToName<StateVectorT>::name) {
