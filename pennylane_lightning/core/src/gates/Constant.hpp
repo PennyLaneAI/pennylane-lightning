@@ -43,7 +43,7 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief Gate names
  */
-typedef std::pair<GateOperation, std::string_view> GateView;
+using GateView = typename std::pair<GateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array gate_names = {
     GateView{GateOperation::Identity, "Identity"},
     GateView{GateOperation::PauliX, "PauliX"},
@@ -80,7 +80,7 @@ typedef std::pair<GateOperation, std::string_view> GateView;
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"}};
 
-typedef std::pair<ControlledGateOperation, std::string_view> CGateView;
+using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
     CGateView{ControlledGateOperation::PauliX, "PauliX"},
     CGateView{ControlledGateOperation::PauliY, "PauliY"},
@@ -115,7 +115,7 @@ typedef std::pair<ControlledGateOperation, std::string_view> CGateView;
  * Note that a name of generators must be "Generator" +
  * the name of the corresponding gate.
  */
-typedef std::pair<GeneratorOperation, std::string_view> GeneratorView;
+using GeneratorView = typename std::pair<GeneratorOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array generator_names = {
     GeneratorView{GeneratorOperation::PhaseShift, "GeneratorPhaseShift"},
     GeneratorView{GeneratorOperation::RX, "GeneratorRX"},
@@ -145,8 +145,8 @@ typedef std::pair<GeneratorOperation, std::string_view> GeneratorView;
                   "GeneratorDoubleExcitationPlus"},
 };
 
-typedef std::pair<ControlledGeneratorOperation, std::string_view>
-    CGeneratorView;
+using CGeneratorView =
+    typename std::pair<ControlledGeneratorOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_generator_names = {
     CGeneratorView{ControlledGeneratorOperation::PhaseShift, "PhaseShift"},
     CGeneratorView{ControlledGeneratorOperation::RX, "RX"},
@@ -173,14 +173,15 @@ typedef std::pair<ControlledGeneratorOperation, std::string_view>
 /**
  * @brief Matrix names.
  */
-typedef std::pair<MatrixOperation, std::string_view> MatrixView;
+using MatrixView = typename std::pair<MatrixOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array matrix_names = {
     MatrixView{MatrixOperation::SingleQubitOp, "SingleQubitOp"},
     MatrixView{MatrixOperation::TwoQubitOp, "TwoQubitOp"},
     MatrixView{MatrixOperation::MultiQubitOp, "MultiQubitOp"},
 };
 
-typedef std::pair<ControlledMatrixOperation, std::string_view> CMatrixView;
+using CMatrixView =
+    typename std::pair<ControlledMatrixOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_matrix_names = {
     CMatrixView{ControlledMatrixOperation::NCSingleQubitOp, "NCSingleQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCTwoQubitOp, "NCTwoQubitOp"},
@@ -190,7 +191,7 @@ typedef std::pair<ControlledMatrixOperation, std::string_view> CMatrixView;
 /**
  * @brief Number of wires for gates besides multi-qubit gates
  */
-typedef std::pair<GateOperation, size_t> GateNWires;
+using GateNWires = typename std::pair<GateOperation, size_t>;
 [[maybe_unused]] constexpr std::array gate_wires = {
     GateNWires{GateOperation::Identity, 1},
     GateNWires{GateOperation::PauliX, 1},
@@ -227,7 +228,7 @@ typedef std::pair<GateOperation, size_t> GateNWires;
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
 };
 
-typedef std::pair<ControlledGateOperation, size_t> CGateNWires;
+using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
 [[maybe_unused]] constexpr std::array controlled_gate_wires = {
     CGateNWires{ControlledGateOperation::PauliX, 1},
     CGateNWires{ControlledGateOperation::PauliY, 1},
@@ -255,7 +256,7 @@ typedef std::pair<ControlledGateOperation, size_t> CGateNWires;
 /**
  * @brief Number of wires for generators besides multi-qubit gates
  */
-typedef std::pair<GeneratorOperation, size_t> GeneratorNWires;
+using GeneratorNWires = typename std::pair<GeneratorOperation, size_t>;
 [[maybe_unused]] constexpr std::array generator_wires = {
     GeneratorNWires{GeneratorOperation::PhaseShift, 1},
     GeneratorNWires{GeneratorOperation::RX, 1},
@@ -277,7 +278,8 @@ typedef std::pair<GeneratorOperation, size_t> GeneratorNWires;
     GeneratorNWires{GeneratorOperation::DoubleExcitationPlus, 4},
 };
 
-typedef std::pair<ControlledGeneratorOperation, size_t> CGeneratorNWires;
+using CGeneratorNWires =
+    typename std::pair<ControlledGeneratorOperation, size_t>;
 [[maybe_unused]] constexpr std::array controlled_generator_wires = {
     CGeneratorNWires{ControlledGeneratorOperation::PhaseShift, 1},
     CGeneratorNWires{ControlledGeneratorOperation::RX, 1},
@@ -298,7 +300,7 @@ typedef std::pair<ControlledGeneratorOperation, size_t> CGeneratorNWires;
 /**
  * @brief Number of parameters for gates
  */
-typedef std::pair<GateOperation, size_t> GateNParams;
+using GateNParams = typename std::pair<GateOperation, size_t>;
 [[maybe_unused]] constexpr std::array gate_num_params = {
     GateNParams{GateOperation::Identity, 0},
     GateNParams{GateOperation::PauliX, 0},
@@ -339,7 +341,7 @@ typedef std::pair<GateOperation, size_t> GateNParams;
 /**
  * @brief Number of parameters for gates
  */
-typedef std::pair<ControlledGateOperation, size_t> CGateNParams;
+using CGateNParams = typename std::pair<ControlledGateOperation, size_t>;
 [[maybe_unused]] constexpr std::array controlled_gate_num_params = {
     CGateNParams{ControlledGateOperation::PauliX, 0},
     CGateNParams{ControlledGateOperation::PauliY, 0},
