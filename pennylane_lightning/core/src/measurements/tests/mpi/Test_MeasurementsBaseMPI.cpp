@@ -107,6 +107,17 @@ template <typename TypeList> void testProbabilities() {
                              Catch::Approx(probabilities).margin(1e-6));
             }
         }
+
+        DYNAMIC_SECTION("Looping over different wire configurations - shots"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            for (const auto &term : input) {
+                size_t num_shots = 1000;
+                auto probabilities = Measurer.probs(num_shots);
+                REQUIRE_THAT(prob_local,
+                             Catch::Approx(probabilities).margin(1e-6));
+            }
+        }
+
         testProbabilities<typename TypeList::Next>();
     }
 }
@@ -288,18 +299,6 @@ template <typename TypeList> void testProbabilitiesObs() {
             auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
-        }
-
-        DYNAMIC_SECTION("Test shots"
-                        << StateVectorMPIToName<StateVectorT>::name) {
-            MeasurementsMPI<StateVectorT> Measurer(sv);
-            MeasurementsMPI<StateVectorT> Measurer_shots(sv);
-
-            size_t num_shots = 10000;
-            auto prob_shots = Measurer_shots.probs(num_shots);
-            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(5e-2));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
