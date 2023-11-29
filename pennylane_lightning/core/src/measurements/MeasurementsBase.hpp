@@ -228,6 +228,158 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         return obs_samples;
     }
 
+    /**
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return Variance of the given observable.
+     */
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
+        if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+            // Branch for NamedObs and TensorProd observables
+            auto square_mean = expval(obs, num_shots, {});
+            PrecisionT result =
+                1 - square_mean *
+                        square_mean; //`1` used here is because Eigenvalues for
+                                     // Paulis, Hadamard and Identity are {-1,
+                                     // 1}. Need to change based on eigen values
+                                     // when add Hermitian support.
+            return result;
+        }
+        // Branch for Hamiltonian observables
+        auto coeffs = obs.getCoeffs();
+        PrecisionT result{0.0};
+        size_t obs_term_idx = 0;
+        for (const auto &coeff : coeffs) {
+            std::vector<size_t> shot_range = {};
+            auto obs_samples =
+                measure_with_samples(obs, num_shots, shot_range, obs_term_idx);
+            PrecisionT expval_per_term =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
+            auto term_mean = expval_per_term / obs_samples.size();
+
+            result +=
+                coeff * coeff *
+                (1 - term_mean *
+                         term_mean); //`1` used here is because Eigenvalues for
+                                     // Paulis, Hadamard and Identity are {-1,
+                                     // 1}. Need to change based on eigen values
+                                     // when add Hermitian support.
+            obs_term_idx++;
+        }
+        return result;
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param obs An observable object.
+     *
+     * @return Floating point std::vector with probabilities.
+     * The basis columns are rearranged according to wires.
+     */
+    auto probs(const Observable<StateVectorT> &obs) {
+        PL_ABORT_IF(
+            obs.getObsName().find("Hamiltonian") != std::string::npos,
+            "Hamiltonian and Sparse Hamiltonian do not support samples().");
+        std::vector<size_t> obs_wires;
+        std::vector<size_t> identity_wires;
+        auto sv = _preprocess_state(obs, obs_wires, identity_wires);
+        Derived measure(sv);
+        return measure.probs(obs_wires);
+    }
+
+    /**
+     * @brief Return samples drawn from eigenvalues of the observable
+     *
+     * @param obs The observable object to sample
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return Samples of eigenvalues of the observable
+     */
+    auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> std::vector<PrecisionT> {
+        PL_ABORT_IF(
+            obs.getObsName().find("Hamiltonian") != std::string::npos,
+            "Hamiltonian and Sparse Hamiltonian do not support samples().");
+        std::vector<size_t> obs_wires;
+        std::vector<size_t> identity_wires;
+        std::vector<size_t> shot_range = {};
+        size_t term_idx = 0;
+
+        return measure_with_samples(obs, num_shots, shot_range, term_idx);
+    }
+
+    /**
+     * @brief Return the raw basis state samples
+     *
+     * @param num_shots Number of shots used to generate samples
+     *
+     * @return Raw basis state samples
+     */
+    auto sample(const size_t &num_shots) -> std::vector<size_t> {
+        Derived measure(_statevector);
+        return measure.generate_samples(num_shots);
+    }
+
+    /**
+     * @brief Groups the eigenvalues of samples into a dictionary showing
+     * number of occurences for each possible outcome with the number of shots.
+     *
+     * @param obs The observable to sample
+     * @param num_shots Number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<PrecisionT, size_t> with format
+     * ``{'EigenValue': num_occurences}``
+     */
+    auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> std::unordered_map<PrecisionT, size_t> {
+        std::unordered_map<PrecisionT, size_t> outcome_map;
+        auto sample_data = sample(obs, num_shots);
+        for (size_t i = 0; i < num_shots; i++) {
+            auto key = sample_data[i];
+            auto it = outcome_map.find(key);
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
+    }
+
+    /**
+     * @brief Groups the samples into a dictionary showing number of occurences
+     * for each possible outcome with the number of shots.
+     *
+     * @param num_shots Number of wires the sampled observable was performed on
+     *
+     * @return std::unordered_map<size_t, size_t> with format ``{'outcome':
+     * num_occurences}``
+     */
+    auto counts(const size_t &num_shots) -> std::unordered_map<size_t, size_t> {
+        std::unordered_map<size_t, size_t> outcome_map;
+        auto sample_data = sample(num_shots);
+
+        size_t num_wires = _statevector.getTotalNumQubits();
+        for (size_t i = 0; i < num_shots; i++) {
+            size_t key = 0;
+            for (size_t j = 0; j < num_wires; j++) {
+                key += sample_data[i * num_wires + j] << (num_wires - 1 - j);
+            }
+
+            auto it = outcome_map.find(key);
+            if (it != outcome_map.end()) {
+                it->second += 1;
+            } else {
+                outcome_map[key] = 1;
+            }
+        }
+        return outcome_map;
+    }
+
   private:
     /**
      * @brief Return preprocess state with a observable

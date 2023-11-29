@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add shots support for variance value, probs, sample, counts calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer. All Lightning backends support this support feature.
+[(#561)](https://github.com/PennyLaneAI/pennylane-lightning/pull/561)
+
 * Add shots support for expectation value calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer by adding `measure_with_samples` to the measurement interface. All Lightning backends support this support feature.
 [(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
 

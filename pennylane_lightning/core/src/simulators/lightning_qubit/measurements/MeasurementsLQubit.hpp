@@ -135,6 +135,18 @@ class Measurements final
     }
 
     /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param obs An observable object.
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs) {
+        return BaseType::probs(obs);
+    }
+
+    /**
      * @brief Expected value of an observable.
      *
      * @param matrix Square matrix in row-major order.
@@ -280,6 +292,20 @@ class Measurements final
     auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
                 const std::vector<size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
+    }
+
+    /**
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
     }
 
     /**
