@@ -261,11 +261,8 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             auto prob_obs = Measurer_obs.probs(*obs);
             auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            //size_t num_shots = 10000;
-            //auto prob_shots = Measurer.probs(num_shots);
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
-            //REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(5e-2));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -289,11 +286,19 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             auto prob_obs = Measurer_obs.probs(*obs);
             auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            //size_t num_shots = 10000;
-            //auto prob_shots = Measurer.probs(num_shots);
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
-            //REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("Test shots"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            MeasurementsMPI<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_shots = Measurer.probs(num_shots);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+
+            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(5e-2));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
