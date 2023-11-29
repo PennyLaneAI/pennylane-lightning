@@ -142,12 +142,10 @@ template <typename TypeList> void testProbabilities() {
 
         DYNAMIC_SECTION("Looping over different wire configurations - shots"
                         << StateVectorToName<StateVectorT>::name) {
-            for (const auto &term : input) {
-                size_t num_shots = 1000;
-                probabilities = Measurer.probs(num_shots);
-                REQUIRE_THAT(term.second,
+            size_t num_shots = 10000;
+            probabilities = Measurer.probs(num_shots);
+            REQUIRE_THAT(input[0].second,
                              Catch::Approx(probabilities).margin(5e-2));
-            }
         }
 
         testProbabilities<typename TypeList::Next>();

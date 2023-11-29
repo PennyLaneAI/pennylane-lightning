@@ -110,12 +110,10 @@ template <typename TypeList> void testProbabilities() {
 
         DYNAMIC_SECTION("Looping over different wire configurations - shots"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (const auto &term : input) {
-                size_t num_shots = 1000;
-                auto probabilities = Measurer.probs(num_shots);
-                REQUIRE_THAT(prob_local,
-                             Catch::Approx(probabilities).margin(1e-6));
-            }
+            size_t num_shots = 1000;
+            auto probabilities = Measurer.probs(num_shots);
+            REQUIRE_THAT(prob_local,
+                            Catch::Approx(probabilities).margin(1e-6));
         }
 
         testProbabilities<typename TypeList::Next>();
