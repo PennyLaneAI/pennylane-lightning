@@ -195,6 +195,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     };
 
     constexpr static std::array implemented_controlled_matrices = {
+        ControlledMatrixOperation::NCSingleQubitOp,
+        ControlledMatrixOperation::NCTwoQubitOp,
         ControlledMatrixOperation::NCMultiQubitOp,
     };
 
@@ -315,7 +317,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i1] = mat[0B10] * v0 +
                       mat[0B11] * v1; // NOLINT(readability-magic-numbers)
         };
-        applyNC1(arr, num_qubits, {}, wires, core_function);
+        if (controlled_wires.empty()) {
+            applyNC1<PrecisionT, PrecisionT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC1<PrecisionT, PrecisionT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT>
@@ -370,7 +378,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = mat[0B1100] * v00 + mat[0B1101] * v01 +
                        mat[0B1110] * v10 + mat[0B1111] * v11;
         };
-        applyNC2(arr, num_qubits, controlled_wires, wires, core_function);
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, PrecisionT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        } else {
+            applyNC2<PrecisionT, PrecisionT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, wires, core_function);
+        }
     }
 
     template <class PrecisionT>
@@ -2217,7 +2231,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 };
 
-// Matrix operations
+/* Matrix operations */
+
 extern template void GateImplementationsLM::applySingleQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
     const std::vector<size_t> &, bool);
@@ -2236,6 +2251,18 @@ extern template void GateImplementationsLM::applyMultiQubitOp<float>(
 extern template void GateImplementationsLM::applyMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
     const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNCSingleQubitOp<float>(
+    std::complex<float> *, size_t, const std::complex<float> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNCSingleQubitOp<double>(
+    std::complex<double> *, size_t, const std::complex<double> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNCTwoQubitOp<float>(
+    std::complex<float> *, size_t, const std::complex<float> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+extern template void GateImplementationsLM::applyNCTwoQubitOp<double>(
+    std::complex<double> *, size_t, const std::complex<double> *,
+    const std::vector<size_t> &, const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCMultiQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
     const std::vector<size_t> &, const std::vector<size_t> &, bool);
@@ -2253,7 +2280,6 @@ extern template void
 GateImplementationsLM::applyNCPauliX<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &,
                                              const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyNCPauliY<float>(std::complex<float> *, size_t,
                                             const std::vector<size_t> &,
@@ -2262,7 +2288,6 @@ extern template void
 GateImplementationsLM::applyNCPauliY<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &,
                                              const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyNCPauliZ<float>(std::complex<float> *, size_t,
                                             const std::vector<size_t> &,
@@ -2271,14 +2296,12 @@ extern template void
 GateImplementationsLM::applyNCPauliZ<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &,
                                              const std::vector<size_t> &, bool);
-
 extern template void GateImplementationsLM::applyNCHadamard<float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCHadamard<double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyNCS<float>(std::complex<float> *, size_t,
                                        const std::vector<size_t> &,
@@ -2287,7 +2310,6 @@ extern template void
 GateImplementationsLM::applyNCS<double>(std::complex<double> *, size_t,
                                         const std::vector<size_t> &,
                                         const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyNCT<float>(std::complex<float> *, size_t,
                                        const std::vector<size_t> &,
@@ -2296,35 +2318,30 @@ extern template void
 GateImplementationsLM::applyNCT<double>(std::complex<double> *, size_t,
                                         const std::vector<size_t> &,
                                         const std::vector<size_t> &, bool);
-
 extern template void GateImplementationsLM::applyNCPhaseShift<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyNCPhaseShift<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyNCRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyNCRX<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyNCRY<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyNCRY<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyNCRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyNCRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCSingleExcitation<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2333,7 +2350,6 @@ extern template void
 GateImplementationsLM::applyNCSingleExcitation<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCSingleExcitationMinus<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2342,7 +2358,6 @@ extern template void
 GateImplementationsLM::applyNCSingleExcitationMinus<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCSingleExcitationPlus<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2351,7 +2366,6 @@ extern template void
 GateImplementationsLM::applyNCSingleExcitationPlus<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCDoubleExcitation<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2360,7 +2374,6 @@ extern template void
 GateImplementationsLM::applyNCDoubleExcitation<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCDoubleExcitationMinus<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2369,7 +2382,6 @@ extern template void
 GateImplementationsLM::applyNCDoubleExcitationMinus<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyNCDoubleExcitationPlus<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
@@ -2378,7 +2390,6 @@ extern template void
 GateImplementationsLM::applyNCDoubleExcitationPlus<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool, double);
-
 // Single-qubit gates
 extern template void
 GateImplementationsLM::applyIdentity<float>(std::complex<float> *, size_t,
@@ -2386,69 +2397,58 @@ GateImplementationsLM::applyIdentity<float>(std::complex<float> *, size_t,
 extern template void
 GateImplementationsLM::applyIdentity<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyPauliX<float>(std::complex<float> *, size_t,
                                           const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyPauliX<double>(std::complex<double> *, size_t,
                                            const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyPauliY<float>(std::complex<float> *, size_t,
                                           const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyPauliY<double>(std::complex<double> *, size_t,
                                            const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyPauliZ<float>(std::complex<float> *, size_t,
                                           const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyPauliZ<double>(std::complex<double> *, size_t,
                                            const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyHadamard<float>(std::complex<float> *, size_t,
                                             const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyHadamard<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyS<float>(std::complex<float> *, size_t,
                                      const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyS<double>(std::complex<double> *, size_t,
                                       const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyT<float>(std::complex<float> *, size_t,
                                      const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyT<double>(std::complex<double> *, size_t,
                                       const std::vector<size_t> &, bool);
-
 extern template void GateImplementationsLM::applyPhaseShift<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyPhaseShift<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyRX<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyRY<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyRY<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyRot<float, float>(std::complex<float> *, size_t,
                                               const std::vector<size_t> &, bool,
@@ -2457,7 +2457,6 @@ extern template void
 GateImplementationsLM::applyRot<double, double>(std::complex<double> *, size_t,
                                                 const std::vector<size_t> &,
                                                 bool, double, double, double);
-
 // Two-qubit gates
 extern template void
 GateImplementationsLM::applyCNOT<float>(std::complex<float> *, size_t,
@@ -2465,70 +2464,58 @@ GateImplementationsLM::applyCNOT<float>(std::complex<float> *, size_t,
 extern template void
 GateImplementationsLM::applyCNOT<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyCY<float>(std::complex<float> *, size_t,
                                       const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyCY<double>(std::complex<double> *, size_t,
                                        const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyCZ<float>(std::complex<float> *, size_t,
                                       const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyCZ<double>(std::complex<double> *, size_t,
                                        const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applySWAP<float>(std::complex<float> *, size_t,
                                         const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applySWAP<double>(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool);
-
 extern template void GateImplementationsLM::applyIsingXX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyIsingXX<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyIsingXY<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyIsingXY<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyIsingYY<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyIsingYY<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyIsingZZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyIsingZZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyControlledPhaseShift<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void
 GateImplementationsLM::applyControlledPhaseShift<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyCRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyCRX<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyCRY<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyCRY<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applyCRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyCRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void
 GateImplementationsLM::applyCRot<float, float>(std::complex<float> *, size_t,
                                                const std::vector<size_t> &,
@@ -2537,41 +2524,33 @@ extern template void
 GateImplementationsLM::applyCRot<double, double>(std::complex<double> *, size_t,
                                                  const std::vector<size_t> &,
                                                  bool, double, double, double);
-
 extern template void GateImplementationsLM::applyMultiRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 extern template void GateImplementationsLM::applyMultiRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
-
 extern template void GateImplementationsLM::applySingleExcitation<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applySingleExcitation<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
-
 extern template void
 GateImplementationsLM::applySingleExcitationMinus<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applySingleExcitationMinus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
-
 extern template void
 GateImplementationsLM::applySingleExcitationPlus<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applySingleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
-
 // Three-qubit gates
 extern template void
 GateImplementationsLM::applyCSWAP<float>(std::complex<float> *, size_t,
@@ -2579,45 +2558,39 @@ GateImplementationsLM::applyCSWAP<float>(std::complex<float> *, size_t,
 extern template void
 GateImplementationsLM::applyCSWAP<double>(std::complex<double> *, size_t,
                                           const std::vector<size_t> &, bool);
-
 extern template void
 GateImplementationsLM::applyToffoli<float>(std::complex<float> *, size_t,
                                            const std::vector<size_t> &, bool);
 extern template void
 GateImplementationsLM::applyToffoli<double>(std::complex<double> *, size_t,
                                             const std::vector<size_t> &, bool);
-
 // Four-qubit gates
 extern template void GateImplementationsLM::applyDoubleExcitation<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applyDoubleExcitation<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
-
 extern template void
 GateImplementationsLM::applyDoubleExcitationMinus<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applyDoubleExcitationMinus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
-
 extern template void
 GateImplementationsLM::applyDoubleExcitationPlus<float, float>(
     std::complex<float> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, float angle);
-
 extern template void
 GateImplementationsLM::applyDoubleExcitationPlus<double, double>(
     std::complex<double> *arr, size_t num_qubits,
     const std::vector<size_t> &wires, bool inverse, double angle);
 
 /* Controlled generators */
+
 extern template auto GateImplementationsLM::applyNCGeneratorPhaseShift(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<size_t> &, bool) -> float;
@@ -2666,122 +2639,105 @@ GateImplementationsLM::applyNCGeneratorSingleExcitationPlus(
     const std::vector<size_t> &, bool) -> double;
 
 /* Generators */
+
 extern template auto GateImplementationsLM::applyGeneratorPhaseShift(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorPhaseShift(std::complex<double> *, size_t,
                                                 const std::vector<size_t> &,
                                                 bool) -> double;
-
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRX(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRX(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRY(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRY(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRZ(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto PauliGenerator<GateImplementationsLM>::applyGeneratorRZ(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto GateImplementationsLM::applyGeneratorIsingXX(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorIsingXX(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto
 GateImplementationsLM::applyGeneratorIsingXY(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorIsingXY(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorIsingYY(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorIsingYY(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto
 GateImplementationsLM::applyGeneratorIsingZZ(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorIsingZZ(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorCRX(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorCRX(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto GateImplementationsLM::applyGeneratorCRY(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorCRY(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto GateImplementationsLM::applyGeneratorCRZ(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
 GateImplementationsLM::applyGeneratorCRZ(std::complex<double> *, size_t,
                                          const std::vector<size_t> &, bool)
     -> double;
-
 extern template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitation(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitation(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitationMinus(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitationMinus(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorSingleExcitationPlus(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitation(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitation(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationMinus(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool)
     -> double;
 extern template auto GateImplementationsLM::applyGeneratorDoubleExcitationPlus(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
 extern template auto
 GateImplementationsLM::applyGeneratorMultiRZ(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool)

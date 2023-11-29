@@ -182,6 +182,8 @@ typedef std::pair<MatrixOperation, std::string_view> MatrixView;
 
 typedef std::pair<ControlledMatrixOperation, std::string_view> CMatrixView;
 [[maybe_unused]] constexpr std::array controlled_matrix_names = {
+    CMatrixView{ControlledMatrixOperation::NCSingleQubitOp, "NCSingleQubitOp"},
+    CMatrixView{ControlledMatrixOperation::NCTwoQubitOp, "NCTwoQubitOp"},
     CMatrixView{ControlledMatrixOperation::NCMultiQubitOp, "NCMultiQubitOp"},
 };
 

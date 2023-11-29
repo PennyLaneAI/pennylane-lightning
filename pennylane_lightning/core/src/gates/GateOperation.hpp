@@ -161,7 +161,9 @@ enum class MatrixOperation : uint32_t {
 
 enum class ControlledMatrixOperation : uint32_t {
     BEGIN = 0,
-    NCMultiQubitOp = 0,
+    NCSingleQubitOp = 0,
+    NCTwoQubitOp,
+    NCMultiQubitOp,
     /* END (placeholder) */
     END
 };

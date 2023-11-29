@@ -681,6 +681,19 @@ struct ControlledMatrixOpToMemberFuncPtr {
 };
 template <class PrecisionT, class GateImplementation>
 struct ControlledMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation,
+    ControlledMatrixOperation::NCSingleQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSingleQubitOp<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledMatrixOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, ControlledMatrixOperation::NCTwoQubitOp> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCTwoQubitOp<PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledMatrixOpToMemberFuncPtr<
     PrecisionT, GateImplementation, ControlledMatrixOperation::NCMultiQubitOp> {
     constexpr static auto value =
         &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;

@@ -1004,9 +1004,9 @@ void testApplyControlledMultiQubitOpInverse() {
             const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
             auto st = ini_st;
-            GateImplementation::applyNCMultiQubitOp(
+            GateImplementation::applyNCSingleQubitOp(
                 st.data(), num_qubits, matrix.data(), controls, wires, false);
-            GateImplementation::applyNCMultiQubitOp(
+            GateImplementation::applyNCSingleQubitOp(
                 st.data(), num_qubits, matrix.data(), controls, wires, true);
 
             REQUIRE(st == approx(ini_st).margin(margin));
@@ -1028,9 +1028,9 @@ void testApplyControlledMultiQubitOpInverse() {
             const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
             auto st = ini_st;
-            GateImplementation::applyNCMultiQubitOp(
+            GateImplementation::applyNCTwoQubitOp(
                 st.data(), num_qubits, matrix.data(), controls, wires, false);
-            GateImplementation::applyNCMultiQubitOp(
+            GateImplementation::applyNCTwoQubitOp(
                 st.data(), num_qubits, matrix.data(), controls, wires, true);
 
             REQUIRE(st == approx(ini_st).margin(margin));

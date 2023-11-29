@@ -347,6 +347,12 @@ void assignKernelsForControlledMatrixOp_Default() {
     auto &instance =
         OperationKernelMap<ControlledMatrixOperation>::getInstance();
 
+    instance.assignKernelForOp(ControlledMatrixOperation::NCSingleQubitOp,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledMatrixOperation::NCTwoQubitOp,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(ControlledMatrixOperation::NCMultiQubitOp,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
