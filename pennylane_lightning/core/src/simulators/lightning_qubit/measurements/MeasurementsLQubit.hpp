@@ -46,7 +46,6 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
 using namespace Pennylane::LightningQubit::Functors;
-using Pennylane::Util::INVSQRT2;
 enum class ExpValFunc : uint32_t {
     BEGIN = 1,
     Identity = 1,
@@ -79,9 +78,12 @@ class Measurements final
 
   public:
     explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector} {
-        init_expval_funcs_();
-    };
+        : BaseType{statevector},
+          expval_funcs_{{"Identity", ExpValFunc::Identity},
+                        {"PauliX", ExpValFunc::PauliX},
+                        {"PauliY", ExpValFunc::PauliY},
+                        {"PauliZ", ExpValFunc::PauliZ},
+                        {"Hadamard", ExpValFunc::Hadamard}} {};
 
     /**
      * @brief Templated method that returns the expectation value of named
@@ -103,10 +105,7 @@ class Measurements final
         size_t num_qubits = this->_statevector.getNumQubits();
         const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
 
-        PrecisionT expval = 0.0;
-        functor_t<PrecisionT>(arr_data, num_qubits, wires)(expval);
-
-        return expval;
+        return functor_t<PrecisionT>(arr_data, num_qubits, wires)();
     }
 
     /**
@@ -207,7 +206,7 @@ class Measurements final
                       const std::vector<size_t> &wires) {
         // In-place calculation of expval without creating duplicate of the
         // statevector.
-        switch (expval_funcs_[operation]) {
+        switch (expval_funcs_.at(operation)) {
         case ExpValFunc::Identity:
             return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
                                            0>(wires);
@@ -634,6 +633,8 @@ class Measurements final
     }
 
   private:
+    const std::unordered_map<std::string, ExpValFunc> expval_funcs_;
+
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.
@@ -714,21 +715,5 @@ class Measurements final
         }
         return init_idx;
     }
-
-    std::unordered_map<std::string, ExpValFunc> expval_funcs_;
-
-    // clang-format off
-        /**
-        * @brief Register generator operations in the generators_indices_ attribute:
-        *        an unordered_map mapping strings to GateOperation enumeration keywords.
-        */
-        void init_expval_funcs_() {
-            expval_funcs_["Identity"] = ExpValFunc::Identity;
-            expval_funcs_["PauliX"]   = ExpValFunc::PauliX;
-            expval_funcs_["PauliY"]   = ExpValFunc::PauliY;
-            expval_funcs_["PauliZ"]   = ExpValFunc::PauliZ;
-            expval_funcs_["Hadamard"] = ExpValFunc::Hadamard;
-        }
-    // clang-format on
 }; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
