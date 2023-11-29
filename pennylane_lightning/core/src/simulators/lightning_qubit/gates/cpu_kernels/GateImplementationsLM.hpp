@@ -230,9 +230,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
             idx = indices[0];
-            for (std::size_t i = 0; i < length; i++) {
-                if ((inner_idx & (one << i)) != 0) {
-                    idx |= rev_wire_shifts[i + n_contr];
+            for (std::size_t i = n_contr; i < length; i++) {
+                if ((inner_idx & (one << (i - n_contr))) != 0) {
+                    idx |= rev_wire_shifts[i];
                 }
             }
             indices[inner_idx] = idx;
@@ -269,9 +269,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
             idx = indices[0];
-            for (std::size_t i = 0; i < rev_wire_shifts.size(); i++) {
-                if ((inner_idx & (one << i)) != 0) {
-                    idx |= rev_wire_shifts[i + n_contr];
+            for (std::size_t i = n_contr; i < rev_wire_shifts.size(); i++) {
+                if ((inner_idx & (one << (i - n_contr))) != 0) {
+                    idx |= rev_wire_shifts[i];
                 }
             }
             indices[inner_idx] = idx;
