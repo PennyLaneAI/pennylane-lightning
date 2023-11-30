@@ -140,6 +140,55 @@ template <typename TypeList> void testProbabilities() {
             }
         }
 
+        testProbabilities<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilities<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testProbabilitiesShots() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
+            input = {
+#ifdef _ENABLE_PLGPU
+                // Bit index reodering conducted in the python layer
+                // for L-GPU. Also L-GPU backend doesn't support
+                // out of order wires for probability calculation
+                {{2, 1, 0},
+                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                  0.00801973, 0.02280642, 0.00104134}}
+#else
+                {{0, 1, 2},
+                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                  0.00801973, 0.02280642, 0.00104134}},
+                {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                {{0}, {0.79249179, 0.20750821}},
+                {{1}, {0.88507558, 0.11492442}},
+                {{2}, {0.9563339, 0.0436661}}
+#endif
+            };
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        std::vector<PrecisionT> probabilities;
+
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- fullsystem"
             << StateVectorToName<StateVectorT>::name) {
@@ -164,9 +213,9 @@ template <typename TypeList> void testProbabilities() {
     }
 }
 
-TEST_CASE("Probabilities", "[MeasurementsBase]") {
+TEST_CASE("Probabilities Shots", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
-        testProbabilities<TestStateVectorBackends>();
+        testProbabilitiesShots<TestStateVectorBackends>();
     }
 }
 
