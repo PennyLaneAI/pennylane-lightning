@@ -131,11 +131,6 @@ jobs:
           mkdir -p ./tests/results
           ./measurements_test_runner
           /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 ./measurements_test_runner_mpi
-        #for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-        #for file in *runner_mpi ; do /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-        #lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-        #lcov --remove coverage.info '/usr/*' --output-file coverage.info
-        #mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
           set +x
 
       - name: Upload test results
