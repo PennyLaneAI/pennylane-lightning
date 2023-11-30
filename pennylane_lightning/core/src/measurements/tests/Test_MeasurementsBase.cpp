@@ -166,6 +166,7 @@ template <typename TypeList> void testProbabilitiesShots() {
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}}
 #else
+                // prob shots only support in-order target wires for now
                 {{0, 1, 2},
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}},

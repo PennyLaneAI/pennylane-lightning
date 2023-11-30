@@ -118,7 +118,7 @@ template <typename TypeList> void testProbabilities() {
 
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- sub system"
-            << StateVectorToName<StateVectorT>::name) {
+            << StateVectorMPIToName<StateVectorT>::name) {
             for (const auto &term : input) {
                 size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
