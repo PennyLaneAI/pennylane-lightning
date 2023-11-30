@@ -210,7 +210,7 @@ template <typename TypeList> void testProbabilitiesShots() {
             }
         }
 
-        testProbabilities<typename TypeList::Next>();
+        testProbabilitiesShots<typename TypeList::Next>();
     }
 }
 
