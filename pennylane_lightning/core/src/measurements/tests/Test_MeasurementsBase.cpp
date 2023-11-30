@@ -158,14 +158,14 @@ template <typename TypeList> void testProbabilitiesShots() {
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
             input = {
-#ifdef _ENABLE_PLGPU
-                // Bit index reodering conducted in the python layer
-                // for L-GPU. Also L-GPU backend doesn't support
-                // out of order wires for probability calculation
-                {{2, 1, 0},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}}
-#else
+//#ifdef _ENABLE_PLGPU
+//                // Bit index reodering conducted in the python layer
+//                // for L-GPU. Also L-GPU backend doesn't support
+//                // out of order wires for probability calculation
+//                {{2, 1, 0},
+//                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+//                 0.00801973, 0.02280642, 0.00104134}}
+//#else
                 // prob shots only support in-order target wires for now
                 {{0, 1, 2},
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
@@ -176,7 +176,7 @@ template <typename TypeList> void testProbabilitiesShots() {
                 {{0}, {0.79249179, 0.20750821}},
                 {{1}, {0.88507558, 0.11492442}},
                 {{2}, {0.9563339, 0.0436661}}
-#endif
+//#endif
             };
 
         // Defining the Statevector that will be measured.
@@ -201,17 +201,17 @@ template <typename TypeList> void testProbabilitiesShots() {
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- sub system"
             << StateVectorToName<StateVectorT>::name) {
-#ifdef _ENABLE_PLGPU
-            std::vector<size_t> wires = {0, 1, 2};
-            std::vector<PrecisionT> expected_probs = {
-                0.67078706, 0.03062806, 0.0870997,  0.00397696,
-                0.17564072, 0.00801973, 0.02280642, 0.00104134};
-            size_t num_shots = 10000;
-            probabilities = Measurer.probs(wires, num_shots);
-
-            REQUIRE_THAT(expected_probs,
-                         Catch::Approx(probabilities).margin(5e-2));
-#else
+//#ifdef _ENABLE_PLGPU
+//            std::vector<size_t> wires = {0, 1, 2};
+//            std::vector<PrecisionT> expected_probs = {
+//                0.67078706, 0.03062806, 0.0870997,  0.00397696,
+//                0.17564072, 0.00801973, 0.02280642, 0.00104134};
+//            size_t num_shots = 10000;
+//            probabilities = Measurer.probs(wires, num_shots);
+//
+//            REQUIRE_THAT(expected_probs,
+//                         Catch::Approx(probabilities).margin(5e-2));
+//#else
             for (const auto &term : input) {
                 size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
@@ -219,7 +219,7 @@ template <typename TypeList> void testProbabilitiesShots() {
                              Catch::Approx(probabilities).margin(5e-2));
             }
 
-#endif
+//#endif
         }
 
         testProbabilitiesShots<typename TypeList::Next>();

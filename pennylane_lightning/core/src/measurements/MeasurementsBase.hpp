@@ -312,7 +312,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             size_t bitVal = 0;
             for (size_t bit = 0; bit < wires.size(); bit++) {
                 bitVal +=
-                    ((it.first >> (num_wires - 1 - wires[bit])) & size_t{1})
+                    ((it.first >> (num_wires - size_t{1} - wires[bit])) & size_t{1})
                     << (wires.size() - size_t{1} - bit);
             }
 
