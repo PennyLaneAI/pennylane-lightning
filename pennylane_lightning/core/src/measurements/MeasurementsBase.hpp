@@ -311,9 +311,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         for (auto &it : counts_map) {
             size_t bitVal = 0;
             for (size_t bit = 0; bit < wires.size(); bit++) {
-                bitVal +=
-                    ((it.first >> (num_wires - size_t{1} - wires[bit])) & size_t{1})
-                    << (wires.size() - size_t{1} - bit);
+                bitVal += ((it.first >> (num_wires - size_t{1} - wires[bit])) &
+                           size_t{1})
+                          << (wires.size() - size_t{1} - bit);
             }
 
             prob_shots[bitVal] +=

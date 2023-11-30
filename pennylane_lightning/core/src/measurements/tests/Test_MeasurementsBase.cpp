@@ -157,27 +157,16 @@ template <typename TypeList> void testProbabilitiesShots() {
 
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
-            input = {
-//#ifdef _ENABLE_PLGPU
-//                // Bit index reodering conducted in the python layer
-//                // for L-GPU. Also L-GPU backend doesn't support
-//                // out of order wires for probability calculation
-//                {{2, 1, 0},
-//                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-//                 0.00801973, 0.02280642, 0.00104134}}
-//#else
-                // prob shots only support in-order target wires for now
-                {{0, 1, 2},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}},
-                {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
-                {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
-                {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-                {{0}, {0.79249179, 0.20750821}},
-                {{1}, {0.88507558, 0.11492442}},
-                {{2}, {0.9563339, 0.0436661}}
-//#endif
-            };
+            input = {// prob shots only support in-order target wires for now
+                     {{0, 1, 2},
+                      {0.67078706, 0.03062806, 0.0870997, 0.00397696,
+                       0.17564072, 0.00801973, 0.02280642, 0.00104134}},
+                     {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                     {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                     {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                     {{0}, {0.79249179, 0.20750821}},
+                     {{1}, {0.88507558, 0.11492442}},
+                     {{2}, {0.9563339, 0.0436661}}};
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
@@ -201,25 +190,12 @@ template <typename TypeList> void testProbabilitiesShots() {
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- sub system"
             << StateVectorToName<StateVectorT>::name) {
-//#ifdef _ENABLE_PLGPU
-//            std::vector<size_t> wires = {0, 1, 2};
-//            std::vector<PrecisionT> expected_probs = {
-//                0.67078706, 0.03062806, 0.0870997,  0.00397696,
-//                0.17564072, 0.00801973, 0.02280642, 0.00104134};
-//            size_t num_shots = 10000;
-//            probabilities = Measurer.probs(wires, num_shots);
-//
-//            REQUIRE_THAT(expected_probs,
-//                         Catch::Approx(probabilities).margin(5e-2));
-//#else
             for (const auto &term : input) {
                 size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
                 REQUIRE_THAT(term.second,
                              Catch::Approx(probabilities).margin(5e-2));
             }
-
-//#endif
         }
 
         testProbabilitiesShots<typename TypeList::Next>();
