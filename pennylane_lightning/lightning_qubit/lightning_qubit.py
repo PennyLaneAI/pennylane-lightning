@@ -363,23 +363,34 @@ if LQ_CPP_BINARY_AVAILABLE:
                 return
             method = getattr(sim, f"{basename}", None)
             control_wires = self.wires.indices(operation.control_wires)
+            control_values = (
+                [bool(int(i)) for i in operation.hyperparameters["control_values"]]
+                if operation.name == "MultiControlledX"
+                else operation.control_values
+            )
             if operation.name == "MultiControlledX":
                 target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
             else:
                 target_wires = self.wires.indices(operation.target_wires)
+            paulix = getattr(sim, "PauliX", None)
+            for wire, value in zip(control_wires, control_values):
+                if not value:
+                    paulix([wire], False, [])
             if method is not None:  # apply n-controlled specialized gate
                 inv = False
                 param = operation.parameters
                 method(control_wires, target_wires, inv, param)
             else:  # apply gate as an n-controlled matrix
                 method = getattr(sim, "applyControlledMatrix")
-                control_wires = self.wires.indices(operation.control_wires)
                 target_wires = self.wires.indices(operation.target_wires)
                 try:
                     method(qml.matrix(operation.base), control_wires, target_wires, False)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(operation.base.matrix, control_wires, target_wires, False)
+            for wire, value in zip(control_wires, control_values):
+                if not value:
+                    paulix([wire], False, [])
 
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.
@@ -409,11 +420,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                     param = operation.parameters
                     method(wires, inv, param)
                 elif (
-                    (operation.name[0:2] == "C(" or operation.name == "ControlledQubitUnitary")
-                    and all(operation.control_values)
-                ) or (
-                    operation.name == "MultiControlledX"
-                    and all(char == "1" for char in operation.hyperparameters["control_values"])
+                    operation.name[0:2] == "C("
+                    or operation.name == "ControlledQubitUnitary"
+                    or operation.name == "MultiControlledX"
                 ):  # apply n-controlled gate
                     self._apply_lightning_controlled(sim, operation)
                 else:  # apply gate as a matrix

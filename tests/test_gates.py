@@ -294,8 +294,9 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     device_name != "lightning.qubit",
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
+@pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_qubit_unitary(n_qubits, tol):
+def test_controlled_qubit_unitary(n_qubits, control_value, tol):
     """Test that ControlledQubitUnitary is correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
@@ -317,7 +318,14 @@ def test_controlled_qubit_unitary(n_qubits, tol):
 
                 def circuit():
                     qml.StatePrep(init_state, wires=range(n_qubits))
-                    qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires)
+                    qml.ControlledQubitUnitary(
+                        U,
+                        control_wires=control_wires,
+                        wires=target_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
+                    )
                     return qml.state()
 
                 circ = qml.QNode(circuit, dev)
@@ -355,8 +363,9 @@ def test_controlled_qubit_unitary(n_qubits, tol):
         qml.DoubleExcitationPlus,
     ],
 )
+@pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_qubit_gates(operation, n_qubits, tol):
+def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
@@ -375,9 +384,21 @@ def test_controlled_qubit_gates(operation, n_qubits, tol):
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
                 if operation.num_params == 0:
-                    qml.ctrl(operation(target_wires), control_wires)
+                    qml.ctrl(
+                        operation(target_wires),
+                        control_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
+                    )
                 else:
-                    qml.ctrl(operation(0.1234, target_wires), control_wires)
+                    qml.ctrl(
+                        operation(0.1234, target_wires),
+                        control_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
+                    )
                 return qml.state()
 
             circ = qml.QNode(circuit, dev)
