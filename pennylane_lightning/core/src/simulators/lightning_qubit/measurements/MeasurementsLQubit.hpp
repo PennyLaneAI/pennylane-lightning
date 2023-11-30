@@ -158,6 +158,21 @@ class Measurements final
     }
 
     /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
+                                  const size_t &num_shots) {
+        return BaseType::probs(wires, num_shots);
+    }
+
+    /**
      * @brief Expected value of an observable.
      *
      * @param matrix Square matrix in row-major order.

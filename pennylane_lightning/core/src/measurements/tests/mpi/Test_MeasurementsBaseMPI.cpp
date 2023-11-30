@@ -116,6 +116,17 @@ template <typename TypeList> void testProbabilities() {
                          Catch::Approx(probabilities).margin(5e-2));
         }
 
+        DYNAMIC_SECTION(
+            "Looping over different wire configurations - shots- sub system"
+            << StateVectorToName<StateVectorT>::name) {
+            for (const auto &term : input) {
+                size_t num_shots = 10000;
+                probabilities = Measurer.probs(term.first, num_shots);
+                REQUIRE_THAT(expected_prob,
+                             Catch::Approx(probabilities).margin(5e-2));
+            }
+        }
+
         testProbabilities<typename TypeList::Next>();
     }
 }

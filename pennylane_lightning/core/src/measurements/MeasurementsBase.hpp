@@ -292,6 +292,37 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    auto probs(const std::vector<size_t> &wires, const size_t &num_shots)
+        -> std::vector<PrecisionT> {
+        auto counts_map = counts(num_shots);
+
+        size_t num_wires = _statevector.getTotalNumQubits();
+
+        std::vector<PrecisionT> prob_shots(size_t{1} << wires.size(), 0.0);
+
+        for (auto &it : counts_map) {
+            size_t bitVal = 0;
+            for (size_t bit = 0; bit < wires.size(); bit++) {
+                bitVal +=
+                    ((it.first >> wires[bit]) & 1) >> (wires.size() - 1 - bit);
+            }
+
+            prob_shots[bitVal] +=
+                it.second / static_cast<PrecisionT>(num_shots);
+        }
+
+        return prob_shots;
+    }
+
+    /**
      * @brief Probabilities with shot-noise.
      *
      * @param num_shots Number of shots.
