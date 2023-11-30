@@ -162,8 +162,7 @@ template <typename TypeList> void testProbabilitiesShots() {
                 // Bit index reodering conducted in the python layer
                 // for L-GPU. Also L-GPU backend doesn't support
                 // out of order wires for probability calculation
-                {//{2, 1, 0},
-                 {0,1,2},
+                {{2, 1, 0},
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}}
 #else
@@ -190,7 +189,6 @@ template <typename TypeList> void testProbabilitiesShots() {
         Measurements<StateVectorT> Measurer(statevector);
 
         std::vector<PrecisionT> probabilities;
-        /*
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- fullsystem"
             << StateVectorToName<StateVectorT>::name) {
@@ -199,17 +197,29 @@ template <typename TypeList> void testProbabilitiesShots() {
             REQUIRE_THAT(input[0].second,
                          Catch::Approx(probabilities).margin(5e-2));
         }
-        */
 
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- sub system"
             << StateVectorToName<StateVectorT>::name) {
+#ifdef _ENABLE_PLGPU
+            std::vector<size_t> wires = {0, 1, 2};
+            std::vector<PrecisionT> expected_probs = {
+                0.67078706, 0.03062806, 0.0870997,  0.00397696,
+                0.17564072, 0.00801973, 0.02280642, 0.00104134};
+            size_t num_shots = 10000;
+            probabilities = Measurer.probs(wires, num_shots);
+
+            REQUIRE_THAT(expected_probs,
+                         Catch::Approx(probabilities).margin(5e-2));
+#else
             for (const auto &term : input) {
                 size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
                 REQUIRE_THAT(term.second,
                              Catch::Approx(probabilities).margin(5e-2));
             }
+
+#endif
         }
 
         testProbabilitiesShots<typename TypeList::Next>();
