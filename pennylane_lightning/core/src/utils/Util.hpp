@@ -509,4 +509,27 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
     }
     return transposed_tensor;
 }
+
+/**
+ * @brief Kronecker product of two diagonal matrices. Only diagonal elements are
+ * stored.
+ *
+ * @tparam T Data type.
+ * @param A A diagonal matrix with only diagonal elements stored.
+ * @param B A diagonal matrix with only diagonal elements stored.
+ * @return result Result matrix with only diagonal elements stored.
+ */
+template <typename T>
+auto kronProd(const std::vector<T> &A, const std::vector<T> &B)
+    -> std::vector<T> {
+    std::vector<T> result(A.size() * B.size(), 0);
+
+    for (size_t i = 0; i < A.size(); i++) {
+        for (size_t j = 0; j < B.size(); j++) {
+            result[i * B.size() + j] = A[i] * B[j];
+        }
+    }
+
+    return result;
+}
 } // namespace Pennylane::Util
