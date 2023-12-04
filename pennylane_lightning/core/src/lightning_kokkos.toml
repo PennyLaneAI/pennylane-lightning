@@ -2,7 +2,6 @@ schema = 1
 
 [device]
 name = "lightning.kokkos"
-version = "v0.31.0"
 precision = ['float32', 'float64']
 
 [operations]
