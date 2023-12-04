@@ -610,12 +610,15 @@ class Measurements final
      * @brief Probabilities of each computational basis state for an observable.
      *
      * @param obs An observable object.
+     * @param num_shots Number of shots. If specified with a non-zero number,
+     * shot-noise will be added to return probabilities
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs) {
-        return BaseType::probs(obs);
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
+                                  const size_t &num_shots = 0) {
+        return BaseType::probs(obs, num_shots);
     }
 
     /**

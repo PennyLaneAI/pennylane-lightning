@@ -276,11 +276,14 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @brief Probabilities to measure rotated basis states.
      *
      * @param obs An observable object.
+     * @param num_shots Number of shots (Optional). If specified with a non-zero
+     * number, shot-noise will be added to return probabilities
      *
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const Observable<StateVectorT> &obs) {
+    auto probs(const Observable<StateVectorT> &obs,
+               const size_t &num_shots = 0) {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
@@ -288,6 +291,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         std::vector<size_t> identity_wires;
         auto sv = _preprocess_state(obs, obs_wires, identity_wires);
         Derived measure(sv);
+        if (num_shots) {
+            return measure.probs(obs_wires, num_shots);
+        }
         return measure.probs(obs_wires);
     }
 
@@ -311,6 +317,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         for (auto &it : counts_map) {
             size_t bitVal = 0;
             for (size_t bit = 0; bit < wires.size(); bit++) {
+                // Mapping the value of wires[bit]th bit to local [bit]th bit of
+                // the output
                 bitVal += ((it.first >> (num_wires - size_t{1} - wires[bit])) &
                            size_t{1})
                           << (wires.size() - size_t{1} - bit);

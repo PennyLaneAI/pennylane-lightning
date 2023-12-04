@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add shots-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this support feature. Please note that target wires should be sorted in ascending manner.
+* Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this support feature. Please note that target wires should be sorted in ascending manner.
 [(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
 
 * Add shots support for variance value, probs, sample, counts calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer. All Lightning backends support this support feature.
