@@ -300,9 +300,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     /**
      * @brief Probabilities with shot-noise for a subset of the full system.
      *
-     * @param num_shots Number of shots.
      * @param wires Wires will restrict probabilities to a subset
      * of the full system.
+     * @param num_shots Number of shots.
      *
      * @return Floating point std::vector with probabilities.
      */
