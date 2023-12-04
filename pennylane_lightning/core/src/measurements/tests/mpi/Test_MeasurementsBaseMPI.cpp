@@ -387,8 +387,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
             auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
             auto prob_all = mpi_manager.allgather(prob);
-            REQUIRE_THAT(prob_obs_shots,
-                         Catch::Approx(prob_all).margin(5e-2));
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -414,8 +413,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
             auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
             auto prob_all = mpi_manager.allgather(prob);
-            REQUIRE_THAT(prob_obs_shots,
-                         Catch::Approx(prob_all).margin(5e-2));
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
 
         testProbabilitiesObsShots<typename TypeList::Next>();
