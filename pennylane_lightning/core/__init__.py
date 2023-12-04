@@ -17,7 +17,8 @@ from pathlib import Path
 from ._version import __version__
 
 
-lightning_qubit_config_file = Path(__file__).parent / "src" / "lightning.qubit.toml"
-lightning_kokkos_config_file = Path(__file__).parent / "src" / "lightning.kokkos.toml"
+lightning_qubit_config_file = Path(__file__).parent / "src" / "lightning_qubit.toml"
+lightning_kokkos_config_file = Path(__file__).parent / "src" / "lightning_kokkos.toml"
+lightning_gpu_config_file = Path(__file__).parent / "src" / "lightning_gpu.toml"
 
-__all__ = ["__version__", "lightning_qubit_config_file", "lightning_kokkos_config_file"]
+__all__ = ["__version__", "lightning_qubit_config_file", "lightning_kokkos_config_file", "lightning_gpu_config_file"]
