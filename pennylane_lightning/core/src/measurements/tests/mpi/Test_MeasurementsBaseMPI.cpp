@@ -387,8 +387,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
             auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
             auto prob_all = mpi_manager.allgather(prob);
-            auto prob_obs_shots_all = mpi_manager.allgather(prob_obs_shots);
-            REQUIRE_THAT(prob_obs_shots_all,
+            REQUIRE_THAT(prob_obs_shots,
                          Catch::Approx(prob_all).margin(5e-2));
         }
 
@@ -411,11 +410,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
-            auto prob_obs_shots = Measurer_obs_shots.probs(*obs);
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
             auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
             auto prob_all = mpi_manager.allgather(prob);
-            auto prob_obs_shots_all = mpi_manager.allgather(prob_obs_shots);
-            REQUIRE_THAT(prob_obs_shots_all,
+            REQUIRE_THAT(prob_obs_shots,
                          Catch::Approx(prob_all).margin(5e-2));
         }
 
