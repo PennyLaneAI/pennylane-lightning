@@ -291,7 +291,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         std::vector<size_t> identity_wires;
         auto sv = _preprocess_state(obs, obs_wires, identity_wires);
         Derived measure(sv);
-        if (num_shots!=size_t{0}) {
+        if (num_shots != size_t{0}) {
             return measure.probs(obs_wires, num_shots);
         }
         return measure.probs(obs_wires);

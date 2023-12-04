@@ -396,11 +396,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
 
-            #ifdef _ENABLE_PLGPU
-                auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
-            #else
-                auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            #endif
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }
@@ -426,11 +426,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-            #ifdef _ENABLE_PLGPU
-                auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
-            #else
-                auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            #endif
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }

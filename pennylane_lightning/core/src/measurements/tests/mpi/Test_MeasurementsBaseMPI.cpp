@@ -328,6 +328,8 @@ template <typename TypeList> void testProbabilitiesObsShots() {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
 
+        const size_t num_qubits = 3;
+
         // Defining the Statevector that will be measured.
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
@@ -383,13 +385,9 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-            #ifdef _ENABLE_PLGPU
-                auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
-            #else
-                auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            #endif
-
-            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob_all = mpi_manager.allgather(prob);
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -412,13 +410,9 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs);
-            #ifdef _ENABLE_PLGPU
-                auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
-            #else
-                auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
-            #endif
-
-            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob_all = mpi_manager.allgather(prob);
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
 
         testProbabilitiesObsShots<typename TypeList::Next>();
