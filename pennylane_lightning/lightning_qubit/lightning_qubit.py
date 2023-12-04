@@ -18,9 +18,9 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from warnings import warn
+from pathlib import Path
 import numpy as np
 
-from pennylane_lightning.core import lightning_qubit_config_file as config_file
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
@@ -187,7 +187,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
-        config = config_file
+        config = Path(__file__).parents[1] / "core" / "src" / "lightning_qubit.toml"
 
         def __init__(
             self,
