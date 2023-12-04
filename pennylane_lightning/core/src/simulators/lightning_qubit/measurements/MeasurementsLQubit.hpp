@@ -145,7 +145,7 @@ class Measurements final
      * in lexicographic order.
      */
     std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  const size_t &num_shots = 0) {
+                                  size_t num_shots = 0) {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -156,7 +156,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(const size_t &num_shots) {
+    std::vector<PrecisionT> probs(size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -171,24 +171,9 @@ class Measurements final
      */
 
     std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  const size_t &num_shots) {
+                                  size_t num_shots) {
         return BaseType::probs(wires, num_shots);
     }
-
-    /**
-     * @brief Probabilities with shot-noise for an observable.
-     *
-     * @param obs   An observable object.
-     * @param num_shots Number of shots.
-     *
-     * @return Floating point std::vector with probabilities.
-     */
-    /*
-    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  const size_t &num_shots) {
-        return BaseType::probs(obs, num_shots);
-    }
-    */
 
     /**
      * @brief Expected value of an observable.

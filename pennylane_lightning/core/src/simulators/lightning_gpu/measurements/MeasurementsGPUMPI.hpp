@@ -220,7 +220,7 @@ class MeasurementsMPI final
      * in lexicographic order.
      */
     std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  const size_t &num_shots = 0) {
+                                  size_t num_shots = 0) {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -231,7 +231,7 @@ class MeasurementsMPI final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(const size_t &num_shots) {
+    std::vector<PrecisionT> probs(size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -246,7 +246,7 @@ class MeasurementsMPI final
      */
 
     std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  const size_t &num_shots) {
+                                  size_t num_shots) {
         return BaseType::probs(wires, num_shots);
     }
 
