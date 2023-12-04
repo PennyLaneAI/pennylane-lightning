@@ -23,6 +23,7 @@
 #include "Error.hpp"
 #include "GateImplementationsLM.hpp"
 #include "GateOperation.hpp"
+#include "GatePragmas.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "LinearAlgebra.hpp"
@@ -65,7 +66,7 @@ class GateImplementationsAVXCommon
         GeneratorOperation::RY,         GeneratorOperation::RZ,
         GeneratorOperation::IsingXX,    GeneratorOperation::IsingYY,
         GeneratorOperation::IsingZZ,
-        /* IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
+        /* IsingXY, CRX, CRY, CRZ, ControlledPhaseShift */
     };
 
     constexpr static std::array<ControlledGateOperation, 0>
