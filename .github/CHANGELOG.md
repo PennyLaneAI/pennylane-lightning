@@ -23,7 +23,7 @@
 
 ### Improvements
 
-* Add configuration files to improve compatibility with Catalyst
+* Add configuration files to improve compatibility with Catalyst.
   [(#557)](https://github.com/PennyLaneAI/pennylane-lightning/pull/566)
 
 * Refactor shot-noise related methods of MeasurementsBase class in the C++ layer and eigenvalues are not limited to `1` and `-1`. Add `getObs()` method to Observables class. Refactor `applyInPlaceShots` to allow users to get eigenvalues of Observables object. Deprecated `_preprocess_state` method in `MeasurementsBase` class for safer use of the `LightningQubitRaw` backend.
