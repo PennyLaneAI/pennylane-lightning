@@ -102,11 +102,15 @@ matrix = [
 exactshots = [
 	"Expval",
 	"Var",
+	"Probs",
+	"State",
 ]
 finiteshots = [
+	"Exp",
+	"Var",
 	"Probs",
 	"Sample",
-	"Measure", # mid-circuit measurement
+	"Counts",
 ]
 
 [compilation]
