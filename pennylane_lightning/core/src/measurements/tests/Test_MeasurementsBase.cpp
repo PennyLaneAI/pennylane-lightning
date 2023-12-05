@@ -563,6 +563,7 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -577,25 +578,23 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
         // Initializing the measures class.
         // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer_shots(statevector);
         Measurements<StateVectorT> Measurer(statevector);
 
-        const PrecisionT theta = M_PI / 2;
-        const PrecisionT real_term = std::cos(theta);
-        const PrecisionT imag_term = std::sin(theta);
-
-        DYNAMIC_SECTION("Failed for Hermitian"
+        DYNAMIC_SECTION("2x2 Hermitian matrix"
                         << StateVectorToName<StateVectorT>::name) {
-            MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
-                                     ComplexT{0, -imag_term}, real_term};
+            MatrixT Hermitian_matrix{ComplexT{-6, 0}, ComplexT{2, 1},
+                                     ComplexT{2, -1}, ComplexT{0, 0}};
 
-            HermitianObs<StateVectorT> obs(Hermitian_matrix, {0});
-            size_t num_shots = 1000;
+            HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
+            size_t num_shots = 10000;
             std::vector<size_t> shots_range = {};
-            REQUIRE_THROWS_WITH(
-                Measurer.expval(obs, num_shots, shots_range),
-                Catch::Matchers::Contains(
-                    "expval calculation is not supported by shots"));
-            REQUIRE(obs.getCoeffs().size() == 0);
+
+            PrecisionT expected = Measurer.expval(obs);
+
+            PrecisionT result_shots =
+                Measurer_shots.expval(obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result_shots).margin(5e-2));
         }
 
         testHermitianObsExpvalShot<typename TypeList::Next>();
@@ -607,6 +606,7 @@ TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
         testHermitianObsExpvalShot<TestStateVectorBackends>();
     }
 }
+#endif
 
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {

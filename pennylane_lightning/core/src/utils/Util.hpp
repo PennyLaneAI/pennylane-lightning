@@ -26,6 +26,10 @@
 #include <type_traits> // is_same_v
 #include <vector>
 
+#ifdef PL_USE_LAPACK
+#include <lapacke.h>
+#endif
+
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
 
@@ -532,4 +536,62 @@ auto kronProd(const std::vector<T> &A, const std::vector<T> &B)
 
     return result;
 }
+
+/**
+ * @brief Decompose Hermitian matrix into diagonal matrix and unitaries
+ *
+ * @tparam T Data type.
+ *
+ * @param N Number of columns.
+ * @param LDA Number of rows.
+ * @param Ah Hermitian matrix to be decomposed.
+ * @param eigenVals eigenvalue results.
+ * @param unitaries unitary result.
+ * @return result Result matrix with only diagonal elements stored.
+ */
+
+template <typename T>
+void compute_diagonalizing_gates(size_t N, size_t LDA,
+                                 const std::vector<std::complex<T>> &Ah,
+                                 std::vector<T> &eigenVals,
+                                 std::vector<std::complex<T>> &unitary) {
+    using LapackComplexT =
+        typename std::conditional<std::is_same<T, float>::value,
+                                  lapack_complex_float,
+                                  lapack_complex_double>::type;
+    int n = N;
+    int lda = LDA;
+    int info;
+
+    eigenVals.clear();
+    eigenVals.resize(n);
+    unitary.clear();
+    unitary = std::vector<std::complex<T>>(n * n, {0, 0});
+
+    std::vector<LapackComplexT> ah(n * lda, {0.0, 0.0});
+
+    for (size_t i = 0; i < static_cast<size_t>(n); i++) {
+        for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
+            ah[i * lda + j] = {Ah[i * lda + j].real(), Ah[i * lda + j].imag()};
+        }
+    }
+
+    // Solve eigenproblem
+    if constexpr (std::is_same<T, float>::value) {
+        info = LAPACKE_cheev(LAPACK_ROW_MAJOR, 'V', 'L', n, ah.data(), lda,
+                             eigenVals.data());
+    } else {
+        info = LAPACKE_zheev(LAPACK_ROW_MAJOR, 'V', 'L', n, ah.data(), lda,
+                             eigenVals.data());
+    }
+
+    // data copy
+    for (size_t i = 0; i < static_cast<size_t>(n); i++) {
+        for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
+            T *val = reinterpret_cast<T *>(&ah[i * lda + j]);
+            unitary[j * lda + i] = {val[0], -val[1]};
+        }
+    }
+}
+
 } // namespace Pennylane::Util

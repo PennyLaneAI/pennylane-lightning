@@ -133,15 +133,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             // SparseHamiltonian does not support samples in pennylane.
             PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
                      "not supported by shots");
-        } else if (obs.getObsName().find("Hermitian") != std::string::npos) {
-            // TODO support. This support requires an additional method to solve
-            // eigenpair and unitary matrices, and the results of eigenpair and
-            // unitary matrices data need to be added to the Hermitian class and
-            // public methods are need to access eigen values. Note the
-            // assumption that eigen values are -1 and 1 in the
-            // `measurement_with_sample` method should be updated as well.
-            PL_ABORT("For Hermitian Observables, expval calculation is not "
-                     "supported by shots");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
             auto obsTerms = obs.getObs();
