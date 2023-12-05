@@ -357,9 +357,91 @@ template <typename TypeList> void testProbabilitiesObs() {
     }
 }
 
-TEST_CASE("Probabilities Obs shots", "[MeasurementsBase]") {
+TEST_CASE("Probabilities Obs", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testProbabilitiesObs<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testProbabilitiesObsShots() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        StateVectorT sv(statevector_data.data(), statevector_data.size());
+
+        DYNAMIC_SECTION("Test TensorProd XYZ"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto Y2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
+
+            Measurements<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                               {{0}, {2}, {2}, {2}},
+                               {false, false, false, false});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
+
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("Test TensorProd YHI"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto I2 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
+
+            Measurements<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
+                               {false, false, false});
+            const PrecisionT theta = -M_PI / 4.0;
+            sv.applyOperation("RY", {1}, false, {theta});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
+
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+        }
+
+        testProbabilitiesObsShots<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities Obs Shots", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilitiesObsShots<TestStateVectorBackends>();
     }
 }
 

@@ -243,11 +243,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @brief Probabilities to measure rotated basis states.
      *
      * @param obs An observable object.
+     * @param num_shots Number of shots (Optional). If specified with a non-zero
+     * number, shot-noise will be added to return probabilities
      *
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const Observable<StateVectorT> &obs) {
+    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0) {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
@@ -255,19 +257,22 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         std::vector<std::vector<PrecisionT>> eigenvalues;
         auto sv = _preprocess_state(obs, obs_wires, eigenvalues);
         Derived measure(sv);
+        if (num_shots != size_t{0}) {
+            return measure.probs(obs_wires, num_shots);
+        }
         return measure.probs(obs_wires);
     }
 
     /**
      * @brief Probabilities with shot-noise for a subset of the full system.
      *
-     * @param num_shots Number of shots.
      * @param wires Wires will restrict probabilities to a subset
      * of the full system.
+     * @param num_shots Number of shots.
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(const std::vector<size_t> &wires, const size_t &num_shots)
+    auto probs(const std::vector<size_t> &wires, size_t num_shots)
         -> std::vector<PrecisionT> {
         auto counts_map = counts(num_shots);
 
@@ -278,6 +283,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         for (auto &it : counts_map) {
             size_t bitVal = 0;
             for (size_t bit = 0; bit < wires.size(); bit++) {
+                // Mapping the value of wires[bit]th bit to local [bit]th bit of
+                // the output
                 bitVal += ((it.first >> (num_wires - size_t{1} - wires[bit])) &
                            size_t{1})
                           << (wires.size() - size_t{1} - bit);
@@ -297,7 +304,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(const size_t &num_shots) -> std::vector<PrecisionT> {
+    auto probs(size_t num_shots) -> std::vector<PrecisionT> {
         auto counts_map = counts(num_shots);
 
         size_t num_wires = _statevector.getTotalNumQubits();
