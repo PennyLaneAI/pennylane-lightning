@@ -195,32 +195,6 @@ class Measurements final
     }
 
     /**
-     * @brief Probabilities with shot-noise.
-     *
-     * @param num_shots Number of shots.
-     *
-     * @return Floating point std::vector with probabilities.
-     */
-    std::vector<PrecisionT> probs(const size_t &num_shots) {
-        return BaseType::probs(num_shots);
-    }
-
-    /**
-     * @brief Probabilities with shot-noise for a subset of the full system.
-     *
-     * @param num_shots Number of shots.
-     * @param wires Wires will restrict probabilities to a subset
-     * of the full system.
-     *
-     * @return Floating point std::vector with probabilities.
-     */
-
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  const size_t &num_shots) {
-        return BaseType::probs(wires, num_shots);
-    }
-
-    /**
      * @brief Utility method for samples.
      *
      * @param num_samples Number of Samples
