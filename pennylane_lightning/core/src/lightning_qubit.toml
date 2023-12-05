@@ -116,4 +116,10 @@ finiteshots = [
 [compilation]
 qjit_compatible = true
 control_flow = true
+mid_circuit_measurement = true
 dynamic_qubit_management = false # true after merging `StateVectorLQubitDynamic` to the monorepo
+
+[options]
+mcmc = "_mcmc"
+num_burnin = "_num_burnin"
+kernel_name = "_kernel_name"
