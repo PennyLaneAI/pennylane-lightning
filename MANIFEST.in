@@ -1,5 +1,5 @@
 include requirements.txt
 include CHANGELOG.rst
 include lightning_qubit.toml
-include lightning_kokkos.toml
 include lightning_gpu.toml
+include lightning_kokkos.toml
