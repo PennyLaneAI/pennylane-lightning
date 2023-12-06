@@ -1,9 +1,5 @@
 name: Testing::Linux::x86_64::LGPU
 on:
-  workflow_run:
-    workflows: ["Testing::LKokkos::CUDA"]
-    types:
-      - completed
   workflow_call:
     inputs:
       lightning-version:
@@ -14,6 +10,11 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+  release:
+  pull_request:
+  push:
+    branches:
+      - master
 
 env:
   CI_CUDA_ARCH: 86
@@ -51,7 +52,7 @@ jobs:
           nvidia-smi
 
   cpptestswithLGPU_cu11:
-    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
+    if: ${{ github.event_name != 'workflow_call' }}
     needs: [builddeps]
     strategy:
       matrix:
