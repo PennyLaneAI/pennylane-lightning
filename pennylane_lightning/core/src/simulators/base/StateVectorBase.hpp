@@ -67,6 +67,15 @@ template <class PrecisionT, class Derived> class StateVectorBase {
     }
 
     /**
+     * @brief Get the total number of qubits of the simulated system.
+     *
+     * @return std::size_t
+     */
+    [[nodiscard]] auto getTotalNumQubits() const -> size_t {
+        return num_qubits_;
+    }
+
+    /**
      * @brief Get the size of the statevector
      *
      * @return The size of the statevector

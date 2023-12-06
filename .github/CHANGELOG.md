@@ -1,10 +1,33 @@
 # Release 0.34.0-dev
 
 ### New features since last release
+* Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
+[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
+
+* Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this feature. Please note that target wires should be sorted in ascending manner.
+[(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
+
+* Add shots support for variance value, probs, sample, counts calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer. All Lightning backends support this support feature.
+[(#561)](https://github.com/PennyLaneAI/pennylane-lightning/pull/561)
+
+* Add shots support for expectation value calculation for given observables (`NamedObs`, `TensorProd` and `Hamiltonian`) based on Pauli words, `Identity` and `Hadamard` in the C++ layer by adding `measure_with_samples` to the measurement interface. All Lightning backends support this support feature.
+[(#556)](https://github.com/PennyLaneAI/pennylane-lightning/pull/556)
+
+* `qml.QubitUnitary` operators can be included in a circuit differentiated with the adjoint method. Lightning handles circuits with arbitrary non-differentiable `qml.QubitUnitary` operators. 1,2-qubit `qml.QubitUnitary` operators with differentiable parameters can be differentiated using decomposition.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Breaking changes
 
+* Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
+
 ### Improvements
+
+* Refactor shot-noise related methods of MeasurementsBase class in the C++ layer and eigenvalues are not limited to `1` and `-1`. Add `getObs()` method to Observables class. Refactor `applyInPlaceShots` to allow users to get eigenvalues of Observables object. Deprecated `_preprocess_state` method in `MeasurementsBase` class for safer use of the `LightningQubitRaw` backend.
+[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
+
+* Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Update Dockerfile and rewrite the `build-wheel-lightning-gpu` stage to build Lightning-GPU from the `pennylane-lightning` monorepo.
   [(#539)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/539)
@@ -23,7 +46,16 @@
 
 ### Documentation
 
+* Fixed a small typo in the documentation page for the PennyLane-Lightning GPU device.
+  [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
+
 ### Bug fixes
+
+* Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
+  [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
+
+* Move deprecated `stateprep` `QuantumScript` argument into the operation list in `mpitests/test_adjoint_jacobian.py`.
+  [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
@@ -32,7 +64,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux, Shuli Shu
+Isaac De Vlugt, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
 
 ---
 

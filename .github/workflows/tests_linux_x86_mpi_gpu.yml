@@ -143,16 +143,16 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          if-no-files-found: error
           name: ubuntu-tests-reports
           path: ./Build/tests/results/
+          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
-          if-no-files-found: error
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          if-no-files-found: error
 
       - name: Cleanup
         if: always()

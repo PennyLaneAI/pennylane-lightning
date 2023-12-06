@@ -21,7 +21,6 @@
 #include <future>
 #include <omp.h>
 #include <span>
-#include <thread>
 #include <variant>
 
 #include "AdjointJacobianBase.hpp"
@@ -102,8 +101,6 @@ class AdjointJacobianMPI final
 
     /**
      * @brief Batches the adjoint_jacobian method over the available GPUs.
-     * Explicitly forbids OMP_NUM_THREADS>1 to avoid issues with std::thread
-     * contention and state access issues.
      *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.

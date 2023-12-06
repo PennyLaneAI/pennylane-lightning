@@ -21,6 +21,7 @@
 
 #include <complex>
 #include <memory>
+#include <random>
 #include <vector>
 /**
  * @file
@@ -82,6 +83,7 @@ template <class StateVector> struct StateVectorToName {};
 template <typename TypeList> void testNamedObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
         using NamedObsT = NamedObsBase<StateVectorT>;
 
         DYNAMIC_SECTION("Name of the Observable must be correct - "
@@ -119,6 +121,27 @@ template <typename TypeList> void testNamedObsBase() {
             REQUIRE(ob1 != ob3);
         }
 
+        DYNAMIC_SECTION("Unsupported NamedObs for applyInPlaceShots") {
+            std::mt19937_64 re{1337};
+            const size_t num_qubits = 3;
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+            auto obs = NamedObsT("RY", {0}, {0.4});
+
+            std::vector<std::vector<PrecisionT>> eigenValues;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                Catch::Matchers::Contains(
+                    "Provided NamedObs does not supported for shots"));
+
+            auto ob = obs.getObs();
+            REQUIRE(ob.empty() == true);
+        }
+
         testNamedObsBase<typename TypeList::Next>();
     }
 }
@@ -133,6 +156,7 @@ template <typename TypeList> void testHermitianObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
+        using PrecisionT = typename StateVectorT::PrecisionT;
         using HermitianObsT = HermitianObsBase<StateVectorT>;
 
         DYNAMIC_SECTION("HermitianObs only accepts correct arguments - "
@@ -181,6 +205,26 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
             REQUIRE(ob2 != ob3);
+        }
+
+        DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::mt19937_64 re{1337};
+            const size_t num_qubits = 3;
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+            auto obs =
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+
+            std::vector<std::vector<PrecisionT>> eigenValues;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                Catch::Matchers::Contains("Hermitian observables do not "
+                                          "support applyInPlaceShots method."));
         }
 
         testHermitianObsBase<typename TypeList::Next>();
@@ -263,6 +307,10 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob3);
             REQUIRE(ob1 != ob4);
             REQUIRE(ob1 != ob5);
+
+            auto obs = ob1.getObs();
+            REQUIRE(obs[0]->getObsName() == "PauliX[0]");
+            REQUIRE(obs[1]->getObsName() == "PauliZ[1]");
         }
 
         DYNAMIC_SECTION("Tensor product applies to a statevector correctly"
@@ -453,6 +501,22 @@ template <typename TypeList> void testHamiltonianBase() {
                 REQUIRE_THROWS_AS(ham->applyInPlace(state_vector),
                                   LightningException);
             }
+
+            DYNAMIC_SECTION("applyInPlaceShots must fail - "
+                            << StateVectorToName<StateVectorT>::name) {
+                auto ham =
+                    HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
+                auto st_data = createZeroState<ComplexT>(2);
+
+                StateVectorT state_vector(st_data.data(), st_data.size());
+
+                std::vector<std::vector<PrecisionT>> eigenValues;
+                std::vector<size_t> ob_wires;
+
+                REQUIRE_THROWS_AS(
+                    ham->applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                    LightningException);
+            }
         }
         testHamiltonianBase<typename TypeList::Next>();
     }
@@ -533,6 +597,23 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             REQUIRE_THROWS_AS(sparseH->applyInPlace(state_vector),
                               LightningException);
+        }
+
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlaceShots must fail - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto init_state =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+            StateVectorT state_vector(init_state.data(), init_state.size());
+
+            std::vector<std::vector<PrecisionT>> eigenValues;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_WITH(
+                sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                Catch::Matchers::Contains(
+                    "SparseHamiltonian observables do "
+                    "not support the applyInPlaceShots method."));
         }
 
         testSparseHamiltonianBase<typename TypeList::Next>();

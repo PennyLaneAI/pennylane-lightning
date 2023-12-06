@@ -317,7 +317,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=None
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 2> /dev/null || echo Something went wrong with Pytest
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -349,3 +349,4 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
