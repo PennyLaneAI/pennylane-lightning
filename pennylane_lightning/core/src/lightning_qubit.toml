@@ -106,7 +106,7 @@ exactshots = [
 	"State",
 ]
 finiteshots = [
-	"Exp",
+	"Expval",
 	"Var",
 	"Probs",
 	"Sample",
