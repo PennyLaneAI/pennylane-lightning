@@ -1253,7 +1253,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
                 "Hadamard", std::vector<size_t>{1});
             auto obs1 = TensorProdObs<StateVectorT>::create({Y0, H1});
 
-            auto obs = Hamiltonian<StateVectorT>::create({1, 1}, {obs0, obs1});
+            auto obs = Hamiltonian<StateVectorT>::create({0.1, 0.3}, {obs0, obs1});
 
             Measurements<StateVectorT> Measurer_analytic(sv);
             auto expected = Measurer_analytic.expval(*obs);
