@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpptests:
-    if: ${{ !contains(fromJSON('["workflow_dispatch"]'), github.event_name) }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -177,7 +177,7 @@ jobs:
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -333,7 +333,7 @@ jobs:
       os: ubuntu-22.04
 
   cpptestswithKokkos:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
@@ -585,7 +585,7 @@ jobs:
 
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:

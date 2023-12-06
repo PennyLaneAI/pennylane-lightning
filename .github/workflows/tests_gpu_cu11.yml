@@ -52,7 +52,7 @@ jobs:
           nvidia-smi
 
   cpptestswithLGPU_cu11:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [builddeps]
     strategy:
       matrix:
