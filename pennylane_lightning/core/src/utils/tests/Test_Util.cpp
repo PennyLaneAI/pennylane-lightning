@@ -182,3 +182,23 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
         }
     }
 }
+
+TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
+    SECTION("For -1, 1 values") {
+        std::vector<TestType> vec0{1, -1};
+        std::vector<TestType> vec1{1, -1};
+        auto vec = kronProd(vec0, vec1);
+        std::vector<TestType> expected = {1, -1, -1, 1};
+
+        CHECK(vec == expected);
+    }
+
+    SECTION("For NON -1, 1 values") {
+        std::vector<TestType> vec0{3, -2};
+        std::vector<TestType> vec1{-4, 5};
+        auto vec = kronProd(vec0, vec1);
+        std::vector<TestType> expected = {-12, 15, 8, -10};
+
+        CHECK(vec == expected);
+    }
+}

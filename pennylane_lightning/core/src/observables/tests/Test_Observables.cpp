@@ -137,6 +137,9 @@ template <typename TypeList> void testNamedObsBase() {
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains(
                     "Provided NamedObs does not supported for shots"));
+
+            auto ob = obs.getObs();
+            REQUIRE(ob.empty() == true);
         }
 
         testNamedObsBase<typename TypeList::Next>();
@@ -304,6 +307,10 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob3);
             REQUIRE(ob1 != ob4);
             REQUIRE(ob1 != ob5);
+
+            auto obs = ob1.getObs();
+            REQUIRE(obs[0]->getObsName() == "PauliX[0]");
+            REQUIRE(obs[1]->getObsName() == "PauliZ[1]");
         }
 
         DYNAMIC_SECTION("Tensor product applies to a statevector correctly"

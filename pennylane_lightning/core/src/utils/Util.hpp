@@ -519,18 +519,19 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
  * stored.
  *
  * @tparam T Data type.
- * @param A A diagonal matrix with only diagonal elements stored.
- * @param B A diagonal matrix with only diagonal elements stored.
- * @return result Result matrix with only diagonal elements stored.
+ * @param diagA A vector containing the values of a diagonal matrix.
+ * @param diagB A vector containing the values of a diagonal matrix.
+ * @return kronAB A vector containing the diagonal values of the Kronecker
+ * product.
  */
 template <typename T>
-auto kronProd(const std::vector<T> &A, const std::vector<T> &B)
+auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
     -> std::vector<T> {
-    std::vector<T> result(A.size() * B.size(), 0);
+    std::vector<T> result(diagA.size() * diagB.size(), 0);
 
-    for (size_t i = 0; i < A.size(); i++) {
-        for (size_t j = 0; j < B.size(); j++) {
-            result[i * B.size() + j] = A[i] * B[j];
+    for (size_t i = 0; i < diagA.size(); i++) {
+        for (size_t j = 0; j < diagB.size(); j++) {
+            result[i * diagB.size() + j] = diagA[i] * diagB[j];
         }
     }
 

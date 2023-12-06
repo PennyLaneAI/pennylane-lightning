@@ -24,9 +24,12 @@
 
 #include "CPUMemoryModel.hpp"
 
+#include "Util.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
@@ -246,12 +249,29 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
         std::vector<size_t> obs_wires;
         std::vector<std::vector<PrecisionT>> eigenvalues;
-        auto sv = _preprocess_state(obs, obs_wires, eigenvalues);
-        Derived measure(sv);
-        if (num_shots != size_t{0}) {
-            return measure.probs(obs_wires, num_shots);
+        if constexpr (std::is_same_v<
+                          typename StateVectorT::MemoryStorageT,
+                          Pennylane::Util::MemoryStorageLocation::External>) {
+            std::vector<ComplexT> data_storage(
+                this->_statevector.getData(),
+                this->_statevector.getData() + this->_statevector.getLength());
+            StateVectorT sv(data_storage.data(), data_storage.size());
+            sv.updateData(data_storage.data(), data_storage.size());
+            obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
+            Derived measure(sv);
+            if (num_shots > size_t{0}) {
+                return measure.probs(obs_wires, num_shots);
+            }
+            return measure.probs(obs_wires);
+        } else {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
+            Derived measure(sv);
+            if (num_shots > size_t{0}) {
+                return measure.probs(obs_wires, num_shots);
+            }
+            return measure.probs(obs_wires);
         }
-        return measure.probs(obs_wires);
     }
 
     /**
@@ -399,32 +419,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
   private:
     /**
-     * @brief Return preprocess state with a observable
-     *
-     * @param obs The observable to sample
-     * @param obs_wires Observable wires.
-     * @param identity_wires Wires of Identity gates
-     *
-     * @return a StateVectorT object
-     */
-    auto _preprocess_state(const Observable<StateVectorT> &obs,
-                           std::vector<size_t> &obs_wires,
-                           std::vector<std::vector<PrecisionT>> &eigenValues) {
-        if constexpr (std::is_same_v<
-                          typename StateVectorT::MemoryStorageT,
-                          Pennylane::Util::MemoryStorageLocation::External>) {
-            StateVectorT sv(_statevector.getData(), _statevector.getLength());
-            sv.updateData(_statevector.getData(), _statevector.getLength());
-            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
-            return sv;
-        } else {
-            StateVectorT sv(_statevector);
-            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
-            return sv;
-        }
-    }
-
-    /**
      * @brief Return samples of a observable
      *
      * @param obs The observable to sample
@@ -432,7 +426,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param shot_range The range of samples to use. All samples are used by
      * default.
      * @param obs_wires Observable wires.
-     * @param identity_wires Wires of Identity gates
+     * @param eigenValues eigenvalues of the observable.
      *
      * @return std::vector<size_t> samples in std::vector
      */
@@ -442,9 +436,23 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                        std::vector<size_t> &obs_wires,
                        std::vector<std::vector<PrecisionT>> &eigenValues) {
         const size_t num_qubits = _statevector.getTotalNumQubits();
-        auto sv = _preprocess_state(obs, obs_wires, eigenValues);
-        Derived measure(sv);
-        auto samples = measure.generate_samples(num_shots);
+        std::vector<size_t> samples;
+        if constexpr (std::is_same_v<
+                          typename StateVectorT::MemoryStorageT,
+                          Pennylane::Util::MemoryStorageLocation::External>) {
+            std::vector<ComplexT> data_storage(
+                this->_statevector.getData(),
+                this->_statevector.getData() + this->_statevector.getLength());
+            StateVectorT sv(data_storage.data(), data_storage.size());
+            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        } else {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        }
 
         if (!shot_range.empty()) {
             std::vector<size_t> sub_samples(shot_range.size() * num_qubits);

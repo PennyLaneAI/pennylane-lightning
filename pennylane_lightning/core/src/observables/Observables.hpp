@@ -66,8 +66,7 @@ template <class StateVectorT> class Observable {
      * place.
      *
      * @param sv Reference to StateVector object.
-     * @param identity_wires Reference to a std::vector object which stores
-     * wires of Identity gates in the observable.
+     * @param eigenValues Eigenvalues of an observable.
      * @param ob_wires Reference to a std::vector object which stores wires of
      * the observable.
      */
@@ -176,6 +175,7 @@ class NamedObsBase : public Observable<StateVectorT> {
                            std::vector<std::vector<PrecisionT>> &eigenValues,
                            std::vector<size_t> &ob_wires) const override {
         ob_wires.clear();
+        eigenValues.clear();
         ob_wires.push_back(wires_[0]);
         eigenValues.clear();
 
@@ -530,6 +530,14 @@ class HamiltonianBase : public Observable<StateVectorT> {
         ss << "]}";
         return ss.str();
     }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> override {
+        return obs_;
+    };
 
     /**
      * @brief Get the coefficients of the observable.
