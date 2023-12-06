@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && github.event_name != 'workflow_call' }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && github.event_name != 'workflow_dispatch' }}
     runs-on:
       - self-hosted
       - linux
