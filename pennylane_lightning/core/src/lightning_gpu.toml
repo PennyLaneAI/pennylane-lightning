@@ -39,15 +39,11 @@ native = [
         "CRY",
         "CRZ",
         "CRot",
+        "Identity",
         "IsingXX",
         "IsingYY",
         "IsingZZ",
         "IsingXY",
-        # Adjoint'ed gates
-        # which just need the inverse flag set
-        # are considered natively supported gates.
-        "Adjoint(S)",
-        "Adjoint(T)",
 ]
 # decomp gates are those which are neither supported natively
 # and are not executed via the applyMatrix operation. Technically
@@ -65,7 +61,6 @@ decomp = [
         "Adjoint(SX)",
         "Adjoint(ISWAP)",
         "Adjoint(SISWAP)",
-        "Identity",
         "BasisState",
         "QubitStateVector",
         "StatePrep",
@@ -82,6 +77,8 @@ decomp = [
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "Adjoint(S)",
+        "Adjoint(T)",
 ]
 # QubitUnitary should never be here.
 # Gates in "matrix" are decomposed to QubitUnitary.
@@ -90,6 +87,8 @@ decomp = [
 # These are gates that appear on the list of supported gates
 # but are not in the list of Quantum Gate Set Instructions in
 # the Catalyst repository.
+# One disadvantage of matrix gates is that they will be lowered to
+# QubitUnitary and QubitUnitary is not differentiable.
 # TODO: Move some of these to native once we add support for them
 # in Catalyst runtime.
 matrix = [
@@ -113,6 +112,8 @@ finiteshots = [
 
 [compilation]
 qjit_compatible = false
+runtime_code_generation = false
+adjoint = false
+quantum_control = false
 mid_circuit_measurement = false
-control_flow = false
-dynamic_qubit_management = false # true after merging `StateVectorLQubitDynamic` to the monorepo
+dynamic_qubit_management = false 
