@@ -24,9 +24,12 @@
 
 #include "CPUMemoryModel.hpp"
 
+#include "Util.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
