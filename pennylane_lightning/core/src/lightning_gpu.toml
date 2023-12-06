@@ -70,7 +70,6 @@ decomp = [
         "QubitStateVector",
         "StatePrep",
         "ControlledQubitUnitary",
-        "MultiControlledX",
         "DiagonalQubitUnitary",
         "SingleExcitation",
         "SingleExcitationPlus",
@@ -94,6 +93,7 @@ decomp = [
 # TODO: Move some of these to native once we add support for them
 # in Catalyst runtime.
 matrix = [
+        "MultiControlledX",
 ]
 
 [measurements]
