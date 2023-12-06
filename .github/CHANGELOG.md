@@ -1,7 +1,7 @@
 # Release 0.34.0-dev
 
 ### New features since last release
-* Shot-noise related methods now accommodate observable objects with arbitary eigenvalues. Add a Kronecker product method for two diagonal matrices.
+* Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
 [(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
 
 * Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this feature. Please note that target wires should be sorted in ascending manner.
