@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpptests:
-    if: ${{ github.event_name != 'workflow_dispatch' }}
+    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
