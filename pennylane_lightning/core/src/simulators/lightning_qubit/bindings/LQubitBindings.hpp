@@ -26,16 +26,21 @@
 #include "GateOperation.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
+#include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "TypeList.hpp"
 #include "VectorJacobianProduct.hpp"
 
+#include <iostream>
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningQubit;
 using namespace Pennylane::LightningQubit::Algorithms;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::Observables;
+using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::StateVectorLQubitRaw;
 } // namespace
 /// @endcond
@@ -43,9 +48,9 @@ using Pennylane::LightningQubit::StateVectorLQubitRaw;
 namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
-using StateVectorBackends =
-    Pennylane::Util::TypeList<StateVectorLQubitRaw<float>,
-                              StateVectorLQubitRaw<double>, void>;
+using StateVectorBackends = Pennylane::Util::TypeList<
+    StateVectorLQubitRaw<float>, StateVectorLQubitRaw<double>,
+    StateVectorLQubitManaged<float>, StateVectorLQubitManaged<double>, void>;
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -60,51 +65,56 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
-          ControlledGateKernelMap, ControlledGeneratorKernelMap,
-          ControlledMatrixKernelMap] = sv.getSupportedKernels();
+    auto &&[GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
+            ControlledGateKernelMap, ControlledGeneratorKernelMap,
+            ControlledMatrixKernelMap] = sv.getSupportedKernels();
 
+    std::cout << "GateKernelMap" << std::endl;
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
         const auto value = dispatcher.getKernelName(kernel);
-
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
         res_map[key.c_str()] = value;
     }
-
+    std::cout << "GeneratorKernelMap" << std::endl;
     for (const auto &[gen_op, kernel] : GeneratorKernelMap) {
         const auto key = std::string(lookup(Constant::generator_names, gen_op));
         const auto value = dispatcher.getKernelName(kernel);
-
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
         res_map[key.c_str()] = value;
     }
-
+    std::cout << "MatrixKernelMap" << std::endl;
     for (const auto &[mat_op, kernel] : MatrixKernelMap) {
         const auto key = std::string(lookup(Constant::matrix_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
 
         res_map[key.c_str()] = value;
     }
-
+    std::cout << "ControlledGateKernelMap" << std::endl;
     for (const auto &[mat_op, kernel] : ControlledGateKernelMap) {
         const auto key =
             std::string(lookup(Constant::controlled_gate_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
 
         res_map[key.c_str()] = value;
     }
-
+    std::cout << "ControlledGeneratorKernelMap" << std::endl;
     for (const auto &[mat_op, kernel] : ControlledGeneratorKernelMap) {
         const auto key =
             std::string(lookup(Constant::controlled_generator_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
 
         res_map[key.c_str()] = value;
     }
-
+    std::cout << "ControlledMatrixKernelMap" << std::endl;
     for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
         const auto key =
             std::string(lookup(Constant::controlled_matrix_names, mat_op));
         const auto value = dispatcher.getKernelName(kernel);
+        std::cout << "(" << key << ", " << value << ")" << std::endl;
 
         res_map[key.c_str()] = value;
     }
@@ -160,6 +170,11 @@ void registerControlledGate(PyClass &pyclass) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    using mem_location = typename StateVectorT::MemoryStorageT;
+    if constexpr (mem_location::name == "Internal") {
+        pyclass.def(py::init<std::size_t>()); // Internal memory managed SV
+    }
+
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
     pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
@@ -269,10 +284,13 @@ void registerBackendSpecificObservables([[maybe_unused]] py::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using mem_location = typename StateVectorT::MemoryStorageT;
 
     std::string class_name;
 
-    class_name = "SparseHamiltonianC" + bitsize;
+    class_name = "SparseHamiltonianC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<SparseHamiltonian<StateVectorT>,
                std::shared_ptr<SparseHamiltonian<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
@@ -355,12 +373,16 @@ void registerBackendSpecificAlgorithms(py::module_ &m) {
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
+    using mem_location = typename StateVectorT::MemoryStorageT;
+
     std::string class_name;
 
     //***********************************************************************//
     //                        Vector Jacobian Product
     //***********************************************************************//
-    class_name = "VectorJacobianProductC" + bitsize;
+    class_name = "VectorJacobianProductC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<VectorJacobianProduct<StateVectorT>>(m, class_name.c_str(),
                                                     py::module_local())
         .def(py::init<>())
@@ -384,6 +406,128 @@ auto getBackendInfo() -> py::dict {
  */
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
+    using namespace Pennylane::Gates;
+    py::enum_<KernelType>(m, "KernelType", py::arithmetic())
+        .value("PI", KernelType::PI)
+        .value("LM", KernelType::LM)
+        .value("AVX2", KernelType::AVX2)
+        .value("AVX512", KernelType::AVX512)
+        .value("None", KernelType::None);
+
+    py::enum_<GateOperation>(m, "GateOperation", py::arithmetic())
+        .value("BEGIN", GateOperation::BEGIN)
+        .value("Identity", GateOperation::Identity)
+        .value("PauliX", GateOperation::PauliX)
+        .value("PauliY", GateOperation::PauliY)
+        .value("PauliZ", GateOperation::PauliZ)
+        .value("Hadamard", GateOperation::Hadamard)
+        .value("S", GateOperation::S)
+        .value("T", GateOperation::T)
+        .value("PhaseShift", GateOperation::PhaseShift)
+        .value("RX", GateOperation::RX)
+        .value("RY", GateOperation::RY)
+        .value("RZ", GateOperation::RZ)
+        .value("Rot", GateOperation::Rot)
+        .value("CNOT", GateOperation::CNOT)
+        .value("CY", GateOperation::CY)
+        .value("CZ", GateOperation::CZ)
+        .value("SWAP", GateOperation::SWAP)
+        .value("IsingXX", GateOperation::IsingXX)
+        .value("IsingXY", GateOperation::IsingXY)
+        .value("IsingYY", GateOperation::IsingYY)
+        .value("IsingZZ", GateOperation::IsingZZ)
+        .value("ControlledPhaseShift", GateOperation::ControlledPhaseShift)
+        .value("CRX", GateOperation::CRX)
+        .value("CRY", GateOperation::CRY)
+        .value("CRZ", GateOperation::CRZ)
+        .value("CRot", GateOperation::CRot)
+        .value("SingleExcitation", GateOperation::SingleExcitation)
+        .value("SingleExcitationMinus", GateOperation::SingleExcitationMinus)
+        .value("SingleExcitationPlus", GateOperation::SingleExcitationPlus)
+        .value("Toffoli", GateOperation::Toffoli)
+        .value("CSWAP", GateOperation::CSWAP)
+        .value("DoubleExcitation", GateOperation::DoubleExcitation)
+        .value("DoubleExcitationMinus", GateOperation::DoubleExcitationMinus)
+        .value("DoubleExcitationPlus", GateOperation::DoubleExcitationPlus)
+        .value("MultiRZ", GateOperation::MultiRZ)
+        .value("END", GateOperation::END);
+
+    py::enum_<ControlledGateOperation>(m, "ControlledGateOperation",
+                                       py::arithmetic())
+        .value("BEGIN", ControlledGateOperation::BEGIN)
+        .value("Identity", ControlledGateOperation::Identity)
+        .value("PauliX", ControlledGateOperation::PauliX)
+        .value("PauliY", ControlledGateOperation::PauliY)
+        .value("PauliZ", ControlledGateOperation::PauliZ)
+        .value("Hadamard", ControlledGateOperation::Hadamard)
+        .value("S", ControlledGateOperation::S)
+        .value("T", ControlledGateOperation::T)
+        .value("PhaseShift", ControlledGateOperation::PhaseShift)
+        .value("RX", ControlledGateOperation::RX)
+        .value("RY", ControlledGateOperation::RY)
+        .value("RZ", ControlledGateOperation::RZ)
+        .value("SWAP", ControlledGateOperation::SWAP)
+        .value("IsingXX", ControlledGateOperation::IsingXX)
+        .value("IsingXY", ControlledGateOperation::IsingXY)
+        .value("IsingYY", ControlledGateOperation::IsingYY)
+        .value("IsingZZ", ControlledGateOperation::IsingZZ)
+        .value("SingleExcitation", ControlledGateOperation::SingleExcitation)
+        .value("SingleExcitationMinus",
+               ControlledGateOperation::SingleExcitationMinus)
+        .value("SingleExcitationPlus",
+               ControlledGateOperation::SingleExcitationPlus)
+        .value("DoubleExcitation", ControlledGateOperation::DoubleExcitation)
+        .value("DoubleExcitationMinus",
+               ControlledGateOperation::DoubleExcitationMinus)
+        .value("DoubleExcitationPlus",
+               ControlledGateOperation::DoubleExcitationPlus)
+        .value("END", ControlledGateOperation::END);
+
+    py::enum_<ControlledGeneratorOperation>(m, "ControlledGeneratorOperation",
+                                            py::arithmetic())
+        .value("BEGIN", ControlledGeneratorOperation::BEGIN)
+        .value("PhaseShift", ControlledGeneratorOperation::PhaseShift)
+        .value("RX", ControlledGeneratorOperation::RX)
+        .value("RY", ControlledGeneratorOperation::RY)
+        .value("RZ", ControlledGeneratorOperation::RZ)
+        .value("IsingXX", ControlledGeneratorOperation::IsingXX)
+        .value("IsingXY", ControlledGeneratorOperation::IsingXY)
+        .value("IsingYY", ControlledGeneratorOperation::IsingYY)
+        .value("IsingZZ", ControlledGeneratorOperation::IsingZZ)
+        .value("SingleExcitation",
+               ControlledGeneratorOperation::SingleExcitation)
+        .value("SingleExcitationMinus",
+               ControlledGeneratorOperation::SingleExcitationMinus)
+        .value("SingleExcitationPlus",
+               ControlledGeneratorOperation::SingleExcitationPlus)
+        .value("DoubleExcitation",
+               ControlledGeneratorOperation::DoubleExcitation)
+        .value("DoubleExcitationMinus",
+               ControlledGeneratorOperation::DoubleExcitationMinus)
+        .value("DoubleExcitationPlus",
+               ControlledGeneratorOperation::DoubleExcitationPlus)
+        .value("END", ControlledGeneratorOperation::END);
+
+    py::enum_<MatrixOperation>(m, "MatrixOperation", py::arithmetic())
+        .value("BEGIN", MatrixOperation::BEGIN)
+        .value("SingleQubitOp", MatrixOperation::SingleQubitOp)
+        .value("TwoQubitOp", MatrixOperation::TwoQubitOp)
+        .value("MultiQubitOp", MatrixOperation::MultiQubitOp)
+        .value("END", MatrixOperation::END);
+
+    py::enum_<MatrixOperation>(m, "ControlledMatrixOperation", py::arithmetic())
+        .value("BEGIN", ControlledMatrixOperation::BEGIN)
+        .value("NCSingleQubitOp", ControlledMatrixOperation::NCSingleQubitOp)
+        .value("NCTwoQubitOp", ControlledMatrixOperation::NCTwoQubitOp)
+        .value("NCMultiQubitOp", ControlledMatrixOperation::NCMultiQubitOp)
+        .value("END", ControlledMatrixOperation::END);
+
+    py::class_<DynamicDispatcher<double>>(m, "DynamicDispatcher",
+                                          py::module_local())
+        .def_static("getInstance", &DynamicDispatcher<double>::getInstance,
+                    py::return_value_policy::reference)
+        .def("registeredKernels", &DynamicDispatcher<double>::registeredKernels)
+        .def("getKernelName", &DynamicDispatcher<double>::getKernelName);
 }
 
 } // namespace Pennylane::LightningQubit

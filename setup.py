@@ -178,7 +178,8 @@ packages_list = ["pennylane_lightning." + backend]
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core"]
 else:
-    requirements += ["pennylane_lightning==" + version]
+    ver_dep = version.replace("-", ".")
+    requirements += ["pennylane_lightning==" + ver_dep]
 
 suffix = backend.replace("lightning_", "")
 if suffix == "gpu":

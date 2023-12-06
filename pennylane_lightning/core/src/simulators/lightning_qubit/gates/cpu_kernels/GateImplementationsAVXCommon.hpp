@@ -31,6 +31,7 @@
 #include <immintrin.h>
 
 #include <complex>
+#include <iostream>
 #include <vector>
 
 /// @cond DEV
@@ -102,6 +103,8 @@ class GateImplementationsAVXCommon
                             const size_t num_qubits,
                             const std::vector<size_t> &wires,
                             [[maybe_unused]] bool inverse) {
+        std::cout << "AVX PAULIY" << std::endl;
+
         using ApplyPauliYAVX =
             AVXCommon::ApplyPauliY<PrecisionT,
                                    Derived::packed_bytes / sizeof(PrecisionT)>;

@@ -232,10 +232,13 @@ void registerBackendSpecificObservables(py::module_ &m) {
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using mem_location = typename StateVectorT::MemoryStorageT;
 
     std::string class_name;
 
-    class_name = "SparseHamiltonianC" + bitsize;
+    class_name = "SparseHamiltonianC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<SparseHamiltonian<StateVectorT>,
                std::shared_ptr<SparseHamiltonian<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),

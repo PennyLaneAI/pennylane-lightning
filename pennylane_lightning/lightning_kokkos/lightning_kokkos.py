@@ -303,11 +303,10 @@ if LK_CPP_BINARY_AVAILABLE:
         @property
         def measurements(self):
             """Returns Measurements constructor of the matching precision."""
-            state_vector = self.state_vector
             return (
-                MeasurementsC64(state_vector)
+                MeasurementsC64(self.state_vector)
                 if self.use_csingle
-                else MeasurementsC128(state_vector)
+                else MeasurementsC128(self.state_vector)
             )
 
         @property

@@ -17,6 +17,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <string_view>
 
 #include "BitUtil.hpp"
 #include "TypeList.hpp"
@@ -181,18 +182,24 @@ namespace MemoryStorageLocation {
  * @brief Tag to indicate internal memory storage for compile-time dispatch.
  *
  */
-struct Internal {};
+struct Internal {
+    static constexpr std::string_view name = "Internal";
+};
 
 /**
  * @brief Tag to indicate external memory storage for compile-time dispatch.
  *
  */
-struct External {};
+struct External {
+    static constexpr std::string_view name = "External";
+};
 /**
  * @brief Tag to indicate undefined memory storage for compile-time dispatch.
  *
  */
-struct Undefined {};
+struct Undefined {
+    static constexpr std::string_view name = "Undefined";
+};
 } // namespace MemoryStorageLocation
 
 ///@cond DEV

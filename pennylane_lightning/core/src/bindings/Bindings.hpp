@@ -300,15 +300,20 @@ void registerBackendAgnosticObservables(py::module_ &m) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
+    using mem_location = typename StateVectorT::MemoryStorageT;
 
     std::string class_name;
 
-    class_name = "ObservableC" + bitsize;
+    class_name = "ObservableC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<Observable<StateVectorT>,
                std::shared_ptr<Observable<StateVectorT>>>(m, class_name.c_str(),
                                                           py::module_local());
 
-    class_name = "NamedObsC" + bitsize;
+    class_name = "NamedObsC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<NamedObs<StateVectorT>, std::shared_ptr<NamedObs<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
@@ -330,7 +335,9 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             },
             "Compare two observables");
 
-    class_name = "HermitianObsC" + bitsize;
+    class_name = "HermitianObsC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<HermitianObs<StateVectorT>,
                std::shared_ptr<HermitianObs<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
@@ -357,7 +364,9 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             },
             "Compare two observables");
 
-    class_name = "TensorProdObsC" + bitsize;
+    class_name = "TensorProdObsC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<TensorProdObs<StateVectorT>,
                std::shared_ptr<TensorProdObs<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
@@ -380,7 +389,9 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             },
             "Compare two observables");
 
-    class_name = "HamiltonianC" + bitsize;
+    class_name = "HamiltonianC" + bitsize + "_";
+    class_name += mem_location::name;
+
     using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
     py::class_<Hamiltonian<StateVectorT>,
                std::shared_ptr<Hamiltonian<StateVectorT>>,
@@ -506,6 +517,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+    using mem_location = typename StateVectorT::MemoryStorageT;
 
     std::string class_name;
 
@@ -513,7 +525,9 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     //                              Operations
     //***********************************************************************//
 
-    class_name = "OpsStructC" + bitsize;
+    class_name = "OpsStructC" + bitsize + "_";
+    class_name += mem_location::name;
+
     py::class_<OpsData<StateVectorT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
@@ -576,7 +590,8 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     //***********************************************************************//
     //                            Adjoint Jacobian
     //***********************************************************************//
-    class_name = "AdjointJacobianC" + bitsize;
+    class_name = "AdjointJacobianC" + bitsize + "_";
+    class_name += mem_location::name;
     py::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str(),
                                               py::module_local())
         .def(py::init<>())
@@ -625,7 +640,11 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //***********************************************************************//
     //                              StateVector
     //***********************************************************************//
-    std::string class_name = "StateVectorC" + bitsize;
+
+    using mem_location = typename StateVectorT::MemoryStorageT;
+
+    std::string class_name = "StateVectorC" + bitsize + "_";
+    class_name += mem_location::name;
     auto pyclass =
         py::class_<StateVectorT>(m, class_name.c_str(), py::module_local());
     pyclass.def(py::init(&createStateVectorFromNumpyData<StateVectorT>))
@@ -645,7 +664,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //***********************************************************************//
     //                             Measurements
     //***********************************************************************//
-    class_name = "MeasurementsC" + bitsize;
+    class_name = "MeasurementsC" + bitsize + "_";
+    class_name += mem_location::name;
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 

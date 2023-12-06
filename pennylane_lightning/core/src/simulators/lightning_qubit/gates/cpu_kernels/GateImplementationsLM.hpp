@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <bit>
 #include <complex>
+#include <iostream>
 #include <tuple>
 #include <vector>
 
@@ -646,6 +647,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyPauliY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                 const std::vector<size_t> &wires, const bool inverse) {
+        std::cout << "LM PAULIY" << std::endl;
         applyNCPauliY(arr, num_qubits, {}, wires, inverse);
     }
 
