@@ -24,9 +24,12 @@
 
 #include "CPUMemoryModel.hpp"
 
+#include "Util.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Observables;
+using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
@@ -144,15 +147,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                      "supported by shots");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
+            auto obsTerms = obs.getObs();
             for (size_t obs_term_idx = 0; obs_term_idx < coeffs.size();
                  obs_term_idx++) {
-                auto obs_samples = measure_with_samples(
-                    obs, num_shots, shot_range, obs_term_idx);
-                PrecisionT result_per_term = std::accumulate(
-                    obs_samples.begin(), obs_samples.end(), 0.0);
-
-                result +=
-                    coeffs[obs_term_idx] * result_per_term / obs_samples.size();
+                result += coeffs[obs_term_idx] * expval(*obsTerms[obs_term_idx],
+                                                        num_shots, shot_range);
             }
         } else {
             auto obs_samples = measure_with_samples(obs, num_shots, shot_range);
@@ -170,60 +169,39 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param num_shots Number of shots used to generate samples
      * @param shot_range The range of samples to use. All samples are used
      * by default.
-     * @param term_idx Index of a Hamiltonian term
      *
      * @return Expectation value with respect to the given observable.
      */
     auto measure_with_samples(const Observable<StateVectorT> &obs,
                               const size_t &num_shots,
-                              const std::vector<size_t> &shot_range,
-                              size_t term_idx = 0) {
+                              const std::vector<size_t> &shot_range) {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> obs_wires;
-        std::vector<size_t> identity_wires;
+        std::vector<std::vector<PrecisionT>> eigenValues;
 
-        auto sub_samples = _sample_state(obs, num_shots, shot_range, obs_wires,
-                                         identity_wires, term_idx);
+        auto sub_samples =
+            _sample_state(obs, num_shots, shot_range, obs_wires, eigenValues);
 
         size_t num_samples = shot_range.empty() ? num_shots : shot_range.size();
 
         std::vector<PrecisionT> obs_samples(num_samples, 0);
 
-        size_t num_identity_obs = identity_wires.size();
-        if (!identity_wires.empty()) {
-            size_t identity_obs_idx = 0;
-            for (size_t i = 0; i < obs_wires.size(); i++) {
-                if (identity_wires[identity_obs_idx] == obs_wires[i]) {
-                    std::swap(obs_wires[identity_obs_idx], obs_wires[i]);
-                    identity_obs_idx++;
-                }
-            }
+        std::vector<PrecisionT> eigenVals = eigenValues[0];
+
+        for (size_t i = 1; i < eigenValues.size(); i++) {
+            eigenVals = kronProd(eigenVals, eigenValues[i]);
         }
 
         for (size_t i = 0; i < num_samples; i++) {
-            std::vector<size_t> local_sample(obs_wires.size());
             size_t idx = 0;
+            size_t wire_idx = 0;
             for (auto &obs_wire : obs_wires) {
-                local_sample[idx] = sub_samples[i * num_qubits + obs_wire];
-                idx++;
+                idx += sub_samples[i * num_qubits + obs_wire]
+                       << (obs_wires.size() - 1 - wire_idx);
+                wire_idx++;
             }
 
-            if (num_identity_obs != obs_wires.size()) {
-                // eigen values are `1` and `-1` for PauliX, PauliY, PauliZ,
-                // Hadamard gates the eigen value for a eigen vector |00001> is
-                // -1 since sum of the value at each bit position is odd
-                size_t bitSum = static_cast<size_t>(
-                    std::accumulate(local_sample.begin() + num_identity_obs,
-                                    local_sample.end(), 0));
-                if ((bitSum & size_t{1}) == 1) {
-                    obs_samples[i] = -1;
-                } else {
-                    obs_samples[i] = 1;
-                }
-            } else {
-                // eigen value for Identity gate is `1`
-                obs_samples[i] = 1;
-            }
+            obs_samples[i] = eigenVals[idx];
         }
         return obs_samples;
     }
@@ -238,35 +216,27 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
         if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
-            // Branch for NamedObs and TensorProd observables
-            auto square_mean = expval(obs, num_shots, {});
-            PrecisionT result =
-                1 - square_mean *
-                        square_mean; //`1` used here is because Eigenvalues for
-                                     // Paulis, Hadamard and Identity are {-1,
-                                     // 1}. Need to change based on eigen values
-                                     // when add Hermitian support.
+            auto obs_samples = measure_with_samples(obs, num_shots, {});
+            auto square_mean =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0) /
+                obs_samples.size();
+            auto mean_square =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0,
+                                [](PrecisionT acc, PrecisionT element) {
+                                    return acc + element * element;
+                                }) /
+                obs_samples.size();
+            PrecisionT result = mean_square - square_mean * square_mean;
             return result;
         }
         // Branch for Hamiltonian observables
         auto coeffs = obs.getCoeffs();
+        auto obs_terms = obs.getObs();
+
         PrecisionT result{0.0};
         size_t obs_term_idx = 0;
         for (const auto &coeff : coeffs) {
-            std::vector<size_t> shot_range = {};
-            auto obs_samples =
-                measure_with_samples(obs, num_shots, shot_range, obs_term_idx);
-            PrecisionT expval_per_term =
-                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
-            auto term_mean = expval_per_term / obs_samples.size();
-
-            result +=
-                coeff * coeff *
-                (1 - term_mean *
-                         term_mean); //`1` used here is because Eigenvalues for
-                                     // Paulis, Hadamard and Identity are {-1,
-                                     // 1}. Need to change based on eigen values
-                                     // when add Hermitian support.
+            result += coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
             obs_term_idx++;
         }
         return result;
@@ -287,13 +257,30 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
         std::vector<size_t> obs_wires;
-        std::vector<size_t> identity_wires;
-        auto sv = _preprocess_state(obs, obs_wires, identity_wires);
-        Derived measure(sv);
-        if (num_shots != size_t{0}) {
-            return measure.probs(obs_wires, num_shots);
+        std::vector<std::vector<PrecisionT>> eigenvalues;
+        if constexpr (std::is_same_v<
+                          typename StateVectorT::MemoryStorageT,
+                          Pennylane::Util::MemoryStorageLocation::External>) {
+            std::vector<ComplexT> data_storage(
+                this->_statevector.getData(),
+                this->_statevector.getData() + this->_statevector.getLength());
+            StateVectorT sv(data_storage.data(), data_storage.size());
+            sv.updateData(data_storage.data(), data_storage.size());
+            obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
+            Derived measure(sv);
+            if (num_shots > size_t{0}) {
+                return measure.probs(obs_wires, num_shots);
+            }
+            return measure.probs(obs_wires);
+        } else {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
+            Derived measure(sv);
+            if (num_shots > size_t{0}) {
+                return measure.probs(obs_wires, num_shots);
+            }
+            return measure.probs(obs_wires);
         }
-        return measure.probs(obs_wires);
     }
 
     /**
@@ -366,11 +353,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
         std::vector<size_t> obs_wires;
-        std::vector<size_t> identity_wires;
         std::vector<size_t> shot_range = {};
-        size_t term_idx = 0;
 
-        return measure_with_samples(obs, num_shots, shot_range, term_idx);
+        return measure_with_samples(obs, num_shots, shot_range);
     }
 
     /**
@@ -443,35 +428,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
   private:
     /**
-     * @brief Return preprocess state with a observable
-     *
-     * @param obs The observable to sample
-     * @param obs_wires Observable wires.
-     * @param identity_wires Wires of Identity gates
-     * @param term_idx Index of a Hamiltonian term. For other observables, its
-     * value is 0, which is set as default.
-     *
-     * @return a StateVectorT object
-     */
-    auto _preprocess_state(const Observable<StateVectorT> &obs,
-                           std::vector<size_t> &obs_wires,
-                           std::vector<size_t> &identity_wires,
-                           const size_t &term_idx = 0) {
-        if constexpr (std::is_same_v<
-                          typename StateVectorT::MemoryStorageT,
-                          Pennylane::Util::MemoryStorageLocation::External>) {
-            StateVectorT sv(_statevector.getData(), _statevector.getLength());
-            sv.updateData(_statevector.getData(), _statevector.getLength());
-            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-            return sv;
-        } else {
-            StateVectorT sv(_statevector);
-            obs.applyInPlaceShots(sv, identity_wires, obs_wires, term_idx);
-            return sv;
-        }
-    }
-
-    /**
      * @brief Return samples of a observable
      *
      * @param obs The observable to sample
@@ -479,9 +435,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param shot_range The range of samples to use. All samples are used by
      * default.
      * @param obs_wires Observable wires.
-     * @param identity_wires Wires of Identity gates
-     * @param term_idx Index of a Hamiltonian term. For other observables, its
-     * value is 0, which is set as default.
+     * @param eigenValues eigenvalues of the observable.
      *
      * @return std::vector<size_t> samples in std::vector
      */
@@ -489,12 +443,25 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                        const size_t &num_shots,
                        const std::vector<size_t> &shot_range,
                        std::vector<size_t> &obs_wires,
-                       std::vector<size_t> &identity_wires,
-                       const size_t &term_idx = 0) {
+                       std::vector<std::vector<PrecisionT>> &eigenValues) {
         const size_t num_qubits = _statevector.getTotalNumQubits();
-        auto sv = _preprocess_state(obs, obs_wires, identity_wires, term_idx);
-        Derived measure(sv);
-        auto samples = measure.generate_samples(num_shots);
+        std::vector<size_t> samples;
+        if constexpr (std::is_same_v<
+                          typename StateVectorT::MemoryStorageT,
+                          Pennylane::Util::MemoryStorageLocation::External>) {
+            std::vector<ComplexT> data_storage(
+                this->_statevector.getData(),
+                this->_statevector.getData() + this->_statevector.getLength());
+            StateVectorT sv(data_storage.data(), data_storage.size());
+            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        } else {
+            StateVectorT sv(_statevector);
+            obs.applyInPlaceShots(sv, eigenValues, obs_wires);
+            Derived measure(sv);
+            samples = measure.generate_samples(num_shots);
+        }
 
         if (!shot_range.empty()) {
             std::vector<size_t> sub_samples(shot_range.size() * num_qubits);
