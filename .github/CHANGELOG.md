@@ -46,6 +46,9 @@
 
 ### Bug fixes
 
+* Do not run C++ tests when testing for compatibility with PennyLane, hence fixing plugin-matrix failures. Fix Lightning-GPU workflow trigger.
+  [(#571)](https://github.com/PennyLaneAI/pennylane-lightning/pull/571)
+
 * Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
   [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
 
