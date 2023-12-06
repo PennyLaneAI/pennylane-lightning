@@ -65,19 +65,6 @@ decomp = [
         "Adjoint(SX)",
         "Adjoint(ISWAP)",
         "Adjoint(SISWAP)",
-]
-# QubitUnitary should never be here.
-# Gates in "matrix" are decomposed to QubitUnitary.
-# Having a QubitUnitary here would mean an infinite loop.
-
-# These are gates that appear on the list of supported gates
-# but are not in the list of Quantum Gate Set Instructions in
-# the Catalyst repository.
-# One disadvantage of matrix gates is that they will be lowered to
-# QubitUnitary and QubitUnitary is not differentiable.
-# TODO: Move some of these to native once we add support for them
-# in Catalyst runtime.
-matrix = [
         "Identity",
         "BasisState",
         "QubitStateVector",
@@ -96,6 +83,19 @@ matrix = [
         "OrbitalRotation",
         "QFT",
         "ECR",
+]
+# QubitUnitary should never be here.
+# Gates in "matrix" are decomposed to QubitUnitary.
+# Having a QubitUnitary here would mean an infinite loop.
+
+# These are gates that appear on the list of supported gates
+# but are not in the list of Quantum Gate Set Instructions in
+# the Catalyst repository.
+# One disadvantage of matrix gates is that they will be lowered to
+# QubitUnitary and QubitUnitary is not differentiable.
+# TODO: Move some of these to native once we add support for them
+# in Catalyst runtime.
+matrix = [
 ]
 
 [measurements]
