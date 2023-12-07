@@ -149,11 +149,12 @@ auto getNumpyArrayAlignment(const py::array &numpyArray) -> CPUMemoryModel {
  * @return Numpy array
  */
 template <typename T>
-auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> py::array {
+auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size,
+                       bool zeroInit = false) -> py::array {
     using Pennylane::Util::alignedAlloc;
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
-        void *ptr =
-            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
+        void *ptr = alignedAlloc(getAlignment<T>(memory_model),
+                                 sizeof(T) * size, zeroInit);
         auto capsule = py::capsule(ptr, &Util::alignedFree);
         return py::array{py::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
     }
@@ -172,20 +173,23 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> py::array {
  * @param size Size of the array to create
  * @param dt Pybind11's datatype object
  */
-auto allocateAlignedArray(size_t size, const py::dtype &dt) -> py::array {
+auto allocateAlignedArray(size_t size, const py::dtype &dt,
+                          bool zeroInit = false) -> py::array {
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(py::dtype::of<float>())) {
-        return alignedNumpyArray<float>(memory_model, size);
+        return alignedNumpyArray<float>(memory_model, size, zeroInit);
     }
     if (dt.is(py::dtype::of<double>())) {
-        return alignedNumpyArray<double>(memory_model, size);
+        return alignedNumpyArray<double>(memory_model, size, zeroInit);
     }
     if (dt.is(py::dtype::of<std::complex<float>>())) {
-        return alignedNumpyArray<std::complex<float>>(memory_model, size);
+        return alignedNumpyArray<std::complex<float>>(memory_model, size,
+                                                      zeroInit);
     }
     if (dt.is(py::dtype::of<std::complex<double>>())) {
-        return alignedNumpyArray<std::complex<double>>(memory_model, size);
+        return alignedNumpyArray<std::complex<double>>(memory_model, size,
+                                                       zeroInit);
     }
     throw py::type_error("Unsupported datatype.");
 }
