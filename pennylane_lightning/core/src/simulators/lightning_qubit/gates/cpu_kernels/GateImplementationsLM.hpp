@@ -308,8 +308,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         }
-        auto core_function = [mat](std::complex<PrecisionT> *arr,
-                                   const std::size_t i0, const std::size_t i1) {
+        auto core_function = [&mat](std::complex<PrecisionT> *arr,
+                                    const std::size_t i0,
+                                    const std::size_t i1) {
             const std::complex<PrecisionT> v0 = arr[i0];
             const std::complex<PrecisionT> v1 = arr[i1];
             arr[i0] = mat[0B00] * v0 +
@@ -360,25 +361,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         }
-        auto core_function = [mat](std::complex<PrecisionT> *arr,
-                                   const std::size_t i00, const std::size_t i01,
-                                   const std::size_t i10,
-                                   const std::size_t i11) {
-            const std::complex<PrecisionT> v00 = arr[i00];
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-            const std::complex<PrecisionT> v11 = arr[i11];
-            // NOLINTBEGIN(readability-magic-numbers)
-            arr[i00] = mat[0B0000] * v00 + mat[0B0001] * v01 +
-                       mat[0B0010] * v10 + mat[0B0011] * v11;
-            arr[i01] = mat[0B0100] * v00 + mat[0B0101] * v01 +
-                       mat[0B0110] * v10 + mat[0B0111] * v11;
-            arr[i10] = mat[0B1000] * v00 + mat[0B1001] * v01 +
-                       mat[0B1010] * v10 + mat[0B1011] * v11;
-            arr[i11] = mat[0B1100] * v00 + mat[0B1101] * v01 +
-                       mat[0B1110] * v10 + mat[0B1111] * v11;
-            // NOLINTEND(readability-magic-numbers)
-        };
+        auto core_function =
+            [&mat](std::complex<PrecisionT> *arr, const std::size_t i00,
+                   const std::size_t i01, const std::size_t i10,
+                   const std::size_t i11) {
+                const std::complex<PrecisionT> v00 = arr[i00];
+                const std::complex<PrecisionT> v01 = arr[i01];
+                const std::complex<PrecisionT> v10 = arr[i10];
+                const std::complex<PrecisionT> v11 = arr[i11];
+                // NOLINTBEGIN(readability-magic-numbers)
+                arr[i00] = mat[0B0000] * v00 + mat[0B0001] * v01 +
+                           mat[0B0010] * v10 + mat[0B0011] * v11;
+                arr[i01] = mat[0B0100] * v00 + mat[0B0101] * v01 +
+                           mat[0B0110] * v10 + mat[0B0111] * v11;
+                arr[i10] = mat[0B1000] * v00 + mat[0B1001] * v01 +
+                           mat[0B1010] * v10 + mat[0B1011] * v11;
+                arr[i11] = mat[0B1100] * v00 + mat[0B1101] * v01 +
+                           mat[0B1110] * v10 + mat[0B1111] * v11;
+                // NOLINTEND(readability-magic-numbers)
+            };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, PrecisionT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
@@ -601,8 +602,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
               const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCPauliX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        using ParamT = PrecisionT;
+        auto core_function = [](std::complex<PrecisionT> *arr,
+                                [[maybe_unused]] const std::size_t i00,
+                                [[maybe_unused]] const std::size_t i01,
+                                const std::size_t i10, const std::size_t i11) {
+            std::swap(arr[i10], arr[i11]);
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -647,8 +657,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCPauliY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        using ParamT = PrecisionT;
+        auto core_function = [](std::complex<PrecisionT> *arr,
+                                [[maybe_unused]] const std::size_t i00,
+                                [[maybe_unused]] const std::size_t i01,
+                                const std::size_t i10, const std::size_t i11) {
+            const auto v0 = arr[i10];
+            const auto v1 = arr[i11];
+            arr[i10] = {std::imag(v1), -std::real(v1)};
+            arr[i11] = {-std::imag(v0), std::real(v0)};
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -680,8 +702,16 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                         const std::vector<size_t> &wires, const bool inverse) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPauliZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCPauliZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
+        using ParamT = PrecisionT;
+        auto core_function = [](std::complex<PrecisionT> *arr,
+                                [[maybe_unused]] const std::size_t i00,
+                                [[maybe_unused]] const std::size_t i01,
+                                [[maybe_unused]] const std::size_t i10,
+                                const std::size_t i11) { arr[i11] *= -1; };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -723,9 +753,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::complex<PrecisionT> shift =
             (inverse) ? -Pennylane::Util::IMAG<PrecisionT>()
                       : Pennylane::Util::IMAG<PrecisionT>();
-        auto core_function = [shift](std::complex<PrecisionT> *arr,
-                                     [[maybe_unused]] const std::size_t i0,
-                                     const std::size_t i1) {
+        auto core_function = [&shift](std::complex<PrecisionT> *arr,
+                                      [[maybe_unused]] const std::size_t i0,
+                                      const std::size_t i1) {
             arr[i1] *= shift;
         };
         if (controlled_wires.empty()) {
@@ -751,9 +781,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
         const std::complex<PrecisionT> shift = {isqrt2,
                                                 inverse ? -isqrt2 : isqrt2};
-        auto core_function = [shift](std::complex<PrecisionT> *arr,
-                                     [[maybe_unused]] const std::size_t i0,
-                                     const std::size_t i1) {
+        auto core_function = [&shift](std::complex<PrecisionT> *arr,
+                                      [[maybe_unused]] const std::size_t i0,
+                                      const std::size_t i1) {
             arr[i1] *= shift;
         };
         if (controlled_wires.empty()) {
@@ -779,9 +809,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::complex<PrecisionT> s =
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
                     : std::exp(std::complex<PrecisionT>(0, angle));
-        auto core_function = [s](std::complex<PrecisionT> *arr,
-                                 [[maybe_unused]] const std::size_t i0,
-                                 const std::size_t i1) { arr[i1] *= s; };
+        auto core_function = [&s](std::complex<PrecisionT> *arr,
+                                  [[maybe_unused]] const std::size_t i0,
+                                  const std::size_t i1) { arr[i1] *= s; };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
@@ -805,9 +835,19 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           const std::vector<size_t> &wires,
                                           [[maybe_unused]] bool inverse,
                                           ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCPhaseShift(arr, num_qubits, {wires[0]}, {wires[1]}, inverse,
-                          angle);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCPhaseShift(arr, num_qubits, {wires[0]}, {wires[1]}, inverse,
+        //                   angle);
+        const std::complex<PrecisionT> s =
+            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
+                    : std::exp(std::complex<PrecisionT>(0, angle));
+        auto core_function = [&s](std::complex<PrecisionT> *arr,
+                                  [[maybe_unused]] const std::size_t i00,
+                                  [[maybe_unused]] const std::size_t i01,
+                                  [[maybe_unused]] const std::size_t i10,
+                                  const std::size_t i11) { arr[i11] *= s; };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -849,8 +889,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, const bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCRX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT js =
+            (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
+        auto core_function = [c, js](std::complex<PrecisionT> *arr,
+                                     [[maybe_unused]] const std::size_t i00,
+                                     [[maybe_unused]] const std::size_t i01,
+                                     const std::size_t i10,
+                                     const std::size_t i11) {
+            const std::complex<PrecisionT> v0 = arr[i10];
+            const std::complex<PrecisionT> v1 = arr[i11];
+            arr[i10] = c * v0 +
+                       std::complex<PrecisionT>{-imag(v1) * js, real(v1) * js};
+            arr[i11] = std::complex<PrecisionT>{-imag(v0) * js, real(v0) * js} +
+                       c * v1;
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -892,8 +949,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, const bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCRY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT s =
+            (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+        auto core_function = [c, s](std::complex<PrecisionT> *arr,
+                                    [[maybe_unused]] const std::size_t i00,
+                                    [[maybe_unused]] const std::size_t i01,
+                                    const std::size_t i10,
+                                    const std::size_t i11) {
+            const std::complex<PrecisionT> v0 = arr[i10];
+            const std::complex<PrecisionT> v1 = arr[i11];
+            arr[i10] = std::complex<PrecisionT>{c * real(v0) - s * real(v1),
+                                                c * imag(v0) - s * imag(v1)};
+            arr[i11] = std::complex<PrecisionT>{s * real(v0) + c * real(v1),
+                                                s * imag(v0) + c * imag(v1)};
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -909,9 +983,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-        auto core_function = [shifts](std::complex<PrecisionT> *arr,
-                                      const std::size_t i0,
-                                      const std::size_t i1) {
+        auto core_function = [&shifts](std::complex<PrecisionT> *arr,
+                                       const std::size_t i0,
+                                       const std::size_t i1) {
             arr[i0] *= shifts[0];
             arr[i1] *= shifts[1];
         };
@@ -935,8 +1009,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &wires, const bool inverse,
                          ParamT angle) {
-        PL_ASSERT(wires.size() == 2);
-        applyNCRZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        // PL_ASSERT(wires.size() == 2);
+        // applyNCRZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse, angle);
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+        auto core_function = [&shifts](std::complex<PrecisionT> *arr,
+                                       [[maybe_unused]] const std::size_t i00,
+                                       [[maybe_unused]] const std::size_t i01,
+                                       const std::size_t i10,
+                                       const std::size_t i11) {
+            arr[i10] *= shifts[0];
+            arr[i11] *= shifts[1];
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -1317,17 +1408,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::complex<PrecisionT> e =
             inverse ? std::exp(std::complex<PrecisionT>(0, angle / 2))
                     : std::exp(-std::complex<PrecisionT>(0, angle / 2));
-        auto core_function = [c, s,
-                              e](std::complex<PrecisionT> *arr,
-                                 const std::size_t i00, const std::size_t i01,
-                                 const std::size_t i10, const std::size_t i11) {
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-            arr[i00] *= e;
-            arr[i01] = c * v01 - s * v10;
-            arr[i10] = s * v01 + c * v10;
-            arr[i11] *= e;
-        };
+        auto core_function =
+            [c, s, &e](std::complex<PrecisionT> *arr, const std::size_t i00,
+                       const std::size_t i01, const std::size_t i10,
+                       const std::size_t i11) {
+                const std::complex<PrecisionT> v01 = arr[i01];
+                const std::complex<PrecisionT> v10 = arr[i10];
+                arr[i00] *= e;
+                arr[i01] = c * v01 - s * v10;
+                arr[i10] = s * v01 + c * v10;
+                arr[i11] *= e;
+            };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
@@ -1357,17 +1448,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::complex<PrecisionT> e =
             inverse ? std::exp(-std::complex<PrecisionT>(0, angle / 2))
                     : std::exp(std::complex<PrecisionT>(0, angle / 2));
-        auto core_function = [c, s,
-                              e](std::complex<PrecisionT> *arr,
-                                 const std::size_t i00, const std::size_t i01,
-                                 const std::size_t i10, const std::size_t i11) {
-            const std::complex<PrecisionT> v01 = arr[i01];
-            const std::complex<PrecisionT> v10 = arr[i10];
-            arr[i00] *= e;
-            arr[i01] = c * v01 - s * v10;
-            arr[i10] = s * v01 + c * v10;
-            arr[i11] *= e;
-        };
+        auto core_function =
+            [c, s, &e](std::complex<PrecisionT> *arr, const std::size_t i00,
+                       const std::size_t i01, const std::size_t i10,
+                       const std::size_t i11) {
+                const std::complex<PrecisionT> v01 = arr[i01];
+                const std::complex<PrecisionT> v10 = arr[i10];
+                arr[i00] *= e;
+                arr[i01] = c * v01 - s * v10;
+                arr[i10] = s * v01 + c * v10;
+                arr[i11] *= e;
+            };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
                 arr, num_qubits, controlled_wires, wires, core_function);
@@ -1518,10 +1609,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(std::complex<PrecisionT>{0, angle / 2})
                     : std::exp(std::complex<PrecisionT>{0, -angle / 2});
         auto core_function = [cr, sj,
-                              e](std::complex<PrecisionT> *arr,
-                                 [[maybe_unused]] const std::size_t i0011,
-                                 [[maybe_unused]] const std::size_t i1100,
-                                 const std::array<std::size_t, 16> &indices) {
+                              &e](std::complex<PrecisionT> *arr,
+                                  [[maybe_unused]] const std::size_t i0011,
+                                  [[maybe_unused]] const std::size_t i1100,
+                                  const std::array<std::size_t, 16> &indices) {
             const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
             const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
             for (const auto &i : indices) {
@@ -1551,10 +1642,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             inverse ? std::exp(std::complex<PrecisionT>{0, -angle / 2})
                     : std::exp(std::complex<PrecisionT>{0, angle / 2});
         auto core_function = [cr, sj,
-                              e](std::complex<PrecisionT> *arr,
-                                 [[maybe_unused]] const std::size_t i0011,
-                                 [[maybe_unused]] const std::size_t i1100,
-                                 const std::array<std::size_t, 16> &indices) {
+                              &e](std::complex<PrecisionT> *arr,
+                                  [[maybe_unused]] const std::size_t i0011,
+                                  [[maybe_unused]] const std::size_t i1100,
+                                  const std::array<std::size_t, 16> &indices) {
             const std::complex<PrecisionT> v3 = arr[indices[0B0011]];
             const std::complex<PrecisionT> v12 = arr[indices[0B1100]];
             for (const auto &i : indices) {
@@ -2114,11 +2205,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         using ComplexT = std::complex<PrecisionT>;
         constexpr ComplexT zero{};
         constexpr ComplexT imag{0, 1};
-        auto core_function = [zero,
-                              imag](std::complex<PrecisionT> *arr,
-                                    [[maybe_unused]] const std::size_t i0011,
-                                    [[maybe_unused]] const std::size_t i1100,
-                                    const std::vector<std::size_t> &indices) {
+        auto core_function = [&zero,
+                              &imag](std::complex<PrecisionT> *arr,
+                                     [[maybe_unused]] const std::size_t i0011,
+                                     [[maybe_unused]] const std::size_t i1100,
+                                     const std::vector<std::size_t> &indices) {
             const std::size_t offset = indices.size() - 16;
             const ComplexT v3 = arr[indices[offset + 0B0011]];
             const ComplexT v12 = arr[indices[offset + 0B1100]];
