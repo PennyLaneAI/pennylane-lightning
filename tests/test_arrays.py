@@ -22,10 +22,7 @@ import numpy as np
 try:
     from pennylane_lightning.lightning_qubit_ops import allocate_aligned_array
 except (ImportError, ModuleNotFoundError):
-    try:
-        from pennylane_lightning.lightning_kokkos_ops import allocate_aligned_array
-    except (ImportError, ModuleNotFoundError):
-        pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
