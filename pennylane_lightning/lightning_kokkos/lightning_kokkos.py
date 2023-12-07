@@ -35,6 +35,7 @@ try:
         print_configuration,
         StateVectorC128,
         StateVectorC64,
+        backend_info,
     )
 
     LK_CPP_BINARY_AVAILABLE = True
