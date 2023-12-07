@@ -107,6 +107,29 @@ template <typename TypeList> void testProbabilities() {
                              Catch::Approx(probabilities).margin(1e-6));
             }
         }
+
+        DYNAMIC_SECTION("Looping over different wire configurations - shots"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            size_t num_shots = 1000;
+            auto probabilities = Measurer.probs(num_shots);
+            REQUIRE_THAT(expected_prob,
+                         Catch::Approx(probabilities).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(
+            "Looping over different wire configurations - shots- sub system"
+            << StateVectorMPIToName<StateVectorT>::name) {
+            std::vector<size_t> wires = {0, 1, 2};
+            std::vector<PrecisionT> expected_probs = {
+                0.67078706, 0.03062806, 0.0870997,  0.00397696,
+                0.17564072, 0.00801973, 0.02280642, 0.00104134};
+            size_t num_shots = 10000;
+            auto probabilities = Measurer.probs(wires, num_shots);
+
+            REQUIRE_THAT(expected_probs,
+                         Catch::Approx(probabilities).margin(5e-2));
+        }
+
         testProbabilities<typename TypeList::Next>();
     }
 }
@@ -163,16 +186,16 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliX", {i});
-                MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+                MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperation("Hadamard", {i}, false);
 
                 MeasurementsMPI<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -180,17 +203,17 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliY", {i});
-                MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+                MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{i}, {i}, {i}},
                                    {false, false, false});
 
                 MeasurementsMPI<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -198,14 +221,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliZ", {i});
-                MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+                MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
                 MeasurementsMPI<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -213,16 +236,16 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("Hadamard", {i});
-                MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+                MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
                 const PrecisionT theta = -M_PI / 4.0;
                 sv.applyOperation("RY", {i}, false, {theta});
 
                 MeasurementsMPI<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -230,14 +253,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("Identity", {i});
-                MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+                MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
                 MeasurementsMPI<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -251,7 +274,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "PauliY", std::vector<size_t>{2});
             auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1, Y2});
 
-            MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+            MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
                                {{0}, {2}, {2}, {2}},
@@ -259,10 +282,10 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -275,7 +298,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "Identity", std::vector<size_t>{2});
             auto obs = TensorProdObsMPI<StateVectorT>::create({Y0, H1, I2});
 
-            MeasurementsMPI<StateVectorT> Measurer_shots(statevector);
+            MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
                                {false, false, false});
@@ -284,19 +307,122 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             MeasurementsMPI<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Probabilities Obs shots", "[MeasurementsBase]") {
+TEST_CASE("Probabilities Obs", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testProbabilitiesObs<TestStateVectorMPIBackends>();
+    }
+}
+
+template <typename TypeList> void testProbabilitiesObsShots() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        const size_t num_qubits = 3;
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data =
+            createNonTrivialState<StateVectorCudaManaged<PrecisionT>>();
+
+        MPIManager mpi_manager(MPI_COMM_WORLD);
+        REQUIRE(mpi_manager.getSize() == 2);
+
+        size_t mpi_buffersize = 1;
+
+        size_t nGlobalIndexBits =
+            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
+        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+
+        int nDevices = 0;
+        cudaGetDeviceCount(&nDevices);
+        REQUIRE(nDevices >= 2);
+        int deviceId = mpi_manager.getRank() % nDevices;
+        cudaSetDevice(deviceId);
+        DevTag<int> dt_local(deviceId, 0);
+        mpi_manager.Barrier();
+
+        auto sv_data_local = mpi_manager.scatter(statevector_data, 0);
+
+        StateVectorT statevector(mpi_manager, dt_local, mpi_buffersize,
+                                 nGlobalIndexBits, nLocalIndexBits);
+        statevector.CopyHostDataToGpu(sv_data_local.data(),
+                                      sv_data_local.size(), false);
+        mpi_manager.Barrier();
+
+        StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
+                        nLocalIndexBits);
+        sv.CopyHostDataToGpu(sv_data_local.data(), sv_data_local.size(), false);
+
+        mpi_manager.Barrier();
+
+        DYNAMIC_SECTION("Test TensorProd XYZ"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto Y2 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliY", std::vector<size_t>{2});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({X0, Z1, Y2});
+
+            MeasurementsMPI<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                               {{0}, {2}, {2}, {2}},
+                               {false, false, false, false});
+
+            MeasurementsMPI<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob_all = mpi_manager.allgather(prob);
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("Test TensorProd YHI"
+                        << StateVectorMPIToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto I2 = std::make_shared<NamedObsMPI<StateVectorT>>(
+                "Identity", std::vector<size_t>{2});
+            auto obs = TensorProdObsMPI<StateVectorT>::create({Y0, H1, I2});
+
+            MeasurementsMPI<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
+                               {false, false, false});
+            const PrecisionT theta = -M_PI / 4.0;
+            sv.applyOperation("RY", {1}, false, {theta});
+
+            MeasurementsMPI<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob_all = mpi_manager.allgather(prob);
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
+        }
+
+        testProbabilitiesObsShots<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities Obs shots", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilitiesObsShots<TestStateVectorMPIBackends>();
     }
 }
 

@@ -139,6 +139,7 @@ template <typename TypeList> void testProbabilities() {
                              Catch::Approx(probabilities).margin(1e-6));
             }
         }
+
         testProbabilities<typename TypeList::Next>();
     }
 }
@@ -146,6 +147,64 @@ template <typename TypeList> void testProbabilities() {
 TEST_CASE("Probabilities", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testProbabilities<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testProbabilitiesShots() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Expected results calculated with Pennylane default.qubit:
+        std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
+            input = {// prob shots only support in-order target wires for now
+                     {{0, 1, 2},
+                      {0.67078706, 0.03062806, 0.0870997, 0.00397696,
+                       0.17564072, 0.00801973, 0.02280642, 0.00104134}},
+                     {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                     {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                     {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                     {{0}, {0.79249179, 0.20750821}},
+                     {{1}, {0.88507558, 0.11492442}},
+                     {{2}, {0.9563339, 0.0436661}}};
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        std::vector<PrecisionT> probabilities;
+        DYNAMIC_SECTION(
+            "Looping over different wire configurations - shots- fullsystem"
+            << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            probabilities = Measurer.probs(num_shots);
+            REQUIRE_THAT(input[0].second,
+                         Catch::Approx(probabilities).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(
+            "Looping over different wire configurations - shots- sub system"
+            << StateVectorToName<StateVectorT>::name) {
+            for (const auto &term : input) {
+                size_t num_shots = 10000;
+                probabilities = Measurer.probs(term.first, num_shots);
+                REQUIRE_THAT(term.second,
+                             Catch::Approx(probabilities).margin(5e-2));
+            }
+        }
+
+        testProbabilitiesShots<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities Shots", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilitiesShots<TestStateVectorBackends>();
     }
 }
 
@@ -158,25 +217,27 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
+        auto sv_data = createNonTrivialState<StateVectorT>();
+
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        StateVectorT sv(statevector_data.data(), statevector_data.size());
+        StateVectorT sv(sv_data.data(), sv_data.size());
 
         DYNAMIC_SECTION("Test PauliX"
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliX", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperation("Hadamard", {i}, false);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -184,17 +245,17 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliY", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{i}, {i}, {i}},
                                    {false, false, false});
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -202,14 +263,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliZ", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -217,16 +278,16 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Hadamard", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
                 const PrecisionT theta = -M_PI / 4.0;
                 sv.applyOperation("RY", {i}, false, {theta});
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -234,14 +295,14 @@ template <typename TypeList> void testProbabilitiesObs() {
                         << StateVectorToName<StateVectorT>::name) {
             for (size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Identity", {i});
-                Measurements<StateVectorT> Measurer_shots(statevector);
+                Measurements<StateVectorT> Measurer_obs(statevector);
 
                 Measurements<StateVectorT> Measurer(sv);
 
-                auto prob_shots = Measurer_shots.probs(obs);
-                auto prob = Measurer.probs({i});
+                auto prob_obs = Measurer_obs.probs(obs);
+                auto prob = Measurer.probs(std::vector<size_t>({i}));
 
-                REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+                REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
         }
 
@@ -255,7 +316,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "PauliY", std::vector<size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
 
-            Measurements<StateVectorT> Measurer_shots(statevector);
+            Measurements<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
                                {{0}, {2}, {2}, {2}},
@@ -263,10 +324,10 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         DYNAMIC_SECTION("Test TensorProd YHI"
@@ -279,7 +340,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 "Identity", std::vector<size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
 
-            Measurements<StateVectorT> Measurer_shots(statevector);
+            Measurements<StateVectorT> Measurer_obs(statevector);
 
             sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
                                {false, false, false});
@@ -288,19 +349,102 @@ template <typename TypeList> void testProbabilitiesObs() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            auto prob_shots = Measurer_shots.probs(*obs);
-            auto prob = Measurer.probs({0, 1, 2});
+            auto prob_obs = Measurer_obs.probs(*obs);
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
 
-            REQUIRE_THAT(prob_shots, Catch::Approx(prob).margin(1e-6));
+            REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
 
         testProbabilitiesObs<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Probabilities Obs shots", "[MeasurementsBase]") {
+TEST_CASE("Probabilities Obs", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testProbabilitiesObs<TestStateVectorBackends>();
+    }
+}
+
+template <typename TypeList> void testProbabilitiesObsShots() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+
+        // Defining the Statevector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        auto sv_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        StateVectorT sv(sv_data.data(), sv_data.size());
+
+        DYNAMIC_SECTION("Test TensorProd XYZ"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto Y2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
+
+            Measurements<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                               {{0}, {2}, {2}, {2}},
+                               {false, false, false, false});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
+
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("Test TensorProd YHI"
+                        << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto I2 = std::make_shared<NamedObs<StateVectorT>>(
+                "Identity", std::vector<size_t>{2});
+            auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
+
+            Measurements<StateVectorT> Measurer_obs_shots(statevector);
+
+            sv.applyOperations({"PauliZ", "S", "Hadamard"}, {{0}, {0}, {0}},
+                               {false, false, false});
+            const PrecisionT theta = -M_PI / 4.0;
+            sv.applyOperation("RY", {1}, false, {theta});
+
+            Measurements<StateVectorT> Measurer(sv);
+
+            size_t num_shots = 10000;
+            auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
+#ifdef _ENABLE_PLGPU
+            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+#else
+            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+#endif
+
+            REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
+        }
+
+        testProbabilitiesObsShots<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Probabilities Obs Shots", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testProbabilitiesObsShots<TestStateVectorBackends>();
     }
 }
 
@@ -1051,8 +1195,15 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
         std::vector<ComplexT> statevector_data{
             {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
             {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+
+        std::vector<ComplexT> sv_data{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                      {0.3, 0.4}, {0.4, 0.5}};
+
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
+
+        StateVectorT sv(sv_data.data(), sv_data.size());
 
         // Initializing the measures class.
         // This object attaches to the statevector allowing several measures.
@@ -1085,6 +1236,32 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
             auto res = Measurer.expval(*ob, num_shots, shots_range);
             auto expected = PrecisionT(-0.086);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("TensorProd with shots_range "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs0 = TensorProdObs<StateVectorT>::create({X0, Z1});
+
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto obs1 = TensorProdObs<StateVectorT>::create({Y0, H1});
+
+            auto obs =
+                Hamiltonian<StateVectorT>::create({0.1, 0.3}, {obs0, obs1});
+
+            Measurements<StateVectorT> Measurer_analytic(sv);
+            auto expected = Measurer_analytic.expval(*obs);
+
+            size_t num_shots = 2000;
+            auto res = Measurer.expval(*obs, num_shots, {});
+
             REQUIRE(expected == Approx(res).margin(5e-2));
         }
 

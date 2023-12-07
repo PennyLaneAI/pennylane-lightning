@@ -1,6 +1,11 @@
 # Release 0.34.0-dev
 
 ### New features since last release
+* Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
+[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
+
+* Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this feature. Please note that target wires should be sorted in ascending manner.
+[(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
 
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
@@ -20,6 +25,9 @@
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
+
+* Refactor shot-noise related methods of MeasurementsBase class in the C++ layer and eigenvalues are not limited to `1` and `-1`. Add `getObs()` method to Observables class. Refactor `applyInPlaceShots` to allow users to get eigenvalues of Observables object. Deprecated `_preprocess_state` method in `MeasurementsBase` class for safer use of the `LightningQubitRaw` backend.
+[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
 
 * Modify `setup.py` to use backend-specific build directory (`f"build_{backend}"`) to accelerate rebuilding backends in alternance.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
@@ -45,6 +53,9 @@
   [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
 
 ### Bug fixes
+
+* Do not run C++ tests when testing for compatibility with PennyLane, hence fixing plugin-matrix failures. Fix Lightning-GPU workflow trigger.
+  [(#571)](https://github.com/PennyLaneAI/pennylane-lightning/pull/571)
 
 * Revert single-node multi-GPU batching behaviour to match https://github.com/PennyLaneAI/pennylane-lightning-gpu/pull/27.
   [(#564)](https://github.com/PennyLaneAI/pennylane-lightning/pull/564)
