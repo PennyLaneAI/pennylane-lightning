@@ -202,7 +202,7 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             # Create the initial state. Internally, we store the
             # state as an array of dimension [2]*wires.
-            self._state = None  # self._create_basis_state(0)
+            self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
 
             self._batch_obs = batch_obs
@@ -223,8 +223,6 @@ if LQ_CPP_BINARY_AVAILABLE:
 
         @staticmethod
         def _asarray(arr, dtype=None):
-            if isinstance(arr, np.ndarray):
-                return arr
             arr = np.asarray(arr)  # arr is not copied
 
             if arr.dtype.kind not in ["f", "c"]:
@@ -241,7 +239,10 @@ if LQ_CPP_BINARY_AVAILABLE:
                 new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(
                     arr.shape
                 )
-                np.copyto(new_arr, arr)
+                if len(arr.shape):
+                    new_arr[:] = arr
+                else:
+                    np.copyto(new_arr, arr)
                 arr = new_arr
             return arr
 
@@ -254,8 +255,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                 representing the statevector of the basis state
             Note: This function does not support broadcasted inputs yet.
             """
-            state = allocate_aligned_array(2**self.num_wires, np.dtype(self.C_DTYPE), True)
+            state = np.zeros(2**self.num_wires, dtype=np.complex128)
             state[index] = 1
+            state = self._asarray(state, dtype=self.C_DTYPE)
             return self._reshape(state, [2] * self.num_wires)
 
         def reset(self):
@@ -263,7 +265,8 @@ if LQ_CPP_BINARY_AVAILABLE:
             super().reset()
 
             # init the state vector to |00..0>
-            self._state = self._create_basis_state(0)
+            if not self.state[0] == 1.0 + 0j:
+                self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
 
         @property
