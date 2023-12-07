@@ -601,7 +601,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static void
     applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-              const std::vector<size_t> &wires, const bool inverse) {
+              const std::vector<size_t> &wires, [[maybe_unused]] const bool inverse) {
         // PL_ASSERT(wires.size() == 2);
         // applyNCPauliX(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
         using ParamT = PrecisionT;
@@ -656,7 +656,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse) {
+                        const std::vector<size_t> &wires, [[maybe_unused]] const bool inverse) {
         // PL_ASSERT(wires.size() == 2);
         // applyNCPauliY(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
         using ParamT = PrecisionT;
@@ -701,7 +701,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, const bool inverse) {
+                        const std::vector<size_t> &wires, [[maybe_unused]] const bool inverse) {
         // PL_ASSERT(wires.size() == 2);
         // applyNCPauliZ(arr, num_qubits, {wires[0]}, {wires[1]}, inverse);
         using ParamT = PrecisionT;
