@@ -53,10 +53,6 @@ inline auto alignedAlloc(uint32_t alignment, size_t bytes,
 #endif
     if (zero_init) {
         std::memset(p, 0, bytes);
-
-        // for(std::size_t b = 0 ; b < bytes; b++){
-        //     reinterpret_cast<uint8_t*>(p)[b] = static_cast<uint8_t>(0);
-        // }
     }
     return p;
 }
