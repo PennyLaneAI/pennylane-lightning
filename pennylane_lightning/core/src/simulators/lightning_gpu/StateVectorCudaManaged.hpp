@@ -284,6 +284,28 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param params Optional std gate matrix if opName doesn't exist.
+     */
+    template <template <typename...> class complex_t>
+    void
+    applyOperation(const std::string &opName,
+                   const std::vector<std::size_t> &controlled_wires,
+                   const std::vector<std::size_t> &wires, bool inverse = false,
+                   const std::vector<Precision> &params = {0.0},
+                   const std::vector<complex_t<Precision>> &gate_matrix = {}) {
+        PL_ABORT_IF(!controlled_wires.empty(),
+                    "Controlled kernels not implemented.");
+        applyOperation(opName, wires, inverse, params, gate_matrix);
+    }
+
+    /**
      * @brief Apply a single generator to the state vector using the given
      * kernel.
      *

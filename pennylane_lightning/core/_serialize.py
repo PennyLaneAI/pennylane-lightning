@@ -27,6 +27,7 @@ from pennylane import (
     Rot,
     Hamiltonian,
     SparseHamiltonian,
+    QubitUnitary,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -311,10 +312,31 @@ class QuantumScriptSerializer:
         """
         names = []
         params = []
+        controlled_wires = []
         wires = []
         mats = []
 
         uses_stateprep = False
+
+        def get_wires(operation, single_op):
+            if operation.name[0:2] == "C(" or (
+                operation.name == "MultiControlledX"
+                and all(char == "1" for char in operation.hyperparameters["control_values"])
+            ):
+                name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+                controlled_wires_list = operation.control_wires
+                if operation.name == "MultiControlledX":
+                    wires_list = list(set(operation.wires) - set(controlled_wires_list))
+                else:
+                    wires_list = operation.target_wires
+                if not hasattr(self.sv_type, name):
+                    single_op = QubitUnitary(matrix(single_op.base), single_op.base.wires)
+                    name = single_op.name
+            else:
+                name = single_op.name
+                wires_list = single_op.wires.tolist()
+                controlled_wires_list = []
+            return single_op, name, wires_list, controlled_wires_list
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -326,7 +348,7 @@ class QuantumScriptSerializer:
                 op_list = [operation]
 
             for single_op in op_list:
-                name = single_op.name
+                single_op, name, wires_list, controlled_wires_list = get_wires(operation, single_op)
                 names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
@@ -340,8 +362,8 @@ class QuantumScriptSerializer:
                     params.append(single_op.parameters)
                     mats.append([])
 
-                wires_list = single_op.wires.tolist()
+                controlled_wires.append([wires_map[w] for w in controlled_wires_list])
                 wires.append([wires_map[w] for w in wires_list])
 
         inverses = [False] * len(names)
-        return (names, params, wires, inverses, mats), uses_stateprep
+        return (names, params, wires, inverses, mats, controlled_wires), uses_stateprep
