@@ -545,14 +545,6 @@ class HamiltonianBase : public Observable<StateVectorT> {
     [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> override {
         return coeffs_;
     };
-
-    /**
-     * @brief Get the observable.
-     */
-    [[nodiscard]] auto getObs() const
-        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> override {
-        return obs_;
-    };
 };
 
 /**
