@@ -49,8 +49,39 @@ template <class StateVectorT> class OpsData {
     const std::vector<std::vector<size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<ComplexT>> ops_matrices_;
+    const std::vector<std::vector<size_t>> ops_controlled_wires_;
 
   public:
+    /**
+     * @brief Construct an OpsData object, representing the serialized
+     * operations to apply upon the `%StateVector`.
+     *
+     * @param ops_name Name of each operation to apply.
+     * @param ops_params Parameters for a given operation ({} if optional).
+     * @param ops_wires Wires upon which to apply operation.
+     * @param ops_inverses Value to represent whether given operation is
+     * adjoint.
+     * @param ops_matrices Numerical representation of given matrix if not
+     * supported.
+     * @param ops_controlled_wires Control wires
+     */
+    OpsData(std::vector<std::string> ops_name,
+            const std::vector<std::vector<PrecisionT>> &ops_params,
+            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<bool> ops_inverses,
+            std::vector<std::vector<ComplexT>> ops_matrices,
+            std::vector<std::vector<size_t>> ops_controlled_wires)
+        : num_par_ops_{0}, ops_name_{std::move(ops_name)},
+          ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_{std::move(ops_controlled_wires)} {
+        for (const auto &p : ops_params) {
+            num_par_ops_ += static_cast<size_t>(!p.empty());
+        }
+        num_nonpar_ops_ = ops_params.size() - num_par_ops_;
+    };
+
     /**
      * @brief Construct an OpsData object, representing the serialized
      * operations to apply upon the `%StateVector`.
@@ -71,11 +102,10 @@ template <class StateVectorT> class OpsData {
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
           ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_{std::move(ops_matrices)} {
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -97,11 +127,10 @@ template <class StateVectorT> class OpsData {
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
           ops_wires_{std::move(ops_wires)},
           ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_(ops_name.size()) {
+          ops_matrices_(ops_name.size()),
+          ops_controlled_wires_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -139,6 +168,15 @@ template <class StateVectorT> class OpsData {
     [[nodiscard]] auto getOpsWires() const
         -> const std::vector<std::vector<size_t>> & {
         return ops_wires_;
+    }
+    /**
+     * @brief Get the controlled wires for each operation.
+     *
+     * @return const std::vector<std::vector<size_t>>&
+     */
+    [[nodiscard]] auto getOpsControlledWires() const
+        -> const std::vector<std::vector<size_t>> & {
+        return ops_controlled_wires_;
     }
     /**
      * @brief Get the adjoint flag for each operation.
