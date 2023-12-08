@@ -210,6 +210,47 @@ class MeasurementsMPI final
     }
 
     /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots(Optional).  If specified with a non-zero
+     * number, shot-noise will be added to return probabilities
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
+                                  size_t num_shots = 0) {
+        return BaseType::probs(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(size_t num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
+                                  size_t num_shots) {
+        return BaseType::probs(wires, num_shots);
+    }
+
+    /**
      * @brief Utility method for samples.
      *
      * @param num_samples Number of Samples
@@ -734,5 +775,19 @@ class MeasurementsMPI final
 
         return mean_square - squared_mean * squared_mean;
     };
+
+    /**
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures

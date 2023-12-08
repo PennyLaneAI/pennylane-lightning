@@ -1,5 +1,15 @@
 name: Testing (Windows)
 on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   push:
     branches:
       - master
@@ -11,6 +21,7 @@ concurrency:
 
 jobs:
   cpptests:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -144,11 +155,12 @@ jobs:
           cmake --install ./Build --config Debug --verbose
 
   cpptestswithkokkos:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_dependencies, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
