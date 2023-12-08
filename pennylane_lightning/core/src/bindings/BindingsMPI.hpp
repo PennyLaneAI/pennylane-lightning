@@ -372,7 +372,8 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<size_t>> &ops_controlled_wires) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
             for (size_t op = 0; op < ops_name.size(); op++) {
@@ -384,8 +385,9 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
                         std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<StateVectorT>{ops_name, ops_params, ops_wires,
-                                         ops_inverses, conv_matrices};
+            return OpsData<StateVectorT>{ops_name,      ops_params,
+                                         ops_wires,     ops_inverses,
+                                         conv_matrices, ops_controlled_wires};
         },
         "Create a list of operations from data.");
 

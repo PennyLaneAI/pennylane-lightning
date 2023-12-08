@@ -20,6 +20,7 @@ import pytest
 import numpy as np
 
 import pennylane as qml
+import pennylane_lightning
 
 # defaults
 TOL = 1e-6
@@ -118,12 +119,23 @@ if device_name not in qml.plugin_devices:
     )
 
 # Device specification
+import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
+
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
+
+    if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
+        import pennylane_lightning.lightning_kokkos_ops as lightning_ops
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+
+    if hasattr(pennylane_lightning, "lightning_gpu_ops"):
+        import pennylane_lightning.lightning_gpu_ops as lightning_ops
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
+
+    if hasattr(pennylane_lightning, "lightning_qubit_ops"):
+        import pennylane_lightning.lightning_qubit_ops as lightning_ops
 
 
 # General qubit_device fixture, for any number of wires.

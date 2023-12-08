@@ -17,7 +17,6 @@
  * method.
  */
 #pragma once
-
 #include <span>
 
 #include "JacobianData.hpp"
@@ -56,11 +55,20 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                 bool adj = false) {
         for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
-            state.applyOperation(operations.getOpsName()[op_idx],
-                                 operations.getOpsWires()[op_idx],
-                                 operations.getOpsInverses()[op_idx] ^ adj,
-                                 operations.getOpsParams()[op_idx],
-                                 operations.getOpsMatrices()[op_idx]);
+            if (operations.getOpsControlledWires()[op_idx].empty()) {
+                state.applyOperation(operations.getOpsName()[op_idx],
+                                     operations.getOpsWires()[op_idx],
+                                     operations.getOpsInverses()[op_idx] ^ adj,
+                                     operations.getOpsParams()[op_idx],
+                                     operations.getOpsMatrices()[op_idx]);
+            } else {
+                state.applyOperation(operations.getOpsName()[op_idx],
+                                     operations.getOpsControlledWires()[op_idx],
+                                     operations.getOpsWires()[op_idx],
+                                     operations.getOpsInverses()[op_idx] ^ adj,
+                                     operations.getOpsParams()[op_idx],
+                                     operations.getOpsMatrices()[op_idx]);
+            }
         }
     }
 
@@ -77,11 +85,20 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
     inline void applyOperationAdj(UpdatedStateVectorT &state,
                                   const OpsData<StateVectorT> &operations,
                                   size_t op_idx) {
-        state.applyOperation(operations.getOpsName()[op_idx],
-                             operations.getOpsWires()[op_idx],
-                             !operations.getOpsInverses()[op_idx],
-                             operations.getOpsParams()[op_idx],
-                             operations.getOpsMatrices()[op_idx]);
+        if (operations.getOpsControlledWires()[op_idx].empty()) {
+            state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsWires()[op_idx],
+                                 !operations.getOpsInverses()[op_idx],
+                                 operations.getOpsParams()[op_idx],
+                                 operations.getOpsMatrices()[op_idx]);
+        } else {
+            state.applyOperation(operations.getOpsName()[op_idx],
+                                 operations.getOpsControlledWires()[op_idx],
+                                 operations.getOpsWires()[op_idx],
+                                 !operations.getOpsInverses()[op_idx],
+                                 operations.getOpsParams()[op_idx],
+                                 operations.getOpsMatrices()[op_idx]);
+        }
     }
 
     /**
@@ -115,6 +132,24 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                const std::vector<size_t> &wires, const bool adj)
         -> PrecisionT {
         return sv.applyGenerator(op_name, wires, adj);
+    }
+
+    /**
+     * @brief Applies the gate generator for a given parametric gate. Returns
+     * the associated scaling coefficient.
+     *
+     * @param sv Statevector data to operate upon.
+     * @param op_name Name of parametric gate.
+     * @param controlled_wires Control wires.
+     * @param wires Wires to operate upon.
+     * @param adj Indicate whether to take the adjoint of the operation.
+     * @return PrecisionT Generator scaling coefficient.
+     */
+    inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
+                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<size_t> &wires, const bool adj)
+        -> PrecisionT {
+        return sv.applyGenerator(op_name, controlled_wires, wires, adj);
     }
 
     /**
