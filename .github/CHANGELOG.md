@@ -54,6 +54,9 @@
 
 ### Bug fixes
 
+* Allow support for newer clang-tidy versions on non-x86_64 platforms.
+  [(#567)](https://github.com/PennyLaneAI/pennylane-lightning/pull/567)
+
 * Do not run C++ tests when testing for compatibility with PennyLane, hence fixing plugin-matrix failures. Fix Lightning-GPU workflow trigger.
   [(#571)](https://github.com/PennyLaneAI/pennylane-lightning/pull/571)
 

@@ -51,15 +51,17 @@ using Pennylane::Util::PairHash;
 
 namespace Pennylane::LightningQubit::Internal {
 constexpr auto generatorNamesWithoutPrefix() {
-    constexpr std::string_view prefix = "Generator";
+    constexpr std::string_view prefix{"Generator"};
     namespace GateConstant = Pennylane::Gates::Constant;
     std::array<std::pair<GeneratorOperation, std::string_view>,
                GateConstant::generator_names.size()>
-        res;
+        res{};
     for (size_t i = 0; i < GateConstant::generator_names.size(); i++) {
+        // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
         const auto [gntr_op, gntr_name] = GateConstant::generator_names[i];
         res[i].first = gntr_op;
         res[i].second = gntr_name.substr(prefix.size());
+        // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
     }
     return res;
 }
@@ -101,37 +103,37 @@ template <typename PrecisionT> class DynamicDispatcher {
     using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
 
   private:
-    std::unordered_map<std::string, GateOperation> str_to_gates_;
+    std::unordered_map<std::string, GateOperation> str_to_gates_{};
     std::unordered_map<std::string, ControlledGateOperation>
-        str_to_controlled_gates_;
-    std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_;
+        str_to_controlled_gates_{};
+    std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_{};
     std::unordered_map<std::string, ControlledGeneratorOperation>
-        str_to_controlled_gntrs_;
+        str_to_controlled_gntrs_{};
 
     std::unordered_map<std::pair<GateOperation, KernelType>, GateFunc, PairHash>
-        gate_kernels_;
+        gate_kernels_{};
 
     std::unordered_map<std::pair<GeneratorOperation, KernelType>, GeneratorFunc,
                        PairHash>
-        generator_kernels_;
+        generator_kernels_{};
 
     std::unordered_map<std::pair<MatrixOperation, KernelType>, MatrixFunc,
                        PairHash>
-        matrix_kernels_;
+        matrix_kernels_{};
 
     std::unordered_map<std::pair<ControlledGateOperation, KernelType>,
                        ControlledGateFunc, PairHash>
-        controlled_gate_kernels_;
+        controlled_gate_kernels_{};
 
     std::unordered_map<std::pair<ControlledGeneratorOperation, KernelType>,
                        ControlledGeneratorFunc, PairHash>
-        controlled_generator_kernels_;
+        controlled_generator_kernels_{};
 
     std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
                        ControlledMatrixFunc, PairHash>
-        controlled_matrix_kernels_;
+        controlled_matrix_kernels_{};
 
-    std::unordered_map<KernelType, std::string> kernel_names_;
+    std::unordered_map<KernelType, std::string> kernel_names_{};
 
     DynamicDispatcher() {
         constexpr static auto gntr_names_without_prefix =
@@ -435,7 +437,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param gate_op Gate operation
      * @param kernel Kernel
      */
-    bool isRegistered(GateOperation gate_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(GateOperation gate_op,
+                                    KernelType kernel) const {
         return gate_kernels_.find(std::make_pair(gate_op, kernel)) !=
                gate_kernels_.cend();
     }
@@ -460,7 +463,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param gntr_op Generator operation
      * @param kernel Kernel
      */
-    bool isRegistered(GeneratorOperation gntr_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(GeneratorOperation gntr_op,
+                                    KernelType kernel) const {
         return generator_kernels_.find(std::make_pair(gntr_op, kernel)) !=
                generator_kernels_.cend();
     }
@@ -485,7 +489,8 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param mat_op Matrix operation
      * @param kernel Kernel
      */
-    bool isRegistered(MatrixOperation mat_op, KernelType kernel) const {
+    [[nodiscard]] bool isRegistered(MatrixOperation mat_op,
+                                    KernelType kernel) const {
         return matrix_kernels_.find(std::make_pair(mat_op, kernel)) !=
                matrix_kernels_.cend();
     }
