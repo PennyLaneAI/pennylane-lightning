@@ -103,14 +103,41 @@ endif()
 
 
 if(ENABLE_LAPACK)
+    if(MSVC)
+        message(FATAL_ERROR "LAPACK is not supported for Windows.")
+    endif()
+
     message(STATUS "LAPACK is ON.")
     find_package(LAPACK REQUIRED)
     if(LAPACK_FOUND)
         message(STATUS "LAPACK found.")
-        get_target_property(lapack_include_dirs LAPACK::LAPACK INTERFACE_INCLUDE_DIRECTORIES)
-        message("LAPACK Include Directories: ${lapack_include_dirs}")
-        
-        target_link_libraries(lightning_external_libs INTERFACE ${LAPACK_LIBRARIES} LAPACK::LAPACK BLAS::BLAS)
+        string(FIND "${CMAKE_SYSTEM}" "cray" subStrIdx)
+        if(NOT subStrIdx EQUAL -1)
+            set(CRAY_LIBSCI_INC "$ENV{CRAY_LIBSCI_PREFIX_DIR}/include")
+            set(CRAY_LIBSCI_LIB "$ENV{CRAY_LIBSCI_PREFIX_DIR}/lib")
+
+            find_library(SCI_LIB
+                NAMES   libsci_gnu.so
+                HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/lib
+            )
+
+            find_file(SCI_INC
+                NAMES   lapacke.h
+                HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/include
+            )
+
+            if(NOT SCI_LIB OR NOT SCI_INC)
+                message(FATAL_ERROR "\nUnable to find libsci on CrayLinux. Please ensure it is correctly installed and available on path.")
+            else()
+                add_library(sci SHARED IMPORTED GLOBAL)
+                get_filename_component(SCI_INC_DIR ${SCI_INC} DIRECTORY)
+                target_include_directories(sci INTERFACE ${SCI_INC_DIR})
+                set_target_properties(sci PROPERTIES IMPORTED_LOCATION ${SCI_LIB})
+                target_link_libraries(lightning_external_libs INTERFACE sci)
+            endif()
+        else()
+            target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
+        endif()
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
         message(STATUS "LAPACK is enabled but not found.\n")

@@ -616,6 +616,38 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
             REQUIRE(expected == Approx(result_shots).margin(5e-2));
         }
 
+        DYNAMIC_SECTION("2x2 Hermitian matrix2"
+                        << StateVectorToName<StateVectorT>::name) {
+            MatrixT Hermitian_matrix{ComplexT{0, 0}, ComplexT{1, 0},
+                                     ComplexT{1, 0}, ComplexT{0, 0}};
+
+            HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+
+            PrecisionT expected = Measurer.expval(obs);
+
+            PrecisionT result_shots =
+                Measurer_shots.expval(obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result_shots).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("2x2 Hermitian matrix3"
+                        << StateVectorToName<StateVectorT>::name) {
+            MatrixT Hermitian_matrix{ComplexT{1, 0}, ComplexT{0, 0},
+                                     ComplexT{0, 0}, ComplexT{-1, 0}};
+
+            HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
+            size_t num_shots = 10000;
+            std::vector<size_t> shots_range = {};
+
+            PrecisionT expected = Measurer.expval(obs);
+
+            PrecisionT result_shots =
+                Measurer_shots.expval(obs, num_shots, shots_range);
+            REQUIRE(expected == Approx(result_shots).margin(5e-2));
+        }
+
         testHermitianObsExpvalShot<typename TypeList::Next>();
     }
 }

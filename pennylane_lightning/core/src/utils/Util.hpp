@@ -589,6 +589,9 @@ void compute_diagonalizing_gates(size_t N, size_t LDA,
     // data copy
     for (size_t i = 0; i < static_cast<size_t>(n); i++) {
         for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
+            // crealf()/creal() is not available since include <complex.h>
+            // will conflict with <complex>. Using `reinterpret_cast` instead
+            // here.
             T *val = reinterpret_cast<T *>(&ah[i * lda + j]);
             unitary[j * lda + i] = {val[0], -val[1]};
         }
