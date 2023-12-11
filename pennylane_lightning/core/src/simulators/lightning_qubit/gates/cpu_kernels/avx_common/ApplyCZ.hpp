@@ -106,7 +106,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCZ {
             const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
             const auto v = PrecisionAVXConcept::load(arr + i11); // 11
-            PrecisionAVXConcept::store(arr + i11, -1.0 * v);
+            inner_fn(arr + i11, -1.0 * v);
         }
     }
 };
