@@ -46,7 +46,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
         constexpr static auto compiled_permutation =
             compilePermutation<PrecisionT>(
                 flip(identity<packed_size>(), rev_wire));
-#pragma omp parallel for
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
 
@@ -84,7 +84,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
                                               // counts, low stride data)
         }
 
-#pragma omp parallel for
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;
