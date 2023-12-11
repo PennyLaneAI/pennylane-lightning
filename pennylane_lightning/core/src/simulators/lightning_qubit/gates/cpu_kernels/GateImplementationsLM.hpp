@@ -254,7 +254,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static auto parity2indices(const std::size_t k,
                                std::vector<std::size_t> parity,
                                std::vector<std::size_t> rev_wire_shifts,
-                               const std::size_t n_contr = 0)
+                               const std::size_t n_contr = 0,
+                               std::vector<std::size_t> rev_wires = {})
         -> std::vector<std::size_t> {
         constexpr std::size_t one{1};
         const std::size_t dim = one << (rev_wire_shifts.size() - n_contr);
@@ -264,7 +265,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             idx |= ((k << i) & parity[i]);
         }
         for (std::size_t i = 0; i < n_contr; i++) {
-            idx |= rev_wire_shifts[i];
+            if (rev_wires.empty()) {
+                idx |= rev_wire_shifts[i];
+            } else {
+                idx = (idx & ~(size_t{1} << rev_wires[i])) | rev_wire_shifts[i];
+            }
         }
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
@@ -436,13 +441,19 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                          controlled_wires.begin(), controlled_wires.end());
 
         std::vector<std::size_t> rev_wires(nw_tot);
-        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot, 0);
         for (std::size_t k = 0; k < nw_tot; k++) {
             rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-            const std::size_t value =
-                (k < n_wires || controlled_values[k - n_wires]) ? one : zero;
-            rev_wire_shifts[k] = (value << rev_wires[k]);
+            if (k < n_contr) {
+                rev_wire_shifts[k] =
+                    size_t{controlled_values[(n_contr - 1) - k]}
+                    << rev_wires[k];
+            }
+            if (k >= n_contr) {
+                rev_wire_shifts[k] = (one << rev_wires[k]);
+            }
         }
+
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
@@ -452,7 +463,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
 
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            indices = parity2indices(k, parity, rev_wire_shifts, n_contr);
+            indices =
+                parity2indices(k, parity, rev_wire_shifts, n_contr, rev_wires);
             for (std::size_t i = 0; i < dim; i++) {
                 coeffs_in[i] = arr[indices[i]];
             }

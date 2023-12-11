@@ -87,6 +87,13 @@ inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
 }
 
 /**
+ * @brief Swap bits in i-th and j-th position in place
+ */
+inline auto constexpr bitset(size_t bits, size_t n, bool x) {
+    return (bits & ~(size_t{1} << n)) | (size_t{x} << n);
+}
+
+/**
  * @brief Return integers with leading/trailing ones at positions specified by a
  * list of target wires.
  *
