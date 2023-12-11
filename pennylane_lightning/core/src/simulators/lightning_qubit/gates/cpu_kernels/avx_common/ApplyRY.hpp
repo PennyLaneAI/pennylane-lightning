@@ -23,6 +23,7 @@
 #include "Util.hpp"
 
 #include <complex>
+#include <omp.h>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
 template <typename PrecisionT, size_t packed_size> struct ApplyRY {
@@ -49,6 +50,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRY {
         constexpr static auto perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), rev_wire));
 
+#pragma omp parallel for
         for (size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto w_diag = diag_real * v;
@@ -74,6 +76,22 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRY {
         const auto p_sin_factor = set1<PrecisionT, packed_size>(sin);
         const auto m_sin_factor = set1<PrecisionT, packed_size>(-sin);
 
+        // Define method to push data back to main memory from register
+        void (*inner_fn)(std::complex<PrecisionT> *arr,
+                         typename PrecisionAVXConcept::IntrinsicType i);
+        if (omp_get_max_threads() < 4) {
+            inner_fn =
+                &PrecisionAVXConcept::store; // Best for when false sharing or
+                                             // cache evictions are unlikely
+                                             // (low-thread counts)
+        } else {
+            inner_fn =
+                &PrecisionAVXConcept::stream; // Best when cache evictions are
+                                              // expected often (high-thread
+                                              // counts, low stride data)
+        }
+
+#pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;
@@ -84,8 +102,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRY {
             const auto w0 = cos_factor * v0 + m_sin_factor * v1;
             const auto w1 = cos_factor * v1 + p_sin_factor * v0;
 
-            PrecisionAVXConcept::store(arr + i0, w0);
-            PrecisionAVXConcept::store(arr + i1, w1);
+            inner_fn(arr + i0, w0);
+            inner_fn(arr + i1, w1);
         }
     }
 };

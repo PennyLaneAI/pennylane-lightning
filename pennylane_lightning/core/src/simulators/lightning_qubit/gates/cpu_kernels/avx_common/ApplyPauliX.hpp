@@ -23,6 +23,7 @@
 #include "Util.hpp"
 
 #include <complex>
+#include <omp.h>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
 template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
@@ -39,6 +40,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
         constexpr static auto compiled_permutation =
             compilePermutation<PrecisionT>(
                 flip(identity<packed_size>(), rev_wire));
+#pragma omp parallel for
         for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             PrecisionAVXConcept::store(arr + k,
@@ -52,14 +54,31 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPauliX {
         const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
         const size_t wire_parity = fillTrailingOnes(rev_wire);
         const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+
+        // Define method to push data back to main memory from register
+        void (*inner_fn)(std::complex<PrecisionT> *arr,
+                         typename PrecisionAVXConcept::IntrinsicType i);
+        if (omp_get_max_threads() < 4) {
+            inner_fn =
+                &PrecisionAVXConcept::store; // Best for when false sharing or
+                                             // cache evictions are unlikely
+                                             // (low-thread counts)
+        } else {
+            inner_fn =
+                &PrecisionAVXConcept::stream; // Best when cache evictions are
+                                              // expected often (high-thread
+                                              // counts, low stride data)
+        }
+
+#pragma omp parallel for
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0);
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
-            PrecisionAVXConcept::store(arr + i0, v1);
-            PrecisionAVXConcept::store(arr + i1, v0);
+            inner_fn(arr + i0, v1);
+            inner_fn(arr + i1, v0);
         }
     }
 };
