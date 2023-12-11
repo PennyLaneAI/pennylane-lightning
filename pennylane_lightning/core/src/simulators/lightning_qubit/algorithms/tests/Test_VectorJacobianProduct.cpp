@@ -80,8 +80,12 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
         ops_wires.emplace_back(createWires(gate_op, wires));
     }
 
-    return {ops_names, ops_params, ops_wires, ops_inverses,
-            std::vector<std::vector<ComplexT>>(length)};
+    return {ops_names,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            std::vector<std::vector<ComplexT>>(length),
+            std::vector<std::vector<size_t>>(length)};
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
@@ -266,6 +270,54 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
         JacobianData<StateVectorT> jd1{1, 4, ini_st.data(), {}, ops_data1, {0}};
         JacobianData<StateVectorT> jd2{1, 4, ini_st.data(), {}, ops_data2, {0}};
+
+        std::vector<ComplexT> vjp1(1);
+        std::vector<ComplexT> vjp2(1);
+
+        vector_jacobian_product(std::span{vjp1}, jd1,
+                                std::span<const ComplexT>{dy1}, true);
+
+        vector_jacobian_product(std::span{vjp2}, jd2,
+                                std::span<const ComplexT>{dy2}, true);
+
+        REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
+    }
+
+    SECTION("Test controlled complex dy") {
+        OpsData<StateVectorT> ops_data1{
+            {"PauliX", "RX"}, // names
+            {{}, {M_PI / 7}}, // params
+            {{1}, {1}},       // wires
+            {false, false},   // inverses
+            {{}, {}},         // matrices
+            {{0, 2}, {2}},    // controlled wires
+        };
+
+        auto dy1 = std::vector<ComplexT>{{0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}};
+
+        OpsData<StateVectorT> ops_data2{
+            {"PauliX", "RX"},  // names
+            {{}, {-M_PI / 7}}, // params
+            {{1}, {1}},        // wires
+            {false, false},    // inverses
+            {{}, {}},          // matrices
+            {{0, 2}, {2}},     // controlled wires
+        };
+
+        auto dy2 = std::vector<ComplexT>{{0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}};
+
+        std::vector<ComplexT> ini_st{{isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}, {0.0, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}};
+
+        JacobianData<StateVectorT> jd1{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data1,     {0}};
+        JacobianData<StateVectorT> jd2{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data2,     {0}};
 
         std::vector<ComplexT> vjp1(1);
         std::vector<ComplexT> vjp2(1);

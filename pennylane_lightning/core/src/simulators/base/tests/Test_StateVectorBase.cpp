@@ -120,6 +120,30 @@ template <typename TypeList> void testApplyOperations() {
                 state_vector_2.getData(), state_vector_2.getLength()));
         }
 
+        DYNAMIC_SECTION("Apply 0-controlled operations without parameters - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto st_data_1 =
+                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            auto st_data_2 = st_data_1;
+
+            StateVectorT state_vector_1(
+                reinterpret_cast<ComplexT *>(st_data_1.data()),
+                st_data_1.size());
+            StateVectorT state_vector_2(
+                reinterpret_cast<ComplexT *>(st_data_2.data()),
+                st_data_2.size());
+
+            state_vector_1.applyOperation("PauliX", {}, {0}, false);
+            state_vector_1.applyOperation("PauliY", {}, {1}, false);
+
+            state_vector_2.applyOperation("PauliX", {}, {0}, false);
+            state_vector_2.applyOperation("PauliY", {}, {1}, false);
+
+            REQUIRE(isApproxEqual(
+                state_vector_1.getData(), state_vector_1.getLength(),
+                state_vector_2.getData(), state_vector_2.getLength()));
+        }
+
         DYNAMIC_SECTION("Apply operations with parameters - "
                         << StateVectorToName<StateVectorT>::name) {
             auto st_data_1 =
