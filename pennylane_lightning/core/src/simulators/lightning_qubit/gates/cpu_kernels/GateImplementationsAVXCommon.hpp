@@ -23,6 +23,7 @@
 #include "Error.hpp"
 #include "GateImplementationsLM.hpp"
 #include "GateOperation.hpp"
+#include "GatePragmas.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "LinearAlgebra.hpp"

@@ -92,6 +92,18 @@ template <typename T> struct AVX2Concept {
     }
 
     PL_FORCE_INLINE
+    static void stream(std::complex<PrecisionT> *p, IntrinsicType value) {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
+            _mm256_stream_ps(reinterpret_cast<PrecisionT *>(p), value);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            _mm256_stream_pd(reinterpret_cast<PrecisionT *>(p), value);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    PL_FORCE_INLINE
     static auto mul(IntrinsicType v0, IntrinsicType v1) {
         if constexpr (std::is_same_v<PrecisionT, float>) {
             return _mm256_mul_ps(v0, v1);

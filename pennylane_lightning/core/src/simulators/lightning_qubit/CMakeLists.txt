@@ -20,6 +20,7 @@ add_library(lightning_qubit STATIC ${LQUBIT_FILES})
 
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
+option(LQ_ENABLE_KERNEL_OMP "Enable OpenMP pragmas for gate kernels" OFF)
 
 # Inform the compiler that this device is enabled.
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLQUBIT=1")
@@ -44,6 +45,10 @@ if(ENABLE_BLAS)
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_BLAS=1")
 else()
     message(STATUS "ENABLE_BLAS is OFF.")
+endif()
+
+if(LQ_ENABLE_KERNEL_OMP)
+    add_definitions("-DPL_LQ_KERNEL_OMP")
 endif()
 
 target_link_libraries(lightning_qubit PUBLIC    lightning_compile_options

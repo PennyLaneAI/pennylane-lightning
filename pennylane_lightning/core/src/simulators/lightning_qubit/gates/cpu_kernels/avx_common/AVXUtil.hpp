@@ -305,6 +305,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
 template <typename PrecisionT, size_t packed_size, typename Func>
 auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
+    PL_LOOP_SIMD
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
                             2 * static_cast<PrecisionT>(func(idx));
@@ -323,6 +324,7 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
 template <typename PrecisionT, size_t packed_size, typename Func>
 auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
+    PL_LOOP_SIMD
     for (size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
         data[2 * idx + 1] = data[2 * idx + 0];

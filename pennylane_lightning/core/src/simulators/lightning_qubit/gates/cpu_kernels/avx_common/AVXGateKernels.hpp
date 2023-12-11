@@ -16,6 +16,7 @@
  * Include all AVX gate implementations
  */
 #pragma once
+#include "../GatePragmas.hpp"
 #include "ApplyCNOT.hpp"
 #include "ApplyCRX.hpp"
 #include "ApplyCRY.hpp"
