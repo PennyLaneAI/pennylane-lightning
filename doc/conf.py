@@ -92,9 +92,22 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
+    "sphinxext.opengraph",
 ]
 
-intersphinx_mapping = {"https://docs.pennylane.ai/en/stable/": None}
+# Open Graph metadata
+ogp_social_cards = {
+    "image": "_static/logo.png",
+    "enable": True,
+    "site_url": "https://docs.pennylane.ai/projects/lightning/",
+    "line_color": "#03b2ff",
+}
+ogp_image = "_static/pennylane_lightning.png"
+
+# The base URL with a proper language and version.
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+
+intersphinx_mapping = {"https://docs.pennylane.ai/projects/lightning/en/stable/": None}
 
 autosummary_generate = True
 autosummary_imported_members = False

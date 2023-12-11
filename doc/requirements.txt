@@ -8,3 +8,5 @@ sphinx-automodapi
 pennylane-sphinx-theme
 custatevec-cu11
 wheel
+sphinxext-opengraph
+matplotlib
