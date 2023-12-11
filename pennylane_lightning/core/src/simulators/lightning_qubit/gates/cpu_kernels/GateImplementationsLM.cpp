@@ -42,22 +42,28 @@ template void GateImplementationsLM::applyMultiQubitOp<double>(
     const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCSingleQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCSingleQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCTwoQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCTwoQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCMultiQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 
 /* Single-qubit gates */
 

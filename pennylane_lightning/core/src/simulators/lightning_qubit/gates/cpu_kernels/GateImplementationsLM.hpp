@@ -288,6 +288,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wire A wire the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -296,6 +297,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyNCSingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                          const std::complex<PrecisionT> *matrix,
                          const std::vector<size_t> &controlled_wires,
+                         const std::vector<bool> &controlled_values,
                          const std::vector<size_t> &wires,
                          bool inverse = false) {
         constexpr std::size_t one{1};
@@ -332,7 +334,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                        const std::complex<PrecisionT> *matrix,
                        const std::vector<size_t> &wires, bool inverse = false) {
-        applyNCSingleQubitOp(arr, num_qubits, matrix, {}, wires, inverse);
+        applyNCSingleQubitOp(arr, num_qubits, matrix, {}, {}, wires, inverse);
     }
 
     /**
@@ -342,6 +344,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -350,6 +353,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyNCTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                       const std::complex<PrecisionT> *matrix,
                       const std::vector<size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
                       const std::vector<size_t> &wires, bool inverse = false) {
         constexpr std::size_t one{1};
         constexpr std::size_t dim = one << 2U;
@@ -394,7 +398,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
                     const std::complex<PrecisionT> *matrix,
                     const std::vector<size_t> &wires, bool inverse = false) {
-        applyNCTwoQubitOp(arr, num_qubits, matrix, {}, wires, inverse);
+        applyNCTwoQubitOp(arr, num_qubits, matrix, {}, {}, wires, inverse);
     }
 
     /**
@@ -407,6 +411,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -414,9 +419,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT, class FuncT>
     static void applyNCN(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                          const std::vector<std::size_t> &controlled_wires,
+                         const std::vector<bool> &controlled_values,
                          const std::vector<std::size_t> &wires,
                          FuncT core_function) {
         constexpr std::size_t one{1};
+        constexpr std::size_t zero{0};
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
@@ -432,7 +439,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::vector<std::size_t> rev_wire_shifts(nw_tot);
         for (std::size_t k = 0; k < nw_tot; k++) {
             rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-            rev_wire_shifts[k] = (one << rev_wires[k]);
+            const std::size_t value =
+                (k < n_wires || controlled_values[k - n_wires]) ? one : zero;
+            rev_wire_shifts[k] = (value << rev_wires[k]);
         }
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
@@ -458,6 +467,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -466,6 +476,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyNCMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                         const std::complex<PrecisionT> *matrix,
                         const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
                         const std::vector<std::size_t> &wires, bool inverse) {
         constexpr std::size_t one{1};
         const std::size_t n_wires = wires.size();
@@ -491,7 +502,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                     }
                 }
             };
-        applyNCN(arr, num_qubits, controlled_wires, wires, core_function);
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
     }
 
     template <class PrecisionT>
@@ -499,7 +511,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                       const std::complex<PrecisionT> *matrix,
                       const std::vector<std::size_t> &wires, bool inverse) {
-        applyNCMultiQubitOp(arr, num_qubits, matrix, {}, wires, inverse);
+        applyNCMultiQubitOp(arr, num_qubits, matrix, {}, {}, wires, inverse);
     }
 
     /* One-qubit gates */
@@ -2339,22 +2351,28 @@ extern template void GateImplementationsLM::applyMultiQubitOp<double>(
     const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCSingleQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCSingleQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCTwoQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCTwoQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCMultiQubitOp<float>(
     std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 extern template void GateImplementationsLM::applyNCMultiQubitOp<double>(
     std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, const std::vector<size_t> &, bool);
+    const std::vector<size_t> &, const std::vector<bool> &,
+    const std::vector<size_t> &, bool);
 
 /* Controlled single-qubit gates */
 

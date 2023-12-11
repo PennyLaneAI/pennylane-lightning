@@ -824,6 +824,7 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::complex<PrecisionT> *,
                           const std::vector<size_t> &,
+                          const std::vector<bool> &,
                           const std::vector<size_t> &, bool);
 };
 
@@ -998,8 +999,10 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                                    size_t num_qubits,
                                    const std::complex<PrecisionT *> matrix,
                                    const std::vector<size_t> &controlled_wires,
+                                   const std::vector<bool> &controlled_values,
                                    const std::vector<size_t> &wires, bool adj) {
-    return func(data, num_qubits, matrix, controlled_wires, wires, adj);
+    return func(data, num_qubits, matrix, controlled_wires, controlled_values,
+                wires, adj);
 }
 
 } // namespace Pennylane::LightningQubit::Gates

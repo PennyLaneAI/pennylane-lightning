@@ -121,11 +121,12 @@ void applyControlledMatrix(
     const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
                       py::array::c_style | py::array::forcecast> &matrix,
     const std::vector<size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
     const std::vector<size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
     st.applyControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
-        wires, inverse);
+        controlled_values, wires, inverse);
 }
 template <class StateVectorT, class PyClass>
 void registerControlledGate(PyClass &pyclass) {

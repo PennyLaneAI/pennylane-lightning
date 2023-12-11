@@ -791,7 +791,7 @@ void testApplyNCMultiQubitOp() {
         auto st(ref_st);
 
         GateImplementation::applyNCMultiQubitOp(
-            st.data(), num_qubits, matrix.data(), {2}, {3}, inverse);
+            st.data(), num_qubits, matrix.data(), {2}, {true}, {3}, inverse);
         GateImplementation::applyCNOT(ref_st.data(), num_qubits, {2, 3},
                                       inverse);
 
@@ -809,7 +809,7 @@ void testApplyNCMultiQubitOp() {
         auto st(ref_st);
 
         GateImplementation::applyNCMultiQubitOp(
-            st.data(), num_qubits, matrix.data(), {2}, {3}, inverse);
+            st.data(), num_qubits, matrix.data(), {2}, {true}, {3}, inverse);
         GateImplementation::applyCY(ref_st.data(), num_qubits, {2, 3}, inverse);
 
         REQUIRE(st == approx(ref_st).margin(margin));
@@ -998,6 +998,7 @@ void testApplyControlledMultiQubitOpInverse() {
             const size_t ns = controls.size();
             std::vector<size_t> wires{controls[ns - 1]};
             controls.pop_back();
+            const std::vector<bool> control_values(controls.size(), true);
 
             const auto ini_st =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -1005,9 +1006,11 @@ void testApplyControlledMultiQubitOpInverse() {
 
             auto st = ini_st;
             GateImplementation::applyNCSingleQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, false);
+                st.data(), num_qubits, matrix.data(), controls, control_values,
+                wires, false);
             GateImplementation::applyNCSingleQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, true);
+                st.data(), num_qubits, matrix.data(), controls, control_values,
+                wires, true);
 
             REQUIRE(st == approx(ini_st).margin(margin));
         }
@@ -1022,16 +1025,19 @@ void testApplyControlledMultiQubitOpInverse() {
             std::vector<size_t> wires{controls[ns - 2], controls[ns - 1]};
             controls.pop_back();
             controls.pop_back();
+            const std::vector<bool> control_values(controls.size(), true);
 
             const auto ini_st =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
             const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
             auto st = ini_st;
-            GateImplementation::applyNCTwoQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, false);
-            GateImplementation::applyNCTwoQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, true);
+            GateImplementation::applyNCTwoQubitOp(st.data(), num_qubits,
+                                                  matrix.data(), controls,
+                                                  control_values, wires, false);
+            GateImplementation::applyNCTwoQubitOp(st.data(), num_qubits,
+                                                  matrix.data(), controls,
+                                                  control_values, wires, true);
 
             REQUIRE(st == approx(ini_st).margin(margin));
         }
@@ -1049,15 +1055,19 @@ void testApplyControlledMultiQubitOpInverse() {
             controls.pop_back();
             controls.pop_back();
 
+            const std::vector<bool> control_values(controls.size(), true);
+
             const auto ini_st =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
             const auto matrix = randomUnitary<PrecisionT>(re, wires.size());
 
             auto st = ini_st;
             GateImplementation::applyNCMultiQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, false);
+                st.data(), num_qubits, matrix.data(), controls, control_values,
+                wires, false);
             GateImplementation::applyNCMultiQubitOp(
-                st.data(), num_qubits, matrix.data(), controls, wires, true);
+                st.data(), num_qubits, matrix.data(), controls, control_values,
+                wires, true);
 
             REQUIRE(st == approx(ini_st).margin(margin));
         }

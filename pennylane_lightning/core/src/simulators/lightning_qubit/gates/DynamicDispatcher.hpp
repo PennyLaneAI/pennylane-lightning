@@ -707,9 +707,13 @@ template <typename PrecisionT> class DynamicDispatcher {
                                size_t num_qubits,
                                const std::complex<PrecisionT> *matrix,
                                const std::vector<size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
                                const std::vector<size_t> &wires,
                                bool inverse) const {
         PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
         const auto mat_op = [n_wires = wires.size()]() {
             switch (n_wires) {
             case 1:
@@ -729,8 +733,8 @@ template <typename PrecisionT> class DynamicDispatcher {
                                         mat_op)) +
                      " is not registered for the given kernel");
         }
-        (iter->second)(data, num_qubits, matrix, controlled_wires, wires,
-                       inverse);
+        (iter->second)(data, num_qubits, matrix, controlled_wires,
+                       controlled_values, wires, inverse);
     }
 
     /**
