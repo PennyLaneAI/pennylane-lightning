@@ -473,19 +473,21 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param adj Indicates whether to use adjoint of operator.
      */
     [[nodiscard]] auto applyGenerator(
         const std::string &opName, const std::vector<size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
         const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
         const auto kernel = getKernelForControlledGenerator(generator_op);
         return dispatcher.applyControlledGenerator(
-            kernel, arr, this->getNumQubits(), opName, controlled_wires, wires,
-            adj);
+            kernel, arr, this->getNumQubits(), opName, controlled_wires,
+            controlled_values, wires, adj);
     }
 
     /**

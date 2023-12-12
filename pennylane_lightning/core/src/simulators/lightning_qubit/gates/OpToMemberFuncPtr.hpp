@@ -807,6 +807,7 @@ template <class PrecisionT> struct GeneratorFuncPtr {
 template <class PrecisionT> struct ControlledGeneratorFuncPtr {
     using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
                                 const std::vector<size_t> &,
+                                const std::vector<bool> &,
                                 const std::vector<size_t> &, bool);
 };
 

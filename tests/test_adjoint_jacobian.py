@@ -719,9 +719,10 @@ class TestAdjointJacobianQNode:
             qml.DoubleExcitationPlus,
         ],
     )
+    @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", range(2, 6))
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
-    def test_controlled_jacobian(self, par, n_qubits, operation, tol):
+    def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
         """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
         par = np.array([0.1234, par, 0.5678])
         dev = qml.device("lightning.qubit", wires=n_qubits)
@@ -732,26 +733,32 @@ class TestAdjointJacobianQNode:
         if operation.num_wires > n_qubits:
             return
 
-        def circuit(p):
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.RX(p[0], 0)
-            qml.ctrl(
-                operation(p[1], wires=range(n_qubits - operation.num_wires, n_qubits)),
-                range(0, n_qubits - operation.num_wires),
-            )
-            qml.RY(p[2], 0)
-            return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
+        for n_controls in range(0, n_qubits - operation.num_wires):
+            control_wires = range(n_controls, n_qubits - operation.num_wires)
 
-        circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
-        circ_ps = qml.QNode(circuit, dev, diff_method="finite-diff")
-        jac_ad = np.array(qml.jacobian(circ_ad)(par))
-        jac_ps = np.array(qml.jacobian(circ_ps)(par))
+            def circuit(p):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RX(p[0], 0)
+                qml.ctrl(
+                    operation(p[1], wires=range(n_qubits - operation.num_wires, n_qubits)),
+                    control_wires,
+                    control_values=[
+                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                    ],
+                )
+                qml.RY(p[2], 0)
+                return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
 
-        # different methods must agree
-        assert jac_ad.size == n_qubits * 3
-        assert np.allclose(jac_ad.shape, [n_qubits, 3])
-        assert np.allclose(jac_ad.shape, jac_ps.shape)
-        assert np.allclose(jac_ad, jac_ps, atol=tol, rtol=0)
+            circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
+            circ_ps = qml.QNode(circuit, dev, diff_method="finite-diff")
+            jac_ad = np.array(qml.jacobian(circ_ad)(par))
+            jac_ps = np.array(qml.jacobian(circ_ps)(par))
+
+            # different methods must agree
+            assert jac_ad.size == n_qubits * 3
+            assert np.allclose(jac_ad.shape, [n_qubits, 3])
+            assert np.allclose(jac_ad.shape, jac_ps.shape)
+            assert np.allclose(jac_ad, jac_ps, atol=tol, rtol=0)
 
     thetas = np.linspace(-2 * np.pi, 2 * np.pi, 8)
 

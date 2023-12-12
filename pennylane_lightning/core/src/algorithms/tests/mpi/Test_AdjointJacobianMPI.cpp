@@ -267,8 +267,7 @@ template <typename TypeList> void testAdjointJacobian() {
                     {}, {}, {}, cnot, {}, {}, {}, {}},
                 std::vector<std::vector<size_t>>{
                     {}, {}, {}, {}, {}, {}, {}, {}},
-                std::vector<std::vector<bool>>{
-                    {}, {}, {}, {}, {}, {}, {}, {}});
+                std::vector<std::vector<bool>>{{}, {}, {}, {}, {}, {}, {}, {}});
 
             JacobianDataMPI<StateVectorT> tape{num_params, psi, {obs}, ops, tp};
 
