@@ -72,11 +72,11 @@ decomp = [
         "QubitStateVector",
         "StatePrep",
         "MultiControlledX",
-        "ControlledQubitUnitary",
 ]
 
 # Gates which should be translated to QubitUnitary
 matrix = [
+        "ControlledQubitUnitary",
         "ECR",
         "SX",
         "ISWAP",
