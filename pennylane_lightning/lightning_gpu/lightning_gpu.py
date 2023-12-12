@@ -18,6 +18,7 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 
 from warnings import warn
+from pathlib import Path
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
@@ -230,6 +231,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
+        config = Path(__file__).parent / "lightning_gpu.toml"
 
         def __init__(
             self,
