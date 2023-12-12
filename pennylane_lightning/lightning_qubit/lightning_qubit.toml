@@ -72,8 +72,9 @@ decomp = [
         "BasisState",
         "QubitStateVector",
         "StatePrep",
-        "ControlledQubitUnitary",
         "QFT",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
 ]
 
 # Gates which should be translated to QubitUnitary
@@ -89,7 +90,6 @@ matrix = [
         "QubitCarry",
         "QubitSum",
         "DiagonalQubitUnitary",
-        "MultiControlledX",
 ]
 
 [measurement_processes]
