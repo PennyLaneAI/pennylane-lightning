@@ -346,10 +346,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, PrecisionT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, PrecisionT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
         }
     }
 
@@ -410,10 +412,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, PrecisionT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, PrecisionT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
         }
     }
 
@@ -550,6 +554,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -558,6 +563,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
               bool has_controls = true>
     static void applyNC1(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &controlled_wires,
+                         const std::vector<bool> &controlled_values,
                          const std::vector<size_t> &wires,
                          FuncT core_function) {
         constexpr std::size_t one{1};
@@ -568,17 +574,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(num_qubits >= nw_tot);
 
         if constexpr (has_controls) {
+            PL_ABORT_IF_NOT(controlled_values.size() == n_contr,
+                            "`controlled_wires` must have the same size as "
+                            "`controlled_values`.");
+
             std::vector<std::size_t> all_wires;
             all_wires.reserve(nw_tot);
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            std::vector<std::size_t> rev_wires(nw_tot);
-            std::vector<std::size_t> rev_wire_shifts(nw_tot);
-            for (std::size_t k = 0; k < nw_tot; k++) {
-                rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-                rev_wire_shifts[k] = (one << rev_wires[k]);
-            }
+            const auto [rev_wires, rev_wire_shifts] =
+                reverseWires(num_qubits, all_wires, controlled_values);
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
             for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
@@ -618,10 +624,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -645,7 +655,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             std::swap(arr[i10], arr[i11]);
         };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -673,10 +683,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -702,7 +716,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] = {-std::imag(v0), std::real(v0)};
         };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -717,10 +731,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 const std::size_t i1) { arr[i1] *= -1; };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -742,7 +760,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                 [[maybe_unused]] const std::size_t i10,
                                 const std::size_t i11) { arr[i11] *= -1; };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -762,10 +780,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -791,10 +813,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -819,10 +845,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -845,10 +875,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                   const std::size_t i1) { arr[i1] *= s; };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -875,7 +909,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                   [[maybe_unused]] const std::size_t i10,
                                   const std::size_t i11) { arr[i11] *= s; };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -899,10 +933,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -933,7 +971,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                        c * v1;
         };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -957,10 +995,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -991,7 +1033,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                                 s * imag(v0) + c * imag(v1)};
         };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
@@ -1015,10 +1057,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1049,7 +1095,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i11] *= shifts[1];
         };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-            arr, num_qubits, {}, wires, core_function);
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     template <class PrecisionT>
@@ -1122,6 +1168,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -1130,6 +1177,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
               bool has_controls = true>
     static void applyNC2(std::complex<PrecisionT> *arr, const size_t num_qubits,
                          const std::vector<size_t> &controlled_wires,
+                         const std::vector<bool> &controlled_values,
                          const std::vector<size_t> &wires,
                          FuncT core_function) {
         constexpr std::size_t one{1};
@@ -1139,17 +1187,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(n_wires == 2);
         PL_ASSERT(num_qubits >= nw_tot);
         if constexpr (has_controls) {
+            PL_ABORT_IF_NOT(controlled_values.size() == n_contr,
+                            "`controlled_wires` must have the same size as "
+                            "`controlled_values`.");
+
             std::vector<std::size_t> all_wires;
             all_wires.reserve(nw_tot);
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            std::vector<std::size_t> rev_wires(nw_tot);
-            std::vector<std::size_t> rev_wire_shifts(nw_tot);
-            for (std::size_t k = 0; k < nw_tot; k++) {
-                rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-                rev_wire_shifts[k] = (one << rev_wires[k]);
-            }
+            const auto [rev_wires, rev_wire_shifts] =
+                reverseWires(num_qubits, all_wires, controlled_values);
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
             for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
@@ -1199,10 +1247,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1248,10 +1300,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1289,10 +1345,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1331,10 +1391,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1369,10 +1433,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1404,10 +1472,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1443,10 +1515,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 
@@ -1483,10 +1559,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             };
         if (controlled_wires.empty()) {
             applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         } else {
             applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, wires, core_function);
+                arr, num_qubits, controlled_wires,
+                std::vector<bool>(controlled_wires.size(), true), wires,
+                core_function);
         }
     }
 

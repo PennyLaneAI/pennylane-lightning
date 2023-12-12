@@ -384,10 +384,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                     if not value:
                         paulix([wire], False, [])
             else:  # apply gate as an n-controlled matrix
-                paulix = getattr(sim, "PauliX", None)
-                for wire, value in zip(control_wires, control_values):
-                    if len(target_wires) <= 2 and not value:
-                        paulix([wire], False, [])
                 method = getattr(sim, "applyControlledMatrix")
                 target_wires = self.wires.indices(operation.target_wires)
                 try:
@@ -403,10 +399,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                     method(
                         operation.base.matrix, control_wires, control_values, target_wires, False
                     )
-                paulix = getattr(sim, "PauliX", None)
-                for wire, value in zip(control_wires, control_values):
-                    if len(target_wires) <= 2 and not value:
-                        paulix([wire], False, [])
 
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.
