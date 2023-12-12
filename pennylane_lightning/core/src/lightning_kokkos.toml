@@ -64,6 +64,7 @@ native = [
         "Adjoint(SX)",
         "Adjoint(ISWAP)",
         "Adjoint(SISWAP)",
+        "ControlledQubitUnitary",
 ]
 
 # Operators that should be decomposed according to the algorithm used
@@ -73,25 +74,24 @@ native = [
 # strategy in PennyLane.
 decomp = [
         "BasisState",
-        "ECR",
         "QubitStateVector",
         "StatePrep",
-        "ControlledQubitUnitary",
-        "DiagonalQubitUnitary",
+        "QFT",
+]
+
+# Gates which should be translated to QubitUnitary
+matrix = [
+        "ECR",
         "SX",
         "ISWAP",
         "PSWAP",
         "SISWAP",
         "SQISW",
         "CPhase",
+        "OrbitalRotation",
         "QubitCarry",
         "QubitSum",
-        "OrbitalRotation",
-        "QFT",
-]
-
-# Gates which should be translated to QubitUnitary
-matrix = [
+        "DiagonalQubitUnitary",
         "MultiControlledX",
 ]
 

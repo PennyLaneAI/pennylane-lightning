@@ -75,25 +75,25 @@ decomp = [
         "Adjoint(ISWAP)",
         "Adjoint(SISWAP)",
         "BasisState",
-        "ECR",
         "QubitStateVector",
         "StatePrep",
         "ControlledQubitUnitary",
-        "DiagonalQubitUnitary",
+        "QFT",
+]
+
+# Gates which should be translated to QubitUnitary
+matrix = [
+        "ECR",
         "SX",
         "ISWAP",
         "PSWAP",
         "SISWAP",
         "SQISW",
         "CPhase",
+        "OrbitalRotation",
         "QubitCarry",
         "QubitSum",
-        "OrbitalRotation",
-        "QFT",
-]
-
-# Gates which should be translated to QubitUnitary
-matrix = [
+        "DiagonalQubitUnitary",
         "MultiControlledX",
 ]
 
