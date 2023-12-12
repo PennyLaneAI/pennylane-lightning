@@ -208,7 +208,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
-        config = Path(__file__).parents[1] / "core" / "src" / "lightning_qubit.toml"
+        config = Path(__file__).parent / "lightning_qubit.toml"
 
         def __init__(  # pylint: disable=too-many-arguments
             self,

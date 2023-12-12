@@ -231,7 +231,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
-        config = Path(__file__).parents[1] / "core" / "src" / "lightning_gpu.toml"
+        config = Path(__file__).parent / "lightning_gpu.toml"
 
         def __init__(
             self,
