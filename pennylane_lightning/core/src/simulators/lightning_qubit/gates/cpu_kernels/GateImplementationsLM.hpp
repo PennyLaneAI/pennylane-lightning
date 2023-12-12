@@ -51,6 +51,25 @@ namespace Pennylane::LightningQubit::Gates {
 class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
   private:
     /* Alias utility functions */
+    static std::pair<std::vector<std::size_t>, std::vector<std::size_t>>
+    reverseWires(const std::size_t num_qubits,
+                 const std::vector<std::size_t> &all_wires,
+                 const std::vector<bool> &controlled_values) {
+        constexpr std::size_t one{1};
+        const std::size_t nw_tot = all_wires.size();
+        const std::size_t n_contr = controlled_values.size();
+        std::vector<std::size_t> rev_wires(nw_tot);
+        std::vector<std::size_t> rev_wire_shifts(nw_tot);
+        for (std::size_t k = 0; k < nw_tot; k++) {
+            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
+            const std::size_t value =
+                (k < n_contr) ? size_t{controlled_values[(n_contr - 1) - k]}
+                              : one;
+            rev_wire_shifts[k] = (value << rev_wires[k]);
+        }
+        return {rev_wires, rev_wire_shifts};
+    }
+
     static std::pair<size_t, size_t> revWireParity(size_t rev_wire) {
         const auto parity = Pennylane::Util::revWireParity(
             std::array<std::size_t, 1>{rev_wire});
@@ -433,6 +452,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(num_qubits >= nw_tot);
+        PL_ABORT_IF_NOT(controlled_values.size() == n_contr,
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
 
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
@@ -440,20 +462,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.insert(all_wires.begin() + wires.size(),
                          controlled_wires.begin(), controlled_wires.end());
 
-        std::vector<std::size_t> rev_wires(nw_tot);
-        std::vector<std::size_t> rev_wire_shifts(nw_tot, 0);
-        for (std::size_t k = 0; k < nw_tot; k++) {
-            rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-            if (k < n_contr) {
-                rev_wire_shifts[k] =
-                    size_t{controlled_values[(n_contr - 1) - k]}
-                    << rev_wires[k];
-            }
-            if (k >= n_contr) {
-                rev_wire_shifts[k] = (one << rev_wires[k]);
-            }
-        }
-
+        const auto [rev_wires, rev_wire_shifts] =
+            reverseWires(num_qubits, all_wires, controlled_values);
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
