@@ -31,8 +31,6 @@ try:
     from pennylane_lightning.lightning_kokkos_ops import (
         allocate_aligned_array,
         backend_info,
-        best_alignment,
-        get_alignment,
         InitializationSettings,
         MeasurementsC128,
         MeasurementsC64,
