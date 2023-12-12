@@ -61,11 +61,6 @@ native = [
         "DoubleExcitationMinus",
         "MultiRZ",
         "QubitUnitary",
-        "Adjoint(S)",
-        "Adjoint(T)",
-        "Adjoint(SX)",
-        "Adjoint(ISWAP)",
-        "Adjoint(SISWAP)",
 ]
 
 # Operators that should be decomposed according to the algorithm used

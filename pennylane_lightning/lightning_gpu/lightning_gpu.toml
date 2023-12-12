@@ -59,11 +59,6 @@ native = [
         "DoubleExcitationMinus",
         "MultiRZ",
         "QubitUnitary",
-        "Adjoint(S)",
-        "Adjoint(T)",
-        "Adjoint(SX)",
-        "Adjoint(ISWAP)",
-        "Adjoint(SISWAP)",
         "ControlledQubitUnitary",
 ]
 
