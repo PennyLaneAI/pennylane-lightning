@@ -25,6 +25,6 @@
 #include "cpu_kernels/GateImplementationsPI.hpp"
 
 using TestKernels = Pennylane::Util::TypeList<
-    Pennylane::LightningQubit::Gates::GateImplementationsLM,
-    Pennylane::LightningQubit::Gates::GateImplementationsPI, void>;
+    Pennylane::LightningQubit::Gates::GateImplementationsPI,
+    Pennylane::LightningQubit::Gates::GateImplementationsLM, void>;
 #endif

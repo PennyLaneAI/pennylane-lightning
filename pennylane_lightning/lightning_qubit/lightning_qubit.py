@@ -116,6 +116,27 @@ if LQ_CPP_BINARY_AVAILABLE:
         "CRX",
         "CRY",
         "CRZ",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -187,7 +208,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         observables = allowed_observables
         _backend_info = backend_info
 
-        def __init__(
+        def __init__(  # pylint: disable=too-many-arguments
             self,
             wires,
             *,
@@ -279,7 +300,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Returns a Measurements object matching ``use_csingle`` precision."""
             ket = np.ravel(self._state)
             state_vector = StateVectorC64(ket) if self.use_csingle else StateVectorC128(ket)
-            # state_vector = self.state_vector
             return (
                 MeasurementsC64(state_vector)
                 if self.use_csingle
@@ -334,14 +354,56 @@ if LQ_CPP_BINARY_AVAILABLE:
             num = self._get_basis_state_index(state, wires)
             self._state = self._create_basis_state(num)
 
+        def _apply_lightning_controlled(self, sim, operation):
+            """Apply an arbitrary controlled operation to the state tensor.
+
+            Args:
+                sim (StateVectorC64, StateVectorC128): a state vector simulator
+                operation (~pennylane.operation.Operation): operation to apply
+
+            Returns:
+                array[complex]: the output state tensor
+            """
+            basename = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+            if basename == "Identity":
+                return
+            method = getattr(sim, f"{basename}", None)
+            control_wires = self.wires.indices(operation.control_wires)
+            control_values = (
+                [bool(int(i)) for i in operation.hyperparameters["control_values"]]
+                if operation.name == "MultiControlledX"
+                else operation.control_values
+            )
+            if operation.name == "MultiControlledX":
+                target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
+            else:
+                target_wires = self.wires.indices(operation.target_wires)
+            paulix = getattr(sim, "PauliX", None)
+            for wire, value in zip(control_wires, control_values):
+                if not value:
+                    paulix([wire], False, [])
+            if method is not None:  # apply n-controlled specialized gate
+                inv = False
+                param = operation.parameters
+                method(control_wires, target_wires, inv, param)
+            else:  # apply gate as an n-controlled matrix
+                method = getattr(sim, "applyControlledMatrix")
+                target_wires = self.wires.indices(operation.target_wires)
+                try:
+                    method(qml.matrix(operation.base), control_wires, target_wires, False)
+                except AttributeError:  # pragma: no cover
+                    # To support older versions of PL
+                    method(operation.base.matrix, control_wires, target_wires, False)
+            for wire, value in zip(control_wires, control_values):
+                if not value:
+                    paulix([wire], False, [])
+
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.
 
             Args:
                 state (array[complex]): the input state tensor
                 operations (list[~pennylane.operation.Operation]): operations to apply
-                dtype (type): Type of numpy ``complex`` to be used. Can be important
-                to specify for large systems for memory allocation purposes.
 
             Returns:
                 array[complex]: the output state tensor
@@ -357,9 +419,19 @@ if LQ_CPP_BINARY_AVAILABLE:
                 if operation.name == "Identity":
                     continue
                 method = getattr(sim, operation.name, None)
-
                 wires = self.wires.indices(operation.wires)
-                if method is None:
+
+                if method is not None:  # apply specialized gate
+                    inv = False
+                    param = operation.parameters
+                    method(wires, inv, param)
+                elif (
+                    operation.name[0:2] == "C("
+                    or operation.name == "ControlledQubitUnitary"
+                    or operation.name == "MultiControlledX"
+                ):  # apply n-controlled gate
+                    self._apply_lightning_controlled(sim, operation)
+                else:  # apply gate as a matrix
                     # Inverse can be set to False since qml.matrix(operation) is already in
                     # inverted form
                     method = getattr(sim, "applyMatrix")
@@ -368,10 +440,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
                         method(operation.matrix, wires, False)
-                else:
-                    inv = False
-                    param = operation.parameters
-                    method(wires, inv, param)
 
             return np.reshape(state_vector, state.shape)
 

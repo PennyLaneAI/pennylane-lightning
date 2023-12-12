@@ -23,6 +23,9 @@
 #include "TypeList.hpp"
 
 namespace Pennylane::Util {
+// NOLINTBEGIN(cppcoreguidelines-owning-memory, cppcoreguidelines-no-malloc,
+// hicpp-no-malloc)
+
 /**
  * @brief Custom aligned allocate function.
  *
@@ -68,7 +71,7 @@ inline void alignedFree(void *p) {
 #elif defined(_MSC_VER)
     return _aligned_free(p);
 #else
-    return std::free(p); // NOLINT(hicpp-no-malloc)
+    return std::free(p);
 #endif
 }
 
@@ -82,6 +85,7 @@ inline void alignedFree(void *p) {
  */
 template <class T> class AlignedAllocator {
   private:
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     const uint32_t alignment_;
 
   public:
@@ -120,7 +124,7 @@ template <class T> class AlignedAllocator {
         if (size == 0) {
             return nullptr;
         }
-        void *p;
+        void *p = nullptr;
         if (alignment_ > alignof(std::max_align_t)) {
             p = alignedAlloc(alignment_, sizeof(T) * size);
         } else {
@@ -155,6 +159,8 @@ template <class T> class AlignedAllocator {
         ptr->~U();
     }
 };
+// NOLINTEND(cppcoreguidelines-owning-memory, cppcoreguidelines-no-malloc,
+// hicpp-no-malloc)
 
 /**
  * @brief Compare two allocators

@@ -185,7 +185,7 @@ class AdjointJacobianMPI final
                 if (ops.hasParams(op_idx)) {
                     if (current_param_idx == *tp_it) {
                         const PrecisionT scalingFactor =
-                            BaseType::applyGenerator(
+                            this->applyGenerator(
                                 mu, ops.getOpsName()[op_idx],
                                 ops.getOpsWires()[op_idx],
                                 !ops.getOpsInverses()[op_idx]) *

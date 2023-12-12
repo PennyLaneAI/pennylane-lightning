@@ -15,7 +15,7 @@
 Unit tests for Measurements in Lightning devices.
 """
 import pytest
-from conftest import device_name, LightningDevice as ld
+from conftest import device_name, LightningDevice as ld, lightning_ops
 
 import numpy as np
 import math
@@ -28,6 +28,12 @@ from pennylane.measurements import (
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+
+def test_measurements():
+    dev = qml.device(device_name, wires=2)
+    m = dev.measurements
+    assert isinstance(m, (lightning_ops.MeasurementsC64, lightning_ops.MeasurementsC128))
 
 
 def test_no_measure():

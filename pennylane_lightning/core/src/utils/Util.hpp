@@ -89,7 +89,7 @@ inline static constexpr auto ConstSum(std::complex<U> a, std::complex<T> b)
  * @return constexpr std::complex<T>{0.5,0}
  */
 template <class T> inline static constexpr auto HALF() -> std::complex<T> {
-    return {0.5, 0};
+    return {0.5, 0}; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 }
 
 /**
@@ -433,7 +433,7 @@ getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
     for (auto j : indicesToExclude) {
         for (size_t i = 0; i < indices.size(); i++) {
             if (j == indices[i]) {
-                indices.erase(indices.begin() + i);
+                indices.erase(indices.begin() + static_cast<int>(i));
             }
         }
     }
