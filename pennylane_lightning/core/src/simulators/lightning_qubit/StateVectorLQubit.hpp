@@ -353,21 +353,26 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToControlledGateOp(opName);
         const auto kernel = getKernelForControlledGate(gate_op);
-        dispatcher.applyControlledGate(kernel, arr, this->getNumQubits(),
-                                       opName, controlled_wires, wires, inverse,
-                                       params);
+        dispatcher.applyControlledGate(
+            kernel, arr, this->getNumQubits(), opName, controlled_wires,
+            controlled_values, wires, inverse, params);
     }
     /**
      * @brief Apply a single gate to the state-vector.
@@ -396,6 +401,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Apply a single gate to the state-vector.
      *
      * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -405,11 +412,16 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     void applyOperation(
         [[maybe_unused]] const std::string &opName,
         const std::vector<size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
         const std::vector<size_t> &wires, bool inverse,
         const std::vector<PrecisionT> &params,
         [[maybe_unused]] const std::vector<ComplexT, Alloc> &matrix) {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
         if (!controlled_wires.empty()) {
-            applyOperation(opName, controlled_wires, wires, inverse, params);
+            applyOperation(opName, controlled_wires, controlled_values, wires,
+                           inverse, params);
             return;
         }
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();

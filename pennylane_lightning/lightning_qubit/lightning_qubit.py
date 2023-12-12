@@ -373,16 +373,9 @@ if LQ_CPP_BINARY_AVAILABLE:
             else:
                 target_wires = self.wires.indices(operation.target_wires)
             if method is not None:  # apply n-controlled specialized gate
-                paulix = getattr(sim, "PauliX", None)
-                for wire, value in zip(control_wires, control_values):
-                    if not value:
-                        paulix([wire], False, [])
                 inv = False
                 param = operation.parameters
-                method(control_wires, target_wires, inv, param)
-                for wire, value in zip(control_wires, control_values):
-                    if not value:
-                        paulix([wire], False, [])
+                method(control_wires, control_values, target_wires, inv, param)
             else:  # apply gate as an n-controlled matrix
                 method = getattr(sim, "applyControlledMatrix")
                 target_wires = self.wires.indices(operation.target_wires)

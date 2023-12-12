@@ -92,6 +92,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     using ControlledGateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
         const std::vector<size_t> & /*controlled_wires*/,
+        const std::vector<bool> & /*controlled_values*/,
         const std::vector<size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
 
@@ -564,6 +565,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param num_qubits Number of qubits.
      * @param gate_op Gate operation.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -571,16 +573,20 @@ template <typename PrecisionT> class DynamicDispatcher {
     void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
                              const std::string &op_name,
                              const std::vector<size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
                              const std::vector<size_t> &wires, bool inverse,
                              const std::vector<PrecisionT> &params = {}) const {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
         const auto iter = controlled_gate_kernels_.find(
             std::make_pair(strToControlledGateOp(op_name), kernel));
         if (iter == controlled_gate_kernels_.cend()) {
             PL_ABORT("Cannot find a registered kernel for a given gate "
                      "and kernel pair");
         }
-        (iter->second)(data, num_qubits, controlled_wires, wires, inverse,
-                       params);
+        (iter->second)(data, num_qubits, controlled_wires, controlled_values,
+                       wires, inverse, params);
     }
 
     /**
