@@ -2,26 +2,27 @@ schema = 1
 
 [device]
 name = "lightning.gpu"
-precision = ['float32', 'float64']
 
-[operations]
+[operators]
+# Observables supported by the device
 observables = [
         "PauliX",
         "PauliY",
         "PauliZ",
         "Hadamard",
-        "SparseHamiltonian",
-        "Hamiltonian",
         "Hermitian",
         "Identity",
+        "SparseHamiltonian",
+        "Hamiltonian",
         "Sum",
-        "Prod",
         "SProd",
+        "Prod",
+        "Exp",
 ]
 
-# These are gates that do not need decomposition.
-# Also gates which are natively supported by the device.
-[[operations.gates]]
+# The union of all gate types listed in this section must match what
+# the device considers "supported" through PennyLane's device API.
+[[operators.gates]]
 native = [
         "Identity",
         "PauliX",
@@ -57,14 +58,7 @@ native = [
         "DoubleExcitationPlus",
         "DoubleExcitationMinus",
         "MultiRZ",
-
-	# QubitUnitary is technically
-	# "applyMatrix", but it doesn't
-	# belong in matrix gates.
         "QubitUnitary",
-
-	# All adjoint operations in lightning_kokkos
-	# are applied via the inverse flag.
         "Adjoint(S)",
         "Adjoint(T)",
         "Adjoint(SX)",
@@ -72,10 +66,11 @@ native = [
         "Adjoint(SISWAP)",
 ]
 
-# Gates listed in qml.device.ops
-# which the authors of this file would like to be decomposed
-# according to rules outlined in the decomposition strategy for each
-# operation.
+# Operators that should be decomposed according to the algorithm used
+# by PennyLane's device API.
+# Optional, since gates not listed in this list will typically be decomposed by
+# default, but can be useful to express a deviation from this device's regular
+# strategy in PennyLane.
 decomp = [
         "BasisState",
         "ECR",
@@ -95,13 +90,12 @@ decomp = [
         "QFT",
 ]
 
-# Gates listed in qml.device.ops
-# which the authors of this file would like to be decomposed into QubitUnitary.
+# Gates which should be translated to QubitUnitary
 matrix = [
         "MultiControlledX",
 ]
 
-[measurements]
+[measurement_processes]
 exactshots = [
 	"Expval",
 	"Var",
@@ -117,9 +111,17 @@ finiteshots = [
 ]
 
 [compilation]
+# If the device is compatible with qjit
 qjit_compatible = false
+# If the device requires run time generation of the quantum circuit.
 runtime_code_generation = false
-adjoint = false
+# If the device supports adjoint
+quantum_adjoint = false
+# If the device supports quantum control instructions natively
 quantum_control = false
+# If the device supports mid circuit measurements natively
 mid_circuit_measurement = false
+
+# This field is currently unchecked but it is reserved for the purpose of
+# determining if the device supports dynamic qubit allocation/deallocation.
 dynamic_qubit_management = false 
