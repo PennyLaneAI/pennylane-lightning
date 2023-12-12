@@ -107,7 +107,7 @@ ogp_image = "_static/pennylane_lightning.png"
 # The base URL with a proper language and version.
 html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
-intersphinx_mapping = {"https://docs.pennylane.ai/projects/lightning/en/stable/": None}
+intersphinx_mapping = {"https://docs.pennylane.ai/en/stable/": None}
 
 autosummary_generate = True
 autosummary_imported_members = False
