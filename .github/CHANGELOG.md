@@ -52,6 +52,9 @@
 * Fixed a small typo in the documentation page for the PennyLane-Lightning GPU device.
   [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
 
+* Add OpenGraph social preview for Lightning docs.
+[(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
+
 ### Bug fixes
 
 * Allow support for newer clang-tidy versions on non-x86_64 platforms.
@@ -73,7 +76,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Isaac De Vlugt, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
+Isaac De Vlugt, Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
 
 ---
 
