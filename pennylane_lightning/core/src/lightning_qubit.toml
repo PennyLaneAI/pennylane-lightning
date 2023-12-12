@@ -61,6 +61,11 @@ native = [
         "DoubleExcitationMinus",
         "MultiRZ",
         "QubitUnitary",
+        "Adjoint(S)",
+        "Adjoint(T)",
+        "Adjoint(SX)",
+        "Adjoint(ISWAP)",
+        "Adjoint(SISWAP)",
 ]
 
 # Operators that should be decomposed according to the algorithm used
@@ -69,11 +74,6 @@ native = [
 # default, but can be useful to express a deviation from this device's regular
 # strategy in PennyLane.
 decomp = [
-        "Adjoint(S)",
-        "Adjoint(T)",
-        "Adjoint(SX)",
-        "Adjoint(ISWAP)",
-        "Adjoint(SISWAP)",
         "BasisState",
         "QubitStateVector",
         "StatePrep",
