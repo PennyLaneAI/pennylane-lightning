@@ -259,6 +259,8 @@ class StateVectorKokkos final
                         const std::vector<ComplexT> &gate_matrix = {}) {
         if (opName == "Identity") {
             // No op
+        } else if (opName == "C(GlobalPhase)") {
+            applyControlledGlobalPhase(gate_matrix);
         } else if (gates_indices_.contains(opName)) {
             applyNamedOperation(opName, wires, inverse, params);
         } else {
@@ -268,6 +270,18 @@ class StateVectorKokkos final
                                                       gate_matrix.size()));
             return applyMultiQubitOp(matrix, wires, inverse);
         }
+    }
+
+    void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
+        KokkosVector diagonal_("diagonal_", diagonal.size());
+        Kokkos::deep_copy(diagonal_, UnmanagedConstComplexHostView(
+                                         diagonal.data(), diagonal.size()));
+        auto two2N = BaseType::getLength();
+        auto dataview = getView();
+        Kokkos::parallel_for(
+            two2N, KOKKOS_LAMBDA(const std::size_t i) {
+                dataview(i) *= diagonal_(i);
+            });
     }
 
     /**

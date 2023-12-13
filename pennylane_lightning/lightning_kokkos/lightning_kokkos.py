@@ -98,6 +98,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "PauliZ",
         "MultiRZ",
         "GlobalPhase",
+        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -393,6 +394,7 @@ if LK_CPP_BINARY_AVAILABLE:
             # matrix multiplication with the identity.
             invert_param = False
             state = self.state_vector
+
             for ops in operations:
                 if str(ops.name) == "Identity":
                     continue
@@ -404,7 +406,10 @@ if LK_CPP_BINARY_AVAILABLE:
 
                 wires = self.wires.indices(ops.wires)
 
-                if method is None:
+                if ops.name == "C(GlobalPhase)":
+                    matrix = np.diag(ops.matrix(self.wires)).reshape((1, -1))
+                    state.apply(name, wires, False, param, matrix)
+                elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)
@@ -421,7 +426,6 @@ if LK_CPP_BINARY_AVAILABLE:
                         [],
                         mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
-
                 else:
                     param = ops.parameters
                     method(wires, invert_param, param)

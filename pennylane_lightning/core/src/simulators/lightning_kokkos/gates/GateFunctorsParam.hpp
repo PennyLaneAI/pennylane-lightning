@@ -1443,9 +1443,9 @@ template <class PrecisionT, bool inverse = false> struct globalPhaseFunctor {
     Kokkos::complex<PrecisionT> phase;
 
     globalPhaseFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                       size_t num_qubits, const std::vector<size_t> &wires,
+                       [[maybe_unused]] size_t num_qubits,
+                       [[maybe_unused]] const std::vector<size_t> &wires,
                        const std::vector<PrecisionT> &params) {
-        const PrecisionT &angle = params[0];
         phase = (inverse)
                     ? Kokkos::exp(Kokkos::complex<PrecisionT>{0, params[0]})
                     : Kokkos::exp(Kokkos::complex<PrecisionT>{0, -params[0]});

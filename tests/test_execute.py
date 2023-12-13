@@ -86,7 +86,7 @@ class TestQChem:
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ["lightning.kokkos", "lightning.qubit"],
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 class TestGrover:
