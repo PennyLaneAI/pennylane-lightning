@@ -193,6 +193,13 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
                                         {0.0}, std::vector<ComplexT>{}),
             LightningException,
             "Controlled kernels not implemented."); // invalid controlled_wires
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("PauliX", {}, std::vector<bool>{false},
+                                        std::vector<std::size_t>{1}, false,
+                                        {0.0}, std::vector<ComplexT>{}),
+            LightningException,
+            "`controlled_wires` must have the same size "
+            "as"); // invalid controlled_wires
     }
 
     SECTION("Test invalid arguments with parameters") {
