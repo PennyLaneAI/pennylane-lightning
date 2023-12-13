@@ -523,6 +523,9 @@ class StateVectorKokkos final
         case GateOperation::MultiRZ:
             applyMultiRZ(wires, inverse, params);
             return;
+        case GateOperation::GlobalPhase:
+            applyGlobalPhase(wires, inverse, params);
+            return;
         case GateOperation::CSWAP:
             applyGateFunctor<cSWAPFunctor, 3>(wires, inverse, params);
             return;
@@ -672,6 +675,31 @@ class StateVectorKokkos final
             Kokkos::parallel_for(
                 Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
                 multiRZFunctor<fp_t, true>(*data_, num_qubits, wires, params));
+        }
+    }
+
+    /**
+     * @brief Apply a GlobalPhase operator to the state vector using a matrix
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params parameters for this gate
+     */
+    void applyGlobalPhase(const std::vector<size_t> &wires,
+                          bool inverse = false,
+                          const std::vector<fp_t> &params = {}) {
+        auto &&num_qubits = this->getNumQubits();
+
+        if (!inverse) {
+            Kokkos::parallel_for(
+                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
+                globalPhaseFunctor<fp_t, false>(*data_, num_qubits, wires,
+                                                params));
+        } else {
+            Kokkos::parallel_for(
+                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
+                globalPhaseFunctor<fp_t, true>(*data_, num_qubits, wires,
+                                               params));
         }
     }
 
@@ -841,6 +869,7 @@ class StateVectorKokkos final
         gates_indices_["DoubleExcitationMinus"] = GateOperation::DoubleExcitationMinus;
         gates_indices_["DoubleExcitationPlus"]  = GateOperation::DoubleExcitationPlus;
         gates_indices_["MultiRZ"]               = GateOperation::MultiRZ;
+        gates_indices_["GlobalPhase"]           = GateOperation::GlobalPhase;
         gates_indices_["CSWAP"]                 = GateOperation::CSWAP;
         gates_indices_["Toffoli"]               = GateOperation::Toffoli;
     }

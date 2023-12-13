@@ -85,6 +85,10 @@ class TestQChem:
         assert np.allclose(grad_dev_l, grad_qml_d, tol)
 
 
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
+    reason="N-controlled operations only implemented in lightning.qubit.",
+)
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
@@ -106,7 +110,6 @@ class TestGrover:
             # Grover's iterator
             for _ in range(iterations):
                 qml.FlipSign(omega, wires=wires)
-
                 qml.templates.GroverOperator(wires)
 
             return qml.probs(wires=wires)
@@ -118,5 +121,6 @@ class TestGrover:
             zip([i for i in range(len(index) - 1, -1, -1)], index),
             0,
         )
-        assert np.all(prob[index] > 0.95)
+        assert np.allclose(np.sum(prob), 1.0)
+        assert prob[index] > 0.95
         assert np.sum(prob) - prob[index] < 0.05

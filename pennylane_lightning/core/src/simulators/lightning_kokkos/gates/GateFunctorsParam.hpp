@@ -1438,6 +1438,24 @@ template <class PrecisionT, bool inverse = false> struct multiRZFunctor {
     }
 };
 
+template <class PrecisionT, bool inverse = false> struct globalPhaseFunctor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+    Kokkos::complex<PrecisionT> phase;
+
+    globalPhaseFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                       size_t num_qubits, const std::vector<size_t> &wires,
+                       const std::vector<PrecisionT> &params) {
+        const PrecisionT &angle = params[0];
+        phase = (inverse)
+                    ? Kokkos::exp(Kokkos::complex<PrecisionT>{0, params[0]})
+                    : Kokkos::exp(Kokkos::complex<PrecisionT>{0, -params[0]});
+        arr = arr_;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const size_t k) const { arr[k] *= phase; }
+};
+
 template <class PrecisionT, bool inverse = false> struct rotFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 

@@ -1708,8 +1708,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                      [[maybe_unused]] const std::vector<size_t> &wires,
                      bool inverse, ParamT angle) {
         const std::complex<PrecisionT> s =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
-                    : std::exp(std::complex<PrecisionT>(0, angle));
+            inverse ? std::exp(std::complex<PrecisionT>(0, angle))
+                    : std::exp(-std::complex<PrecisionT>(0, angle));
 
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= s;

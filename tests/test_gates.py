@@ -52,6 +52,7 @@ def op(op_name):
         "ControlledPhaseShift": [qml.ControlledPhaseShift, [], {"phi": 1.777, "wires": [0, 1]}],
         "CPhase": [qml.CPhase, [], {"phi": 1.777, "wires": [0, 1]}],
         "MultiRZ": [qml.MultiRZ, [], {"theta": 0.112, "wires": [0, 1, 2]}],
+        "GlobalPhase": [qml.GlobalPhase, [], {"phi": 0.112, "wires": [0, 1, 2]}],
         "CRX": [qml.CRX, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRY": [qml.CRY, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRZ": [qml.CRZ, [], {"phi": 0.123, "wires": [0, 1]}],
