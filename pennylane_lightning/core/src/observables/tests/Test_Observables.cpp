@@ -246,6 +246,7 @@ template <typename TypeList> void testTensorProdObsBase() {
         using HermitianObsT = HermitianObsBase<StateVectorT>;
         using NamedObsT = NamedObsBase<StateVectorT>;
         using TensorProdObsT = TensorProdObsBase<StateVectorT>;
+        using HamiltonianT = HamiltonianBase<StateVectorT>;
 
         DYNAMIC_SECTION("Overlapping wires throw an exception - "
                         << StateVectorToName<StateVectorT>::name) {
@@ -353,6 +354,36 @@ template <typename TypeList> void testTensorProdObsBase() {
                                       state_vector.getDataVector().size(),
                                       expected.data(), expected.size()));
             }
+        }
+
+        DYNAMIC_SECTION("Failed for ApplyInPlaceShots"
+                        << StateVectorToName<StateVectorT>::name) {
+            using VectorT = TestVector<ComplexT>;
+            auto X0 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
+            auto X1 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+            auto X2 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+
+            auto ham = HamiltonianT::create({0.8, 0.5, 0.7}, {
+                                                                 X0,
+                                                                 X1,
+                                                                 X2,
+                                                             });
+
+            auto obs = TensorProdObsT{ham};
+
+            VectorT st_data = createProductState<PrecisionT, ComplexT>("+-01");
+
+            StateVectorT state_vector(st_data.data(), st_data.size());
+
+            std::vector<std::vector<PrecisionT>> eigenValues;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_AS(
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                LightningException);
         }
 
         testTensorProdObsBase<typename TypeList::Next>();

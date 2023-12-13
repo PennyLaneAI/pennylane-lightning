@@ -958,6 +958,28 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
 
+        DYNAMIC_SECTION(" full wires with apply operations"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            auto X2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{2});
+            auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{1});
+            auto Z0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            auto obs = TensorProdObs<StateVectorT>::create({X2, Y1, Z0});
+
+            statevector.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                                        {{0}, {1}, {2}, {2}},
+                                        {false, false, false, false});
+
+            Measurements<StateVectorT> Measurer0(statevector);
+
+            auto expected = Measurer0.var(*obs);
+            auto result = Measurer0.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
         DYNAMIC_SECTION(" With Identity"
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 10000;
