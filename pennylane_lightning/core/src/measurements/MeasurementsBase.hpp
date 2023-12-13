@@ -205,12 +205,25 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Variance of the given observable.
      */
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        PrecisionT result{0.0};
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
             // SparseHamiltonian does not support shot measurement in pennylane.
             PL_ABORT("SparseHamiltonian observables do not support shot "
                      "measurement.");
-        } else if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+        } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
+            // Branch for Hamiltonian observables
+            auto coeffs = obs.getCoeffs();
+            auto obs_terms = obs.getObs();
+
+            size_t obs_term_idx = 0;
+            for (const auto &coeff : coeffs) {
+                result +=
+                    coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
+                obs_term_idx++;
+            }
+        } else {
             auto obs_samples = measure_with_samples(obs, num_shots, {});
             auto square_mean =
                 std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0) /
@@ -221,22 +234,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                                     return acc + element * element;
                                 }) /
                 obs_samples.size();
-            PrecisionT result = mean_square - square_mean * square_mean;
-            return result;
-        } else {
-            // Branch for Hamiltonian observables
-            auto coeffs = obs.getCoeffs();
-            auto obs_terms = obs.getObs();
-
-            PrecisionT result{0.0};
-            size_t obs_term_idx = 0;
-            for (const auto &coeff : coeffs) {
-                result +=
-                    coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
-                obs_term_idx++;
-            }
-            return result;
+            result = mean_square - square_mean * square_mean;
         }
+        return result;
     }
 
     /**
