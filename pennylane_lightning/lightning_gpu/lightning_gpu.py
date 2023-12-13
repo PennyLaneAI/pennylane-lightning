@@ -143,6 +143,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
         "Hadamard",
         "S",
         "Adjoint(S)",

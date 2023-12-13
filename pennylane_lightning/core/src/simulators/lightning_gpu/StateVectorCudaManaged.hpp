@@ -65,6 +65,15 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const size_t index, bool async,
                                cudaStream_t stream_id);
 
+extern void globalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+                                        cuComplex phase,
+                                        size_t thread_per_block,
+                                        cudaStream_t stream_id);
+extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
+                                        cuDoubleComplex phase,
+                                        size_t thread_per_block,
+                                        cudaStream_t stream_id);
+
 /**
  * @brief Managed memory CUDA state-vector class using custateVec backed
  * gate-calls.
@@ -196,6 +205,23 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Multiplies the state-vector by a global phase.
+     *
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param param Complex phase generator.
+     */
+    template <size_t thread_per_block = 256>
+    void globalPhaseStateVector(const bool adjoint, const Precision param) {
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+        std::complex<Precision> phase =
+            (adjoint) ? std::exp(std::complex<Precision>{0, param})
+                      : std::exp(std::complex<Precision>{0, -param});
+        auto cuPhase = complexToCu(phase);
+        globalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
+                                    cuPhase, thread_per_block, stream_id);
+    }
+
+    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if
@@ -246,6 +272,8 @@ class StateVectorCudaManaged
                                             wires.end()};
         if (opName == "Identity") {
             return;
+        } else if (opName == "GlobalPhase") {
+            globalPhaseStateVector(adjoint, params[0]);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate({opName}, ctrls, tgts, params.front(),
                                      adjoint);
