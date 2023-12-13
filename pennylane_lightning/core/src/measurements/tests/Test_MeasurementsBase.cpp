@@ -217,10 +217,12 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
+        auto sv_data = createNonTrivialState<StateVectorT>();
+
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        StateVectorT sv(statevector_data.data(), statevector_data.size());
+        StateVectorT sv(sv_data.data(), sv_data.size());
 
         DYNAMIC_SECTION("Test PauliX"
                         << StateVectorToName<StateVectorT>::name) {
@@ -370,10 +372,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
+        auto sv_data = createNonTrivialState<StateVectorT>();
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        StateVectorT sv(statevector_data.data(), statevector_data.size());
+        StateVectorT sv(sv_data.data(), sv_data.size());
 
         DYNAMIC_SECTION("Test TensorProd XYZ"
                         << StateVectorToName<StateVectorT>::name) {
@@ -1192,8 +1195,15 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
         std::vector<ComplexT> statevector_data{
             {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
             {0.2, 0.2}, {0.3, 0.3}, {0.3, 0.4}, {0.4, 0.5}};
+
+        std::vector<ComplexT> sv_data{{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
+                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
+                                      {0.3, 0.4}, {0.4, 0.5}};
+
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
+
+        StateVectorT sv(sv_data.data(), sv_data.size());
 
         // Initializing the measures class.
         // This object attaches to the statevector allowing several measures.
@@ -1226,6 +1236,32 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
             auto res = Measurer.expval(*ob, num_shots, shots_range);
             auto expected = PrecisionT(-0.086);
+            REQUIRE(expected == Approx(res).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("TensorProd with shots_range "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto X0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{0});
+            auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{1});
+            auto obs0 = TensorProdObs<StateVectorT>::create({X0, Z1});
+
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+            auto H1 = std::make_shared<NamedObs<StateVectorT>>(
+                "Hadamard", std::vector<size_t>{1});
+            auto obs1 = TensorProdObs<StateVectorT>::create({Y0, H1});
+
+            auto obs =
+                Hamiltonian<StateVectorT>::create({0.1, 0.3}, {obs0, obs1});
+
+            Measurements<StateVectorT> Measurer_analytic(sv);
+            auto expected = Measurer_analytic.expval(*obs);
+
+            size_t num_shots = 2000;
+            auto res = Measurer.expval(*obs, num_shots, {});
+
             REQUIRE(expected == Approx(res).margin(5e-2));
         }
 

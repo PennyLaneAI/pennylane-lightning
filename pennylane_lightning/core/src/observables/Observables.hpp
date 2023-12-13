@@ -66,16 +66,14 @@ template <class StateVectorT> class Observable {
      * place.
      *
      * @param sv Reference to StateVector object.
-     * @param identity_wires Reference to a std::vector object which stores
-     * wires of Identity gates in the observable.
+     * @param eigenValues Eigenvalues of an observable.
      * @param ob_wires Reference to a std::vector object which stores wires of
      * the observable.
-     * @param term_idx Index of a Hamiltonian term.
      */
-    virtual void applyInPlaceShots(StateVectorT &sv,
-                                   std::vector<size_t> &identity_wires,
-                                   std::vector<size_t> &ob_wires,
-                                   size_t term_idx = 0) const = 0;
+    virtual void
+    applyInPlaceShots(StateVectorT &sv,
+                      std::vector<std::vector<PrecisionT>> &eigenValues,
+                      std::vector<size_t> &ob_wires) const = 0;
 
     /**
      * @brief Get the name of the observable
@@ -86,6 +84,15 @@ template <class StateVectorT> class Observable {
      * @brief Get the wires the observable applies to.
      */
     [[nodiscard]] virtual auto getWires() const -> std::vector<size_t> = 0;
+
+    /**
+     * @brief Get the observable data.
+     *
+     */
+    [[nodiscard]] virtual auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> {
+        return {};
+    };
 
     /**
      * @brief Get the coefficients of a Hamiltonian observable.
@@ -164,12 +171,11 @@ class NamedObsBase : public Observable<StateVectorT> {
         sv.applyOperation(obs_name_, wires_, false, params_);
     }
 
-    void
-    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identity_wire,
-                      std::vector<size_t> &ob_wires,
-                      [[maybe_unused]] size_t term_idx = 0) const override {
+    void applyInPlaceShots(StateVectorT &sv,
+                           std::vector<std::vector<PrecisionT>> &eigenValues,
+                           std::vector<size_t> &ob_wires) const override {
         ob_wires.clear();
-        identity_wire.clear();
+        eigenValues.clear();
         ob_wires.push_back(wires_[0]);
 
         if (obs_name_ == "PauliX") {
@@ -182,9 +188,14 @@ class NamedObsBase : public Observable<StateVectorT> {
             sv.applyOperation("RY", wires_, false, {theta});
         } else if (obs_name_ == "PauliZ") {
         } else if (obs_name_ == "Identity") {
-            identity_wire.push_back(wires_[0]);
         } else {
             PL_ABORT("Provided NamedObs does not support shot measurement.");
+        }
+
+        if (obs_name_ == "Identity") {
+            eigenValues.push_back({1, 1});
+        } else {
+            eigenValues.push_back({1, -1});
         }
     }
 };
@@ -361,20 +372,25 @@ class TensorProdObsBase : public Observable<StateVectorT> {
         }
     }
 
-    void
-    applyInPlaceShots(StateVectorT &sv, std::vector<size_t> &identity_wires,
-                      std::vector<size_t> &ob_wires,
-                      [[maybe_unused]] size_t term_idx = 0) const override {
-        identity_wires.clear();
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> override {
+        return obs_;
+    };
+
+    void applyInPlaceShots(StateVectorT &sv,
+                           std::vector<std::vector<PrecisionT>> &eigenValues,
+                           std::vector<size_t> &ob_wires) const override {
+        eigenValues.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
-            std::vector<size_t> identity_wire;
+            std::vector<std::vector<PrecisionT>> eigenVals;
             std::vector<size_t> ob_wire;
-            ob->applyInPlaceShots(sv, identity_wire, ob_wire);
-            if (!identity_wire.empty()) {
-                identity_wires.push_back(identity_wire[0]);
-            }
+            ob->applyInPlaceShots(sv, eigenVals, ob_wire);
             ob_wires.push_back(ob_wire[0]);
+            eigenValues.push_back(eigenVals[0]);
         }
     }
 
@@ -498,6 +514,14 @@ class HamiltonianBase : public Observable<StateVectorT> {
         ss << "]}";
         return ss.str();
     }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> override {
+        return obs_;
+    };
 
     /**
      * @brief Get the coefficients of the observable.

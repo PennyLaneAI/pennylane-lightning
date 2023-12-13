@@ -130,13 +130,16 @@ template <typename TypeList> void testNamedObsBase() {
             StateVectorT state_vector(init_state.data(), init_state.size());
             auto obs = NamedObsT("RY", {0}, {0.4});
 
-            std::vector<size_t> identity_wire;
+            std::vector<std::vector<PrecisionT>> eigenValues;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains(
                     "Provided NamedObs does not support shot measurement."));
+
+            auto ob = obs.getObs();
+            REQUIRE(ob.empty() == true);
         }
 
         testNamedObsBase<typename TypeList::Next>();
@@ -215,7 +218,7 @@ template <typename TypeList> void testHermitianObsBase() {
             auto obs =
                 HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
 
-            std::vector<size_t> identity_wire;
+            std::vector<std::vector<PrecisionT>> eigenValues;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
@@ -304,6 +307,10 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob3);
             REQUIRE(ob1 != ob4);
             REQUIRE(ob1 != ob5);
+
+            auto obs = ob1.getObs();
+            REQUIRE(obs[0]->getObsName() == "PauliX[0]");
+            REQUIRE(obs[1]->getObsName() == "PauliZ[1]");
         }
 
         DYNAMIC_SECTION("Tensor product applies to a statevector correctly"
@@ -503,12 +510,12 @@ template <typename TypeList> void testHamiltonianBase() {
 
                 StateVectorT state_vector(st_data.data(), st_data.size());
 
-                std::vector<size_t> identity_wires;
+                std::vector<std::vector<PrecisionT>> eigenValues;
                 std::vector<size_t> ob_wires;
 
-                REQUIRE_THROWS_AS(ham->applyInPlaceShots(
-                                      state_vector, identity_wires, ob_wires),
-                                  LightningException);
+                REQUIRE_THROWS_AS(
+                    ham->applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                    LightningException);
             }
         }
         testHamiltonianBase<typename TypeList::Next>();
@@ -599,7 +606,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             StateVectorT state_vector(init_state.data(), init_state.size());
 
-            std::vector<size_t> identity_wire;
+            std::vector<std::vector<PrecisionT>> eigenValues;
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
