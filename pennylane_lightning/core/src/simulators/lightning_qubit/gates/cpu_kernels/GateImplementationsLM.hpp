@@ -65,7 +65,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (std::size_t k = 0; k < nw_tot; k++) {
             rev_wires[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
             const std::size_t value =
-                (k < n_contr) ? size_t{controlled_values[(n_contr - 1) - k]}
+                (k < n_contr) ? static_cast<std::size_t>(
+                                    controlled_values[(n_contr - 1) - k])
                               : one;
             rev_wire_shifts[k] = (value << rev_wires[k]);
         }
@@ -1863,7 +1864,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         std::size_t mask{0};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= std::size_t{controlled_values[n_contr - 1 - k]} << k;
+            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
+                    << k;
         }
         const std::size_t i0 = mask << one;
         const std::size_t i1 = i0 | one;
@@ -2047,7 +2049,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         std::size_t mask{0};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= std::size_t{controlled_values[n_contr - 1 - k]} << k;
+            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
+                    << k;
         }
         const std::size_t i00 = mask << two;
         const std::size_t i01 = i00 | one;
@@ -2337,7 +2340,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         std::size_t mask{0};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= std::size_t{controlled_values[n_contr - 1 - k]} << k;
+            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
+                    << k;
         }
 
         std::size_t i0000 = 0;
