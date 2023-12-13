@@ -4,7 +4,10 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on:
+      - self-hosted
+      - macOS
+      - ARM64
 
     steps:
       - run: echo 'Hello World'
