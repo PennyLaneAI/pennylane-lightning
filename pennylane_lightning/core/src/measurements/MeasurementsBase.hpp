@@ -165,7 +165,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto measure_with_samples(const Observable<StateVectorT> &obs,
                               const size_t &num_shots,
-                              const std::vector<size_t> &shot_range) {
+                              const std::vector<size_t> &shot_range)
+        -> std::vector<PrecisionT> {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> obs_wires;
         std::vector<std::vector<PrecisionT>> eigenValues;
@@ -249,7 +250,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0) {
+    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
@@ -440,7 +442,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                        const size_t &num_shots,
                        const std::vector<size_t> &shot_range,
                        std::vector<size_t> &obs_wires,
-                       std::vector<std::vector<PrecisionT>> &eigenValues) {
+                       std::vector<std::vector<PrecisionT>> &eigenValues)
+        -> std::vector<size_t> {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> samples;
         if constexpr (std::is_same_v<
