@@ -382,6 +382,13 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(StateVectorT &sv,
                            std::vector<std::vector<PrecisionT>> &eigenValues,
                            std::vector<size_t> &ob_wires) const override {
+        for (const auto &ob : obs_) {
+            if (ob->getObsName().find("Hamiltonian") != std::string::npos) {
+                PL_ABORT("Hamiltonian observables as a term of an TensorProd "
+                         "observable do not "
+                         "support shot measurement.");
+            }
+        }
         eigenValues.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
