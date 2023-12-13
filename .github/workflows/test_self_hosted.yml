@@ -6,8 +6,8 @@ jobs:
   test:
     runs-on:
       - self-hosted
-      - macOS
-      - ARM64
+      - macos
+      - arm64
 
     steps:
       - run: echo 'Hello World'
