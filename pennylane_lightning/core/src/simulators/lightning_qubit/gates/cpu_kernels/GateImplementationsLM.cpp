@@ -216,6 +216,10 @@ template void GateImplementationsLM::applyMultiRZ<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 template void GateImplementationsLM::applyMultiRZ<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyGlobalPhase<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyGlobalPhase<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
 
 /* QChem functions */
 

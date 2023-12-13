@@ -123,6 +123,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationMinus,
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
+        GateOperation::GlobalPhase,
     };
 
     constexpr static std::array implemented_controlled_gates = {
@@ -1698,6 +1699,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void
+    applyGlobalPhase(std::complex<PrecisionT> *arr, size_t num_qubits,
+                     [[maybe_unused]] const std::vector<size_t> &wires,
+                     bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> s =
+            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
+                    : std::exp(std::complex<PrecisionT>(0, angle));
+
+        for (size_t k = 0; k < exp2(num_qubits); k++) {
+            arr[k] *= s;
         }
     }
 

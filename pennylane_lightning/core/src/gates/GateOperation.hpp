@@ -65,6 +65,7 @@ enum class GateOperation : uint32_t {
     DoubleExcitationPlus,
     /* Multi-qubit gates */
     MultiRZ,
+    GlobalPhase,
     /* END (placeholder) */
     END
 };

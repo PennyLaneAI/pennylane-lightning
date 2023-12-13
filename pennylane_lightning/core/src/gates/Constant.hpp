@@ -26,7 +26,8 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{
+    GateOperation::MultiRZ, GateOperation::GlobalPhase};
 /**
  * @brief List of multi-qubit generators
  */
@@ -78,7 +79,8 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitation, "DoubleExcitation"},
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
-    GateView{GateOperation::MultiRZ, "MultiRZ"}};
+    GateView{GateOperation::MultiRZ, "MultiRZ"},
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -336,6 +338,7 @@ using GateNParams = typename std::pair<GateOperation, size_t>;
     GateNParams{GateOperation::DoubleExcitationPlus, 1},
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
+    GateNParams{GateOperation::GlobalPhase, 1},
 };
 
 /**

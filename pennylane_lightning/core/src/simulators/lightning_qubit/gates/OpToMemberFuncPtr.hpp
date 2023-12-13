@@ -259,6 +259,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyMultiRZ<PrecisionT, ParamT>;
 };
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::GlobalPhase> {
+    constexpr static auto value =
+        &GateImplementation::template applyGlobalPhase<PrecisionT, ParamT>;
+};
 
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
