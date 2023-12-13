@@ -275,7 +275,7 @@ class StateVectorKokkos final
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.

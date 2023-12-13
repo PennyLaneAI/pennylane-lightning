@@ -144,7 +144,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @param sv Statevector data to operate upon.
      * @param op_name Name of parametric gate.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to operate upon.
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return PrecisionT Generator scaling coefficient.

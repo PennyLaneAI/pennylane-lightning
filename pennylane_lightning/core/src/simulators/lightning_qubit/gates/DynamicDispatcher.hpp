@@ -565,7 +565,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param num_qubits Number of qubits.
      * @param gate_op Gate operation.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -801,7 +801,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param num_qubits Number of qubits.
      * @param op_name Gate operation name.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */

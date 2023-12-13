@@ -316,7 +316,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wire A wire the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -374,7 +374,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -443,7 +443,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -496,7 +496,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param num_qubits Number of qubits.
      * @param matrix Perfect square matrix in row-major order.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
@@ -557,7 +557,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -1163,7 +1163,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -1585,7 +1585,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -1825,7 +1825,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -2009,7 +2009,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.
@@ -2301,7 +2301,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param core_function Gate function returning the matrix-vector product
      * for a wire block.

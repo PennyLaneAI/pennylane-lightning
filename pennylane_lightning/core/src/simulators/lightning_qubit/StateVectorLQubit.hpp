@@ -353,7 +353,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -402,7 +402,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
@@ -473,7 +473,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
      * @param adj Indicates whether to use adjoint of operator.
      */
@@ -497,7 +497,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data (in row-major format).
      * @param controlled_wires Control wires.
-     * @param controlled_values Control values (0 or 1).
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
