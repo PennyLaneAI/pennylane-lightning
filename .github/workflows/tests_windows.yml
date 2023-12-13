@@ -109,8 +109,6 @@ jobs:
         os: [windows-latest]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
-        exclude:
-          - exec_model: OPENMP
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
