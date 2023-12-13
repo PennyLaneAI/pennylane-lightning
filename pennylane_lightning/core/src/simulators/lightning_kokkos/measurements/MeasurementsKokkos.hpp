@@ -286,7 +286,8 @@ class Measurements final
 
     auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
                 const std::vector<size_t> &shot_range) -> PrecisionT {
-        return BaseType::expval(obs, num_shots, shot_range);
+        //return BaseType::expval(obs, num_shots, shot_range);
+        return return static_cast<BaseType *>(this)->expval(obs, num_shots, shot_range);
     }
 
     /**
@@ -468,7 +469,8 @@ class Measurements final
 
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
         -> PrecisionT {
-        return BaseType::var(obs, num_shots);
+        //return BaseType::var(obs, num_shots);
+        return static_cast<BaseType *>(this)->var(obs, num_shots);
     }
 
     /**
