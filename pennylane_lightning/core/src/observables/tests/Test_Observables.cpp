@@ -136,7 +136,7 @@ template <typename TypeList> void testNamedObsBase() {
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
                 Catch::Matchers::Contains(
-                    "Provided NamedObs does not supported for shots"));
+                    "Provided NamedObs does not support shot measurement."));
         }
 
         testNamedObsBase<typename TypeList::Next>();
@@ -220,8 +220,8 @@ template <typename TypeList> void testHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
-                Catch::Matchers::Contains("Hermitian observables do not "
-                                          "support applyInPlaceShots method."));
+                Catch::Matchers::Contains(
+                    "Hermitian observables do not support shot measurement."));
         }
 
         testHermitianObsBase<typename TypeList::Next>();
@@ -606,7 +606,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
                 sparseH->applyInPlaceShots(state_vector, identity_wire,
                                            ob_wires),
                 Catch::Matchers::Contains("SparseHamiltonian observables do "
-                                          "not the applyInPlaceShots method."));
+                                          "not support shot measurement."));
         }
 
         testSparseHamiltonianBase<typename TypeList::Next>();

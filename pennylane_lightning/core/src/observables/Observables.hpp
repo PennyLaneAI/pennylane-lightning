@@ -184,9 +184,7 @@ class NamedObsBase : public Observable<StateVectorT> {
         } else if (obs_name_ == "Identity") {
             identity_wire.push_back(wires_[0]);
         } else {
-            PL_ABORT("Provided NamedObs does not supported for shots "
-                     "calculation. Supported NamedObs are PauliX, PauliY, "
-                     "PauliZ, Identity and Hadamard.");
+            PL_ABORT("Provided NamedObs does not support shot measurement.");
         }
     }
 };
@@ -247,8 +245,11 @@ class HermitianObsBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT("Hermitian observables do not support applyInPlaceShots "
-                 "method.");
+        // TODO support. This support requires an additional method to solve
+        // eigenpair and unitary matrices, and the results of eigenpair and
+        // unitary matrices data need to be added to the Hermitian class and
+        // public methods are need to access eigen values.
+        PL_ABORT("Hermitian observables do not support shot measurement.");
     }
 };
 
@@ -467,8 +468,8 @@ class HamiltonianBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identity_wires,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT("For Hamiltonian Observables, the applyInPlace method must be "
-                 "defined at the backend level.");
+        PL_ABORT("Hamiltonian observables as a term of an observable do not "
+                 "support shot measurement.");
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
@@ -593,8 +594,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                       [[maybe_unused]] std::vector<size_t> &identity_wire,
                       [[maybe_unused]] std::vector<size_t> &ob_wires,
                       [[maybe_unused]] size_t term_idx = 0) const override {
-        PL_ABORT("SparseHamiltonian observables do not the applyInPlaceShots "
-                 "method.");
+        PL_ABORT(
+            "SparseHamiltonian observables do not support shot measurement.");
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {

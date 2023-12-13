@@ -130,18 +130,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         PrecisionT result{0.0};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
-            // SparseHamiltonian does not support samples in pennylane.
-            PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
-                     "not supported by shots");
-        } else if (obs.getObsName().find("Hermitian") != std::string::npos) {
-            // TODO support. This support requires an additional method to solve
-            // eigenpair and unitary matrices, and the results of eigenpair and
-            // unitary matrices data need to be added to the Hermitian class and
-            // public methods are need to access eigen values. Note the
-            // assumption that eigen values are -1 and 1 in the
-            // `measurement_with_sample` method should be updated as well.
-            PL_ABORT("For Hermitian Observables, expval calculation is not "
-                     "supported by shots");
+            // SparseHamiltonian does not support shot measurement in pennylane.
+            PL_ABORT("SparseHamiltonian observables do not support shot "
+                     "measurement.");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
             for (size_t obs_term_idx = 0; obs_term_idx < coeffs.size();
@@ -237,7 +228,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Variance of the given observable.
      */
     auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
-        if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+        if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
+            // SparseHamiltonian does not support shot measurement in pennylane.
+            PL_ABORT("SparseHamiltonian observables do not support shot "
+                     "measurement.");
+        } else if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
             // Branch for NamedObs and TensorProd observables
             auto square_mean = expval(obs, num_shots, {});
             PrecisionT result =
@@ -247,29 +242,31 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                                      // 1}. Need to change based on eigen values
                                      // when add Hermitian support.
             return result;
-        }
-        // Branch for Hamiltonian observables
-        auto coeffs = obs.getCoeffs();
-        PrecisionT result{0.0};
-        size_t obs_term_idx = 0;
-        for (const auto &coeff : coeffs) {
-            std::vector<size_t> shot_range = {};
-            auto obs_samples =
-                measure_with_samples(obs, num_shots, shot_range, obs_term_idx);
-            PrecisionT expval_per_term =
-                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0);
-            auto term_mean = expval_per_term / obs_samples.size();
+        } else {
+            // Branch for Hamiltonian observables
+            auto coeffs = obs.getCoeffs();
+            PrecisionT result{0.0};
+            size_t obs_term_idx = 0;
+            for (const auto &coeff : coeffs) {
+                std::vector<size_t> shot_range = {};
+                auto obs_samples = measure_with_samples(
+                    obs, num_shots, shot_range, obs_term_idx);
+                PrecisionT expval_per_term = std::accumulate(
+                    obs_samples.begin(), obs_samples.end(), 0.0);
+                auto term_mean = expval_per_term / obs_samples.size();
 
-            result +=
-                coeff * coeff *
-                (1 - term_mean *
+                result +=
+                    coeff * coeff *
+                    (1 -
+                     term_mean *
                          term_mean); //`1` used here is because Eigenvalues for
                                      // Paulis, Hadamard and Identity are {-1,
                                      // 1}. Need to change based on eigen values
                                      // when add Hermitian support.
-            obs_term_idx++;
+                obs_term_idx++;
+            }
+            return result;
         }
-        return result;
     }
 
     /**

@@ -594,7 +594,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
             REQUIRE_THROWS_WITH(
                 Measurer.expval(obs, num_shots, shots_range),
                 Catch::Matchers::Contains(
-                    "expval calculation is not supported by shots"));
+                    "Hermitian observables do not support shot measurement."));
             REQUIRE(obs.getCoeffs().size() == 0);
         }
 
@@ -1292,7 +1292,7 @@ TEST_CASE("Var Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
     }
 }
 
-template <typename TypeList> void testSparseHObsExpvalShot() {
+template <typename TypeList> void testSparseHObsMeasureShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
@@ -1312,22 +1312,32 @@ template <typename TypeList> void testSparseHObsExpvalShot() {
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
-        DYNAMIC_SECTION("Failed for SparseH "
+        DYNAMIC_SECTION("Failed for expval "
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 1000;
             std::vector<size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.expval(*sparseH, num_shots, shots_range),
-                Catch::Matchers::Contains(
-                    "expval calculation is not supported by shots"));
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not support shot measurement."));
         }
 
-        testSparseHObsExpvalShot<typename TypeList::Next>();
+        DYNAMIC_SECTION("Failed for var "
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.var(*sparseH, num_shots),
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not support shot measurement."));
+        }
+
+        testSparseHObsMeasureShot<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Expval Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
+TEST_CASE("Measure Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
-        testSparseHObsExpvalShot<TestStateVectorBackends>();
+        testSparseHObsMeasureShot<TestStateVectorBackends>();
     }
 }
