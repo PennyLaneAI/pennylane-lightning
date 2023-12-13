@@ -2,10 +2,10 @@
 
 ### New features since last release
 * Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
-[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
+  [(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
 
 * Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this feature. Please note that target wires should be sorted in ascending manner.
-[(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
+  [(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
 
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
@@ -25,6 +25,9 @@
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
+
+* Unify error messages of shot measurement related unsupported observables to better Catalyst.
+  [(#577)](https://github.com/PennyLaneAI/pennylane-lightning/pull/577)
 
 * Add configuration files to improve compatibility with Catalyst.
   [(#566)](https://github.com/PennyLaneAI/pennylane-lightning/pull/566)
@@ -56,7 +59,7 @@
   [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
 
 * Add OpenGraph social preview for Lightning docs.
-[(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
+  [(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
 
 ### Bug fixes
 
