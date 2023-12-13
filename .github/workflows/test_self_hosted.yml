@@ -1,0 +1,10 @@
+name: Testing ARM
+on:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: self-hosted
+
+    steps:
+      - run: echo 'Hello World'
