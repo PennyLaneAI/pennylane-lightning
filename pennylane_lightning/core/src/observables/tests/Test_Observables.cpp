@@ -222,7 +222,7 @@ template <typename TypeList> void testHermitianObsBase() {
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, identity_wire, ob_wires),
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains(
                     "Hermitian observables do not support shot measurement."));
         }
@@ -610,8 +610,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
             std::vector<size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
-                sparseH->applyInPlaceShots(state_vector, identity_wire,
-                                           ob_wires),
+                sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }

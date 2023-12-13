@@ -211,36 +211,28 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             PL_ABORT("SparseHamiltonian observables do not support shot "
                      "measurement.");
         } else if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
-            // Branch for NamedObs and TensorProd observables
-            auto square_mean = expval(obs, num_shots, {});
-            PrecisionT result =
-                1 - square_mean *
-                        square_mean; //`1` used here is because Eigenvalues for
-                                     // Paulis, Hadamard and Identity are {-1,
-                                     // 1}. Need to change based on eigen values
-                                     // when add Hermitian support.
+            auto obs_samples = measure_with_samples(obs, num_shots, {});
+            auto square_mean =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0) /
+                obs_samples.size();
+            auto mean_square =
+                std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0,
+                                [](PrecisionT acc, PrecisionT element) {
+                                    return acc + element * element;
+                                }) /
+                obs_samples.size();
+            PrecisionT result = mean_square - square_mean * square_mean;
             return result;
         } else {
             // Branch for Hamiltonian observables
             auto coeffs = obs.getCoeffs();
+            auto obs_terms = obs.getObs();
+
             PrecisionT result{0.0};
             size_t obs_term_idx = 0;
             for (const auto &coeff : coeffs) {
-                std::vector<size_t> shot_range = {};
-                auto obs_samples = measure_with_samples(
-                    obs, num_shots, shot_range, obs_term_idx);
-                PrecisionT expval_per_term = std::accumulate(
-                    obs_samples.begin(), obs_samples.end(), 0.0);
-                auto term_mean = expval_per_term / obs_samples.size();
-
                 result +=
-                    coeff * coeff *
-                    (1 -
-                     term_mean *
-                         term_mean); //`1` used here is because Eigenvalues for
-                                     // Paulis, Hadamard and Identity are {-1,
-                                     // 1}. Need to change based on eigen values
-                                     // when add Hermitian support.
+                    coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
                 obs_term_idx++;
             }
             return result;

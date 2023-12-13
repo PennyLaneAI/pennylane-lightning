@@ -251,11 +251,10 @@ class HermitianObsBase : public Observable<StateVectorT> {
         sv.applyMatrix(matrix_, wires_);
     }
 
-    void
-    applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identity_wire,
-                      [[maybe_unused]] std::vector<size_t> &ob_wires,
-                      [[maybe_unused]] size_t term_idx = 0) const override {
+    void applyInPlaceShots(
+        [[maybe_unused]] StateVectorT &sv,
+        [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
+        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
         // TODO support. This support requires an additional method to solve
         // eigenpair and unitary matrices, and the results of eigenpair and
         // unitary matrices data need to be added to the Hermitian class and
@@ -479,11 +478,10 @@ class HamiltonianBase : public Observable<StateVectorT> {
                  "defined at the backend level.");
     }
 
-    void
-    applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identity_wires,
-                      [[maybe_unused]] std::vector<size_t> &ob_wires,
-                      [[maybe_unused]] size_t term_idx = 0) const override {
+    void applyInPlaceShots(
+        [[maybe_unused]] StateVectorT &sv,
+        [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
+        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
         PL_ABORT("Hamiltonian observables as a term of an observable do not "
                  "support shot measurement.");
     }
@@ -613,11 +611,10 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
                  "defined at the backend level.");
     }
 
-    void
-    applyInPlaceShots([[maybe_unused]] StateVectorT &sv,
-                      [[maybe_unused]] std::vector<size_t> &identity_wire,
-                      [[maybe_unused]] std::vector<size_t> &ob_wires,
-                      [[maybe_unused]] size_t term_idx = 0) const override {
+    void applyInPlaceShots(
+        [[maybe_unused]] StateVectorT &sv,
+        [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
+        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
         PL_ABORT(
             "SparseHamiltonian observables do not support shot measurement.");
     }
