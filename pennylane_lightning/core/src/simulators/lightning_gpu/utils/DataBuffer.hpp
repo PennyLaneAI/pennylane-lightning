@@ -48,8 +48,8 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
 
     DataBuffer(std::size_t length, int device_id = 0,
                cudaStream_t stream_id = 0, bool alloc_memory = true)
-        : length_{length}, dev_tag_{device_id, stream_id},
-          gpu_buffer_{nullptr} {
+        : length_{length}, dev_tag_{device_id, stream_id}, gpu_buffer_{
+                                                               nullptr} {
         if (alloc_memory && (length > 0)) {
             dev_tag_.refresh();
             PL_CUDA_IS_SUCCESS(

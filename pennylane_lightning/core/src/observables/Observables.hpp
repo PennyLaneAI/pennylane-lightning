@@ -303,8 +303,15 @@ class TensorProdObsBase : public Observable<StateVectorT> {
      */
     template <typename... Ts>
     explicit TensorProdObsBase(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
-        std::unordered_set<size_t> wires;
+        if (obs_.size() == 1 &&
+            obs_[0]->getObsName().find("@") != std::string::npos) {
+            // This would prevent the misuse of this constructor for creating
+            // TensorProdObsBase(TensorProdObsBase).
+            PL_ABORT("A new TensorProdObsBase observable cannot be created "
+                     "from a single TensorProdObsBase.");
+        }
 
+        std::unordered_set<size_t> wires;
         for (const auto &ob : obs_) {
             const auto ob_wires = ob->getWires();
             for (const auto wire : ob_wires) {
@@ -369,8 +376,6 @@ class TensorProdObsBase : public Observable<StateVectorT> {
 
     void applyInPlace(StateVectorT &sv) const override {
         for (const auto &ob : obs_) {
-            std::cerr << "ob name in applyInPlace:" << ob->getObsName()
-                      << std::endl;
             ob->applyInPlace(sv);
         }
     }
@@ -393,14 +398,13 @@ class TensorProdObsBase : public Observable<StateVectorT> {
                          "support shot measurement.");
             }
         }
+
         eigenValues.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
             std::vector<std::vector<PrecisionT>> eigenVals;
             std::vector<size_t> ob_wire;
             ob->applyInPlaceShots(sv, eigenVals, ob_wire);
-            std::cerr << "ob name in applySHOTS:" << ob->getObsName()
-                      << std::endl;
             ob_wires.push_back(ob_wire[0]);
             eigenValues.push_back(eigenVals[0]);
         }

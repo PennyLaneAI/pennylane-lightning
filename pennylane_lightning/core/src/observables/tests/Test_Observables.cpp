@@ -278,6 +278,18 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE_NOTHROW(TensorProdObsT::create({ob1, ob2}));
         }
 
+        DYNAMIC_SECTION("Constructing an invalid TensorProd(TensorProd) - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto ob2_1 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+            auto ob2_2 =
+                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{3});
+            auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
+
+            REQUIRE_THROWS_AS(TensorProdObsT::create({ob2}),
+                              LightningException);
+        }
+
         DYNAMIC_SECTION("getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
             auto ob = TensorProdObsT(
