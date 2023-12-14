@@ -20,8 +20,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <iostream>
-
 #include "Error.hpp"
 #include "Util.hpp"
 
@@ -195,9 +193,9 @@ class NamedObsBase : public Observable<StateVectorT> {
         }
 
         if (obs_name_ == "Identity") {
-            eigenValues.push_back(std::vector<PrecisionT>{1, 1});
+            eigenValues.push_back({1, 1});
         } else {
-            eigenValues.push_back(std::vector<PrecisionT>{1, -1});
+            eigenValues.push_back({1, -1});
         }
     }
 };
