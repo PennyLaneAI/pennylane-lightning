@@ -133,11 +133,11 @@ template <typename TypeList> void testApplyOperations() {
                 reinterpret_cast<ComplexT *>(st_data_2.data()),
                 st_data_2.size());
 
-            state_vector_1.applyOperation("PauliX", {}, {0}, false);
-            state_vector_1.applyOperation("PauliY", {}, {1}, false);
+            state_vector_1.applyOperation("PauliX", {}, {}, {0}, false);
+            state_vector_1.applyOperation("PauliY", {}, {}, {1}, false);
 
-            state_vector_2.applyOperation("PauliX", {}, {0}, false);
-            state_vector_2.applyOperation("PauliY", {}, {1}, false);
+            state_vector_2.applyOperation("PauliX", {}, {}, {0}, false);
+            state_vector_2.applyOperation("PauliY", {}, {}, {1}, false);
 
             REQUIRE(isApproxEqual(
                 state_vector_1.getData(), state_vector_1.getLength(),

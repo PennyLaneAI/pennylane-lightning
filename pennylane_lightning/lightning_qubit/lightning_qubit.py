@@ -375,25 +375,26 @@ if LQ_CPP_BINARY_AVAILABLE:
                 target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
             else:
                 target_wires = self.wires.indices(operation.target_wires)
-            paulix = getattr(sim, "PauliX", None)
-            for wire, value in zip(control_wires, control_values):
-                if not value:
-                    paulix([wire], False, [])
             if method is not None:  # apply n-controlled specialized gate
                 inv = False
                 param = operation.parameters
-                method(control_wires, target_wires, inv, param)
+                method(control_wires, control_values, target_wires, inv, param)
             else:  # apply gate as an n-controlled matrix
                 method = getattr(sim, "applyControlledMatrix")
                 target_wires = self.wires.indices(operation.target_wires)
                 try:
-                    method(qml.matrix(operation.base), control_wires, target_wires, False)
+                    method(
+                        qml.matrix(operation.base),
+                        control_wires,
+                        control_values,
+                        target_wires,
+                        False,
+                    )
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
-                    method(operation.base.matrix, control_wires, target_wires, False)
-            for wire, value in zip(control_wires, control_values):
-                if not value:
-                    paulix([wire], False, [])
+                    method(
+                        operation.base.matrix, control_wires, control_values, target_wires, False
+                    )
 
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.

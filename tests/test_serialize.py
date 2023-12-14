@@ -430,6 +430,7 @@ class TestSerializeOps:
                 [False, False, False],
                 [[], [], []],
                 [[], [], []],
+                [[], [], []],
             ),
             False,
         )
@@ -468,7 +469,7 @@ class TestSerializeOps:
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
-            qml.ctrl(qml.PauliX(wires=0), [1, 2, 3])
+            qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
         s_expected = (
@@ -479,6 +480,7 @@ class TestSerializeOps:
                 [False, False, False],
                 [[], [], []],
                 [[], [], [1, 2, 3]],
+                [[], [], [True, False, False]],
             ),
             False,
         )
@@ -502,6 +504,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
+                [[], [], []],
                 [[], [], []],
                 [[], [], []],
             ),
@@ -554,6 +557,7 @@ class TestSerializeOps:
                 [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False],
+                [[], [], [], [], [], []],
                 [[], [], [], [], [], []],
                 [[], [], [], [], [], []],
             ),

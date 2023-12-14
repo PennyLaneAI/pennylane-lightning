@@ -85,7 +85,8 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
             ops_wires,
             ops_inverses,
             std::vector<std::vector<ComplexT>>(length),
-            std::vector<std::vector<size_t>>(length)};
+            std::vector<std::vector<size_t>>(length),
+            std::vector<std::vector<bool>>(length)};
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
@@ -285,12 +286,13 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
     SECTION("Test controlled complex dy") {
         OpsData<StateVectorT> ops_data1{
-            {"PauliX", "RX"}, // names
-            {{}, {M_PI / 7}}, // params
-            {{1}, {1}},       // wires
-            {false, false},   // inverses
-            {{}, {}},         // matrices
-            {{0, 2}, {2}},    // controlled wires
+            {"PauliX", "RX"},       // names
+            {{}, {M_PI / 7}},       // params
+            {{1}, {1}},             // wires
+            {false, false},         // inverses
+            {{}, {}},               // matrices
+            {{0, 2}, {2}},          // controlled wires
+            {{true, true}, {true}}, // controlled values
         };
 
         auto dy1 = std::vector<ComplexT>{{0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
@@ -298,12 +300,13 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
                                          {0.4, 0.4}, {0.4, 0.4}};
 
         OpsData<StateVectorT> ops_data2{
-            {"PauliX", "RX"},  // names
-            {{}, {-M_PI / 7}}, // params
-            {{1}, {1}},        // wires
-            {false, false},    // inverses
-            {{}, {}},          // matrices
-            {{0, 2}, {2}},     // controlled wires
+            {"PauliX", "RX"},       // names
+            {{}, {-M_PI / 7}},      // params
+            {{1}, {1}},             // wires
+            {false, false},         // inverses
+            {{}, {}},               // matrices
+            {{0, 2}, {2}},          // controlled wires
+            {{true, true}, {true}}, // controlled values
         };
 
         auto dy2 = std::vector<ComplexT>{{0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
