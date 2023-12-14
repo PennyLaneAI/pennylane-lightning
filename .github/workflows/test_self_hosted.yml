@@ -2,7 +2,16 @@ name: Testing ARM
 on:
   pull_request:
 
+concurrency:
+  group: test
+  cancel-in-progress: true
+
 jobs:
+  test-large:
+    runs-on: pl-4-core-large-runner
+    steps:
+      - run: echo 'Hello world'
+
   test:
     runs-on:
       - self-hosted
