@@ -313,6 +313,7 @@ class AdjointJacobian final
                             : mu.applyGenerator(
                                   ops_name[op_idx],
                                   ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
                                   ops.getOpsWires()[op_idx],
                                   !ops.getOpsInverses()[op_idx]) *
                                   (ops.getOpsInverses()[op_idx] ? -1 : 1);
