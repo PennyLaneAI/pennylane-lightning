@@ -86,7 +86,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Isaac De Vlugt, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee James O'Riordan, Shuli Shu
+Ali Asadi, Isaac De Vlugt, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee James O'Riordan, Shuli Shu
 
 ---
 
