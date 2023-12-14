@@ -85,10 +85,6 @@ class TestQChem:
         assert np.allclose(grad_dev_l, grad_qml_d, tol)
 
 
-@pytest.mark.skipif(
-    device_name not in ["lightning.kokkos", "lightning.qubit"],
-    reason="N-controlled operations only implemented in lightning.qubit.",
-)
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 

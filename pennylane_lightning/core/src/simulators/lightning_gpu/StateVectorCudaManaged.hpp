@@ -74,6 +74,15 @@ extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
                                         size_t thread_per_block,
                                         cudaStream_t stream_id);
 
+extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+                                         cuComplex *phase,
+                                         size_t thread_per_block,
+                                         cudaStream_t stream_id);
+extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
+                                         cuDoubleComplex *phase,
+                                         size_t thread_per_block,
+                                         cudaStream_t stream_id);
+
 /**
  * @brief Managed memory CUDA state-vector class using custateVec backed
  * gate-calls.
@@ -222,6 +231,27 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Multiplies the state-vector by a controlled global phase.
+     *
+     * @param phase Controlled complex phase vector.
+     */
+    template <size_t thread_per_block = 256>
+    void cGlobalPhaseStateVector(const std::vector<CFP_t> &phase,
+                                 const bool async = false) {
+        PL_ABORT_IF_NOT(BaseType::getLength() == phase.size(),
+                        "The state-vector data must have the same size as the "
+                        "controlled-phase data.")
+        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+        DataBuffer<CFP_t, int> d_phase{BaseType::getLength(), device_id,
+                                       stream_id, true};
+        d_phase.CopyHostDataToGpu(phase.data(), phase.size(), async);
+        cGlobalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
+                                     d_phase.getData(), thread_per_block,
+                                     stream_id);
+    }
+
+    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if
@@ -258,10 +288,10 @@ class StateVectorCudaManaged
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Gate data (in row-major format).
      */
-    void applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {}) {
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adjoint = false,
+                        const std::vector<Precision> &params = {0.0},
+                        const std::vector<CFP_t> &gate_matrix = {}) {
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
                                   BaseType::getCtrlMap().end())
                                      ? BaseType::getCtrlMap().at(opName)
@@ -272,6 +302,8 @@ class StateVectorCudaManaged
                                             wires.end()};
         if (opName == "Identity") {
             return;
+        } else if (opName == "C(GlobalPhase)") {
+            cGlobalPhaseStateVector(gate_matrix);
         } else if (opName == "GlobalPhase") {
             globalPhaseStateVector(adjoint, params[0]);
         } else if (native_gates_.find(opName) != native_gates_.end()) {

@@ -98,7 +98,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     import pennylane as qml
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -144,6 +144,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "PauliZ",
         "MultiRZ",
         "GlobalPhase",
+        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -533,7 +534,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
-                if method is None:
+                if ops.name == "C(GlobalPhase)":
+                    controls = ops.control_wires
+                    control_values = ops.control_values
+                    param = ops.base.parameters[0]
+                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
+                    self._gpu_state.apply(name, wires, False, [[param]], matrix)
+                elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)

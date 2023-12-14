@@ -129,7 +129,7 @@ __global__ void globalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
  *
  * @param sv Complex data pointer of state vector on device.
  * @param num_sv Number of state vector elements.
- * @param phase Complex data pointer of input values (on device).
+ * @param phase Constant complex phase.
  * @param thread_per_block Number of threads set per block.
  * @param stream_id Stream id of CUDA calls
  */
@@ -144,6 +144,49 @@ void globalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
     dim3 gridSize(block_per_grid, 1);
 
     globalPhaseStateVectorkernel<GPUDataT, index_type>
+        <<<gridSize, blockSize, 0, stream_id>>>(sv, num_sv, phase);
+    PL_CUDA_IS_SUCCESS(cudaGetLastError());
+}
+
+/**
+ * @brief The CUDA kernel that multiplies the state vector data on GPU device
+ * by a controlled global phase.
+ *
+ * @param sv Complex data pointer of state vector on device.
+ * @param num_sv Number of state vector elements.
+ * @param phase Complex data pointer of controlled global phase values (on
+ * device).
+ */
+template <class GPUDataT, class index_type>
+__global__ void cGlobalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
+                                              GPUDataT *phase) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < num_sv) {
+        sv[i] = ComplexMul(sv[i], phase[i]);
+    }
+}
+
+/**
+ * @brief The CUDA kernel call wrapper.
+ *
+ * @param sv Complex data pointer of state vector on device.
+ * @param num_sv Number of state vector elements.
+ * @param phase Complex data pointer of controlled global phase values (on
+ * device).
+ * @param thread_per_block Number of threads set per block.
+ * @param stream_id Stream id of CUDA calls
+ */
+template <class GPUDataT, class index_type>
+void cGlobalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
+                                       GPUDataT *phase, size_t thread_per_block,
+                                       cudaStream_t stream_id) {
+    auto dv = std::div(static_cast<long>(num_sv), thread_per_block);
+    size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
+    const size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
+    dim3 blockSize(thread_per_block, 1, 1);
+    dim3 gridSize(block_per_grid, 1);
+
+    cGlobalPhaseStateVectorkernel<GPUDataT, index_type>
         <<<gridSize, blockSize, 0, stream_id>>>(sv, num_sv, phase);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
@@ -204,6 +247,20 @@ void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
                                  cudaStream_t stream_id) {
     globalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
                                      stream_id);
+}
+
+void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+                                  cuComplex *phase, size_t thread_per_block,
+                                  cudaStream_t stream_id) {
+    cGlobalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
+                                      stream_id);
+}
+void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
+                                  cuDoubleComplex *phase,
+                                  size_t thread_per_block,
+                                  cudaStream_t stream_id) {
+    cGlobalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
+                                      stream_id);
 }
 
 } // namespace Pennylane::LightningGPU
