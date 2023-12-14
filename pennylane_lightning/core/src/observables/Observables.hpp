@@ -369,6 +369,8 @@ class TensorProdObsBase : public Observable<StateVectorT> {
 
     void applyInPlace(StateVectorT &sv) const override {
         for (const auto &ob : obs_) {
+            std::cerr << "ob name in applyInPlace:" << ob->getObsName()
+                      << std::endl;
             ob->applyInPlace(sv);
         }
     }
