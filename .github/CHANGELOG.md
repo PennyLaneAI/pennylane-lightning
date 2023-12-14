@@ -1,6 +1,10 @@
 # Release 0.34.0-dev
 
 ### New features since last release
+
+* Lightning-Qubit support arbitrary controlled gates (any wires and any control values). The kernels are implemented in the `LM` module.
+  [(#576)](https://github.com/PennyLaneAI/pennylane-lightning/pull/576)
+
 * Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
   [(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
 

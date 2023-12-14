@@ -80,6 +80,7 @@ template <class PrecisionT, class ParamT, class GateImplementation,
 constexpr auto controlledGateOpToFunctor() {
     return [](std::complex<PrecisionT> *data, size_t num_qubits,
               const std::vector<size_t> &controlled_wires,
+              const std::vector<bool> &controlled_values,
               const std::vector<size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
         constexpr auto func_ptr = Gates::ControlledGateOpToMemberFuncPtr<
@@ -88,7 +89,8 @@ constexpr auto controlledGateOpToFunctor() {
                   lookup(Pennylane::Gates::Constant::controlled_gate_num_params,
                          gate_op));
         Gates::callControlledGateOps(func_ptr, data, num_qubits,
-                                     controlled_wires, wires, inverse, params);
+                                     controlled_wires, controlled_values, wires,
+                                     inverse, params);
     };
 }
 

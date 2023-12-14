@@ -295,7 +295,15 @@ class QuantumScriptSerializer:
 
     def serialize_ops(
         self, tape: QuantumTape, wires_map: dict
-    ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
+    ) -> Tuple[
+        List[List[str]],
+        List[np.ndarray],
+        List[List[int]],
+        List[bool],
+        List[np.ndarray],
+        List[List[int]],
+        List[List[bool]],
+    ]:
         """Serializes the operations of an input tape.
 
         The state preparation operations are not included.
@@ -313,22 +321,25 @@ class QuantumScriptSerializer:
         names = []
         params = []
         controlled_wires = []
+        controlled_values = []
         wires = []
         mats = []
 
         uses_stateprep = False
 
         def get_wires(operation, single_op):
-            if operation.name[0:2] == "C(" or (
-                operation.name == "MultiControlledX"
-                and all(char == "1" for char in operation.hyperparameters["control_values"])
-            ):
+            if operation.name[0:2] == "C(" or operation.name == "MultiControlledX":
                 name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
                 controlled_wires_list = operation.control_wires
                 if operation.name == "MultiControlledX":
                     wires_list = list(set(operation.wires) - set(controlled_wires_list))
                 else:
                     wires_list = operation.target_wires
+                control_values_list = (
+                    [bool(int(i)) for i in operation.hyperparameters["control_values"]]
+                    if operation.name == "MultiControlledX"
+                    else operation.control_values
+                )
                 if not hasattr(self.sv_type, name):
                     single_op = QubitUnitary(matrix(single_op.base), single_op.base.wires)
                     name = single_op.name
@@ -336,7 +347,8 @@ class QuantumScriptSerializer:
                 name = single_op.name
                 wires_list = single_op.wires.tolist()
                 controlled_wires_list = []
-            return single_op, name, wires_list, controlled_wires_list
+                control_values_list = []
+            return single_op, name, wires_list, controlled_wires_list, control_values_list
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -348,7 +360,13 @@ class QuantumScriptSerializer:
                 op_list = [operation]
 
             for single_op in op_list:
-                single_op, name, wires_list, controlled_wires_list = get_wires(operation, single_op)
+                (
+                    single_op,
+                    name,
+                    wires_list,
+                    controlled_wires_list,
+                    controlled_values_list,
+                ) = get_wires(operation, single_op)
                 names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
@@ -362,8 +380,17 @@ class QuantumScriptSerializer:
                     params.append(single_op.parameters)
                     mats.append([])
 
+                controlled_values.append(controlled_values_list)
                 controlled_wires.append([wires_map[w] for w in controlled_wires_list])
                 wires.append([wires_map[w] for w in wires_list])
 
         inverses = [False] * len(names)
-        return (names, params, wires, inverses, mats, controlled_wires), uses_stateprep
+        return (
+            names,
+            params,
+            wires,
+            inverses,
+            mats,
+            controlled_wires,
+            controlled_values,
+        ), uses_stateprep
