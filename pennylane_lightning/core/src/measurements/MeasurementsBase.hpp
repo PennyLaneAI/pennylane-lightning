@@ -225,6 +225,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                 obs_term_idx++;
             }
         } else {
+            std::cerr << "obs_ in var size********:" << obs.getObs().size()
+                      << std::endl;
             auto obs_samples = measure_with_samples(obs, num_shots, {});
             auto square_mean =
                 std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0) /

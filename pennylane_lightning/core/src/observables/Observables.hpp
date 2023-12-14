@@ -20,6 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include <iostream>
+
 #include "Error.hpp"
 #include "Util.hpp"
 
@@ -193,9 +195,9 @@ class NamedObsBase : public Observable<StateVectorT> {
         }
 
         if (obs_name_ == "Identity") {
-            eigenValues.push_back({1, 1});
+            eigenValues.push_back(std::vector<PrecisionT>{1, 1});
         } else {
-            eigenValues.push_back({1, -1});
+            eigenValues.push_back(std::vector<PrecisionT>{1, -1});
         }
     }
 };
@@ -395,6 +397,8 @@ class TensorProdObsBase : public Observable<StateVectorT> {
             std::vector<std::vector<PrecisionT>> eigenVals;
             std::vector<size_t> ob_wire;
             ob->applyInPlaceShots(sv, eigenVals, ob_wire);
+            std::cerr << "ob name in applySHOTS:" << ob->getObsName()
+                      << std::endl;
             ob_wires.push_back(ob_wire[0]);
             eigenValues.push_back(eigenVals[0]);
         }
