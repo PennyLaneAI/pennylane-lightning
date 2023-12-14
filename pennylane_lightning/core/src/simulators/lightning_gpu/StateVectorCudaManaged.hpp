@@ -40,8 +40,6 @@
 
 #include "LinearAlg.hpp"
 
-#include <iostream>
-
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
@@ -302,20 +300,9 @@ class StateVectorCudaManaged
                                              wires.begin() + ctrl_offset};
         const std::vector<std::size_t> tgts{wires.begin() + ctrl_offset,
                                             wires.end()};
-        {
-            auto sv = getDataVector();
-            printf("\n");
-            for (auto &v : sv) {
-                printf("(%f, %f)\n", v.real(), v.imag());
-            }
-        }
         if (opName == "Identity") {
             return;
         } else if (opName == "C(GlobalPhase)") {
-            printf("\n");
-            for (auto &v : gate_matrix) {
-                printf("(%f, %f)\n", v.x, v.y);
-            }
             cGlobalPhaseStateVector(gate_matrix);
         } else if (opName == "GlobalPhase") {
             globalPhaseStateVector(adjoint, params[0]);
@@ -335,7 +322,6 @@ class StateVectorCudaManaged
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
-
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
             // ensure wire indexing correctly preserved for tensor-observables
@@ -349,29 +335,11 @@ class StateVectorCudaManaged
                 std::string message = "Currently unsupported gate: " + opName;
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
-                std::cout << "add_gate(" << opName << "," << par[0] << ")"
-                          << std::endl;
-                // printf("\nadd_gate(%s, %f)\n", opName.c_str(), par[0]);
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
-            } else {
-                std::cout << "get_gate_host(" << opName << "," << par[0] << ")"
-                          << std::endl;
-                auto ggg = gate_cache_.get_gate_host(opName, par[0]);
-                printf("\n");
-                for (auto &v : ggg) {
-                    printf("(%f, %f)\n", v.x, v.y);
-                }
             }
             applyDeviceMatrixGate(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
                 tgts_local, adjoint);
-        }
-        {
-            auto sv = getDataVector();
-            printf("\n");
-            for (auto &v : sv) {
-                printf("(%f, %f)\n", v.real(), v.imag());
-            }
         }
     }
 

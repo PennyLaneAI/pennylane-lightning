@@ -97,7 +97,7 @@ class TestGrover:
 
         @qml.qnode(dev, diff_method=None)
         def circuit(omega):
-            iterations = 1  # int(np.round(np.sqrt(2**num_qubits) * np.pi / 4))
+            iterations = int(np.round(np.sqrt(2**num_qubits) * np.pi / 4))
 
             # Initial state preparation
             for wire in wires:

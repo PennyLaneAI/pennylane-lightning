@@ -18,6 +18,7 @@ import pytest
 from conftest import LightningDevice, device_name
 from conftest import THETA, PHI
 
+import copy
 import itertools
 import numpy as np
 import pennylane as qml
@@ -109,6 +110,33 @@ def test_gate_unitary_correct(op, op_name):
 
     unitary_expected = qml.matrix(op[0](*op[1], **op[2]))
 
+    assert np.allclose(unitary, unitary_expected)
+
+    op1 = copy.deepcopy(op[1])
+    if len(op1) > 0:
+        op1 = [np.sqrt(5) * param for param in op1]
+    op2 = copy.deepcopy(op[2])
+    if "phi" in op2.keys():
+        op2["phi"] *= np.sqrt(2)
+    if "theta" in op2.keys():
+        op2["theta"] *= np.sqrt(3)
+    if "U" in op2.keys():
+        op2["U"] *= np.sqrt(3)
+
+    @qml.qnode(dev)
+    def output(input):
+        qml.BasisState(input, wires=range(wires))
+        op[0](*op[1], **op[2])
+        op[0](*op1, **op2)
+        return qml.state()
+
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
+
+    for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
+        out = output(np.array(input))
+        unitary[:, i] = out
+
+    unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
     assert np.allclose(unitary, unitary_expected)
 
 

@@ -17,8 +17,6 @@
 #include <variant>
 #include <vector>
 
-#include <iostream>
-
 #include "cuda.h"
 
 #include "BindingsBase.hpp"
@@ -157,7 +155,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<size_t> &wires, bool inv,
-               const std::vector<ParamT> &params, const np_arr_c &gate_matrix) {
+               const std::vector<std::vector<ParamT>> &params,
+               const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
                 std::vector<CFP_t> matrix_cu;
                 if (m_buffer.size) {
@@ -166,16 +165,12 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                         std::vector<CFP_t>{m_ptr, m_ptr + m_buffer.size};
                 }
                 if (params.empty()) {
-                    std::cout << "params.size() = " << params.size()
-                              << std::endl;
                     sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
                                       matrix_cu);
                 } else {
-                    std::cout << "params.size() = " << params.size()
-                              << ", params[0] = " << params[0] << std::endl;
                     PL_ABORT_IF(params.size() != 1,
                                 "params should be a List[List[float]].")
-                    sv.applyOperation(str, wires, inv, params, matrix_cu);
+                    sv.applyOperation(str, wires, inv, params[0], matrix_cu);
                 }
             },
             "Apply operation via the gate matrix");
