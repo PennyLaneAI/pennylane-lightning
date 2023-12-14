@@ -523,8 +523,11 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # matrix multiplication with the identity.
             skipped_ops = ["Identity"]
             invert_param = False
-
+            print(operations)
             for ops in operations:
+                print(ops)
+                U = ops.matrix()
+                assert np.allclose(U @ np.conj(U.T), np.eye(*U.shape))
                 if str(ops.name) in skipped_ops:
                     continue
                 name = ops.name
@@ -532,6 +535,14 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     name = ops.base.name
                     invert_param = True
                 method = getattr(self._gpu_state, name, None)
+                # if (
+                #     ops.name == "MultiControlledX"
+                #     and len(ops.wires) == 2
+                #     and ops.hyperparameters["control_values"] == "1"
+                # ):
+                #     method = getattr(self._gpu_state, "CNOT", None)
+                # else:
+                #     method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
                 if ops.name == "C(GlobalPhase)":
@@ -539,7 +550,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     control_values = ops.control_values
                     param = ops.base.parameters[0]
                     matrix = global_phase_diagonal(param, self.wires, controls, control_values)
-                    self._gpu_state.apply(name, wires, False, [[param]], matrix)
+                    self._gpu_state.apply(name, wires, False, [], matrix)
                 elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
@@ -547,20 +558,28 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
                         mat = ops.matrix
-
+                        r_dtype = np.float32 if self.use_csingle else np.float64
+                        param = (
+                            [[r_dtype(ops.hash)]]
+                            if ops.name == "MultiControlledX"
+                            else [[r_dtype(0.0)]]
+                        )
+                        print(param)
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
                         name,
                         wires,
                         False,
-                        [],
+                        param,
                         mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
 
                 else:
                     param = ops.parameters
                     method(wires, invert_param, param)
+                sv = self.state
+                assert np.allclose(np.linalg.norm(sv), 1.0)
 
         # pylint: disable=unused-argument
         def apply(self, operations, rotations=None, **kwargs):

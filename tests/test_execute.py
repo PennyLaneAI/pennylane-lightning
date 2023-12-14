@@ -97,7 +97,7 @@ class TestGrover:
 
         @qml.qnode(dev, diff_method=None)
         def circuit(omega):
-            iterations = int(np.round(np.sqrt(2**num_qubits) * np.pi / 4))
+            iterations = 1  # int(np.round(np.sqrt(2**num_qubits) * np.pi / 4))
 
             # Initial state preparation
             for wire in wires:
@@ -117,6 +117,7 @@ class TestGrover:
             zip([i for i in range(len(index) - 1, -1, -1)], index),
             0,
         )
+        print(prob)
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
         assert np.sum(prob) - prob[index] < 0.05
