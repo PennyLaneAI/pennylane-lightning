@@ -62,12 +62,14 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
                                      operations.getOpsParams()[op_idx],
                                      operations.getOpsMatrices()[op_idx]);
             } else {
-                state.applyOperation(operations.getOpsName()[op_idx],
-                                     operations.getOpsControlledWires()[op_idx],
-                                     operations.getOpsWires()[op_idx],
-                                     operations.getOpsInverses()[op_idx] ^ adj,
-                                     operations.getOpsParams()[op_idx],
-                                     operations.getOpsMatrices()[op_idx]);
+                state.applyOperation(
+                    operations.getOpsName()[op_idx],
+                    operations.getOpsControlledWires()[op_idx],
+                    operations.getOpsControlledValues()[op_idx],
+                    operations.getOpsWires()[op_idx],
+                    operations.getOpsInverses()[op_idx] ^ adj,
+                    operations.getOpsParams()[op_idx],
+                    operations.getOpsMatrices()[op_idx]);
             }
         }
     }
@@ -94,6 +96,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         } else {
             state.applyOperation(operations.getOpsName()[op_idx],
                                  operations.getOpsControlledWires()[op_idx],
+                                 operations.getOpsControlledValues()[op_idx],
                                  operations.getOpsWires()[op_idx],
                                  !operations.getOpsInverses()[op_idx],
                                  operations.getOpsParams()[op_idx],
@@ -141,15 +144,18 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @param sv Statevector data to operate upon.
      * @param op_name Name of parametric gate.
      * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to operate upon.
      * @param adj Indicate whether to take the adjoint of the operation.
      * @return PrecisionT Generator scaling coefficient.
      */
     inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
                                const std::vector<size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
                                const std::vector<size_t> &wires, const bool adj)
         -> PrecisionT {
-        return sv.applyGenerator(op_name, controlled_wires, wires, adj);
+        return sv.applyGenerator(op_name, controlled_wires, controlled_values,
+                                 wires, adj);
     }
 
     /**

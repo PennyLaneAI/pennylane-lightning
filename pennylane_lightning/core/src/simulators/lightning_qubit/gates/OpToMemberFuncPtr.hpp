@@ -782,12 +782,14 @@ template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 0> {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &,
+                          const std::vector<bool> &,
                           const std::vector<size_t> &, bool);
 };
 template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::vector<size_t> &,
+                          const std::vector<bool> &,
                           const std::vector<size_t> &, bool, ParamT);
 };
 
@@ -805,6 +807,7 @@ template <class PrecisionT> struct GeneratorFuncPtr {
 template <class PrecisionT> struct ControlledGeneratorFuncPtr {
     using Type = PrecisionT (*)(std::complex<PrecisionT> *, size_t,
                                 const std::vector<size_t> &,
+                                const std::vector<bool> &,
                                 const std::vector<size_t> &, bool);
 };
 
@@ -824,6 +827,7 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, size_t,
                           const std::complex<PrecisionT> *,
                           const std::vector<size_t> &,
+                          const std::vector<bool> &,
                           const std::vector<size_t> &, bool);
 };
 
@@ -929,10 +933,11 @@ inline void
 callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 0> func,
                       std::complex<PrecisionT> *data, size_t num_qubits,
                       const std::vector<size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
                       const std::vector<size_t> &wires, bool inverse,
                       [[maybe_unused]] const std::vector<ParamT> &params) {
     PL_ASSERT(params.empty());
-    func(data, num_qubits, controlled_wires, wires, inverse);
+    func(data, num_qubits, controlled_wires, controlled_values, wires, inverse);
 }
 
 template <class PrecisionT, class ParamT>
@@ -940,10 +945,12 @@ inline void
 callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
                       std::complex<PrecisionT> *data, size_t num_qubits,
                       const std::vector<size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
                       const std::vector<size_t> &wires, bool inverse,
                       const std::vector<ParamT> &params) {
     PL_ASSERT(params.size() == 1);
-    func(data, num_qubits, controlled_wires, wires, inverse, params[0]);
+    func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
+         params[0]);
 }
 
 /// @}
@@ -998,8 +1005,10 @@ inline void callControlledMatrixOp(ControlledMatrixFuncPtrT<PrecisionT> func,
                                    size_t num_qubits,
                                    const std::complex<PrecisionT *> matrix,
                                    const std::vector<size_t> &controlled_wires,
+                                   const std::vector<bool> &controlled_values,
                                    const std::vector<size_t> &wires, bool adj) {
-    return func(data, num_qubits, matrix, controlled_wires, wires, adj);
+    return func(data, num_qubits, matrix, controlled_wires, controlled_values,
+                wires, adj);
 }
 
 } // namespace Pennylane::LightningQubit::Gates
