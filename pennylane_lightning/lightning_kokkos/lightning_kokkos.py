@@ -67,7 +67,7 @@ if LK_CPP_BINARY_AVAILABLE:
     import pennylane as qml
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -407,8 +407,11 @@ if LK_CPP_BINARY_AVAILABLE:
                 wires = self.wires.indices(ops.wires)
 
                 if ops.name == "C(GlobalPhase)":
-                    matrix = np.diag(ops.matrix(self.wires)).reshape((1, -1))
-                    state.apply(name, wires, False, param, matrix)
+                    controls = ops.control_wires
+                    control_values = ops.control_values
+                    param = ops.base.parameters[0]
+                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
+                    state.apply(name, wires, False, [[param]], matrix)
                 elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
