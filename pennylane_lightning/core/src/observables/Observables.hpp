@@ -302,7 +302,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     template <typename... Ts>
     explicit TensorProdObsBase(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
         if (obs_.size() == 1 &&
-            obs_[0]->getObsName().find("@") != std::string::npos) {
+            obs_[0]->getObsName().find('@') != std::string::npos) {
             // This would prevent the misuse of this constructor for creating
             // TensorProdObsBase(TensorProdObsBase).
             PL_ABORT("A new TensorProdObsBase observable cannot be created "
