@@ -194,7 +194,7 @@ info = {
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
-    "url": "https://github.com/XanaduAI/pennylane-lightning",
+    "url": "https://github.com/PennyLaneAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
