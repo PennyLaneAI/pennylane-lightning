@@ -13,9 +13,7 @@ jobs:
       - run: echo 'Hello world'
 
   test:
-    runs-on:
-      - self-hosted
-      - macos
+    runs-on: xanadu-arm64-mac
 
     steps:
       - run: echo 'Hello World'
