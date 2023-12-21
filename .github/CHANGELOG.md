@@ -82,6 +82,9 @@
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
+* Fix the issue with assigning kernels to ops before registering kernels on macOS
+  [(#582)](https://github.com/PennyLaneAI/pennylane-lightning/pull/582)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
