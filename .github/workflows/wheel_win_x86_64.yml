@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        exec_model: [\"SERIAL\"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
@@ -88,9 +88,9 @@ jobs:
       matrix:
         os: [windows-2022]
         arch: [AMD64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        exec_model: [\"SERIAL\"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
@@ -183,7 +183,7 @@ jobs:
     strategy:
       matrix:
         arch: [AMD64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}

@@ -190,9 +190,7 @@ class NamedObsBase : public Observable<StateVectorT> {
         } else if (obs_name_ == "PauliZ") {
         } else if (obs_name_ == "Identity") {
         } else {
-            PL_ABORT("Provided NamedObs does not supported for shots "
-                     "calculation. Supported NamedObs are PauliX, PauliY, "
-                     "PauliZ, Identity and Hadamard.");
+            PL_ABORT("Provided NamedObs does not support shot measurement.");
         }
 
         if (obs_name_ == "Identity") {
@@ -319,8 +317,15 @@ class TensorProdObsBase : public Observable<StateVectorT> {
      */
     template <typename... Ts>
     explicit TensorProdObsBase(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
-        std::unordered_set<size_t> wires;
+        if (obs_.size() == 1 &&
+            obs_[0]->getObsName().find('@') != std::string::npos) {
+            // This would prevent the misuse of this constructor for creating
+            // TensorProdObsBase(TensorProdObsBase).
+            PL_ABORT("A new TensorProdObsBase observable cannot be created "
+                     "from a single TensorProdObsBase.");
+        }
 
+        std::unordered_set<size_t> wires;
         for (const auto &ob : obs_) {
             const auto ob_wires = ob->getWires();
             for (const auto wire : ob_wires) {
@@ -400,6 +405,14 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(StateVectorT &sv,
                            std::vector<std::vector<PrecisionT>> &eigenValues,
                            std::vector<size_t> &ob_wires) const override {
+        for (const auto &ob : obs_) {
+            if (ob->getObsName().find("Hamiltonian") != std::string::npos) {
+                PL_ABORT("Hamiltonian observables as a term of an TensorProd "
+                         "observable do not "
+                         "support shot measurement.");
+            }
+        }
+
         eigenValues.clear();
         ob_wires.clear();
         for (const auto &ob : obs_) {
@@ -500,8 +513,8 @@ class HamiltonianBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
-        PL_ABORT(
-            "Hamiltonian observables do not support the applyInPlaceShots");
+        PL_ABORT("Hamiltonian observables as a term of an observable do not "
+                 "support shot measurement.");
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
@@ -633,9 +646,8 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
-        PL_ABORT("SparseHamiltonian observables do not support the "
-                 "applyInPlaceShots "
-                 "method.");
+        PL_ABORT(
+            "SparseHamiltonian observables do not support shot measurement.");
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {

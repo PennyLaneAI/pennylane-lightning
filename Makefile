@@ -115,7 +115,7 @@ format-python:
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./BuildTidy
-	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
+	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCLANG_TIDY_BINARY=clang-tidy -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
 else
