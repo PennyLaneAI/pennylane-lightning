@@ -117,25 +117,66 @@ if(ENABLE_LAPACK)
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/lapack -DLAPACKE=ON -DBUILD_SHARED_LIBS=ON
     )
 
+    find_library(LAPACK_LIB
+                NAMES   liblapack.so
+                HINTS   ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64
+                        ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib
+    )
+
+    find_library(LAPACKE_LIB
+                NAMES   liblapacke.so
+                HINTS   ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64
+                        ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib
+    )
+
+    find_library(BLAS_LIB
+                NAMES   libblas.so
+                HINTS   ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64
+                        ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib
+    )
+
+    find_file(LAPACKE_INC
+                NAMES   lapacke.h
+                HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/include
+    )
 
     add_library(lapack SHARED IMPORTED GLOBAL)
     add_library(lapacke SHARED IMPORTED GLOBAL)
     add_library(blas SHARED IMPORTED GLOBAL)
 
-    target_include_directories(lapack INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
-    target_include_directories(lapacke INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
+    #
+    #        find_file(SCI_INC
+    #            NAMES   lapacke.h
+    #            HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/include
+    #        )
 
-    set_target_properties(lapack PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/liblapacke.so
-    )
+    #target_include_directories(lapack INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
+    #target_include_directories(lapacke INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
 
-    set_target_properties(lapacke PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/liblapacke.so
-    )
+    #set_target_properties(lapack PROPERTIES
+    #    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/liblapacke.so
+    #)
 
-    set_target_properties(blas PROPERTIES
-        IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/libblas.so
-    )
+    #set_target_properties(lapacke PROPERTIES
+    #    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/liblapacke.so
+    #)
+
+    #set_target_properties(blas PROPERTIES
+    #    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/libblas.so
+    #)
+
+    get_filename_component(LAPACKE_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(lapacke INTERFACE ${LAPACKE_INC_DIR})
+    set_target_properties(lapacke PROPERTIES IMPORTED_LOCATION ${LAPACKE_LIB})
+
+
+    get_filename_component(LAPACK_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(lapack INTERFACE ${LAPACK_INC_DIR})
+    set_target_properties(lapack PROPERTIES IMPORTED_LOCATION ${LAPACK_LIB})
+
+    get_filename_component(BLAS_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(blas INTERFACE ${BLAS_INC_DIR})
+    set_target_properties(blas PROPERTIES IMPORTED_LOCATION ${BLAS_LIB})
 
     target_link_libraries(lightning_external_libs INTERFACE lapack lapacke blas)
 
