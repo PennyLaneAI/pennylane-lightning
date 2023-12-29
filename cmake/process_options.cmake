@@ -137,7 +137,7 @@ if(ENABLE_LAPACK)
 
     find_file(LAPACKE_INC
                 NAMES   lapacke.h
-                HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/include
+                HINTS   ${CMAKE_CURRENT_BINARY_DIR}/lapack/include
     )
 
     add_library(lapack SHARED IMPORTED GLOBAL)
