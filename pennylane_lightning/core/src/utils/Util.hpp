@@ -550,7 +550,7 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  * @param unitaries unitary result.
  * @return result Result matrix with only diagonal elements stored.
  */
-
+#ifdef PL_USE_LAPACK
 template <typename T>
 void compute_diagonalizing_gates(size_t N, size_t LDA,
                                  const std::vector<std::complex<T>> &Ah,
@@ -597,5 +597,6 @@ void compute_diagonalizing_gates(size_t N, size_t LDA,
         }
     }
 }
+#endif
 
 } // namespace Pennylane::Util
