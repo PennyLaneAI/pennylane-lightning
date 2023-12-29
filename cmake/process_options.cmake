@@ -103,9 +103,9 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    if(MSVC)
-        message(FATAL_ERROR "LAPACK is not supported for Windows.")
-    endif()
+    #if(MSVC)
+    #    message(FATAL_ERROR "LAPACK is not supported for Windows.")
+    #endif()
 
     #LAPACK NOT FOUND
     include(ExternalProject)
