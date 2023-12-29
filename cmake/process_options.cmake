@@ -107,34 +107,20 @@ if(ENABLE_LAPACK)
         message(FATAL_ERROR "LAPACK is not supported for Windows.")
     endif()
 
-    #set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-    #get_target_property(lapack_BINARY_DIR lapack INTERFACE_INCLUDE_DIRECTORIES)
-
+    #LAPACK NOT FOUND
     include(ExternalProject)
 
-    # Define ExternalProject for mypackage
     ExternalProject_Add(LAPACK
         GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
         GIT_TAG        "master"
-        GIT_SUBMODULES "" # Avoid recursively cloning all submodules
+        GIT_SUBMODULES ""
         CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/lapack -DLAPACKE=ON -DBUILD_SHARED_LIBS=ON
     )
 
-    #ExternalProject_Get_Property(LAPACK BINARY_DIR)
-    #ExternalProject_Get_Property(LAPACK INSTALL_DIR)
-    #ExternalProject_Get_Property(LAPACK SOURCE_DIR)
 
-    #set(LAPACK_INC_DIR ${SOURCE_DIR}/LAPACKE-build/include CACHE INTERNAL "LAPACK source directory")
-
-    #message("LAPACK binary directory: ${BINARY_DIR}")
-    #message("LAPACK install directory: ${INSTALL_DIR}")
-    #message("LAPACK source directory: ${SOURCE_DIR}")
-    #message("LAPACK inc directory: ${LAPACK_INC_DIR}")
-
-    add_library(lapack STATIC IMPORTED GLOBAL)
-    add_library(lapacke STATIC IMPORTED GLOBAL)
-    add_library(blas STATIC IMPORTED GLOBAL)
+    add_library(lapack SHARED IMPORTED GLOBAL)
+    add_library(lapacke SHARED IMPORTED GLOBAL)
+    add_library(blas SHARED IMPORTED GLOBAL)
 
     target_include_directories(lapack INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
     target_include_directories(lapacke INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
