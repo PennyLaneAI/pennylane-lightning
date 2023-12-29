@@ -165,17 +165,17 @@ if(ENABLE_LAPACK)
     #    IMPORTED_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/lapack/lib64/libblas.so
     #)
 
-    get_filename_component(LAPACKE_INC_DIR ${LAPACKE_INC} DIRECTORY)
-    target_include_directories(lapacke INTERFACE ${LAPACKE_INC_DIR})
+    #get_filename_component(LAPACKE_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(lapacke INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
     set_target_properties(lapacke PROPERTIES IMPORTED_LOCATION ${LAPACKE_LIB})
 
 
-    get_filename_component(LAPACK_INC_DIR ${LAPACKE_INC} DIRECTORY)
-    target_include_directories(lapack INTERFACE ${LAPACK_INC_DIR})
+    #get_filename_component(LAPACK_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(lapack INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
     set_target_properties(lapack PROPERTIES IMPORTED_LOCATION ${LAPACK_LIB})
 
-    get_filename_component(BLAS_INC_DIR ${LAPACKE_INC} DIRECTORY)
-    target_include_directories(blas INTERFACE ${BLAS_INC_DIR})
+    #get_filename_component(BLAS_INC_DIR ${LAPACKE_INC} DIRECTORY)
+    target_include_directories(blas INTERFACE ${CMAKE_CURRENT_BINARY_DIR}/lapack/include)
     set_target_properties(blas PROPERTIES IMPORTED_LOCATION ${BLAS_LIB})
 
     target_link_libraries(lightning_external_libs INTERFACE lapack lapacke blas)
