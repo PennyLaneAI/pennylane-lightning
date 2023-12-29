@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild -G Ninja \
+            cmake . -BBuild \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \
@@ -201,7 +201,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild -G Ninja \
+            cmake . -BBuild \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
@@ -375,7 +375,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild -G Ninja \
+            cmake . -BBuild \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \
@@ -627,7 +627,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild -G Ninja \
+            cmake . -BBuild \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \
