@@ -150,14 +150,14 @@ jobs:
           python -m pip install cmake build
       
       - name: Install MSYS2 and gfortran
-      run: |
-        choco install msys2
-        refreshenv
-        msys2 --version
-        msys2 pacman -Syu --noconfirm
-        msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
-        export PATH="/c/msys64/mingw64/bin:$PATH"
-        gfortran --version
+        run: |
+          choco install msys2
+          refreshenv
+          msys2 --version
+          msys2 pacman -Syu --noconfirm
+          msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
+          export PATH="/c/msys64/mingw64/bin:$PATH"
+          gfortran --version
 
 
       - name: Build Kokkos core library
@@ -213,14 +213,14 @@ jobs:
           arch: amd64
       
       - name: Install MSYS2 and gfortran
-      run: |
-        choco install msys2
-        refreshenv
-        msys2 --version
-        msys2 pacman -Syu --noconfirm
-        msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
-        export PATH="/c/msys64/mingw64/bin:$PATH"
-        gfortran --version
+        run: |
+          choco install msys2
+          refreshenv
+          msys2 --version
+          msys2 pacman -Syu --noconfirm
+          msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
+          export PATH="/c/msys64/mingw64/bin:$PATH"
+          gfortran --version
 
       - name: Enable long paths
         run: |
