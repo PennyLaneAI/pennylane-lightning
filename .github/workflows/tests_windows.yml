@@ -43,8 +43,7 @@ jobs:
         with:
           path-type: inherit
           msystem: MINGW64
-            install: >-
-              mingw-w64-x86_64-gcc-fortran
+          install: mingw-w64-x86_64-gcc-fortran
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -204,8 +203,7 @@ jobs:
         with:
           path-type: inherit
           msystem: MINGW64
-            install: >-
-              mingw-w64-x86_64-gcc-fortran
+          install: mingw-w64-x86_64-gcc-fortran
 
       - name: Enable long paths
         run: |
