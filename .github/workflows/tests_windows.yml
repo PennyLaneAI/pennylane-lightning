@@ -38,15 +38,13 @@ jobs:
         with:
           arch: amd64
       
-      - name: Install MSYS2 and gfortran
-      run: |
-        choco install msys2
-        refreshenv
-        msys2 --version
-        msys2 pacman -Syu --noconfirm
-        msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
-        export PATH="/c/msys64/mingw64/bin:$PATH"
-        gfortran --version
+      - name: Install gfortran
+        uses: msys2/setup-msys2@v2
+        with:
+          path-type: inherit
+          msystem: MINGW64
+            install: >-
+              mingw-w64-x86_64-gcc-fortran
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -148,14 +146,6 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           python -m pip install cmake build
-      
-      - name: Install gfortran
-        uses: msys2/setup-msys2@v2
-        with:
-          path-type: inherit
-          msystem: MINGW64
-            install: >-
-              mingw-w64-x86_64-gcc-fortran
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
