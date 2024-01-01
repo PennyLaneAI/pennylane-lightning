@@ -39,11 +39,14 @@ jobs:
           arch: amd64
       
       - name: Install gfortran
-        uses: msys2/setup-msys2@v2
-        with:
-          path-type: inherit
-          msystem: MINGW64
-          install: mingw-w64-x86_64-gcc-fortran
+        run: |
+          choco install msys2 -y
+          refreshenv
+          msys2 --version
+          msys2 pacman -Syu --noconfirm
+          msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
+          echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+          gfortran --version
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
