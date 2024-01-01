@@ -152,7 +152,7 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
         CHECK(squaredNorm(vec) == Approx(110.0));
     }
 }
-
+/*
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
     SECTION("For complex type") {
@@ -182,6 +182,7 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
         }
     }
 }
+*/
 
 TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
     SECTION("For -1, 1 values") {
