@@ -41,7 +41,6 @@ jobs:
       - name: Install gfortran
         run: |
           choco install msys2 -y
-          refreshenv
           msys2 pacman -Syu --noconfirm
           msys2 pacman -S --noconfirm mingw-w64-x86_64-gcc-fortran
           echo "C:\tools\msys64\mingw64\bin" >> $env:GITHUB_PATH
