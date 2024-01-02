@@ -520,6 +520,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                       const std::vector<std::vector<size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
+        .def(py::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &,
+                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<bool>> &>())
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
@@ -527,6 +534,11 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << ", 'controlled_wires': "
+                           << ops.getOpsControlledWires()[op];
+                ops_stream << ", 'controlled_values': "
+                           << ops.getOpsControlledValues()[op];
+                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
                 ops_stream << "}";
                 if (op < ops.getSize() - 1) {
                     ops_stream << ",";
@@ -545,7 +557,9 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
             for (size_t op = 0; op < ops_name.size(); op++) {
@@ -557,8 +571,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                         std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<StateVectorT>{ops_name, ops_params, ops_wires,
-                                         ops_inverses, conv_matrices};
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
         },
         "Create a list of operations from data.");
 

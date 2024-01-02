@@ -249,8 +249,10 @@ template <typename TypeList> void testAdjointJacobian() {
                     "PauliX", std::vector<size_t>{1}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
                     "PauliX", std::vector<size_t>{2}));
+            std::vector<ComplexT> cnot{1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                                       0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0};
             auto ops = OpsData<StateVectorT>(
-                {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
+                {"RZ", "RY", "RZ", "QubitUnitary", "CNOT", "RZ", "RY", "RZ"},
                 {{param[0]},
                  {param[1]},
                  {param[2]},
@@ -260,7 +262,12 @@ template <typename TypeList> void testAdjointJacobian() {
                  {param[1]},
                  {param[2]}},
                 {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
-                {false, false, false, false, false, false, false, false});
+                {false, false, false, false, false, false, false, false},
+                std::vector<std::vector<ComplexT>>{
+                    {}, {}, {}, cnot, {}, {}, {}, {}},
+                std::vector<std::vector<size_t>>{
+                    {}, {}, {}, {}, {}, {}, {}, {}},
+                std::vector<std::vector<bool>>{{}, {}, {}, {}, {}, {}, {}, {}});
 
             JacobianDataMPI<StateVectorT> tape{num_params, psi, {obs}, ops, tp};
 

@@ -516,14 +516,17 @@ static auto getSingleExcitation(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             c,
-            s,
-            ZERO<ComplexT, T>(),
-            ZERO<ComplexT, T>(),
             -s,
+            ZERO<ComplexT, T>(),
+
+            ZERO<ComplexT, T>(),
+            s,
             c,
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
@@ -579,10 +582,10 @@ static auto getSingleExcitationMinus(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             c,
-            s,
-            ZERO<ComplexT, T>(),
-            ZERO<ComplexT, T>(),
             -s,
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            s,
             c,
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
@@ -640,10 +643,10 @@ static auto getSingleExcitationPlus(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             c,
-            s,
-            ZERO<ComplexT, T>(),
-            ZERO<ComplexT, T>(),
             -s,
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            s,
             c,
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
@@ -698,7 +701,7 @@ static auto getDoubleExcitation(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = ONE<ComplexT, T>();
     mat[34] = ONE<ComplexT, T>();
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = ONE<ComplexT, T>();
     mat[85] = ONE<ComplexT, T>();
     mat[102] = ONE<ComplexT, T>();
@@ -707,7 +710,7 @@ static auto getDoubleExcitation(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = ONE<ComplexT, T>();
     mat[170] = ONE<ComplexT, T>();
     mat[187] = ONE<ComplexT, T>();
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = ONE<ComplexT, T>();
     mat[238] = ONE<ComplexT, T>();
@@ -754,7 +757,7 @@ static auto getDoubleExcitationMinus(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -763,7 +766,7 @@ static auto getDoubleExcitationMinus(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -824,7 +827,7 @@ static auto getDoubleExcitationPlus(T angle) -> std::vector<ComplexT<T>> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -833,7 +836,7 @@ static auto getDoubleExcitationPlus(T angle) -> std::vector<ComplexT<T>> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -926,6 +929,67 @@ static constexpr auto getGeneratorIsingXX() -> std::vector<ComplexT<T>> {
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
 
         ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+    };
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XY coupling
+ * gate data in row-major format.
+ *
+ * @tparam ComplexT<T> Required precision of gate (`float` or `double`).
+ * @tparam T Required precision of parameter (`float` or `double`).
+ * @param angle Phase shift angle.
+ * @return std::vector<ComplexT<T>> Return Ising XY coupling
+ * gate data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static auto getIsingXY(T angle) -> std::vector<ComplexT<T>> {
+    const T p2 = angle / 2;
+    const ComplexT<T> c{std::cos(p2), 0};
+    const ComplexT<T> neg_is{0, std::sin(p2)};
+    return {ONE<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+
+            ZERO<ComplexT, T>(),
+            c,
+            neg_is,
+            ZERO<ComplexT, T>(),
+
+            ZERO<ComplexT, T>(),
+            neg_is,
+            c,
+            ZERO<ComplexT, T>(),
+
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ONE<ComplexT, T>()};
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XY generator
+ * data in row-major format.
+ *
+ * @tparam ComplexT<T> Required precision of gate (`float` or `double`).
+ * @tparam T Required precision of parameter (`float` or `double`).
+ * @return constexpr std::array<CFP_t>
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getGeneratorIsingXY() -> std::vector<ComplexT<T>> {
+    return {
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
     };
 }

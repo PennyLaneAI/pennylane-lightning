@@ -35,6 +35,8 @@
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
 
+#include "CPUMemoryModel.hpp"
+
 /// @cond DEV
 namespace {
 using Pennylane::Gates::GateOperation;
@@ -90,6 +92,7 @@ class StateVectorKokkos final
         Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
@@ -248,7 +251,7 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
@@ -265,6 +268,31 @@ class StateVectorKokkos final
                                                       gate_matrix.size()));
             return applyMultiQubitOp(matrix, wires, inverse);
         }
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(controlled_wires.empty(),
+                        "Controlled kernels not implemented.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        applyOperation(opName, wires, inverse, params, gate_matrix);
     }
 
     /**
@@ -612,9 +640,9 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     template <template <class, bool> class functor_t, int nqubits>
-    void
-    applyGateFunctor(const std::vector<size_t> &wires, bool inverse = false,
-                     [[maybe_unused]] const std::vector<fp_t> &params = {}) {
+    void applyGateFunctor(const std::vector<size_t> &wires,
+                          bool inverse = false,
+                          const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
         PL_ASSERT(wires.size() == nqubits);
         if (!inverse) {
@@ -638,7 +666,7 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     void applyMultiRZ(const std::vector<size_t> &wires, bool inverse = false,
-                      [[maybe_unused]] const std::vector<fp_t> &params = {}) {
+                      const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
 
         if (!inverse) {

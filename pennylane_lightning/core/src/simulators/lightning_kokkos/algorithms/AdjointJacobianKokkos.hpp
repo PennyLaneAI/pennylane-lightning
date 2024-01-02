@@ -118,13 +118,13 @@ class AdjointJacobian final
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
-            this->applyOperations(lambda, ops);
+            BaseType::applyOperations(lambda, ops);
         }
 
         // Create observable-applied state-vectors
         std::vector<StateVectorT> H_lambda(num_observables,
                                            StateVectorT(lambda.getNumQubits()));
-        this->applyObservables(H_lambda, lambda, obs);
+        BaseType::applyObservables(H_lambda, lambda, obs);
 
         StateVectorT mu{lambda.getNumQubits()};
 
@@ -142,14 +142,15 @@ class AdjointJacobian final
                 break; // All done
             }
             mu.updateData(lambda);
-            this->applyOperationAdj(lambda, ops, op_idx);
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     const PrecisionT scalingFactor =
-                        this->applyGenerator(mu, ops.getOpsName()[op_idx],
-                                             ops.getOpsWires()[op_idx],
-                                             !ops.getOpsInverses()[op_idx]) *
+                        BaseType::applyGenerator(
+                            mu, ops.getOpsName()[op_idx],
+                            ops.getOpsWires()[op_idx],
+                            !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
                     for (size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
@@ -163,8 +164,8 @@ class AdjointJacobian final
                 }
                 current_param_idx--;
             }
-            this->applyOperationsAdj(H_lambda, ops,
-                                     static_cast<size_t>(op_idx));
+            BaseType::applyOperationsAdj(H_lambda, ops,
+                                         static_cast<size_t>(op_idx));
         }
     }
 };

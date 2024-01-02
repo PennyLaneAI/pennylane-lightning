@@ -91,6 +91,7 @@ class CMakeBuild(build_ext):
         super().finalize_options()
 
     def build_extension(self, ext: CMakeExtension):
+        self.build_temp = f"build_{backend}"
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         build_type = "Debug" if debug else "RelWithDebInfo"

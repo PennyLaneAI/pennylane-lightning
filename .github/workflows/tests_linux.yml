@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpptests:
-    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -174,9 +174,10 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   cpptestswithOpenBLAS:
-    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -323,6 +324,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
@@ -331,7 +333,7 @@ jobs:
       os: ubuntu-22.04
 
   cpptestswithKokkos:
-    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
@@ -512,7 +514,7 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}.xml
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -541,6 +543,7 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   upload-to-codecov-linux-python:
     needs: [pythontests, pythontestswithOpenBLAS, pythontestswithKokkos]
@@ -582,7 +585,7 @@ jobs:
 
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
-    if: ${{ !contains(fromJSON('["workflow_call"]'), github.event_name) }}
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:

@@ -27,6 +27,7 @@ from pennylane import (
     Rot,
     Hamiltonian,
     SparseHamiltonian,
+    QubitUnitary,
 )
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
@@ -52,9 +53,12 @@ class QuantumScriptSerializer:
     """
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
-    def __init__(self, device_name, use_csingle: bool = False, use_mpi: bool = False):
+    def __init__(
+        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
+    ):
         self.use_csingle = use_csingle
         self.device_name = device_name
+        self.split_obs = split_obs
         if device_name == "lightning.qubit":
             try:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
@@ -189,6 +193,10 @@ class QuantumScriptSerializer:
     def _hamiltonian(self, observable, wires_map: dict):
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in observable.ops]
+
+        if self.split_obs:
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
+
         return self.hamiltonian_obs(coeffs, terms)
 
     def _sparse_hamiltonian(self, observable, wires_map: dict):
@@ -240,6 +248,9 @@ class QuantumScriptSerializer:
         pwords, coeffs = zip(*observable.items())
         terms = [self._pauli_word(pw, wires_map) for pw in pwords]
         coeffs = np.array(coeffs).astype(self.rtype)
+
+        if self.split_obs:
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access
@@ -269,11 +280,30 @@ class QuantumScriptSerializer:
                 the C++ backend
         """
 
-        return [self._ob(observable, wires_map) for observable in tape.observables]
+        serialized_obs = []
+        offset_indices = [0]
+
+        for observable in tape.observables:
+            ser_ob = self._ob(observable, wires_map)
+            if isinstance(ser_ob, list):
+                serialized_obs.extend(ser_ob)
+                offset_indices.append(offset_indices[-1] + len(ser_ob))
+            else:
+                serialized_obs.append(ser_ob)
+                offset_indices.append(offset_indices[-1] + 1)
+        return serialized_obs, offset_indices
 
     def serialize_ops(
         self, tape: QuantumTape, wires_map: dict
-    ) -> Tuple[List[List[str]], List[np.ndarray], List[List[int]], List[bool], List[np.ndarray]]:
+    ) -> Tuple[
+        List[List[str]],
+        List[np.ndarray],
+        List[List[int]],
+        List[bool],
+        List[np.ndarray],
+        List[List[int]],
+        List[List[bool]],
+    ]:
         """Serializes the operations of an input tape.
 
         The state preparation operations are not included.
@@ -290,10 +320,35 @@ class QuantumScriptSerializer:
         """
         names = []
         params = []
+        controlled_wires = []
+        controlled_values = []
         wires = []
         mats = []
 
         uses_stateprep = False
+
+        def get_wires(operation, single_op):
+            if operation.name[0:2] == "C(" or operation.name == "MultiControlledX":
+                name = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+                controlled_wires_list = operation.control_wires
+                if operation.name == "MultiControlledX":
+                    wires_list = list(set(operation.wires) - set(controlled_wires_list))
+                else:
+                    wires_list = operation.target_wires
+                control_values_list = (
+                    [bool(int(i)) for i in operation.hyperparameters["control_values"]]
+                    if operation.name == "MultiControlledX"
+                    else operation.control_values
+                )
+                if not hasattr(self.sv_type, name):
+                    single_op = QubitUnitary(matrix(single_op.base), single_op.base.wires)
+                    name = single_op.name
+            else:
+                name = single_op.name
+                wires_list = single_op.wires.tolist()
+                controlled_wires_list = []
+                control_values_list = []
+            return single_op, name, wires_list, controlled_wires_list, control_values_list
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -305,19 +360,37 @@ class QuantumScriptSerializer:
                 op_list = [operation]
 
             for single_op in op_list:
-                name = single_op.name
+                (
+                    single_op,
+                    name,
+                    wires_list,
+                    controlled_wires_list,
+                    controlled_values_list,
+                ) = get_wires(operation, single_op)
                 names.append(name)
-
-                if not hasattr(self.sv_type, name):
+                # QubitUnitary is a special case, it has a parameter which is not differentiable.
+                # We thus pass a dummy 0.0 parameter which will not be referenced
+                if name == "QubitUnitary":
+                    params.append([0.0])
+                    mats.append(matrix(single_op))
+                elif not hasattr(self.sv_type, name):
                     params.append([])
                     mats.append(matrix(single_op))
-
                 else:
                     params.append(single_op.parameters)
                     mats.append([])
 
-                wires_list = single_op.wires.tolist()
+                controlled_values.append(controlled_values_list)
+                controlled_wires.append([wires_map[w] for w in controlled_wires_list])
                 wires.append([wires_map[w] for w in wires_list])
 
         inverses = [False] * len(names)
-        return (names, params, wires, inverses, mats), uses_stateprep
+        return (
+            names,
+            params,
+            wires,
+            inverses,
+            mats,
+            controlled_wires,
+            controlled_values,
+        ), uses_stateprep

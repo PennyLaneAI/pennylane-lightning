@@ -24,10 +24,12 @@
 #endif
 /**
  * @brief Predefined macro variable to a string. Use std::format instead in
- * C++20.
+ * C++20. TODO: Replace stringify macro definition.
  */
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
 #define PL_TO_STR_INDIR(x) #x
 #define PL_TO_STR(VAR) PL_TO_STR_INDIR(VAR)
+// NOLINTEND(cppcoreguidelines-macro-usage)
 
 #if defined(__GNUC__) || defined(__clang__)
 #define PL_UNREACHABLE __builtin_unreachable()
@@ -49,10 +51,6 @@
 [[maybe_unused]] static constexpr bool use_avx512f = true;
 #else
 [[maybe_unused]] static constexpr bool use_avx512f = false;
-#endif
-
-#if defined(_OPENMP)
-#define PL_USE_OMP 1
 #endif
 
 #if (_OPENMP >= 202011)
