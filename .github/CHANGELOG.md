@@ -1,11 +1,15 @@
 # Release 0.34.0-dev
 
 ### New features since last release
+
+* Lightning-Qubit support arbitrary controlled gates (any wires and any control values). The kernels are implemented in the `LM` module.
+  [(#576)](https://github.com/PennyLaneAI/pennylane-lightning/pull/576)
+
 * Shot-noise related methods now accommodate observable objects with arbitrary eigenvalues. Add a Kronecker product method for two diagonal matrices.
-[(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
+  [(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
 
 * Add shot-noise support for probs in the C++ layer. Probabilities are calculated from generated samples. All Lightning backends support this feature. Please note that target wires should be sorted in ascending manner.
-[(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
+  [(#568)](https://github.com/PennyLaneAI/pennylane-lightning/pull/568)
 
 * Add `LM` kernels to apply arbitrary controlled operations efficiently.
   [(#516)](https://github.com/PennyLaneAI/pennylane-lightning/pull/516)
@@ -25,6 +29,12 @@
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
+
+* Unify error messages of shot measurement related unsupported observables to better Catalyst.
+  [(#577)](https://github.com/PennyLaneAI/pennylane-lightning/pull/577)
+
+* Add configuration files to improve compatibility with Catalyst.
+  [(#566)](https://github.com/PennyLaneAI/pennylane-lightning/pull/566)
 
 * Refactor shot-noise related methods of MeasurementsBase class in the C++ layer and eigenvalues are not limited to `1` and `-1`. Add `getObs()` method to Observables class. Refactor `applyInPlaceShots` to allow users to get eigenvalues of Observables object. Deprecated `_preprocess_state` method in `MeasurementsBase` class for safer use of the `LightningQubitRaw` backend.
 [(#570)](https://github.com/PennyLaneAI/pennylane-lightning/pull/570)
@@ -53,7 +63,7 @@
   [(#563)](https://github.com/PennyLaneAI/pennylane-lightning/pull/563)
 
 * Add OpenGraph social preview for Lightning docs.
-[(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
+  [(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
 
 ### Bug fixes
 
@@ -75,11 +85,14 @@
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
 
+* Fix the issue with assigning kernels to ops before registering kernels on macOS
+  [(#582)](https://github.com/PennyLaneAI/pennylane-lightning/pull/582)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Isaac De Vlugt, Amintor Dusko, Vincent Michaud-Rioux, Lee James O'Riordan, Shuli Shu
+Ali Asadi, Isaac De Vlugt, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee James O'Riordan, Shuli Shu
 
 ---
 

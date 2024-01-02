@@ -136,7 +136,7 @@ template <typename TypeList> void testNamedObsBase() {
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains(
-                    "Provided NamedObs does not supported for shots"));
+                    "Provided NamedObs does not support shot measurement."));
 
             auto ob = obs.getObs();
             REQUIRE(ob.empty() == true);
@@ -223,8 +223,8 @@ template <typename TypeList> void testHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains("Hermitian observables do not "
-                                          "support applyInPlaceShots method."));
+                Catch::Matchers::Contains(
+                    "Hermitian observables do not support shot measurement."));
         }
 
         testHermitianObsBase<typename TypeList::Next>();
@@ -246,6 +246,7 @@ template <typename TypeList> void testTensorProdObsBase() {
         using HermitianObsT = HermitianObsBase<StateVectorT>;
         using NamedObsT = NamedObsBase<StateVectorT>;
         using TensorProdObsT = TensorProdObsBase<StateVectorT>;
+        using HamiltonianT = HamiltonianBase<StateVectorT>;
 
         DYNAMIC_SECTION("Overlapping wires throw an exception - "
                         << StateVectorToName<StateVectorT>::name) {
@@ -275,6 +276,18 @@ template <typename TypeList> void testTensorProdObsBase() {
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_NOTHROW(TensorProdObsT::create({ob1, ob2}));
+        }
+
+        DYNAMIC_SECTION("Constructing an invalid TensorProd(TensorProd) - "
+                        << StateVectorToName<StateVectorT>::name) {
+            auto ob2_1 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+            auto ob2_2 =
+                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{3});
+            auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
+
+            REQUIRE_THROWS_AS(TensorProdObsT::create({ob2}),
+                              LightningException);
         }
 
         DYNAMIC_SECTION("getObsName - "
@@ -353,6 +366,36 @@ template <typename TypeList> void testTensorProdObsBase() {
                                       state_vector.getDataVector().size(),
                                       expected.data(), expected.size()));
             }
+        }
+
+        DYNAMIC_SECTION("Failed for ApplyInPlaceShots"
+                        << StateVectorToName<StateVectorT>::name) {
+            using VectorT = TestVector<ComplexT>;
+            auto X0 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
+            auto X1 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+            auto X2 =
+                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+
+            auto ham = HamiltonianT::create({0.8, 0.5, 0.7}, {
+                                                                 X0,
+                                                                 X1,
+                                                                 X2,
+                                                             });
+
+            auto obs = TensorProdObsT{ham};
+
+            VectorT st_data = createProductState<PrecisionT, ComplexT>("+-01");
+
+            StateVectorT state_vector(st_data.data(), st_data.size());
+
+            std::vector<std::vector<PrecisionT>> eigenValues;
+            std::vector<size_t> ob_wires;
+
+            REQUIRE_THROWS_AS(
+                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
+                LightningException);
         }
 
         testTensorProdObsBase<typename TypeList::Next>();
@@ -611,9 +654,8 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
             REQUIRE_THROWS_WITH(
                 sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains(
-                    "SparseHamiltonian observables do "
-                    "not support the applyInPlaceShots method."));
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not support shot measurement."));
         }
 
         testSparseHamiltonianBase<typename TypeList::Next>();
