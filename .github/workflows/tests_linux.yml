@@ -560,7 +560,8 @@ jobs:
 
       - name: Combine coverage files
         run: |
-          python -m coverage combine ./main/coverage*
+          python -m pip install coverage 
+          python -m combine ./main/coverage*
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3

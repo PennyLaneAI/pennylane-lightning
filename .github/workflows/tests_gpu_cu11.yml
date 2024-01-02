@@ -335,6 +335,11 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
 
+      - name: Combine coverage files
+        run: |
+          python -m pip install coverage 
+          python -m combine ./main/coverage*
+
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
         with:
