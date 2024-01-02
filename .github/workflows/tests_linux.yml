@@ -18,7 +18,7 @@ on:
 env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
 
@@ -167,13 +167,14 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: |
+            ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
@@ -317,13 +318,13 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   build_and_cache_Kokkos:
@@ -514,7 +515,7 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -536,13 +537,13 @@ jobs:
           PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
@@ -553,15 +554,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: List before download
+        run: ls -ltrah
+
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
           name: ubuntu-codecov-results-python
 
+      - name: List after download
+        run: ls -ltrah
+
       - name: Combine coverage files
         run: |
           python -m pip install coverage 
-          python -m coverage combine
+          python -m coverage combine 
+          python -m coverage xml -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
