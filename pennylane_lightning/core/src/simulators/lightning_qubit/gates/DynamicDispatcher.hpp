@@ -105,11 +105,8 @@ template <typename PrecisionT> class DynamicDispatcher {
 
   private:
     std::unordered_map<std::string, GateOperation> str_to_gates_{};
-    std::unordered_map<std::string, ControlledGateOperation>
-        str_to_controlled_gates_{};
+
     std::unordered_map<std::string, GeneratorOperation> str_to_gntrs_{};
-    std::unordered_map<std::string, ControlledGeneratorOperation>
-        str_to_controlled_gntrs_{};
 
     std::unordered_map<std::pair<GateOperation, KernelType>, GateFunc, PairHash>
         gate_kernels_{};
@@ -122,6 +119,14 @@ template <typename PrecisionT> class DynamicDispatcher {
                        PairHash>
         matrix_kernels_{};
 
+    std::unordered_map<KernelType, std::string> kernel_names_{};
+
+    std::unordered_map<std::string, ControlledGateOperation>
+        str_to_controlled_gates_{};
+
+    std::unordered_map<std::string, ControlledGeneratorOperation>
+        str_to_controlled_gntrs_{};
+
     std::unordered_map<std::pair<ControlledGateOperation, KernelType>,
                        ControlledGateFunc, PairHash>
         controlled_gate_kernels_{};
@@ -133,8 +138,6 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
                        ControlledMatrixFunc, PairHash>
         controlled_matrix_kernels_{};
-
-    std::unordered_map<KernelType, std::string> kernel_names_{};
 
     DynamicDispatcher() {
         constexpr static auto gntr_names_without_prefix =
