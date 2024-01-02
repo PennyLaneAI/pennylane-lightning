@@ -43,7 +43,7 @@ jobs:
         with:
           path-type: inherit
           msystem: MINGW64
-          install: mingw-w64-lapack
+          install: mingw-w64-clang-x86_64-blas mingw-w64-lapack mingw-w64-clang-x86_64-lapacke
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
