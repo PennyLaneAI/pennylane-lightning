@@ -121,8 +121,6 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     std::unordered_map<KernelType, std::string> kernel_names_{};
 
-    // Defining controlled gates before `kernel_names_` triggers
-    // `assignKernelForOp` before registering kernels at run time.
     std::unordered_map<std::string, ControlledGateOperation>
         str_to_controlled_gates_{};
 
