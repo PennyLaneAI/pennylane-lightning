@@ -553,17 +553,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: List before download
-        run: ls -ltrah
+        with:
+          fetch-tags: true
+          path: main
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-
-      - name: List after download
-        run: ls -ltrah
 
       - name: Combine coverage files
         run: |
