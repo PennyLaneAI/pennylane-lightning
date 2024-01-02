@@ -103,9 +103,21 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    #if(MSVC)
-    #    message(FATAL_ERROR "LAPACK is not supported for Windows.")
-    #endif()
+    if(MSVC)
+        #message(FATAL_ERROR "LAPACK is not supported for Windows.")
+        find_package(BLAS REQUIRED)
+        find_package(LAPACK REQUIRED)
+        set(LAPACK_LINKER_FLAGS -llapacke -llapack -lblas)
+        set(LAPACKE_DIR $ENV{LAPACK}/LAPACKE)
+        set(LINK_FLAGS "${LINK_FLAGS} ${LAPACK_LINKER_FLAGS}")
+        set(LAPACK_LIBRARIES ${LAPACK_LIBRARIES} ${LAPACKE_LIB})
+        message(STATUS ${LAPACK_LIBRARIES})
+
+        target_link_libraries(lightning_external_libs INTERFACE ${LAPACK_LIBRARIES})
+
+        target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
+
+    endif()
 
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

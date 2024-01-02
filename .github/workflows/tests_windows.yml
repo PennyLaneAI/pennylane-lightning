@@ -43,10 +43,7 @@ jobs:
         with:
           path-type: inherit
           msystem: MINGW64
-          install: mingw-w64-x86_64-gcc-fortran
-      
-      - name: Verify gfortran installation
-        run: gfortran --version
+          install: mingw-w64-x86_64-lapacke
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
