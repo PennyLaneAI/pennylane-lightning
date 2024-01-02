@@ -568,7 +568,7 @@ jobs:
       - name: Combine coverage files
         run: |
           python -m pip install coverage 
-          python -m coverage combine 
+          python -m coverage combine .coverage-python*
           python -m coverage xml -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
