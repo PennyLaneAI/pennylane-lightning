@@ -40,10 +40,10 @@ jobs:
       
       - name: Install gfortran
         uses: msys2/setup-msys2@v2
-        with:
-          path-type: inherit
-          msystem: MINGW64
-          install: mingw-w64-clang-x86_64-blas mingw-w64-lapack mingw-w64-clang-x86_64-lapacke
+        run: |
+          pacman - S --noconfirm mingw-w64-clang-x86_64-blas
+          pacman - S --noconfirm mingw-w64-lapack 
+          pacman - S --noconfirm mingw-w64-clang-x86_64-lapacke
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
