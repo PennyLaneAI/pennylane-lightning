@@ -680,6 +680,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             sv0.applyOperation("CNOT", {control, wire});
             sv1.applyOperation("PauliX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -688,12 +689,14 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
         if (control != 0 && wire != 0) {
             sv0.applyOperation("Toffoli", {0, control, wire});
             sv1.applyOperation("PauliX", std::vector<size_t>{0, control},
+                               std::vector<bool>{true, true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
 
             sv0.applyOperation("Toffoli", {control, 0, wire});
             sv1.applyOperation("PauliX", std::vector<size_t>{control, 0},
+                               std::vector<bool>{true, true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -711,6 +714,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             sv0.applyOperation("CY", {control, wire});
             sv1.applyOperation("PauliY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -728,6 +732,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             sv0.applyOperation("CZ", {control, wire});
             sv1.applyOperation("PauliZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -758,6 +763,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv1.updateData(st0);
             sv0.applyOperation("CSWAP", {control, wire0, wire1});
             sv1.applyOperation("SWAP", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
