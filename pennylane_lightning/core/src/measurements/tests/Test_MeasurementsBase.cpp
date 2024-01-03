@@ -597,7 +597,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
             REQUIRE_THROWS_WITH(
                 Measurer.expval(obs, num_shots, shots_range),
                 Catch::Matchers::Contains(
-                    "expval calculation is not supported by shots"));
+                    "Hermitian observables do not support shot measurement."));
             REQUIRE(obs.getCoeffs().size() == 0);
         }
 
@@ -940,6 +940,43 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
             auto expected = Measurer.var(*obs);
             auto result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" full wires"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            auto X2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{2});
+            auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{1});
+            auto Z0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            auto obs = TensorProdObs<StateVectorT>::create({X2, Y1, Z0});
+            auto expected = Measurer.var(*obs);
+            auto result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION(" full wires with apply operations"
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 10000;
+            auto X2 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<size_t>{2});
+            auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{1});
+            auto Z0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliZ", std::vector<size_t>{0});
+            auto obs = TensorProdObs<StateVectorT>::create({X2, Y1, Z0});
+
+            statevector.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
+                                        {{0}, {1}, {2}, {2}},
+                                        {false, false, false, false});
+
+            Measurements<StateVectorT> Measurer0(statevector);
+
+            auto expected = Measurer0.var(*obs);
+            auto result = Measurer0.var(*obs, num_shots);
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
 
@@ -1328,7 +1365,7 @@ TEST_CASE("Var Shot - HamiltonianObs ", "[MeasurementsBase][Observables]") {
     }
 }
 
-template <typename TypeList> void testSparseHObsExpvalShot() {
+template <typename TypeList> void testSparseHObsMeasureShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
@@ -1348,22 +1385,32 @@ template <typename TypeList> void testSparseHObsExpvalShot() {
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
-        DYNAMIC_SECTION("Failed for SparseH "
+        DYNAMIC_SECTION("Failed for expval "
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 1000;
             std::vector<size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.expval(*sparseH, num_shots, shots_range),
-                Catch::Matchers::Contains(
-                    "expval calculation is not supported by shots"));
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not support shot measurement."));
         }
 
-        testSparseHObsExpvalShot<typename TypeList::Next>();
+        DYNAMIC_SECTION("Failed for var "
+                        << StateVectorToName<StateVectorT>::name) {
+            size_t num_shots = 1000;
+            std::vector<size_t> shots_range = {};
+            REQUIRE_THROWS_WITH(
+                Measurer.var(*sparseH, num_shots),
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
+                                          "not support shot measurement."));
+        }
+
+        testSparseHObsMeasureShot<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Expval Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
+TEST_CASE("Measure Shot - SparseHObs ", "[MeasurementsBase][Observables]") {
     if constexpr (BACKEND_FOUND) {
-        testSparseHObsExpvalShot<TestStateVectorBackends>();
+        testSparseHObsMeasureShot<TestStateVectorBackends>();
     }
 }

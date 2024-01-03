@@ -133,18 +133,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         PrecisionT result{0.0};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
-            // SparseHamiltonian does not support samples in pennylane.
-            PL_ABORT("For SparseHamiltonian Observables, expval calculation is "
-                     "not supported by shots");
-        } else if (obs.getObsName().find("Hermitian") != std::string::npos) {
-            // TODO support. This support requires an additional method to solve
-            // eigenpair and unitary matrices, and the results of eigenpair and
-            // unitary matrices data need to be added to the Hermitian class and
-            // public methods are need to access eigen values. Note the
-            // assumption that eigen values are -1 and 1 in the
-            // `measurement_with_sample` method should be updated as well.
-            PL_ABORT("For Hermitian Observables, expval calculation is not "
-                     "supported by shots");
+            // SparseHamiltonian does not support shot measurement in pennylane.
+            PL_ABORT("SparseHamiltonian observables do not support shot "
+                     "measurement.");
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
             auto obsTerms = obs.getObs();
@@ -174,7 +165,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto measure_with_samples(const Observable<StateVectorT> &obs,
                               const size_t &num_shots,
-                              const std::vector<size_t> &shot_range) {
+                              const std::vector<size_t> &shot_range)
+        -> std::vector<PrecisionT> {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> obs_wires;
         std::vector<std::vector<PrecisionT>> eigenValues;
@@ -214,8 +206,25 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Variance of the given observable.
      */
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots) {
-        if (obs.getObsName().find("Hamiltonian") == std::string::npos) {
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        PrecisionT result{0.0};
+        if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
+            // SparseHamiltonian does not support shot measurement in pennylane.
+            PL_ABORT("SparseHamiltonian observables do not support shot "
+                     "measurement.");
+        } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
+            // Branch for Hamiltonian observables
+            auto coeffs = obs.getCoeffs();
+            auto obs_terms = obs.getObs();
+
+            size_t obs_term_idx = 0;
+            for (const auto &coeff : coeffs) {
+                result +=
+                    coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
+                obs_term_idx++;
+            }
+        } else {
             auto obs_samples = measure_with_samples(obs, num_shots, {});
             auto square_mean =
                 std::accumulate(obs_samples.begin(), obs_samples.end(), 0.0) /
@@ -226,18 +235,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                                     return acc + element * element;
                                 }) /
                 obs_samples.size();
-            PrecisionT result = mean_square - square_mean * square_mean;
-            return result;
-        }
-        // Branch for Hamiltonian observables
-        auto coeffs = obs.getCoeffs();
-        auto obs_terms = obs.getObs();
-
-        PrecisionT result{0.0};
-        size_t obs_term_idx = 0;
-        for (const auto &coeff : coeffs) {
-            result += coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
-            obs_term_idx++;
+            result = mean_square - square_mean * square_mean;
         }
         return result;
     }
@@ -252,7 +250,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0) {
+    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
@@ -443,7 +442,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
                        const size_t &num_shots,
                        const std::vector<size_t> &shot_range,
                        std::vector<size_t> &obs_wires,
-                       std::vector<std::vector<PrecisionT>> &eigenValues) {
+                       std::vector<std::vector<PrecisionT>> &eigenValues)
+        -> std::vector<size_t> {
         const size_t num_qubits = _statevector.getTotalNumQubits();
         std::vector<size_t> samples;
         if constexpr (std::is_same_v<
