@@ -25,9 +25,11 @@ namespace Pennylane::LightningQubit::Gates::Pragmas {
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
 #define PRAGMA_WRAP(S) _Pragma(#S)
 #define PL_LOOP_PARALLEL(x) PRAGMA_WRAP(omp parallel for collapse(x))
+#define PL_LOOP_PARALLEL_VA(x, ...) PRAGMA_WRAP(omp parallel for collapse(x) __VA_ARGS__)
 #define PL_LOOP_SIMD PRAGMA_WRAP(omp simd)
 #else
 #define PL_LOOP_PARALLEL(N)
+#define PL_LOOP_PARALLEL_VA(N, ...)
 #define PL_LOOP_SIMD
 #endif
 
