@@ -18,6 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from warnings import warn
+from pathlib import Path
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
@@ -183,6 +184,7 @@ if LK_CPP_BINARY_AVAILABLE:
         operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
+        config = Path(__file__).parent / "lightning_kokkos.toml"
 
         def __init__(
             self,

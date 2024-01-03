@@ -2290,6 +2290,7 @@ TEMPLATE_TEST_CASE(
             sv0.applyOperation("ControlledPhaseShift", {control, wire}, inverse,
                                {param});
             sv1.applyOperation("PhaseShift", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire}, inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -2309,6 +2310,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyOperation("CRX", {control, wire}, inverse, {param});
             sv1.applyOperation("RX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire}, inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -2328,6 +2330,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyOperation("CRY", {control, wire}, inverse, {param});
             sv1.applyOperation("RY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire}, inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -2347,6 +2350,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyOperation("CRZ", {control, wire}, inverse, {param});
             sv1.applyOperation("RZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire}, inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
@@ -2396,6 +2400,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingXX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1}, inverse,
                                {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2418,6 +2423,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingXY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1}, inverse,
                                {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2440,6 +2446,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingYY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1}, inverse,
                                {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2462,6 +2469,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("IsingZZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1}, inverse,
                                {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2484,6 +2492,7 @@ TEMPLATE_TEST_CASE(
 
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation("SingleExcitation", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1}, inverse,
                                {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2508,7 +2517,8 @@ TEMPLATE_TEST_CASE(
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation(
                 "SingleExcitationMinus", std::vector<size_t>{control},
-                std::vector<size_t>{wire0, wire1}, inverse, {param});
+                std::vector<bool>{true}, std::vector<size_t>{wire0, wire1},
+                inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -2531,7 +2541,8 @@ TEMPLATE_TEST_CASE(
             sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
             sv1.applyOperation(
                 "SingleExcitationPlus", std::vector<size_t>{control},
-                std::vector<size_t>{wire0, wire1}, inverse, {param});
+                std::vector<bool>{true}, std::vector<size_t>{wire0, wire1},
+                inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -2586,6 +2597,7 @@ TEMPLATE_TEST_CASE(
             sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
                             inverse);
             sv1.applyOperation("DoubleExcitation", std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1, wire2, wire3},
                                inverse, {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2614,6 +2626,7 @@ TEMPLATE_TEST_CASE(
                             inverse);
             sv1.applyOperation("DoubleExcitationMinus",
                                std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1, wire2, wire3},
                                inverse, {param});
             REQUIRE(sv0.getDataVector() ==
@@ -2642,6 +2655,7 @@ TEMPLATE_TEST_CASE(
                             inverse);
             sv1.applyOperation("DoubleExcitationPlus",
                                std::vector<size_t>{control},
+                               std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1, wire2, wire3},
                                inverse, {param});
             REQUIRE(sv0.getDataVector() ==
