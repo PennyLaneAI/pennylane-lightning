@@ -25,6 +25,9 @@
 
 ### Breaking changes
 
+* Set the default version of Kokkos to 4.2.00 throughout the project (CMake, CI, etc.)
+  [(#578)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/578)
+
 * Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
@@ -67,6 +70,9 @@
 
 ### Bug fixes
 
+* Fix CodeCov file contention issue when uploading data from many workloads.
+  [(#584)](https://github.com/PennyLaneAI/pennylane-lightning/pull/584)
+
 * Ensure the `lightning.gpu` intermediate wheel builds are uploaded to TestPyPI.
   [(#575)](https://github.com/PennyLaneAI/pennylane-lightning/pull/575)
 
@@ -87,6 +93,9 @@
 
 * Fix the issue with assigning kernels to ops before registering kernels on macOS
   [(#582)](https://github.com/PennyLaneAI/pennylane-lightning/pull/582)
+
+* Update `MANIFEST.in` to include device config files and `CHANGELOG.md`
+  [(#585)](https://github.com/PennyLaneAI/pennylane-lightning/pull/585)
 
 ### Contributors
 
