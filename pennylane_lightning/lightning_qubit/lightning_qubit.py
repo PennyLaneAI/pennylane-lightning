@@ -225,6 +225,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             # state as an array of dimension [2]*wires.
             self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
+            self._c_dtype = c_dtype
 
             self._batch_obs = batch_obs
             self._mcmc = mcmc
@@ -276,9 +277,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                 representing the statevector of the basis state
             Note: This function does not support broadcasted inputs yet.
             """
-            state = np.zeros(2**self.num_wires, dtype=np.complex128)
+            state = allocate_aligned_array(2**self.num_wires, np.dtype(self.C_DTYPE), True)
             state[index] = 1
-            state = self._asarray(state, dtype=self.C_DTYPE)
             return self._reshape(state, [2] * self.num_wires)
 
         def reset(self):
