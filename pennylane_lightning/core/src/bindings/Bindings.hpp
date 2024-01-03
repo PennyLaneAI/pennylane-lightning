@@ -175,6 +175,7 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size,
  */
 auto allocateAlignedArray(size_t size, const py::dtype &dt,
                           bool zeroInit = false) -> py::array {
+    // TODO: Move memset operations to here to reduce zeroInit pass-throughs.
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(py::dtype::of<float>())) {
