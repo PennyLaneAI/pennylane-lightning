@@ -70,6 +70,9 @@
 
 ### Bug fixes
 
+* Fix CodeCov file contention issue when uploading data from many workloads.
+  [(#584)](https://github.com/PennyLaneAI/pennylane-lightning/pull/584)
+
 * Ensure the `lightning.gpu` intermediate wheel builds are uploaded to TestPyPI.
   [(#575)](https://github.com/PennyLaneAI/pennylane-lightning/pull/575)
 
