@@ -91,6 +91,9 @@
 * Fix the issue with assigning kernels to ops before registering kernels on macOS
   [(#582)](https://github.com/PennyLaneAI/pennylane-lightning/pull/582)
 
+* Update `MANIFEST.in` to include device config files and `CHANGELOG.md`
+  [(#585)](https://github.com/PennyLaneAI/pennylane-lightning/pull/585)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
