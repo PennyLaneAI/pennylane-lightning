@@ -70,6 +70,9 @@
 * Fix CodeCov file contention issue when uploading data from many workloads.
   [(#584)](https://github.com/PennyLaneAI/pennylane-lightning/pull/584)
 
+* Ensure the `lightning.gpu` intermediate wheel builds are uploaded to TestPyPI.
+  [(#575)](https://github.com/PennyLaneAI/pennylane-lightning/pull/575)
+
 * Allow support for newer clang-tidy versions on non-x86_64 platforms.
   [(#567)](https://github.com/PennyLaneAI/pennylane-lightning/pull/567)
 
