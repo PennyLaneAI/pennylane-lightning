@@ -25,6 +25,9 @@
 
 ### Breaking changes
 
+* Set the default version of Kokkos to 4.2.00 throughout the project (CMake, CI, etc.)
+  [(#578)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/578)
+
 * Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 

@@ -19,7 +19,7 @@ env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  KOKKOS_VERSION: e542e989af99cb87881ee2a0d06916541ee76006
+  KOKKOS_VERSION: 4.2.00
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
 
@@ -39,7 +39,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.1.00"]
+        kokkos_version: ["4.2.00"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -110,7 +110,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.1.00"]
+        kokkos_version: ["4.2.00"]
 
     name: C++ tests (Kokkos)
     runs-on:
@@ -197,7 +197,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos", "all"]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.1.00"]
+        kokkos_version: ["4.2.00"]
 
     name: Python tests with Kokkos
     runs-on:
