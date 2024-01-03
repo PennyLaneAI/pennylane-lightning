@@ -21,11 +21,12 @@
 #include <catch2/catch.hpp>
 
 #include "CPUMemoryModel.hpp"
+#include "Gates.hpp"
+#include "StateVectorLQubitManaged.hpp"
 #include "TestHelpers.hpp" // PrecisionToName, createProductState
 #include "TestHelpersWires.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp" // INVSQRT2
-
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)
 #endif
@@ -39,9 +40,7 @@
 namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::Util;
-using Pennylane::Gates::getPhaseShift;
-using Pennylane::Gates::getRot;
-using Pennylane::Gates::getRZ;
+using namespace Pennylane::Gates;
 } // namespace
 /// @endcond
 
@@ -2264,3 +2263,403 @@ void testApplyMultiRZ() {
     }
 }
 PENNYLANE_RUN_TEST(MultiRZ);
+
+TEMPLATE_TEST_CASE(
+    "StateVectorLQubitManaged::applyOperation param one-qubit with controls",
+    "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3);
+    const size_t wire = GENERATE(0, 1, 2, 3);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    DYNAMIC_SECTION("N-controlled PhaseShift - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("ControlledPhaseShift", {control, wire}, inverse,
+                               {param});
+            sv1.applyOperation("PhaseShift", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire}, inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled RX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CRX", {control, wire}, inverse, {param});
+            sv1.applyOperation("RX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire}, inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled RY - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CRY", {control, wire}, inverse, {param});
+            sv1.applyOperation("RY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire}, inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled RZ - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CRZ", {control, wire}, inverse, {param});
+            sv1.applyOperation("RZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire}, inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorLQubitManaged::applyOperation param two-qubits with controls",
+    "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<TestType>;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3);
+    const size_t wire0 = GENERATE(0, 1, 2, 3);
+    const size_t wire1 = GENERATE(0, 1, 2, 3);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 4; i++) {
+            cmatrix[i * 8 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 4; i++) {
+            for (std::size_t j = 0; j < 4; j++) {
+                cmatrix[(i + 4) * 8 + j + 4] = matrix[i * 4 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    DYNAMIC_SECTION("N-controlled IsingXX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getIsingXX<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("IsingXX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled IsingXY - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getIsingXY<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("IsingXY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled IsingYY - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getIsingYY<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("IsingYY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled IsingZZ - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getIsingZZ<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("IsingZZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SingleExcitation - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getSingleExcitation<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("SingleExcitation", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SingleExcitationMinus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix =
+                getSingleExcitationMinus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation(
+                "SingleExcitationMinus", std::vector<size_t>{control},
+                std::vector<bool>{true}, std::vector<size_t>{wire0, wire1},
+                inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SingleExcitationPlus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix =
+                getSingleExcitationPlus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation(
+                "SingleExcitationPlus", std::vector<size_t>{control},
+                std::vector<bool>{true}, std::vector<size_t>{wire0, wire1},
+                inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorLQubitManaged::applyOperation param four-qubits with controls",
+    "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<TestType>;
+    std::mt19937 re{1337};
+    const int num_qubits = 5;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire0 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire1 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire2 = GENERATE(0, 1, 2, 3, 4);
+    const size_t wire3 = GENERATE(0, 1, 2, 3, 4);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 16; i++) {
+            cmatrix[i * 32 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 16; i++) {
+            for (std::size_t j = 0; j < 16; j++) {
+                cmatrix[(i + 16) * 32 + j + 16] = matrix[i * 16 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitation - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix = getDoubleExcitation<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitation", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitationMinus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix =
+                getDoubleExcitationMinus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitationMinus",
+                               std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled DoubleExcitationPlus - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << ", " << wire2
+                    << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto matrix =
+                getDoubleExcitationPlus<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1, wire2, wire3},
+                            inverse);
+            sv1.applyOperation("DoubleExcitationPlus",
+                               std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1, wire2, wire3},
+                               inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}

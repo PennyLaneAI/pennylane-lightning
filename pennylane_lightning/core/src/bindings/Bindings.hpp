@@ -71,6 +71,21 @@ using namespace Pennylane::LightningKokkos::Measures;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLGPU == 1
+#include "AdjointJacobianGPU.hpp"
+#include "LGPUBindings.hpp"
+#include "MeasurementsGPU.hpp"
+#include "ObservablesGPU.hpp"
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Algorithms;
+using namespace Pennylane::LightningGPU::Observables;
+using namespace Pennylane::LightningGPU::Measures;
+} // namespace
+  /// @endcond
+
 #else
 
 static_assert(false, "Backend not found.");
@@ -272,7 +287,8 @@ void registerInfo(py::module_ &m) {
  * @tparam StateVectorT
  * @param m Pybind module
  */
-template <class StateVectorT> void registerObservables(py::module_ &m) {
+template <class StateVectorT>
+void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ComplexT =
@@ -504,6 +520,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                       const std::vector<std::vector<size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
+        .def(py::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &,
+                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<bool>> &>())
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
@@ -511,6 +534,11 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << ", 'controlled_wires': "
+                           << ops.getOpsControlledWires()[op];
+                ops_stream << ", 'controlled_values': "
+                           << ops.getOpsControlledValues()[op];
+                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
                 ops_stream << "}";
                 if (op < ops.getSize() - 1) {
                     ops_stream << ",";
@@ -521,7 +549,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
 
     /**
      * Create operation list.
-     * */
+     */
     std::string function_name = "create_ops_listC" + bitsize;
     m.def(
         function_name.c_str(),
@@ -529,7 +557,9 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
            const std::vector<std::vector<PrecisionT>> &ops_params,
            const std::vector<std::vector<size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
             for (size_t op = 0; op < ops_name.size(); op++) {
@@ -541,8 +571,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                         std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<StateVectorT>{ops_name, ops_params, ops_wires,
-                                         ops_inverses, conv_matrices};
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
         },
         "Create a list of operations from data.");
 
@@ -553,6 +588,31 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     py::class_<AdjointJacobian<StateVectorT>>(m, class_name.c_str(),
                                               py::module_local())
         .def(py::init<>())
+#ifdef _ENABLE_PLGPU
+        .def(
+            "batched",
+            [](AdjointJacobian<StateVectorT> &adjoint_jacobian,
+               const StateVectorT &sv,
+               const std::vector<std::shared_ptr<Observable<StateVectorT>>>
+                   &observables,
+               const OpsData<StateVectorT> &operations,
+               const std::vector<size_t> &trainableParams) {
+                using PrecisionT = typename StateVectorT::PrecisionT;
+                std::vector<PrecisionT> jac(observables.size() *
+                                                trainableParams.size(),
+                                            PrecisionT{0.0});
+                const JacobianData<StateVectorT> jd{
+                    operations.getTotalNumParams(),
+                    sv.getLength(),
+                    sv.getData(),
+                    observables,
+                    operations,
+                    trainableParams};
+                adjoint_jacobian.batchAdjointJacobian(std::span{jac}, jd);
+                return py::array_t<PrecisionT>(py::cast(jac));
+            },
+            "Batch Adjoint Jacobian method.")
+#endif
         .def("__call__", &registerAdjointJacobian<StateVectorT>,
              "Adjoint Jacobian method.");
 }
@@ -587,7 +647,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     /* Observables submodule */
     py::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerObservables<StateVectorT>(obs_submodule);
+    registerBackendAgnosticObservables<StateVectorT>(obs_submodule);
+    registerBackendSpecificObservables<StateVectorT>(obs_submodule);
 
     //***********************************************************************//
     //                             Measurements
@@ -596,7 +657,11 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
+#ifdef _ENABLE_PLGPU
+    pyclass_measurements.def(py::init<StateVectorT &>());
+#else
     pyclass_measurements.def(py::init<const StateVectorT &>());
+#endif
     registerBackendAgnosticMeasurements<StateVectorT>(pyclass_measurements);
     registerBackendSpecificMeasurements<StateVectorT>(pyclass_measurements);
 

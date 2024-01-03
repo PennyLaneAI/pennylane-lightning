@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        exec_model: [\"SERIAL\"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
@@ -52,10 +52,7 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
-          git clone https://github.com/kokkos/kokkos.git
-          cd D:\a\kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd ..
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
 
       - name: Create installation directory
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -91,9 +88,9 @@ jobs:
       matrix:
         os: [windows-2022]
         arch: [AMD64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
+        exec_model: [\"SERIAL\"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11" }')[matrix.cibw_build] }})
@@ -133,7 +130,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: |
-            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+            python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@master
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
@@ -186,7 +183,7 @@ jobs:
     strategy:
       matrix:
         arch: [AMD64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}

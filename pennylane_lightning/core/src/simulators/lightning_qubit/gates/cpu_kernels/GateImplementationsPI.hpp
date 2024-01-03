@@ -96,7 +96,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GateOperation::DoubleExcitation,
         GateOperation::DoubleExcitationMinus,
         GateOperation::DoubleExcitationPlus,
-        GateOperation::MultiRZ};
+        GateOperation::MultiRZ,
+    };
 
     constexpr static std::array implemented_generators = {
         GeneratorOperation::PhaseShift,
@@ -113,11 +114,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         GeneratorOperation::ControlledPhaseShift,
         GeneratorOperation::DoubleExcitation,
         GeneratorOperation::DoubleExcitationMinus,
-        GeneratorOperation::DoubleExcitationPlus};
+        GeneratorOperation::DoubleExcitationPlus,
+    };
 
     constexpr static std::array implemented_matrices = {
-        MatrixOperation::SingleQubitOp, MatrixOperation::TwoQubitOp,
-        MatrixOperation::MultiQubitOp};
+        MatrixOperation::SingleQubitOp,
+        MatrixOperation::TwoQubitOp,
+        MatrixOperation::MultiQubitOp,
+    };
+
+    constexpr static std::array<ControlledGateOperation, 0>
+        implemented_controlled_gates{};
+
+    constexpr static std::array<ControlledGeneratorOperation, 0>
+        implemented_controlled_generators{};
+
+    constexpr static std::array<ControlledMatrixOperation, 0>
+        implemented_controlled_matrices{};
 
     /**
      * @brief Apply a single qubit gate to the statevector.

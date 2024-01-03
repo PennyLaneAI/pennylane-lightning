@@ -63,10 +63,7 @@ jobs:
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          git clone https://github.com/kokkos/kokkos.git
-          cd kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd -
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
 
       - name: Build Kokkos core library
@@ -116,6 +113,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           mkdir Kokkos
           cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
@@ -155,7 +153,7 @@ jobs:
           CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
 
           CIBW_BEFORE_TEST: |
-            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+            python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@master
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
           CIBW_TEST_COMMAND: |

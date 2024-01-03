@@ -49,8 +49,43 @@ template <class StateVectorT> class OpsData {
     const std::vector<std::vector<size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<ComplexT>> ops_matrices_;
+    const std::vector<std::vector<size_t>> ops_controlled_wires_;
+    const std::vector<std::vector<bool>> ops_controlled_values_;
 
   public:
+    /**
+     * @brief Construct an OpsData object, representing the serialized
+     * operations to apply upon the `%StateVector`.
+     *
+     * @param ops_name Name of each operation to apply.
+     * @param ops_params Parameters for a given operation ({} if optional).
+     * @param ops_wires Wires upon which to apply operation.
+     * @param ops_inverses Value to represent whether given operation is
+     * adjoint.
+     * @param ops_matrices Numerical representation of given matrix if not
+     * supported.
+     * @param ops_controlled_wires Control wires
+     * @param ops_controlled_wires Control values
+     */
+    OpsData(std::vector<std::string> ops_name,
+            const std::vector<std::vector<PrecisionT>> &ops_params,
+            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<bool> ops_inverses,
+            std::vector<std::vector<ComplexT>> ops_matrices,
+            std::vector<std::vector<size_t>> ops_controlled_wires,
+            std::vector<std::vector<bool>> ops_controlled_values)
+        : num_par_ops_{0}, ops_name_{std::move(ops_name)},
+          ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_{std::move(ops_controlled_wires)},
+          ops_controlled_values_{std::move(ops_controlled_values)} {
+        for (const auto &p : ops_params) {
+            num_par_ops_ += static_cast<size_t>(!p.empty());
+        }
+        num_nonpar_ops_ = ops_params.size() - num_par_ops_;
+    };
+
     /**
      * @brief Construct an OpsData object, representing the serialized
      * operations to apply upon the `%StateVector`.
@@ -70,12 +105,12 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<ComplexT>> ops_matrices)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
-          ops_inverses_{std::move(ops_inverses)}, ops_matrices_{
-                                                      std::move(ops_matrices)} {
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_(ops_name.size()),
+          ops_controlled_values_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -95,13 +130,13 @@ template <class StateVectorT> class OpsData {
             std::vector<std::vector<size_t>> ops_wires,
             std::vector<bool> ops_inverses)
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
-          ops_wires_{std::move(ops_wires)}, ops_inverses_{std::move(
-                                                ops_inverses)},
-          ops_matrices_(ops_name.size()) {
+          ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_(ops_name.size()),
+          ops_controlled_wires_(ops_name.size()),
+          ops_controlled_values_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -139,6 +174,24 @@ template <class StateVectorT> class OpsData {
     [[nodiscard]] auto getOpsWires() const
         -> const std::vector<std::vector<size_t>> & {
         return ops_wires_;
+    }
+    /**
+     * @brief Get the controlled wires for each operation.
+     *
+     * @return const std::vector<std::vector<size_t>>&
+     */
+    [[nodiscard]] auto getOpsControlledWires() const
+        -> const std::vector<std::vector<size_t>> & {
+        return ops_controlled_wires_;
+    }
+    /**
+     * @brief Get the controlled values for each operation.
+     *
+     * @return const std::vector<std::vector<size_t>>&
+     */
+    [[nodiscard]] auto getOpsControlledValues() const
+        -> const std::vector<std::vector<bool>> & {
+        return ops_controlled_values_;
     }
     /**
      * @brief Get the adjoint flag for each operation.
@@ -203,10 +256,10 @@ template <class StateVectorT> class OpsData {
  */
 template <class StateVectorT> class JacobianData {
   private:
-    using ComplexT = typename StateVectorT::ComplexT;
+    using CFP_t = typename StateVectorT::CFP_t;
     size_t num_parameters; /**< Number of parameters in the tape */
     size_t num_elements;   /**< Length of the statevector data */
-    const ComplexT *psi;   /**< Pointer to the statevector data */
+    const CFP_t *psi;      /**< Pointer to the statevector data */
 
     /**
      * @var observables
@@ -249,7 +302,7 @@ template <class StateVectorT> class JacobianData {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(size_t num_params, size_t num_elem, const ComplexT *sv_ptr,
+    JacobianData(size_t num_params, size_t num_elem, const CFP_t *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                  OpsData<StateVectorT> ops, std::vector<size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),
@@ -278,11 +331,9 @@ template <class StateVectorT> class JacobianData {
     /**
      * @brief Get the pointer to the statevector data.
      *
-     * @return ComplexT *
+     * @return CFP_t *
      */
-    [[nodiscard]] auto getPtrStateVec() const -> const ComplexT * {
-        return psi;
-    }
+    [[nodiscard]] auto getPtrStateVec() const -> const CFP_t * { return psi; }
 
     /**
      * @brief Get observables for which to calculate Jacobian.

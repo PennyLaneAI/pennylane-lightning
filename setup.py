@@ -21,7 +21,7 @@ from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 
@@ -29,7 +29,7 @@ def get_backend():
     """Return backend.
 
     The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit".
+    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
     A dot can also be used instead of an underscore.
     If the environment variable ``PL_BACKEND`` is defined, its value is used.
     Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
@@ -91,6 +91,7 @@ class CMakeBuild(build_ext):
         super().finalize_options()
 
     def build_extension(self, ext: CMakeExtension):
+        self.build_temp = f"build_{backend}"
         extdir = str(Path(self.get_ext_fullpath(ext.name)).parent.absolute())
         debug = int(os.environ.get("DEBUG", 0)) if self.debug is None else self.debug
         build_type = "Debug" if debug else "RelWithDebInfo"
@@ -164,6 +165,7 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
+
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
@@ -171,19 +173,21 @@ requirements = [
     "pennylane>=0.32",
 ]
 
-packages_list = ['pennylane_lightning.'+backend]
+packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ['pennylane_lightning.core']
+    packages_list += ["pennylane_lightning.core"]
 else:
-    requirements += ["pennylane_lightning=="+version]
+    requirements += ["pennylane_lightning==" + version]
 
 suffix = backend.replace("lightning_", "")
+if suffix == "gpu":
+    suffix = suffix[0:].upper()
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 
-pkg_suffix = "" if suffix == "Qubit" else "_"+suffix
+pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
 info = {
     "name": f"PennyLane_Lightning{pkg_suffix}",
@@ -204,16 +208,23 @@ info = {
     else [CMakeExtension(f"{backend}_ops")],
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
+    "extras_require": {
+        "gpu": ["pennylane-lightning-gpu"],
+        "kokkos": ["pennylane-lightning-kokkos"],
+    },
 }
 
 if backend == "lightning_qubit":
-    info = info | {
-        "package_data": {
-            'pennylane_lightning.core': [
-                os.path.join("src", "*"),
-                os.path.join("src", "**", "*"),
-            ]
-        },}
+    info.update(
+        {
+            "package_data": {
+                "pennylane_lightning.core": [
+                    os.path.join("src", "*"),
+                    os.path.join("src", "**", "*"),
+                ]
+            },
+        }
+    )
 
 classifiers = [
     "Development Status :: 4 - Beta",

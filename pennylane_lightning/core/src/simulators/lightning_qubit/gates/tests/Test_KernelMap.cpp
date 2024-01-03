@@ -110,7 +110,7 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
         OperationKernelMap<Pennylane::Gates::GateOperation>::getInstance();
     SECTION("Single thread, large number of qubits") {
         // For large N, single thread calls "LM" for all single- and two-qubit
-        // gates. For k-qubit gates with k >= 3, we use PI.
+        // gates.
         auto gate_map = instance.getKernelMap(28, Threading::SingleThread,
                                               CPUMemoryModel::Unaligned);
         for_each_enum<Pennylane::Gates::GateOperation>(
@@ -123,9 +123,6 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
                                   gate_op) <= 2) {
                     REQUIRE(gate_map[gate_op] ==
                             Pennylane::Gates::KernelType::LM);
-                } else {
-                    REQUIRE(gate_map[gate_op] ==
-                            Pennylane::Gates::KernelType::PI);
                 }
             });
     }
@@ -196,7 +193,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp parallel default(none)                                             \
     shared(instance, records, rd, num_qubits, threadings, memory_models)       \
-        firstprivate(num_iter)
+    firstprivate(num_iter)
 #endif
     {
         std::mt19937 re;

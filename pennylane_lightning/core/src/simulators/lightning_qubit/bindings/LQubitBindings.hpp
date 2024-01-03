@@ -25,15 +25,17 @@
 #include "DynamicDispatcher.hpp"
 #include "GateOperation.hpp"
 #include "MeasurementsLQubit.hpp"
+#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "TypeList.hpp"
 #include "VectorJacobianProduct.hpp"
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningQubit::Measures;
-using namespace Pennylane::LightningQubit::Algorithms;
 using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningQubit::Algorithms;
+using namespace Pennylane::LightningQubit::Measures;
+using namespace Pennylane::LightningQubit::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitRaw;
 } // namespace
 /// @endcond
@@ -58,8 +60,9 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap] =
-        sv.getSupportedKernels();
+    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
+          ControlledGateKernelMap, ControlledGeneratorKernelMap,
+          ControlledMatrixKernelMap] = sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -81,16 +84,88 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
         res_map[key.c_str()] = value;
     }
+
+    for (const auto &[mat_op, kernel] : ControlledGateKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_gate_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledGeneratorKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_generator_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
     return res_map;
 }
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateVector<StateVectorT>(pyclass);
-
+    registerControlledGate<StateVectorT>(pyclass);
+    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+                "Apply controlled operation");
     pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
                 "Get internal kernels for operations");
 }
@@ -178,6 +253,58 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                      strides /* strides for each axis     */
                      ));
              });
+}
+
+/**
+ * @brief Register backend specific observables.
+ *
+ * @tparam StateVectorT
+ * @param m Pybind module
+ */
+template <class StateVectorT>
+void registerBackendSpecificObservables([[maybe_unused]] py::module_ &m) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision.
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+
+    std::string class_name;
+
+    class_name = "SparseHamiltonianC" + bitsize;
+    py::class_<SparseHamiltonian<StateVectorT>,
+               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
+               Observable<StateVectorT>>(m, class_name.c_str(),
+                                         py::module_local())
+        .def(py::init([](const np_arr_c &data,
+                         const std::vector<std::size_t> &indices,
+                         const std::vector<std::size_t> &indptr,
+                         const std::vector<std::size_t> &wires) {
+            using ComplexT = typename StateVectorT::ComplexT;
+            const py::buffer_info buffer_data = data.request();
+            const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
+
+            return SparseHamiltonian<StateVectorT>{
+                std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
+                indices, indptr, wires};
+        }))
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+             "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const SparseHamiltonian<StateVectorT> &self,
+               py::handle other) -> bool {
+                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                return self == other_cast;
+            },
+            "Compare two observables");
 }
 
 /**

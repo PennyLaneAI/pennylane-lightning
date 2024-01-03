@@ -8,6 +8,8 @@
 # Include this file only once
 include_guard()
 
+option(PLLGPU_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
+
 if (WIN32)
     # Increasing maximum full-path length allowed.
   message("Setting default path length to 240 characters")
@@ -76,16 +78,19 @@ if(ENABLE_NATIVE)
     target_compile_options(lightning_compile_options INTERFACE -march=native)
 endif()
 
+
+if(PLLGPU_DISABLE_CUDA_SAFETY)
+    target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
+endif()
+
 if(ENABLE_OPENMP)
     message(STATUS "ENABLE_OPENMP is ON.")
     find_package(OpenMP)
-
     if(NOT OpenMP_CXX_FOUND)
         message(FATAL_ERROR "OpenMP is enabled but not found.\n"
             "Install OpenMP or set ENABLE_OPENMP OFF.")
     endif()
-
-    target_link_libraries(lightning_compile_options INTERFACE OpenMP::OpenMP_CXX)
+    target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_OMP=1")
     target_link_libraries(lightning_external_libs INTERFACE OpenMP::OpenMP_CXX)
 else()
     message(STATUS "ENABLE_OPENMP is OFF.")

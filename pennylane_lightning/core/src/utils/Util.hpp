@@ -89,7 +89,7 @@ inline static constexpr auto ConstSum(std::complex<U> a, std::complex<T> b)
  * @return constexpr std::complex<T>{0.5,0}
  */
 template <class T> inline static constexpr auto HALF() -> std::complex<T> {
-    return {0.5, 0};
+    return {0.5, 0}; // NOLINT(cppcoreguidelines-avoid-magic-numbers)
 }
 
 /**
@@ -433,7 +433,7 @@ getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
     for (auto j : indicesToExclude) {
         for (size_t i = 0; i < indices.size(); i++) {
             if (j == indices[i]) {
-                indices.erase(indices.begin() + i);
+                indices.erase(indices.begin() + static_cast<int>(i));
             }
         }
     }
@@ -508,5 +508,29 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
         transposed_tensor[ind] = tensor[transposed_state_index(ind, new_axes)];
     }
     return transposed_tensor;
+}
+
+/**
+ * @brief Kronecker product of two diagonal matrices. Only diagonal elements are
+ * stored.
+ *
+ * @tparam T Data type.
+ * @param diagA A vector containing the values of a diagonal matrix.
+ * @param diagB A vector containing the values of a diagonal matrix.
+ * @return kronAB A vector containing the diagonal values of the Kronecker
+ * product.
+ */
+template <typename T>
+auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
+    -> std::vector<T> {
+    std::vector<T> result(diagA.size() * diagB.size(), 0);
+
+    for (size_t i = 0; i < diagA.size(); i++) {
+        for (size_t j = 0; j < diagB.size(); j++) {
+            result[i * diagB.size() + j] = diagA[i] * diagB[j];
+        }
+    }
+
+    return result;
 }
 } // namespace Pennylane::Util

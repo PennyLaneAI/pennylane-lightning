@@ -2,7 +2,11 @@
 [run]
 source = pennylane_lightning
 omit =
-    tests*
+    tests/*
+    mpitests/*
+
+[coverage:run]
+parallel = true
 
 [report]
 # Regexes for lines to exclude from consideration

@@ -20,6 +20,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "StateVectorLQubitManaged.hpp"
 #include "TestHelpers.hpp" // PrecisionToName, createProductState
 #include "TestHelpersWires.hpp"
 #include "TestKernels.hpp"
@@ -336,6 +337,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCY() {
         GateImplementation::applyCY(sv02.data(), num_qubits, {0, 2}, false);
         CHECK(sv02 == expected);
     }
+
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CY 1,2 |+10> -> i|+11> - "
                     << PrecisionToName<PrecisionT>::value) {
@@ -405,6 +407,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
         CHECK(sv02 == expected);
         CHECK(sv20 == expected);
     }
+
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CZ1,2 |+10> -> |+10> - "
                     << PrecisionToName<PrecisionT>::value) {
@@ -483,6 +486,7 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
         CHECK(sv02 == expected);
         CHECK(sv20 == expected);
     }
+
     DYNAMIC_SECTION(GateImplementation::name
                     << ", SWAP1,2 |+10> -> |+01> - "
                     << PrecisionToName<PrecisionT>::value) {
@@ -639,6 +643,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
                                        false);
         CHECK(sv102 == expected);
     }
+
     DYNAMIC_SECTION(GateImplementation::name
                     << ", CSWAP 2,1,0 |+10> -> |+10> - "
                     << PrecisionToName<PrecisionT>::value) {
@@ -651,3 +656,117 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     }
 }
 PENNYLANE_RUN_TEST(CSWAP);
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
+                   "one-qubit with controls",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3);
+    const size_t wire = GENERATE(0, 1, 2, 3);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    DYNAMIC_SECTION("N-controlled PauliX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CNOT", {control, wire});
+            sv1.applyOperation("PauliX", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+
+        if (control != 0 && wire != 0) {
+            sv0.applyOperation("Toffoli", {0, control, wire});
+            sv1.applyOperation("PauliX", std::vector<size_t>{0, control},
+                               std::vector<bool>{true, true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+
+            sv0.applyOperation("Toffoli", {control, 0, wire});
+            sv1.applyOperation("PauliX", std::vector<size_t>{control, 0},
+                               std::vector<bool>{true, true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PauliY - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CY", {control, wire});
+            sv1.applyOperation("PauliY", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PauliZ - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyOperation("CZ", {control, wire});
+            sv1.applyOperation("PauliZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
+                   "two-qubit with controls",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const size_t control = GENERATE(0, 1, 2, 3);
+    const size_t wire0 = GENERATE(0, 1, 2, 3);
+    const size_t wire1 = GENERATE(0, 1, 2, 3);
+    StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
+    StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
+
+    DYNAMIC_SECTION("N-controlled SWAP - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+            sv0.applyOperation("CSWAP", {control, wire0, wire1});
+            sv1.applyOperation("SWAP", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire0, wire1});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}

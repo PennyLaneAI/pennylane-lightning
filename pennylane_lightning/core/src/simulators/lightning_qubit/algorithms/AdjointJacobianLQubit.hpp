@@ -17,7 +17,6 @@
  * method.
  */
 #pragma once
-
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -113,7 +112,7 @@ class AdjointJacobian final
                     try {
                         states[h_i].updateData(reference_state.getData(),
                                                reference_state.getLength());
-                        this->applyObservable(states[h_i], *observables[h_i]);
+                        BaseType::applyObservable(states[h_i], *observables[h_i]);
                     } catch (...) {
                         #if defined(_OPENMP)
                             #pragma omp critical
@@ -137,7 +136,7 @@ class AdjointJacobian final
         } else {
             states[0].updateData(reference_state.getData(),
                                  reference_state.getLength());
-            this->applyObservable(states[0], *observables[0]);
+            BaseType::applyObservable(states[0], *observables[0]);
         }
     }
 
@@ -167,7 +166,7 @@ class AdjointJacobian final
         #endif
             for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
                 try {
-                    this->applyOperationAdj(states[st_idx], operations, op_idx);
+                    BaseType::applyOperationAdj(states[st_idx], operations, op_idx);
                 } catch (...) {
                     #if defined(_OPENMP)
                         #pragma omp critical
@@ -243,10 +242,9 @@ class AdjointJacobian final
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorLQubitManaged<PrecisionT> lambda(jd.getPtrStateVec(),
                                                     jd.getSizeStateVec());
-
         // Apply given operations to statevector if requested
         if (apply_operations) {
-            this->applyOperations(lambda, ops);
+            BaseType::applyOperations(lambda, ops);
         }
 
         const auto tp_rend = tp.rend();
@@ -301,16 +299,24 @@ class AdjointJacobian final
                 break; // All done
             }
             mu.updateData(lambda.getData(), lambda.getLength());
-            this->applyOperationAdj(lambda, ops, op_idx);
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     // if current parameter is a trainable parameter
                     const PrecisionT scalingFactor =
-                        mu.applyGenerator(ops_name[op_idx],
-                                          ops.getOpsWires()[op_idx],
-                                          !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? mu.applyGenerator(ops_name[op_idx],
+                                                ops.getOpsWires()[op_idx],
+                                                !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : mu.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     const size_t mat_row_idx =
                         trainableParamNumber * num_observables;

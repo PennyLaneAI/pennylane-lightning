@@ -2,18 +2,36 @@ name: Compat Check w/PL - stable/latest
 
 on:
   schedule:
-    - cron: "0 3 * * 1-5"  # Run daily at 3am Mon-Fri
+    - cron: "0 2 * * 1-5"  # Run daily at 3am Mon-Fri
   workflow_dispatch:
 
 jobs:
   tests_linux:
-    name: Lightning-Kokkos Compatibility test (tests_linux) - stable/latest
+    name: Lightning Compatibility test (tests_linux) - stable/latest
     uses: ./.github/workflows/tests_linux.yml
     with:
       lightning-version: stable
       pennylane-version: latest
+  tests_lkokkos_gpu:
+    name: Lightning Compatibility test (tests_lkokkos_gpu) - stable/latest
+    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    with:
+      lightning-version: stable
+      pennylane-version: latest
+  tests_lgpu_gpu:
+    name: Lightning Compatibility test (tests_lgpu_gpu) - stable/latest
+    uses: ./.github/workflows/tests_gpu_cu11.yml
+    with:
+      lightning-version: stable
+      pennylane-version: latest
+  tests_lgpu_gpu_mpi:
+    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - stable/latest
+    uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
+    with:
+      lightning-version: stable
+      pennylane-version: latest
   tests_without_binary:
-    name: Lightning-Kokkos Compatibility test (tests_without_binary) - stable/latest
+    name: Lightning Compatibility test (tests_without_binary) - stable/latest
     uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: stable

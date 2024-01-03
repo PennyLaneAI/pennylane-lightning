@@ -25,9 +25,9 @@ namespace Pennylane::Gates {
  * @brief Enum class for all gate operations
  */
 enum class GateOperation : uint32_t {
-    BEGIN = 1,
+    BEGIN = 0,
     /* Single-qubit gates */
-    Identity = 1,
+    Identity = 0,
     PauliX,
     PauliY,
     PauliZ,
@@ -69,13 +69,42 @@ enum class GateOperation : uint32_t {
     END
 };
 
+enum class ControlledGateOperation : uint32_t {
+    BEGIN = 0,
+    /* Single-qubit gates */
+    PauliX = 0,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    S,
+    T,
+    PhaseShift,
+    RX,
+    RY,
+    RZ,
+    /* Two-qubit gates */
+    SWAP,
+    IsingXX,
+    IsingXY,
+    IsingYY,
+    IsingZZ,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
+    /* END (placeholder) */
+    END
+};
+
 /**
  * @brief Enum class for all gate generators
  */
 enum class GeneratorOperation : uint32_t {
-    BEGIN = 1,
+    BEGIN = 0,
     /* Gate generators (only used internally for adjoint diff) */
-    PhaseShift = 1,
+    PhaseShift = 0,
     RX,
     RY,
     RZ,
@@ -98,15 +127,45 @@ enum class GeneratorOperation : uint32_t {
     END
 };
 
+enum class ControlledGeneratorOperation : uint32_t {
+    BEGIN = 0,
+    PhaseShift = 0,
+    RX,
+    RY,
+    RZ,
+    IsingXX,
+    IsingXY,
+    IsingYY,
+    IsingZZ,
+    SingleExcitation,
+    SingleExcitationMinus,
+    SingleExcitationPlus,
+    DoubleExcitation,
+    DoubleExcitationMinus,
+    DoubleExcitationPlus,
+    /* END (placeholder) */
+    END
+};
+
 /**
  * @brief Enum class for matrix operation
  */
 enum class MatrixOperation : uint32_t {
-    BEGIN = 1,
-    SingleQubitOp = 1,
+    BEGIN = 0,
+    SingleQubitOp = 0,
     TwoQubitOp,
     MultiQubitOp,
     /* END (placeholder) */
     END
 };
+
+enum class ControlledMatrixOperation : uint32_t {
+    BEGIN = 0,
+    NCSingleQubitOp = 0,
+    NCTwoQubitOp,
+    NCMultiQubitOp,
+    /* END (placeholder) */
+    END
+};
+
 } // namespace Pennylane::Gates

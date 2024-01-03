@@ -6,16 +6,22 @@ TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND?="$(if $(backend:-=),$(backend),lightning_qubit)"
 
-ifdef verbose
-    VERBOSE := --verbose
-else
-    VERBOSE :=
-endif
-
 ifdef check
     CHECK := --check
 else
     CHECK :=
+endif
+
+ifdef build_options
+    OPTIONS := $(build_options)
+else
+    OPTIONS :=
+endif
+
+ifdef verbose
+    VERBOSE := --verbose
+else
+    VERBOSE :=
 endif
 
 .PHONY: help
@@ -56,16 +62,7 @@ clean:
 	rm -rf .coverage coverage_html_report/
 	rm -rf pennylane_lightning/*_ops*
 
-.PHONY : test-builtin test-suite test-python coverage coverage-cpp test-cpp test-cpp-no-omp test-cpp-blas test-cpp-kokkos
-test-builtin:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
-
-test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
-
-test-python: test-builtin test-suite
-
+.PHONY : test-builtin test-suite test-python test-cpp coverage coverage-cpp 
 coverage:
 	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
@@ -75,7 +72,7 @@ coverage:
 coverage-cpp:
 	@echo "Generating cpp coverage report in BuildCov/out for $(PL_BACKEND) backend"
 	rm -rf ./BuildCov
-	cmake -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuildCov -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_COVERAGE=ON -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 	cmake --build ./BuildCov
 	cd ./BuildCov; for file in *runner ; do ./$file; done; \
 	lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info; \
@@ -83,12 +80,21 @@ coverage-cpp:
 
 build:
 	rm -rf ./Build
-	cmake -BBuild -G Ninja -DENABLE_BLAS=ON -DENABLE_KOKKOS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuild -G Ninja -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 	cmake --build ./Build $(VERBOSE)
+
+test-builtin:
+	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
+
+test-suite:
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
+
+test-python: test-builtin test-suite
 
 test-cpp:
 	rm -rf ./BuildTests
-	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_KOKKOS=ON -DENABLE_OPENMP=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
 	OMP_PROC_BIND=false ./BuildTests/$(target)
@@ -97,25 +103,19 @@ else
 	OMP_PROC_BIND=false cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
-test-cpp-blas:
-	rm -rf ./BuildTests
-	cmake -BBuildTests -G Ninja -DBUILD_TESTS=ON -DENABLE_BLAS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
-	cmake --build ./BuildTests $(VERBOSE)
-	cmake --build ./BuildTests $(VERBOSE) --target test
-
 .PHONY: format format-cpp
 format: format-cpp format-python
 
 format-cpp:
-	./bin/format $(CHECK) --cfversion $(if $(version:-=),$(version),0) ./pennylane_lightning
+	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	black -l 100 ./pennylane_lightning/ ./tests $(CHECK)
+	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
 
 .PHONY: check-tidy
 check-tidy:
 	rm -rf ./BuildTidy
-	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake -BBuildTidy -DENABLE_CLANG_TIDY=ON -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DCLANG_TIDY_BINARY=clang-tidy -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
 else
@@ -138,24 +138,24 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := 0.32.0
+    VERSION := 0.33.1
 endif
 docker-build:
-	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) .
+	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) --build-arg='LIGHTNING_VERSION=$(VERSION)' .
 docker-push:
 	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
 docker-build-all:
+	$(MAKE) docker-build target=lightning-qubit
 	$(MAKE) docker-build target=lightning-gpu
+	$(MAKE) docker-build target=lightning-kokkos-openmp
 	$(MAKE) docker-build target=lightning-kokkos-cuda
 	$(MAKE) docker-build target=lightning-kokkos-rocm
-	$(MAKE) docker-build target=lightning-kokkos-openmp
-	$(MAKE) docker-build target=lightning-qubit
 docker-push-all:
+	$(MAKE) docker-push target=lightning-qubit
 	$(MAKE) docker-push target=lightning-gpu
+	$(MAKE) docker-push target=lightning-kokkos-openmp
 	$(MAKE) docker-push target=lightning-kokkos-cuda
 	$(MAKE) docker-push target=lightning-kokkos-rocm
-	$(MAKE) docker-push target=lightning-kokkos-openmp
-	$(MAKE) docker-push target=lightning-qubit
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all

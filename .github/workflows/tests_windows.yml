@@ -1,5 +1,15 @@
 name: Testing (Windows)
 on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   push:
     branches:
       - master
@@ -11,6 +21,7 @@ concurrency:
 
 jobs:
   cpptests:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -61,13 +72,14 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
-
+          if-no-files-found: error
+          
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-
+          if-no-files-found: error
 
   win-set-matrix-x86:
     name: Set builder matrix
@@ -113,10 +125,7 @@ jobs:
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
-          git clone https://github.com/kokkos/kokkos.git
-          cd D:\a\kokkos
-          git checkout ${{ matrix.kokkos_version }}
-          cd ..
+          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
 
       - name: Create installation directory
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -146,11 +155,12 @@ jobs:
           cmake --install ./Build --config Debug --verbose
 
   cpptestswithkokkos:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_dependencies, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
@@ -221,12 +231,14 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+          if-no-files-found: error
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
 
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithkokkos]

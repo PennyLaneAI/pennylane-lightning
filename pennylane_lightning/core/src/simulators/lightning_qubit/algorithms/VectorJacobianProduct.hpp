@@ -135,10 +135,18 @@ class VectorJacobianProduct final
                     // if current parameter is a trainable parameter
                     mu_d.updateData(mu.getDataVector());
                     const auto scalingFactor =
-                        mu_d.applyGenerator(ops_name[op_idx],
-                                            ops.getOpsWires()[op_idx],
-                                            !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? mu_d.applyGenerator(
+                                  ops_name[op_idx], ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : mu_d.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     jac[trainable_param_idx] =
                         ComplexT{0.0, scalingFactor} *

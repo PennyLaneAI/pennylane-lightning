@@ -34,6 +34,21 @@ if device_name == "lightning.kokkos":
         TensorProdObsC128,
         HamiltonianC64,
         HamiltonianC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
+    )
+elif device_name == "lightning.gpu":
+    from pennylane_lightning.lightning_gpu_ops.observables import (
+        NamedObsC64,
+        NamedObsC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
+        HamiltonianC64,
+        HamiltonianC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
     )
 else:
     from pennylane_lightning.lightning_qubit_ops.observables import (
@@ -45,6 +60,8 @@ else:
         TensorProdObsC128,
         HamiltonianC64,
         HamiltonianC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
     )
 
 
@@ -81,6 +98,10 @@ def test_wrong_device_name():
         (qml.Projector([0], wires=0), HermitianObsC128),
         (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
         (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
+        (
+            qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
+            SparseHamiltonianC128,
+        ),
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):
@@ -106,7 +127,7 @@ class TestSerializeObs:
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -126,7 +147,7 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
         s_expected = hermitian_obs(
@@ -147,7 +168,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -171,7 +192,7 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -204,7 +225,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -246,7 +267,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -301,7 +322,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
 
@@ -353,7 +374,7 @@ class TestSerializeObs:
     def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms):
         """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
-        res = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
         assert len(res) == 1
@@ -379,7 +400,7 @@ class TestSerializeObs:
     def test_multi_wire_identity(self, use_csingle):
         """Tests that multi-wire Identity does not fail serialization."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
-        res = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+        res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, self.wires_dict
         )
         assert len(res) == 1
@@ -408,6 +429,58 @@ class TestSerializeOps:
                 [[0], [1], [0, 1]],
                 [False, False, False],
                 [[], [], []],
+                [[], [], []],
+                [[], [], []],
+            ),
+            False,
+        )
+        assert s == s_expected
+
+    def test_basic_circuit_not_implemented_ctrl_ops(self):
+        """Test expected serialization for a simple circuit"""
+        ops = qml.OrbitalRotation(0.1234, wires=range(4))
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=0)
+            qml.RY(0.6, wires=1)
+            qml.ctrl(ops, [4, 5])
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s_expected = (
+            (
+                ["RX", "RY", "QubitUnitary"],
+                [np.array([0.4]), np.array([0.6]), [0.0]],
+                [[0], [1], list(ops.wires)],
+                [False, False, False],
+                [[], [], [qml.matrix(ops)]],
+                [[], [], [4, 5]],
+            ),
+            False,
+        )
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
+        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
+        assert s[0][5] == s_expected[0][5]
+        assert s[1] == s_expected[1]
+
+    def test_multicontrolledx(self):
+        """Test expected serialization for a simple circuit"""
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.4, wires=0)
+            qml.RY(0.6, wires=1)
+            qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s_expected = (
+            (
+                ["RX", "RY", "PauliX"],
+                [np.array([0.4]), np.array([0.6]), []],
+                [[0], [1], [0]],
+                [False, False, False],
+                [[], [], []],
+                [[], [], [1, 2, 3]],
+                [[], [], [True, False, False]],
             ),
             False,
         )
@@ -431,6 +504,8 @@ class TestSerializeOps:
                 [[0.4], [0.6], []],
                 [[0], [1], [0, 1]],
                 [False, False, False],
+                [[], [], []],
+                [[], [], []],
                 [[], [], []],
             ),
             True,
@@ -483,6 +558,8 @@ class TestSerializeOps:
                 [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
                 [False, False, False, False, False, False],
                 [[], [], [], [], [], []],
+                [[], [], [], [], [], []],
+                [[], [], [], [], [], []],
             ),
             False,
         )
@@ -516,7 +593,7 @@ class TestSerializeOps:
                     "DoubleExcitationMinus",
                     "DoubleExcitationPlus",
                 ],
-                [[0.4], [0.6], [], [], [], [0.555], [0.555], [0.555]],
+                [[0.4], [0.6], [], [0.0], [], [0.555], [0.555], [0.555]],
                 [[0], [1], [0, 1], [0, 1], [0, 1, 2], [3, 2, 1, 0], [0, 1, 2, 3], [0, 1, 2, 3]],
                 [False, False, False, False, False, False, False, False],
                 [

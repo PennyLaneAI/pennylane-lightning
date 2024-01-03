@@ -5,11 +5,11 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of lightning to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
       pennylane-version:
         type: string
         required: true
-        description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
   push:
     branches:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -40,10 +40,18 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
           cd main
+          git fetch --tags --force
           git checkout $(git tag | sort -V | tail -1)
           git log -1 --format='%H'
           git status
@@ -55,8 +63,24 @@ jobs:
 
       - name: Get required Python packages
         run: |
+          rm -fr $(python -m pip cache dir)/selfcheck/
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v3
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
@@ -65,7 +89,7 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning package
-        if: ${{ matrix.pl_backend == 'lightning_kokkos'}}
+        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv

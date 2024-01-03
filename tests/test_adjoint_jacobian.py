@@ -23,6 +23,8 @@ from scipy.stats import unitary_group
 import pennylane as qml
 from pennylane import numpy as np
 from pennylane import QNode, qnode
+from pennylane import qchem
+
 
 I, X, Y, Z = (
     np.eye(2),
@@ -37,7 +39,10 @@ if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-fixture_params = itertools.product([np.complex64, np.complex128], kokkos_args)
+fixture_params = itertools.product(
+    [np.complex64, np.complex128],
+    kokkos_args,
+)
 
 
 def Rx(theta):
@@ -101,6 +106,8 @@ class TestAdjointJacobian:
             qml.state()
 
         if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+            message = "Adjoint differentiation does not support State measurements."
+        elif device_name == "lightning.gpu" and ld._CPP_BINARY_AVAILABLE:
             message = "Adjoint differentiation does not support State measurements."
         elif ld._CPP_BINARY_AVAILABLE:
             message = "This method does not support statevector return type."
@@ -174,13 +181,12 @@ class TestAdjointJacobian:
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_pauli_rotation_gradient(self, stateprep, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
-
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
         )
 
         tape = qml.tape.QuantumScript(
-            [G(theta, 0)], [qml.expval(qml.PauliZ(0))], [stateprep(random_state, 0)]
+            [stateprep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
         )
 
         tape.trainable_params = {1}
@@ -199,7 +205,6 @@ class TestAdjointJacobian:
     def test_Rot_gradient(self, stateprep, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
-
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
@@ -218,10 +223,35 @@ class TestAdjointJacobian:
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
+    @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_phaseshift_gradient(self, n_qubits, par, tol):
+        """Test that the gradient of the phaseshift gate matches the exact analytic formula."""
+        par = np.array(par)
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+        init_state = np.zeros(2**n_qubits)
+        init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
+
+        with qml.tape.QuantumTape() as tape:
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.ctrl(qml.PhaseShift(par, wires=n_qubits - 1), range(0, n_qubits - 1))
+            qml.expval(qml.PauliY(n_qubits - 1))
+
+        tape.trainable_params = {1}
+
+        exact = np.cos(par)
+        grad_A = dev.adjoint_jacobian(tape)
+
+        # different methods must agree
+        assert np.allclose(grad_A, exact, atol=tol, rtol=0)
+
     @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     def test_ry_gradient(self, par, tol, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-
         with qml.tape.QuantumTape() as tape:
             qml.RY(par, wires=[0])
             qml.expval(qml.PauliX(0))
@@ -353,7 +383,6 @@ class TestAdjointJacobian:
                 [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
             )
         )
-
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
@@ -375,7 +404,6 @@ class TestAdjointJacobian:
     def test_gradients_pauliz(self, op, obs, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
-
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.QuantumTape() as tape:
             qml.Hadamard(wires=0)
@@ -416,7 +444,6 @@ class TestAdjointJacobian:
     def test_gradients_hermitian(self, op, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
-
         # op.num_wires and op.num_params must be initialized a priori
         with qml.tape.QuantumTape() as tape:
             qml.Hadamard(wires=0)
@@ -447,7 +474,6 @@ class TestAdjointJacobian:
 
     def test_gradient_gate_with_multiple_parameters_pauliz(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
-
         x, y, z = [0.5, 0.3, -0.7]
 
         tape = qml.tape.QuantumScript(
@@ -557,12 +583,18 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
+        if device_name != "lightning.gpu":
+            dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
 
-        qml.execute([tape], dev, None)
-        dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
+            qml.execute([tape], dev, None)
+            dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
 
-        assert np.allclose(dM1, dM2, atol=tol, rtol=0)
+            assert np.allclose(dM1, dM2, atol=tol, rtol=0)
+        else:
+            state_vector = dev.state
+            qml.execute([tape], dev, None)
+            dM2 = dev.adjoint_jacobian(tape, starting_state=state_vector)
+            assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_provide_wrong_starting_state(self, dev):
@@ -584,7 +616,7 @@ class TestAdjointJacobian:
             dev.adjoint_jacobian(tape, starting_state=np.ones(7))
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
+        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
     )
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
@@ -663,6 +695,70 @@ class TestAdjointJacobianQNode:
         grad_F = grad_fn(*args)
 
         assert np.allclose(grad_A, grad_F, atol=tol, rtol=0)
+
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PhaseShift,
+            qml.RX,
+            qml.RY,
+            qml.RZ,
+            qml.IsingXX,
+            qml.IsingXY,
+            qml.IsingYY,
+            qml.IsingZZ,
+            qml.SingleExcitation,
+            qml.SingleExcitationMinus,
+            qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
+        ],
+    )
+    @pytest.mark.parametrize("control_value", [False, True])
+    @pytest.mark.parametrize("n_qubits", range(2, 6))
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
+        """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
+        par = np.array([0.1234, par, 0.5678])
+        dev = qml.device("lightning.qubit", wires=n_qubits)
+        np.random.seed(1337)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        if operation.num_wires > n_qubits:
+            return
+
+        for n_controls in range(0, n_qubits - operation.num_wires):
+            control_wires = range(n_controls, n_qubits - operation.num_wires)
+
+            def circuit(p):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RX(p[0], 0)
+                qml.ctrl(
+                    operation(p[1], wires=range(n_qubits - operation.num_wires, n_qubits)),
+                    control_wires,
+                    control_values=[
+                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                    ],
+                )
+                qml.RY(p[2], 0)
+                return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
+
+            circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
+            circ_ps = qml.QNode(circuit, dev, diff_method="finite-diff")
+            jac_ad = np.array(qml.jacobian(circ_ad)(par))
+            jac_ps = np.array(qml.jacobian(circ_ps)(par))
+
+            # different methods must agree
+            assert jac_ad.size == n_qubits * 3
+            assert np.allclose(jac_ad.shape, [n_qubits, 3])
+            assert np.allclose(jac_ad.shape, jac_ps.shape)
+            assert np.allclose(jac_ad, jac_ps, atol=tol, rtol=0)
 
     thetas = np.linspace(-2 * np.pi, 2 * np.pi, 8)
 
@@ -886,7 +982,10 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Lightning binary required",
+)
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -907,6 +1006,89 @@ def test_tape_qchem(tol):
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
 
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+def test_tape_qchem_sparse(tol):
+    """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
+
+    H, qubits = qml.qchem.molecular_hamiltonian(
+        ["H", "H"], np.array([0.0, 0.1, 0.0, 0.0, -0.1, 0.0])
+    )
+
+    H_sparse = H.sparse_matrix(range(4))
+
+    def circuit_sparse(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(qml.SparseHamiltonian(H_sparse, wires=range(4)))
+
+    def circuit(params):
+        circuit_ansatz(params, wires=range(4))
+        return qml.expval(H)
+
+    params = np.linspace(0, 29, 30) * 0.111
+
+    dev_ld = qml.device(device_name, wires=qubits)
+    dev_dq = qml.device("default.qubit", wires=qubits)
+
+    circuit_ld = qml.QNode(circuit_sparse, dev_ld, diff_method="adjoint")
+    circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
+
+    assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+
+
+custom_wires = ["alice", 3.14, -1, 0]
+
+
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.parametrize(
+    "returns",
+    [
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [0.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[1])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [2.0],
+                [qml.PauliX(wires=custom_wires[2]) @ qml.PauliZ(wires=custom_wires[0])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+        qml.SparseHamiltonian(
+            qml.Hamiltonian(
+                [1.1],
+                [qml.PauliX(wires=custom_wires[0]) @ qml.PauliZ(wires=custom_wires[2])],
+            ).sparse_matrix(custom_wires),
+            wires=custom_wires,
+        ),
+    ],
+)
+def test_adjoint_SparseHamiltonian(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+
+    dev = qml.device(device_name, wires=custom_wires)
+    dev_default = qml.device("default.qubit", wires=custom_wires)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return qml.expval(returns)
+
+    n_params = 30
+    np.random.seed(1337)
+    params = np.random.rand(n_params)
+
+    qnode = qml.QNode(circuit, dev, diff_method="adjoint")
+    qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
+
+    j_device = qml.jacobian(qnode)(params)
+    j_default = qml.jacobian(qnode_default)(params)
+
+    assert np.allclose(j_device, j_default)
 
 
 @pytest.mark.parametrize(
@@ -989,9 +1171,6 @@ def test_integration_chunk_observables():
     assert np.allclose(j_def, j_lightning_batched)
 
 
-custom_wires = ["alice", 3.14, -1, 0]
-
-
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1039,3 +1218,289 @@ def test_integration_custom_wires(returns):
     j_lightning = qml.jacobian(casted_to_array_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Tests only for lightning.gpu",
+)
+@pytest.mark.parametrize(
+    "returns",
+    [
+        (qml.PauliZ(custom_wires[0]),),
+        (qml.PauliZ(custom_wires[0]), qml.PauliZ(custom_wires[1])),
+        (qml.PauliZ(custom_wires[0]), qml.PauliZ(custom_wires[1]), qml.PauliZ(custom_wires[3])),
+        (
+            qml.PauliZ(custom_wires[0]),
+            qml.PauliZ(custom_wires[1]),
+            qml.PauliZ(custom_wires[3]),
+            qml.PauliZ(custom_wires[2]),
+        ),
+        (
+            qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+            qml.PauliZ(custom_wires[1]) @ qml.PauliY(custom_wires[2]),
+        ),
+        (qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]), qml.PauliZ(custom_wires[1])),
+    ],
+)
+def test_integration_custom_wires_batching(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+
+    dev_def = qml.device("default.qubit", wires=custom_wires)
+    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, batch_obs=True)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return [qml.expval(r) for r in returns] + [qml.expval(qml.PauliY(custom_wires[1]))]
+
+    n_params = 30
+    np.random.seed(1337)
+    params = np.random.rand(n_params)
+
+    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_def = qml.QNode(circuit, dev_def)
+
+    def convert_to_array_gpu(params):
+        return np.hstack(qnode_gpu(params))
+
+    def convert_to_array_def(params):
+        return np.hstack(qnode_def(params))
+
+    j_gpu = qml.jacobian(convert_to_array_gpu)(params)
+    j_def = qml.jacobian(convert_to_array_def)(params)
+
+    assert np.allclose(j_gpu, j_def, atol=1e-7)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    reason="Tests only for lightning.gpu",
+)
+@pytest.mark.parametrize(
+    "returns",
+    [
+        (0.5 * qml.PauliZ(custom_wires[0]),),
+        (0.5 * qml.PauliZ(custom_wires[0]), qml.PauliZ(custom_wires[1])),
+        (
+            qml.PauliZ(custom_wires[0]),
+            0.5 * qml.PauliZ(custom_wires[1]),
+            qml.PauliZ(custom_wires[3]),
+        ),
+        (
+            qml.PauliZ(custom_wires[0]),
+            qml.PauliZ(custom_wires[1]),
+            qml.PauliZ(custom_wires[3]),
+            0.5 * qml.PauliZ(custom_wires[2]),
+        ),
+        (
+            qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+            0.5 * qml.PauliZ(custom_wires[1]) @ qml.PauliY(custom_wires[2]),
+        ),
+        (
+            qml.PauliZ(custom_wires[0]) @ qml.PauliY(custom_wires[3]),
+            0.5 * qml.PauliZ(custom_wires[1]),
+        ),
+        (
+            0.0 * qml.PauliZ(custom_wires[0]) @ qml.PauliZ(custom_wires[1]),
+            1.0 * qml.Identity(10),
+            1.2 * qml.PauliZ(custom_wires[2]) @ qml.PauliZ(custom_wires[3]),
+        ),
+    ],
+)
+def test_batching_H(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations and when using custom wire labels"""
+
+    dev_cpu = qml.device("default.qubit", wires=custom_wires + [10, 72])
+    dev_gpu = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=True)
+    dev_gpu_default = qml.device(device_name, wires=custom_wires + [10, 72], batch_obs=False)
+
+    def circuit(params):
+        circuit_ansatz(params, wires=custom_wires)
+        return qml.math.hstack([qml.expval(r) for r in returns])
+
+    n_params = 30
+    np.random.seed(1337)
+    params = np.random.rand(n_params)
+
+    qnode_cpu = qml.QNode(circuit, dev_cpu, diff_method="parameter-shift")
+    qnode_gpu = qml.QNode(circuit, dev_gpu, diff_method="adjoint")
+    qnode_gpu_default = qml.QNode(circuit, dev_gpu_default, diff_method="adjoint")
+
+    def convert_to_array_cpu(params):
+        return np.hstack(qnode_cpu(params))
+
+    def convert_to_array_gpu(params):
+        return np.hstack(qnode_gpu(params))
+
+    def convert_to_array_gpu_default(params):
+        return np.hstack(qnode_gpu_default(params))
+
+    j_cpu = qml.jacobian(qnode_cpu)(params)
+    j_gpu = qml.jacobian(qnode_gpu)(params)
+    j_gpu_default = qml.jacobian(qnode_gpu_default)(params)
+
+    assert np.allclose(j_cpu, j_gpu)
+    assert np.allclose(j_gpu, j_gpu_default)
+
+
+@pytest.fixture(scope="session")
+def create_xyz_file(tmp_path_factory):
+    directory = tmp_path_factory.mktemp("tmp")
+    file = directory / "h2.xyz"
+    file.write_text("""2\nH2, Unoptimized\nH  1.0 0.0 0.0\nH -1.0 0.0 0.0""")
+    yield file
+
+
+@pytest.mark.skipif(
+    not ld._CPP_BINARY_AVAILABLE,
+    reason="Tests only for lightning.gpu",
+)
+@pytest.mark.parametrize(
+    "batches",
+    [False, True, 1, 2, 3, 4],
+)
+def test_integration_H2_Hamiltonian(create_xyz_file, batches):
+    _ = pytest.importorskip("openfermionpyscf")
+    n_electrons = 2
+    np.random.seed(1337)
+
+    str_path = create_xyz_file
+    symbols, coordinates = qml.qchem.read_structure(str(str_path), outpath=str(str_path.parent))
+
+    H, qubits = qml.qchem.molecular_hamiltonian(
+        symbols,
+        coordinates,
+        method="pyscf",
+        active_electrons=n_electrons,
+        name="h2",
+        outpath=str(str_path.parent),
+        load_data=True,
+    )
+    hf_state = qml.qchem.hf_state(n_electrons, qubits)
+    _, doubles = qml.qchem.excitations(n_electrons, qubits)
+
+    # Choose different batching supports here
+    dev = qml.device(device_name, wires=qubits, batch_obs=batches)
+    dev_comp = qml.device("default.qubit", wires=qubits)
+
+    @qml.qnode(dev, diff_method="adjoint")
+    def circuit(params, excitations):
+        qml.BasisState(hf_state, wires=H.wires)
+        for i, excitation in enumerate(excitations):
+            if len(excitation) == 4:
+                qml.DoubleExcitation(params[i], wires=excitation)
+            else:
+                qml.SingleExcitation(params[i], wires=excitation)
+        return qml.expval(H)
+
+    @qml.qnode(dev_comp, diff_method="parameter-shift")
+    def circuit_compare(params, excitations):
+        qml.BasisState(hf_state, wires=H.wires)
+
+        for i, excitation in enumerate(excitations):
+            if len(excitation) == 4:
+                qml.DoubleExcitation(params[i], wires=excitation)
+            else:
+                qml.SingleExcitation(params[i], wires=excitation)
+        return qml.expval(H)
+
+    jac_func = qml.jacobian(circuit)
+    jac_func_comp = qml.jacobian(circuit_compare)
+
+    params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
+    jacs = jac_func(params, excitations=doubles)
+    jacs_comp = jac_func_comp(params, excitations=doubles)
+
+    assert np.allclose(jacs, jacs_comp)
+
+
+@pytest.mark.parametrize("n_targets", range(1, 6))
+def test_qubit_unitary(n_targets):
+    """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
+    n_wires = 6
+    dev = qml.device(device_name, wires=n_wires)
+    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+
+    np.random.seed(1337)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = np.array(init_state, requires_grad=False)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
+    U, _ = np.linalg.qr(U)
+    U = np.array(U, requires_grad=False)
+
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
+    par = 2 * np.pi * np.random.rand(n_wires)
+
+    def circuit(x):
+        qml.StatePrep(init_state, wires=range(n_wires))
+        for i in range(n_wires // 2):
+            qml.RY(x[i], wires=i)
+        qml.QubitUnitary(U, wires=range(n_targets))
+        for i in range(n_wires // 2, n_wires):
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
+
+    circ = qml.QNode(circuit, dev, diff_method="adjoint")
+    circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    jac = qml.jacobian(circ)(par)
+    jac_ps = qml.jacobian(circ_ps)(par)
+    jac_def = qml.jacobian(circ_def)(par)
+
+    assert jac.size == n_wires
+    assert not np.allclose(jac, 0.0)
+    assert np.allclose(jac, jac_ps)
+    assert np.allclose(jac, jac_def)
+
+
+@pytest.mark.parametrize("n_targets", [1, 2])
+def test_diff_qubit_unitary(n_targets):
+    """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
+    n_wires = 6
+    dev = qml.device(device_name, wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
+    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+
+    np.random.seed(1337)
+    init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state = np.array(init_state, requires_grad=False)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
+    U, _ = np.linalg.qr(U)
+    U = np.array(U, requires_grad=False)
+
+    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+
+    par = 2 * np.pi * np.random.rand(n_wires)
+
+    def circuit(x, u_mat):
+        qml.StatePrep(init_state, wires=range(n_wires))
+        for i in range(n_wires // 2):
+            qml.RY(x[i], wires=i)
+        qml.QubitUnitary(u_mat, wires=range(n_targets))
+        for i in range(n_wires // 2, n_wires):
+            qml.RY(x[i], wires=i)
+        return qml.expval(obs)
+
+    circ = qml.QNode(circuit, dev, diff_method="adjoint")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", h=h)
+    circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
+    jacs = qml.jacobian(circ)(par, U)
+    jacs_def = qml.jacobian(circ_def)(par, U)
+    jacs_fd = qml.jacobian(circ_fd)(par, U)
+    jacs_ps = qml.jacobian(circ_ps)(par, U)
+
+    for jac, jac_def, jac_fd, jac_ps in zip(jacs, jacs_def, jacs_fd, jacs_ps):
+        assert not np.allclose(jac, 0.0)
+        assert np.allclose(jac, jac_fd)
+        assert np.allclose(jac, jac_ps)
+        assert np.allclose(jac, jac_def)

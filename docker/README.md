@@ -16,11 +16,11 @@ You can also check the Lightning-plugins documentation:
 Each image contains PennyLane and one of several high-performance plugins.
 Choose a version (e.g. `0.32.0`) and append a device (plugin) name among the following:
 
+- `lightning-qubit`: [pennylane-lightning](https://github.com/PennyLaneAI/pennylane-lightning) provides a fast state-vector simulator written in C++.
 - `lightning-gpu`: [pennylane-lightning-gpu](https://github.com/PennyLaneAI/pennylane-lightning-gpu) is a plugin based on the NVIDIA [cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
 - `lightning-kokkos-cuda`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [CUDA](https://developer.nvidia.com/cuda-toolkit) backend.
 - `lightning-kokkos-openmp`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [OpenMP](https://www.openmp.org/) backend.
 - `lightning-kokkos-rocm`: [pennylane-lightning-kokkos](https://github.com/PennyLaneAI/pennylane-lightning#lightning-kokkos-installation) parallelizes state-vector simulations using Kokkos' [HIP](https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html) backend.
-- `lightning-qubit`: [pennylane-lightning](https://github.com/PennyLaneAI/pennylane-lightning) provides a fast state-vector simulator written in C++.
 
 If you have Docker installed, download and spawn a container with `pennylane-lightning` as follows
 
@@ -55,11 +55,11 @@ pl-device-test --device lightning.qubit --shots 10000
 
 Decide on a target among:
 
+- `wheel-lightning-qubit`
 - `wheel-lightning-gpu`
 - `wheel-lightning-kokkos-cuda`
 - `wheel-lightning-kokkos-openmp`
 - `wheel-lightning-kokkos-rocm`
-- `wheel-lightning-qubit`
 
 For instance `TARGET=wheel-lightning-qubit`.
 Then the following command will build the target

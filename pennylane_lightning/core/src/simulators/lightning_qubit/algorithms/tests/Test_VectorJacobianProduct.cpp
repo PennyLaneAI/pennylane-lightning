@@ -55,6 +55,7 @@ template <class StateVectorT, class RandomEngine>
 auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
     -> OpsData<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
     using namespace Pennylane::LightningQubit::Gates;
 
     std::array gates_to_use = {Pennylane::Gates::GateOperation::RX,
@@ -79,7 +80,13 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
         ops_wires.emplace_back(createWires(gate_op, wires));
     }
 
-    return {ops_names, ops_params, ops_wires, ops_inverses, {{}}};
+    return {ops_names,
+            ops_params,
+            ops_wires,
+            ops_inverses,
+            std::vector<std::vector<ComplexT>>(length),
+            std::vector<std::vector<size_t>>(length),
+            std::vector<std::vector<bool>>(length)};
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
@@ -88,13 +95,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
-    using VectorT = TestVector<ComplexT>;
 
     using std::cos;
     using std::sin;
     using std::sqrt;
 
-    AdjointJacobian<StateVectorT> adj;
     VectorJacobianProduct<StateVectorT> vector_jacobian_product;
 
     constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
@@ -106,7 +111,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI / 7}}, // params
             {{0, 1}, {1}},    // wires
             {false, false},   // inverses
-            {}                // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -124,7 +128,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {theta}},  // params
             {{0, 1}, {1}},  // wires
             {false, false}, // inverses
-            {}              // matrices
         };
 
         auto dy = std::vector<ComplexT>(4);
@@ -183,7 +186,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{0, 1}, {1}, {1, 0}, {0}, {0, 1}, {1}, {1, 0}, {0}},     // wires
             {false, false, false, false, false, false, false,
              false}, // inverses
-            {}       // matrices
         };
 
         std::vector<ComplexT> expected_der0 = {
@@ -250,7 +252,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {M_PI / 7}}, // params
             {{0, 1}, {1}},    // wires
             {false, false},   // inverses
-            {}                // matrices
         };
 
         auto dy1 = std::vector<ComplexT>{
@@ -261,7 +262,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             {{}, {-M_PI / 7}}, // params
             {{0, 1}, {1}},     // wires
             {false, false},    // inverses
-            {}                 // matrices
         };
 
         auto dy2 = std::vector<ComplexT>{
@@ -284,8 +284,61 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
         REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
     }
 
+    SECTION("Test controlled complex dy") {
+        OpsData<StateVectorT> ops_data1{
+            {"PauliX", "RX"},       // names
+            {{}, {M_PI / 7}},       // params
+            {{1}, {1}},             // wires
+            {false, false},         // inverses
+            {{}, {}},               // matrices
+            {{0, 2}, {2}},          // controlled wires
+            {{true, true}, {true}}, // controlled values
+        };
+
+        auto dy1 = std::vector<ComplexT>{{0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}, {0.4, 0.4},
+                                         {0.4, 0.4}, {0.4, 0.4}};
+
+        OpsData<StateVectorT> ops_data2{
+            {"PauliX", "RX"},       // names
+            {{}, {-M_PI / 7}},      // params
+            {{1}, {1}},             // wires
+            {false, false},         // inverses
+            {{}, {}},               // matrices
+            {{0, 2}, {2}},          // controlled wires
+            {{true, true}, {true}}, // controlled values
+        };
+
+        auto dy2 = std::vector<ComplexT>{{0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}, {0.4, -0.4},
+                                         {0.4, -0.4}, {0.4, -0.4}};
+
+        std::vector<ComplexT> ini_st{{isqrt2, 0.0}, {0.0, 0.0}, {isqrt2, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}, {0.0, 0.0},
+                                     {0.0, 0.0},    {0.0, 0.0}};
+
+        JacobianData<StateVectorT> jd1{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data1,     {0}};
+        JacobianData<StateVectorT> jd2{1,  ini_st.size(), ini_st.data(),
+                                       {}, ops_data2,     {0}};
+
+        std::vector<ComplexT> vjp1(1);
+        std::vector<ComplexT> vjp2(1);
+
+        vector_jacobian_product(std::span{vjp1}, jd1,
+                                std::span<const ComplexT>{dy1}, true);
+
+        vector_jacobian_product(std::span{vjp2}, jd2,
+                                std::span<const ComplexT>{dy2}, true);
+
+        REQUIRE(vjp1[0] == approx(-std::conj(vjp2[0])));
+    }
+
     SECTION(
         "Check the result is consistent with adjoint diff with observables") {
+        using VectorT = TestVector<ComplexT>;
+        AdjointJacobian<StateVectorT> adj;
+
         std::mt19937 re{1337};
         auto ops_data = createRandomOps<StateVectorT>(re, 10, 3);
         auto obs = std::make_shared<NamedObs<StateVectorT>>(

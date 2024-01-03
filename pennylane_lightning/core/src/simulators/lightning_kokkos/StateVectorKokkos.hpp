@@ -17,6 +17,7 @@
  */
 
 #pragma once
+#include <complex>
 #include <cstddef>
 #include <cstdlib>
 #include <string>
@@ -33,6 +34,8 @@
 #include "GateOperation.hpp"
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
+
+#include "CPUMemoryModel.hpp"
 
 /// @cond DEV
 namespace {
@@ -61,6 +64,7 @@ class StateVectorKokkos final
   public:
     using PrecisionT = fp_t;
     using ComplexT = Kokkos::complex<fp_t>;
+    using CFP_t = ComplexT;
     using DoubleLoopRank = Kokkos::Rank<2>;
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
@@ -88,6 +92,7 @@ class StateVectorKokkos final
         Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
@@ -169,7 +174,7 @@ class StateVectorKokkos final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(ComplexT *hostdata_, size_t length,
+    StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
@@ -177,12 +182,20 @@ class StateVectorKokkos final
         HostToDevice(hostdata_, length);
     }
 
+    StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
+    }
+
     /**
      * @brief Create a new state vector from data on the host.
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(const ComplexT *hostdata_, size_t length,
+    StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
@@ -238,7 +251,7 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
@@ -255,6 +268,31 @@ class StateVectorKokkos final
                                                       gate_matrix.size()));
             return applyMultiQubitOp(matrix, wires, inverse);
         }
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(controlled_wires.empty(),
+                        "Controlled kernels not implemented.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        applyOperation(opName, wires, inverse, params, gate_matrix);
     }
 
     /**
@@ -513,6 +551,9 @@ class StateVectorKokkos final
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
+        if (!generators_indices_.contains(opName)) {
+            PL_ABORT(std::string("Generator does not exist for ") + opName);
+        }
         switch (generators_indices_[opName]) {
         case GeneratorOperation::RX:
             applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
@@ -582,8 +623,10 @@ class StateVectorKokkos final
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::MultiRZ:
             return applyGeneratorMultiRZ(wires, inverse, params);
+        /// LCOV_EXCL_START
         default:
             PL_ABORT(std::string("Generator does not exist for ") + opName);
+            /// LCOV_EXCL_STOP
         }
     }
 
@@ -597,9 +640,9 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     template <template <class, bool> class functor_t, int nqubits>
-    void
-    applyGateFunctor(const std::vector<size_t> &wires, bool inverse = false,
-                     [[maybe_unused]] const std::vector<fp_t> &params = {}) {
+    void applyGateFunctor(const std::vector<size_t> &wires,
+                          bool inverse = false,
+                          const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
         PL_ASSERT(wires.size() == nqubits);
         if (!inverse) {
@@ -623,7 +666,7 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     void applyMultiRZ(const std::vector<size_t> &wires, bool inverse = false,
-                      [[maybe_unused]] const std::vector<fp_t> &params = {}) {
+                      const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
 
         if (!inverse) {
@@ -686,7 +729,7 @@ class StateVectorKokkos final
      * @param new_data data pointer to new data.
      * @param new_size size of underlying data storage.
      */
-    void updateData(ComplexT *new_data, size_t new_size) {
+    void updateData(ComplexT *new_data, std::size_t new_size) {
         updateData(KokkosVector(new_data, new_size));
     }
 
@@ -738,7 +781,7 @@ class StateVectorKokkos final
      * @brief Copy data from the host space to the device space.
      *
      */
-    inline void HostToDevice(ComplexT *sv, size_t length) {
+    inline void HostToDevice(ComplexT *sv, std::size_t length) {
         Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
     }
 
@@ -746,7 +789,7 @@ class StateVectorKokkos final
      * @brief Copy data from the device space to the host space.
      *
      */
-    inline void DeviceToHost(ComplexT *sv, size_t length) const {
+    inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
         Kokkos::deep_copy(UnmanagedComplexHostView(sv, length), *data_);
     }
 

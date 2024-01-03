@@ -276,6 +276,20 @@ class Measurements final
     }
 
     /**
+     * @brief Expectation value for a Observable with shots
+     *
+     * @param obs Observable.
+     * @param num_shots Number of shots.
+     * @param shots_range Vector of shot number to measurement.
+     * @return Floating point expected value of the observable.
+     */
+
+    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
+                const std::vector<size_t> &shot_range) -> PrecisionT {
+        return BaseType::expval(obs, num_shots, shot_range);
+    }
+
+    /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
      * @tparam index_type integer type used as indices of the sparse matrix.
@@ -444,7 +458,21 @@ class Measurements final
     };
 
     /**
-     * @brief Probabilities of each computational basis state.
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
@@ -576,6 +604,47 @@ class Measurements final
 
             return probabilities;
         }
+    }
+
+    /**
+     * @brief Probabilities of each computational basis state for an observable.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots. If specified with a non-zero number,
+     * shot-noise will be added to return probabilities
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
+                                  size_t num_shots = 0) {
+        return BaseType::probs(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(size_t num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
+                                  size_t num_shots) {
+        return BaseType::probs(wires, num_shots);
     }
 
     /**
