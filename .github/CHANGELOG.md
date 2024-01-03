@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Support added for Python 3.12 wheel builds.
+  [(#541)](https://github.com/PennyLaneAI/pennylane-lightning/pull/541)
+
 * Lightning-Qubit support arbitrary controlled gates (any wires and any control values). The kernels are implemented in the `LM` module.
   [(#576)](https://github.com/PennyLaneAI/pennylane-lightning/pull/576)
 
@@ -72,6 +75,9 @@
   [(#574)](https://github.com/PennyLaneAI/pennylane-lightning/pull/574)
 
 ### Bug fixes
+
+* Fix CodeCov file contention issue when uploading data from many workloads.
+  [(#584)](https://github.com/PennyLaneAI/pennylane-lightning/pull/584)
 
 * Ensure the `lightning.gpu` intermediate wheel builds are uploaded to TestPyPI.
   [(#575)](https://github.com/PennyLaneAI/pennylane-lightning/pull/575)
