@@ -28,9 +28,11 @@
 #include <complex>
 #include <utility>
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningQubit::Gates::Pragmas;
-}
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
 template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
