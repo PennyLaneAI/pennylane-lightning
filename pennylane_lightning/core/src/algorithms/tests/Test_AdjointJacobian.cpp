@@ -154,9 +154,11 @@ template <typename TypeList> void testAdjointJacobian() {
                     std::vector<std::vector<size_t>> controls{
                         std::vector<size_t>(num_qubits - 1)};
                     std::iota(controls[0].begin(), controls[0].end(), 0);
-                    auto ops = OpsData<StateVectorT>({"PhaseShift"}, {{p}},
-                                                     {{num_qubits - 1}},
-                                                     {false}, {{}}, controls);
+                    std::vector<std::vector<bool>> control_values{
+                        std::vector<bool>(num_qubits - 1, true)};
+                    auto ops = OpsData<StateVectorT>(
+                        {"PhaseShift"}, {{p}}, {{num_qubits - 1}}, {false},
+                        {{}}, controls, control_values);
 
                     std::vector<ComplexT> cdata(1U << num_qubits);
                     cdata[cdata.size() - 2] =
@@ -411,7 +413,8 @@ template <typename TypeList> void testAdjointJacobian() {
                 std::vector<std::vector<ComplexT>>{
                     {}, {}, {}, cnot, {}, {}, {}, {}},
                 std::vector<std::vector<size_t>>{
-                    {}, {}, {}, {}, {}, {}, {}, {}});
+                    {}, {}, {}, {}, {}, {}, {}, {}},
+                std::vector<std::vector<bool>>{{}, {}, {}, {}, {}, {}, {}, {}});
 
             JacobianData<StateVectorT> tape{
                 num_params, psi.getLength(), psi.getData(), {obs}, ops, tp};
