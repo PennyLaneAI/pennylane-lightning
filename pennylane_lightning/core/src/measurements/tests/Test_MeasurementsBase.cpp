@@ -597,7 +597,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             PrecisionT result_shots =
                 Measurer_shots.expval(obs, num_shots, shots_range);
-            
+
             REQUIRE(expected == Approx(result_shots).margin(1e-1));
         }
 
