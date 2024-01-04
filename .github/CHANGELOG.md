@@ -36,6 +36,9 @@
 
 ### Improvements
 
+* Ensure aligned memory used for numpy arrays with state-vector without reallocations.
+  [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
+
 * Unify error messages of shot measurement related unsupported observables to better Catalyst.
   [(#577)](https://github.com/PennyLaneAI/pennylane-lightning/pull/577)
 

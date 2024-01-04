@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <new>
@@ -35,23 +36,28 @@ namespace Pennylane::Util {
  * @param bytes Number of bytes to allocate
  * @return Pointer to the allocated memory
  */
-inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
+inline auto alignedAlloc(uint32_t alignment, size_t bytes,
+                         bool zero_init = false) -> void * {
     if (bytes % alignment != 0) {
         bytes = alignment * (bytes / alignment + 1);
     }
+    void *p = nullptr;
+
 #if defined(__clang__) && defined(__APPLE__)
     /*
      * We use `posix_memalign` for MacOS as Mac does not support
      * `std::aligned_alloc` properly yet (even in MacOS 10.15).
      */
-    void *p;
     posix_memalign(&p, alignment, bytes);
-    return p;
 #elif defined(_MSC_VER)
-    return _aligned_malloc(bytes, alignment);
+    p = _aligned_malloc(bytes, alignment);
 #else
-    return std::aligned_alloc(alignment, bytes);
+    p = std::aligned_alloc(alignment, bytes);
 #endif
+    if (zero_init) {
+        std::memset(p, 0, bytes);
+    }
+    return p;
 }
 
 /**
