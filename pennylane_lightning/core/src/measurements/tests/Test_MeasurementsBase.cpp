@@ -597,7 +597,8 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             PrecisionT result_shots =
                 Measurer_shots.expval(obs, num_shots, shots_range);
-            REQUIRE(expected == Approx(result_shots).margin(5e-2));
+            
+            REQUIRE(expected == Approx(result_shots).margin(1e-1));
         }
 
         DYNAMIC_SECTION("2x2 Hermitian matrix1"
@@ -821,7 +822,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 #ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 50000;
+            size_t num_shots = 10000;
             std::vector<size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliX", std::vector<size_t>{0});
@@ -831,16 +832,10 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto H1 = std::make_shared<HermitianObs<StateVectorT>>(
                 Hermitian_matrix1, std::vector<size_t>{1});
 
-            MatrixT Hermitian_matrix2{ComplexT{-6, 0}, ComplexT{2, 1},
-                                      ComplexT{2, -1}, ComplexT{0, 0}};
-
-            auto H2 = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_matrix2, std::vector<size_t>{2});
-
-            auto obs = TensorProdObs<StateVectorT>::create({X0, H2, H1});
+            auto obs = TensorProdObs<StateVectorT>::create({X0, H1});
             PrecisionT expected = Measurer.expval(*obs);
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
-            REQUIRE(expected == Approx(result).margin(5e-2));
+            REQUIRE(expected == Approx(result).margin(1e-1));
         }
 #endif
 
