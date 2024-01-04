@@ -553,8 +553,8 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  *
  * @tparam T Data type.
  *
- * @param N Number of columns.
- * @param LDA Number of rows.
+ * @param n Number of columns.
+ * @param lda Number of rows.
  * @param Ah Hermitian matrix to be decomposed.
  * @param eigenVals eigenvalue results.
  * @param unitaries unitary result.
@@ -612,13 +612,8 @@ void compute_diagonalizing_gates(int n, int lda,
                work_optimal.data(), &lwork, rwork.data(), &info);
     }
 
-    // data copy
     for (size_t i = 0; i < static_cast<size_t>(n); i++) {
         for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
-            // crealf()/creal() is not available since include <complex.h>
-            // will conflict with <complex>. Using `reinterpret_cast` instead
-            // here.
-            // T *val = reinterpret_cast<T *>(&ah[i * lda + j]);
             unitary[i * lda + j] = {ah[i * lda + j].real(),
                                     -ah[i * lda + j].imag()};
         }

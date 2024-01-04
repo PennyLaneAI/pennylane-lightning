@@ -637,7 +637,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild -G Ninja\
+            cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \

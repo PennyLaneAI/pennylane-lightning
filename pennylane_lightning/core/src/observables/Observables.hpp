@@ -216,7 +216,9 @@ class HermitianObsBase : public Observable<StateVectorT> {
   protected:
     MatrixT matrix_;
     std::vector<size_t> wires_;
+
 #ifdef PL_USE_LAPACK
+
   private:
     std::vector<PrecisionT> eigenVals_;
     MatrixT unitary_;

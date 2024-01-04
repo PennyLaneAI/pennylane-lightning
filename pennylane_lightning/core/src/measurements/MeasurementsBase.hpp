@@ -176,13 +176,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         size_t num_samples = shot_range.empty() ? num_shots : shot_range.size();
 
+        std::vector<PrecisionT> obs_samples(num_samples, 0);
+
         std::vector<PrecisionT> eigenVals = eigenValues[0];
 
         for (size_t i = 1; i < eigenValues.size(); i++) {
             eigenVals = kronProd(eigenVals, eigenValues[i]);
         }
-
-        std::vector<PrecisionT> obs_samples(num_samples, 0);
 
         for (size_t i = 0; i < num_samples; i++) {
             size_t idx = 0;
