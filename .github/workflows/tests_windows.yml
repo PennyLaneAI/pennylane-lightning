@@ -226,6 +226,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `

@@ -103,11 +103,6 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    if(MSVC)
-        set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake" CACHE FILEPATH "Toolchain file")
-        message(STATUS "Current dir is ${CMAKE_CURRENT_SOURCE_DIR}.\n")
-    endif()
-
     find_package(LAPACK REQUIRED)
     if(LAPACK_FOUND)
         message(STATUS "LAPACK found.")
