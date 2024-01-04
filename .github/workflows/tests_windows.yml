@@ -38,17 +38,28 @@ jobs:
         with:
           arch: amd64
       
-      - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
+      #- name: Set up MSYS2
+      #  uses: msys2/setup-msys2@v2
 
-      - name: Add MSYS2 to PATH
-        run: echo "::add-path::$(msys2.path)/usr/bin" >> $env:GITHUB_PATH
+      #- name: Add MSYS2 to PATH
+      #  run: echo "::add-path::$(msys2.path)/usr/bin" >> $env:GITHUB_PATH
       
-      - name: Install LAPACKE
+      #- name: Install LAPACKE
+      #  run: |
+      #    pacman -S --noconfirm mingw-w64-clang-x86_64-blas
+      #    pacman -S --noconfirm mingw-w64-lapack 
+      #    pacman -S --noconfirm mingw-w64-clang-x86_64-lapacke
+
+      - name: Install lapack with vcpkg
         run: |
-          pacman -S --noconfirm mingw-w64-clang-x86_64-blas
-          pacman -S --noconfirm mingw-w64-lapack 
-          pacman -S --noconfirm mingw-w64-clang-x86_64-lapacke
+          pushd .
+          cd ~
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          popd
+          ./vcpkg integrate install
+          ./vcpkg install lapack
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
