@@ -204,12 +204,9 @@ jobs:
       
       - name: Install lapack with vcpkg
         run: |
-          pushd .
-          cd ~
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
-          popd
           vcpkg integrate install
           vcpkg install lapack
 
@@ -224,6 +221,12 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
+            git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+            cd vcpkg
+            .\bootstrap-vcpkg.bat
+            vcpkg integrate install
+            vcpkg install lapack
+            cd ..
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
