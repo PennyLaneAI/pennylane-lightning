@@ -156,7 +156,9 @@ template <typename TypeList> void testHermitianObsBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
-        // using PrecisionT = typename StateVectorT::PrecisionT;
+#ifndef PL_USE_LAPACK
+        using PrecisionT = typename StateVectorT::PrecisionT;
+#endif
         using HermitianObsT = HermitianObsBase<StateVectorT>;
 
         DYNAMIC_SECTION("HermitianObs only accepts correct arguments - "
@@ -206,7 +208,7 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob1 != ob3);
             REQUIRE(ob2 != ob3);
         }
-        /*
+#ifndef PL_USE_LAPACK
         DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -226,7 +228,7 @@ template <typename TypeList> void testHermitianObsBase() {
                 Catch::Matchers::Contains(
                     "Hermitian observables do not support shot measurement."));
         }
-        */
+#endif
 
         testHermitianObsBase<typename TypeList::Next>();
     }

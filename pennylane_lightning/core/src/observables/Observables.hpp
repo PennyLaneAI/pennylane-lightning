@@ -273,8 +273,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);
 #else
-        PL_ABORT("Hermitian observables do not support applyInPlaceShots "
-                 "method.");
+        PL_ABORT("Hermitian observables do not support shot measurement.");
 #endif
     }
 };

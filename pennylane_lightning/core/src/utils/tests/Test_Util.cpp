@@ -153,6 +153,7 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
+#ifdef PL_USE_LAPACK
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
     SECTION("For complex type") {
@@ -182,6 +183,7 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
         }
     }
 }
+#endif
 
 TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
     SECTION("For -1, 1 values") {
