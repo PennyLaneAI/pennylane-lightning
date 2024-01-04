@@ -221,17 +221,12 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-            cd vcpkg
-            .\bootstrap-vcpkg.bat
-            vcpkg integrate install
-            vcpkg install lapack
-            cd ..
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\pennylane-lightning\pennylane-lightning\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
