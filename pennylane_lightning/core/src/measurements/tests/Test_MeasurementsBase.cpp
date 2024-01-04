@@ -741,8 +741,10 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
         using ComplexT = StateVectorT::ComplexT;
-        using MatrixT = std::vector<ComplexT>;
 
+#ifdef PL_USE_LAPACK
+        using MatrixT = std::vector<ComplexT>;
+#endif
         // Defining the State Vector that will be measured.
         std::vector<ComplexT> statevector_data{
             {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
@@ -820,7 +822,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 50000;
-            std::vector<size_t> shots_range={};
+            std::vector<size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliX", std::vector<size_t>{0});
 
@@ -840,7 +842,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
-
 #endif
 
         testTensorProdObsExpvalShot<typename TypeList::Next>();
