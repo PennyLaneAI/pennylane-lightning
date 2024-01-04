@@ -224,8 +224,6 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            Subst Z: (pwd)
-            Set-Location -Path "Z:\"
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
