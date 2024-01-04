@@ -586,11 +586,11 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
         DYNAMIC_SECTION("2x2 Hermitian matrix0"
                         << StateVectorToName<StateVectorT>::name) {
-            MatrixT Hermitian_matrix{ComplexT{-6, 0}, ComplexT{2, 1},
-                                     ComplexT{2, -1}, ComplexT{0, 0}};
+            MatrixT Hermitian_matrix{ComplexT{-3, 0}, ComplexT{2, 1},
+                                     ComplexT{2, -1}, ComplexT{2, 0}};
 
             HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
-            size_t num_shots = 10000;
+            size_t num_shots = 80000;
             std::vector<size_t> shots_range = {};
 
             PrecisionT expected = Measurer.expval(obs);
@@ -598,7 +598,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
             PrecisionT result_shots =
                 Measurer_shots.expval(obs, num_shots, shots_range);
 
-            REQUIRE(expected == Approx(result_shots).margin(1e-1));
+            REQUIRE(expected == Approx(result_shots).margin(5e-2));
         }
 
         DYNAMIC_SECTION("2x2 Hermitian matrix1"
@@ -822,20 +822,20 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 #ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 10000;
+            size_t num_shots = 80000;
             std::vector<size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliX", std::vector<size_t>{0});
 
             MatrixT Hermitian_matrix1{ComplexT{3, 0}, ComplexT{2, 1},
-                                      ComplexT{2, -1}, ComplexT{-1, 0}};
+                                      ComplexT{2, -1}, ComplexT{-2, 0}};
             auto H1 = std::make_shared<HermitianObs<StateVectorT>>(
                 Hermitian_matrix1, std::vector<size_t>{1});
 
             auto obs = TensorProdObs<StateVectorT>::create({X0, H1});
             PrecisionT expected = Measurer.expval(*obs);
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
-            REQUIRE(expected == Approx(result).margin(1e-1));
+            REQUIRE(expected == Approx(result).margin(5e-2));
         }
 #endif
 
