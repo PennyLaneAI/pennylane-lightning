@@ -119,7 +119,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.0.01\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.2.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
