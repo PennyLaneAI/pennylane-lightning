@@ -26,12 +26,22 @@
 #include <type_traits> // is_same_v
 #include <vector>
 
-#ifdef PL_USE_LAPACK
-#include <lapacke.h>
-#endif
-
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
+
+#ifdef PL_USE_LAPACK
+extern "C" {
+// LAPACK routine for complex Hermitian eigensystems
+extern void cheev_(const char *jobz, const char *uplo, const int *n,
+                   std::complex<float> *a, const int *lda, float *w,
+                   std::complex<float> *work, const int *lwork, float *rwork,
+                   int *info);
+extern void zheev_(const char *jobz, const char *uplo, const int *n,
+                   std::complex<double> *a, const int *lda, double *w,
+                   std::complex<double> *work, const int *lwork, double *rwork,
+                   int *info);
+}
+#endif
 
 namespace Pennylane::Util {
 /**
@@ -552,38 +562,54 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  */
 #ifdef PL_USE_LAPACK
 template <typename T>
-void compute_diagonalizing_gates(size_t N, size_t LDA,
+void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
                                  std::vector<T> &eigenVals,
                                  std::vector<std::complex<T>> &unitary) {
-    using LapackComplexT =
-        typename std::conditional<std::is_same<T, float>::value,
-                                  lapack_complex_float,
-                                  lapack_complex_double>::type;
-    int n = N;
-    int lda = LDA;
-    int info;
-
     eigenVals.clear();
     eigenVals.resize(n);
     unitary.clear();
     unitary = std::vector<std::complex<T>>(n * n, {0, 0});
 
-    std::vector<LapackComplexT> ah(n * lda, {0.0, 0.0});
+    std::vector<std::complex<T>> ah(n * lda, {0.0, 0.0});
 
     for (size_t i = 0; i < static_cast<size_t>(n); i++) {
-        for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
-            ah[i * lda + j] = {Ah[i * lda + j].real(), Ah[i * lda + j].imag()};
+        for (size_t j = 0; j <= i; j++) {
+            ah[j * n + i] = Ah[i * lda + j];
         }
     }
 
+    // Parameters for zheev_
+    char jobz =
+        'V'; // Compute both eigenvalues and eigenvectors ('V' for vectors)
+    char uplo = 'L'; // Upper triangle of a is stored
+    std::vector<std::complex<T>> work_query(
+        1);                          // Workspace array for optimal size query
+    int lwork = -1;                  // Optimal workspace size query
+    std::vector<T> rwork(3 * n - 2); // Real workspace array
+    int info;
+
     // Solve eigenproblem
     if constexpr (std::is_same<T, float>::value) {
-        info = LAPACKE_cheev(LAPACK_ROW_MAJOR, 'V', 'L', n, ah.data(), lda,
-                             eigenVals.data());
+        // Query optimal workspace size
+        cheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+               work_query.data(), &lwork, rwork.data(), &info);
+        // Allocate workspace
+        lwork = static_cast<int>(work_query[0].real());
+        std::vector<std::complex<T>> work_optimal(lwork, {0, 0});
+        // Perform eigenvalue and eigenvector computation
+        cheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
-        info = LAPACKE_zheev(LAPACK_ROW_MAJOR, 'V', 'L', n, ah.data(), lda,
-                             eigenVals.data());
+        // Query optimal workspace size
+        zheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+               work_query.data(), &lwork, rwork.data(), &info);
+        // Allocate workspace
+        lwork = static_cast<int>(work_query[0].real());
+        std::vector<std::complex<T>> work_optimal(lwork, {0, 0});
+        // Perform eigenvalue and eigenvector computation
+        zheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+               work_optimal.data(), &lwork, rwork.data(), &info);
     }
 
     // data copy
@@ -592,8 +618,9 @@ void compute_diagonalizing_gates(size_t N, size_t LDA,
             // crealf()/creal() is not available since include <complex.h>
             // will conflict with <complex>. Using `reinterpret_cast` instead
             // here.
-            T *val = reinterpret_cast<T *>(&ah[i * lda + j]);
-            unitary[j * lda + i] = {val[0], -val[1]};
+            // T *val = reinterpret_cast<T *>(&ah[i * lda + j]);
+            unitary[i * lda + j] = {ah[i * lda + j].real(),
+                                    -ah[i * lda + j].imag()};
         }
     }
 }

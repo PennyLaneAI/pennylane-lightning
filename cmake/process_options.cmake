@@ -103,103 +103,16 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    if(MSVC)
-        #message(FATAL_ERROR "LAPACK is not supported for Windows.")
-        find_package(BLAS REQUIRED)
-        find_package(LAPACK REQUIRED)
-        set(LAPACK_LINKER_FLAGS -llapacke -llapack -lblas)
-        set(LAPACKE_DIR $ENV{LAPACK}/LAPACKE)
-        set(LINK_FLAGS "${LINK_FLAGS} ${LAPACK_LINKER_FLAGS}")
-        set(LAPACK_LIBRARIES ${LAPACK_LIBRARIES} ${LAPACKE_LIB})
-        message(STATUS ${LAPACK_LIBRARIES})
-        message(STATUS ${LAPACK_INC_DIR})
-
-        target_link_libraries(lightning_external_libs INTERFACE ${LAPACK_LIBRARIES})
-
+    find_package(LAPACK REQUIRED)
+    if(LAPACK_FOUND)
+        message(STATUS "LAPACK found.")
+        target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-
     else()
-        set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-        include(ExternalProject)
-
-        # Build LAPACKE with ExternalProject
-        ExternalProject_Add(LAPACK
-            GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
-            GIT_TAG        "master"
-            GIT_SUBMODULES "" # Avoid recursively cloning all submodules
-            CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/lapack -DLAPACKE=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=ON #-DHAVE_LAPACK_CONFIG_H=ON -DLAPACK_COMPLEX_CPP=ON -DBUILD_SHARED_LIBS=ON
-        )
-
-        ExternalProject_Get_Property(LAPACK INSTALL_DIR)
-
-
-        if(NOT CMAKE_GENERATOR)
-            #add_subdirectory(${INSTALL_DIR}/src/LAPACK)
-            #add_subdirectory(${INSTALL_DIR}/src/LAPACK-build)
-        
-            find_library(LAPACK_LIB
-                NAMES   liblapack.so
-                HINTS   ${CMAKE_BINARY_DIR}/lapack/lib64
-                        ${CMAKE_BINARY_DIR}/lapack/lib
-                #HINTS   ${INSTALL_DIR}/src/LAPACK-build/lib
-                #        #${INSTALL_DIR}/src/LAPACK-build/lib64
-            )
-
-            find_library(LAPACKE_LIB
-                NAMES   liblapacke.so
-                HINTS   ${CMAKE_BINARY_DIR}/lapack/lib64
-                        ${CMAKE_BINARY_DIR}/lapack/lib
-                #HINTS   ${INSTALL_DIR}/src/LAPACK-build/lib
-                        #${INSTALL_DIR}/src/LAPACK-build/lib64
-            )
-
-            find_library(BLAS_LIB
-                    NAMES   libblas.so
-                    HINTS   ${CMAKE_BINARY_DIR}/lapack/lib64
-                            ${CMAKE_BINARY_DIR}/lapack/lib
-                    #HINTS   ${INSTALL_DIR}/src/LAPACK-build/lib
-                    #${INSTALL_DIR}/src/LAPACK-build/lib64
-            )
-
-            find_file(LAPACKE_INC
-                NAMES   lapacke.h
-                HINTS   ${CMAKE_BINARY_DIR}/lapack/include
-                #HINTS   ${INSTALL_DIR}/src/LAPACK-build/include
-            )
-
-            if(NOT LAPACK_LIB OR NOT LAPACKE_LIB OR NOT LAPACKE_INC)
-                message(FATAL_ERROR "\nUnable to find LAPACK. Please ensure it is correctly installed and available on path.")
-            else()
-                add_library(lapack SHARED IMPORTED GLOBAL)
-                add_library(lapacke SHARED IMPORTED GLOBAL)
-                add_library(blas SHARED IMPORTED GLOBAL)
-
-                get_filename_component(LAPACKE_INC_DIR ${LAPACKE_INC} DIRECTORY)
-
-                target_include_directories(lapack INTERFACE ${LAPACKE_INC_DIR})
-                target_include_directories(lapacke INTERFACE ${LAPACKE_INC_DIR})
-                target_include_directories(blas INTERFACE ${LAPACKE_INC_DIR})
-
-                set_target_properties(lapack PROPERTIES
-                    IMPORTED_LOCATION ${LAPACK_LIB}
-                )
-
-                set_target_properties(lapacke PROPERTIES
-                    IMPORTED_LOCATION ${LAPACKE_LIB}
-                )
-
-                set_target_properties(blas PROPERTIES
-                    IMPORTED_LOCATION ${BLAS_LIB}
-                )
-
-                #set_target_properties(lapacke PROPERTIES POSITION_INDEPENDENT_CODE ON)
-                target_link_libraries(lightning_external_libs INTERFACE blas lapack lapacke)
-
-                target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-            endif()
-        endif()
+        message(STATUS "LAPACK is enabled but not found.\n")
     endif()
+
+    
     #find_package(LAPACK REQUIRED)
     #if(LAPACK_FOUND)
     #    message(STATUS "LAPACK found.")
@@ -228,7 +141,7 @@ if(ENABLE_LAPACK)
     #            target_link_libraries(lightning_external_libs INTERFACE sci)
     #        endif()
     #    else()
-    #        target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
+    #        target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK -llapacke)
     #    endif()
     #    target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     #else()
