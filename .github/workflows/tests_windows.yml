@@ -59,7 +59,7 @@ jobs:
           .\bootstrap-vcpkg.bat
           popd
           vcpkg integrate install
-          vcpkg install lapack --LAPACKE=ON
+          vcpkg install lapack
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
