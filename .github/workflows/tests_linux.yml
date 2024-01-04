@@ -59,7 +59,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build
+            cmake --build ./Build --verbose
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
@@ -211,7 +211,7 @@ jobs:
               -DENABLE_LAPACK=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build
+            cmake --build ./Build --verbose
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
@@ -385,7 +385,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build
+            cmake --build ./Build --verbose
             cd ./Build
             mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
@@ -645,7 +645,7 @@ jobs:
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./Build
+            cmake --build ./Build --verbose
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
