@@ -47,11 +47,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION gfortran ninja-build gcovr lcov
+        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild \
+            cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \
@@ -198,11 +198,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION gfortran libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild \
+            cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
@@ -372,11 +372,11 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION gfortran ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild \
+            cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \
@@ -633,11 +633,11 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION gfortran ninja-build gcovr lcov 
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov 
 
       - name: Build and run unit tests
         run: |
-            cmake . -BBuild \
+            cmake . -BBuild -G Ninja\
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=ON \

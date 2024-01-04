@@ -109,43 +109,11 @@ if(ENABLE_LAPACK)
         target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
-        message(STATUS "LAPACK is enabled but not found.\n")
+        if(MSVC)
+            if(NOT CMAKE_TOOLCHAIN_FILE)
+                message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
+            endif()
+        endif()
+        message(FATAL_ERROR "LAPACK is enabled but not found.\n")
     endif()
-
-    
-    #find_package(LAPACK REQUIRED)
-    #if(LAPACK_FOUND)
-    #    message(STATUS "LAPACK found.")
-    #    string(FIND "${CMAKE_SYSTEM}" "cray" subStrIdx)
-    #    if(NOT subStrIdx EQUAL -1)
-    #        set(CRAY_LIBSCI_INC "$ENV{CRAY_LIBSCI_PREFIX_DIR}/include")
-    #        set(CRAY_LIBSCI_LIB "$ENV{CRAY_LIBSCI_PREFIX_DIR}/lib")
-    #
-    #        find_library(SCI_LIB
-    #            NAMES   libsci_gnu.so
-    #            HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/lib
-    #        )
-    #
-    #        find_file(SCI_INC
-    #            NAMES   lapacke.h
-    #            HINTS   $ENV{CRAY_LIBSCI_PREFIX_DIR}/include
-    #        )
-    #
-    #        if(NOT SCI_LIB OR NOT SCI_INC)
-    #            message(FATAL_ERROR "\nUnable to find libsci on CrayLinux. Please ensure it is correctly installed and available on path.")
-    #        else()
-    #            add_library(sci SHARED IMPORTED GLOBAL)
-    #            get_filename_component(SCI_INC_DIR ${SCI_INC} DIRECTORY)
-    #            target_include_directories(sci INTERFACE ${SCI_INC_DIR})
-    #            set_target_properties(sci PROPERTIES IMPORTED_LOCATION ${SCI_LIB})
-    #            target_link_libraries(lightning_external_libs INTERFACE sci)
-    #        endif()
-    #    else()
-    #        target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK -llapacke)
-    #    endif()
-    #    target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-    #else()
-    #    message(STATUS "LAPACK is enabled but not found.\n")
-    #endif()
-    
 endif()
