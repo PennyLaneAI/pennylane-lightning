@@ -583,7 +583,7 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        if device_name != "lightning.gpu":
+        if device_name == "lightning.kokkos":
             dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
 
             qml.execute([tape], dev, None)
