@@ -51,6 +51,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -59,13 +60,14 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build --verbose
+            cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -202,6 +204,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
@@ -211,13 +214,14 @@ jobs:
               -DENABLE_LAPACK=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build --verbose
+            cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -376,6 +380,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -385,13 +390,14 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build --verbose
+            cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -637,6 +643,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -645,10 +652,11 @@ jobs:
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./Build --verbose
+            cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
