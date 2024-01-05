@@ -370,6 +370,7 @@ LAPACK support
 LAPACK, a numerical linear algebra library, is requiredd to enable stochastic measurement support in C++ backend. We suggest first install ``LAPACK`` following instrcutions in `LAPACK document <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
 
 On Debian-based Linux systems, LAPACK can be also installed via ``apt``:
+
 .. code-block:: console
 
     $ sudo apt -y update &&
