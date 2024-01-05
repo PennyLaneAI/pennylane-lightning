@@ -18,6 +18,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <numbers>
@@ -579,14 +580,11 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 
-    // Parameters for zheev_
-    char jobz =
-        'V'; // Compute both eigenvalues and eigenvectors ('V' for vectors)
-    char uplo = 'L'; // Upper triangle of a is stored
-    std::vector<std::complex<T>> work_query(
-        1);                          // Workspace array for optimal size query
-    int lwork = -1;                  // Optimal workspace size query
-    std::vector<T> rwork(3 * n - 2); // Real workspace array
+    char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
+    char uplo = 'L'; // Upper triangle of matrix is stored
+    std::vector<std::complex<T>> work_query(1); // vector for optimal size query
+    int lwork = -1;                             // Optimal workspace size query
+    std::vector<T> rwork(3 * n - 2);            // Real workspace array
     int info;
 
     // Solve eigenproblem
@@ -612,12 +610,10 @@ void compute_diagonalizing_gates(int n, int lda,
                work_optimal.data(), &lwork, rwork.data(), &info);
     }
 
-    for (size_t i = 0; i < static_cast<size_t>(n); i++) {
-        for (size_t j = 0; j < static_cast<size_t>(lda); j++) {
-            unitary[i * lda + j] = {ah[i * lda + j].real(),
-                                    -ah[i * lda + j].imag()};
-        }
-    }
+    std::transform(ah.begin(), ah.end(), unitary.begin(),
+                   [](std::complex<T> value) {
+                       return std::complex<T>{value.real(), -value.imag()};
+                   });
 }
 #endif
 

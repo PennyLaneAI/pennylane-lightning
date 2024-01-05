@@ -244,20 +244,22 @@ class HermitianObsBase : public Observable<StateVectorT> {
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 #ifdef PL_USE_LAPACK
-        std::vector<std::complex<PrecisionT>> mat;
-        std::vector<std::complex<PrecisionT>> unitary;
-        for (auto &element : matrix_) {
-            std::complex<PrecisionT> tmp(element.real(), element.imag());
-            mat.push_back(tmp);
-        }
+        std::vector<std::complex<PrecisionT>> mat(matrix_.size());
+        std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
+
+        std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
+                       [](ComplexT value) {
+                           return static_cast<std::complex<PrecisionT>>(value);
+                       });
+
         Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
             Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
             eigenVals_, unitary);
 
-        for (auto &element : unitary) {
-            ComplexT tmp(element.real(), element.imag());
-            unitary_.push_back(tmp);
-        }
+        unitary_.resize(unitary.size());
+        std::transform(
+            unitary.begin(), unitary.end(), unitary_.begin(),
+            [](ComplexT value) { return static_cast<ComplexT>(value); });
 #endif
     }
 
