@@ -179,7 +179,7 @@ template <typename TypeList> void testHermitianObsBase() {
         DYNAMIC_SECTION("getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(
-                HermitianObsT(std::vector<ComplexT>{1.0, 0.0, 2.0, 0.0}, {0})
+                HermitianObsT(std::vector<ComplexT>{1.0, 0.0, 0.0, -1.0}, {0})
                     .getObsName() == "Hermitian");
         }
 
@@ -190,7 +190,7 @@ template <typename TypeList> void testHermitianObsBase() {
             auto ob2 =
                 HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, 0.0}, {0}};
             auto ob3 =
-                HermitianObsT{std::vector<ComplexT>{0.0, 1.0, 0.0, 0.0}, {0}};
+                HermitianObsT{std::vector<ComplexT>{0.0, 1.0, 1.0, 0.0}, {0}};
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
             REQUIRE(ob2 != ob3);
@@ -199,15 +199,24 @@ template <typename TypeList> void testHermitianObsBase() {
         DYNAMIC_SECTION("Comparing objects wires - "
                         << StateVectorToName<StateVectorT>::name) {
             auto ob1 =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, -1.0}, {0}};
             auto ob2 =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, -1.0}, {0}};
             auto ob3 =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {1}};
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, -1.0}, {1}};
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
             REQUIRE(ob2 != ob3);
         }
+
+        DYNAMIC_SECTION("Failed to create a HermitianObs- "
+                        << StateVectorToName<StateVectorT>::name) {
+            REQUIRE_THROWS_WITH(
+                HermitianObsT(std::vector<ComplexT>{1.0, 0.0, 1.0, 0.0}, {0}),
+                Catch::Matchers::Contains("The matrix passed to HermitianObs "
+                                          "is not a Hermitian matrix."));
+        }
+
 #ifndef PL_USE_LAPACK
         DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
                         << StateVectorToName<StateVectorT>::name) {
@@ -218,7 +227,7 @@ template <typename TypeList> void testHermitianObsBase() {
 
             StateVectorT state_vector(init_state.data(), init_state.size());
             auto obs =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, -1.0}, {0}};
 
             std::vector<std::vector<PrecisionT>> eigenValues;
             std::vector<size_t> ob_wires;
