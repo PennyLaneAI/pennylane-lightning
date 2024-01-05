@@ -985,6 +985,88 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
+#ifdef PL_USE_LAPACK
+template <typename TypeList> void testHermitianObsShotVar() {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using StateVectorT = typename TypeList::Type;
+        using PrecisionT = typename StateVectorT::PrecisionT;
+        using ComplexT = typename StateVectorT::ComplexT;
+        using MatrixT = std::vector<ComplexT>;
+
+        // Defining the State Vector that will be measured.
+        auto statevector_data = createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measures class.
+        // This object attaches to the statevector allowing several measures.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        const PrecisionT theta = M_PI / 2;
+        const PrecisionT real_term = std::cos(theta);
+        const PrecisionT imag_term = std::sin(theta);
+
+        DYNAMIC_SECTION("Varying wires - 2x2 matrix - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+            // Expected results calculated with Pennylane default.qubit:
+            std::vector<PrecisionT> exp_values_ref = {
+                0.5849835714501204, 0.7701511529340699, 0.9126678074548389};
+
+            MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
+                                     ComplexT{0, -imag_term}, real_term};
+
+            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                 ind_wires++) {
+                HermitianObs<StateVectorT> obs(Hermitian_matrix,
+                                               wires_list[ind_wires]);
+                PrecisionT expected = exp_values_ref[ind_wires];
+                size_t num_shots = 10000;
+                PrecisionT result = Measurer.var(obs, num_shots);
+                REQUIRE(expected == Approx(result).margin(5e-2));
+            }
+        }
+
+        DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
+                        << StateVectorToName<StateVectorT>::name) {
+            std::vector<std::vector<size_t>> wires_list = {
+                {0, 1}, {0, 2}, {1, 2}};
+            // Expected results calculated with Pennylane default.qubit:
+            std::vector<PrecisionT> exp_values_ref = {
+                0.6549036423585175, 0.8048961865516002, 0.8582611741038356};
+
+            MatrixT Hermitian_matrix(16);
+            Hermitian_matrix[0] = real_term;
+            Hermitian_matrix[1] = ComplexT{0, imag_term};
+            Hermitian_matrix[4] = ComplexT{0, -imag_term};
+            Hermitian_matrix[5] = real_term;
+            Hermitian_matrix[10] = ComplexT{1.0, 0};
+            Hermitian_matrix[15] = ComplexT{1.0, 0};
+
+            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                 ind_wires++) {
+                HermitianObs<StateVectorT> obs(Hermitian_matrix,
+                                               wires_list[ind_wires]);
+
+                size_t num_shots = 10000;
+                PrecisionT expected = exp_values_ref[ind_wires];
+                PrecisionT result = Measurer.var(obs, num_shots);
+                REQUIRE(expected == Approx(result).margin(5e-2));
+            }
+        }
+
+        testHermitianObsShotVar<typename TypeList::Next>();
+    }
+}
+
+TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
+    if constexpr (BACKEND_FOUND) {
+        testHermitianObsShotVar<TestStateVectorBackends>();
+    }
+}
+
+#endif
+
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -1029,6 +1111,36 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer.var(*obs, num_shots);
             REQUIRE(expected == Approx(result).margin(5e-2));
         }
+
+#ifdef PL_USE_LAPACK
+        DYNAMIC_SECTION("With Hermitian"
+                        << StateVectorToName<StateVectorT>::name) {
+            using MatrixT = std::vector<ComplexT>;
+            size_t num_shots = 10000;
+            const PrecisionT theta = M_PI / 2;
+            const PrecisionT real_term = std::cos(theta);
+            const PrecisionT imag_term = std::sin(theta);
+
+            MatrixT Hermitian_matrix(16);
+            Hermitian_matrix[0] = real_term;
+            Hermitian_matrix[1] = ComplexT{0, imag_term};
+            Hermitian_matrix[4] = ComplexT{0, -imag_term};
+            Hermitian_matrix[5] = real_term;
+            Hermitian_matrix[10] = ComplexT{1.0, 0};
+            Hermitian_matrix[15] = ComplexT{1.0, 0};
+
+            auto Her = std::make_shared<HermitianObs<StateVectorT>>(
+                Hermitian_matrix, std::vector<size_t>{0, 2});
+
+            auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{1});
+
+            auto obs = TensorProdObs<StateVectorT>::create({Her, Y1});
+            auto expected = Measurer.var(*obs);
+            auto result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+#endif
 
         DYNAMIC_SECTION(" full wires with apply operations"
                         << StateVectorToName<StateVectorT>::name) {
