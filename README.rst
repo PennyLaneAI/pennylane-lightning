@@ -277,8 +277,8 @@ Then Lightning-GPU with MPI support can then be installed with ``pip``:
     CMAKE_ARGS="-DENABLE_MPI=ON"  PL_BACKEND="lightning_gpu" python -m pip install -e .
 
 
-Test L-GPU with MPI
-===================
+Test Lightning-GPU with MPI
+===========================
 
 You may test the Python layer of the MPI enabled plugin as follows:
 
@@ -363,6 +363,26 @@ Note that ``THREADS`` backend is not recommended since `Kokkos does not guarante
 
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
+
+.. lapack-start-inclusion-marker-do-not-remove
+LAPACK support
+**************
+LAPACK, a numerical linear algebra library, is requiredd to enable stochastic measurement support in C++ backend. We suggest first install ``LAPACK`` following instrcutions in [LAPACK document](https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>).
+
+On Debian-based Linux systems, LAPACK can be also installed via ``apt``:
+.. code-block:: console
+
+    $ sudo apt -y update &&
+    $ sudo apt install g++ liblapack-dev
+
+where ``liblapack-dev`` is included to also install LAPACK.
+
+On Windows systems, LAPACK is recommended to be built and installed using [vcpkg](https://github.com/Microsoft/vcpkg/) following the instructions [here](https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>).
+
+The CMake option ``-DENABLE_LAPACK=ON`` must also be specified when building C++ backends. For Windows systems, we suggest to add the CMake option ``-DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake`` to ensure ``LAPACK`` can be found with cmake.
+
+.. lapack-end-inclusion-marker-do-not-remove
+
 
 .. docker-start-inclusion-marker-do-not-remove
 
@@ -455,5 +475,6 @@ PennyLane Lightning makes use of the following libraries and tools, which are un
 - **pybind11:** https://github.com/pybind/pybind11
 - **Kokkos Core:** https://github.com/kokkos/kokkos
 - **NVIDIA cuQuantum:** https://developer.nvidia.com/cuquantum-sdk
+- **LAPACK:** https://github.com/Reference-LAPACK/lapack
 
 .. acknowledgements-end-inclusion-marker-do-not-remove
