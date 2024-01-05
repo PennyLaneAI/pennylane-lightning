@@ -1113,7 +1113,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
         }
 
 #ifdef PL_USE_LAPACK
-        DYNAMIC_SECTION("With Hermitian"
+        DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
             size_t num_shots = 10000;
@@ -1136,6 +1136,24 @@ template <typename TypeList> void testTensorProdObsVarShot() {
                 "PauliY", std::vector<size_t>{1});
 
             auto obs = TensorProdObs<StateVectorT>::create({Her, Y1});
+            auto expected = Measurer.var(*obs);
+            auto result = Measurer.var(*obs, num_shots);
+            REQUIRE(expected == Approx(result).margin(5e-2));
+        }
+
+        DYNAMIC_SECTION("With Hermitian and NameObs"
+                        << StateVectorToName<StateVectorT>::name) {
+            using MatrixT = std::vector<ComplexT>;
+            size_t num_shots = 10000;
+
+            MatrixT Hermitian_matrix(4, {0, 0});
+            Hermitian_matrix[0] = 1;
+            Hermitian_matrix[3] = -1;
+
+            auto Her = std::make_shared<HermitianObs<StateVectorT>>(
+                Hermitian_matrix, std::vector<size_t>{1});
+
+            auto obs = TensorProdObs<StateVectorT>::create({Her});
             auto expected = Measurer.var(*obs);
             auto result = Measurer.var(*obs, num_shots);
             REQUIRE(expected == Approx(result).margin(5e-2));

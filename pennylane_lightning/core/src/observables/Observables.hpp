@@ -252,6 +252,10 @@ class HermitianObsBase : public Observable<StateVectorT> {
                            return static_cast<std::complex<PrecisionT>>(value);
                        });
 
+        PL_ASSERT(Pennylane::Util::is_Hermitian<ComplexT>(
+                      Util::exp2(wires_.size()), Util::exp2(wires_.size()),
+                      mat) == true);
+
         Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
             Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
             eigenVals_, unitary);

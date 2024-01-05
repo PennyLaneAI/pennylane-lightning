@@ -550,6 +550,29 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
 }
 
 /**
+ * @brief Check if a matrix is a Hermitian matrix.
+ *
+ * @tparam T Data type.
+ *
+ * @param n Number of columns.
+ * @param lda Number of rows.
+ * @param mat A matrix to be checked.
+ *
+ * @return is_Hermitian The matrix is Hermitian or not.
+ */
+template <typename ComplexT>
+bool is_Hermitian(size_t n, size_t lda, const std::vector<ComplexT> &mat) {
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = i + 1; j < lda; j++) {
+            if (mat[j + i * lda] != conj(mat[i + j * n])) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+/**
  * @brief Decompose Hermitian matrix into diagonal matrix and unitaries
  *
  * @tparam T Data type.

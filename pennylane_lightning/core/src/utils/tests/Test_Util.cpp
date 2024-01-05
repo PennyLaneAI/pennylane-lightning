@@ -153,6 +153,23 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
+                   double) {
+    SECTION("Test a Hermition matrix") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, -1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == true);
+    }
+
+    SECTION("Test a matrix not a Hermitian") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, 1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == false);
+    }
+}
+
 #ifdef PL_USE_LAPACK
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
