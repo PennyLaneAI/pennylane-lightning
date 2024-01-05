@@ -247,7 +247,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         PL_ABORT_IF_NOT(
             Pennylane::Util::is_Hermitian<ComplexT>(Util::exp2(wires_.size()),
                                                     Util::exp2(wires_.size()),
-                                                    mat) == true,
+                                                    matrix_) == true,
             "The matrix passed to HermitianObs is not a Hermitian matrix.");
 #ifdef PL_USE_LAPACK
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
