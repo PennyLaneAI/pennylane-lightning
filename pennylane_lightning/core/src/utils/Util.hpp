@@ -564,7 +564,7 @@ template <typename ComplexT>
 bool is_Hermitian(size_t n, size_t lda, const std::vector<ComplexT> &mat) {
     for (size_t i = 0; i < n; i++) {
         for (size_t j = i + 1; j < lda; j++) {
-            if (mat[j + i * lda] != conj(mat[i + j * n])) {
+            if (mat[j + i * lda] != std::conj(mat[i + j * n])) {
                 return false;
             }
         }

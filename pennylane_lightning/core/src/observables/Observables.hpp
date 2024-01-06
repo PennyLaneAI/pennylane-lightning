@@ -244,19 +244,20 @@ class HermitianObsBase : public Observable<StateVectorT> {
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 
-        PL_ABORT_IF_NOT(
-            Pennylane::Util::is_Hermitian<ComplexT>(Util::exp2(wires_.size()),
-                                                    Util::exp2(wires_.size()),
-                                                    matrix_) == true,
-            "The matrix passed to HermitianObs is not a Hermitian matrix.");
-#ifdef PL_USE_LAPACK
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
-        std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
                        [](ComplexT value) {
                            return static_cast<std::complex<PrecisionT>>(value);
                        });
+
+        PL_ABORT_IF_NOT(
+            Pennylane::Util::is_Hermitian<ComplexT>(Util::exp2(wires_.size()),
+                                                    Util::exp2(wires_.size()),
+                                                    mat) == true,
+            "The matrix passed to HermitianObs is not a Hermitian matrix.");
+#ifdef PL_USE_LAPACK
+        std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
 
         Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
             Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
