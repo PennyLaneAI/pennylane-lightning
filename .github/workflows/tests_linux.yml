@@ -219,7 +219,7 @@ jobs:
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
       
-    cpptestswithOpenBLASNoLAPACK:
+  cpptestswithOpenBLASNoLAPACK:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
       matrix:
@@ -618,7 +618,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithOpenBLASNoLAPACK, cpptestswithKokkos]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
