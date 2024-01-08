@@ -549,6 +549,7 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
     return result;
 }
 
+#ifdef PL_USE_LAPACK
 /**
  * @brief Check if a matrix is a Hermitian matrix.
  *
@@ -558,7 +559,7 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  * @param lda Number of rows.
  * @param mat A matrix to be checked.
  *
- * @return is_Hermitian The matrix is Hermitian or not.
+ * @return is_Hermitian Is the matrix a Hermitian matrix or not.
  */
 template <typename T>
 bool is_Hermitian(size_t n, size_t lda,
@@ -583,9 +584,7 @@ bool is_Hermitian(size_t n, size_t lda,
  * @param Ah Hermitian matrix to be decomposed.
  * @param eigenVals eigenvalue results.
  * @param unitaries unitary result.
- * @return result Result matrix with only diagonal elements stored.
  */
-#ifdef PL_USE_LAPACK
 template <typename T>
 void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,

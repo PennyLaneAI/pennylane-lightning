@@ -20,6 +20,7 @@ build:
     - build-essential
     - libopenblas-base
     - libopenblas-dev
+    - liblapack-dev
     - graphviz
     - nvidia-cuda-toolkit
   jobs:

@@ -51,7 +51,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -67,7 +66,6 @@ jobs:
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -204,7 +202,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
@@ -221,7 +218,6 @@ jobs:
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -380,7 +376,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -397,7 +392,6 @@ jobs:
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -643,7 +637,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -656,7 +649,6 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
-            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
