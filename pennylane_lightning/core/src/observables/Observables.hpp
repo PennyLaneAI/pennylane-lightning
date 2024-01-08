@@ -244,6 +244,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 
+#ifdef PL_USE_LAPACK
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -251,12 +252,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
                            return static_cast<std::complex<PrecisionT>>(value);
                        });
 
-        PL_ABORT_IF_NOT(
-            Pennylane::Util::is_Hermitian<PrecisionT>(Util::exp2(wires_.size()),
-                                                      Util::exp2(wires_.size()),
-                                                      mat) == true,
-            "The matrix passed to HermitianObs is not a Hermitian matrix.");
-#ifdef PL_USE_LAPACK
         std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
 
         Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
@@ -289,6 +284,19 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
 #ifdef PL_USE_LAPACK
+        std::vector<std::complex<PrecisionT>> mat(matrix_.size());
+
+        std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
+                       [](ComplexT value) {
+                           return static_cast<std::complex<PrecisionT>>(value);
+                       });
+
+        PL_ABORT_IF_NOT(
+            Pennylane::Util::is_Hermitian<PrecisionT>(Util::exp2(wires_.size()),
+                                                      Util::exp2(wires_.size()),
+                                                      mat) == true,
+            "The matrix passed to HermitianObs is not a Hermitian matrix.");
+            
         eigenValues.clear();
         ob_wires.clear();
         ob_wires = wires_;

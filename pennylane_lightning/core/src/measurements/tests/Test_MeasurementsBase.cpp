@@ -533,7 +533,7 @@ template <typename TypeList> void testNamedObsExpvalShot() {
                         Measurer.expval(obs, num_shots, shots_range);
                     REQUIRE_THAT(result,
                                  Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
                 }
             }
         }
@@ -556,7 +556,7 @@ template <typename TypeList> void testNamedObsExpvalShot() {
                         Measurer.expval(obs, num_shots, shots_range);
                     REQUIRE_THAT(result,
                                  Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
                 }
             }
         }
@@ -604,7 +604,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             REQUIRE_THAT(result_shots,
                          Catch::Matchers::WithinRel(
-                             expected, static_cast<PrecisionT>(0.20)));
+                             expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("2x2 Hermitian matrix1"
@@ -623,7 +623,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             REQUIRE_THAT(result_shots,
                          Catch::Matchers::WithinRel(
-                             expected, static_cast<PrecisionT>(0.20)));
+                             expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("2x2 Hermitian matrix2"
@@ -642,7 +642,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             REQUIRE_THAT(result_shots,
                          Catch::Matchers::WithinRel(
-                             expected, static_cast<PrecisionT>(0.20)));
+                             expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("2x2 Hermitian matrix3"
@@ -661,7 +661,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
 
             REQUIRE_THAT(result_shots,
                          Catch::Matchers::WithinRel(
-                             expected, static_cast<PrecisionT>(0.20)));
+                             expected, static_cast<PrecisionT>(0.10)));
         }
 
         testHermitianObsExpvalShot<typename TypeList::Next>();
@@ -785,7 +785,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto result = Measurer.expval(*obs, num_shots, shots_range);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION(" - With Identity but no shots_range"
@@ -801,7 +801,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION(" With shots_range"
@@ -820,7 +820,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto result = Measurer.expval(*obs, num_shots, shots_range);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION(" With Identity and shots_range"
@@ -839,7 +839,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
 #ifdef PL_USE_LAPACK
@@ -860,7 +860,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 #endif
 
@@ -923,7 +923,7 @@ template <typename TypeList> void testNamedObsVar() {
 
                     REQUIRE_THAT(result,
                                  Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
                 }
             }
         }
@@ -1054,7 +1054,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
 
                 REQUIRE_THAT(result,
                              Catch::Matchers::WithinRel(
-                                 expected, static_cast<PrecisionT>(0.20)));
+                                 expected, static_cast<PrecisionT>(0.10)));
             }
         }
 
@@ -1085,7 +1085,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
 
                 REQUIRE_THAT(result,
                              Catch::Matchers::WithinRel(
-                                 expected, static_cast<PrecisionT>(0.20)));
+                                 expected, static_cast<PrecisionT>(0.10)));
             }
         }
 
@@ -1130,7 +1130,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION(" full wires"
@@ -1147,7 +1147,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
 #ifdef PL_USE_LAPACK
@@ -1178,7 +1178,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("With Hermitian and NameObs"
@@ -1198,7 +1198,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 #endif
 
@@ -1223,7 +1223,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             auto result = Measurer0.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION(" With Identity"
@@ -1238,7 +1238,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             PrecisionT result = Measurer.var(*obs, num_shots);
 
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
         }
 
         testTensorProdObsVarShot<typename TypeList::Next>();
@@ -1368,7 +1368,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
                     REQUIRE_THAT(result,
                                  Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
                 }
             }
 
@@ -1391,7 +1391,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
                     REQUIRE_THAT(result,
                                  Catch::Matchers::WithinRel(
-                                     expected, static_cast<PrecisionT>(0.20)));
+                                     expected, static_cast<PrecisionT>(0.10)));
                 }
             }
         }
@@ -1514,7 +1514,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             auto expected = PrecisionT(-0.086);
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  expected, static_cast<PrecisionT>(0.20)));
+                                  expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("With shots_range "
@@ -1529,7 +1529,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             auto expected = PrecisionT(-0.086);
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  expected, static_cast<PrecisionT>(0.20)));
+                                  expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("TensorProd with shots_range "
@@ -1556,7 +1556,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             auto res = Measurer.expval(*obs, num_shots, {});
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  expected, static_cast<PrecisionT>(0.20)));
+                                  expected, static_cast<PrecisionT>(0.10)));
         }
 
         testHamiltonianObsExpvalShot<typename TypeList::Next>();
@@ -1597,7 +1597,7 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             auto expected = Measurer.var(*ob);
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  expected, static_cast<PrecisionT>(0.20)));
+                                  expected, static_cast<PrecisionT>(0.10)));
         }
 
         DYNAMIC_SECTION("YI" << StateVectorToName<StateVectorT>::name) {
@@ -1614,7 +1614,7 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             auto expected = Measurer.var(*ob);
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  expected, static_cast<PrecisionT>(0.20)));
+                                  expected, static_cast<PrecisionT>(0.10)));
         }
 
         testHamiltonianObsVarShot<typename TypeList::Next>();
