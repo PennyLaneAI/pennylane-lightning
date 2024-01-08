@@ -296,7 +296,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
                                                       Util::exp2(wires_.size()),
                                                       mat) == true,
             "The matrix passed to HermitianObs is not a Hermitian matrix.");
-            
+
         eigenValues.clear();
         ob_wires.clear();
         ob_wires = wires_;
