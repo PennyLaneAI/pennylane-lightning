@@ -153,6 +153,7 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
+#ifdef PL_USE_LAPACK
 TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
                    double) {
     SECTION("Test a Hermition matrix") {
@@ -170,7 +171,6 @@ TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
     }
 }
 
-#ifdef PL_USE_LAPACK
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
     SECTION("For complex type") {

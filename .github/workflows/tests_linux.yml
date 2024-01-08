@@ -637,6 +637,7 @@ jobs:
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -649,6 +650,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
