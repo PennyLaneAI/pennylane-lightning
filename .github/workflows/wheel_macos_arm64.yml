@@ -15,8 +15,8 @@ on:
 
 env:
   ARCHS: 'arm64'
-  PYTHON3_MIN_VERSION: "9"
-  PYTHON3_MAX_VERSION: "11"
+  PYTHON3_MIN_VERSION: "12"
+  PYTHON3_MAX_VERSION: "12"
 
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
