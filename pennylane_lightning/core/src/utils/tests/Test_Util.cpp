@@ -153,7 +153,6 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
-#ifdef PL_USE_LAPACK
 TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
                    double) {
     SECTION("Test a Hermition matrix") {
@@ -170,37 +169,6 @@ TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
         REQUIRE(is_Hermitian(2, 2, A) == false);
     }
 }
-
-TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
-                   float, double) {
-    SECTION("For complex type") {
-        std::vector<std::complex<TestType>> A{
-            {-6.0, 0.0}, {2.0, 1.0}, {2.0, -1.0}, {0.0, 0.0}};
-        std::vector<TestType> expectedEigenVals = {-6.741657, 0.741657};
-        std::vector<std::complex<TestType>> expectedUnitaries = {
-            {-0.94915323, 0.0},
-            {0.2815786, 0.1407893},
-            {0.31481445, 0.0},
-            {0.84894846, 0.42447423}};
-        size_t N = 2;
-        size_t LDA = 2;
-        std::vector<TestType> eigenVals;
-        std::vector<std::complex<TestType>> Unitaries;
-        compute_diagonalizing_gates(N, LDA, A, eigenVals, Unitaries);
-
-        for (size_t i = 0; i < expectedEigenVals.size(); i++) {
-            CHECK(eigenVals[i] == Approx(expectedEigenVals[i]).margin(1e-6));
-        }
-
-        for (size_t i = 0; i < Unitaries.size(); i++) {
-            CHECK(Unitaries[i].real() ==
-                  Approx(expectedUnitaries[i].real()).margin(1e-6));
-            CHECK(Unitaries[i].imag() ==
-                  Approx(expectedUnitaries[i].imag()).margin(1e-6));
-        }
-    }
-}
-#endif
 
 TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
     SECTION("For -1, 1 values") {

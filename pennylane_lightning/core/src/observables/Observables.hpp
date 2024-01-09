@@ -23,6 +23,10 @@
 #include "Error.hpp"
 #include "Util.hpp"
 
+#ifdef PL_USE_LAPACK
+#include "UtilLinearAlg.hpp"
+#endif
+
 namespace Pennylane::Observables {
 /**
  * @brief A base class (CRTP) for all observable classes.
