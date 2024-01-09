@@ -14,19 +14,18 @@ python:
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.11"
+    python: "3.9"
   apt_packages:
     - cmake
     - build-essential
     - libopenblas-base
     - libopenblas-dev
-    - liblapack-dev
     - graphviz
     - nvidia-cuda-toolkit
   jobs:
     pre_install:
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
     post_install:
-      - rm -rf ./build* && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
-      - rm -rf ./build* && PL_BACKEND="lightning_gpu" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
+      - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
+      - rm -rf ./build && PL_BACKEND="lightning_gpu" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
       - python -m pip install ./dist/*.whl

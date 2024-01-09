@@ -1470,7 +1470,7 @@ def test_diff_qubit_unitary(dev, n_targets):
         return qml.expval(obs)
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
-    circ_def = qml.QNode(circuit, dev_def, diff_method="parameter-shift")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
     circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", h=h)
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
     jacs = qml.jacobian(circ)(par, U)

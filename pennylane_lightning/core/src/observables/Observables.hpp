@@ -181,7 +181,6 @@ class NamedObsBase : public Observable<StateVectorT> {
         ob_wires.clear();
         eigenValues.clear();
         ob_wires.push_back(wires_[0]);
-        eigenValues.clear();
 
         if (obs_name_ == "PauliX") {
             sv.applyOperation("Hadamard", wires_, false);
