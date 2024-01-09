@@ -30,6 +30,7 @@
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
 
+namespace {
 #ifdef PL_USE_LAPACK
 extern "C" {
 // LAPACK routine for complex Hermitian eigensystems
@@ -43,6 +44,7 @@ extern void zheev_(const char *jobz, const char *uplo, const int *n,
                    int *info);
 }
 #endif
+} // namespace
 
 namespace Pennylane::Util {
 /**
