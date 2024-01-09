@@ -320,7 +320,7 @@ For example, the following will build Kokkos for NVIDIA A100 cards
 .. code-block:: console
 
     cmake -S . -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=RelWithDebug \
+        -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
         -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
         -DCMAKE_CXX_STANDARD=20 \
         -DBUILD_SHARED_LIBS:BOOL=ON \
