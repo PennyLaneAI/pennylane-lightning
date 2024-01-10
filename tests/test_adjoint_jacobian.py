@@ -18,8 +18,6 @@ import itertools
 import pytest
 from conftest import device_name, LightningDevice as ld
 
-import time
-
 import math
 from scipy.stats import unitary_group
 import pennylane as qml
