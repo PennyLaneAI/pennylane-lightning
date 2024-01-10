@@ -34,7 +34,7 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\lapack
+          path: D:\a\lapack
           key: ${{ matrix.os }}-lapack-Debug
 
       - name: Build Lapack libs
@@ -45,8 +45,6 @@ jobs:
           cd vcpkg
           .\bootstrap-vcpkg.bat
           vcpkg install lapack
-
-
 
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
@@ -59,6 +57,13 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
+      - name: Restoring cached Lapack
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\vcpkg
+          key: ${{ matrix.os }}-lapack-Debug
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -213,12 +218,19 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Restoring cached dependencies
+      - name: Restoring cached Kokkos
         id: kokkos-cache
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
+      
+      - name: Restoring cached Lapack
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\vcpkg
+          key: ${{ matrix.os }}-lapack-Debug
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
