@@ -22,7 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    timeout-minutes: 120
+    timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
