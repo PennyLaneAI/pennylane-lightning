@@ -20,8 +20,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_lapack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    timeout-minutes: 30
+    name: Lapack
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cache installation directories
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\lapack
+          key: ${{ matrix.os }}-lapack-Debug
+
+      - name: Build Lapack libs
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
+
+
+
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    needs: [build_lapack]
     timeout-minutes: 120
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -38,12 +67,18 @@ jobs:
         with:
           arch: amd64
 
-      - name: Install lapack with vcpkg
+      #- name: Install lapack with vcpkg
+      #  run: |
+      #    git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+      #    cd vcpkg
+      #    .\bootstrap-vcpkg.bat
+      #    vcpkg install lapack
+
+      - name: Copy cached Lapack libraries
+        if: steps.lapack-cache.outputs.cache-hit == 'true'
         run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+          Copy-Item -Path "D:\a\vcpkg\" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\vcpkg" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -165,7 +200,7 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies, win-set-matrix-x86]
+    needs: [build_dependencies, build_lapack, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
@@ -194,17 +229,23 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
+      - name: Copy cached Lapack libraries
+        if: steps.lapack-cache.outputs.cache-hit == 'true'
+        run: |
+          Copy-Item -Path "D:\a\vcpkg\" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\vcpkg" -Recurse -Force
+
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
       
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+      #- name: Install lapack with vcpkg
+      #  run: |
+      #    git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+      #    cd vcpkg
+      #    .\bootstrap-vcpkg.bat
+      #    vcpkg install lapack
 
       - name: Enable long paths
         run: |
