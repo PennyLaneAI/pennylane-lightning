@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Hermitian observable support for shot-noise measurement.
+* Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
   
 ### Breaking changes

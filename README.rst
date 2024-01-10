@@ -392,7 +392,7 @@ where ``${TARGET}`` is one of the following
 LAPACK support
 **************
 
-LAPACK, a numerical linear algebra library, is requiredd to enable stochastic measurement support in C++ backend. We suggest first install ``LAPACK`` following instrcutions in `LAPACK document <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
+LAPACK, a numerical linear algebra library, is required to enable stochastic measurement support in the C++ backend. We suggest first installing ``LAPACK`` following instructions in `LAPACK document <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
 
 On Debian-based Linux systems, LAPACK can be also installed via ``apt``:
 
@@ -405,7 +405,7 @@ where ``liblapack-dev`` is included to also install LAPACK.
 
 On Windows systems, LAPACK is recommended to be built and installed using `vcpkg <https://github.com/Microsoft/vcpkg/>`_ following the instructions `here <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
 
-The CMake option ``-DENABLE_LAPACK=ON`` must also be specified when building C++ backends. For Windows systems, we suggest to add the CMake option ``-DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake`` to ensure ``LAPACK`` can be found with cmake.
+The CMake option ``-DENABLE_LAPACK=ON`` must also be specified when building C++ backends. For Windows systems, we suggest adding the CMake option ``-DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake`` to ensure ``LAPACK`` can be found with CMake.
 
 Contributing
 ************

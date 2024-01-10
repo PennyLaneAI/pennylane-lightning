@@ -583,7 +583,7 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        // Initializing the measures class.
+        // Initializing the Measurements class.
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer_shots(statevector);
         Measurements<StateVectorT> Measurer(statevector);
@@ -758,9 +758,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
         using PrecisionT = typename StateVectorT::PrecisionT;
         using ComplexT = StateVectorT::ComplexT;
 
-#ifdef PL_USE_LAPACK
-        using MatrixT = std::vector<ComplexT>;
-#endif
         // Defining the State Vector that will be measured.
         std::vector<ComplexT> statevector_data{
             {0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1}, {0.1, 0.2},
@@ -850,8 +847,9 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliX", std::vector<size_t>{0});
 
-            MatrixT Hermitian_matrix1{ComplexT{3, 0}, ComplexT{2, 1},
-                                      ComplexT{2, -1}, ComplexT{-3, 0}};
+            std::vector<ComplexT> Hermitian_matrix1{
+                ComplexT{3, 0}, ComplexT{2, 1}, ComplexT{2, -1},
+                ComplexT{-3, 0}};
             auto H1 = std::make_shared<HermitianObs<StateVectorT>>(
                 Hermitian_matrix1, std::vector<size_t>{1});
 
