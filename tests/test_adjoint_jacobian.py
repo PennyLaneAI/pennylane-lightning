@@ -1454,7 +1454,7 @@ def test_qubit_unitary(n_targets):
     jac = qml.jacobian(circ)(par)
     jac_ps = qml.jacobian(circ_ps)(par)
     jac_def = qml.jacobian(circ_def)(par)
-    
+
     assert jac.size == n_wires
     assert not np.allclose(jac, 0.0)
     assert np.allclose(jac, jac_ps)
