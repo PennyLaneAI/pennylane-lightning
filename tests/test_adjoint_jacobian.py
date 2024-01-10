@@ -18,6 +18,8 @@ import itertools
 import pytest
 from conftest import device_name, LightningDevice as ld
 
+import time
+
 import math
 from scipy.stats import unitary_group
 import pennylane as qml
@@ -1448,11 +1450,11 @@ def test_qubit_unitary(n_targets):
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
-    circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
+    circ_def = qml.QNode(circuit, dev_def, diff_method="parameter-shift")
     jac = qml.jacobian(circ)(par)
     jac_ps = qml.jacobian(circ_ps)(par)
     jac_def = qml.jacobian(circ_def)(par)
-
+    
     assert jac.size == n_wires
     assert not np.allclose(jac, 0.0)
     assert np.allclose(jac, jac_ps)
