@@ -248,7 +248,7 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=ON \
+              -DENABLE_LAPACK=OFF \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
             cmake --build ./Build
@@ -673,7 +673,7 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov 
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
