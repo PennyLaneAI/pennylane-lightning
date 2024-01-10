@@ -287,7 +287,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
 #ifdef PL_USE_LAPACK
-        /*
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -300,7 +299,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
                                                       Util::exp2(wires_.size()),
                                                       mat) == true,
             "The matrix passed to HermitianObs is not a Hermitian matrix.");
-        */
+
         eigenValues.clear();
         ob_wires.clear();
         ob_wires = wires_;

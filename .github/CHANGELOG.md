@@ -4,6 +4,7 @@
 
 * Add Hermitian observable support for shot-noise measurement.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
+  
 ### Breaking changes
 
 ### Improvements
@@ -23,7 +24,6 @@ Shuli Shu
 # Release 0.34.0
 
 ### New features since last release
-
 
 * Support added for Python 3.12 wheel builds.
   [(#541)](https://github.com/PennyLaneAI/pennylane-lightning/pull/541)
