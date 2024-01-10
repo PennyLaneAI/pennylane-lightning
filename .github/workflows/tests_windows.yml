@@ -40,12 +40,9 @@ jobs:
 
       - name: Install lapack with vcpkg
         run: |
-          pushd .
-          cd ~
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
-          popd
           vcpkg install lapack
 
       - name: Setup OpenCppCoverage and add to PATH
