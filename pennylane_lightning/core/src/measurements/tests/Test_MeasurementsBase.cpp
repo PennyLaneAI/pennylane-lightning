@@ -1557,6 +1557,29 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
                                   expected, static_cast<PrecisionT>(0.20)));
         }
 
+#ifdef PL_USE_LAPACK
+        DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+
+            std::vector<ComplexT> Hermitian_mat{ComplexT{3, 0}, ComplexT{2, 1},
+                                                ComplexT{2, -1},
+                                                ComplexT{-3, 0}};
+            auto Her1 = std::make_shared<HermitianObs<StateVectorT>>(
+                Hermitian_mat, std::vector<size_t>{1});
+
+            auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, Her1});
+
+            size_t num_shots = 100000;
+
+            auto res = Measurer.expval(*ob, num_shots, {});
+            auto expected = Measurer.expval(*ob);
+
+            REQUIRE_THAT(res, Catch::Matchers::WithinRel(
+                                  expected, static_cast<PrecisionT>(0.20)));
+        }
+#endif
+
         testHamiltonianObsExpvalShot<typename TypeList::Next>();
     }
 }
@@ -1614,6 +1637,37 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
+
+#ifdef PL_USE_LAPACK
+        DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
+            using ComplexT = typename StateVectorT::ComplexT;
+            auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
+                "PauliY", std::vector<size_t>{0});
+
+            std::vector<ComplexT> Hermitian_mat1{ComplexT{3, 0}, ComplexT{2, 1},
+                                                 ComplexT{2, -1},
+                                                 ComplexT{-3, 0}};
+            auto Her1 = std::make_shared<HermitianObs<StateVectorT>>(
+                Hermitian_mat1, std::vector<size_t>{1});
+
+            std::vector<ComplexT> Hermitian_mat2{ComplexT{2, 0}, ComplexT{1, 1},
+                                                 ComplexT{1, -1},
+                                                 ComplexT{-6, 0}};
+            auto Her2 = std::make_shared<HermitianObs<StateVectorT>>(
+                Hermitian_mat2, std::vector<size_t>{2});
+
+            auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5, 1.0},
+                                                        {Y0, Her1, Her2});
+
+            size_t num_shots = 20000;
+
+            auto res = Measurer.var(*ob, num_shots);
+            auto expected = Measurer.var(*ob);
+
+            REQUIRE_THAT(res, Catch::Matchers::WithinRel(
+                                  expected, static_cast<PrecisionT>(0.20)));
+        }
+#endif
 
         testHamiltonianObsVarShot<typename TypeList::Next>();
     }
