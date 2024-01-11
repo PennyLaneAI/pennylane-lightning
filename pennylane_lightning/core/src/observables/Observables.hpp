@@ -261,7 +261,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
             Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
             eigenVals_, unitary);
 
-        unitary_.resize(unitary.size());
         std::transform(
             unitary.begin(), unitary.end(), unitary_.begin(),
             [](ComplexT value) { return static_cast<ComplexT>(value); });
@@ -301,7 +300,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
             "The matrix passed to HermitianObs is not a Hermitian matrix.");
 
         eigenValues.clear();
-        ob_wires.clear();
         ob_wires = wires_;
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);

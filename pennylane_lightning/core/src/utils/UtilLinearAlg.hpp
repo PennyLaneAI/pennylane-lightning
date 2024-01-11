@@ -43,11 +43,11 @@ void compute_diagonalizing_gates(int n, int lda,
                                  std::vector<std::complex<T>> &unitary) {
     eigenVals.clear();
     eigenVals.resize(n);
-    unitary.clear();
     unitary = std::vector<std::complex<T>>(n * n, {0, 0});
 
     std::vector<std::complex<T>> ah(n * lda, {0.0, 0.0});
 
+    //TODO optmize transpose
     for (size_t i = 0; i < static_cast<size_t>(n); i++) {
         for (size_t j = 0; j <= i; j++) {
             ah[j * n + i] = Ah[i * lda + j];
@@ -56,7 +56,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
     char uplo = 'L'; // Upper triangle of matrix is stored
-    std::vector<std::complex<T>> work_query(1); // vector for optimal size query
+    std::vector<std::complex<T>> work_query(1); // Vector for optimal size query
     int lwork = -1;                             // Optimal workspace size query
     std::vector<T> rwork(3 * n - 2);            // Real workspace array
     int info;
