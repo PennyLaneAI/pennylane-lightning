@@ -607,7 +607,7 @@ jobs:
 
   upload-to-codecov-linux-python:
     needs: [pythontests, pythontestswithOpenBLAS, pythontestswithKokkos]
-    name: Upload coverage data to codecov
+    name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -635,7 +635,7 @@ jobs:
 
   upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithOpenBLASNoLAPACK, cpptestswithKokkos]
-    name: Upload coverage data to codecov
+    name: Upload cpp coverage data to codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
