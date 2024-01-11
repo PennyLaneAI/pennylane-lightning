@@ -157,10 +157,10 @@ class NamedObsBase : public Observable<StateVectorT> {
           params_{std::move(params)} {}
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        using Util::operator<<;
-        std::ostringstream obs_stream;
-        obs_stream << obs_name_ << wires_;
-        return obs_stream.str();
+        // using Util::operator<<;
+        // std::ostringstream obs_stream;
+        // obs_stream << obs_name_ << wires_;
+        return obs_name_; // obs_stream.str();
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {

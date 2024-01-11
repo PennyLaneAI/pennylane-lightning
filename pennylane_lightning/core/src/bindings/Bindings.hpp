@@ -20,10 +20,13 @@
 
 #pragma once
 #include <set>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <vector>
+
+#include <iostream>
 
 #include <pybind11/complex.h>
 #include <pybind11/functional.h>
@@ -299,6 +302,7 @@ void registerBackendAgnosticObservables(py::module_ &m) {
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type.
     using ParamT = PrecisionT;           // Parameter's data precision
+    using ObsSPtr = std::shared_ptr<Observable<StateVectorT>>;
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -321,7 +325,14 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const std::string &name, const std::vector<size_t> &wires) {
                 return NamedObs<StateVectorT>(name, wires);
             }))
-        .def("__repr__", &NamedObs<StateVectorT>::getObsName)
+        .def("get_obs_name", &NamedObs<StateVectorT>::getObsName)
+        .def("__repr__",
+             [](const NamedObs<StateVectorT> &self) {
+                 using Util::operator<<;
+                 std::ostringstream obs_stream;
+                 obs_stream << self.getObsName() << self.getWires();
+                 return obs_stream.str();
+             })
         .def("get_wires", &NamedObs<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
@@ -333,7 +344,20 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                 auto other_cast = other.cast<NamedObs<StateVectorT>>();
                 return self == other_cast;
             },
-            "Compare two observables");
+            "Compare two observables")
+        .def(py::pickle(
+            [](const NamedObs<StateVectorT> &self) { // __getstate__
+                return py::make_tuple(self.getObsName(), self.getWires());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 2)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new instance */
+                NamedObs<StateVectorT> p(t[0].cast<std::string>(),
+                                         t[1].cast<std::vector<std::size_t>>());
+                return p;
+            }));
 
     class_name = "HermitianObsC" + bitsize;
     py::class_<HermitianObs<StateVectorT>,
@@ -348,6 +372,8 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                     std::vector<ComplexT>(ptr, ptr + buffer.size), wires);
             }))
         .def("__repr__", &HermitianObs<StateVectorT>::getObsName)
+        .def("get_obs_name", &HermitianObs<StateVectorT>::getObsName)
+        .def("get_matrix", &HermitianObs<StateVectorT>::getMatrix)
         .def("get_wires", &HermitianObs<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
@@ -360,7 +386,21 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                 auto other_cast = other.cast<HermitianObs<StateVectorT>>();
                 return self == other_cast;
             },
-            "Compare two observables");
+            "Compare two observables")
+        .def(py::pickle(
+            [](const HermitianObs<StateVectorT> &self) { // __getstate__
+                return py::make_tuple(self.getMatrix(), self.getWires());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 2)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new instance */
+                HermitianObs<StateVectorT> p(
+                    t[0].cast<typename HermitianObs<StateVectorT>::MatrixT>(),
+                    t[1].cast<std::vector<std::size_t>>());
+                return p;
+            }));
 
     class_name = "TensorProdObsC" + bitsize;
     py::class_<TensorProdObs<StateVectorT>,
@@ -371,6 +411,8 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &obs) { return TensorProdObs<StateVectorT>(obs); }))
         .def("__repr__", &TensorProdObs<StateVectorT>::getObsName)
+        .def("get_obs_name", &TensorProdObs<StateVectorT>::getObsName)
+        .def("get_observables", &TensorProdObs<StateVectorT>::getObs)
         .def("get_wires", &TensorProdObs<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
@@ -383,7 +425,20 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                 auto other_cast = other.cast<TensorProdObs<StateVectorT>>();
                 return self == other_cast;
             },
-            "Compare two observables");
+            "Compare two observables")
+        .def(py::pickle(
+            [](const TensorProdObs<StateVectorT> &self) { // __getstate__
+                return py::make_tuple(self.getObs());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 1)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new instance */
+                TensorProdObs<StateVectorT> p(
+                    std::move(t[0].cast<std::vector<ObsSPtr>>()));
+                return p;
+            }));
 
     class_name = "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
@@ -401,6 +456,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         .def("__repr__", &Hamiltonian<StateVectorT>::getObsName)
         .def("get_wires", &Hamiltonian<StateVectorT>::getWires,
              "Get wires of observables")
+        .def("get_observables", &Hamiltonian<StateVectorT>::getObs,
+             "Get ordered list observables")
+        .def("get_coefficients", &Hamiltonian<StateVectorT>::getCoeffs,
+             "Get ordered list of observable coefficients")
         .def(
             "__eq__",
             [](const Hamiltonian<StateVectorT> &self,
@@ -411,7 +470,21 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                 auto other_cast = other.cast<Hamiltonian<StateVectorT>>();
                 return self == other_cast;
             },
-            "Compare two observables");
+            "Compare two observables")
+        .def(py::pickle(
+            [](const Hamiltonian<StateVectorT> &self) { // __getstate__
+                return py::make_tuple(self.getCoeffs(), self.getObs());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 2)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new instance */
+                Hamiltonian<StateVectorT> p(
+                    std::move(t[0].cast<std::vector<PrecisionT>>()),
+                    std::move(t[1].cast<std::vector<ObsSPtr>>()));
+                return p;
+            }));
 }
 
 /**
@@ -532,25 +605,53 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                       const std::vector<std::vector<ComplexT>> &,
                       const std::vector<std::vector<size_t>> &,
                       const std::vector<std::vector<bool>> &>())
-        .def("__repr__", [](const OpsData<StateVectorT> &ops) {
-            using namespace Pennylane::Util;
-            std::ostringstream ops_stream;
-            for (size_t op = 0; op < ops.getSize(); op++) {
-                ops_stream << "{'name': " << ops.getOpsName()[op];
-                ops_stream << ", 'params': " << ops.getOpsParams()[op];
-                ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
-                ops_stream << ", 'controlled_wires': "
-                           << ops.getOpsControlledWires()[op];
-                ops_stream << ", 'controlled_values': "
-                           << ops.getOpsControlledValues()[op];
-                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
-                ops_stream << "}";
-                if (op < ops.getSize() - 1) {
-                    ops_stream << ",";
-                }
-            }
-            return "Operations: [" + ops_stream.str() + "]";
-        });
+        .def("__repr__",
+             [](const OpsData<StateVectorT> &ops) {
+                 using namespace Pennylane::Util;
+                 std::ostringstream ops_stream;
+                 for (size_t op = 0; op < ops.getSize(); op++) {
+                     ops_stream << "{'name': " << ops.getOpsName()[op];
+                     ops_stream << ", 'params': " << ops.getOpsParams()[op];
+                     ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                     ops_stream << ", 'controlled_wires': "
+                                << ops.getOpsControlledWires()[op];
+                     ops_stream << ", 'controlled_values': "
+                                << ops.getOpsControlledValues()[op];
+                     ops_stream << ", 'wires': " << ops.getOpsWires()[op];
+                     ops_stream << "}";
+                     if (op < ops.getSize() - 1) {
+                         ops_stream << ",";
+                     }
+                 }
+                 return "Operations: [" + ops_stream.str() + "]";
+             })
+        .def(py::pickle(
+            [](const OpsData<StateVectorT> &self) { // __getstate__
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(self.getOpsName(), self.getOpsParams(),
+                                      self.getOpsWires(), self.getOpsInverses(),
+                                      self.getOpsMatrices(),
+                                      self.getOpsControlledWires(),
+                                      self.getOpsControlledValues());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 7)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new C++ instance */
+                OpsData<StateVectorT> p(
+                    std::move(t[0].cast<std::vector<std::string>>()),
+                    std::move(
+                        t[1].cast<std::vector<std::vector<PrecisionT>>>()),
+                    std::move(t[2].cast<std::vector<std::vector<size_t>>>()),
+                    std::move(t[3].cast<std::vector<bool>>()),
+                    std::move(t[4].cast<std::vector<
+                                  std::vector<std::complex<PrecisionT>>>>()),
+                    std::move(t[5].cast<std::vector<std::vector<size_t>>>()),
+                    std::move(t[6].cast<std::vector<std::vector<bool>>>()));
+
+                return p;
+            }));
 
     /**
      * Create operation list.
