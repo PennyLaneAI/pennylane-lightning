@@ -185,7 +185,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 30
-    name: C++ tests (OpenBLAS)
+    name: C++ tests (OpenBLAS with LAPACK)
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -226,7 +226,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 30
-    name: C++ tests (OpenBLAS)
+    name: C++ tests (OpenBLAS without LAPACK)
     runs-on: ${{ matrix.os }}
 
     steps:
