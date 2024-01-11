@@ -217,7 +217,23 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-Lapack
+          path: ./Build/tests/results/
+          if-no-files-found: error
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+          if-no-files-found: error
+
       
   cpptestswithOpenBLASNoLAPACK:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
