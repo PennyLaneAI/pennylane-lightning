@@ -43,6 +43,7 @@ void compute_diagonalizing_gates(int n, int lda,
                                  std::vector<std::complex<T>> &unitary) {
     eigenVals.clear();
     eigenVals.resize(n);
+    unitary.clear();
     unitary = std::vector<std::complex<T>>(n * n, {0, 0});
 
     std::vector<std::complex<T>> ah(n * lda, {0.0, 0.0});
