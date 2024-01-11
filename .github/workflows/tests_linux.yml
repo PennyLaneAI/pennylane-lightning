@@ -621,11 +621,11 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
 
-      - name: Combine coverage files
-        run: |
-          python -m pip install coverage 
-          python -m coverage combine .coverage-python*
-          python -m coverage xml -o coverage-${{ github.job }}.xml
+      #- name: Combine coverage files
+      #  run: |
+      #    python -m pip install coverage 
+      #    python -m coverage combine .coverage-python*
+      #    python -m coverage xml -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
