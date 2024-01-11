@@ -123,7 +123,7 @@ template <typename TypeList> void testNamedObsBase() {
 
         DYNAMIC_SECTION("Unsupported NamedObs for applyInPlaceShots") {
             std::mt19937_64 re{1337};
-            const size_t num_qubits = 3;
+            constexpr size_t num_qubits = 3;
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -211,7 +211,7 @@ template <typename TypeList> void testHermitianObsBase() {
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
-            const size_t num_qubits = 3;
+            constexpr size_t num_qubits = 3;
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -233,7 +233,7 @@ template <typename TypeList> void testHermitianObsBase() {
         DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
-            const size_t num_qubits = 3;
+            constexpr size_t num_qubits = 3;
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 

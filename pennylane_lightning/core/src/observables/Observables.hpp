@@ -301,7 +301,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
             "The matrix passed to HermitianObs is not a Hermitian matrix.");
 
         eigenValues.clear();
-        ob_wires.clear();
         ob_wires = wires_;
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);
