@@ -645,8 +645,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                         t[1].cast<std::vector<std::vector<PrecisionT>>>()),
                     std::move(t[2].cast<std::vector<std::vector<size_t>>>()),
                     std::move(t[3].cast<std::vector<bool>>()),
-                    std::move(t[4].cast<std::vector<
-                                  std::vector<std::complex<PrecisionT>>>>()),
+                    std::move(t[4].cast<std::vector<std::vector<ComplexT>>>()),
                     std::move(t[5].cast<std::vector<std::vector<size_t>>>()),
                     std::move(t[6].cast<std::vector<std::vector<bool>>>()));
 
