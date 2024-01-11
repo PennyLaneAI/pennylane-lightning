@@ -22,7 +22,8 @@
 #include <algorithm>
 #include <complex>
 #include <vector>
-/// [@cond](https://github.com/cond) DEV
+
+/// @cond DEV
 namespace {
 extern "C" {
 // LAPACK routine for complex Hermitian eigensystems
