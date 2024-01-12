@@ -634,6 +634,27 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
             "SparseHamiltonian observables do not support shot measurement.");
     }
 
+    /**
+     * @brief Return a reference to the CSR data vector.
+     *
+     * @return std::vector<ComplexT>
+     */
+    const std::vector<ComplexT> &getData() { return data_; }
+
+    /**
+     * @brief Return a reference to the CSR indices vector.
+     *
+     * @return const std::vector<IdxT>&
+     */
+    const std::vector<IdxT> &getIndices() { return indices_; }
+
+    /**
+     * @brief Return a reference to the CSR offsets vector.
+     *
+     * @return const std::vector<IdxT>&
+     */
+    const std::vector<IdxT> &getOffsets() { return offsets_; }
+
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;

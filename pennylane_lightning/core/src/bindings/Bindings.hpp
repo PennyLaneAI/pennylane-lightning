@@ -742,7 +742,29 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     auto pyclass =
         py::class_<StateVectorT>(m, class_name.c_str(), py::module_local());
     pyclass.def(py::init(&createStateVectorFromNumpyData<StateVectorT>))
-        .def_property_readonly("size", &StateVectorT::getLength);
+        .def_property_readonly("size", &StateVectorT::getLength)
+        .def(py::pickle(
+            [](const StateVectorT &self) { // __getstate__
+                return py::make_tuple(self.getDataVector());
+            },
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 1)
+                    throw std::runtime_error("Invalid state!");
+
+                /* Create a new C++ instance */
+                auto vec =
+                    t[0].cast<std::vector<typename StateVectorT::ComplexT>>();
+
+                if constexpr (std::is_same_v<
+                                  typename StateVectorT::MemoryStorageT,
+                                  MemoryStorageLocation::Internal>) {
+                    return StateVectorT(t[0].cast<std::vector<ComplexT> &>());
+                } else {
+                    PL_ABORT("Externally managed statevector data does not "
+                             "currently support serialization. Please use an "
+                             "internally managed statevector class.");
+                }
+            }));
 
     registerBackendClassSpecificBindings<StateVectorT>(pyclass);
 
