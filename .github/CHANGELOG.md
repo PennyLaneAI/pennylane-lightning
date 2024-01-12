@@ -1,4 +1,26 @@
-# Release 0.34.0-dev
+# Release 0.35.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+
+---
+
+# Release 0.34.0
 
 ### New features since last release
 
@@ -35,9 +57,9 @@
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
-
-* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels.
-  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+ 
+* Ensure aligned memory used for numpy arrays with state-vector without reallocations.
+  [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
 * Unify error messages of shot measurement related unsupported observables to better Catalyst.
   [(#577)](https://github.com/PennyLaneAI/pennylane-lightning/pull/577)

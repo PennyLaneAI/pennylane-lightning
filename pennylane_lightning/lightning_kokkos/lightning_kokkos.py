@@ -32,8 +32,6 @@ try:
     from pennylane_lightning.lightning_kokkos_ops import (
         allocate_aligned_array,
         backend_info,
-        best_alignment,
-        get_alignment,
         InitializationSettings,
         MeasurementsC128,
         MeasurementsC64,
@@ -232,8 +230,10 @@ if LK_CPP_BINARY_AVAILABLE:
             # or dtype mismatches
             # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
             # numpy allocated memory as the memory location happens to be aligned.
-            if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
-                new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
+            if arr.dtype != dtype:
+                new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(
+                    arr.shape
+                )
                 np.copyto(new_arr, arr)
                 arr = new_arr
             return arr

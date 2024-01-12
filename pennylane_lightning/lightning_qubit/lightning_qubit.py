@@ -227,6 +227,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             # state as an array of dimension [2]*wires.
             self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
+            self._c_dtype = c_dtype
 
             self._batch_obs = batch_obs
             self._mcmc = mcmc
@@ -259,8 +260,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned)
             # numpy allocated memory as the memory location happens to be aligned.
             if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
-                new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
-                np.copyto(new_arr, arr)
+                new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(
+                    arr.shape
+                )
+                if len(arr.shape):
+                    new_arr[:] = arr
+                else:
+                    np.copyto(new_arr, arr)
                 arr = new_arr
             return arr
 
@@ -273,9 +279,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                 representing the statevector of the basis state
             Note: This function does not support broadcasted inputs yet.
             """
-            state = np.zeros(2**self.num_wires, dtype=np.complex128)
+            state = allocate_aligned_array(2**self.num_wires, np.dtype(self.C_DTYPE), True)
             state[index] = 1
-            state = self._asarray(state, dtype=self.C_DTYPE)
             return self._reshape(state, [2] * self.num_wires)
 
         def reset(self):
@@ -283,7 +288,8 @@ if LQ_CPP_BINARY_AVAILABLE:
             super().reset()
 
             # init the state vector to |00..0>
-            self._state = self._create_basis_state(0)
+            if not self.state[0] == 1.0 + 0j:
+                self._state = self._create_basis_state(0)
             self._pre_rotated_state = self._state
 
         @property
