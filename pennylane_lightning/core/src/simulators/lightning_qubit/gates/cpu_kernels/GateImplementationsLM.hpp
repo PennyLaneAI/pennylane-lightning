@@ -1633,7 +1633,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 reverseWires(num_qubits, all_wires, controlled_values);
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
-            PL_LOOP_PARALLEL_VA(1, private(indices, i0000, i0011, i1100))
+            PL_LOOP_PARALLEL_VA(1, firstprivate(indices, i0000, i0011, i1100))
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
                 if constexpr (compute_indices) {
                     const auto &&tmp =
@@ -1663,7 +1663,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 one << rev_wires[0], one << rev_wires[1], one << rev_wires[2],
                 one << rev_wires[3]};
             const auto parity = Pennylane::Util::revWireParity(rev_wires);
-            PL_LOOP_PARALLEL_VA(1, private(indices, i0000, i0011, i1100))
+            PL_LOOP_PARALLEL_VA(1, firstprivate(indices, i0000, i0011, i1100))
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
                 if constexpr (compute_indices) {
                     indices = parity2indices(k, parity, rev_wire_shifts);
