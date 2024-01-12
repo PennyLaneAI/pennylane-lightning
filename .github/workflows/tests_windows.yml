@@ -132,7 +132,7 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\
+          path: D:\a\install_dir\vcpkg
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Create installation directory
