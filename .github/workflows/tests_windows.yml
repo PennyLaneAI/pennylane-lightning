@@ -22,6 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    needs: [build_lapack]
     timeout-minutes: 45
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -37,13 +38,19 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
-
-      - name: Install lapack with vcpkg
+      
+      - name: Restoring cached Lapack
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\lapack
+          key: ${{ matrix.os }}-lapack-Debug
+      
+      - name: Copy cached lapack
+        if: steps.lapck-cache.outputs.cache-hit == 'true'
         run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+          Copy-Item -Path "D:\a\install_dir\lapack" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -59,7 +66,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\lapack `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -109,8 +116,56 @@ jobs:
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
+  
 
-  build_dependencies:
+  build_lapack:
+    needs: [win-set-matrix-x86]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    timeout-minutes: 30
+    name: LAPACK-Reference
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cache installation directories
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-lapack-Debug
+
+      - name: Clone LAPACK libs
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a
+          git clone https://github.com/Reference-LAPACK/lapack.git
+
+      - name: Create installation directory
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
+          mkdir -p D:\a\install_dir\lapack
+
+      - name: Install dependencies
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install cmake build
+          choco install mingw -y
+          echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
+
+
+      - name: Build Lapack library
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a\lapack
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake --build . -j --target install
+
+  build_kokkos:
     needs: [win-set-matrix-x86]
     strategy:
       fail-fast: false
@@ -165,7 +220,7 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies, win-set-matrix-x86]
+    needs: [build_kokkos, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
