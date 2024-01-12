@@ -349,9 +349,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const NamedObs<StateVectorT> &self) { // __getstate__
                 return py::make_tuple(self.getObsName(), self.getWires());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 2)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 2) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new instance */
                 NamedObs<StateVectorT> p(t[0].cast<std::string>(),
@@ -391,9 +392,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const HermitianObs<StateVectorT> &self) { // __getstate__
                 return py::make_tuple(self.getMatrix(), self.getWires());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 2)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 2) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new instance */
                 HermitianObs<StateVectorT> p(
@@ -430,9 +432,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const TensorProdObs<StateVectorT> &self) { // __getstate__
                 return py::make_tuple(self.getObs());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 1)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 1) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new instance */
                 TensorProdObs<StateVectorT> p(
@@ -475,9 +478,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             [](const Hamiltonian<StateVectorT> &self) { // __getstate__
                 return py::make_tuple(self.getCoeffs(), self.getObs());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 2)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 2) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new instance */
                 Hamiltonian<StateVectorT> p(
@@ -634,9 +638,10 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                                       self.getOpsControlledWires(),
                                       self.getOpsControlledValues());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 7)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 7) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new C++ instance */
                 OpsData<StateVectorT> p(
@@ -747,9 +752,10 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
             [](const StateVectorT &self) { // __getstate__
                 return py::make_tuple(self.getDataVector());
             },
-            [](py::tuple t) { // __setstate__
-                if (t.size() != 1)
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 1) {
                     throw std::runtime_error("Invalid state!");
+                }
 
                 /* Create a new C++ instance */
                 auto vec =
@@ -765,6 +771,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                     PL_ABORT("Externally managed statevector data does not "
                              "currently support serialization. Please use an "
                              "internally managed statevector class.");
+                    // Required due to Pybind11 macro processing, though never
+                    // reached.
                     typename StateVectorT::ComplexT *null_data = nullptr;
                     return StateVectorT(null_data, 0);
                 }
