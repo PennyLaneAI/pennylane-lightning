@@ -43,14 +43,14 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\vcpkg
+          path: D:\a\install_dir
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Copy cached lapack
         if: steps.lapck-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\vcpkg\vcpkg" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\vcpkg" -Recurse -Force
+          Copy-Item -Path "D:\a\install_dir\vcpkg" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -132,18 +132,19 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\vcpkg
+          path: D:\a\install_dir
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Create installation directory
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
-          Remove-Item -Path D:\a\install_dir\vcpkg -Recurse -Force -ErrorAction Ignore
-          mkdir -p D:\a\install_dir\vcpkg
+          Remove-Item -Path D:\a\install_dir -Recurse -Force -ErrorAction Ignore
+          mkdir -p D:\a\install_dir
 
       - name: Install lapack with vcpkg
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
-          cd D:\a\install_dir\vcpkg
+          cd D:\a\install_dir
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
