@@ -118,6 +118,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install ninja cmake custatevec-cu11
+          sudo apt-get -y -q install liblapack-dev
 
       - name: Build and run unit tests
         run: |
@@ -125,6 +126,7 @@ jobs:
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
+            -DENABLE_LAPACK=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
