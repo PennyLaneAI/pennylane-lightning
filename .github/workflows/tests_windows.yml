@@ -162,7 +162,7 @@ jobs:
           cd D:\a\lapack
           mkdir build
           cd build
-          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake -DCMAKE_Fortran_COMPILER=C:\tools\mingw64\bin\gfortran.exe -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
 
   build_kokkos:
