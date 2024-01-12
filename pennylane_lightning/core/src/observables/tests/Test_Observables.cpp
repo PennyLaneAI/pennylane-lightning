@@ -88,7 +88,7 @@ template <typename TypeList> void testNamedObsBase() {
 
         DYNAMIC_SECTION("Name of the Observable must be correct - "
                         << StateVectorToName<StateVectorT>::name) {
-            REQUIRE(NamedObsT("PauliZ", {0}).getObsName() == "PauliZ[0]");
+            REQUIRE(NamedObsT("PauliZ", {0}).getObsName() == "PauliZ");
         }
 
         DYNAMIC_SECTION("Comparing objects names") {
@@ -295,7 +295,7 @@ template <typename TypeList> void testTensorProdObsBase() {
             auto ob = TensorProdObsT(
                 std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
                 std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
-            REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
+            REQUIRE(ob.getObsName() == "PauliX @ PauliZ");
         }
 
         DYNAMIC_SECTION("Compare tensor product observables"
@@ -322,8 +322,10 @@ template <typename TypeList> void testTensorProdObsBase() {
             REQUIRE(ob1 != ob5);
 
             auto obs = ob1.getObs();
-            REQUIRE(obs[0]->getObsName() == "PauliX[0]");
-            REQUIRE(obs[1]->getObsName() == "PauliZ[1]");
+            REQUIRE(obs[0]->getObsName() == "PauliX");
+            REQUIRE(obs[1]->getObsName() == "PauliZ");
+            REQUIRE(obs[0]->getWires() == std::vector<std::size_t>{0});
+            REQUIRE(obs[1]->getWires() == std::vector<std::size_t>{1});
         }
 
         DYNAMIC_SECTION("Tensor product applies to a statevector correctly"
@@ -447,7 +449,8 @@ template <typename TypeList> void testHamiltonianBase() {
                 REQUIRE(
                     HamiltonianT::create({0.3, 0.5}, {X0, Z2})->getObsName() ==
                     "Hamiltonian: { 'coeffs' : [0.3, 0.5], "
-                    "'observables' : [PauliX[0], PauliZ[2]]}");
+                    "'observables' : { 'terms' : [PauliX, PauliZ], 'wires' : "
+                    "[[0], [2]]}}");
             }
 
             DYNAMIC_SECTION("Compare Hamiltonians - "

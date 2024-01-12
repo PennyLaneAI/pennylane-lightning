@@ -516,10 +516,18 @@ class HamiltonianBase : public Observable<StateVectorT> {
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Util::operator<<;
         std::ostringstream ss;
-        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ << ", 'observables' : [";
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_
+           << ", 'observables' : { 'terms' : [";
         const auto term_size = coeffs_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
+            if (t != term_size - 1) {
+                ss << ", ";
+            }
+        }
+        ss << "], 'wires' : [";
+        for (size_t t = 0; t < term_size; t++) {
+            ss << obs_[t]->getWires();
             if (t != term_size - 1) {
                 ss << ", ";
             }
