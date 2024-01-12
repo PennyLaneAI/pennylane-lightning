@@ -747,7 +747,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
             [](const StateVectorT &self) { // __getstate__
                 return py::make_tuple(self.getDataVector());
             },
-            [](py::tuple &t) { // __setstate__
+            [](py::tuple t) { // __setstate__
                 if (t.size() != 1)
                     throw std::runtime_error("Invalid state!");
 
@@ -758,11 +758,15 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                 if constexpr (std::is_same_v<
                                   typename StateVectorT::MemoryStorageT,
                                   MemoryStorageLocation::Internal>) {
-                    return StateVectorT(t[0].cast<std::vector<ComplexT> &>());
+                    return StateVectorT(
+                        t[0].cast<
+                            std::vector<typename StateVectorT::ComplexT>>());
                 } else {
                     PL_ABORT("Externally managed statevector data does not "
                              "currently support serialization. Please use an "
                              "internally managed statevector class.");
+                    typename StateVectorT::ComplexT *null_data = nullptr;
+                    return StateVectorT(null_data, 0);
                 }
             }));
 

@@ -213,13 +213,12 @@ if LGPU_CPP_BINARY_AVAILABLE:
             wires (int): the number of wires to initialize the device with
             mpi (bool): enable MPI support. MPI support will be enabled if ``mpi`` is set as``True``.
             mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-            sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
             shots (int): How many times the circuit should be evaluated (or sampled) to estimate
                 the expectation values. Defaults to ``None`` if not specified. Setting
                 to ``None`` results in computing statistics like expectation values and
                 variances analytically.
-            batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
+            batch_obs (Union[bool, int]): determine whether to use run batches over observables in the adjoint Jacobian pipeline. If true, batches in numbers of available backend resources. If numbered, batches in the given chunk size.
         """
 
         name = "Lightning GPU PennyLane plugin"
@@ -236,7 +235,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             *,
             mpi: bool = False,
             mpi_buf_size: int = 0,
-            sync=False,
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
@@ -285,7 +283,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     self._num_local_wires,
                 )
 
-            self._sync = sync
             self._batch_obs = batch_obs
             self._create_basis_state(0)
 

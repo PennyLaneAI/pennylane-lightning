@@ -1057,7 +1057,7 @@ class StateVectorCudaMPI final
      *
      * @return std::vector<std::complex<PrecisionT>>
      */
-    auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
+    auto getDataVector() const -> std::vector<std::complex<PrecisionT>> {
         std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
         this->CopyGpuDataToHost(data_host.data(), data_host.size());
         return data_host;

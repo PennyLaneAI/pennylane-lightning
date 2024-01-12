@@ -1145,7 +1145,7 @@ def test_integration_chunk_observables():
 
     def circuit(params):
         circuit_ansatz(params, wires=range(4))
-        return [qml.expval(qml.PauliZ(i)) for i in range(4)]
+        return qml.math.hstack([qml.expval(qml.PauliZ(i)) for i in range(4)])
 
     n_params = 30
     params = np.linspace(0, 10, n_params)

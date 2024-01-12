@@ -19,6 +19,7 @@ interfaces with C++ for fast linear algebra calculations.
 
 from warnings import warn
 from pathlib import Path
+from typing import Union
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
@@ -167,7 +168,6 @@ if LK_CPP_BINARY_AVAILABLE:
 
         Args:
             wires (int): the number of wires to initialize the device with
-            sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of
                 ``np.complex64`` or ``np.complex128``.
             kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
@@ -176,6 +176,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 the expectation values. Defaults to ``None`` if not specified. Setting
                 to ``None`` results in computing statistics like expectation values and
                 variances analytically.
+            batch_obs (Union[bool, int]): determine whether to use run batches over observables in the adjoint Jacobian pipeline. If true, batches in numbers of available backend resources. If numbered, batches in the given chunk size.
         """
 
         name = "Lightning Kokkos PennyLane plugin"
@@ -190,10 +191,9 @@ if LK_CPP_BINARY_AVAILABLE:
             self,
             wires,
             *,
-            sync=True,
             c_dtype=np.complex128,
             shots=None,
-            batch_obs=False,
+            batch_obs: Union[bool, int] = False,
             kokkos_args=None,
         ):  # pylint: disable=unused-argument
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
@@ -207,7 +207,6 @@ if LK_CPP_BINARY_AVAILABLE:
                 raise TypeError(
                     f"Argument kokkos_args must be of type {type0} but it is of {type(kokkos_args)}."
                 )
-            self._sync = sync
 
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
@@ -715,19 +714,26 @@ if LK_CPP_BINARY_AVAILABLE:
 
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
-            if self._batch_obs and requested_threads > 1:  # pragma: no cover
-                obs_partitions = _chunk_iterable(
-                    processed_data["obs_serialized"], requested_threads
-                )
-                jac = []
-                for obs_chunk in obs_partitions:
-                    jac_local = adjoint_jacobian(
-                        processed_data["state_vector"],
-                        obs_chunk,
-                        processed_data["ops_serialized"],
-                        trainable_params,
+            if self._batch_obs:
+                if requested_threads > 1:  # pragma: no cover
+                    num_obs = len(processed_data["obs_serialized"])
+                    batch_size = (
+                        num_obs
+                        if isinstance(self._batch_obs, bool)
+                        else self._batch_obs
+                        * 1  # Single device, multiple threads per device so  * 1
                     )
-                    jac.extend(jac_local)
+
+                    obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
+                    jac = []
+                    for obs_chunk in obs_partitions:
+                        jac_local = adjoint_jacobian(
+                            processed_data["state_vector"],
+                            obs_chunk,
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+                        jac.extend(jac_local)
             else:
                 jac = adjoint_jacobian(
                     processed_data["state_vector"],
@@ -738,9 +744,32 @@ if LK_CPP_BINARY_AVAILABLE:
             jac = np.array(jac)
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-            if hasattr(qml, "active_return"):  # pragma: no cover
-                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if not self._batch_obs:
+                jac_r[:, processed_data["record_tp_rows"]] = jac
+            else:
+                # Reduce over decomposed expval(H), if required.
+                for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                    if (
+                        processed_data["obs_idx_offsets"][idx + 1]
+                        - processed_data["obs_idx_offsets"][idx]
+                    ) > 1:
+                        jac_r[idx, :] = np.sum(
+                            jac[
+                                processed_data["obs_idx_offsets"][idx] : processed_data[
+                                    "obs_idx_offsets"
+                                ][idx + 1],
+                                :,
+                            ],
+                            axis=0,
+                        )
+                    else:
+                        jac_r[idx, :] = jac[
+                            processed_data["obs_idx_offsets"][idx] : processed_data[
+                                "obs_idx_offsets"
+                            ][idx + 1],
+                            :,
+                        ]
+
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long

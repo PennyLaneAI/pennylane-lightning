@@ -746,9 +746,14 @@ if LQ_CPP_BINARY_AVAILABLE:
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
             if self._batch_obs and requested_threads > 1:
-                obs_partitions = _chunk_iterable(
-                    processed_data["obs_serialized"], requested_threads
+                batch_size = (
+                    requested_threads
+                    if isinstance(self._batch_obs, bool)
+                    else self._batch_obs
+                    * requested_threads  # Alway batch in chunks of thread-counts
                 )
+
+                obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
                 jac = []
                 for obs_chunk in obs_partitions:
                     jac_local = adjoint_jacobian(
@@ -768,9 +773,31 @@ if LQ_CPP_BINARY_AVAILABLE:
             jac = np.array(jac)
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-            if hasattr(qml, "active_return"):  # pragma: no cover
-                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if not self._batch_obs:
+                jac_r[:, processed_data["record_tp_rows"]] = jac
+            else:
+                # Reduce over decomposed expval(H), if required.
+                for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                    if (
+                        processed_data["obs_idx_offsets"][idx + 1]
+                        - processed_data["obs_idx_offsets"][idx]
+                    ) > 1:
+                        jac_r[idx, :] = np.sum(
+                            jac[
+                                processed_data["obs_idx_offsets"][idx] : processed_data[
+                                    "obs_idx_offsets"
+                                ][idx + 1],
+                                :,
+                            ],
+                            axis=0,
+                        )
+                    else:
+                        jac_r[idx, :] = jac[
+                            processed_data["obs_idx_offsets"][idx] : processed_data[
+                                "obs_idx_offsets"
+                            ][idx + 1],
+                            :,
+                        ]
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=line-too-long, inconsistent-return-statements

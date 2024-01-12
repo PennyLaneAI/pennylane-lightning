@@ -146,7 +146,9 @@ class StateVectorKokkos final
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        HostToDevice(hostdata_, length);
+        // const cast required due to Kokkos rules.
+        // Host-data will not be modified.
+        HostToDevice(const_cast<ComplexT *>(hostdata_), length);
     }
 
     /**
@@ -765,15 +767,15 @@ class StateVectorKokkos final
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        std::vector<ComplexT> data(this->getLength());
+        DeviceToHost(data.data(), data.size());
+        return data;
     }
 
     [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        std::vector<ComplexT> data(this->getLength());
+        DeviceToHost(data.data(), data.size());
+        return data;
     }
 
     /**
