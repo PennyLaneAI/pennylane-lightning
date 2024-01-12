@@ -156,6 +156,23 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
+                   double) {
+    SECTION("Test for a Hermitian matrix") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, -1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == true);
+    }
+
+    SECTION("Test for a non-Hermitian matrix") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, 1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == false);
+    }
+}
+
 TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
     SECTION("For -1, 1 values") {
         std::vector<TestType> vec0{1, -1};
