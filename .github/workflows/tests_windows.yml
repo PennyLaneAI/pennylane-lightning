@@ -148,12 +148,21 @@ jobs:
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
       
-      - name: Install lapack with vcpkg
+      - name: Set up MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msys2-version: 'latest'
+
+      - name: Install MinGW components
         run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install gfortran
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm mingw-w64-x86_64-gcc mingw-w64-x86_64-gfortran
+
+          gfortran --version
+      
+      - name: Display gfortran Path
+        run: |
+          echo "gfortran path: $(command -v gfortran)"
 
       - name: Install dependencies
         if: steps.lapack-cache.outputs.cache-hit != 'true'
@@ -166,7 +175,7 @@ jobs:
           cd D:\a\lapack
           mkdir build
           cd build
-          cmake -DCMAKE_TOOLCHAIN_FILE=D:/a/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
 
   build_kokkos:
