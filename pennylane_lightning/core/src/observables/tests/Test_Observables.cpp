@@ -474,7 +474,7 @@ template <typename TypeList> void testHamiltonianBase() {
                     HamiltonianT::create({0.3, 0.5}, {X0, Z2})->getObsName() ==
                     "Hamiltonian: { 'coeffs' : [0.3, 0.5], "
                     "'observables' : { 'terms' : [PauliX, PauliZ], 'wires' : "
-                    "[[0], [2]]}}");
+                    "[[0], [2]] } }");
             }
 
             DYNAMIC_SECTION("Compare Hamiltonians - "

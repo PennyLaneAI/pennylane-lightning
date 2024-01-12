@@ -580,7 +580,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
                 ss << ", ";
             }
         }
-        ss << "]}";
+        ss << "] } }";
         return ss.str();
     }
 
