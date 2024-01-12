@@ -146,7 +146,7 @@ class StateVectorKokkos final
         : StateVectorKokkos(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        HostToDevice(hostdata_copy.data(), length);
+        HostToDevice(hostdata_, length);
     }
 
     /**
