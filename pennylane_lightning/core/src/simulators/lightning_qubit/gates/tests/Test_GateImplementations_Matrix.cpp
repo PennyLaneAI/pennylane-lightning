@@ -821,25 +821,41 @@ void testApplyMatrixForKernels() {
     using Pennylane::Gates::MatrixOperation;
     if constexpr (!std::is_same_v<TypeList, void>) {
         using GateImplementation = typename TypeList::Type;
-
-        if constexpr (array_has_elem(GateImplementation::implemented_matrices,
-                                     MatrixOperation::SingleQubitOp)) {
-            testApplySingleQubitOp<PrecisionT, GateImplementation>();
+        DYNAMIC_SECTION(GateImplementation::name) {
+            if constexpr (array_has_elem(
+                              GateImplementation::implemented_matrices,
+                              MatrixOperation::SingleQubitOp)) {
+                DYNAMIC_SECTION("testApplySingleQubitOp") {
+                    testApplySingleQubitOp<PrecisionT, GateImplementation>();
+                }
+            }
+            if constexpr (array_has_elem(
+                              GateImplementation::implemented_matrices,
+                              MatrixOperation::TwoQubitOp)) {
+                DYNAMIC_SECTION("testApplyTwoQubitOp") {
+                    testApplyTwoQubitOp<PrecisionT, GateImplementation>();
+                }
+            }
+            if constexpr (array_has_elem(
+                              GateImplementation::implemented_matrices,
+                              MatrixOperation::MultiQubitOp)) {
+                DYNAMIC_SECTION("testApplyMultiQubitOp") {
+                    testApplyMultiQubitOp<PrecisionT, GateImplementation>();
+                }
+            }
+            if constexpr (array_has_elem(
+                              GateImplementation::
+                                  implemented_controlled_matrices,
+                              ControlledMatrixOperation::NCMultiQubitOp)) {
+                DYNAMIC_SECTION("testApplyNCMultiQubitOp") {
+                    testApplyNCMultiQubitOp<PrecisionT, GateImplementation>();
+                }
+            }
+            DYNAMIC_SECTION("testApplyMatrixForKernels") {
+                testApplyMatrixForKernels<PrecisionT,
+                                          typename TypeList::Next>();
+            }
         }
-        if constexpr (array_has_elem(GateImplementation::implemented_matrices,
-                                     MatrixOperation::TwoQubitOp)) {
-            testApplyTwoQubitOp<PrecisionT, GateImplementation>();
-        }
-        if constexpr (array_has_elem(GateImplementation::implemented_matrices,
-                                     MatrixOperation::MultiQubitOp)) {
-            testApplyMultiQubitOp<PrecisionT, GateImplementation>();
-        }
-        if constexpr (array_has_elem(
-                          GateImplementation::implemented_controlled_matrices,
-                          ControlledMatrixOperation::NCMultiQubitOp)) {
-            testApplyNCMultiQubitOp<PrecisionT, GateImplementation>();
-        }
-        testApplyMatrixForKernels<PrecisionT, typename TypeList::Next>();
     }
 }
 

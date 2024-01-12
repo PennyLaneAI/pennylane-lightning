@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
 ### Documentation
 
 ### Bug fixes
@@ -17,6 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Lee J. O'Riordan,
 Shuli Shu
 
 ---
@@ -58,7 +62,7 @@ Shuli Shu
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
-
+ 
 * Ensure aligned memory used for numpy arrays with state-vector without reallocations.
   [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
