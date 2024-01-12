@@ -2063,7 +2063,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             Pennylane::Util::revWireParity(rev_wires);
 
         const std::size_t dim = one << nw_tot;
-        // std::vector<std::size_t> indices(dim);
 
         std::size_t mask{0};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
