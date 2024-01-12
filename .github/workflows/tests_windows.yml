@@ -147,14 +147,18 @@ jobs:
         run: |
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
+      
+      - name: Install lapack with vcpkg
+        run: |
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install gfortran
 
       - name: Install dependencies
         if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           python -m pip install cmake build
-          choco install mingw -y
-          echo "C:\tools\mingw64\bin" >> $env:GITHUB_PATH
-
 
       - name: Build Lapack library
         if: steps.lapack-cache.outputs.cache-hit != 'true'
@@ -162,7 +166,7 @@ jobs:
           cd D:\a\lapack
           mkdir build
           cd build
-          cmake -DCMAKE_Fortran_COMPILER=C:\tools\mingw64\bin\gfortran.exe -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake -DCMAKE_TOOLCHAIN_FILE=D:/a/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
 
   build_kokkos:
