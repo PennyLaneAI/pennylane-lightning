@@ -43,13 +43,13 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\vcpkg
+          path: D:\a\install_dir\vcpkg
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Copy cached lapack
         if: steps.lapck-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\vcpkg" `
+          Copy-Item -Path "D:\a\install_dir\vcpkg" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\vcpkg" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
@@ -132,12 +132,12 @@ jobs:
         id: lapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\
+          path: D:\a\install_dir\
           key: ${{ matrix.os }}-lapack-Debug
 
       - name: Install lapack with vcpkg
         run: |
-          cd D:\a\
+          cd D:\a\install_dir\
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
