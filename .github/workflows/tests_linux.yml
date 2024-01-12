@@ -59,12 +59,28 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
+
+            cmake . -BBuildKernelOMP -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON \
+              -DLQ_ENABLE_KERNEL_OMP=ON
+
             cmake --build ./Build
-            cd ./Build
-            mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            cmake --build ./BuildKernelOMP
+
+            for d in Build BuildKernelOMP; do
+              cd ./$d
+              mkdir -p ./tests/results
+              for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+              lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+              lcov --remove coverage.info '/usr/*' --output-file coverage.info
+              cd ..
+            done
+            lcov --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info -o coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
@@ -72,14 +88,17 @@ jobs:
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
-          path: ./Build/tests/results/
+          path: |
+            ./Build/tests/results/
+            ./BuildKernelOMP/tests/results/
+
           if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
   pythontests:
@@ -158,7 +177,7 @@ jobs:
       - name: Install backend device
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
@@ -265,7 +284,8 @@ jobs:
               -DBUILD_TESTS=ON \
               -DENABLE_LAPACK=OFF \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON
+              -DENABLE_COVERAGE=ON \
+              -DLQ_ENABLE_KERNEL_OMP=ON
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
