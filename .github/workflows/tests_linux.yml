@@ -47,13 +47,14 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
+              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
@@ -197,7 +198,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
@@ -207,6 +208,62 @@ jobs:
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DBUILD_TESTS=ON \
+              -DENABLE_LAPACK=ON \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON
+            cmake --build ./Build
+            cd ./Build
+            mkdir -p ./tests/results
+            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --remove coverage.info '/usr/*' --output-file coverage.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-Lapack
+          path: ./Build/tests/results/
+          if-no-files-found: error
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+          if-no-files-found: error
+
+  cpptestswithOpenBLASNoLAPACK:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_qubit"]
+    timeout-minutes: 30
+    name: C++ tests (OpenBLAS without LAPACK)
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
+
+      - name: Build and run unit tests
+        run: |
+            cmake . -BBuild -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DENABLE_PYTHON=OFF \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DBUILD_TESTS=ON \
+              -DENABLE_LAPACK=OFF \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
             cmake --build ./Build
@@ -370,13 +427,14 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
+              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
@@ -548,7 +606,7 @@ jobs:
 
   upload-to-codecov-linux-python:
     needs: [pythontests, pythontestswithOpenBLAS, pythontestswithKokkos]
-    name: Upload coverage data to codecov
+    name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -575,8 +633,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
-    name: Upload coverage data to codecov
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithOpenBLASNoLAPACK, cpptestswithKokkos]
+    name: Upload cpp coverage data to codecov
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -630,13 +688,15 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
 
       - name: Build and run unit tests
         run: |
+            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
+              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
@@ -645,6 +705,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results_multiple_backends
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
+            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
