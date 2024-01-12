@@ -49,7 +49,7 @@ jobs:
       - name: Copy cached lapack
         if: steps.lapck-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\vcpkg" `
+          Copy-Item -Path "D:\a\install_dir\vcpkg\vcpkg" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\vcpkg" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
@@ -66,7 +66,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\lapack `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\vcpkg `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -134,10 +134,16 @@ jobs:
         with:
           path: D:\a\install_dir\
           key: ${{ matrix.os }}-lapack-Debug
+      
+      - name: Create installation directory
+        if: steps.kokkos-cache.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -Path D:\a\install_dir\vcpkg -Recurse -Force -ErrorAction Ignore
+          mkdir -p D:\a\install_dir\vcpkg
 
       - name: Install lapack with vcpkg
         run: |
-          cd D:\a\install_dir\
+          cd D:\a\install_dir\vcpkg
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
