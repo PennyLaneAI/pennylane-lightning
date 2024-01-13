@@ -141,25 +141,19 @@ jobs:
           Remove-Item -Path D:\a\install_dir -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir
 
-      - name: Check MSYS2
+      - name: setup msys2
         if: steps.lapack-cache.outputs.cache-hit != 'true'
-        run: |
-          shell: msys2 {0}
-        
-      - name: Install dependencies 
         use: msys2/setup-msys2@v2
         with:
-          msystem: MINGW64 
-          update: true
-          install: >-
-            git
-            tar
-            zip
+          install: | 
             make
-            mingw64/mingw-w64-x86_64-gcc
-            mingw64/mingw-w64-x86_64-gcc-fortran
-            mingw64/mingw-w64-x86_64-cmake
-        
+            mingw-w64-x86_64-toolchain
+      
+      - name: Setup ccache
+        uses: Chocobo1/setup-ccache-action@v1
+        with:
+          windows_compile_environment: msys2  # this field is required
+
       - name: Install lapack
         if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
@@ -168,8 +162,8 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          /mingw64/bin/cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
-          /mingw64/bin/cmake --build . -j --target install
+          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake --build . -j --target install
 
       #- name: Install lapack with vcpkg
       #  if: steps.lapack-cache.outputs.cache-hit != 'true'
