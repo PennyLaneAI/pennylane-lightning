@@ -143,7 +143,7 @@ jobs:
 
       - name: setup msys2
         if: steps.lapack-cache.outputs.cache-hit != 'true'
-        use: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@v2
         with:
           install: | 
             make
