@@ -99,7 +99,7 @@ class StateVectorCudaMPI final
                                      StateVectorCudaMPI<Precision>>::CFP_t;
     using PrecisionT = Precision;
     using ComplexT = std::complex<PrecisionT>;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
     StateVectorCudaMPI() = delete;
 

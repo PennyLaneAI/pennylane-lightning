@@ -83,7 +83,7 @@ class StateVectorCudaManaged
     using CFP_t =
         typename StateVectorCudaBase<Precision,
                                      StateVectorCudaManaged<Precision>>::CFP_t;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
     StateVectorCudaManaged() = delete;
     StateVectorCudaManaged(size_t num_qubits)
