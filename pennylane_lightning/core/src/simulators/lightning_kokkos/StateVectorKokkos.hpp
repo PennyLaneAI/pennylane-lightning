@@ -92,7 +92,7 @@ class StateVectorKokkos final
         Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
@@ -764,17 +764,23 @@ class StateVectorKokkos final
     [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Get a host copy of the statevector data.
+     *
+     * @tparam ComplexTAlt Alternative complex floating-point datatype. Defaults
+     * to `ComplexT`.
+     * @return std::vector<ComplexTAlt>
      */
-    [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data(this->getLength());
-        DeviceToHost(data.data(), data.size());
-        return data;
-    }
-
-    [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        std::vector<ComplexT> data(this->getLength());
-        DeviceToHost(data.data(), data.size());
+    template <class ComplexTAlt = ComplexT>
+    [[nodiscard]] auto getDataVector() const -> std::vector<ComplexTAlt> {
+        std::vector<ComplexTAlt> data(this->getLength());
+        // Local data buffer must be cast to device buffer type before copy.
+        // Copy performed in device-bufer data space.
+        if constexpr (std::is_same_v<ComplexTAlt, ComplexT>) {
+            DeviceToHost(data.data(), data.size());
+        } else {
+            DeviceToHost(reinterpret_cast<ComplexT *>(data.data()),
+                         data.size());
+        }
         return data;
     }
 

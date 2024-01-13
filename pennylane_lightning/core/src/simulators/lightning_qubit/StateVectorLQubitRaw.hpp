@@ -105,8 +105,26 @@ class StateVectorLQubitRaw final
      *
      * @return a std::vector<ComplexT> object that stores statevector data.
      */
-    auto getDataVector() const -> std::vector<ComplexT> {
+    [[nodiscard]] auto getDataVector() const -> std::vector<ComplexT> {
         return std::vector<ComplexT>{data_, data_ + length_};
+    }
+
+    /**
+     * @brief Get a host copy of the statevector data.
+     *
+     * @tparam ComplexTAlt Alternative complex floating-point datatype. Defaults
+     * to `ComplexT`.
+     * @return std::vector<ComplexTAlt>
+     */
+    template <class ComplexTAlt = ComplexT>
+    [[nodiscard]] auto getDataVector() const -> std::vector<ComplexTAlt> {
+        if constexpr (std::is_same_v<ComplexTAlt, ComplexT>) {
+            return std::vector<ComplexTAlt>{data_, data_ + length_};
+        } else {
+            // All data on host, as no device present.
+            const ComplexTAlt *ptr = reinterpret_cast<ComplexTAlt *>(data_);
+            return std::vector<ComplexTAlt>{ptr, ptr + length_};
+        }
     }
 
     /**

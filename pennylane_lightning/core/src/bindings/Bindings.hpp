@@ -24,6 +24,7 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <iostream>
@@ -750,26 +751,27 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
         .def_property_readonly("size", &StateVectorT::getLength)
         .def(py::pickle(
             [](const StateVectorT &self) { // __getstate__
-                return py::make_tuple(self.getDataVector());
+                return py::make_tuple(
+                    self.template getDataVector<std::complex<PrecisionT>>());
             },
             [](py::tuple &t) { // __setstate__
                 if (t.size() != 1) {
                     throw std::runtime_error("Invalid state!");
                 }
 
-                /* Create a new C++ instance */
-                auto vec =
-                    t[0].cast<std::vector<typename StateVectorT::ComplexT>>();
-
                 if constexpr (std::is_same_v<
                                   typename StateVectorT::MemoryStorageT,
                                   MemoryStorageLocation::Internal>) {
-                    return StateVectorT(
-                        t[0].cast<
-                            std::vector<typename StateVectorT::ComplexT>>());
+                    using CastType =
+                        decltype(std::declval<StateVectorT>()
+                                     .template getDataVector<
+                                         std::complex<PrecisionT>>());
+
+                    auto vec = t[0].cast<CastType>();
+                    return StateVectorT(vec.data(), vec.size());
                 } else {
-                    PL_ABORT("Externally managed statevector data does not "
-                             "currently support serialization. Please use an "
+                    PL_ABORT("External or Undefined statevector data do not "
+                             "support serialization. Please use an "
                              "internally managed statevector class.");
                     // Required due to Pybind11 macro processing, though never
                     // reached.

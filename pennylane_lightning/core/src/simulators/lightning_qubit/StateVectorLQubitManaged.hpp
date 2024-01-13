@@ -146,16 +146,24 @@ class StateVectorLQubitManaged final
     }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Get a host copy of the statevector data.
+     *
+     * @tparam ComplexTAlt Alternative complex floating-point datatype. Defaults
+     * to `ComplexT`.
+     * @return std::vector<ComplexTAlt>
      */
-    [[nodiscard]] auto getDataVector()
-        -> std::vector<ComplexT, AlignedAllocator<ComplexT>> & {
-        return data_;
-    }
-
+    template <class ComplexTAlt = ComplexT>
     [[nodiscard]] auto getDataVector() const
-        -> const std::vector<ComplexT, AlignedAllocator<ComplexT>> & {
-        return data_;
+        -> const std::vector<ComplexT, AlignedAllocator<ComplexTAlt>> & {
+        if constexpr (std::is_same_v<ComplexTAlt, ComplexT>) {
+            return data_;
+        } else {
+            // All data on host, as no device present.
+            const ComplexTAlt *ptr =
+                reinterpret_cast<ComplexTAlt *>(data_.data());
+            return std::vector<ComplexTAlt, AlignedAllocator<ComplexTAlt>>{
+                ptr, ptr + length_};
+        }
     }
 
     /**
