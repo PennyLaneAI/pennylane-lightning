@@ -141,10 +141,12 @@ jobs:
           Remove-Item -Path D:\a\install_dir -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir
 
-      - name: Install dependency
+      - name: Check MSYS2
         if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           shell: msys2 {0}
+        
+      - name: Install dependencies 
         use: msys2/setup-msys2@v2
         with:
           msystem: MINGW64 
@@ -166,8 +168,8 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
-          cmake --build . -j --target install
+          /mingw64/bin/cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          /mingw64/bin/cmake --build . -j --target install
 
       #- name: Install lapack with vcpkg
       #  if: steps.lapack-cache.outputs.cache-hit != 'true'
