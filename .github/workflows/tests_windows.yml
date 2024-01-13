@@ -162,7 +162,7 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          cmake -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack -G "MSYS Makefiles" ..
+          cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
 
       #- name: Install lapack with vcpkg
