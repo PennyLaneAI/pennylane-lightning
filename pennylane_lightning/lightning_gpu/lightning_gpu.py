@@ -689,7 +689,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     batch_size = (
                         num_obs
                         if isinstance(self._batch_obs, bool)
-                        else (self._batch_obs * self._dp.getTotalDevices(), requested_batch)
+                        else max(self._batch_obs * self._dp.getTotalDevices(), requested_batch)
                     )
                     jac = []
                     for chunk in range(0, num_obs, batch_size):
