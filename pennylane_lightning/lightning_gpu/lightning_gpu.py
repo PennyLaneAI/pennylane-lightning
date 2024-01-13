@@ -77,6 +77,7 @@ except (ImportError, ValueError) as e:
 if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
     from itertools import product
+    from os import getenv
 
     from pennylane import (
         math,
@@ -678,15 +679,17 @@ if LGPU_CPP_BINARY_AVAILABLE:
             - Evenly distribute the observables over all available GPUs (`batch_obs=True`): This will evenly split the data into ceil(num_obs/num_gpus) chunks, and allocate enough space on each GPU up-front before running through them concurrently. This relies on C++ threads to handle the orchestration.
             - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
             """
+            requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
+
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
-            if self._batch_obs:  # Batching of Measurements
+            if self._batch_obs or requested_batch > 0:  # Batching of Measurements
                 if not self._mpi:  # Single-node path, controlled batching over available GPUs
                     num_obs = len(processed_data["obs_serialized"])
                     batch_size = (
                         num_obs
                         if isinstance(self._batch_obs, bool)
-                        else self._batch_obs * self._dp.getTotalDevices()
+                        else (self._batch_obs * self._dp.getTotalDevices(), requested_batch)
                     )
                     jac = []
                     for chunk in range(0, num_obs, batch_size):

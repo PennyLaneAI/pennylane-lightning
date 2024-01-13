@@ -197,6 +197,7 @@ if LK_CPP_BINARY_AVAILABLE:
             kokkos_args=None,
         ):  # pylint: disable=unused-argument
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
+            self._batch_obs = batch_obs
 
             if kokkos_args is None:
                 self._kokkos_state = _kokkos_dtype(c_dtype)(self.num_wires)
@@ -710,30 +711,30 @@ if LK_CPP_BINARY_AVAILABLE:
             # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
             # This will allow use of Lightning with adjoint for large-qubit numbers AND large
             # numbers of observables, enabling choice between compute time and memory use.
-            requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
+            requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
 
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
-            if self._batch_obs:
-                if requested_threads > 1:  # pragma: no cover
-                    num_obs = len(processed_data["obs_serialized"])
-                    batch_size = (
-                        num_obs
-                        if isinstance(self._batch_obs, bool)
-                        else self._batch_obs
-                        * 1  # Single device, multiple threads per device so  * 1
-                    )
+            if self._batch_obs or requested_batch > 0:  # pragma: no cover
+                print(f"Here: {self._batch_obs} {requested_batch}")
+                num_obs = len(processed_data["obs_serialized"])
+                batch_size = (
+                    num_obs
+                    if isinstance(self._batch_obs, bool)
+                    else max(requested_batch, self._batch_obs)
+                    * 1  # Single device, multiple threads per device so  * 1
+                )
 
-                    obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
-                    jac = []
-                    for obs_chunk in obs_partitions:
-                        jac_local = adjoint_jacobian(
-                            processed_data["state_vector"],
-                            obs_chunk,
-                            processed_data["ops_serialized"],
-                            trainable_params,
-                        )
-                        jac.extend(jac_local)
+                obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
+                jac = []
+                for obs_chunk in obs_partitions:
+                    jac_local = adjoint_jacobian(
+                        processed_data["state_vector"],
+                        obs_chunk,
+                        processed_data["ops_serialized"],
+                        trainable_params,
+                    )
+                    jac.extend(jac_local)
             else:
                 jac = adjoint_jacobian(
                     processed_data["state_vector"],
