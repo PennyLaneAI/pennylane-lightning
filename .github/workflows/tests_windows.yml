@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v3
       
       - name: Copy cached lapack
-        if: steps.lapck-cache.outputs.cache-hit == 'true'
+        if: steps.lapack-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\lapack" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
