@@ -167,8 +167,8 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          /mingw64/bin/cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
-          /mingw64/bin/cmake --build . -j --target install
+          cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake --build . -j --target install
 
       #- name: Install lapack with vcpkg
       #  if: steps.lapack-cache.outputs.cache-hit != 'true'
