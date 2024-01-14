@@ -23,7 +23,7 @@ jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_lapack]
-    timeout-minutes: 45
+    timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -243,26 +243,39 @@ jobs:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
       
+      - name: Restoring cached Lapack
+        id: lapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\lapack
+          key: ${{ matrix.os }}-lapack-Debug
+      
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      - name: Copy cached libraries
+      - name: Copy cached kokkos
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
+      
+      - name: Copy cached lapack
+        if: steps.lapack-cache.outputs.cache-hit == 'true'
+        run: |
+          Copy-Item -Path "D:\a\install_dir\lapack" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
       
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+      #- name: Install lapack with vcpkg
+      #  run: |
+      #    git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+      #    cd vcpkg
+      #    .\bootstrap-vcpkg.bat
+      #    vcpkg install lapack
 
       - name: Enable long paths
         run: |
@@ -282,7 +295,8 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\lapack `
+          #-DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
