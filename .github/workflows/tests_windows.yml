@@ -145,14 +145,19 @@ jobs:
         #if: steps.lapack-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
-          install: | 
+          msystem: MINGW64
+          update: true
+          install: >-
+            git
+            tar
+            zip
             make
-            mingw-w64-x86_64-toolchain
-      
-      - name: Setup ccache
-        uses: Chocobo1/setup-ccache-action@v1
-        with:
-          windows_compile_environment: msys2  # this field is required
+            mingw64/mingw-w64-x86_64-gcc
+            mingw64/mingw-w64-x86_64-gcc-fortran
+            mingw64/mingw-w64-x86_64-cmake
+        #  install: | 
+        #    make
+        #    mingw-w64-x86_64-toolchain
 
       - name: Install lapack
         #if: steps.lapack-cache.outputs.cache-hit != 'true'
@@ -162,8 +167,8 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
-          cmake --build . -j --target install
+          /mingw64/bin/cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          /mingw64/bin/cmake --build . -j --target install
 
       #- name: Install lapack with vcpkg
       #  if: steps.lapack-cache.outputs.cache-hit != 'true'
