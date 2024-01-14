@@ -50,7 +50,7 @@ jobs:
         if: steps.lapck-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\lapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning" -Recurse -Force
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -136,13 +136,13 @@ jobs:
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Create installation directory
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
 
       - name: setup msys2
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -155,29 +155,17 @@ jobs:
             mingw64/mingw-w64-x86_64-gcc
             mingw64/mingw-w64-x86_64-gcc-fortran
             mingw64/mingw-w64-x86_64-cmake
-        #  install: | 
-        #    make
-        #    mingw-w64-x86_64-toolchain
 
       - name: Install lapack
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
           cd lapack
           mkdir build
           cd build
-          cmake -G"MSYS Makefiles" -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake -G"MSYS Makefiles" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
-
-      #- name: Install lapack with vcpkg
-      #  if: steps.lapack-cache.outputs.cache-hit != 'true'
-      #  run: |
-      #    cd D:\a\install_dir
-      #    git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-      #    cd vcpkg
-      #    .\bootstrap-vcpkg.bat
-      #    vcpkg install lapack
 
 
   build_kokkos:
