@@ -164,7 +164,7 @@ jobs:
           cd lapack
           mkdir build
           cd build
-          cmake -G"MSYS Makefiles" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_LIBDIR=D:\a\install_dir\lapack ..
+          cmake -G"MSYS Makefiles" -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\lapack ..
           cmake --build . -j --target install
 
 
