@@ -49,6 +49,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: .
+          file: docker/Dockerfile
           push: false
           tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
