@@ -4,9 +4,6 @@ name: Docker::Linux::x86_64
 # **Why we have it**: To build Docker images to be uploaded to Docker Hub.
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
-env:
-  LIGHTNING_VERSION: 0.34.0
-
 on:
   pull_request:
   push:
@@ -27,8 +24,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_version: ["0.34.0"]
-        pl_backend: ["lightning-qubit"]
-        # pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
+        # pl_backend: ["lightning-qubit"]
+        pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
     name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ matrix.pl_version }}
     runs-on: ${{ matrix.os }}
@@ -46,78 +43,29 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and export to Docker
         uses: docker/build-push-action@v5
         with:
+          push: false
+          load: true
           context: .
           file: docker/Dockerfile
-          push: false
-          tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          tags: test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
 
-  # install_dependencies:
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-22.04]
-  #   timeout-minutes: 30
-  #   name: Install dependencies 
-  #   runs-on: ${{ matrix.os }}
+      - name: Test
+        run: |
+          docker run --rm test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
 
-  #   steps:
-
-  #     - name: Uninstall old versions
-  #       run: |
-  #         for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get -y remove $pkg; done
-
-  #     - name: Set up Docker's apt repository
-  #       run: |
-  #         # Add Docker's official GPG key:
-  #         sudo apt-get -y update
-  #         sudo apt-get -y install ca-certificates curl gnupg
-  #         sudo install -m 0755 -d /etc/apt/keyrings
-  #         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  #         sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-  #         # Add the repository to Apt sources:
-  #         echo \
-  #           "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-  #           $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  #           sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  #         sudo apt-get -y update
-
-  #     - name: Install the Docker packages
-  #       run: |
-  #         sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-  #     - name: Docker hello-world
-  #       run: |
-  #         sudo docker run hello-world
-
-  # docker-build-linux-x86-64:
-  #   needs: [install_dependencies]
-  #   strategy:
-  #     matrix:
-  #       os: [ubuntu-22.04]
-  #       pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
-  #   timeout-minutes: 180
-  #   name: ${{ matrix.os }}::${{ matrix.pl_backend }}
-  #   runs-on: ${{ matrix.os }}
-
-  #   steps:
-
-  #     - name: Checkout PennyLane-Lightning
-  #       uses: actions/checkout@v3
-
-  #     - name: Docker build 
-  #       run: |
-  #         docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }} --target wheel-${{ matrix.pl_backend }} --build-arg="LIGHTNING_VERSION=${LIGHTNING_VERSION}" .
-
-  #     - name: Docker test
-  #       run: |
-  #         docker run --rm pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }}
-
-  #     # - name: Docker push
-  #     #   run: |
-  #     #     docker push pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          context: .
+          file: docker/Dockerfile
+          tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ matrix.pl_version }}
