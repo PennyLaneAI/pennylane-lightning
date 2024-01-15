@@ -21,6 +21,7 @@ jobs:
 
   docker:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         pl_version: ["0.34.0"]
