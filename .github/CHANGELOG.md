@@ -4,6 +4,9 @@
 
 * Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
+
+* Cache Lapack lib for faster Windows CI checks.
+  [(#592)](https://github.com/PennyLaneAI/pennylane-lightning/pull/592)
   
 ### Breaking changes
 
@@ -20,8 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan,
-Shuli Shu
+Lee J. O'Riordan, Shuli Shu
 
 ---
 
