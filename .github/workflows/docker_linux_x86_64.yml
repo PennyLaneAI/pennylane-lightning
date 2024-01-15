@@ -1,6 +1,6 @@
 name: Docker::Linux::x86_64
 
-# **What it does**: Builds Docker images for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
+# **What it does**: Builds Docker images for Linux (ubuntu-22.04) architecture x86_64 and store it as artifacts.
 # **Why we have it**: To build Docker images to be uploaded to Docker Hub.
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
@@ -25,12 +25,10 @@ jobs:
   install_dependencies:
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        os: [ubuntu-22.04]
     timeout-minutes: 30
     name: Install dependencies 
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
 
     steps:
 
@@ -65,13 +63,11 @@ jobs:
   docker-build-linux-x86-64:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     timeout-minutes: 180
     name: ${{ matrix.os }}::${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
 
     steps:
 
@@ -143,7 +139,7 @@ jobs:
   #     matrix:
   #       arch: [x86_64]
   #       pl_backend: ["lightning_qubit"]
-  #   runs-on: ubuntu-latest
+  #   runs-on: ubuntu-22.04
 
   #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
   #   steps:
