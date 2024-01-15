@@ -16,7 +16,7 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from typing import List
+from typing import List, Union
 from itertools import islice, product
 import numpy as np
 
@@ -73,7 +73,8 @@ class LightningBase(QubitDevice):
         *,
         c_dtype=np.complex128,
         shots=None,
-        batch_obs=False,
+        batch_obs: Union[bool, int] = False,
+        mpi: bool = False,
     ):
         if c_dtype is np.complex64:
             r_dtype = np.float32
@@ -85,6 +86,7 @@ class LightningBase(QubitDevice):
             raise TypeError(f"Unsupported complex Type: {c_dtype}")
         super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
         self._batch_obs = batch_obs
+        self._mpi = mpi
 
     @property
     def stopping_condition(self):

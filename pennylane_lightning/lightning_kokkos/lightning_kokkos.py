@@ -195,9 +195,9 @@ if LK_CPP_BINARY_AVAILABLE:
             shots=None,
             batch_obs: Union[bool, int] = False,
             kokkos_args=None,
+            mpi: bool = False,
         ):  # pylint: disable=unused-argument
-            super().__init__(wires, shots=shots, c_dtype=c_dtype)
-            self._batch_obs = batch_obs
+            super().__init__(wires, shots=shots, c_dtype=c_dtype, batch_obs=batch_obs, mpi=mpi)
 
             if kokkos_args is None:
                 self._kokkos_state = _kokkos_dtype(c_dtype)(self.num_wires)
@@ -727,14 +727,33 @@ if LK_CPP_BINARY_AVAILABLE:
 
                 obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
                 jac = []
-                for obs_chunk in obs_partitions:
-                    jac_local = adjoint_jacobian(
-                        processed_data["state_vector"],
-                        obs_chunk,
-                        processed_data["ops_serialized"],
-                        trainable_params,
-                    )
-                    jac.extend(jac_local)
+
+                if self._mpi:
+                    from mpi4py import MPI
+                    from mpi4py.futures import MPIPoolExecutor
+
+                    with MPIPoolExecutor() as executor:
+                        jac_f = []
+                        for obs_chunk in obs_partitions:
+                            jac_local = executor.submit(
+                                adjoint_jacobian,
+                                processed_data["state_vector"],
+                                obs_chunk,
+                                processed_data["ops_serialized"],
+                                trainable_params,
+                            )
+                            jac_f.append(jac_local)
+                        jac_f = [r.result() for r in jac_f]
+                        jac.extend(jac_f)
+                else:
+                    for obs_chunk in obs_partitions:
+                        jac_local = adjoint_jacobian(
+                            processed_data["state_vector"],
+                            obs_chunk,
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+                        jac.extend(jac_local)
             else:
                 jac = adjoint_jacobian(
                     processed_data["state_vector"],

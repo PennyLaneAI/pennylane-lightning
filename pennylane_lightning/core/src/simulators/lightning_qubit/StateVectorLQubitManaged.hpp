@@ -162,7 +162,7 @@ class StateVectorLQubitManaged final
             const ComplexTAlt *ptr =
                 reinterpret_cast<ComplexTAlt *>(data_.data());
             return std::vector<ComplexTAlt, AlignedAllocator<ComplexTAlt>>{
-                ptr, ptr + length_};
+                ptr, ptr + data_.size()};
         }
     }
 

@@ -128,14 +128,6 @@ class StateVectorKokkos final
         HostToDevice(hostdata_, length);
     }
 
-    StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t length,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
-    }
-
     /**
      * @brief Create a new state vector from data on the host.
      *
@@ -148,7 +140,16 @@ class StateVectorKokkos final
                         "The size of provided data must be a power of 2.");
         // const cast required due to Kokkos rules.
         // Host-data will not be modified.
-        HostToDevice(const_cast<ComplexT *>(hostdata_), length);
+        HostToDevice(hostdata_, length);
+    }
+
+    StateVectorKokkos(const std::complex<PrecisionT> *hostdata_,
+                      std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(reinterpret_cast<const ComplexT *>(hostdata_), length);
     }
 
     /**
@@ -156,7 +157,7 @@ class StateVectorKokkos final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(std::vector<ComplexT> hostdata_,
+    StateVectorKokkos(const std::vector<ComplexT> &hostdata_,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
 
@@ -788,8 +789,9 @@ class StateVectorKokkos final
      * @brief Copy data from the host space to the device space.
      *
      */
-    inline void HostToDevice(ComplexT *sv, std::size_t length) {
-        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
+    inline void HostToDevice(const ComplexT *sv, std::size_t length) {
+        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(
+                                      const_cast<ComplexT *>(sv), length));
     }
 
     /**

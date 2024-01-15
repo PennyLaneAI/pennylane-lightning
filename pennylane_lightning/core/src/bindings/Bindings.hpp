@@ -725,7 +725,18 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
             "Batch Adjoint Jacobian method.")
 #endif
         .def("__call__", &registerAdjointJacobian<StateVectorT>,
-             "Adjoint Jacobian method.");
+             "Adjoint Jacobian method.")
+        .def(py::pickle(
+            [](const AdjointJacobian<StateVectorT> &self) { // __getstate__
+                return py::make_tuple();
+            },
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 0) {
+                    throw std::runtime_error("Invalid state!");
+                }
+
+                return AdjointJacobian<StateVectorT>();
+            }));
 }
 
 /**
@@ -751,10 +762,10 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
         .def_property_readonly("size", &StateVectorT::getLength)
         .def(py::pickle(
             [](const StateVectorT &self) { // __getstate__
-                return py::make_tuple(
-                    self.template getDataVector<std::complex<PrecisionT>>());
+                return py::make_tuple(std::move(
+                    self.template getDataVector<std::complex<PrecisionT>>()));
             },
-            [](py::tuple &t) { // __setstate__
+            [](const py::tuple &t) { // __setstate__
                 if (t.size() != 1) {
                     throw std::runtime_error("Invalid state!");
                 }
@@ -767,7 +778,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                                      .template getDataVector<
                                          std::complex<PrecisionT>>());
 
-                    auto vec = t[0].cast<CastType>();
+                    const auto &vec = t[0].cast<CastType>();
                     return StateVectorT(vec.data(), vec.size());
                 } else {
                     PL_ABORT("External or Undefined statevector data do not "
