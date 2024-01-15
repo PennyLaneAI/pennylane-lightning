@@ -60,16 +60,13 @@ jobs:
         run: |
           sudo docker run hello-world
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get install wget
-
   docker-build-linux-x86-64:
     needs: [install_dependencies]
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
+        pl_backend: ["lightning-qubit"]
+        # pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
     name: ${{ matrix.os }}::${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
