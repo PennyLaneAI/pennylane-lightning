@@ -762,8 +762,25 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
         .def_property_readonly("size", &StateVectorT::getLength)
         .def(py::pickle(
             [](const StateVectorT &self) { // __getstate__
-                return py::make_tuple(std::move(
-                    self.template getDataVector<std::complex<PrecisionT>>()));
+                auto result = std::move(
+                    self.template getDataVector<std::complex<PrecisionT>>());
+                const size_t ndim = 1;
+                const std::vector<size_t> shape{result.size()};
+                constexpr auto sz = sizeof(std::complex<PrecisionT>);
+                const std::vector<size_t> strides{sz};
+
+                auto py_arr = py::array_t<
+                    std::complex<typename StateVectorT::PrecisionT>>(
+                    py::buffer_info(
+                        result.data(), /* data as contiguous array  */
+                        sz,            /* size of one scalar        */
+                        py::format_descriptor<size_t>::format(), /* data type */
+                        ndim,   /* number of dimensions      */
+                        shape,  /* shape of the matrix       */
+                        strides /* strides for each axis     */
+                        ));
+
+                return py::make_tuple(py_arr);
             },
             [](const py::tuple &t) { // __setstate__
                 if (t.size() != 1) {
@@ -778,8 +795,10 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                                      .template getDataVector<
                                          std::complex<PrecisionT>>());
 
-                    const auto &vec = t[0].cast<CastType>();
-                    return StateVectorT(vec.data(), vec.size());
+                    const auto &vec = t[0].cast<py::array_t<
+                        std::complex<typename StateVectorT::PrecisionT>>>();
+
+                    return createStateVectorFromNumpyData<StateVectorT>(vec);
                 } else {
                     PL_ABORT("External or Undefined statevector data do not "
                              "support serialization. Please use an "
