@@ -716,7 +716,6 @@ if LK_CPP_BINARY_AVAILABLE:
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
             if self._batch_obs or requested_batch > 0:  # pragma: no cover
-                print(f"Here: {self._batch_obs} {requested_batch}")
                 num_obs = len(processed_data["obs_serialized"])
                 batch_size = (
                     num_obs
@@ -743,8 +742,7 @@ if LK_CPP_BINARY_AVAILABLE:
                                 trainable_params,
                             )
                             jac_f.append(jac_local)
-                        jac_f = [r.result() for r in jac_f]
-                        jac.extend(jac_f)
+                        jac.append(qml.math.hstack([r.result() for r in jac_f]))
                 else:
                     for obs_chunk in obs_partitions:
                         jac_local = adjoint_jacobian(
