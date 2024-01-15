@@ -60,7 +60,12 @@ jobs:
         run: |
           sudo docker run hello-world
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get install wget
+
   docker-build-linux-x86-64:
+    needs: [install_dependencies]
     strategy:
       matrix:
         os: [ubuntu-22.04]
