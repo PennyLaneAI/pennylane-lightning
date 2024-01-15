@@ -762,8 +762,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
         .def_property_readonly("size", &StateVectorT::getLength)
         .def(py::pickle(
             [](const StateVectorT &self) { // __getstate__
-                auto result = std::move(
-                    self.template getDataVector<std::complex<PrecisionT>>());
+                auto result =
+                    self.template getDataVector<std::complex<PrecisionT>>();
                 const size_t ndim = 1;
                 const std::vector<size_t> shape{result.size()};
                 constexpr auto sz = sizeof(std::complex<PrecisionT>);
@@ -774,13 +774,18 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                     py::buffer_info(
                         result.data(), /* data as contiguous array  */
                         sz,            /* size of one scalar        */
-                        py::format_descriptor<size_t>::format(), /* data type */
-                        ndim,   /* number of dimensions      */
-                        shape,  /* shape of the matrix       */
-                        strides /* strides for each axis     */
+                        py::format_descriptor<
+                            std::complex<PrecisionT>>::format(), /* data type */
+                        ndim,    /* number of dimensions      */
+                        shape,   /* shape of the matrix       */
+                        strides, /* strides for each axis     */
+                        true     /* read only */
                         ));
 
-                return py::make_tuple(py_arr);
+                auto p = static_cast<std::complex<PrecisionT> *>(
+                    py_arr.request().ptr);
+                return py::make_tuple<py::return_value_policy::move>(
+                    std::move(py_arr));
             },
             [](const py::tuple &t) { // __setstate__
                 if (t.size() != 1) {
@@ -795,8 +800,11 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
                                      .template getDataVector<
                                          std::complex<PrecisionT>>());
 
-                    const auto &vec = t[0].cast<py::array_t<
+                    const auto vec = t[0].cast<py::array_t<
                         std::complex<typename StateVectorT::PrecisionT>>>();
+
+                    const auto p = static_cast<std::complex<PrecisionT> *>(
+                        vec.request().ptr);
 
                     return createStateVectorFromNumpyData<StateVectorT>(vec);
                 } else {
