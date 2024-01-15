@@ -103,44 +103,27 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    if(NOT MSVC)
+    if(NOT MSVC OR CMAKE_TOOLCHAIN_FILE)
         find_package(LAPACK REQUIRED)
-        if(NOT LAPACK_FOUND)
+        if(CMAKE_TOOLCHAIN_FILE AND NOT LAPACK_FOUND)
+            message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain properly(<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
+        elseif(NOT LAPACK_FOUND)
             message(FATAL_ERROR "LAPACK is enabled but not found.\n")
         endif()
         message(STATUS "LAPACK found.")
         target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-    else()
-        if(MSVC)
-            if(CMAKE_TOOLCHAIN_FILE)
-                message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain properly(<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
-            endif()
+    elseif(MSVC AND NOT CMAKE_TOOLCHAIN_FILE)
+        #For CACHED LAPACK ON WINDOWS CI
+        find_package(Lapack
+            NAMES liblapack.dll liblapack.dll.a
+            HINTS ${pennylane_lightning_SOURCE_DIR}/lapack
+        )
 
-            find_package(Lapack
-                NAMES liblapack.dll liblapack.dll.a
-                HINTS ${pennylane_lightning_SOURCE_DIR}/lapack
-            )
-
-            if(Lapack_FOUND)
-                message(STATUS "Found existing Lapack library.")
-                target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
-                target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-            else()
-                set(LAPACK_GIT_TAG "master" CACHE STRING "GIT_TAG value to build LAPACK")
-                FetchContent_Declare(
-                    Lapack
-                    GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
-                    GIT_TAG      ${LAPACK_GIT_TAG}
-                )
-                set(CMAKE_POSITION_INDEPENDENT_CODE ON) # build with -fPIC
-            
-                FetchContent_MakeAvailable(Lapack)
-
-                target_link_libraries(lightning_external_libs INTERFACE Lapack)
-
-                target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-            endif()
+        if(Lapack_FOUND)
+            message(STATUS "Found existing Lapack library.")
+            target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
+            target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
         else()
             message(FATAL_ERROR "LAPACK is enabled but not found.\n")
         endif()
