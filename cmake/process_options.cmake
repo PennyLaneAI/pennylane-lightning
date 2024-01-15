@@ -126,7 +126,7 @@ if(ENABLE_LAPACK)
                 message(STATUS "Found existing Lapack library.")
                 target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
                 target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-            elseif()
+            else()
                 set(LAPACK_GIT_TAG "master" CACHE STRING "GIT_TAG value to build LAPACK")
                 FetchContent_Declare(
                     Lapack
