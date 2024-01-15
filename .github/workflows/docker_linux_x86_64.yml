@@ -65,10 +65,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning-qubit"]
-        # pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
+        pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
-    name: ${{ matrix.os }}::${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.pl_backend }}
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -78,81 +77,12 @@ jobs:
 
       - name: Docker build 
         run: |
-          docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:0.34.0-${{ matrix.pl_backend }} --target wheel-${{ matrix.pl_backend }} --build-arg="LIGHTNING_VERSION=${LIGHTNING_VERSION}" .
+          docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }} --target wheel-${{ matrix.pl_backend }} --build-arg="LIGHTNING_VERSION=${LIGHTNING_VERSION}" .
 
-  #     - name: Build wheels
-  #       env:
-  #         CIBW_ARCHS_LINUX: ${{matrix.arch}}
+      - name: Docker test
+        run: |
+          docker run --rm pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }}
 
-  #         CIBW_BUILD: ${{ matrix.cibw_build }}
-
-  #         CIBW_SKIP: "*-musllinux*"
-
-  #         # Python build settings
-  #         CIBW_BEFORE_BUILD: |
-  #           cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-  #           python -m pip install ninja cmake~=3.24.0
-  #           yum clean all -y
-  #           yum install centos-release-scl-rh -y
-  #           yum install devtoolset-11-gcc-c++ -y
-  #           source /opt/rh/devtoolset-11/enable -y
-
-  #         CIBW_ENVIRONMENT: |
-  #           PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
-  #           PL_BACKEND="${{ matrix.pl_backend }}"
-
-  #         # Testing of built wheels
-  #         CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
-
-  #         CIBW_BEFORE_TEST: |
-  #           python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@master
-  #           if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
-
-  #         CIBW_TEST_COMMAND: |
-  #           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-  #           pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
-
-  #         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-
-  #         CIBW_BUILD_VERBOSITY: 3
-
-  #       run: python3.9 -m cibuildwheel --output-dir wheelhouse
-
-  #     - name: Validate wheels
-  #       run: |
-  #         python3.9 -m pip install twine
-  #         python3.9 -m twine check ./wheelhouse/*.whl
-
-  #     - uses: actions-ecosystem/action-regex-match@main
-  #       id: rc_build
-  #       with:
-  #         text: ${{ github.event.pull_request.head.ref }}
-  #         regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
-
-  #     - uses: actions/upload-artifact@v3
-  #       if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
-  #       with:
-  #         name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
-  #         path: ./wheelhouse/*.whl
-
-  # upload-pypi:
-  #   needs: linux-wheels-x86-64
-  #   strategy:
-  #     matrix:
-  #       arch: [x86_64]
-  #       pl_backend: ["lightning_qubit"]
-  #   runs-on: ubuntu-22.04
-
-  #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
-  #   steps:
-  #     - uses: actions/download-artifact@v3
-  #       with:
-  #         name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
-  #         path: dist
-
-  #     - name: Upload wheels to PyPI
-  #       uses: pypa/gh-action-pypi-publish@release/v1
-  #       with:
-  #         user: __token__
-  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-  #         repository-url: https://test.pypi.org/legacy/
+      # - name: Docker push
+      #   run: |
+      #     docker push pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }}
