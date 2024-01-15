@@ -26,10 +26,11 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
+        pl_version: ["0.34.0"]
         pl_backend: ["lightning-qubit"]
         # pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
-    name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}
+    name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ matrix.pl_version }}
     runs-on: ${{ matrix.os }}
     steps:
 
@@ -49,8 +50,10 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: false
-          tags: pennylaneai/pennylane:${LIGHTNING_VERSION}-${{ matrix.pl_backend }}
+          tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ matrix.pl_version }}
 
   # install_dependencies:
   #   strategy:
