@@ -14,14 +14,16 @@
 
 ### Documentation
 
+* Update requirements to build the documentation.
+  [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
+
 ### Bug fixes
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan,
-Shuli Shu
+Amintor Dusko, Lee J. O'Riordan, Shuli Shu
 
 ---
 
