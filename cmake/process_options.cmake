@@ -103,8 +103,11 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    find_package(LAPACK REQUIRED)
-    if(LAPACK_FOUND)
+    if(NOT MSVC)
+        find_package(LAPACK REQUIRED)
+        if(NOT LAPACK_FOUND)
+            message(FATAL_ERROR "LAPACK is enabled but not found.\n")
+        endif()
         message(STATUS "LAPACK found.")
         target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
