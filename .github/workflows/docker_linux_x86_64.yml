@@ -1,0 +1,175 @@
+name: Docker::Linux::x86_64
+
+# **What it does**: Builds Docker images for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
+# **Why we have it**: To build Docker images to be uploaded to Docker Hub.
+# **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: docker_linux_x86_64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  install_dependencies:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+    timeout-minutes: 30
+    name: Install dependencies 
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container_img }}
+
+    steps:
+
+      - name: Uninstall old versions
+        run: |
+          for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+
+      - name: Set up Docker's apt repository
+        run: |
+          # Add Docker's official GPG key:
+          sudo apt-get update
+          sudo apt-get install ca-certificates curl gnupg
+          sudo install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+          # Add the repository to Apt sources:
+          echo \
+            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+
+      - name: Install the Docker packages
+        run: |
+          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      - name: Docker hello-world
+        run: |
+          sudo docker run hello-world
+
+  # linux-wheels-x86-64:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-latest]
+  #       arch: [x86_64]
+  #       pl_backend: ["lightning_kokkos", "lightning_qubit"]
+  #       container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+  #   timeout-minutes: 30
+  #   name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+  #   runs-on: ${{ matrix.os }}
+  #   container: ${{ matrix.container_img }}
+
+  #   steps:
+  #     - name: Restoring cached dependencies
+  #       id: kokkos-cache
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: /root/Kokkos_install/${{ matrix.exec_model }}
+  #         key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+  #     - name: Checkout PennyLane-Lightning
+  #       uses: actions/checkout@v3
+
+  #     - name: Copy cached libraries
+  #       run: |
+  #         mkdir Kokkos
+  #         cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+
+  #     - name: Install dependencies (CentOS)
+  #       if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
+  #       run: |
+  #         # Reduce wait time for repos not responding
+  #         cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+  #         yum update -y && yum install -y docker
+
+  #     - name: Install cibuildwheel
+  #       run: python3.9 -m pip install cibuildwheel~=2.16.0
+
+  #     - name: Build wheels
+  #       env:
+  #         CIBW_ARCHS_LINUX: ${{matrix.arch}}
+
+  #         CIBW_BUILD: ${{ matrix.cibw_build }}
+
+  #         CIBW_SKIP: "*-musllinux*"
+
+  #         # Python build settings
+  #         CIBW_BEFORE_BUILD: |
+  #           cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+  #           python -m pip install ninja cmake~=3.24.0
+  #           yum clean all -y
+  #           yum install centos-release-scl-rh -y
+  #           yum install devtoolset-11-gcc-c++ -y
+  #           source /opt/rh/devtoolset-11/enable -y
+
+  #         CIBW_ENVIRONMENT: |
+  #           PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
+  #           PL_BACKEND="${{ matrix.pl_backend }}"
+
+  #         # Testing of built wheels
+  #         CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
+
+  #         CIBW_BEFORE_TEST: |
+  #           python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@master
+  #           if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+
+  #         CIBW_TEST_COMMAND: |
+  #           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+  #           pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+
+  #         CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+
+  #         CIBW_BUILD_VERBOSITY: 3
+
+  #       run: python3.9 -m cibuildwheel --output-dir wheelhouse
+
+  #     - name: Validate wheels
+  #       run: |
+  #         python3.9 -m pip install twine
+  #         python3.9 -m twine check ./wheelhouse/*.whl
+
+  #     - uses: actions-ecosystem/action-regex-match@main
+  #       id: rc_build
+  #       with:
+  #         text: ${{ github.event.pull_request.head.ref }}
+  #         regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
+
+  #     - uses: actions/upload-artifact@v3
+  #       if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+  #       with:
+  #         name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+  #         path: ./wheelhouse/*.whl
+
+  # upload-pypi:
+  #   needs: linux-wheels-x86-64
+  #   strategy:
+  #     matrix:
+  #       arch: [x86_64]
+  #       pl_backend: ["lightning_qubit"]
+  #   runs-on: ubuntu-latest
+
+  #   if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+  #   steps:
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+  #         path: dist
+
+  #     - name: Upload wheels to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
+  #       with:
+  #         user: __token__
+  #         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+  #         repository-url: https://test.pypi.org/legacy/
