@@ -136,28 +136,22 @@ jobs:
           key: ${{ matrix.os }}-lapack-Debug
       
       - name: Create installation directory
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
 
       - name: setup msys2
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
           update: true
           install: >-
-            git
-            tar
-            zip
-            make
-            mingw64/mingw-w64-x86_64-gcc
             mingw64/mingw-w64-x86_64-gcc-fortran
-            mingw64/mingw-w64-x86_64-cmake
 
       - name: Install lapack
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
