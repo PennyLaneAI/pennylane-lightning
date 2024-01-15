@@ -4,9 +4,6 @@
 
 * Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
-
-* Cache Lapack lib for faster Windows CI checks.
-  [(#592)](https://github.com/PennyLaneAI/pennylane-lightning/pull/592)
   
 ### Breaking changes
 
@@ -15,7 +12,13 @@
 * OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
 
+* Cache Lapack lib for faster Windows CI checks.
+  [(#592)](https://github.com/PennyLaneAI/pennylane-lightning/pull/592)
+
 ### Documentation
+
+* Update requirements to build the documentation.
+  [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
 
 ### Bug fixes
 
@@ -23,7 +26,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, Lee J. O'Riordan, Shuli Shu
 
 ---
 
