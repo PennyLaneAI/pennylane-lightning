@@ -62,7 +62,6 @@ macro(FindKokkos target_name)
             message(STATUS "Building Kokkos from source. SERIAL device enabled.")
             message(STATUS "Requested Kokkos library version: ${KOKKOS_VERSION}")
 
-            # option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
             option(Kokkos_ENABLE_SERIAL  "Enable Kokkos SERIAL device" ON)
             option(Kokkos_ENABLE_COMPLEX_ALIGN "Enable complex alignment in memory" OFF)
 

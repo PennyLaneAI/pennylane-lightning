@@ -103,14 +103,17 @@ endif()
 
 
 if(ENABLE_LAPACK)
-    if(NOT MSVC)
-        find_package(LAPACK REQUIRED)
+    find_package(LAPACK REQUIRED)
+    if(LAPACK_FOUND)
         message(STATUS "LAPACK found.")
         target_link_libraries(lightning_external_libs INTERFACE LAPACK::LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
-        #if(MSVC)
-        if(NOT CMAKE_TOOLCHAIN_FILE)
+        if(MSVC)
+            if(CMAKE_TOOLCHAIN_FILE)
+                message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain properly(<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
+            endif()
+
             find_package(Lapack
                 NAMES liblapack.dll liblapack.dll.a
                 HINTS ${pennylane_lightning_SOURCE_DIR}/lapack
@@ -121,14 +124,22 @@ if(ENABLE_LAPACK)
                 target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
                 target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
             elseif()
-                message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
+                set(LAPACK_GIT_TAG "master" CACHE STRING "GIT_TAG value to build LAPACK")
+                FetchContent_Declare(
+                    Lapack
+                    GIT_REPOSITORY https://github.com/Reference-LAPACK/lapack.git
+                    GIT_TAG      ${LAPACK_GIT_TAG}
+                )
+                set(CMAKE_POSITION_INDEPENDENT_CODE ON) # build with -fPIC
+            
+                FetchContent_MakeAvailable(Lapack)
+
+                target_link_libraries(lightning_external_libs INTERFACE Lapack)
+
+                target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
             endif()
-                #if()
-                #    message(FATAL_ERROR "LAPACK is enabled but not found. Please make sure you set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
-                #elseif()
-                #endif()
+        else()
+            message(FATAL_ERROR "LAPACK is enabled but not found.\n")
         endif()
-        #endif()
-        #message(FATAL_ERROR "LAPACK is enabled but not found.\n")
     endif()
 endif()
