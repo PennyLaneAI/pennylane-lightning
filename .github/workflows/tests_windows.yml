@@ -237,13 +237,6 @@ jobs:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
       
-      - name: Restoring cached Lapack
-        id: lapack-cache
-        uses: actions/cache@v3
-        with:
-          path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack-Debug
-      
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -252,12 +245,6 @@ jobs:
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
-      
-      - name: Copy cached lapack
-        if: steps.lapack-cache.outputs.cache-hit == 'true'
-        run: |
-          Copy-Item -Path "D:\a\install_dir\lapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
