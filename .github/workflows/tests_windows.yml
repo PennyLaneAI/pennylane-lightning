@@ -217,7 +217,7 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_kokkos, win-set-matrix-x86]
+    needs: [build_lapack, build_kokkos, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
