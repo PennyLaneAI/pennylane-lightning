@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack-Debug
+          key: ${{ matrix.os }}-lapack
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -133,7 +133,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack-Debug
+          key: ${{ matrix.os }}-lapack
       
       - name: Create installation directory
         if: steps.lapack-cache.outputs.cache-hit != 'true'
