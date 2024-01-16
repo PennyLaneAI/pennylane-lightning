@@ -136,13 +136,13 @@ jobs:
           key: ${{ matrix.os }}-lapack
       
       - name: Create installation directory
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
 
       - name: Setup msys2
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -151,7 +151,7 @@ jobs:
             mingw64/mingw-w64-x86_64-gcc-fortran
 
       - name: Install lapack
-        #if: steps.lapack-cache.outputs.cache-hit != 'true'
+        if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
@@ -260,6 +260,14 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Kokkos"
+      
+      - name: Install lapack with vcpkg
+        run: |
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\vcpkg\"
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
@@ -286,6 +294,8 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\pennylane-lightning\pennylane-lightning\vcpkg\scripts\buildsystems\vcpkg.cmake `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
