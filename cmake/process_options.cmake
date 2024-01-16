@@ -118,7 +118,9 @@ if(ENABLE_LAPACK)
     else()
         # No CMAKE_TOOLCHAIN_FILE set for WIN32 system
         find_package(Lapack
+            NAMES   liblapack.dll liblapack.dll.a
             HINTS   ${pennylane_lightning_SOURCE_DIR}/lapack
+                    ${CMAKE_PREFIX_PATH}
         )
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
