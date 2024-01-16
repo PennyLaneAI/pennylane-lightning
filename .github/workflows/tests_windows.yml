@@ -258,6 +258,7 @@ jobs:
         run: |
           Copy-Item -Path "D:\a\install_dir\lapack" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
