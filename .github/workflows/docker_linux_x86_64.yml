@@ -42,6 +42,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          push: false
+          context: .
+          file: docker/Dockerfile
+          tags: test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ matrix.pl_version }}
+          no-cache: true
+
+      - name: Test
+        run: |
+          docker run --rm test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -52,3 +69,4 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
+          no-cache: true
