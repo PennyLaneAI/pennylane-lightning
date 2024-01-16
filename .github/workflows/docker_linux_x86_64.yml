@@ -5,6 +5,7 @@ name: Docker::Linux::x86_64
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
 on:
+  pull_request:
   push:
     branches:
       - master
@@ -27,7 +28,8 @@ jobs:
         pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
     name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ matrix.pl_version }}
-    runs-on: ${{ matrix.os }}
+    runs-on:
+      group: 'Lightning Additional Runners'
     steps:
 
       - name: Checkout
@@ -42,6 +44,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v5
+        with:
+          load: true
+          push: false
+          context: .
+          file: docker/Dockerfile
+          tags: test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ matrix.pl_version }}
+
+      - name: Test
+        run: |
+          docker run --rm test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -52,4 +70,3 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
-          no-cache: true
