@@ -117,16 +117,19 @@ if(ENABLE_LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
         # No CMAKE_TOOLCHAIN_FILE set for WIN32 system
-        find_package(Lapack
-            HINTS   ${pennylane_lightning_SOURCE_DIR}/lapack/
-                    ${CMAKE_PREFIX_PATH}
+        find_library(Lapack
+            NAMES   liblapack.dll
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/lapack/bin
+        )
+
+        find_library(Blas
+            NAMES   libblas.dll
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/lapack/bin
         )
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
-            set(LAPACK_INCLUDE_DIRS ${Lapack_INCLUDE_DIRS})
-            set(LAPACK_LIBRARIES ${Lapack_LIBRARIES})    
-            target_link_libraries(lightning_external_libs INTERFACE "${LAPACK_LIBRARIES}")
-            target_include_directories(lightning_external_libs INTERFACE "${LAPACK_INCLUDE_DIRS}")
+            target_link_libraries(lightning_external_libs INTERFACE ${Blas})
+            target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
             target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
         else()
             message(FATAL_ERROR "LAPACK is enabled but not found. Please install Lapack with vcpkg and set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
