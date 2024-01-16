@@ -117,7 +117,7 @@ if(ENABLE_LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
         # No CMAKE_TOOLCHAIN_FILE set for WIN32 system
-        find_library(Lapack
+        find_package(Lapack
             HINTS   ${pennylane_lightning_SOURCE_DIR}/lapack/
         )
         if(Lapack_FOUND)
