@@ -87,11 +87,14 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
 TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
     AlignedAllocator<double> allocator(8);
     REQUIRE(allocator.allocate(0) == nullptr);
-    /* Allocate 1 PiB */
+/* Allocate 1 PiB */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
     REQUIRE_THROWS_AS(
         std::unique_ptr<double>(allocator.allocate(
             size_t{1024} * size_t{1024 * 1024} * size_t{1024 * 1024})),
         std::bad_alloc);
+#pragma GCC diagnostic pop
 }
 
 TEST_CASE("Test tensor transposition", "[Util]") {
@@ -150,6 +153,23 @@ TEMPLATE_TEST_CASE("Util::squaredNorm", "[Util][LinearAlgebra]", float,
     SECTION("For complex type") {
         std::vector<std::complex<TestType>> vec{{0.0, 1.0}, {3.0, 10.0}};
         CHECK(squaredNorm(vec) == Approx(110.0));
+    }
+}
+
+TEMPLATE_TEST_CASE("Util::is_Hermitian", "[Util][LinearAlgebra]", float,
+                   double) {
+    SECTION("Test for a Hermitian matrix") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, -1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == true);
+    }
+
+    SECTION("Test for a non-Hermitian matrix") {
+        std::vector<std::complex<TestType>> A{
+            {-6.0, 0.0}, {2.0, 1.0}, {2.0, 1.0}, {0.0, 0.0}};
+
+        REQUIRE(is_Hermitian(2, 2, A) == false);
     }
 }
 

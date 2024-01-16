@@ -46,6 +46,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_LAPACK "Enable compilation of LAPACK" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -85,7 +86,7 @@ if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.10.1
+                        GIT_TAG        v2.11.1
     )
     FetchContent_MakeAvailable(pybind11)
 endif()

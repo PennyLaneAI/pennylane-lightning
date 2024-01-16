@@ -170,7 +170,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane>=0.32",
+    "pennylane>=0.34",
 ]
 
 packages_list = ["pennylane_lightning." + backend]
@@ -194,7 +194,7 @@ info = {
     "version": version,
     "maintainer": "Xanadu Inc.",
     "maintainer_email": "software@xanadu.ai",
-    "url": "https://github.com/XanaduAI/pennylane-lightning",
+    "url": "https://github.com/PennyLaneAI/pennylane-lightning",
     "license": "Apache License 2.0",
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
@@ -241,6 +241,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Scientific/Engineering :: Physics",
 ]

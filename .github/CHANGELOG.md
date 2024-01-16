@@ -1,6 +1,38 @@
-# Release 0.34.0-dev
+# Release 0.35.0-dev
 
 ### New features since last release
+
+* Add Hermitian observable support for shot-noise measurement and Lapack support.
+  [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
+  
+### Breaking changes
+
+### Improvements
+
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
+### Documentation
+
+* Update requirements to build the documentation.
+  [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Lee J. O'Riordan, Shuli Shu
+
+---
+
+# Release 0.34.0
+
+### New features since last release
+
+* Support added for Python 3.12 wheel builds.
+  [(#541)](https://github.com/PennyLaneAI/pennylane-lightning/pull/541)
 
 * Lightning-Qubit support arbitrary controlled gates (any wires and any control values). The kernels are implemented in the `LM` module.
   [(#576)](https://github.com/PennyLaneAI/pennylane-lightning/pull/576)
@@ -25,10 +57,16 @@
 
 ### Breaking changes
 
+* Set the default version of Kokkos to 4.2.00 throughout the project (CMake, CI, etc.)
+  [(#578)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/578)
+
 * Overload `applyOperation` with a fifth `matrix` argument to all state vector classes to support arbitrary operations in `AdjointJacobianBase`.
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
+ 
+* Ensure aligned memory used for numpy arrays with state-vector without reallocations.
+  [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
 * Unify error messages of shot measurement related unsupported observables to better Catalyst.
   [(#577)](https://github.com/PennyLaneAI/pennylane-lightning/pull/577)
@@ -67,6 +105,12 @@
 
 ### Bug fixes
 
+* Fix CodeCov file contention issue when uploading data from many workloads.
+  [(#584)](https://github.com/PennyLaneAI/pennylane-lightning/pull/584)
+
+* Ensure the `lightning.gpu` intermediate wheel builds are uploaded to TestPyPI.
+  [(#575)](https://github.com/PennyLaneAI/pennylane-lightning/pull/575)
+
 * Allow support for newer clang-tidy versions on non-x86_64 platforms.
   [(#567)](https://github.com/PennyLaneAI/pennylane-lightning/pull/567)
 
@@ -81,6 +125,12 @@
 
 * Fix MPI Python unit tests for the adjoint method.
   [(#538)](https://github.com/PennyLaneAI/pennylane-lightning/pull/538)
+
+* Fix the issue with assigning kernels to ops before registering kernels on macOS
+  [(#582)](https://github.com/PennyLaneAI/pennylane-lightning/pull/582)
+
+* Update `MANIFEST.in` to include device config files and `CHANGELOG.md`
+  [(#585)](https://github.com/PennyLaneAI/pennylane-lightning/pull/585)
 
 ### Contributors
 

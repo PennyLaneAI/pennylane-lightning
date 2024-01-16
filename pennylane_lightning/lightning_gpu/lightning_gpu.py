@@ -28,10 +28,7 @@ from pennylane_lightning.core.lightning_base import (
 
 try:
     from pennylane_lightning.lightning_gpu_ops import (
-        allocate_aligned_array,
         backend_info,
-        best_alignment,
-        get_alignment,
         StateVectorC128,
         StateVectorC64,
         MeasurementsC128,
@@ -333,14 +330,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             if not dtype:
                 dtype = arr.dtype
 
-            # We allocate a new aligned memory and copy data to there if alignment
-            # or dtype mismatches
-            # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
-            # numpy allocated memory as the memory location happens to be aligned.
-            if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
-                new_arr = allocate_aligned_array(arr.size, np.dtype(dtype)).reshape(arr.shape)
-                np.copyto(new_arr, arr)
-                arr = new_arr
             return arr
 
         # pylint disable=missing-function-docstring

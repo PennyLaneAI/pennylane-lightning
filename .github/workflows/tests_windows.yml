@@ -22,7 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    timeout-minutes: 30
+    timeout-minutes: 45
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -38,6 +38,13 @@ jobs:
         with:
           arch: amd64
 
+      - name: Install lapack with vcpkg
+        run: |
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
+
       - name: Setup OpenCppCoverage and add to PATH
         run: |
           choco install OpenCppCoverage -y
@@ -51,6 +58,8 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
+              -DENABLE_LAPACK=ON `
+              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -95,7 +104,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.0.01\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.2.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
@@ -169,13 +178,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Restoring cached dependencies
+      - name: Restoring cached Kokkos
         id: kokkos-cache
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
-
+      
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -189,6 +198,13 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
+      
+      - name: Install lapack with vcpkg
+        run: |
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
 
       - name: Enable long paths
         run: |
@@ -208,8 +224,10 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
+              -DENABLE_LAPACK=ON `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
