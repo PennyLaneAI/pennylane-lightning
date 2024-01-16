@@ -198,6 +198,15 @@ class StateVectorKokkos final
     void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }
 
     /**
+     * @brief Init zeros for the provided statevector buffer.
+     *
+     * @param kv KokkosVector buffer
+     */
+    static void initZeros(KokkosVector &kv) {
+        Kokkos::deep_copy(kv, ComplexT{0.0, 0.0});
+    }
+
+    /**
      * @brief Set value for a single element of the state-vector on device.
      *
      * @param index Index of the target element.
@@ -714,6 +723,10 @@ class StateVectorKokkos final
      */
     void updateData(const KokkosVector &other) {
         Kokkos::deep_copy(*data_, other);
+    }
+
+    void updateData(std::unique_ptr<KokkosVector> &&other) {
+        data_ = std::move(other);
     }
 
     /**
