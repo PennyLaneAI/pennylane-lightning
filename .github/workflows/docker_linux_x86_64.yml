@@ -54,7 +54,8 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
-          no-cache: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
 
       - name: Test
         run: |
@@ -70,4 +71,5 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
-          no-cache: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=min
