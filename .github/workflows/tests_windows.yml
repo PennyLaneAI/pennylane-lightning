@@ -281,7 +281,7 @@ jobs:
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos;D:\a\pennylane-lightning\pennylane-lightning\lapack `
+              -DCMAKE_PREFIX_PATH="D:\a\pennylane-lightning\pennylane-lightning\Kokkos;D:\a\pennylane-lightning\pennylane-lightning\lapack" `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
