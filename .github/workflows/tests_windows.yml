@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack
+          key: ${{ matrix.os }}-lapack-debug
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -133,7 +133,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack
+          key: ${{ matrix.os }}-lapack-debug
       
       - name: Create installation directory
         #if: steps.lapack-cache.outputs.cache-hit != 'true'
@@ -154,18 +154,13 @@ jobs:
         #if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack --x-install-root=D:\a\install_dir\lapack
-        #run: |
-        #  cd D:\a
-        #  git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
-        #  cd lapack
-        #  mkdir build
-        #  cd build
-        #  cmake -G"MSYS Makefiles" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\lapack ..
-        #  cmake --build . -j --target install
+          git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
+          cd lapack
+          mkdir build
+          cd build
+          cmake -G"MSYS Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\lapack ..
+          cmake --build . --config Debug --verbose
+          cmake --install . --config Debug --verbose
 
 
   build_kokkos:
@@ -248,7 +243,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: D:\a\install_dir\lapack
-          key: ${{ matrix.os }}-lapack
+          key: ${{ matrix.os }}-lapack-debug
       
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
