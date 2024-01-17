@@ -68,7 +68,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake -BBuild -G"MSYS Makefiles" `
+            cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
@@ -145,13 +145,13 @@ jobs:
           key: ${{ matrix.os }}-LAPACK-debug
       
       - name: Create installation directory
-        if: steps.LAPACK-cache.outputs.cache-hit != 'true'
+        #if: steps.LAPACK-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\LAPACK -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\LAPACK
 
       - name: Setup msys2
-        if: steps.LAPACK-cache.outputs.cache-hit != 'true'
+        #if: steps.LAPACK-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -160,14 +160,14 @@ jobs:
             mingw64/mingw-w64-x86_64-gcc-fortran
 
       - name: Install LAPACK
-        if: steps.LAPACK-cache.outputs.cache-hit != 'true'
+        #if: steps.LAPACK-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
           cd LAPACK
           mkdir build
           cd build
-          cmake -G"MSYS Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\LAPACK ..
+          cmake -DCMAKE_GNUtoMS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\LAPACK ..
           cmake --build . --config Debug --verbose
           cmake --install . --config Debug --verbose
 
