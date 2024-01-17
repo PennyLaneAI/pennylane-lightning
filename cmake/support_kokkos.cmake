@@ -29,7 +29,7 @@ macro(FindKokkos target_name)
         message(STATUS "Could not find existing Kokkos package. Searching for precompiled libraries and headers...")
 
         find_library(Kokkos_core_lib
-            NAME kokkoscore.a libkokkoscore.a kokkoscore.so libkokkoscore.so
+            NAME kokkoscore.a libkokkoscore.a kokkoscore.so libkokkoscore.so kokkoscore.lib
             HINTS   ${pennylane_lightning_SOURCE_DIR}/Kokkos/lib
                     ${Kokkos_Core_DIR}/lib
                     ${Kokkos_Core_DIR}/lib64
