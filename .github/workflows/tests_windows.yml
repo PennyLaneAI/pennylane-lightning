@@ -259,13 +259,13 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
       
-      - name: Copy cached lapack
-        if: steps.lapack-cache.outputs.cache-hit == 'true'
-        run: |
-          Copy-Item -Path "D:\a\install_dir\lapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
-          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
-          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Kokkos"
+      #- name: Copy cached lapack
+      #  if: steps.lapack-cache.outputs.cache-hit == 'true'
+      #  run: |
+      #    Copy-Item -Path "D:\a\install_dir\lapack" `
+      #              -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
+      #    Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
+      #    Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Kokkos"
       
       #- name: Install lapack with vcpkg
       #  run: |
@@ -300,7 +300,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DCMAKE_TOOLCHAIN_FILE=D:\a\pennylane-lightning\pennylane-lightning\lapack\vcpkg\scripts\buildsystems\vcpkg.cmake `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\lapack\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
