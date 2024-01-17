@@ -52,6 +52,14 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
+      
+      - name: Setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw64/mingw-w64-x86_64-gcc-fortran
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
