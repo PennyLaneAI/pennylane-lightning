@@ -167,7 +167,7 @@ jobs:
           cd LAPACK
           mkdir build
           cd build
-          cmake -DCMAKE_GNUtoMS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\LAPACK ..
+          cmake -G"MSYS Makefiles" -DCMAKE_GNUtoMS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\LAPACK ..
           cmake --build . --config Debug --verbose
           cmake --install . --config Debug --verbose
 
