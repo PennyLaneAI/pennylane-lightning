@@ -68,7 +68,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake -BBuild `
+            cmake -BBuild -G"MSYS Makefiles" `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
