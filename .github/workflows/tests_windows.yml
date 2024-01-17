@@ -260,6 +260,13 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Kokkos"
+      
+      - name: Install lapack with vcpkg
+        run: |
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
@@ -287,6 +294,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\pennylane-lightning\pennylane-lightning\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
