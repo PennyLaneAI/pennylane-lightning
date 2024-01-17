@@ -136,13 +136,13 @@ jobs:
           key: ${{ matrix.os }}-lapack
       
       - name: Create installation directory
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\lapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\lapack
 
       - name: Setup msys2
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -151,13 +151,13 @@ jobs:
             mingw64/mingw-w64-x86_64-gcc-fortran
 
       - name: Install lapack
-        if: steps.lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.lapack-cache.outputs.cache-hit != 'true'
         run: |
-          cd D:\a\install_dir\lapack
+          cd D:\a
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
           cd vcpkg
           .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+          vcpkg install lapack --x-install-root=D:\a\install_dir\lapack
         #run: |
         #  cd D:\a
         #  git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
@@ -258,14 +258,13 @@ jobs:
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
-          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\"
-      
-      #- name: Copy cached lapack
-      #  if: steps.lapack-cache.outputs.cache-hit == 'true'
-      #  run: |
-      #    Copy-Item -Path "D:\a\install_dir\lapack" `
-      #              -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
-      #    Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\lapack"
+
+      - name: Copy cached lapack
+        if: steps.lapack-cache.outputs.cache-hit == 'true'
+        run: |
+          Copy-Item -Path "D:\a\install_dir\lapack" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\lapack" -Recurse -Force
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
       #    Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Kokkos"
       
       #- name: Install lapack with vcpkg
