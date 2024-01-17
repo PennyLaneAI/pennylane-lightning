@@ -258,6 +258,7 @@ jobs:
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\
       
       #- name: Copy cached lapack
       #  if: steps.lapack-cache.outputs.cache-hit == 'true'
