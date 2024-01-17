@@ -286,7 +286,6 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_TOOLCHAIN_FILE=D:\a\pennylane-lightning\pennylane-lightning\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
