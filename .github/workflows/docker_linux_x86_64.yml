@@ -5,9 +5,6 @@ name: Docker::Linux::x86_64
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
 on:
-  push:
-    branches:
-      - master
   release:
     types: [published]
   workflow_dispatch:
@@ -66,6 +63,17 @@ jobs:
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ matrix.pl_version }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          push: false
+          context: .
+          file: docker/Dockerfile
+          tags: pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ matrix.pl_version }}
