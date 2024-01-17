@@ -41,7 +41,8 @@ macro(FindKokkos target_name)
         )
         find_file(  Kokkos_core_inc
             NAMES   Kokkos_Core.hpp
-            HINTS   ${Kokkos_Core_DIR}/include
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/Kokkos/include
+                    ${Kokkos_Core_DIR}/include
                     /usr/include
                     /usr/local/include
                     ENV CPATH
