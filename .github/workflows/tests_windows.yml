@@ -158,16 +158,19 @@ jobs:
           Invoke-WebRequest -Uri http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz -OutFile clapack-3.2.1-CMAKE.tgz
           tar -xzvf clapack-3.2.1-CMAKE.tgz 
           cd clapack-3.2.1-CMAKE
+
           $cmakefile = "CMakeLists.txt"
           $TestLinesList = @(3, 4, 14, 24)
-
           $content = Get-Content $cmakefile
           foreach ($line in $TestLinesList) {
             $content[$line - 1] = "# $($content[$line - 1])"
           }
           $content | Set-Content $cmakefile
 
-          $content
+          $cmakefile_blas = "BLAS/CMakeLists.txt"
+          $content = Get-Content $cmakefile_blas
+          $content[1] = "# $($content[1])"
+          $content | Set-Content $cmakefile_blas
 
           mkdir build
           cd build
