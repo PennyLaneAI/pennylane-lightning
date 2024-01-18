@@ -174,9 +174,9 @@ jobs:
 
           mkdir build
           cd build
-          cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
+          cmake -G"MSYS Makefiles" -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
                 -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\CLapack `
-                -T clangcl ..
+                 ..
           cmake --build .  
           cmake --install . --verbose
 
