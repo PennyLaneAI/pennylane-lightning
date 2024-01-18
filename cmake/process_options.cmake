@@ -126,10 +126,9 @@ if(ENABLE_LAPACK)
             set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/liblapack.lib)
 
             add_library(libBlas SHARED IMPORTED GLOBAL)
-
             set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib)
 
-            target_link_libraries(lightning_external_libs INTERFACE libBlas)
+            target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack)
 
             #target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
             #add_library(lapack SHARED IMPORTED GLOBAL)
