@@ -127,7 +127,43 @@ jobs:
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
-  
+
+  build_CLapack:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    timeout-minutes: 30
+    name: CLapack
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cache installation directories
+        id: CLapack-cache
+        uses: actions/cache@v3
+        with:
+          path: D:\a\install_dir\CLapack
+          key: ${{ matrix.os }}-CLapack
+      
+      - name: Create installation directory
+        if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        run: |
+          Remove-Item -Path D:\a\install_dir\CLapack -Recurse -Force -ErrorAction Ignore
+          mkdir -p D:\a\install_dir\CLapack
+
+      - name: Install CLapack
+        if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a
+          curl -O http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz
+          tar -xzvf clapack-3.2.1-CMAKE.tgz -C D:\a\clapack
+          cd clapack
+          mkdir build
+          cd build
+          cmake -G"MSYS Makefiles" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\CLapack ..
+          cmake --build .  
+          cmake --install . --verbose
+
 
   build_Lapack-PIC:
     strategy:
