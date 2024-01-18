@@ -59,7 +59,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          push: false
+          push: true
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
@@ -70,7 +70,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
-          push: false
+          push: true
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
