@@ -66,6 +66,7 @@ jobs:
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
           gfortran --version
+          Get-ChildItem -Recurse -Path "C:/mingw64/"
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -76,6 +77,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
+              -DCMAKE_Fortran_COMPILER=C:/mingw64/bin/gfortran.exe `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
