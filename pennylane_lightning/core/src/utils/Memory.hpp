@@ -18,6 +18,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <stdlib.h>
 
 #include "BitUtil.hpp"
 #include "TypeList.hpp"
