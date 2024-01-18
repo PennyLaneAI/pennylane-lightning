@@ -122,15 +122,12 @@ if(ENABLE_LAPACK)
         )
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
-            add_library(libLapack INTERFACE IMPORTED)
-            set_target_properties(libLapack PROPERTIES
-                INTERFACE_LINK_LIBRARIES "${pennylane_lightning_SOURCE_DIR}/Lapack/lib/liblapack.lib"
-            )
+            add_library(libLapack SHARED IMPORTED GLOBAL)
+            set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/liblapack.lib)
 
-            add_library(libBlas INTERFACE IMPORTED)
-            set_target_properties(libBlas PROPERTIES
-                INTERFACE_LINK_LIBRARIES "${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib"
-            )
+            add_library(libBlas SHARED IMPORTED GLOBAL)
+
+            set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib)
 
             target_link_libraries(lightning_external_libs INTERFACE libBlas)
 
