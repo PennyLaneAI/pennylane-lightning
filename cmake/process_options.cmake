@@ -117,20 +117,26 @@ if(ENABLE_LAPACK)
         target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
     else()
         # No CMAKE_TOOLCHAIN_FILE set for WIN32 system
-        set(LIBLAPACK_DIRECTORY "${pennylane_lightning_SOURCE_DIR}/Lapack/lib")
-
-        find_library(LIBLAPACK
-            NAMES liblapack.lib
-            HINTS "${LIBLAPACK_DIRECTORY}"
+        find_package(Lapack
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/Lapack/
         )
-        if(LIBLAPACK_FOUND)
+        if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
-            target_link_libraries(lightning_external_libs INTERFACE LIBLAPACK)
+            add_library(libLapack INTERFACE IMPORTED)
+            set_target_properties(libLapack PROPERTIES
+                INTERFACE_LINK_LIBRARIES "${pennylane_lightning_SOURCE_DIR}/Lapack/lib/liblapack.lib"
+            )
 
+            add_library(libBlas INTERFACE IMPORTED)
+            set_target_properties(libBlas PROPERTIES
+                INTERFACE_LINK_LIBRARIES "${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib"
+            )
+
+            target_link_libraries(lightning_external_libs INTERFACE libBlas)
+
+            #target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
             #add_library(lapack SHARED IMPORTED GLOBAL)
             #set_target_properties(lapack PROPERTIES IMPORTED_LOCATION ${pennylane_lightning_SOURCE_DIR}/Lapack/lib)
-            #target_link_libraries(lightning_external_libs INTERFACE Lapack::liblapack)
-            #target_link_libraries(lightning_external_libs INTERFACE Lapack::libblas)
 
             #target_link_libraries(lightning_external_libs -L${pennylane_lightning_SOURCE_DIR}/Lapack/lib)
             #target_link_libraries(lightning_external_libs INTERFACE ${Lapack})
