@@ -571,6 +571,26 @@ auto registerAdjointJacobian(
     return py::array_t<PrecisionT>(py::cast(jac));
 }
 
+template <class StateVectorT>
+auto registerAdjointJacobianMoveable(
+    AdjointJacobian<StateVectorT> &adjoint_jacobian,
+    const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
+    const OpsData<StateVectorT> &operations,
+    const std::vector<size_t> &trainableParams, std::size_t num_qubits)
+    -> py::array_t<typename StateVectorT::PrecisionT> {
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
+                                PrecisionT{0.0});
+    const JacobianData<StateVectorT> jd{operations.getTotalNumParams(),
+                                        num_qubits,
+                                        nullptr,
+                                        observables,
+                                        operations,
+                                        trainableParams};
+    adjoint_jacobian.adjointJacobian(std::span{jac}, jd, num_qubits);
+    return py::array_t<PrecisionT>(py::cast(jac));
+}
+
 /**
  * @brief Register agnostic algorithms.
  *
@@ -726,6 +746,9 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
 #endif
         .def("__call__", &registerAdjointJacobian<StateVectorT>,
              "Adjoint Jacobian method.")
+        .def("adjoint_noSVcopy", &registerAdjointJacobianMoveable<StateVectorT>,
+             "Adjoint Jacobian method with implicit operation application to "
+             "|0..0> state")
         .def(py::pickle(
             [](const AdjointJacobian<StateVectorT> &self) { // __getstate__
                 return py::make_tuple();

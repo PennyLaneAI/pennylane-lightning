@@ -681,7 +681,24 @@ if LGPU_CPP_BINARY_AVAILABLE:
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
             if self._batch_obs or requested_batch > 0:  # Batching of Measurements
-                if not self._mpi:  # Single-node path, controlled batching over available GPUs
+                if self._mpi:
+                    from mpi4py import MPI
+                    from mpi4py.futures import MPIPoolExecutor
+
+                    with MPIPoolExecutor() as executor:
+                        jac_f = []
+                        for obs_chunk in obs_partitions:
+                            jac_local = executor.submit(
+                                adjoint_jacobian,
+                                processed_data["state_vector"],
+                                obs_chunk,
+                                processed_data["ops_serialized"],
+                                trainable_params,
+                            )
+                            jac_f.append(jac_local)
+                        jac.append(qml.math.hstack([r.result() for r in jac_f]))
+
+                else:  # self._mpi:  # Single-node path, controlled batching over available GPUs
                     num_obs = len(processed_data["obs_serialized"])
                     batch_size = (
                         num_obs
@@ -698,13 +715,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
                             trainable_params,
                         )
                         jac.extend(jac_chunk)
-                else:  # MPI path, restrict memory per known GPUs
-                    jac = adjoint_jacobian.batched(
-                        self._gpu_state,
-                        processed_data["obs_serialized"],
-                        processed_data["ops_serialized"],
-                        trainable_params,
-                    )
+                # else:  # MPI path, restrict memory per known GPUs
+                #    jac = adjoint_jacobian.batched(
+                #        self._gpu_state,
+                #        processed_data["obs_serialized"],
+                #        processed_data["ops_serialized"],
+                #        trainable_params,
+                #    )
 
             else:
                 jac = adjoint_jacobian(

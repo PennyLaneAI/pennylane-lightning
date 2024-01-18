@@ -62,6 +62,13 @@ class AdjointJacobian final
   public:
     AdjointJacobian() = default;
 
+    void adjointJacobian(std::span<PrecisionT> jac,
+                         const JacobianData<StateVectorT> &jd,
+                         std::size_t num_qubits) {
+        StateVectorT sv{num_qubits};
+        adjointJacobian(jac, jd, std::move(sv), true);
+    }
+
     /**
      * @brief Calculates the Jacobian for the statevector for the selected set
      * of parametric gates.
@@ -81,9 +88,12 @@ class AdjointJacobian final
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
+    template <
+        class SVT,
+        std::enable_if_t<std::is_same<std::decay_t<SVT>, StateVectorT>::value,
+                         bool> = true>
     void adjointJacobian(std::span<PrecisionT> jac,
-                         const JacobianData<StateVectorT> &jd,
-                         const StateVectorT &ref_data,
+                         const JacobianData<StateVectorT> &jd, SVT &&ref_data,
                          bool apply_operations = false) {
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -114,7 +124,8 @@ class AdjointJacobian final
         const auto tp_rend = tp.rend();
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorT lambda{ref_data};
+        StateVectorT lambda(std::forward<SVT>(ref_data));
+        std::cout << lambda.getNumQubits() << ", " << std::endl;
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
@@ -128,7 +139,7 @@ class AdjointJacobian final
 
         StateVectorT mu{lambda.getNumQubits()};
 
-        for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
+        for (int op_idx = static_cast<int>(ops_name.size()) - 1; op_idx >= 0;
              op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "

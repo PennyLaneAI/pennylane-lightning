@@ -136,6 +136,8 @@ class StateVectorKokkos final
     StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
+        std::cout << "Creating with const hostdata_" << std::endl;
+
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
         // const cast required due to Kokkos rules.
@@ -147,6 +149,7 @@ class StateVectorKokkos final
                       std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
+
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
         HostToDevice(reinterpret_cast<const ComplexT *>(hostdata_), length);
@@ -170,6 +173,16 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
         this->DeviceToDevice(other.getView());
+    }
+
+    StateVectorKokkos(StateVectorKokkos &&other)
+        : BaseType(other.getNumQubits()) {
+        gates_indices_ = std::move(other.gates_indices_);
+        generators_indices_ = std::move(other.generators_indices_);
+        num_qubits_ = other.num_qubits_;
+        data_ = std::move(other.data_);
+
+        other.num_qubits_ = 0;
     }
 
     /**

@@ -728,18 +728,31 @@ if LK_CPP_BINARY_AVAILABLE:
                 jac = []
 
                 if self._mpi:
+
+                    def pickle_dumps(data):
+                        import pickle as p
+
+                        return p.dumps(data, protocol=p.HIGHEST_PROTOCOL)
+
+                    def pickle_loads(data):
+                        import pickle as p
+
+                        return p.loads(data)
+
                     from mpi4py import MPI
+
+                    MPI.pickle.__init__(pickle_dumps, pickle_loads)
                     from mpi4py.futures import MPIPoolExecutor
 
                     with MPIPoolExecutor() as executor:
                         jac_f = []
                         for obs_chunk in obs_partitions:
                             jac_local = executor.submit(
-                                adjoint_jacobian,
-                                processed_data["state_vector"],
+                                adjoint_jacobian.adjoint_noSVcopy,
                                 obs_chunk,
                                 processed_data["ops_serialized"],
                                 trainable_params,
+                                len(self.wires),
                             )
                             jac_f.append(jac_local)
                         jac.append(qml.math.hstack([r.result() for r in jac_f]))
