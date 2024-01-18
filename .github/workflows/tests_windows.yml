@@ -77,12 +77,11 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DCMAKE_Fortran_COMPILER=C:/mingw64/bin/gfortran.exe `
-              -DCMAKE_PREFIX_PATH="D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib;C:/mingw64/lib" `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
             $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
-            set -x
             foreach ($file in $test_bins)
             {
               $filename = $file.ToString() -replace '.{4}$'
@@ -92,7 +91,6 @@ jobs:
               $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
               Invoke-Expression $cov_call
             }
-            set +x
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
