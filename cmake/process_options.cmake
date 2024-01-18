@@ -128,7 +128,7 @@ if(ENABLE_LAPACK)
             add_library(libBlas SHARED IMPORTED GLOBAL)
             set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib)
 
-            target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack)
+            target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack -lgfortran -lm)
             target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
         else()
             message(FATAL_ERROR "LAPACK is enabled but not found. Please install Lapack with vcpkg and set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
