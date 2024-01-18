@@ -22,7 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_CLapack]
+    needs: [build_Lapack-PIC]
     timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -31,22 +31,22 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
-      - name: Restoring cached CLapack
-        id: CLapack-cache
+      - name: Restoring cached Lapack-PIC
+        id: Lapack-PIC-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\CLapack
-          key: ${{ matrix.os }}-CLapack-debug
+          path: D:\a\install_dir\Lapack-PIC
+          key: ${{ matrix.os }}-Lapack-PIC-debug
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
       
-      - name: Copy cached CLapack
-        if: steps.CLapack-cache.outputs.cache-hit == 'true'
+      - name: Copy cached Lapack-PIC
+        if: steps.Lapack-PIC-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\CLapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\CLapack" -Recurse -Force
-          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\CLapack"
+          Copy-Item -Path "D:\a\install_dir\Lapack-PIC" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC" -Recurse -Force
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC"
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -62,7 +62,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\CLapack\lib `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -131,13 +131,13 @@ jobs:
           key: ${{ matrix.os }}-CLapack
       
       - name: Create installation directory
-        #if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        if: steps.CLapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\CLapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\CLapack
 
       - name: Install CLapack
-        #if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        if: steps.CLapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           Invoke-WebRequest -Uri http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz -OutFile clapack-3.2.1-CMAKE.tgz
