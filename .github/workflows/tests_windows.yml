@@ -65,6 +65,7 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+          gfortran --version
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -145,13 +146,13 @@ jobs:
           key: ${{ matrix.os }}-Lapack-PIC-debug
       
       - name: Create installation directory
-        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
+        if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\Lapack-PIC -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\Lapack-PIC
 
       - name: Setup msys2
-        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
+        if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -160,7 +161,7 @@ jobs:
             mingw64/mingw-w64-x86_64-gcc-fortran
 
       - name: Install Lapack-PIC
-        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
+        if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
