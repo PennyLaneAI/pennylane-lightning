@@ -47,8 +47,6 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\Lapack" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack" -Recurse -Force
           Remove-Item -Path "D:\a\pennylane-lightning\pennylane-lightning\Lapack\lib\*.a"
-          Rename-Item -Path "D:\a\pennylane-lightning\pennylane-lightning\Lapack\lib\liblapack.lib" -NewName "lapack.lib"
-          Rename-Item -Path "D:\a\pennylane-lightning\pennylane-lightning\Lapack\lib\libblas.lib" -NewName "blas.lib"
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
       
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
