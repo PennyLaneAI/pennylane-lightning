@@ -122,7 +122,7 @@ if(ENABLE_LAPACK)
         )
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
-            enable_language(Fortran)
+            set(CMAKE_Fortran_COMPILER gfortran)
             add_library(libLapack SHARED IMPORTED GLOBAL)
             set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/liblapack.lib)
 
