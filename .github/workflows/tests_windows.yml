@@ -22,7 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_Lapack-PIC]
+    needs: [build_CLapack]
     timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -31,53 +31,38 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
-      - name: Restoring cached Lapack-PIC
-        id: Lapack-PIC-cache
+      - name: Restoring cached CLapack
+        id: CLapack-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\Lapack-PIC
-          key: ${{ matrix.os }}-Lapack-PIC-debug
+          path: D:\a\install_dir\CLapack
+          key: ${{ matrix.os }}-CLapack-debug
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
       
-      - name: Copy cached Lapack-PIC
-        if: steps.Lapack-PIC-cache.outputs.cache-hit == 'true'
+      - name: Copy cached CLapack
+        if: steps.CLapack-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\Lapack-PIC" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC" -Recurse -Force
-          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
-      
-      #- name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-      #  uses: ilammy/msvc-dev-cmd@v1
-      #  with:
-      #    arch: amd64
-      
-      - name: Setup msys2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw64/mingw-w64-x86_64-gcc-fortran
+          Copy-Item -Path "D:\a\install_dir\CLapack" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\CLapack" -Recurse -Force
+          Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning\CLapack"
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-          gfortran --version
 
       - name: Build and run unit tests for code coverage
         run: |
-            cmake -BBuild `
+            cmake -BBuild -G"MSYS Makefiles" `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_Fortran_COMPILER=C:/mingw64/bin/gfortran.exe `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\CLapack\lib `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
