@@ -66,7 +66,6 @@ jobs:
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
           gfortran --version
-          Get-ChildItem -Recurse -Path "C:/mingw64/"
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -83,6 +82,7 @@ jobs:
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
             $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
+            set -x
             foreach ($file in $test_bins)
             {
               $filename = $file.ToString() -replace '.{4}$'
@@ -92,6 +92,7 @@ jobs:
               $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
               Invoke-Expression $cov_call
             }
+            set +x
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
