@@ -155,8 +155,9 @@ jobs:
         if: steps.CLapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
-          curl -O http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz
-          tar -xzvf clapack-3.2.1-CMAKE.tgz -C D:\a\clapack
+          Invoke-WebRequest -Uri http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz -OutFile clapack.tgz
+          tar -xzvf clapack.tgz -C D:\a\clapack
+          Get-ChildItem -Recurse -Path "D:\a\clapack"
           cd clapack
           mkdir build
           cd build
