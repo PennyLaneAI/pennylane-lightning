@@ -22,7 +22,7 @@ concurrency:
 jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_Lapack]
+    needs: [build_Lapack-PIC]
     timeout-minutes: 30
     name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
@@ -31,21 +31,21 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
-      - name: Restoring cached Lapack
-        id: Lapack-cache
+      - name: Restoring cached Lapack-PIC
+        id: Lapack-PIC-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\Lapack
-          key: ${{ matrix.os }}-Lapack-debug
+          path: D:\a\install_dir\Lapack-PIC
+          key: ${{ matrix.os }}-Lapack-PIC-debug
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
       
-      - name: Copy cached Lapack
-        if: steps.Lapack-cache.outputs.cache-hit == 'true'
+      - name: Copy cached Lapack-PIC
+        if: steps.Lapack-PIC-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\Lapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack" -Recurse -Force
+          Copy-Item -Path "D:\a\install_dir\Lapack-PIC" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC" -Recurse -Force
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
       
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
@@ -75,7 +75,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack\lib `
+              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -127,31 +127,31 @@ jobs:
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
   
 
-  build_Lapack:
+  build_Lapack-PIC:
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
     timeout-minutes: 30
-    name: Lapack-Reference
+    name: Lapack-PIC-Reference
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Cache installation directories
-        id: Lapack-cache
+        id: Lapack-PIC-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\Lapack
-          key: ${{ matrix.os }}-Lapack-debug
+          path: D:\a\install_dir\Lapack-PIC
+          key: ${{ matrix.os }}-Lapack-PIC-debug
       
       - name: Create installation directory
-        if: steps.Lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         run: |
-          Remove-Item -Path D:\a\install_dir\Lapack -Recurse -Force -ErrorAction Ignore
-          mkdir -p D:\a\install_dir\Lapack
+          Remove-Item -Path D:\a\install_dir\Lapack-PIC -Recurse -Force -ErrorAction Ignore
+          mkdir -p D:\a\install_dir\Lapack-PIC
 
       - name: Setup msys2
-        if: steps.Lapack-cache.outputs.cache-hit != 'true'
+        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         uses: msys2/setup-msys2@v2
         with:
           msystem: MINGW64
@@ -159,16 +159,16 @@ jobs:
           install: >-
             mingw64/mingw-w64-x86_64-gcc-fortran
 
-      - name: Install Lapack
-        if: steps.Lapack-cache.outputs.cache-hit != 'true'
+      - name: Install Lapack-PIC
+        #if: steps.Lapack-PIC-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           git clone --quiet --recursive https://github.com/Reference-LAPACK/lapack.git
-          cd Lapack
+          cd Lapack-PIC
           mkdir build
           cd build
-          cmake -G"MSYS Makefiles" -DCMAKE_GNUtoMS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\Lapack ..
-          cmake --build . --config Debug --verbose
+          cmake -G"MSYS Makefiles" -DCMAKE_GNUtoMS=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\Lapack-PIC ..
+          cmake --build . --config Debug 
           cmake --install . --config Debug --verbose
 
 
@@ -227,7 +227,7 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_Lapack, build_kokkos, win-set-matrix-x86]
+    needs: [build_Lapack-PIC, build_kokkos, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
@@ -247,12 +247,12 @@ jobs:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
       
-      - name: Restoring cached Lapack
-        id: Lapack-cache
+      - name: Restoring cached Lapack-PIC
+        id: Lapack-PIC-cache
         uses: actions/cache@v3
         with:
-          path: D:\a\install_dir\Lapack
-          key: ${{ matrix.os }}-Lapack-debug
+          path: D:\a\install_dir\Lapack-PIC
+          key: ${{ matrix.os }}-Lapack-PIC-debug
       
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -263,11 +263,11 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
-      - name: Copy cached Lapack
-        if: steps.Lapack-cache.outputs.cache-hit == 'true'
+      - name: Copy cached Lapack-PIC
+        if: steps.Lapack-PIC-cache.outputs.cache-hit == 'true'
         run: |
-          Copy-Item -Path "D:\a\install_dir\Lapack" `
-                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack" -Recurse -Force
+          Copy-Item -Path "D:\a\install_dir\Lapack-PIC" `
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC" -Recurse -Force
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
@@ -295,7 +295,7 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_PREFIX_PATH="D:\a\pennylane-lightning\pennylane-lightning\Kokkos;D:\a\pennylane-lightning\pennylane-lightning\Lapack\lib" `
+              -DCMAKE_PREFIX_PATH="D:\a\pennylane-lightning\pennylane-lightning\Kokkos;D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib" `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results

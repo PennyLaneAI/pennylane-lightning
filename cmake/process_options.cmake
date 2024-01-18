@@ -118,16 +118,16 @@ if(ENABLE_LAPACK)
     else()
         # No CMAKE_TOOLCHAIN_FILE set for WIN32 system
         find_package(Lapack
-            HINTS   ${pennylane_lightning_SOURCE_DIR}/Lapack/
+            HINTS   ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/
         )
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
             enable_language(Fortran)
             add_library(libLapack SHARED IMPORTED GLOBAL)
-            set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/liblapack.lib)
+            set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/liblapack.lib)
 
             add_library(libBlas SHARED IMPORTED GLOBAL)
-            set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack/lib/libblas.lib)
+            set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/libblas.lib)
 
             target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack)
             target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
