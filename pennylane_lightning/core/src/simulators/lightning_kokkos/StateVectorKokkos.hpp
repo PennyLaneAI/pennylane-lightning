@@ -136,8 +136,6 @@ class StateVectorKokkos final
     StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
-        std::cout << "Creating with const hostdata_" << std::endl;
-
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
         // const cast required due to Kokkos rules.
