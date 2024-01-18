@@ -156,8 +156,8 @@ jobs:
         run: |
           cd D:\a
           Invoke-WebRequest -Uri http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz -OutFile clapack.tgz
-          tar -xzvf clapack.tgz -C D:\a\clapack
-          Get-ChildItem -Recurse -Path "D:\a\clapack"
+          tar -xzvf clapack.tgz 
+          Get-ChildItem -Recurse -Path "D:\a"
           cd clapack
           mkdir build
           cd build
