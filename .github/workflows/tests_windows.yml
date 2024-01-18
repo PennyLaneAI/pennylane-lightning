@@ -48,10 +48,10 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC" -Recurse -Force
           Get-ChildItem -Recurse -Path "D:\a\pennylane-lightning\pennylane-lightning"
       
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
+      #- name: Configure MSVC for amd64 # Use cl.exe as a default compiler
+      #  uses: ilammy/msvc-dev-cmd@v1
+      #  with:
+      #    arch: amd64
       
       - name: Setup msys2
         uses: msys2/setup-msys2@v2
@@ -78,7 +78,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DCMAKE_Fortran_COMPILER=C:/mingw64/bin/gfortran.exe `
-              -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib `
+              -DCMAKE_PREFIX_PATH="D:\a\pennylane-lightning\pennylane-lightning\Lapack-PIC\lib;C:/mingw64/lib" `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
