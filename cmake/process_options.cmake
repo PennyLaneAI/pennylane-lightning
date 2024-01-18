@@ -123,15 +123,12 @@ if(ENABLE_LAPACK)
         if(Lapack_FOUND)
             message(STATUS "Found existing Lapack library.")
             add_library(libLapack SHARED IMPORTED GLOBAL)
-            set_target_properties( libLapack PROPERTIES IMPORTED_LOCATION ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/liblapack.dll)
-
-            #set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/liblapack.dll.a)
+            set_target_properties( libLapack PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/liblapack.lib)
 
             add_library(libBlas SHARED IMPORTED GLOBAL)
-            set_target_properties( libBlas PROPERTIES IMPORTED_LOCATION ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/libblas.dll)
-            #set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/libblas.dll.a)
+            set_target_properties( libBlas PROPERTIES IMPORTED_IMPLIB ${pennylane_lightning_SOURCE_DIR}/Lapack-PIC/lib/libblas.lib)
 
-            target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack)
+            target_link_libraries(lightning_external_libs INTERFACE libBlas libLapack ${Lapack})
             target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
         else()
             message(FATAL_ERROR "LAPACK is enabled but not found. Please install Lapack with vcpkg and set CMAKE_TOOLCHAIN_FILE to use the vcpkg toolchain (<vcpkg-root>/scripts/buildsystems/vcpkg.cmake) after vcpkg install LAPACK.\n")
