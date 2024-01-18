@@ -146,19 +146,28 @@ jobs:
           key: ${{ matrix.os }}-CLapack
       
       - name: Create installation directory
-        if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        #if: steps.CLapack-cache.outputs.cache-hit != 'true'
         run: |
           Remove-Item -Path D:\a\install_dir\CLapack -Recurse -Force -ErrorAction Ignore
           mkdir -p D:\a\install_dir\CLapack
 
       - name: Install CLapack
-        if: steps.CLapack-cache.outputs.cache-hit != 'true'
+        #if: steps.CLapack-cache.outputs.cache-hit != 'true'
         run: |
           cd D:\a
           Invoke-WebRequest -Uri http://www.netlib.org/clapack/clapack-3.2.1-CMAKE.tgz -OutFile clapack-3.2.1-CMAKE.tgz
           tar -xzvf clapack-3.2.1-CMAKE.tgz 
           Get-ChildItem -Recurse -Path "D:\a\clapack-3.2.1-CMAKE"
           cd clapack-3.2.1-CMAKE
+          $cmakefile = "CMakeLists.txt"
+          $TestLinesList = @(2, 3, 8, 12)
+
+          $content = Get-Content $cmakefile
+          foreach ($line in $TestLinesList) {
+            $content[$line - 1] = "# $($content[$line - 1])"
+          }
+          $content | Set-Content $cmakefile
+
           mkdir build
           cd build
           cmake -G"MSYS Makefiles" -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\CLapack -T clangcl ..
