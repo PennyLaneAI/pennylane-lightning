@@ -31,6 +31,7 @@
 #include "BitUtil.hpp"
 #include "GateIndices.hpp"
 #include "GateOperation.hpp"
+#include "GatePragmas.hpp"
 #include "Gates.hpp"
 #include "KernelType.hpp"
 #include "LinearAlgebra.hpp"
@@ -40,6 +41,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Gates;
+using namespace Pennylane::LightningQubit::Gates::Pragmas;
 using Pennylane::Util::ZERO;
 } // namespace
 /// @endcond
@@ -564,6 +566,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                           [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
@@ -582,7 +585,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
@@ -613,7 +615,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
@@ -642,7 +643,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
@@ -677,7 +677,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
@@ -715,7 +714,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
@@ -737,7 +735,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
@@ -784,7 +781,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::complex<PrecisionT> t3 = (inverse) ? -rot[2] : rot[2];
         const std::complex<PrecisionT> t4 =
             (inverse) ? std::conj(rot[3]) : rot[3];
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
@@ -820,6 +816,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         // Participating swapped indices
         static const size_t op_idx0 = 5;
         static const size_t op_idx1 = 6;
+
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[op_idx0]],
@@ -861,7 +858,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
 
-        // Participating swapped indices
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             for (size_t k = 0; k < indices.size(); k++) {
@@ -893,7 +889,6 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                       [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-
         for (const size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = ZERO<PrecisionT>();

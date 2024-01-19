@@ -2,18 +2,31 @@
 
 ### New features since last release
 
+* Add Hermitian observable support for shot-noise measurement and Lapack support.
+  [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
+  
 ### Breaking changes
 
 ### Improvements
 
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
 ### Documentation
 
+* Update requirements to build the documentation.
+  [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
+
 ### Bug fixes
+
+* Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
+  [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
+Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
@@ -54,7 +67,7 @@ This release contains contributions from (in alphabetical order):
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
-
+ 
 * Ensure aligned memory used for numpy arrays with state-vector without reallocations.
   [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
