@@ -125,7 +125,6 @@ class AdjointJacobian final
 
         // Create $U_{1:p}\vert \lambda \rangle$
         StateVectorT lambda(std::forward<SVT>(ref_data));
-        std::cout << lambda.getNumQubits() << ", " << std::endl;
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
