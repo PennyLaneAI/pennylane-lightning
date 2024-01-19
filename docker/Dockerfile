@@ -20,8 +20,8 @@ ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG GCC_VERSION=11
-ARG KOKKOS_VERSION=4.1.00
-ARG LIGHTNING_VERSION=0.33.1
+ARG KOKKOS_VERSION=4.2.00
+ARG LIGHTNING_VERSION=0.34.0
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -137,7 +137,7 @@ FROM base-build-cuda as build-kokkos-cuda
 WORKDIR /opt/kokkos-${KOKKOS_VERSION}
 # RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
 # RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
+RUN git clone --branch lightning https://github.com/vincentmr/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
 RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
     -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
@@ -161,6 +161,7 @@ WORKDIR /opt/pennylane-lightning
 COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
 ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
 RUN pip uninstall -y pennylane-lightning
+RUN echo >> cmake/support_kokkos.cmake && echo "find_package(CUDAToolkit REQUIRED)" >> cmake/support_kokkos.cmake
 RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
 RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
