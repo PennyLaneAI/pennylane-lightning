@@ -92,7 +92,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu11
+          python -m pip install cmake custatevec-cu12
 
       - name: Validate GPU version and installed compiler
         run: |
@@ -232,7 +232,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-dev.txt
-          python -m pip install custatevec-cu11 mpi4py openfermionpyscf
+          python -m pip install custatevec-cu12 mpi4py openfermionpyscf
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Checkout PennyLane for release build

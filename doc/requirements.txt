@@ -6,7 +6,7 @@ pybind11
 sphinx
 sphinx-automodapi
 pennylane-sphinx-theme
-custatevec-cu11
+custatevec-cu12
 wheel
 sphinxext-opengraph
 matplotlib
