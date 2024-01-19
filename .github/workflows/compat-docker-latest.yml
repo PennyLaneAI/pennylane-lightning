@@ -13,3 +13,4 @@ jobs:
     with:
       lightning-version: 0.34.0
       push-to-dockerhub: false
+    secrets: inherit # pass all secrets
