@@ -1,0 +1,15 @@
+name: Docker build tests
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 0 * * 1-5"  # Run daily at 0am Mon-Fri
+  workflow_dispatch:
+
+jobs:
+  tests_linux:
+    name: Docker build tests
+    uses: ./.github/workflows/docker_linux_x86_64.yml
+    with:
+      lightning-version: 0.34.0
+      push-to-dockerhub: false
