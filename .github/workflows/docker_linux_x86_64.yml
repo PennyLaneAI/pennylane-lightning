@@ -12,21 +12,21 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. This should be a valid semantic version, e.g. 0.34.0.
       push-to-dockerhub:
         type: boolean
-        description: Push to Docker Hub when done.
         required: true
+        description: Push to Docker Hub when done.
   workflow_call:
     inputs:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+        description: The version of Lightning to use. This should be a valid semantic version, e.g. 0.34.0.
       push-to-dockerhub:
         type: boolean
-        description: Push to Docker Hub when done.
         required: true
+        description: Push to Docker Hub when done.
 
 concurrency:
   group: docker_linux_x86_64-${{ github.ref }}
@@ -74,7 +74,7 @@ jobs:
         run: |
           docker run --rm test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
 
-      - name: Build and push
+      - name: Build and push version
         uses: docker/build-push-action@v5
         with:
           push: ${{ inputs.push-to-dockerhub }}
@@ -85,7 +85,7 @@ jobs:
           build-args: |
             LIGHTNING_VERSION=${{ inputs.lightning-version }}
 
-      - name: Build and push
+      - name: Build and push latest
         uses: docker/build-push-action@v5
         with:
           push: ${{ inputs.push-to-dockerhub }}

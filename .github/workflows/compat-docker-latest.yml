@@ -1,9 +1,8 @@
 name: Docker build tests
 
 on:
-  pull_request:
   schedule:
-    - cron: "0 0 * * 1-5"  # Run daily at 0am Mon-Fri
+    - cron: "0 4 * * 1-5"  # Run daily at 4am Mon-Fri
   workflow_dispatch:
 
 jobs:
