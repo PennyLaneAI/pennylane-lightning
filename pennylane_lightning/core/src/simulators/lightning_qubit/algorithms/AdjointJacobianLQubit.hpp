@@ -209,9 +209,13 @@ class AdjointJacobian final
      * @param apply_operations Indicate whether to apply operations to tape.psi
      * prior to calculation.
      */
+
+    template <
+        class SVT,
+        std::enable_if_t<std::is_same<std::decay_t<SVT>, StateVectorT>::value,
+                         bool> = true>
     void adjointJacobian(std::span<PrecisionT> jac,
-                         const JacobianData<StateVectorT> &jd,
-                         [[maybe_unused]] const StateVectorT &ref_data = {0},
+                         const JacobianData<StateVectorT> &jd, SVT &&ref_data,
                          bool apply_operations = false) {
         const OpsData<StateVectorT> &ops = jd.getOperations();
         const std::vector<std::string> &ops_name = ops.getOpsName();
@@ -240,8 +244,8 @@ class AdjointJacobian final
             num_param_ops - 1; // total number of parametric ops
 
         // Create $U_{1:p}\vert \lambda \rangle$
-        StateVectorLQubitManaged<PrecisionT> lambda(jd.getPtrStateVec(),
-                                                    jd.getSizeStateVec());
+        StateVectorLQubitManaged<PrecisionT> lambda(
+            std::forward<SVT>(ref_data));
         // Apply given operations to statevector if requested
         if (apply_operations) {
             BaseType::applyOperations(lambda, ops);
@@ -272,7 +276,7 @@ class AdjointJacobian final
 
                 StateVectorT sv((*H_lambda_storage)[ind].data(),
                                 (*H_lambda_storage)[ind].size());
-                H_lambda->push_back(sv);
+                H_lambda->push_back(std::move(sv));
             }
         } else {
             /// LCOV_EXCL_START
@@ -284,7 +288,7 @@ class AdjointJacobian final
 
         applyObservables(*H_lambda, lambda, obs);
 
-        for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
+        for (int op_idx = static_cast<int>(ops_name.size()) - 1; op_idx >= 0;
              op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
@@ -346,6 +350,35 @@ class AdjointJacobian final
                                              tp_size, num_observables);
         std::copy(std::begin(jac_transpose), std::end(jac_transpose),
                   std::begin(jac));
+    }
+
+    /**
+     * @brief Variant of adjointJacobian without explicit statevector reference.
+     * All operations will be applied on a locally instantiated |0..0> state.
+     *
+     *  @see adjointJacobian(std::span<PrecisionT>, const
+     * JacobianData<StateVectorT> &, [[maybe_unused]] const StateVectorT &,
+     * bool)
+     */
+    void adjointJacobian(std::span<PrecisionT> jac,
+                         const JacobianData<StateVectorT> &jd,
+                         std::size_t num_qubits) {
+
+        if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
+                                     MemoryStorageLocation::Internal>) {
+            StateVectorT sv{num_qubits};
+            adjointJacobian(jac, jd, std::move(sv), true);
+        } else if constexpr (std::is_same_v<
+                                 typename StateVectorT::MemoryStorageT,
+                                 MemoryStorageLocation::External>) {
+            using ComplexT = typename StateVectorT::ComplexT;
+            std::vector<ComplexT> data(exp2(num_qubits), ComplexT{0, 0});
+            data[0] = ComplexT{1, 0};
+            StateVectorT sv{data.data(), data.size()};
+            adjointJacobian(jac, jd, std::move(sv), true);
+        } else {
+            PL_ABORT("Invalid configuration: MemoryStorageT undefined.");
+        }
     }
 };
 } // namespace Pennylane::LightningQubit::Algorithms
