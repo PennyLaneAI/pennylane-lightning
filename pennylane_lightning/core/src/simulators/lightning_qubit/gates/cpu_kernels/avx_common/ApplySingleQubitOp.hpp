@@ -79,7 +79,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
         constexpr static auto flip_swap_real_imag =
             compilePermutation<PrecisionT>(
                 swapRealImag(flip(identity<packed_size>(), rev_wire)));
-
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             const auto w_diag =
@@ -139,7 +139,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
 
         constexpr static auto swap_real_imag = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-
+        PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const size_t i1 = i0 | rev_wire_shift;

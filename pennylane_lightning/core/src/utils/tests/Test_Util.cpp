@@ -87,11 +87,14 @@ TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
 TEST_CASE("Test AlignedAllocator", "[Util][Memory]") {
     AlignedAllocator<double> allocator(8);
     REQUIRE(allocator.allocate(0) == nullptr);
-    /* Allocate 1 PiB */
+/* Allocate 1 PiB */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
     REQUIRE_THROWS_AS(
         std::unique_ptr<double>(allocator.allocate(
             size_t{1024} * size_t{1024 * 1024} * size_t{1024 * 1024})),
         std::bad_alloc);
+#pragma GCC diagnostic pop
 }
 
 TEST_CASE("Test tensor transposition", "[Util]") {

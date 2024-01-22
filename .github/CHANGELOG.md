@@ -9,15 +9,30 @@
 
 ### Improvements
 
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+  [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
+* Enable choosing the PennyLane-Lightning version and disabling push to Docker Hub in the Docker build workflow. Add a cron job calling the Docker build workflow.
+  [(#597)](https://github.com/PennyLaneAI/pennylane-lightning/pull/597)
+
+* Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
+  [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
+
 ### Documentation
 
+* Update requirements to build the documentation.
+  [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
+
 ### Bug fixes
+
+* Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
+  [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Shuli Shu
+Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
@@ -58,7 +73,7 @@ Shuli Shu
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
-
+ 
 * Ensure aligned memory used for numpy arrays with state-vector without reallocations.
   [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
