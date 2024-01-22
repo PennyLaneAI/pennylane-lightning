@@ -15,6 +15,9 @@
 * Enable choosing the PennyLane-Lightning version and disabling push to Docker Hub in the Docker build workflow. Add a cron job calling the Docker build workflow.
   [(#597)](https://github.com/PennyLaneAI/pennylane-lightning/pull/597)
 
+* Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
+  [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
+
 ### Documentation
 
 * Update requirements to build the documentation.
