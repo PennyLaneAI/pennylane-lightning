@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests_linux:
+  docker_linux_x86_64:
     name: Docker build tests
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
