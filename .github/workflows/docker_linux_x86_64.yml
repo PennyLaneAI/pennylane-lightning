@@ -8,6 +8,25 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. This should be a valid semantic version, e.g. 0.34.0.
+      push-to-dockerhub:
+        type: boolean
+        required: true
+        description: Push to Docker Hub when done.
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. This should be a valid semantic version, e.g. 0.34.0.
+      push-to-dockerhub:
+        type: boolean
+        required: true
+        description: Push to Docker Hub when done.
 
 concurrency:
   group: docker_linux_x86_64-${{ github.ref }}
@@ -20,10 +39,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        pl_version: ["0.34.0"]
         pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
     timeout-minutes: 180
-    name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ matrix.pl_version }}
+    name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ inputs.lightning-version }}
     runs-on:
       group: 'Lightning Additional Runners'
     steps:
@@ -47,33 +65,33 @@ jobs:
           push: false
           context: .
           file: docker/Dockerfile
-          tags: test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          tags: test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
-            LIGHTNING_VERSION=${{ matrix.pl_version }}
+            LIGHTNING_VERSION=${{ inputs.lightning-version }}
 
       - name: Test
         run: |
-          docker run --rm test:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          docker run --rm test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
 
-      - name: Build and push
+      - name: Build and push version
         uses: docker/build-push-action@v5
         with:
-          push: true
+          push: ${{ inputs.push-to-dockerhub }}
           context: .
           file: docker/Dockerfile
-          tags: pennylaneai/pennylane:${{ matrix.pl_version }}-${{ matrix.pl_backend }}
+          tags: pennylaneai/pennylane:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
-            LIGHTNING_VERSION=${{ matrix.pl_version }}
+            LIGHTNING_VERSION=${{ inputs.lightning-version }}
 
-      - name: Build and push
+      - name: Build and push latest
         uses: docker/build-push-action@v5
         with:
-          push: true
+          push: ${{ inputs.push-to-dockerhub }}
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
-            LIGHTNING_VERSION=${{ matrix.pl_version }}
+            LIGHTNING_VERSION=${{ inputs.lightning-version }}
