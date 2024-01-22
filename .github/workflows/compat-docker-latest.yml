@@ -7,7 +7,7 @@ on:
 
 jobs:
   docker_linux_x86_64:
-    name: Docker build tests
+    name: Docker build tests - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
       lightning-version: 0.34.0
