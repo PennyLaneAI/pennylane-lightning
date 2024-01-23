@@ -90,6 +90,7 @@ matrix = [
         "QubitCarry",
         "QubitSum",
         "DiagonalQubitUnitary",
+        "BlockEncode",
 ]
 
 [measurement_processes]
