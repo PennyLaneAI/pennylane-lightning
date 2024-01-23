@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* The `BlockEncode` operation from PennyLane is now supported on all Lightning devices.
+  [(#599)](https://github.com/PennyLaneAI/pennylane-lightning/pull/599)
+
 * OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
 
@@ -32,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
