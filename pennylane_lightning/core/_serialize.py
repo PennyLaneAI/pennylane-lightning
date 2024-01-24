@@ -14,7 +14,7 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from typing import List, Tuple
+from typing import List, Sequence, Tuple, Union
 import numpy as np
 from pennylane import (
     BasisState,
@@ -32,6 +32,8 @@ from pennylane import (
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
+from pennylane.pauli import is_pauli_word
+from pennylane.ops import Prod, SProd, Sum
 
 from pennylane import matrix, DeviceError
 
@@ -40,6 +42,10 @@ pauli_name_map = {
     "X": "PauliX",
     "Y": "PauliY",
     "Z": "PauliZ",
+    "Identity": "Identity",
+    "PauliX": "PauliX",
+    "PauliY": "PauliY",
+    "PauliZ": "PauliZ",
 }
 
 
@@ -54,7 +60,11 @@ class QuantumScriptSerializer:
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(
-        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
+        self,
+        device_name,
+        use_csingle: bool = False,
+        use_mpi: bool = False,
+        split_obs: Union[bool, int] = False,
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -191,13 +201,32 @@ class QuantumScriptSerializer:
         return self.tensor_obs([self._ob(obs, wires_map) for obs in observable.obs])
 
     def _hamiltonian(self, observable, wires_map: dict):
-        coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
-        terms = [self._ob(t, wires_map) for t in observable.ops]
+        coeffs, ops = observable.terms()
+        coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
+        ops_l = []
+        for t in ops:
+            term_cpp = self._ob(t, wires_map)
+            if isinstance(term_cpp, Sequence):
+                ops_l.extend(term_cpp)
+            else:
+                ops_l.append(term_cpp)
 
         if self.split_obs:
+            if isinstance(self.split_obs, int):
+                idx = 0
+                obs = []
+                while idx < len(coeffs):
+                    obs.append(
+                        self.hamiltonian_obs(
+                            coeffs[idx : idx + self.split_obs], ops_l[idx : idx + self.split_obs]
+                        )
+                    )
+                    idx += self.split_obs
+                return obs
+
             return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
 
-        return self.hamiltonian_obs(coeffs, terms)
+        return self.hamiltonian_obs(coeffs, ops_l)
 
     def _sparse_hamiltonian(self, observable, wires_map: dict):
         """Serialize an observable (Sparse Hamiltonian)
@@ -256,14 +285,14 @@ class QuantumScriptSerializer:
     # pylint: disable=protected-access
     def _ob(self, observable, wires_map):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
+        if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
+            return self._named_obs(observable, wires_map)
         if isinstance(observable, Tensor):
             return self._tensor_ob(observable, wires_map)
-        if observable.name == "Hamiltonian":
+        if observable.name in ("Hamiltonian"):
             return self._hamiltonian(observable, wires_map)
         if observable.name == "SparseHamiltonian":
             return self._sparse_hamiltonian(observable, wires_map)
-        if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
-            return self._named_obs(observable, wires_map)
         if observable._pauli_rep is not None:
             return self._pauli_sentence(observable._pauli_rep, wires_map)
         return self._hermitian_ob(observable, wires_map)

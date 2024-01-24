@@ -16,11 +16,13 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-
+import pickle
 from warnings import warn
 from pathlib import Path
-from typing import Union
+from typing import Callable, Sequence, Union
+from functools import reduce
 import numpy as np
+import itertools
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
@@ -157,6 +159,29 @@ if LK_CPP_BINARY_AVAILABLE:
         "Prod",
         "Exp",
     }
+
+    def pickle_dumps(data):
+        "Pickle string-dump override to always use highest priority set"
+        return pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def pickle_loads(data):
+        "Pickle string-load pair for `pickle_dumps`"
+        return pickle.loads(data)
+
+    def mpi4py_batch(fn: Callable, data: Sequence):
+        "data is a sequence where each work-item is a packaged tuple"
+        from mpi4py import MPI
+
+        MPI.pickle.__init__(pickle_dumps, pickle_loads)
+        from mpi4py.futures import MPIPoolExecutor
+
+        with MPIPoolExecutor() as executor:
+            output_f = executor.starmap(fn, data)
+        return output_f  # [r.result() for r in output_f]
+
+    def remote_expval(state, obs, use_fp64: bool = True):
+        measure = MeasurementsC128(state) if use_fp64 else MeasurementsC64(state)
+        return measure.expval(obs)
 
     class LightningKokkos(LightningBase):
         """PennyLane Lightning Kokkos device.
@@ -500,9 +525,30 @@ if LK_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                if self._batch_obs and self._mpi:
+                    ob_serialized = QuantumScriptSerializer(
+                        self.short_name, self.use_csingle, False, 8
+                    )._ob(observable, self.wire_map)
+
+                    requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
+
+                    num_obs = len(ob_serialized)
+                    batch_size = (
+                        num_obs
+                        if isinstance(self._batch_obs, bool)
+                        else max(requested_batch, self._batch_obs)
+                        * 1  # Single device, multiple threads per device so  * 1
+                    )
+
+                    obs_partitions = list(_chunk_iterable(ob_serialized, batch_size))
+                    # obs_partitions = [reduce(lambda op1, op2: op1+op2, d) for d in obs_partitions]
+
+                    data = list(itertools.product([self._kokkos_state], obs_partitions, [True]))
+                    return mpi4py_batch(remote_expval, data)
+
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, False, False
+                )._ob(observable, self.wire_map)
                 return measure.expval(ob_serialized)
 
             # translate to wire labels used by device
