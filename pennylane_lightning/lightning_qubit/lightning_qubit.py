@@ -154,6 +154,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
     }
 
     allowed_observables = {

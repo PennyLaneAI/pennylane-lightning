@@ -76,6 +76,7 @@ def op(op_name):
         "QubitSum": [qml.QubitSum, [], {"wires": [0, 1, 2]}],
         "QubitCarry": [qml.QubitCarry, [], {"wires": [0, 1, 2, 3]}],
         "QubitUnitary": [qml.QubitUnitary, [], {"U": np.eye(16) * 1j, "wires": [0, 1, 2, 3]}],
+        "BlockEncode": [qml.BlockEncode, [[[0.2, 0, 0.2], [-0.2, 0.2, 0]]], {"wires": [0, 1, 2]}],
     }
     return ops_list.get(op_name)
 
