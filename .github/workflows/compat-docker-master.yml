@@ -1,6 +1,7 @@
 name: Compat Check Docker - Lightning@master
 
 on:
+  pull_request:
   schedule:
     - cron: "0 4 * * 1-5"  # Run daily at 4am Mon-Fri
   workflow_dispatch:
