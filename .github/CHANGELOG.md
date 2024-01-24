@@ -15,6 +15,9 @@
 * OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
 
+* Enable building Docker images for any branch or tag. Set the Docker build cron job to build images for the latest release and `master`.
+  [(#598)](https://github.com/PennyLaneAI/pennylane-lightning/pull/598)
+
 * Enable choosing the PennyLane-Lightning version and disabling push to Docker Hub in the Docker build workflow. Add a cron job calling the Docker build workflow.
   [(#597)](https://github.com/PennyLaneAI/pennylane-lightning/pull/597)
 
