@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm> // fill
 #include <complex>
 #include <vector>
 
@@ -76,7 +77,7 @@ class StateVectorLQubitManaged final
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        data_[0] = {1, 0};
+        setBasisState(0U);
     }
 
     /**
@@ -138,6 +139,39 @@ class StateVectorLQubitManaged final
     operator=(StateVectorLQubitManaged &&) noexcept = default;
 
     ~StateVectorLQubitManaged() = default;
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const size_t index) {
+        std::fill(data_.begin(), data_.end(), 0);
+        data_[index] = {1, 0};
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        for (size_t n = 0; n < indices.size(); n++) {
+            data_[indices[n]] = values[n];
+        }
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
 
     [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }
 
