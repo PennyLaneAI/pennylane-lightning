@@ -233,7 +233,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             # state as an array of dimension [2]*wires.
             self._state = _state_dtype(c_dtype)(self.num_wires)
             self._pre_rotated_state = _state_dtype(c_dtype)(self.num_wires)
-            self._c_dtype = c_dtype
 
             self._batch_obs = batch_obs
             self._mcmc = mcmc
@@ -306,6 +305,15 @@ if LQ_CPP_BINARY_AVAILABLE:
 
         @property
         def state(self):
+            """Copy the state vector data to a numpy array.
+
+            **Example**
+
+            >>> dev = qml.device('lightning.kokkos', wires=1)
+            >>> dev.apply([qml.PauliX(wires=[0])])
+            >>> print(dev.state)
+            [0.+0.j 1.+0.j]
+            """
             state = np.zeros(2**self.num_wires, dtype=self.C_DTYPE)
             state = self._asarray(state, dtype=self.C_DTYPE)
             self._state.getState(state.ravel(order="C"))
