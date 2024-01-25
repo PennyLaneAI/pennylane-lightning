@@ -14,6 +14,8 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
+
+from itertools import islice
 from typing import List, Sequence, Tuple, Union
 import numpy as np
 from pennylane import (
@@ -47,6 +49,14 @@ pauli_name_map = {
     "PauliY": "PauliY",
     "PauliZ": "PauliZ",
 }
+
+
+def _chunk_iterable(iteration, num_chunks):
+    """Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226
+    Replicated from lightning_base to avoid circular import
+    """
+    iteration = iter(iteration)
+    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 
 class QuantumScriptSerializer:
@@ -200,6 +210,14 @@ class QuantumScriptSerializer:
         assert isinstance(observable, Tensor)
         return self.tensor_obs([self._ob(obs, wires_map) for obs in observable.obs])
 
+    def _chunk_ham_terms(self, coeffs, ops, wires_map: dict, split_num: int) -> List:
+        "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
+        num_terms = len(coeffs)
+        step_size = int(np.ceil((1.0 * num_terms) / split_num))
+        c_coeffs = list(_chunk_iterable(coeffs, step_size))
+        c_ops = list(_chunk_iterable(ops, step_size))
+        return c_coeffs, c_ops
+
     def _hamiltonian(self, observable, wires_map: dict):
         coeffs, ops = observable.terms()
         coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
@@ -213,17 +231,11 @@ class QuantumScriptSerializer:
 
         if self.split_obs:
             if isinstance(self.split_obs, int):
-                idx = 0
-                obs = []
-                while idx < len(coeffs):
-                    obs.append(
-                        self.hamiltonian_obs(
-                            coeffs[idx : idx + self.split_obs], ops_l[idx : idx + self.split_obs]
-                        )
-                    )
-                    idx += self.split_obs
-                return obs
+                "Split into `split_obs` sub-Hamiltonian chunks"
+                c, o = self._chunk_ham_terms(coeffs, ops_l, wires_map, self.split_obs)
+                return [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
 
+            "Split until each term is an individual H"
             return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
 
         return self.hamiltonian_obs(coeffs, ops_l)

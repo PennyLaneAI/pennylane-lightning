@@ -180,7 +180,12 @@ if LK_CPP_BINARY_AVAILABLE:
         return output_f  # [r.result() for r in output_f]
 
     def remote_expval(state, obs, use_fp64: bool = True):
+        output = []
         measure = MeasurementsC128(state) if use_fp64 else MeasurementsC64(state)
+        if isinstance(obs, Sequence):
+            for ob in obs:
+                output.append(measure.expval(ob))
+            return np.sum(output)
         return measure.expval(obs)
 
     class LightningKokkos(LightningBase):
@@ -521,30 +526,33 @@ if LK_CPP_BINARY_AVAILABLE:
                 return measure.expval(matrix, observable_wires)
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                observable.name == "Hamiltonian"
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
                 if self._batch_obs and self._mpi:
-                    ob_serialized = QuantumScriptSerializer(
-                        self.short_name, self.use_csingle, False, 8
-                    )._ob(observable, self.wire_map)
+                    requested_batch = int(getenv("PL_FWD_BATCH", "0"))
 
-                    requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
-
-                    num_obs = len(ob_serialized)
                     batch_size = (
-                        num_obs
+                        max(requested_batch, 1)
                         if isinstance(self._batch_obs, bool)
-                        else max(requested_batch, self._batch_obs)
-                        * 1  # Single device, multiple threads per device so  * 1
+                        else max(requested_batch, self._batch_obs) * 1
                     )
 
-                    obs_partitions = list(_chunk_iterable(ob_serialized, batch_size))
-                    # obs_partitions = [reduce(lambda op1, op2: op1+op2, d) for d in obs_partitions]
+                    ob_serialized = QuantumScriptSerializer(
+                        self.short_name, self.use_csingle, False, requested_batch
+                    )._ob(observable, self.wire_map)
 
-                    data = list(itertools.product([self._kokkos_state], obs_partitions, [True]))
-                    return mpi4py_batch(remote_expval, data)
+                    obs_partitions = tuple(_chunk_iterable(ob_serialized, batch_size))[0]
+                    if isinstance(obs_partitions, Sequence):
+                        data = list(itertools.product([self._kokkos_state], obs_partitions, [True]))
+                    else:
+                        data = list(
+                            itertools.product([self._kokkos_state], [obs_partitions], [True])
+                        )
+
+                    out = list(mpi4py_batch(remote_expval, data))
+                    return np.sum(out)
 
                 ob_serialized = QuantumScriptSerializer(
                     self.short_name, self.use_csingle, False, False
@@ -747,18 +755,24 @@ if LK_CPP_BINARY_AVAILABLE:
 
             self._check_adjdiff_supported_operations(tape.operations)
 
-            processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+            if self._batch_obs:
+                requested_batch = int(getenv("PL_BWD_BATCH", "0"))
+                batch_size = (
+                    max(requested_batch, 1)
+                    if isinstance(self._batch_obs, bool)
+                    else max(requested_batch, self._batch_obs)
+                )
+
+                processed_data = self._process_jacobian_tape(
+                    tape, starting_state, use_device_state, False, requested_batch
+                )
+            else:
+                processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
 
             if not processed_data:  # training_params is empty
                 return np.array([], dtype=self.state.dtype)
 
             trainable_params = processed_data["tp_shift"]
-
-            # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-            # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-            # numbers of observables, enabling choice between compute time and memory use.
-            requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
-
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
             if self._batch_obs or requested_batch > 0:  # pragma: no cover
@@ -770,21 +784,10 @@ if LK_CPP_BINARY_AVAILABLE:
                     * 1  # Single device, multiple threads per device so  * 1
                 )
 
-                obs_partitions = _chunk_iterable(processed_data["obs_serialized"], batch_size)
+                obs_partitions = processed_data["obs_serialized"]
                 jac = []
 
                 if self._mpi:
-
-                    def pickle_dumps(data):
-                        import pickle as p
-
-                        return p.dumps(data, protocol=p.HIGHEST_PROTOCOL)
-
-                    def pickle_loads(data):
-                        import pickle as p
-
-                        return p.loads(data)
-
                     from mpi4py import MPI
 
                     MPI.pickle.__init__(pickle_dumps, pickle_loads)
@@ -795,7 +798,7 @@ if LK_CPP_BINARY_AVAILABLE:
                         for obs_chunk in obs_partitions:
                             jac_local = executor.submit(
                                 adjoint_jacobian.adjoint_noSVcopy,
-                                obs_chunk,
+                                [obs_chunk],
                                 processed_data["ops_serialized"],
                                 trainable_params,
                                 len(self.wires),
@@ -806,7 +809,7 @@ if LK_CPP_BINARY_AVAILABLE:
                     for obs_chunk in obs_partitions:
                         jac_local = adjoint_jacobian(
                             processed_data["state_vector"],
-                            obs_chunk,
+                            [obs_chunk],
                             processed_data["ops_serialized"],
                             trainable_params,
                         )
