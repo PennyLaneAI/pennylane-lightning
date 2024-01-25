@@ -242,10 +242,6 @@ if LK_CPP_BINARY_AVAILABLE:
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
 
-            # Create the initial state. Internally, we store the
-            # state as an array of dimension [2]*wires.
-            self._pre_rotated_state = _kokkos_dtype(c_dtype)(self.num_wires)
-
         @staticmethod
         def _asarray(arr, dtype=None):
             arr = np.asarray(arr)  # arr is not copied
@@ -792,6 +788,11 @@ if LK_CPP_BINARY_AVAILABLE:
 
                     MPI.pickle.__init__(pickle_dumps, pickle_loads)
                     from mpi4py.futures import MPIPoolExecutor
+
+                    print(
+                        f"NUM_CHUNKS:{len(obs_partitions)}, CHUNKSIZE={len(obs_partitions[0].coeffs)}",
+                        flush=True,
+                    )
 
                     with MPIPoolExecutor() as executor:
                         jac_f = []
