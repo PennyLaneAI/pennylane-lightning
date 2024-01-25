@@ -59,6 +59,9 @@ help:
 clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf build Build BuildTests BuildTidy BuildGBench
+	rm -rf build_lightning_qubit
+	rm -rf build_lightning_kokkos
+	rm -rf build_lightning_gpu
 	rm -rf .coverage coverage_html_report/
 	rm -rf pennylane_lightning/*_ops*
 
