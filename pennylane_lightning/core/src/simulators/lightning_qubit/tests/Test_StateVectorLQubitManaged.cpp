@@ -21,7 +21,8 @@
 
 #include <catch2/catch.hpp>
 
-#include "LinearAlgebra.hpp" //randomUnitary
+#include "CPUMemoryModel.hpp" // getBestAllocator
+#include "LinearAlgebra.hpp"  //randomUnitary
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData, TestVector
@@ -106,5 +107,61 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
         sv.updateData(st_data);
 
         REQUIRE(sv.getDataVector() == approx(st_data));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::setBasisState",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("Prepares a single computational basis state.") {
+        TestVectorT init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        TestVectorT expected_state(size_t{1U} << num_qubits, 0.0,
+                                   getBestAllocator<ComplexT>());
+        expected_state[3] = {1.0, 0.0};
+
+        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+
+        size_t index = 3;
+        sv.setBasisState(index);
+
+        REQUIRE(sv.getDataVector() == approx(expected_state));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("Set state vector with values and indices") {
+        TestVectorT init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        auto expected_state = init_state;
+
+        for (size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+            std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
+        }
+
+        std::vector<std::size_t> indices = {0, 2, 4, 6, 1, 3, 5, 7};
+
+        std::vector<ComplexT> values = {
+            init_state[1], init_state[3], init_state[5], init_state[7],
+            init_state[0], init_state[2], init_state[4], init_state[6]};
+
+        StateVectorLQubitManaged<PrecisionT> sv{num_qubits};
+        sv.setStateVector(indices, values);
+
+        REQUIRE(sv.getDataVector() == approx(expected_state));
     }
 }
