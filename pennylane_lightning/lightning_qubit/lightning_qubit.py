@@ -117,27 +117,6 @@ if LQ_CPP_BINARY_AVAILABLE:
         "CRX",
         "CRY",
         "CRZ",
-        "C(PauliX)",
-        "C(PauliY)",
-        "C(PauliZ)",
-        "C(Hadamard)",
-        "C(S)",
-        "C(T)",
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(SWAP)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -367,20 +346,36 @@ if LQ_CPP_BINARY_AVAILABLE:
             Returns:
                 array[complex]: the output state tensor
             """
-            basename = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
-            if basename == "Identity":
-                return
-            method = getattr(sim, f"{basename}", None)
             control_wires = self.wires.indices(operation.control_wires)
-            control_values = (
-                [bool(int(i)) for i in operation.hyperparameters["control_values"]]
-                if operation.name == "MultiControlledX"
-                else operation.control_values
-            )
+
             if operation.name == "MultiControlledX":
+                basename = "PauliX"
+                control_values = [bool(int(i)) for i in operation.hyperparameters["control_values"]]
                 target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
             else:
+                basename = operation.base.name
+                control_values = operation.control_values
                 target_wires = self.wires.indices(operation.target_wires)
+
+            if basename == "Identity":
+                return
+            # This special handling is required because PennyLane doesn't canonicalize
+            # C(CNOT/Toffoli) in qml.simplify or qml.ctrl/Controlled, and we now allow `C(...)`
+            # instances through for any supported base gate. However, the C++ simulator `method`
+            # for CNOT/Toffoli does not accept additional control wires.
+            elif basename == "CNOT":
+                basename = "PauliX"
+                control_values += [True]
+                control_wires += operation.base.wires[0]
+                target_wires = [operation.base.wires[1]]
+            elif basename == "Toffoli":
+                basename = "PauliX"
+                control_values += [True, True]
+                control_wires += operation.base.wires[0:2]
+                target_wires = [operation.base.wires[2]]
+
+            method = getattr(sim, f"{basename}", None)
+
             if method is not None:  # apply n-controlled specialized gate
                 inv = False
                 param = operation.parameters
@@ -402,6 +397,15 @@ if LQ_CPP_BINARY_AVAILABLE:
                         operation.base.matrix, control_wires, control_values, target_wires, False
                     )
 
+        def supports_operation(self, operation):
+            """Overwrite base class implementation to allow arbitrarily nested Controlled instances
+            to be applied by Lightning."""
+
+            while operation[0:2] == "C(":
+                operation = operation[2:-1]
+
+            return super().supports_operation(operation)
+
         def apply_lightning(self, state, operations):
             """Apply a list of operations to the state tensor.
 
@@ -422,6 +426,8 @@ if LQ_CPP_BINARY_AVAILABLE:
             for operation in operations:
                 if operation.name == "Identity":
                     continue
+                elif operation.name[0:2] == "C(":
+                    operation = qml.simplify(operation)
                 method = getattr(sim, operation.name, None)
                 wires = self.wires.indices(operation.wires)
 
