@@ -68,23 +68,23 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    # @pytest.mark.skipif(
-    #     device_name == "lightning.kokkos" or device_name == "lightning.gpu",
-    #     reason="Only meaningful for lightning_qubit",
-    # )
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_apply_operation_preserve_pointer_single_wire_no_parameters(
-    #     self, qubit_device, operation, input, expected_output, C
-    # ):
-    #     dev = qubit_device(wires=1)
-    #     dev._state = dev._asarray(input, dtype=C)
-    #     pointer_before, _ = dev._state.__array_interface__["data"]
-    #     dev.apply([operation(wires=[0])])
-    #     pointer_after, _ = dev._state.__array_interface__["data"]
+    @pytest.mark.skipif(
+        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+        reason="Only meaningful for lightning_qubit",
+    )
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_single_wire_no_parameters(
+        self, qubit_device, operation, input, expected_output, C
+    ):
+        dev = qubit_device(wires=1)
+        dev._state = dev._asarray(input, dtype=C)
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(wires=[0])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
-    #     assert pointer_before == pointer_after
+        assert pointer_before == pointer_after
 
     test_data_two_wires_no_parameters = [
         (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
@@ -124,19 +124,19 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_apply_operation_preserve_pointer_two_wires_no_parameters(
-    #     self, qubit_device, operation, input, expected_output, C
-    # ):
-    #     dev = qubit_device(wires=2)
-    #     dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
-    #     pointer_before, _ = dev._state.__array_interface__["data"]
-    #     dev.apply([operation(wires=[0, 1])])
-    #     pointer_after, _ = dev._state.__array_interface__["data"]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_two_wires_no_parameters(
+        self, qubit_device, operation, input, expected_output, C
+    ):
+        dev = qubit_device(wires=2)
+        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(wires=[0, 1])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
-    #     assert pointer_before == pointer_after
+        assert pointer_before == pointer_after
 
     test_data_three_wires_no_parameters = [
         (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
@@ -163,19 +163,19 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_apply_operation_preserve_pointer_three_wires_no_parameters(
-    #     self, qubit_device, operation, input, expected_output, C
-    # ):
-    #     dev = qubit_device(wires=3)
-    #     dev._state = dev._asarray(input, dtype=C).reshape(3 * [2])
-    #     pointer_before, _ = dev._state.__array_interface__["data"]
-    #     dev.apply([operation(wires=[0, 1, 2])])
-    #     pointer_after, _ = dev._state.__array_interface__["data"]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_three_wires_no_parameters(
+        self, qubit_device, operation, input, expected_output, C
+    ):
+        dev = qubit_device(wires=3)
+        dev._state = dev._asarray(input, dtype=C).reshape(3 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(wires=[0, 1, 2])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
-    #     assert pointer_before == pointer_after
+        assert pointer_before == pointer_after
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
@@ -308,21 +308,21 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # @pytest.mark.parametrize(
-    #     "operation,input,expected_output,par", test_data_single_wire_with_parameters
-    # )
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_apply_operation_preserve_pointer_single_wire_with_parameters(
-    #     self, qubit_device, operation, input, expected_output, par, C
-    # ):
-    #     dev = qubit_device(wires=1)
-    #     dev._state = dev._asarray(input, dtype=C)
-    #     pointer_before, _ = dev._state.__array_interface__["data"]
-    #     dev.apply([operation(*par, wires=[0])])
-    #     pointer_after, _ = dev._state.__array_interface__["data"]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize(
+        "operation,input,expected_output,par", test_data_single_wire_with_parameters
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_single_wire_with_parameters(
+        self, qubit_device, operation, input, expected_output, par, C
+    ):
+        dev = qubit_device(wires=1)
+        dev._state = dev._asarray(input, dtype=C)
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(*par, wires=[0])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
-    #     assert pointer_before == pointer_after
+        assert pointer_before == pointer_after
 
     """ operation,input,expected_output,par """
     test_data_two_wires_with_parameters = [
@@ -459,21 +459,21 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    # @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    # @pytest.mark.parametrize(
-    #     "operation,input,expected_output,par", test_data_two_wires_with_parameters
-    # )
-    # @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    # def test_apply_operation_preserve_pointer_two_wires_with_parameters(
-    #     self, qubit_device, operation, input, expected_output, par, C
-    # ):
-    #     dev = qubit_device(wires=2)
-    #     dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
-    #     pointer_before, _ = dev._state.__array_interface__["data"]
-    #     dev.apply([operation(*par, wires=[0, 1])])
-    #     pointer_after, _ = dev._state.__array_interface__["data"]
+    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+    @pytest.mark.parametrize(
+        "operation,input,expected_output,par", test_data_two_wires_with_parameters
+    )
+    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
+    def test_apply_operation_preserve_pointer_two_wires_with_parameters(
+        self, qubit_device, operation, input, expected_output, par, C
+    ):
+        dev = qubit_device(wires=2)
+        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
+        pointer_before, _ = dev._state.__array_interface__["data"]
+        dev.apply([operation(*par, wires=[0, 1])])
+        pointer_after, _ = dev._state.__array_interface__["data"]
 
-    #     assert pointer_before == pointer_after
+        assert pointer_before == pointer_after
 
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
