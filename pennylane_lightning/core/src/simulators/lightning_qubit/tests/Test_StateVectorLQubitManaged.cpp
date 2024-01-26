@@ -124,11 +124,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::setBasisState",
 
         TestVectorT expected_state(size_t{1U} << num_qubits, 0.0,
                                    getBestAllocator<ComplexT>());
-        expected_state[3] = {1.0, 0.0};
-
+        std::size_t index = GENERATE(0, 1, 2, 3, 4, 5, 6, 7)
+        expected_state[index] = {1.0, 0.0};
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
-
-        size_t index = 3;
         sv.setBasisState(index);
 
         REQUIRE(sv.getDataVector() == approx(expected_state));
