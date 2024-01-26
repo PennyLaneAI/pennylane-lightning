@@ -207,7 +207,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                               data_ptr);
                 }
             },
-            "Synchronize data from the GPU device to host.")
+            "Copy StateVector data into a Numpy array.")
         .def(
             "UpdateData",
             [](StateVectorT &device_sv, const np_arr_c &state) {
@@ -219,7 +219,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                     device_sv.updateData(data_ptr, length);
                 }
             },
-            "Synchronize data from the host device to GPU.")
+            "Copy StateVector data into a Numpy array.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation")
         .def("kernel_map", &svKernelMap<StateVectorT>,

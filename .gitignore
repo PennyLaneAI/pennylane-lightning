@@ -6,9 +6,7 @@ doc/code/api/
 PennyLane_Lightning.egg-info/
 PennyLane_Lightning_Kokkos.egg-info/
 build/
-build_lightning_qubit/
-build_lightning_kokkos/
-build_lightning_gpu/
+build_lightning_*/
 Build/
 BuildCov/
 BuildGBench/
