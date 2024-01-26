@@ -231,8 +231,8 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             # Create the initial state. Internally, we store the
             # state as an array of dimension [2]*wires.
-            self._state = _state_dtype(c_dtype)(self.num_wires)
-            self._pre_rotated_state = _state_dtype(c_dtype)(self.num_wires)
+            self._qubit_state = _state_dtype(c_dtype)(self.num_wires)
+            # self._pre_rotated_state = _state_dtype(c_dtype)(self.num_wires)
 
             self._batch_obs = batch_obs
             self._mcmc = mcmc
@@ -280,14 +280,14 @@ if LQ_CPP_BINARY_AVAILABLE:
             Args:
                 index (int): integer representing the computational basis state.
             """
-            self._state.setBasisState(index)
+            self._qubit_state.setBasisState(index)
 
         def reset(self):
             """Reset the device"""
             super().reset()
 
             # init the state vector to |00..0>
-            self._state.resetStateVector()
+            self._qubit_state.resetStateVector()
 
         @property
         def create_ops_list(self):
@@ -316,13 +316,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             """
             state = np.zeros(2**self.num_wires, dtype=self.C_DTYPE)
             state = self._asarray(state, dtype=self.C_DTYPE)
-            self._state.getState(state.ravel(order="C"))
+            self._qubit_state.getState(state.ravel(order="C"))
             return state
 
         @property
         def state_vector(self):
             """Returns a handle to the statevector."""
-            return self._state
+            return self._qubit_state
 
         def _apply_state_vector(self, state, device_wires):
             """Initialize the internal state vector in a specified state.
@@ -332,10 +332,10 @@ if LQ_CPP_BINARY_AVAILABLE:
                 device_wires (Wires): wires that get initialized in the state
             """
 
-            if isinstance(state, self._state.__class__):
+            if isinstance(state, self._qubit_state.__class__):
                 state_data = np.zeros(state.size, dtype=self.C_DTYPE)
                 state_data = self._asarray(state_data, dtype=self.C_DTYPE)
-                self._state.getState(state_data.ravel(order="C"))
+                self._qubit_state.getState(state_data.ravel(order="C"))
                 state = state_data
 
             ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
@@ -347,10 +347,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
                 # Initialize the entire device state with the input state
                 state = self._reshape(state, output_shape).ravel(order="C")
-                self._state.UpdateData(state)
+                self._qubit_state.UpdateData(state)
                 return
 
-            self._state.setStateVector(ravelled_indices, state)  # this operation on device
+            self._qubit_state.setStateVector(ravelled_indices, state)  # this operation on device
 
         def _apply_basis_state(self, state, wires):
             """Initialize the state vector in a specified computational basis state.
