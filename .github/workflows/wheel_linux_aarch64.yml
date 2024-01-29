@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -97,11 +97,11 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -162,7 +162,7 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
@@ -178,7 +178,7 @@ jobs:
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist

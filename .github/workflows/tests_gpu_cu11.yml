@@ -77,11 +77,11 @@ jobs:
           nvidia-smi
 
       - name: Checkout PennyLane-Lightning-GPU
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: main
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -140,7 +140,7 @@ jobs:
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
@@ -148,7 +148,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -180,7 +180,7 @@ jobs:
           nvidia-smi
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -199,7 +199,7 @@ jobs:
           git fetch --tags --force
           git checkout $(git tag | sort -V | tail -1)
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -242,7 +242,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -318,7 +318,7 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
@@ -330,10 +330,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-python
 
@@ -349,10 +349,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
 

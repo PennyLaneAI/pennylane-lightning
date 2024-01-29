@@ -31,7 +31,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
         uses: ilammy/msvc-dev-cmd@v1
@@ -76,7 +76,7 @@ jobs:
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
@@ -84,7 +84,7 @@ jobs:
           if-no-files-found: error
           
       - name: Upload coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
@@ -96,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Kokkos execution strategy
         id: exec_model
@@ -125,7 +125,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
@@ -180,13 +180,13 @@ jobs:
     steps:
       - name: Restoring cached Kokkos
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
       
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -244,7 +244,7 @@ jobs:
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
@@ -252,7 +252,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
@@ -264,10 +264,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows-coverage-report
 

@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -52,7 +52,7 @@ jobs:
         run: |
           git fetch tags --force
           git checkout $(git tag | sort -V | tail -1)
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -137,7 +137,7 @@ jobs:
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports
@@ -145,7 +145,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
@@ -175,7 +175,7 @@ jobs:
 
     steps:
       - name: Checkout pennyLane-lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -192,7 +192,7 @@ jobs:
           git checkout $(git tag | sort -V | tail -1)
 
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -239,7 +239,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -271,7 +271,7 @@ jobs:
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-*.xml
@@ -290,10 +290,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
 
@@ -317,10 +317,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-python
 

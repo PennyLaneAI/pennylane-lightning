@@ -38,13 +38,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
@@ -84,7 +84,7 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
@@ -95,7 +95,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -133,7 +133,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -149,7 +149,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -190,7 +190,7 @@ jobs:
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: |
@@ -208,13 +208,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
@@ -239,7 +239,7 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
       
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-Lapack
@@ -247,7 +247,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
@@ -264,13 +264,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
@@ -295,7 +295,7 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
@@ -303,7 +303,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -320,7 +320,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -341,7 +341,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -357,7 +357,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -398,7 +398,7 @@ jobs:
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -424,17 +424,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -469,7 +469,7 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
@@ -477,7 +477,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
@@ -500,7 +500,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -521,14 +521,14 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -552,7 +552,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -618,7 +618,7 @@ jobs:
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -630,13 +630,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-python
 
@@ -658,10 +658,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
 
@@ -685,17 +685,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -728,7 +728,7 @@ jobs:
             set +x
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
