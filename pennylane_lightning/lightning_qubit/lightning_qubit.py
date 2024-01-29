@@ -232,8 +232,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Create the initial state. Internally, we store the
             # state as an array of dimension [2]*wires.
             self._qubit_state = _state_dtype(c_dtype)(self.num_wires)
-            # self._pre_rotated_state = _state_dtype(c_dtype)(self.num_wires)
-
             self._batch_obs = batch_obs
             self._mcmc = mcmc
             if self._mcmc:
