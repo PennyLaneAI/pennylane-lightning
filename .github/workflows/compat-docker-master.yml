@@ -5,6 +5,10 @@ on:
     - cron: "0 4 * * 1-5"  # Run daily at 4am Mon-Fri
   workflow_dispatch:
 
+concurrency:
+  group: docker_linux_x86_64-master
+  cancel-in-progress: true
+
 jobs:
   docker_linux_x86_64_develop:
     name: Docker develop - Linux::x86_64
