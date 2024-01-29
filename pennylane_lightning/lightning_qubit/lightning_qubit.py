@@ -494,8 +494,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                 "Identity",
                 "Projector",
             ]:
-                qs = qml.tape.QuantumScript([], [qml.expval(observable)])
-                self.apply(self._get_diagonalizing_gates(qs))
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
@@ -550,8 +551,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                 "Identity",
                 "Projector",
             ]:
-                qs = qml.tape.QuantumScript([], [qml.var(observable)])
-                self.apply(self._get_diagonalizing_gates(qs))
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
