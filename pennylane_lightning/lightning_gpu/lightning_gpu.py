@@ -197,6 +197,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "Hamiltonian",
         "Hermitian",
         "Identity",
+        "Projector",
         "Sum",
         "Prod",
         "SProd",
@@ -866,6 +867,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
             Returns:
                 Expectation value of the observable
             """
+            if observable.name in [
+                "Identity",
+                "Projector",
+            ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
+                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+            
             if self.shots is not None:
                 # estimate the expectation value
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
@@ -950,6 +960,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
             Returns:
                 Variance of the observable
             """
+            if observable.name in [
+                "Identity",
+                "Projector",
+            ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
+                return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+            
             if self.shots is not None:
                 # estimate the var
                 # Lightning doesn't support sampling yet
