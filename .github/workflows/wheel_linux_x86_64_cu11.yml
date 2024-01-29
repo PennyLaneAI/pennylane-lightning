@@ -47,7 +47,7 @@ jobs:
     steps:
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies (CentOS)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
@@ -105,7 +105,7 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist

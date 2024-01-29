@@ -38,13 +38,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
@@ -81,13 +81,13 @@ jobs:
               cd ..
             done
             lcov --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info -o coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            mv coverage.info coverage-${{ github.job }}-cpp-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
+          name: ubuntu-tests-reports-${{ github.job }}-cpp-${{ matrix.pl_backend }}
           path: |
             ./Build/tests/results/
             ./BuildKernelOMP/tests/results/
@@ -95,10 +95,10 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./coverage-${{ github.job }}-cpp-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
   pythontests:
@@ -112,7 +112,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -133,7 +133,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -149,7 +149,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -187,14 +187,14 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          mv .coverage .coverage-${{ github.job }}-python-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: |
-            ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
+            ./main/.coverage-${{ github.job }}-python-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
@@ -208,13 +208,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
@@ -236,21 +236,21 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+            mv coverage.info coverage-${{ github.job }}-cpp_lapack-${{ matrix.pl_backend }}.info
       
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-Lapack
+          name: ubuntu-tests-reports-${{ github.job }}-cpp_lapack-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
+          path: ./Build/coverage-${{ github.job }}-cpp_lapack-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
   cpptestswithOpenBLASNoLAPACK:
@@ -264,13 +264,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
@@ -292,21 +292,21 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            mv coverage.info coverage-${{ github.job }}-cpp_blas-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
+          name: ubuntu-tests-reports-${{ github.job }}-cpp_blas-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./Build/coverage-${{ github.job }}-cpp_blas-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
   pythontestswithOpenBLAS:
@@ -320,7 +320,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -341,7 +341,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -357,7 +357,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -395,13 +395,13 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          mv .coverage .coverage-${{ github.job }}-python_blas-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          path: ./main/.coverage-${{ github.job }}-python_blas-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   build_and_cache_Kokkos:
@@ -424,17 +424,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -466,21 +466,21 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+            mv coverage.info coverage-${{ github.job }}-cpp_kokkos-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
+          name: ubuntu-tests-reports-${{ github.job }}-cpp_kokkos-${{ matrix.pl_backend }}
           path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          path: ./Build/coverage-${{ github.job }}-cpp_kokkos-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
   pythontestswithKokkos:
@@ -500,7 +500,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -521,14 +521,14 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -552,7 +552,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -593,7 +593,7 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          mv .coverage .coverage-${{ github.job }}-python_kokkos-${{ matrix.pl_backend }}
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -615,13 +615,13 @@ jobs:
           PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
           pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          mv .coverage .coverage-${{ github.job }}-python_kokkos-${{ matrix.pl_backend }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          path: ./main/.coverage-${{ github.job }}-python_kokkos-${{ matrix.pl_backend }}
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
@@ -630,13 +630,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-python
 
@@ -658,10 +658,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
 
@@ -685,17 +685,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -728,7 +728,7 @@ jobs:
             set +x
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
