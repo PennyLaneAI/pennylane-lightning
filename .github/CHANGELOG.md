@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Split Docker build cron job into two jobs: master and latest. This is mainly for reporting in the `plugin-test-matrix` repo.
+  [(#600)](https://github.com/PennyLaneAI/pennylane-lightning/pull/600)
+
 * The `BlockEncode` operation from PennyLane is now supported on all Lightning devices.
   [(#599)](https://github.com/PennyLaneAI/pennylane-lightning/pull/599)
 
