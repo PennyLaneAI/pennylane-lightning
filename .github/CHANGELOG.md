@@ -9,10 +9,10 @@
 
 ### Improvements
 
-* Decouple LightningQubit memory ownership from numpy and migrate it to LightningQubit managed state-vector class.
+* Decouple LightningQubit memory ownership from numpy and migrate it to Lightning-Qubit managed state-vector class.
   [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
 
-* Expand support for Projector observables on LightningKokkos.
+* Expand support for Projector observables on Lightning-Kokkos.
   [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
 
 * Split Docker build cron job into two jobs: master and latest. This is mainly for reporting in the `plugin-test-matrix` repo.
