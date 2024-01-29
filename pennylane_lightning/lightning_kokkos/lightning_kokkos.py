@@ -150,6 +150,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Hadamard",
         "Hermitian",
         "Identity",
+        "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
         "Sum",
@@ -196,7 +197,7 @@ if LK_CPP_BINARY_AVAILABLE:
             shots=None,
             batch_obs=False,
             kokkos_args=None,
-        ):  # pylint: disable=unused-argument
+        ):  # pylint: disable=unused-argument, too-many-arguments
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
             if kokkos_args is None:
@@ -212,10 +213,6 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
-
-            # Create the initial state. Internally, we store the
-            # state as an array of dimension [2]*wires.
-            self._pre_rotated_state = _kokkos_dtype(c_dtype)(self.num_wires)
 
         @staticmethod
         def _asarray(arr, dtype=None):
@@ -466,8 +463,11 @@ if LK_CPP_BINARY_AVAILABLE:
                 Expectation value of the observable
             """
             if observable.name in [
+                "Identity",
                 "Projector",
             ]:
+                qs = qml.tape.QuantumScript([], [qml.expval(observable)])
+                self.apply(self._get_diagonalizing_gates(qs))
                 return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
@@ -526,8 +526,11 @@ if LK_CPP_BINARY_AVAILABLE:
                 Variance of the observable
             """
             if observable.name in [
+                "Identity",
                 "Projector",
             ]:
+                qs = qml.tape.QuantumScript([], [qml.var(observable)])
+                self.apply(self._get_diagonalizing_gates(qs))
                 return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
