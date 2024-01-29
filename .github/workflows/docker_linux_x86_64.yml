@@ -28,10 +28,6 @@ on:
         required: true
         description: Push to Docker Hub when done.
 
-concurrency:
-  group: docker_linux_x86_64-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
 
   docker:
