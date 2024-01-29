@@ -34,6 +34,9 @@
 
 ### Bug fixes
 
+* Move concurrency group specifications from reusable Docker build workflow to the root workflows.
+  [(#604)](https://github.com/PennyLaneAI/pennylane-lightning/pull/604)
+
 * Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
   [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
 
