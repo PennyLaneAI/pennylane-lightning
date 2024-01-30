@@ -314,7 +314,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             """
             state = np.zeros(2**self.num_wires, dtype=self.C_DTYPE)
             state = self._asarray(state, dtype=self.C_DTYPE)
-            self._qubit_state.getState(state.ravel(order="C"))
+            self._qubit_state.getState(state)
             return state
 
         @property
@@ -331,9 +331,8 @@ if LQ_CPP_BINARY_AVAILABLE:
             """
 
             if isinstance(state, self._qubit_state.__class__):
-                state_data = np.zeros(state.size, dtype=self.C_DTYPE)
-                state_data = self._asarray(state_data, dtype=self.C_DTYPE)
-                self._qubit_state.getState(state_data.ravel(order="C"))
+                state_data = allocate_aligned_array(state.size, np.dtype(self.C_DTYPE), True)
+                self._qubit_state.getState(state_data)
                 state = state_data
 
             ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
