@@ -489,7 +489,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                 Expectation value of the observable
             """
             if observable.name in [
-                "Identity",
                 "Projector",
             ]:
                 if self.shots is None:
@@ -546,7 +545,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                 Variance of the observable
             """
             if observable.name in [
-                "Identity",
                 "Projector",
             ]:
                 if self.shots is None:
