@@ -233,7 +233,8 @@ class QuantumScriptSerializer:
             if isinstance(self.split_obs, int):
                 "Split into `split_obs` sub-Hamiltonian chunks"
                 c, o = self._chunk_ham_terms(coeffs, ops_l, wires_map, self.split_obs)
-                return [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
+                out = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
+                return out
 
             "Split until each term is an individual H"
             return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]

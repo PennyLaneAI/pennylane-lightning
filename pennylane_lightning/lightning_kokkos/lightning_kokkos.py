@@ -536,15 +536,14 @@ if LK_CPP_BINARY_AVAILABLE:
                     )
 
                     ob_serialized = QuantumScriptSerializer(
-                        self.short_name, self.use_csingle, False, requested_batch
+                        self.short_name, self.use_csingle, False, batch_size
                     )._ob(observable, self.wire_map)
 
-                    obs_partitions = tuple(_chunk_iterable(ob_serialized, batch_size))[0]
-                    if isinstance(obs_partitions, Sequence):
-                        data = list(itertools.product([self._kokkos_state], obs_partitions, [True]))
+                    if isinstance(ob_serialized, Sequence):
+                        data = list(itertools.product([self._kokkos_state], ob_serialized, [True]))
                     else:
                         data = list(
-                            itertools.product([self._kokkos_state], [obs_partitions], [True])
+                            itertools.product([self._kokkos_state], [ob_serialized], [True])
                         )
 
                     out = list(mpi4py_batch(remote_expval, data))
@@ -750,9 +749,9 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             self._check_adjdiff_supported_operations(tape.operations)
+            requested_batch = int(getenv("PL_BWD_BATCH", "0"))
 
             if self._batch_obs:
-                requested_batch = int(getenv("PL_BWD_BATCH", "0"))
                 batch_size = (
                     max(requested_batch, 1)
                     if isinstance(self._batch_obs, bool)
@@ -760,7 +759,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
                 processed_data = self._process_jacobian_tape(
-                    tape, starting_state, use_device_state, False, requested_batch
+                    tape, starting_state, use_device_state, False, batch_size
                 )
             else:
                 processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
@@ -788,11 +787,6 @@ if LK_CPP_BINARY_AVAILABLE:
 
                     MPI.pickle.__init__(pickle_dumps, pickle_loads)
                     from mpi4py.futures import MPIPoolExecutor
-
-                    print(
-                        f"NUM_CHUNKS:{len(obs_partitions)}, CHUNKSIZE={len(obs_partitions[0].coeffs)}",
-                        flush=True,
-                    )
 
                     with MPIPoolExecutor() as executor:
                         jac_f = []
