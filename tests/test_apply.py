@@ -58,7 +58,6 @@ class TestApply:
     ):
         """Tests that applying an operation yields the expected output state for single wire
         operations that have no parameters."""
-        # from pennylane.wires import Wires
 
         dev = qubit_device(wires=1)
         _state = np.array(input).astype(dev.C_DTYPE)
