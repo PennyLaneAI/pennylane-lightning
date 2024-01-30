@@ -160,22 +160,13 @@ if LK_CPP_BINARY_AVAILABLE:
         "Exp",
     }
 
-    def pickle_dumps(data):
-        "Pickle string-dump override to always use highest priority set"
-        return pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
-
-    def pickle_loads(data):
-        "Pickle string-load pair for `pickle_dumps`"
-        return pickle.loads(data)
-
     def mpi4py_batch(fn: Callable, data: Sequence):
         "data is a sequence where each work-item is a packaged tuple"
-        from mpi4py import MPI
-
-        MPI.pickle.__init__(pickle_dumps, pickle_loads)
+        from mpi4py import MPI  # Requires to call MPI_Init
         from mpi4py.futures import MPIPoolExecutor
 
-        with MPIPoolExecutor() as executor:
+        kwargs = {"use_pkl5": True}
+        with MPIPoolExecutor(**kwargs) as executor:
             output_f = executor.starmap(fn, data)
         return output_f  # [r.result() for r in output_f]
 
@@ -771,9 +762,9 @@ if LK_CPP_BINARY_AVAILABLE:
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
             if self._batch_obs or requested_batch > 0:  # pragma: no cover
-                num_obs = len(processed_data["obs_serialized"])
+                # num_obs = len(processed_data["obs_serialized"])
                 batch_size = (
-                    num_obs
+                    requested_batch
                     if isinstance(self._batch_obs, bool)
                     else max(requested_batch, self._batch_obs)
                     * 1  # Single device, multiple threads per device so  * 1
@@ -784,11 +775,10 @@ if LK_CPP_BINARY_AVAILABLE:
 
                 if self._mpi:
                     from mpi4py import MPI
-
-                    MPI.pickle.__init__(pickle_dumps, pickle_loads)
                     from mpi4py.futures import MPIPoolExecutor
 
-                    with MPIPoolExecutor() as executor:
+                    kwargs = {"use_pkl5": True}
+                    with MPIPoolExecutor(**kwargs) as executor:
                         jac_f = []
                         for obs_chunk in obs_partitions:
                             jac_local = executor.submit(

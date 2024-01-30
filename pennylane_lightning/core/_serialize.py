@@ -237,7 +237,7 @@ class QuantumScriptSerializer:
                 return out
 
             "Split until each term is an individual H"
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, ops_l)]
 
         return self.hamiltonian_obs(coeffs, ops_l)
 
