@@ -27,8 +27,6 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-
 #include <pybind11/complex.h>
 #include <pybind11/functional.h>
 #include <pybind11/numpy.h>
@@ -464,6 +462,8 @@ void registerBackendAgnosticObservables(py::module_ &m) {
              "Get ordered list observables")
         .def("get_coefficients", &Hamiltonian<StateVectorT>::getCoeffs,
              "Get ordered list of observable coefficients")
+        .def("num_terms", &Hamiltonian<StateVectorT>::getNumTerms,
+             "Get number of terms in the observable")
         .def(
             "__eq__",
             [](const Hamiltonian<StateVectorT> &self,

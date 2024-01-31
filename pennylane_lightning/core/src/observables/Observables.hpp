@@ -106,6 +106,11 @@ template <class StateVectorT> class Observable {
     };
 
     /**
+     * @brief Get the number of elements in the observable.
+     */
+    [[nodiscard]] virtual auto getNumTerms() const -> std::size_t { return 1; };
+
+    /**
      * @brief Test whether this object is equal to another object
      */
     [[nodiscard]] auto operator==(const Observable<StateVectorT> &other) const
@@ -597,6 +602,13 @@ class HamiltonianBase : public Observable<StateVectorT> {
      */
     [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> override {
         return coeffs_;
+    };
+
+    /**
+     * @brief Get the number of terms in the observable.
+     */
+    [[nodiscard]] auto getNumTerms() const -> std::size_t override {
+        return coeffs_.size();
     };
 };
 

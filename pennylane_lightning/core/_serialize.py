@@ -15,7 +15,7 @@ r"""
 Helper functions for serializing quantum tapes.
 """
 
-from itertools import islice
+from itertools import islice, chain
 from typing import List, Sequence, Tuple, Union
 import numpy as np
 from pennylane import (
@@ -328,11 +328,13 @@ class QuantumScriptSerializer:
         for observable in tape.observables:
             ser_ob = self._ob(observable, wires_map)
             if isinstance(ser_ob, list):
+                num_terms = sum([o.num_terms() for o in ser_ob])
                 serialized_obs.extend(ser_ob)
-                offset_indices.append(offset_indices[-1] + len(ser_ob))
+                offset_indices.append(offset_indices[-1] + num_terms)
             else:
+                num_terms = ser_ob.num_terms()
                 serialized_obs.append(ser_ob)
-                offset_indices.append(offset_indices[-1] + 1)
+                offset_indices.append(offset_indices[-1] + num_terms)
         return serialized_obs, offset_indices
 
     def serialize_ops(
@@ -393,13 +395,16 @@ class QuantumScriptSerializer:
             return single_op, name, wires_list, controlled_wires_list, control_values_list
 
         for operation in tape.operations:
+            op_list = []
             if isinstance(operation, (BasisState, StatePrep)):
                 uses_stateprep = True
+                # TODO: identify state-prep offsets
+                # op_list.extend(chain(*[op.decomposition() for op in operation.expand().operations]))
                 continue
             if isinstance(operation, Rot):
-                op_list = operation.expand().operations
+                op_list.extend(operation.expand().operations)
             else:
-                op_list = [operation]
+                op_list.append(operation)
 
             for single_op in op_list:
                 (

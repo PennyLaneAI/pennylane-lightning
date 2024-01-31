@@ -778,18 +778,22 @@ if LK_CPP_BINARY_AVAILABLE:
                     from mpi4py.futures import MPIPoolExecutor
 
                     kwargs = {"use_pkl5": True}
-                    with MPIPoolExecutor(**kwargs) as executor:
-                        jac_f = []
-                        for obs_chunk in obs_partitions:
-                            jac_local = executor.submit(
-                                adjoint_jacobian.adjoint_noSVcopy,
-                                [obs_chunk],
-                                processed_data["ops_serialized"],
-                                trainable_params,
-                                len(self.wires),
-                            )
-                            jac_f.append(jac_local)
-                        jac.append(qml.math.hstack([r.result() for r in jac_f]))
+
+                    if not isinstance(obs_partitions, Sequence):
+                        obs_partitions = [obs_partitions]
+
+                    data_payload = list(
+                        itertools.product(
+                            [processed_data["state_vector"]],
+                            [[o] for o in obs_partitions],
+                            [processed_data["ops_serialized"]],
+                            [trainable_params],
+                            [len(self.wires)],
+                        )
+                    )
+                    res = list(mpi4py_batch(adjoint_jacobian.adjoint_noSVcopy, data_payload))
+                    jac.append(qml.math.hstack(res))
+
                 else:
                     for obs_chunk in obs_partitions:
                         jac_local = adjoint_jacobian(
