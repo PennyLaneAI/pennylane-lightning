@@ -625,7 +625,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if observable.name != "PauliZ":
+            if not isinstance(observable, qml.PauliZ):
                 self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
             return super().sample(
