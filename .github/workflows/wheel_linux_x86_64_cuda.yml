@@ -81,8 +81,8 @@ jobs:
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
-            PATH=$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
-            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
+            PATH=$PATH:/usr/local/cuda-${{ matrix.cuda_version }}.0/bin \
+            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}.0/lib64 \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
