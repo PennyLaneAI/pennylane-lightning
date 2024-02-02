@@ -107,7 +107,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: ./wheelhouse/*.whl
 
   upload-pypi:
@@ -121,7 +121,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: dist
 
       - name: Upload wheels to PyPI
