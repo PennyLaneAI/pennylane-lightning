@@ -1,4 +1,4 @@
-name: Wheel::Linux::x86_64::CUDA-11
+name: Wheel::Linux::x86_64::CUDA
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
 #                   Python versions: 3.9, 3.10, 3.11, 3.12.
@@ -7,8 +7,6 @@ name: Wheel::Linux::x86_64::CUDA-11
 
 env:
   GCC_VERSION: 11
-  CUDA_VERSION_MAJOR: 11
-  CUDA_VERSION_MINOR: 5
 
 on:
   pull_request:
@@ -41,7 +39,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     timeout-minutes: 30
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
