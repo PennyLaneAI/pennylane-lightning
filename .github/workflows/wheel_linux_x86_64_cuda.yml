@@ -37,6 +37,7 @@ jobs:
         os: [ubuntu-latest]
         arch: [x86_64]
         pl_backend: ["lightning_gpu"]
+        cuda_version: ["11-5", "12-0"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     timeout-minutes: 30
@@ -72,18 +73,18 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.24.3 auditwheel custatevec-cu11
+            python -m pip install ninja cmake~=3.24.3 auditwheel custatevec-cu$(echo ${{ matrix.cuda_version }} | cut -d '-' -f 1)
             yum clean all -y
             yum install centos-release-scl-rh -y
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
             yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
-            yum -y install cuda-11-5 git openssh wget
+            yum -y install cuda-${{ matrix.cuda_version }} git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
-            PATH=$PATH:/usr/local/cuda/bin \
-            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda/lib64 \
+            PATH=$PATH:/usr/local/cuda-$(echo ${{ matrix.cuda_version }} | cut -d '-' -f 1)/bin \
+            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-$(echo ${{ matrix.cuda_version }} | cut -d '-' -f 1)/lib64 \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
