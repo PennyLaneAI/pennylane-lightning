@@ -41,7 +41,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     timeout-minutes: 30
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }}.$CUDA_MINOR_VERSION_11 (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container_img }}
 
@@ -78,7 +78,7 @@ jobs:
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
             yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
-            yum -y install cuda-${{ matrix.cuda_version }}-${{ fromJson('{ "11":"${{ env.CUDA_MINOR_VERSION_11 }}","12":"${{ env.CUDA_MINOR_VERSION_12}}"}')[matrix.cuda_version] }} git openssh wget
+            yum -y install cuda-${{ matrix.cuda_version }}-${{ fromJson('{ 11:${{ env.CUDA_MINOR_VERSION_11 }}, 12:${{ env.CUDA_MINOR_VERSION_12}}}')[matrix.cuda_version] }} git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
