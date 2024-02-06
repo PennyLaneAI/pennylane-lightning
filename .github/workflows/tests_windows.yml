@@ -33,11 +33,6 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
-
       - name: Install lapack with vcpkg
         run: |
           git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
@@ -60,7 +55,10 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
-              -DENABLE_WARNINGS=OFF
+              -DENABLE_WARNINGS=OFF `
+              -G"Visual Studio 2022" `
+              -T clangcl `
+
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
             $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
@@ -159,6 +157,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
                           -DCMAKE_BUILD_TYPE=Debug `
+                          -G"Visual Studio 2022" `
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
@@ -228,7 +227,9 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DENABLE_WARNINGS=OFF -T clangcl
+              -DENABLE_WARNINGS=OFF `
+              -G"Visual Studio 2022" `
+              -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
             $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
