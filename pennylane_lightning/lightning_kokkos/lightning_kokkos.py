@@ -784,7 +784,6 @@ if LK_CPP_BINARY_AVAILABLE:
 
                     data_payload = list(
                         itertools.product(
-                            [processed_data["state_vector"]],
                             [[o] for o in obs_partitions],
                             [processed_data["ops_serialized"]],
                             [trainable_params],
