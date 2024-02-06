@@ -56,7 +56,7 @@ jobs:
               -DENABLE_LAPACK=ON `
               -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
               -DENABLE_WARNINGS=OFF `
-              -G"Visual Studio 2022" `
+              -G"Visual Studio 17 2022" `
               -T clangcl `
 
             cmake --build .\Build --config Debug
@@ -157,7 +157,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 `
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON `
                           -DCMAKE_BUILD_TYPE=Debug `
-                          -G"Visual Studio 2022" `
+                          -G"Visual Studio 17 2022" `
                           -T clangcl
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
@@ -228,7 +228,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
               -DENABLE_WARNINGS=OFF `
-              -G"Visual Studio 2022" `
+              -G"Visual Studio 17 2022" `
               -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results
