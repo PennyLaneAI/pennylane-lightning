@@ -199,10 +199,10 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies_kokkos, win-set-matrix-x86]
+    needs: [build_dependencies_kokkos, build_dependencies_vcpkg, win-set-matrix-x86]
     strategy:
       matrix:
-        os: [windows-latest, build_dependencies_kokkos, build_dependencies_vcpkg]
+        os: [windows-latest]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
