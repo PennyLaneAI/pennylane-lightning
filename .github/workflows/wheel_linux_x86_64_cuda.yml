@@ -65,7 +65,7 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++-11);CMAKE_C_COMPILER=$(which gcc-11);LIGHTNING_RELEASE_TAG=master"
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++);CMAKE_C_COMPILER=$(which gcc);LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
@@ -80,9 +80,10 @@ jobs:
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
-            PATH=$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
-            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PL_BACKEND="${{ matrix.pl_backend }}"
+            PATH=/opt/rh/devtoolset-11/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
+            LD_LIBRARY_PATH=/opt/rh/devtoolset-11/root/usr/lib64:/opt/rh/devtoolset-11/root/usr/lib:/opt/rh/devtoolset-11/root/usr/lib64/dyninst:/opt/rh/devtoolset-11/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
+            PL_BACKEND="${{ matrix.pl_backend }}" \
+            PKG_CONFIG_PATH=/opt/rh/devtoolset-11/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 

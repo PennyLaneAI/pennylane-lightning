@@ -39,7 +39,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
-        cuda_version: ["11", "12"]
+        cuda_version: ["12"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -59,7 +59,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
-        cuda_version: ["11", "12"]
+        cuda_version: ["12"]
 
     name: C++ tests (Lightning-GPU)
     runs-on:
@@ -163,7 +163,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
         default_backend: ["lightning_qubit"]
-        cuda_version: ["11", "12"]
+        cuda_version: ["12"]
 
     name: Python tests with LGPU
     runs-on:
