@@ -32,7 +32,7 @@ for arch in [
 ]:
     wheel_policy = WP()
     arch_pol = wheel_policy.get_policy_by_name(arch)
-    if "lib_whitelist" in arch_pol:
+    if arch_pol:
         arch_pol["lib_whitelist"].extend(libs)
 
 if __name__ == "__main__":
