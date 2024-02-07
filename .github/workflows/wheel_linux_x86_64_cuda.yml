@@ -76,7 +76,7 @@ jobs:
             yum install devtoolset-11-gcc-c++ -y
             source /opt/rh/devtoolset-11/enable -y
             yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
-            yum -y install cuda-${{ matrix.cuda_version }}.0 git openssh wget
+            yum -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
