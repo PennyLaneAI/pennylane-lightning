@@ -21,6 +21,7 @@ concurrency:
 
 jobs:
   cpptests:
+    needs: [build_dependencies_vcpkg]
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 45
     name: C++ tests (Windows)
@@ -33,17 +34,12 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Restoring cached vcpkg
+        id: vcpkg-cache
+        uses: actions/cache@v4
         with:
-          arch: amd64
-
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -59,7 +55,7 @@ jobs:
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config Debug
             mkdir -p .\Build\tests\results
@@ -110,7 +106,7 @@ jobs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
 
-  build_dependencies:
+  build_dependencies_kokkos:
     needs: [win-set-matrix-x86]
     strategy:
       fail-fast: false
@@ -125,7 +121,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
@@ -163,12 +159,50 @@ jobs:
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
 
-  cpptestswithkokkos:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies, win-set-matrix-x86]
+
+  build_dependencies_vcpkg:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest]
+    timeout-minutes: 30
+    name: vcpkg dependencies
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cache installation directories
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
+
+      - name: Clone vcpkg
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p D:\a\install_dir
+          cd D:\a\install_dir\
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+
+      - name: Install dependencies
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install cmake build ninja
+
+      - name: Build Lapack library
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a\install_dir\vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
+
+
+  cpptestswithkokkos:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    needs: [build_dependencies_kokkos, win-set-matrix-x86]
+    strategy:
+      matrix:
+        os: [windows-latest, build_dependencies_kokkos, build_dependencies_vcpkg]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
@@ -180,31 +214,26 @@ jobs:
     steps:
       - name: Restoring cached Kokkos
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
+
+      - name: Restoring cached vcpkg
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
       
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      - name: Copy cached libraries
+      - name: Copy cached Kokkos libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
-
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
-      
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
 
       - name: Enable long paths
         run: |
@@ -224,7 +253,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
+              -DCMAKE_TOOLCHAIN_FILE= D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
