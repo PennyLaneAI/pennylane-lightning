@@ -437,29 +437,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
     expected_results[3][0] = ComplexT{0.9210609940028851, 0.0};
     expected_results[3][5] = ComplexT{0.0, -0.3894183423086505};
 
-    std::vector<std::vector<ComplexT>> expected_results_adj{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
-
-    expected_results_adj[0][0] = ComplexT{0.9887710779360422, 0.0};
-    expected_results_adj[0][6] = ComplexT{0.0, 0.14943813247359922};
-
-    expected_results_adj[1][0] = ComplexT{0.9210609940028851, 0.0};
-    expected_results_adj[1][6] = ComplexT{0.0, 0.3894183423086505};
-
-    expected_results_adj[2][0] = ComplexT{0.9887710779360422, 0.0};
-    expected_results_adj[2][5] = ComplexT{0.0, 0.14943813247359922};
-
-    expected_results_adj[3][0] = ComplexT{0.9210609940028851, 0.0};
-    expected_results_adj[3][5] = ComplexT{0.0, 0.3894183423086505};
-
-    SECTION("Apply directly adjoint=false") {
+    SECTION("Apply directly") {
+        bool adjoint = GENERATE(false, true);
         SECTION("IsingXX 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingXX", {0, 1}, false,
+                kokkos_sv.applyOperation("IsingXX", {0, 1}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -468,14 +451,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
             }
         }
         SECTION("IsingXX 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingXX", {0, 2}, false,
+                kokkos_sv.applyOperation("IsingXX", {0, 2}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -484,61 +468,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(
                               expected_results[index + angles.size()][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(
-                              expected_results[index + angles.size()][j])));
+                    CHECK(
+                        (imag(result_sv[j])) ==
+                        Approx(
+                            ((adjoint) ? -1.0 : 1.0) *
+                            imag(expected_results[index + angles.size()][j])));
                 }
-            }
-        }
-    }
-    SECTION("Apply directly adjoint=true") {
-        SECTION("IsingXX 0,1") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingXX", {0, 1}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-        SECTION("IsingXX 0,2") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingXX", {0, 2}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(
-                              expected_results_adj[index + angles.size()][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(
-                              expected_results_adj[index + angles.size()][j])));
-                }
-            }
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < angles.size(); index++) {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            kokkos_sv.applyOperation("IsingXX", {0, 1}, true, {angles[index]});
-            std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK((real(result_sv[j])) ==
-                      Approx(real(expected_results_adj[index][j])));
-                CHECK((imag(result_sv[j])) ==
-                      Approx(imag(expected_results_adj[index][j])));
             }
         }
     }
@@ -568,29 +503,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
     expected_results[3][0] = ComplexT{0.9210609940028851, 0.0};
     expected_results[3][5] = ComplexT{0.0, 0.3894183423086505};
 
-    std::vector<std::vector<ComplexT>> expected_results_adj{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
-
-    expected_results_adj[0][0] = ComplexT{0.9887710779360422, 0.0};
-    expected_results_adj[0][6] = ComplexT{0.0, -0.14943813247359922};
-
-    expected_results_adj[1][0] = ComplexT{0.9210609940028851, 0.0};
-    expected_results_adj[1][6] = ComplexT{0.0, -0.3894183423086505};
-
-    expected_results_adj[2][0] = ComplexT{0.9887710779360422, 0.0};
-    expected_results_adj[2][5] = ComplexT{0.0, -0.14943813247359922};
-
-    expected_results_adj[3][0] = ComplexT{0.9210609940028851, 0.0};
-    expected_results_adj[3][5] = ComplexT{0.0, -0.3894183423086505};
-
-    SECTION("Apply directly adjoint=false") {
+    SECTION("Apply directly") {
+        bool adjoint = GENERATE(false, true);
         SECTION("IsingYY 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingYY", {0, 1}, false,
+                kokkos_sv.applyOperation("IsingYY", {0, 1}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -599,14 +517,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
             }
         }
         SECTION("IsingYY 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingYY", {0, 2}, false,
+                kokkos_sv.applyOperation("IsingYY", {0, 2}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -615,61 +534,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(
                               expected_results[index + angles.size()][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(
-                              expected_results[index + angles.size()][j])));
+                    CHECK(
+                        (imag(result_sv[j])) ==
+                        Approx(
+                            ((adjoint) ? -1.0 : 1.0) *
+                            imag(expected_results[index + angles.size()][j])));
                 }
-            }
-        }
-    }
-    SECTION("Apply directly adjoint=true") {
-        SECTION("IsingYY 0,1") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingYY", {0, 1}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-        SECTION("IsingYY 0,2") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingYY", {0, 2}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(
-                              expected_results_adj[index + angles.size()][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(
-                              expected_results_adj[index + angles.size()][j])));
-                }
-            }
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < angles.size(); index++) {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            kokkos_sv.applyOperation("IsingYY", {0, 1}, true, {angles[index]});
-            std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK((real(result_sv[j])) ==
-                      Approx(real(expected_results_adj[index][j])));
-                CHECK((imag(result_sv[j])) ==
-                      Approx(imag(expected_results_adj[index][j])));
             }
         }
     }
@@ -688,19 +558,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
     expected_results[0][0] = ComplexT{0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = ComplexT{0.9210609940028851, -0.3894183423086505};
 
-    std::vector<std::vector<ComplexT>> expected_results_adj{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
-    expected_results_adj[0][0] =
-        ComplexT{0.9887710779360422, 0.14943813247359922};
-    expected_results_adj[1][0] =
-        ComplexT{0.9210609940028851, 0.3894183423086505};
-
-    SECTION("Apply directly adjoint=false") {
+    SECTION("Apply directly") {
+        bool adjoint = GENERATE(false, true);
         SECTION("IsingZZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingZZ", {0, 1}, false,
+                kokkos_sv.applyOperation("IsingZZ", {0, 1}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -709,14 +572,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
             }
         }
         SECTION("IsingZZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingZZ", {0, 2}, false,
+                kokkos_sv.applyOperation("IsingZZ", {0, 2}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -725,57 +589,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
-            }
-        }
-    }
-    SECTION("Apply directly adjoint=true") {
-        SECTION("IsingZZ 0,1") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingZZ", {0, 1}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-        SECTION("IsingZZ 0,2") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("IsingZZ", {0, 2}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < angles.size(); index++) {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            kokkos_sv.applyOperation("IsingZZ", {0, 1}, true, {angles[index]});
-            std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK((real(result_sv[j])) ==
-                      Approx(real(expected_results_adj[index][j])));
-                CHECK((imag(result_sv[j])) ==
-                      Approx(imag(expected_results_adj[index][j])));
             }
         }
     }
@@ -794,19 +610,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
     expected_results[0][0] = ComplexT{0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = ComplexT{0.9210609940028851, -0.3894183423086505};
 
-    std::vector<std::vector<ComplexT>> expected_results_adj{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
-    expected_results_adj[0][0] =
-        ComplexT{0.9887710779360422, 0.14943813247359922};
-    expected_results_adj[1][0] =
-        ComplexT{0.9210609940028851, 0.3894183423086505};
-
-    SECTION("Apply directly adjoint=false") {
+    SECTION("Apply directly") {
+        bool adjoint = GENERATE(false, true);
         SECTION("MultiRZ 0,1") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("MultiRZ", {0, 1}, false,
+                kokkos_sv.applyOperation("MultiRZ", {0, 1}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -815,14 +624,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
             }
         }
         SECTION("MultiRZ 0,2") {
             for (size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("MultiRZ", {0, 2}, false,
+                kokkos_sv.applyOperation("MultiRZ", {0, 2}, adjoint,
                                          {angles[index]});
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
@@ -831,57 +641,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
                     CHECK((real(result_sv[j])) ==
                           Approx(real(expected_results[index][j])));
                     CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results[index][j])));
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
                 }
-            }
-        }
-    }
-    SECTION("Apply directly adjoint=true") {
-        SECTION("MultiRZ 0,1") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("MultiRZ", {0, 1}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-        SECTION("MultiRZ 0,2") {
-            for (size_t index = 0; index < angles.size(); index++) {
-                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-                kokkos_sv.applyOperation("MultiRZ", {0, 2}, true,
-                                         {angles[index]});
-                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-                for (size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK((real(result_sv[j])) ==
-                          Approx(real(expected_results_adj[index][j])));
-                    CHECK((imag(result_sv[j])) ==
-                          Approx(imag(expected_results_adj[index][j])));
-                }
-            }
-        }
-    }
-    SECTION("Apply using dispatcher") {
-        for (size_t index = 0; index < angles.size(); index++) {
-            StateVectorKokkos<TestType> kokkos_sv{num_qubits};
-            kokkos_sv.applyOperation("MultiRZ", {0, 1}, true, {angles[index]});
-            std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
-            kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
-
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK((real(result_sv[j])) ==
-                      Approx(real(expected_results_adj[index][j])));
-                CHECK((imag(result_sv[j])) ==
-                      Approx(imag(expected_results_adj[index][j])));
             }
         }
     }
