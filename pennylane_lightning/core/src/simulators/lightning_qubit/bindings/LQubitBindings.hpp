@@ -26,7 +26,7 @@
 #include "GateOperation.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
-#include "StateVectorLQubitRaw.hpp"
+#include "StateVectorLQubitManaged.hpp"
 #include "TypeList.hpp"
 #include "VectorJacobianProduct.hpp"
 
@@ -36,7 +36,7 @@ using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningQubit::Algorithms;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::Observables;
-using Pennylane::LightningQubit::StateVectorLQubitRaw;
+using Pennylane::LightningQubit::StateVectorLQubitManaged;
 } // namespace
 /// @endcond
 
@@ -44,8 +44,8 @@ namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
 using StateVectorBackends =
-    Pennylane::Util::TypeList<StateVectorLQubitRaw<float>,
-                              StateVectorLQubitRaw<double>, void>;
+    Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
+                              StateVectorLQubitManaged<double>, void>;
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -162,12 +162,68 @@ void registerControlledGate(PyClass &pyclass) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = PrecisionT; // Parameter's data precision
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
+
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-    pyclass.def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
-                "Apply controlled operation");
-    pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
-                "Get internal kernels for operations");
+
+    pyclass
+        .def(py::init([](std::size_t num_qubits) {
+            return new StateVectorT(num_qubits);
+        }))
+        .def("resetStateVector", &StateVectorT::resetStateVector)
+        .def(
+            "setBasisState",
+            [](StateVectorT &sv, const size_t index) {
+                sv.setBasisState(index);
+            },
+            "Create Basis State.")
+        .def(
+            "setStateVector",
+            [](StateVectorT &sv, const std::vector<std::size_t> &indices,
+               const np_arr_c &state) {
+                const auto buffer = state.request();
+                std::vector<ComplexT> state_in;
+                if (buffer.size) {
+                    const auto ptr = static_cast<const ComplexT *>(buffer.ptr);
+                    state_in = std::vector<ComplexT>{ptr, ptr + buffer.size};
+                }
+                sv.setStateVector(indices, state_in);
+            },
+            "Set State Vector with values and their corresponding indices")
+        .def(
+            "getState",
+            [](const StateVectorT &sv, np_arr_c &state) {
+                py::buffer_info numpyArrayInfo = state.request();
+                auto *data_ptr =
+                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+                if (state.size()) {
+                    std::copy(sv.getData(), sv.getData() + sv.getLength(),
+                              data_ptr);
+                }
+            },
+            "Copy StateVector data into a Numpy array.")
+        .def(
+            "UpdateData",
+            [](StateVectorT &device_sv, const np_arr_c &state) {
+                const py::buffer_info numpyArrayInfo = state.request();
+                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+                const auto length =
+                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                if (length) {
+                    device_sv.updateData(data_ptr, length);
+                }
+            },
+            "Copy StateVector data into a Numpy array.")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation")
+        .def("kernel_map", &svKernelMap<StateVectorT>,
+             "Get internal kernels for operations");
 }
 
 /**

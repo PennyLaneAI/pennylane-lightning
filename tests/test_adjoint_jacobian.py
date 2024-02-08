@@ -583,11 +583,9 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        if device_name == "lightning.kokkos":
-            dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
-
+        if device_name in ["lightning.kokkos", "lightning.qubit"]:
             qml.execute([tape], dev, None)
-            dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
+            dM2 = dev.adjoint_jacobian(tape, starting_state=dev.state_vector)
 
             assert np.allclose(dM1, dM2, atol=tol, rtol=0)
         else:

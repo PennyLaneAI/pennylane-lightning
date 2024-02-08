@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm> // fill
 #include <complex>
 #include <vector>
 
@@ -71,12 +72,12 @@ class StateVectorLQubitManaged final
      * @param memory_model Memory model the statevector will use
      */
     explicit StateVectorLQubitManaged(
-        size_t num_qubits, Threading threading = Threading::SingleThread,
+        std::size_t num_qubits, Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        data_[0] = {1, 0};
+        setBasisState(0U);
     }
 
     /**
@@ -102,7 +103,7 @@ class StateVectorLQubitManaged final
      * @param threading Threading option the statevector to use
      * @param memory_model Memory model the statevector will use
      */
-    StateVectorLQubitManaged(const ComplexT *other_data, size_t other_size,
+    StateVectorLQubitManaged(const ComplexT *other_data, std::size_t other_size,
                              Threading threading = Threading::SingleThread,
                              CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType(log2PerfectPower(other_size), threading, memory_model),
@@ -139,6 +140,39 @@ class StateVectorLQubitManaged final
 
     ~StateVectorLQubitManaged() = default;
 
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const std::size_t index) {
+        std::fill(data_.begin(), data_.end(), 0);
+        data_[index] = {1, 0};
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        for (std::size_t n = 0; n < indices.size(); n++) {
+            data_[indices[n]] = values[n];
+        }
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
     [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }
 
     [[nodiscard]] auto getData() const -> const ComplexT * {
@@ -164,7 +198,7 @@ class StateVectorLQubitManaged final
      * @param new_data data pointer to new data.
      * @param new_size size of underlying data storage.
      */
-    void updateData(const ComplexT *new_data, size_t new_size) {
+    void updateData(const ComplexT *new_data, std::size_t new_size) {
         PL_ASSERT(data_.size() == new_size);
         std::copy(new_data, new_data + new_size, data_.data());
     }

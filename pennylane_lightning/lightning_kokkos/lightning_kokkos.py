@@ -142,6 +142,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
     }
 
     allowed_observables = {
@@ -151,6 +152,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Hadamard",
         "Hermitian",
         "Identity",
+        "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
         "Sum",
@@ -213,10 +215,6 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
-
-            # Create the initial state. Internally, we store the
-            # state as an array of dimension [2]*wires.
-            self._pre_rotated_state = _kokkos_dtype(c_dtype)(self.num_wires)
 
         @staticmethod
         def _asarray(arr, dtype=None):
@@ -348,9 +346,8 @@ if LK_CPP_BINARY_AVAILABLE:
             """
 
             if isinstance(state, self._kokkos_state.__class__):
-                state_data = np.zeros(state.size, dtype=self.C_DTYPE)
-                state_data = self._asarray(state_data, dtype=self.C_DTYPE)
-                state.DeviceToHost(state_data.ravel(order="C"))
+                state_data = allocate_aligned_array(state.size, np.dtype(self.C_DTYPE), True)
+                state.DeviceToHost(state_data)
                 state = state_data
 
             ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
@@ -474,6 +471,9 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
@@ -534,6 +534,9 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
