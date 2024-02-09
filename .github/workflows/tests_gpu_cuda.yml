@@ -347,7 +347,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptestswithLGPU_cu11]
+    needs: [cpptestswithLGPU]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
