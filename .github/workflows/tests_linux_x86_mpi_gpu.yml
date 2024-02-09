@@ -97,11 +97,12 @@ jobs:
           python -m pip install cmake custatevec-cu11
           sudo apt-get -y -q install liblapack-dev
 
-      - name: Validate GPU version and installed compiler
+      - name: Validate GPU version and installed compiler and modules
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/${{ matrix.cuda_version_maj }}
           which -a nvcc
           nvcc --version
+          ls -R /opt/modules
 
       - name: Validate Multi-GPU packages
         run: |
