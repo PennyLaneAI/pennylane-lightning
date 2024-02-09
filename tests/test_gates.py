@@ -493,10 +493,6 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.skipif(
-    device_name not in ["lightning.qubit", "lightning.kokkos"],
-    reason="N-controlled GlobalPhase only implemented in lightning.qubit and lightning.kokkos.",
-)
 @pytest.mark.parametrize(
     "operation",
     [

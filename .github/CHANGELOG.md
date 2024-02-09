@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* All backends now support `GlobalPhase` and `C(GlobalPhase)` in forward pass.
+  [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
+
 * Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
   
@@ -39,6 +42,11 @@
   [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
 
 ### Bug fixes
+
+* Lightning-GPU's gate cache failed to distinguish between certain gates.
+  For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation. 
+  This could happen with (at least) the following gates: `QubitUnitary`,`ControlledQubitUnitary`,`MultiControlledX`,`DiagonalQubitUnitary`,`PSWAP`,`OrbitalRotation`.
+  [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
 * Move concurrency group specifications from reusable Docker build workflow to the root workflows.
   [(#604)](https://github.com/PennyLaneAI/pennylane-lightning/pull/604)
