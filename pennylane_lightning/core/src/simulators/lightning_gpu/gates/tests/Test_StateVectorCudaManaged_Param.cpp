@@ -16,6 +16,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -35,6 +36,7 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningGPU;
+std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -1577,5 +1579,51 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
         sv.applyOperation("CZmat", {0, 1}, false, {0.0}, cz_gate);
         CHECK(sv.getDataVector() ==
               Pennylane::Util::approx(sv_expected.getDataVector()));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGlobalPhase",
+                   "[StateVectorCudaManaged_Param]", double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    const size_t num_qubits = 3;
+    const bool inverse = GENERATE(false, true);
+    const size_t index = GENERATE(0, 1, 2);
+    const TestType param = 0.234;
+    const ComplexT phase = std::exp(ComplexT{0, (inverse) ? param : -param});
+
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+    StateVectorCudaManaged<TestType> sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    sv.applyOperation("GlobalPhase", {index}, inverse, {param});
+    auto result_sv = sv.getDataVector();
+    for (size_t j = 0; j < exp2(num_qubits); j++) {
+        ComplexT tmp = phase * ComplexT(sv_data[j]);
+        CHECK((real(result_sv[j])) == Approx(real(tmp)));
+        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
+                   "[StateVectorCudaManaged_Param]", double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    const size_t num_qubits = 3;
+    const bool inverse = GENERATE(false, true);
+    const size_t index = GENERATE(0, 1, 2);
+    // global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
+    // control_values=[0, 1])
+    const std::vector<ComplexT> phase = {{1.0, 0.}, {1.0, 0.}, {0.0, 1.},
+                                         {0.0, 1.}, {1.0, 0.}, {1.0, 0.},
+                                         {1.0, 0.}, {1.0, 0.}};
+
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+    StateVectorCudaManaged<TestType> sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
+    auto result_sv = sv.getDataVector();
+    for (size_t j = 0; j < exp2(num_qubits); j++) {
+        ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
+        tmp *= ComplexT(sv_data[j]);
+        CHECK((real(result_sv[j])) == Approx(real(tmp)));
+        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
     }
 }

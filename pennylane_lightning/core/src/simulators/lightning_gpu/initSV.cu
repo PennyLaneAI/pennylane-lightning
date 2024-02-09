@@ -16,6 +16,13 @@
 
 namespace {
 template <typename ComplexT>
+__device__ inline ComplexT ComplexConj(ComplexT a) {
+    ComplexT b;
+    b.x = a.x;
+    b.y = -a.y;
+    return b;
+}
+template <typename ComplexT>
 __device__ inline ComplexT ComplexMul(ComplexT a, ComplexT b) {
     ComplexT c;
     c.x = a.x * b.x - a.y * b.y;
@@ -157,12 +164,16 @@ void globalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
  * @param phase Complex data pointer of controlled global phase values (on
  * device).
  */
-template <class GPUDataT, class index_type>
+template <class GPUDataT, class index_type, bool adjoint = false>
 __global__ void cGlobalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
                                               GPUDataT *phase) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < num_sv) {
-        sv[i] = ComplexMul(sv[i], phase[i]);
+        if constexpr (adjoint) {
+            sv[i] = ComplexMul(sv[i], ComplexConj(phase[i]));
+        } else {
+            sv[i] = ComplexMul(sv[i], phase[i]);
+        }
     }
 }
 
@@ -176,7 +187,7 @@ __global__ void cGlobalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
  * @param thread_per_block Number of threads set per block.
  * @param stream_id Stream id of CUDA calls
  */
-template <class GPUDataT, class index_type>
+template <class GPUDataT, class index_type, bool adjoint = false>
 void cGlobalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
                                        GPUDataT *phase, size_t thread_per_block,
                                        cudaStream_t stream_id) {
@@ -186,7 +197,7 @@ void cGlobalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
     dim3 blockSize(thread_per_block, 1, 1);
     dim3 gridSize(block_per_grid, 1);
 
-    cGlobalPhaseStateVectorkernel<GPUDataT, index_type>
+    cGlobalPhaseStateVectorkernel<GPUDataT, index_type, adjoint>
         <<<gridSize, blockSize, 0, stream_id>>>(sv, num_sv, phase);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
@@ -249,18 +260,28 @@ void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
                                      stream_id);
 }
 
-void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv, bool adjoint,
                                   cuComplex *phase, size_t thread_per_block,
                                   cudaStream_t stream_id) {
-    cGlobalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
-                                      stream_id);
+    if (adjoint) {
+        cGlobalPhaseStateVector_CUDA_call<cuComplex, size_t, true>(
+            sv, num_sv, phase, thread_per_block, stream_id);
+    } else {
+        cGlobalPhaseStateVector_CUDA_call<cuComplex, size_t, false>(
+            sv, num_sv, phase, thread_per_block, stream_id);
+    }
 }
 void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
-                                  cuDoubleComplex *phase,
+                                  bool adjoint, cuDoubleComplex *phase,
                                   size_t thread_per_block,
                                   cudaStream_t stream_id) {
-    cGlobalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
-                                      stream_id);
+    if (adjoint) {
+        cGlobalPhaseStateVector_CUDA_call<cuDoubleComplex, size_t, true>(
+            sv, num_sv, phase, thread_per_block, stream_id);
+    } else {
+        cGlobalPhaseStateVector_CUDA_call<cuDoubleComplex, size_t, false>(
+            sv, num_sv, phase, thread_per_block, stream_id);
+    }
 }
 
 } // namespace Pennylane::LightningGPU

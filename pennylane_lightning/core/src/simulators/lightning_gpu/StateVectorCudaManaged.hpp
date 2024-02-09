@@ -75,11 +75,11 @@ extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
                                         cudaStream_t stream_id);
 
 extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
-                                         cuComplex *phase,
+                                         bool adjoint, cuComplex *phase,
                                          size_t thread_per_block,
                                          cudaStream_t stream_id);
 extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
-                                         cuDoubleComplex *phase,
+                                         bool adjoint, cuDoubleComplex *phase,
                                          size_t thread_per_block,
                                          cudaStream_t stream_id);
 
@@ -223,8 +223,7 @@ class StateVectorCudaManaged
     void globalPhaseStateVector(const bool adjoint, const Precision param) {
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         std::complex<Precision> phase =
-            (adjoint) ? std::exp(std::complex<Precision>{0, param})
-                      : std::exp(std::complex<Precision>{0, -param});
+            std::exp(std::complex<Precision>{0, (adjoint) ? param : -param});
         auto cuPhase = complexToCu(phase);
         globalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
                                     cuPhase, thread_per_block, stream_id);
@@ -236,7 +235,8 @@ class StateVectorCudaManaged
      * @param phase Controlled complex phase vector.
      */
     template <size_t thread_per_block = 256>
-    void cGlobalPhaseStateVector(const std::vector<CFP_t> &phase,
+    void cGlobalPhaseStateVector(const bool adjoint,
+                                 const std::vector<CFP_t> &phase,
                                  const bool async = false) {
         PL_ABORT_IF_NOT(BaseType::getLength() == phase.size(),
                         "The state-vector data must have the same size as the "
@@ -247,8 +247,8 @@ class StateVectorCudaManaged
                                        true};
         d_phase.CopyHostDataToGpu(phase.data(), d_phase.getLength(), async);
         cGlobalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
-                                     d_phase.getData(), thread_per_block,
-                                     stream_id);
+                                     adjoint, d_phase.getData(),
+                                     thread_per_block, stream_id);
     }
 
     /**
@@ -303,7 +303,7 @@ class StateVectorCudaManaged
         if (opName == "Identity") {
             return;
         } else if (opName == "C(GlobalPhase)") {
-            cGlobalPhaseStateVector(gate_matrix);
+            cGlobalPhaseStateVector(adjoint, gate_matrix);
         } else if (opName == "GlobalPhase") {
             globalPhaseStateVector(adjoint, params[0]);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
