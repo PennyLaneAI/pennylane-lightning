@@ -115,7 +115,7 @@ def test_gate_unitary_correct(op, op_name):
 
     op1 = copy.deepcopy(op[1])
     if len(op1) > 0:
-        op1 = [-param for param in op1]
+        op1 = (-np.array(op1)).tolist()
     op2 = copy.deepcopy(op[2])
     if "phi" in op2.keys():
         op2["phi"] *= np.sqrt(2)
