@@ -1840,11 +1840,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                      [[maybe_unused]] const std::vector<size_t> &wires,
                      [[maybe_unused]] bool inverse,
                      [[maybe_unused]] ParamT angle) {
-        const std::complex<PrecisionT> s =
-            std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
-        for (size_t k = 0; k < exp2(num_qubits); k++) {
-            arr[k] *= s;
-        }
+        applyNCGlobalPhase(arr, num_qubits, {}, {}, wires, inverse, angle);
     }
 
     template <class PrecisionT, class ParamT>
@@ -1862,13 +1858,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i0] *= phase;
             arr[i1] *= phase;
         };
+        std::vector<size_t> new_wires;
+        if (wires.empty()) {
+            for (size_t i = 0; i < num_qubits; i++) {
+                if (std::find(controlled_wires.begin(), controlled_wires.end(),
+                              i) != controlled_wires.end()) {
+                    new_wires = {i};
+                    break;
+                }
+            }
+        } else {
+            new_wires = {wires[0]};
+        }
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, PrecisionT, decltype(core_function), false>(
-                arr, num_qubits, controlled_wires, controlled_values, wires,
+                arr, num_qubits, controlled_wires, controlled_values, new_wires,
                 core_function);
         } else {
             applyNC1<PrecisionT, PrecisionT, decltype(core_function), true>(
-                arr, num_qubits, controlled_wires, controlled_values, wires,
+                arr, num_qubits, controlled_wires, controlled_values, new_wires,
                 core_function);
         }
     }
