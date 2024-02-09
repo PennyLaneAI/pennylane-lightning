@@ -14,21 +14,10 @@
 #include "cuError.hpp"
 #include <cuComplex.h>
 
+#include "cuda_helpers.hpp"
 namespace {
-template <typename ComplexT>
-__device__ inline ComplexT ComplexConj(ComplexT a) {
-    ComplexT b;
-    b.x = a.x;
-    b.y = -a.y;
-    return b;
-}
-template <typename ComplexT>
-__device__ inline ComplexT ComplexMul(ComplexT a, ComplexT b) {
-    ComplexT c;
-    c.x = a.x * b.x - a.y * b.y;
-    c.y = a.x * b.y + a.y * b.x;
-    return c;
-}
+using Pennylane::LightningGPU::Util::Cmul;
+using Pennylane::LightningGPU::Util::Conj;
 } // namespace
 
 namespace Pennylane::LightningGPU {
@@ -127,7 +116,7 @@ __global__ void globalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
                                              GPUDataT phase) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < num_sv) {
-        sv[i] = ComplexMul(sv[i], phase);
+        sv[i] = Cmul(sv[i], phase);
     }
 }
 
@@ -170,9 +159,9 @@ __global__ void cGlobalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < num_sv) {
         if constexpr (adjoint) {
-            sv[i] = ComplexMul(sv[i], ComplexConj(phase[i]));
+            sv[i] = Cmul(sv[i], Conj(phase[i]));
         } else {
-            sv[i] = ComplexMul(sv[i], phase[i]);
+            sv[i] = Cmul(sv[i], phase[i]);
         }
     }
 }
