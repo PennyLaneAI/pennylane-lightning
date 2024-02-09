@@ -228,6 +228,16 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
                                          {false, false}, {{0.0}}),
             LightningException, "must all be equal"); // invalid parameters
     }
+
+    SECTION("Test invalid operation name and no matrix") {
+        const size_t num_qubits = 3;
+
+        StateVectorT state_vector(num_qubits);
+
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("GlobalPhaseShift", {0}, false, {0.0}),
+            LightningException, "Operation does not exist for GlobalPhaseShift");
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",

@@ -248,7 +248,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
@@ -300,9 +300,30 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
+                   "[StateVectorKokkosManaged_Param]", double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const size_t num_qubits = 3;
+    const bool inverse = GENERATE(false, true);
+    const size_t index = GENERATE(0, 1, 2);
+    const TestType param = 0.234;
+    const ComplexT phase = Kokkos::exp(ComplexT{0, (inverse) ? param : -param});
+
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+    StateVectorKokkos<TestType> kokkos_sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    kokkos_sv.applyOperation("GlobalPhase", {index}, inverse, {param});
+    auto result_sv = kokkos_sv.getDataVector();
+    for (size_t j = 0; j < exp2(num_qubits); j++) {
+        ComplexT tmp = phase * ComplexT(sv_data[j]);
+        CHECK((real(result_sv[j])) == Approx(real(tmp)));
+        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
 
@@ -381,7 +402,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRot",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
 
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const size_t num_qubits = 3;
@@ -651,7 +672,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -694,7 +715,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;
@@ -737,7 +758,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
                    "[StateVectorKokkosManaged_Param]", float, double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const size_t num_qubits = 3;

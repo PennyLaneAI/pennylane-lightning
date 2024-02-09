@@ -264,6 +264,7 @@ class StateVectorKokkos final
         } else if (gates_indices_.contains(opName)) {
             applyNamedOperation(opName, wires, inverse, params);
         } else {
+            PL_ABORT_IF(gate_matrix.size() == 0, std::string("Operation does not exist for ") + opName + std::string(" and no matrix provided."));
             KokkosVector matrix("gate_matrix", gate_matrix.size());
             Kokkos::deep_copy(
                 matrix, UnmanagedConstComplexHostView(gate_matrix.data(),
