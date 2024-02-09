@@ -174,6 +174,8 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
+        cuda_version_maj: ["12"]
+        cuda_version_min: ["2"]
     timeout-minutes: 30
 
     steps:
