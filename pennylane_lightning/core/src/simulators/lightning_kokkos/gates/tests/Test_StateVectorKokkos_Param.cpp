@@ -321,6 +321,30 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
+                   "[StateVectorKokkosManaged_Param]", double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const size_t num_qubits = 3;
+    const bool inverse = GENERATE(false, true);
+    const size_t index = GENERATE(0, 1, 2);
+    // global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
+    // control_values=[0, 1])
+    const std::vector<ComplexT> phase = {{1.0, 0.}, {1.0, 0.}, {0.0, 1.},
+                                         {0.0, 1.}, {1.0, 0.}, {1.0, 0.},
+                                         {1.0, 0.}, {1.0, 0.}};
+
+    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+    StateVectorKokkos<TestType> kokkos_sv(
+        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+    kokkos_sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
+    auto result_sv = kokkos_sv.getDataVector();
+    for (size_t j = 0; j < exp2(num_qubits); j++) {
+        ComplexT tmp = phase[j] * ComplexT(sv_data[j]);
+        CHECK((real(result_sv[j])) == Approx(real(tmp)));
+        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
     const bool inverse = GENERATE(false, true);

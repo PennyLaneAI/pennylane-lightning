@@ -1446,7 +1446,8 @@ template <class PrecisionT, bool inverse = false> struct globalPhaseFunctor {
                        [[maybe_unused]] size_t num_qubits,
                        [[maybe_unused]] const std::vector<size_t> &wires,
                        const std::vector<PrecisionT> &params) {
-        phase = Kokkos::exp(Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
+        phase = Kokkos::exp(
+            Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
         arr = arr_;
     }
 

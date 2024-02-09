@@ -236,7 +236,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
 
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyOperation("GlobalPhaseShift", {0}, false, {0.0}),
-            LightningException, "Operation does not exist for GlobalPhaseShift");
+            LightningException,
+            "Operation does not exist for GlobalPhaseShift");
     }
 }
 
