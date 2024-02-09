@@ -339,7 +339,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
     kokkos_sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
     auto result_sv = kokkos_sv.getDataVector();
     for (size_t j = 0; j < exp2(num_qubits); j++) {
-        ComplexT tmp = phase[j] * ComplexT(sv_data[j]);
+        ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
+        tmp *= ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
     }

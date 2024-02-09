@@ -172,6 +172,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitation,
         ControlledGateOperation::DoubleExcitationMinus,
         ControlledGateOperation::DoubleExcitationPlus,
+        ControlledGateOperation::GlobalPhase,
     };
 
     constexpr static std::array implemented_generators = {
@@ -1837,13 +1838,38 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyGlobalPhase(std::complex<PrecisionT> *arr, size_t num_qubits,
                      [[maybe_unused]] const std::vector<size_t> &wires,
-                     bool inverse, ParamT angle) {
+                     [[maybe_unused]] bool inverse,
+                     [[maybe_unused]] ParamT angle) {
         const std::complex<PrecisionT> s =
-            inverse ? std::exp(std::complex<PrecisionT>(0, angle))
-                    : std::exp(-std::complex<PrecisionT>(0, angle));
-
+            std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= s;
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void
+    applyNCGlobalPhase(std::complex<PrecisionT> *arr, size_t num_qubits,
+                       const std::vector<std::size_t> &controlled_wires,
+                       const std::vector<bool> &controlled_values,
+                       const std::vector<size_t> &wires, bool inverse,
+                       ParamT angle) {
+        const std::complex<PrecisionT> phase =
+            std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
+        auto core_function = [&phase](std::complex<PrecisionT> *arr,
+                                      const std::size_t i0,
+                                      const std::size_t i1) {
+            arr[i0] *= phase;
+            arr[i1] *= phase;
+        };
+        if (controlled_wires.empty()) {
+            applyNC1<PrecisionT, PrecisionT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC1<PrecisionT, PrecisionT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
         }
     }
 
@@ -1875,7 +1901,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
-        PL_ASSERT(n_wires == 1);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;

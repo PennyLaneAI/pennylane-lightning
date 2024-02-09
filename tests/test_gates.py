@@ -391,6 +391,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.DoubleExcitation,
         qml.DoubleExcitationMinus,
         qml.DoubleExcitationPlus,
+        qml.GlobalPhase,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -400,7 +401,8 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 250
-    for n_wires in range(operation.num_wires + 1, operation.num_wires + 4):
+    num_wires = max(operation.num_wires, 1)
+    for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
         if n_perms > threshold:
@@ -489,3 +491,48 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     circ = qml.QNode(circuit, dev)
     circ_def = qml.QNode(cnot_circuit, dev)
     assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    device_name not in ["lightning.qubit", "lightning.kokkos"],
+    reason="N-controlled GlobalPhase only implemented in lightning.qubit and lightning.kokkos.",
+)
+@pytest.mark.parametrize(
+    "operation",
+    [
+        qml.GlobalPhase,
+    ],
+)
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_controlled_globalphase(operation, n_qubits, control_value, tol):
+    """Test that multi-controlled gates are correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    threshold = 250
+    num_wires = max(operation.num_wires, 1)
+    for n_wires in range(num_wires + 1, num_wires + 4):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * n_wires
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            target_wires = all_wires[0 : operation.num_wires]
+            control_wires = all_wires[operation.num_wires :]
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.ctrl(
+                    operation(0.1234, target_wires),
+                    control_wires,
+                    control_values=[
+                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                    ],
+                )
+                return qml.state()
+
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)

@@ -95,6 +95,8 @@ enum class ControlledGateOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    /* Multi-qubit gates */
+    GlobalPhase,
     /* END (placeholder) */
     END
 };

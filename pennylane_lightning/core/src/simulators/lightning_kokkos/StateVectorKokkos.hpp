@@ -260,7 +260,11 @@ class StateVectorKokkos final
         if (opName == "Identity") {
             // No op
         } else if (opName == "C(GlobalPhase)") {
-            applyControlledGlobalPhase(gate_matrix);
+            if (inverse) {
+                applyControlledGlobalPhase<true>(gate_matrix);
+            } else {
+                applyControlledGlobalPhase<false>(gate_matrix);
+            }
         } else if (gates_indices_.contains(opName)) {
             applyNamedOperation(opName, wires, inverse, params);
         } else {
@@ -275,6 +279,7 @@ class StateVectorKokkos final
         }
     }
 
+    template <bool inverse = false>
     void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
         KokkosVector diagonal_("diagonal_", diagonal.size());
         Kokkos::deep_copy(diagonal_, UnmanagedConstComplexHostView(
@@ -283,7 +288,7 @@ class StateVectorKokkos final
         auto dataview = getView();
         Kokkos::parallel_for(
             two2N, KOKKOS_LAMBDA(const std::size_t i) {
-                dataview(i) *= diagonal_(i);
+                dataview(i) *= (inverse) ? conj(diagonal_(i)) : diagonal_(i);
             });
     }
 
