@@ -60,7 +60,7 @@ try:
         "cuquantum"
     ):  # pragma: no cover
         raise ImportError(
-            'custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment.'
+            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
         )
     if not DevPool.getTotalDevices():  # pragma: no cover
         raise ValueError("No supported CUDA-capable device found")
