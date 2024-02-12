@@ -6,7 +6,7 @@ name: Wheel::Any::None
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
+  #pull_request:
   push:
     branches:
       - master
