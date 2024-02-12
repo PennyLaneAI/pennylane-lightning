@@ -195,6 +195,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GeneratorOperation::DoubleExcitationMinus,
         GeneratorOperation::DoubleExcitationPlus,
         GeneratorOperation::MultiRZ,
+        GeneratorOperation::GlobalPhase,
     };
 
     constexpr static std::array implemented_controlled_generators = {
@@ -212,6 +213,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGeneratorOperation::DoubleExcitation,
         ControlledGeneratorOperation::DoubleExcitationMinus,
         ControlledGeneratorOperation::DoubleExcitationPlus,
+        ControlledGeneratorOperation::GlobalPhase,
     };
 
     constexpr static std::array implemented_matrices = {
@@ -1945,6 +1947,43 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
             core_function(arr, indices[i0], indices[i1]);
         }
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyNCGeneratorGlobalPhase(
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        [[maybe_unused]] const std::vector<std::size_t> &wires,
+        [[maybe_unused]] const bool adj) -> PrecisionT {
+        auto core_function = []([[maybe_unused]] std::complex<PrecisionT> *arr,
+                                [[maybe_unused]] const std::size_t i0,
+                                [[maybe_unused]] const std::size_t i1) {};
+        std::size_t target{0};
+        if (!controlled_wires.empty()) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                if (std::find(controlled_wires.begin(), controlled_wires.end(),
+                              i) == controlled_wires.end()) {
+                    target = i;
+                    break;
+                }
+            }
+        }
+        applyNCGenerator1<PrecisionT, decltype(core_function)>(
+            arr, num_qubits, controlled_wires, controlled_values, {target},
+            core_function);
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(-1.0);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto applyGeneratorGlobalPhase(
+        [[maybe_unused]] std::complex<PrecisionT> *arr,
+        [[maybe_unused]] std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &wires,
+        [[maybe_unused]] bool adj) -> PrecisionT {
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return static_cast<PrecisionT>(-1.0);
     }
 
     template <class PrecisionT>

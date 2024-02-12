@@ -553,6 +553,12 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyGeneratorMultiRZ<PrecisionT>;
 };
+template <class PrecisionT, class GateImplementation>
+struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
+                                  GeneratorOperation::GlobalPhase> {
+    constexpr static auto value =
+        &GateImplementation::template applyGeneratorGlobalPhase<PrecisionT>;
+};
 
 template <class PrecisionT, class GateImplementation,
           ControlledGeneratorOperation mat_op>
@@ -655,6 +661,12 @@ struct ControlledGeneratorOpToMemberFuncPtr<
     constexpr static auto value =
         &GateImplementation::template applyNCGeneratorDoubleExcitationPlus<
             PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledGeneratorOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, ControlledGeneratorOperation::GlobalPhase> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCGeneratorGlobalPhase<PrecisionT>;
 };
 
 /**

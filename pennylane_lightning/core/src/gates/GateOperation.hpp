@@ -126,6 +126,7 @@ enum class GeneratorOperation : uint32_t {
     DoubleExcitationMinus,
     DoubleExcitationPlus,
     MultiRZ,
+    GlobalPhase,
     /* END (placeholder) */
     END
 };
@@ -146,6 +147,7 @@ enum class ControlledGeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    GlobalPhase,
     /* END (placeholder) */
     END
 };

@@ -185,6 +185,7 @@ class DummyImplementation {
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationMinus)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(DoubleExcitationPlus)
     PENNYLANE_TESTS_DEFINE_GENERATOR_OP(MultiRZ)
+    PENNYLANE_TESTS_DEFINE_GENERATOR_OP(GlobalPhase)
 };
 
 static_assert(testAllGatesImplemented<float, float, DummyImplementation>(),

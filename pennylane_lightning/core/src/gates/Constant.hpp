@@ -145,6 +145,7 @@ using GeneratorView = typename std::pair<GeneratorOperation, std::string_view>;
                   "GeneratorDoubleExcitationMinus"},
     GeneratorView{GeneratorOperation::DoubleExcitationPlus,
                   "GeneratorDoubleExcitationPlus"},
+    GeneratorView{GeneratorOperation::GlobalPhase, "GeneratorGlobalPhase"},
 };
 
 using CGeneratorView =
@@ -170,6 +171,7 @@ using CGeneratorView =
                    "DoubleExcitationMinus"},
     CGeneratorView{ControlledGeneratorOperation::DoubleExcitationPlus,
                    "DoubleExcitationPlus"},
+    CGeneratorView{ControlledGeneratorOperation::GlobalPhase, "GlobalPhase"},
 };
 
 /**
@@ -280,6 +282,7 @@ using GeneratorNWires = typename std::pair<GeneratorOperation, size_t>;
     GeneratorNWires{GeneratorOperation::DoubleExcitation, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationMinus, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationPlus, 4},
+    GeneratorNWires{GeneratorOperation::GlobalPhase, 1},
 };
 
 using CGeneratorNWires =
@@ -299,6 +302,7 @@ using CGeneratorNWires =
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitation, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationMinus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationPlus, 4},
+    CGeneratorNWires{ControlledGeneratorOperation::GlobalPhase, 1},
 };
 
 /**

@@ -213,8 +213,10 @@ void assignKernelsForGeneratorOp_Default() {
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationMinus,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
-
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::GlobalPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
 }
@@ -348,6 +350,9 @@ void assignKernelsForControlledGeneratorOp_Default() {
     instance.assignKernelForOp(
         ControlledGeneratorOperation::DoubleExcitationPlus, all_threading,
         all_memory_model, all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::GlobalPhase,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
 }
 void assignKernelsForControlledMatrixOp_Default() {
     auto &instance =
