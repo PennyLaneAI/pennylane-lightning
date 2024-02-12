@@ -95,7 +95,8 @@ __host__ __device__ inline static constexpr auto Conj(CFP_t a) -> CFP_t {
  * @return CFP_t The multiplication result
  */
 template <class CFP_t>
-__host__ __device__ inline static constexpr auto Cmul(CFP_t a, CFP_t b) -> CFP_t {
+__host__ __device__ inline static constexpr auto Cmul(CFP_t a, CFP_t b)
+    -> CFP_t {
     if constexpr (std::is_same_v<CFP_t, cuComplex> ||
                   std::is_same_v<CFP_t, float2>) {
         return cuCmulf(a, b);
