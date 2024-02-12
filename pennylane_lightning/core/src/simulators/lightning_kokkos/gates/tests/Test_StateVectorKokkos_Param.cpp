@@ -45,7 +45,6 @@ using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::exp2;
 using std::size_t;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -303,6 +302,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
                    "[StateVectorKokkosManaged_Param]", double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
@@ -324,6 +324,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
                    "[StateVectorKokkosManaged_Param]", double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
@@ -1158,6 +1159,7 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
 TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 7;
     auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
 
