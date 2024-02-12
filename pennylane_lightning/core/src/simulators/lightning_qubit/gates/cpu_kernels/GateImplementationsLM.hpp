@@ -1907,6 +1907,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(n_wires == 1);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
