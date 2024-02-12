@@ -585,8 +585,43 @@ template <typename PrecisionT> class DynamicDispatcher {
         const auto iter = controlled_gate_kernels_.find(
             std::make_pair(strToControlledGateOp(op_name), kernel));
         if (iter == controlled_gate_kernels_.cend()) {
-            PL_ABORT("Cannot find a registered kernel for a given gate "
-                     "and kernel pair");
+            PL_ABORT(
+                "Cannot find a registered kernel for a given controlled gate "
+                "and kernel pair");
+        }
+        (iter->second)(data, num_qubits, controlled_wires, controlled_values,
+                       wires, inverse, params);
+    }
+
+    /**
+     * @brief Apply a single controlled gate to the state-vector using the given
+     * kernel.
+     *
+     * @param kernel Kernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param gate_op Gate operation.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
+                             const ControlledGateOperation op_name,
+                             const std::vector<size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<size_t> &wires, bool inverse,
+                             const std::vector<PrecisionT> &params = {}) const {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        const auto iter =
+            controlled_gate_kernels_.find(std::make_pair(op_name, kernel));
+        if (iter == controlled_gate_kernels_.cend()) {
+            PL_ABORT(
+                "Cannot find a registered kernel for a given controlled gate "
+                "and kernel pair");
         }
         (iter->second)(data, num_qubits, controlled_wires, controlled_values,
                        wires, inverse, params);
@@ -778,7 +813,7 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param kernel Kernel to run the gate operation.
      * @param data Pointer to data.
      * @param num_qubits Number of qubits.
-     * @param op_name Gate operation name.
+     * @param op_name Generator operation name.
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
@@ -793,6 +828,39 @@ template <typename PrecisionT> class DynamicDispatcher {
                      "and kernel pair.");
         }
         return (iter->second)(data, num_qubits, wires, adj);
+    }
+
+    /**
+     * @brief Apply a single controlled generator to the state-vector using the
+     * given kernel.
+     *
+     * @param kernel Kernel to run the gate operation.
+     * @param data Pointer to data.
+     * @param num_qubits Number of qubits.
+     * @param gntr_op Generator operation.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param adj Indicates whether to use adjoint of gate.
+     */
+    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
+                                  size_t num_qubits,
+                                  const ControlledGeneratorOperation gntr_op,
+                                  const std::vector<size_t> &controlled_wires,
+                                  const std::vector<bool> &controlled_values,
+                                  const std::vector<size_t> &wires,
+                                  bool inverse) const -> PrecisionT {
+
+        using Pennylane::Gates::Constant::controlled_generator_names;
+        const auto iter =
+            controlled_generator_kernels_.find(std::make_pair(gntr_op, kernel));
+        if (iter == controlled_generator_kernels_.cend()) {
+            PL_ABORT("Cannot find a registered kernel for a given controlled "
+                     "generator "
+                     "and kernel pair.");
+        }
+        return (iter->second)(data, num_qubits, controlled_wires,
+                              controlled_values, wires, inverse);
     }
 
     /**
