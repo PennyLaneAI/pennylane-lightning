@@ -32,11 +32,8 @@
 namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Util;
-
 using Pennylane::Util::isApproxEqual;
 using Pennylane::Util::randomUnitary;
-
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -82,6 +79,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
@@ -118,6 +116,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
@@ -172,6 +171,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
         const size_t num_qubits = 4;
@@ -245,6 +245,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
                    "[StateVectorKokkos]", float, double) {
     using PrecisionT = TestType;
     using ComplexT = typename StateVectorKokkos<PrecisionT>::ComplexT;
+    std::mt19937_64 re{1337};
 
     SECTION("StateVectorKokkos<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorKokkos<TestType>, size_t>);

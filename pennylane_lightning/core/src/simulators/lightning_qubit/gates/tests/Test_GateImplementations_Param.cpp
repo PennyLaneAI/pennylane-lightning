@@ -42,7 +42,6 @@ namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::Util;
 using namespace Pennylane::Gates;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -2669,6 +2668,8 @@ TEMPLATE_TEST_CASE(
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",
                    "[StateVectorLQubitManaged_Param]", double) {
     using ComplexT = StateVectorLQubitManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
+
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
@@ -2690,6 +2691,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyControlledGlobalPhase",
                    "[StateVectorLQubitManaged_Param]", double) {
     using ComplexT = StateVectorLQubitManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
+
     const TestType pi2 = 1.5707963267948966;
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
