@@ -1848,8 +1848,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyNCGlobalPhase(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
-                       const std::vector<std::size_t> &wires, bool inverse,
-                       ParamT angle) {
+                       [[maybe_unused]] const std::vector<std::size_t> &wires,
+                       bool inverse, ParamT angle) {
         const std::complex<PrecisionT> phase =
             std::exp(std::complex<PrecisionT>(0, inverse ? angle : -angle));
         auto core_function = [&phase](std::complex<PrecisionT> *arr,
