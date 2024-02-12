@@ -54,6 +54,9 @@
   This could happen with (at least) the following gates: `QubitUnitary`,`ControlledQubitUnitary`,`MultiControlledX`,`DiagonalQubitUnitary`,`PSWAP`,`OrbitalRotation`.
   [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
+* Ensure the stopping condition decompositions are respected for larger templated QFT and Grover operators.
+  [(#609)](https://github.com/PennyLaneAI/pennylane-lightning/pull/609)
+
 * Move concurrency group specifications from reusable Docker build workflow to the root workflows.
   [(#604)](https://github.com/PennyLaneAI/pennylane-lightning/pull/604)
 
