@@ -5,21 +5,35 @@
 import sys
 
 from auditwheel.main import main
-from auditwheel.policy import _POLICIES as POLICIES
+from auditwheel.policy import WheelPolicies as WP
 
 # Do not include licensed dynamic libraries
 libs = [
     "libcudart.so.11.0",
+    "libcudart.so.12.0",
     "libcublasLt.so.11",
+    "libcublasLt.so.12",
     "libcublas.so.11",
+    "libcublas.so.12",
     "libcusparse.so.11",
+    "libcusparse.so.12",
     "libcustatevec.so.1",
 ]
 
 print(f"Excluding {libs}")
 
-for p in POLICIES:
-    p["lib_whitelist"].extend(libs)
+for arch in [
+    "manylinux2014_x86_64",
+    "manylinux_2_28_x86_64",
+    "manylinux2014_aarch64",
+    "manylinux_2_28_aarch64",
+    "manylinux2014_ppc64le",
+    "manylinux_2_28_ppc64le",
+]:
+    wheel_policy = WP()
+    arch_pol = wheel_policy.get_policy_by_name(arch)
+    if arch_pol:
+        arch_pol["lib_whitelist"].extend(libs)
 
 if __name__ == "__main__":
     sys.exit(main())
