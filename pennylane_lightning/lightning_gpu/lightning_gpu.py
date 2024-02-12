@@ -204,6 +204,16 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "SProd",
     }
 
+    gate_cache_needs_hash = {
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PSWAP",
+        "OrbitalRotation",
+        "BlockEncode",
+    }
+
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane Lightning GPU device.
 
@@ -537,19 +547,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         # To support older versions of PL
                         mat = ops.matrix
                     r_dtype = np.float32 if self.use_csingle else np.float64
-                    param = (
-                        [[r_dtype(ops.hash)]]
-                        if ops.name
-                        in [
-                            "QubitUnitary",
-                            "ControlledQubitUnitary",
-                            "MultiControlledX",
-                            "DiagonalQubitUnitary",
-                            "PSWAP",
-                            "OrbitalRotation",
-                        ]
-                        else []
-                    )
+                    param = [[r_dtype(ops.hash)]] if ops.name in gate_cache_needs_hash else []
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
