@@ -36,7 +36,6 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningGPU;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -1585,6 +1584,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGlobalPhase",
                    "[StateVectorCudaManaged_Param]", double) {
     using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
@@ -1606,6 +1606,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGlobalPhase",
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
                    "[StateVectorCudaManaged_Param]", double) {
     using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
