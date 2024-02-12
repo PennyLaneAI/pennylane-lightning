@@ -20,6 +20,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "Gates.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "TestHelpers.hpp" // PrecisionToName, createProductState
 #include "TestHelpersWires.hpp"
@@ -732,6 +733,72 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             sv0.applyOperation("CZ", {control, wire});
             sv1.applyOperation("PauliZ", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled Hadamard - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            const auto matrix = getHadamard<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<size_t>{wire});
+            sv1.applyOperation("Hadamard", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+    DYNAMIC_SECTION("N-controlled S - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            const auto matrix = getS<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<size_t>{wire});
+            sv1.applyOperation("S", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled T - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            const std::vector<std::complex<PrecisionT>> matrix =
+                getT<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<size_t>{wire});
+            sv1.applyOperation("T", std::vector<size_t>{control},
                                std::vector<bool>{true},
                                std::vector<size_t>{wire});
             REQUIRE(sv0.getDataVector() ==

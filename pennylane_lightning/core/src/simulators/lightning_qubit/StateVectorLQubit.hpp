@@ -491,10 +491,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given controlled-matrix directly to the statevector
-     * using a given kernel.
+     * @brief Apply a given controlled-matrix directly to the statevector.
      *
-     * @param kernel Kernel to run the operation
      * @param matrix Pointer to the array data (in row-major format).
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
@@ -527,6 +525,26 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
                                          matrix, controlled_wires,
                                          controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given controlled-matrix directly to the statevector.
+     *
+     * @param matrix Vector containing the statevector data (in row-major
+     * format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void
+    applyControlledMatrix(const std::vector<ComplexT> matrix,
+                          const std::vector<size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<size_t> &wires,
+                          bool inverse = false) {
+        applyControlledMatrix(matrix.data(), controlled_wires,
+                              controlled_values, wires, inverse);
     }
 
     /**
