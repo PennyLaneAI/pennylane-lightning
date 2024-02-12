@@ -404,6 +404,12 @@ struct ControlledGateOpToMemberFuncPtr<
         &GateImplementation::template applyNCDoubleExcitationPlus<PrecisionT,
                                                                   ParamT>;
 };
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::MultiRZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCMultiRZ<PrecisionT, ParamT>;
+};
 
 /**
  * @brief Return a specific member function pointer for a given generator
@@ -643,6 +649,12 @@ struct ControlledGeneratorOpToMemberFuncPtr<
     constexpr static auto value =
         &GateImplementation::template applyNCGeneratorDoubleExcitationPlus<
             PrecisionT>;
+};
+template <class PrecisionT, class GateImplementation>
+struct ControlledGeneratorOpToMemberFuncPtr<
+    PrecisionT, GateImplementation, ControlledGeneratorOperation::MultiRZ> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCGeneratorMultiRZ<PrecisionT>;
 };
 
 /**

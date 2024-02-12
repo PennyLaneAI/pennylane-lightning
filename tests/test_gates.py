@@ -362,6 +362,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.DoubleExcitation,
         qml.DoubleExcitationMinus,
         qml.DoubleExcitationPlus,
+        qml.MultiRZ,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -371,14 +372,15 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 250
-    for n_wires in range(operation.num_wires + 1, operation.num_wires + 4):
+    num_wires = max(operation.num_wires, 1)
+    for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
         if n_perms > threshold:
             wire_lists = wire_lists[0 :: (n_perms // threshold)]
         for all_wires in wire_lists:
-            target_wires = all_wires[0 : operation.num_wires]
-            control_wires = all_wires[operation.num_wires :]
+            target_wires = all_wires[0:num_wires]
+            control_wires = all_wires[num_wires:]
             init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
             init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 

@@ -143,6 +143,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "C(DoubleExcitation)",
         "C(DoubleExcitationMinus)",
         "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
         "CRot",
         "IsingXX",
         "IsingYY",

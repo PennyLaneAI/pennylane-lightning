@@ -171,6 +171,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitation,
         ControlledGateOperation::DoubleExcitationMinus,
         ControlledGateOperation::DoubleExcitationPlus,
+        ControlledGateOperation::MultiRZ,
     };
 
     constexpr static std::array implemented_generators = {
@@ -522,9 +523,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             }
         }
         auto core_function =
-            [dim, mat](std::complex<PrecisionT> *arr,
-                       const std::vector<std::size_t> &indices,
-                       const std::vector<std::complex<PrecisionT>> &coeffs_in) {
+            [dim,
+             &mat](std::complex<PrecisionT> *arr,
+                   const std::vector<std::size_t> &indices,
+                   const std::vector<std::complex<PrecisionT>> &coeffs_in) {
                 for (std::size_t i = 0; i < dim; i++) {
                     const auto index = indices[i];
                     arr[index] = 0.0;
@@ -1830,6 +1832,42 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
         }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyNCMultiRZ(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool inverse, ParamT angle) {
+        static constexpr std::size_t one{1};
+        const std::size_t dim = one << wires.size();
+
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+        std::size_t wires_parity = 0U;
+        for (std::size_t wire : wires) {
+            wires_parity |=
+                (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+        }
+        auto core_function =
+            [dim, wires_parity, &shifts](
+                std::complex<PrecisionT> *arr,
+                const std::vector<std::size_t> &indices,
+                [[maybe_unused]] const std::vector<std::complex<PrecisionT>>
+                    &coeffs_in) {
+                for (auto &k : indices) {
+                    arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+                }
+            };
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
     }
 
     /* Generators */

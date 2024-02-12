@@ -94,6 +94,8 @@ enum class ControlledGateOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    /* Multi-qubit gates */
+    MultiRZ,
     /* END (placeholder) */
     END
 };
@@ -143,6 +145,7 @@ enum class ControlledGeneratorOperation : uint32_t {
     DoubleExcitation,
     DoubleExcitationMinus,
     DoubleExcitationPlus,
+    MultiRZ,
     /* END (placeholder) */
     END
 };
