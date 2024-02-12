@@ -727,6 +727,7 @@ class TestAdjointJacobianQNode:
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state = np.array(init_state, requires_grad=False)
 
         if operation.num_wires > n_qubits:
             return

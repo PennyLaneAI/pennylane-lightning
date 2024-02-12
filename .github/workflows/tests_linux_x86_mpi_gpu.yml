@@ -39,6 +39,8 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
+        cuda_version_maj: ["12"]
+        cuda_version_min: ["2"]
     timeout-minutes: 30
 
     steps:
@@ -92,28 +94,29 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu11
+          python -m pip install cmake custatevec-cu12
           sudo apt-get -y -q install liblapack-dev
 
-      - name: Validate GPU version and installed compiler
+      - name: Validate GPU version and installed compiler and modules
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/11.8
+          source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/${{ matrix.cuda_version_maj }}
           which -a nvcc
           nvcc --version
+          ls -R /opt/modules
 
       - name: Validate Multi-GPU packages
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           echo 'Checking for ${{ matrix.mpilib }}'
           which -a mpirun
           mpirun --version
           which -a mpicxx
           mpicxx --version
-          module unload ${{ matrix.mpilib }}
+          module unload ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
 
       - name: Build and run unit tests
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
@@ -123,7 +126,7 @@ jobs:
             -DBUILD_TESTS=ON \
             -DENABLE_LAPACK=ON \
             -DCMAKE_CXX_COMPILER=mpicxx \
-            -DCMAKE_CUDA_COMPILER="/usr/local/cuda/bin/nvcc" \
+            -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
@@ -131,7 +134,7 @@ jobs:
           cd ./Build
           mkdir -p ./tests/results
           for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-          for file in *runner_mpi ; do /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
+          for file in *runner_mpi ; do mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
@@ -171,6 +174,8 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
+        cuda_version_maj: ["12"]
+        cuda_version_min: ["2"]
     timeout-minutes: 30
 
     steps:
@@ -232,9 +237,9 @@ jobs:
 
       - name: Install required packages
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           python -m pip install -r requirements-dev.txt
-          python -m pip install custatevec-cu11 mpi4py openfermionpyscf
+          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
           SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Checkout PennyLane for release build
@@ -256,25 +261,25 @@ jobs:
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
 
       # There are issues running py-cov with MPI. A solution is to use coverage as reported
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          PL_DEVICE=lightning.gpu /opt/mpi/${{ matrix.mpilib }}/bin/mpirun -np 2 \
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          PL_DEVICE=lightning.gpu mpirun -np 2 \
           coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
           coverage combine
-          coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-main.xml
+          coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}-*.xml
+          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
           if-no-files-found: error
 
       - name: Cleanup

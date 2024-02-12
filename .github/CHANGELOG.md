@@ -7,7 +7,13 @@
   
 ### Breaking changes
 
+* Migrate `lightning.gpu` to CUDA 12.
+  [(#606)](https://github.com/PennyLaneAI/pennylane-lightning/pull/606)
+
 ### Improvements
+
+* Lower the overheads of Windows CI tests.
+  [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
 
 * Decouple LightningQubit memory ownership from numpy and migrate it to Lightning-Qubit managed state-vector class.
   [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
