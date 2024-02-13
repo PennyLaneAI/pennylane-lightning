@@ -15,6 +15,3 @@ custatevec-cu12
 wheel
 sphinxext-opengraph
 matplotlib
-nvidia-cublas-cu12
-nvidia-cusparse-cu12
-nvidia-cuda-runtime-cu12
