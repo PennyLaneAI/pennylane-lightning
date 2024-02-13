@@ -7,7 +7,13 @@
   
 ### Breaking changes
 
+* Migrate `lightning.gpu` to CUDA 12.
+  [(#606)](https://github.com/PennyLaneAI/pennylane-lightning/pull/606)
+
 ### Improvements
+
+* Lower the overheads of Windows CI tests.
+  [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
 
 * Decouple LightningQubit memory ownership from numpy and migrate it to Lightning-Qubit managed state-vector class.
   [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
@@ -39,6 +45,9 @@
   [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
 
 ### Bug fixes
+
+* Ensure the stopping condition decompositions are respected for larger templated QFT and Grover operators.
+  [(#609)](https://github.com/PennyLaneAI/pennylane-lightning/pull/609)
 
 * Move concurrency group specifications from reusable Docker build workflow to the root workflows.
   [(#604)](https://github.com/PennyLaneAI/pennylane-lightning/pull/604)
