@@ -236,8 +236,7 @@ jobs:
       - name: Install backend device
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          PL_BACKEND=lightning.qubit pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
