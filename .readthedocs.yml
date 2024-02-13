@@ -21,7 +21,7 @@ build:
     - libopenblas-base
     - libopenblas-dev
     - graphviz
-    - nvidia-cuda-toolkit
+    - cuda-toolkit-12
   jobs:
     pre_install:
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
