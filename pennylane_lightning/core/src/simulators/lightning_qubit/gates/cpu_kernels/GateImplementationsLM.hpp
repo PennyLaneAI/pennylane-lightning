@@ -211,6 +211,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGeneratorOperation::DoubleExcitation,
         ControlledGeneratorOperation::DoubleExcitationMinus,
         ControlledGeneratorOperation::DoubleExcitationPlus,
+        ControlledGeneratorOperation::MultiRZ,
     };
 
     constexpr static std::array implemented_matrices = {
@@ -485,7 +486,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const auto indices =
                 parity2indices(k, parity, rev_wire_shifts, n_contr, rev_wires);
             std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
-
             for (std::size_t i = 0; i < dim; i++) {
                 coeffs_in[i] = arr[indices[i]];
             }
@@ -2249,7 +2249,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
-
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         auto core_function = [](std::complex<PrecisionT> *arr,
@@ -2283,7 +2282,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
-
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         auto core_function = [](std::complex<PrecisionT> *arr,
@@ -2429,7 +2427,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
-
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         using ComplexT = std::complex<PrecisionT>;
@@ -2509,7 +2506,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         std::complex<PrecisionT> *arr, size_t num_qubits,
         const std::vector<size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
-
         const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         using ComplexT = std::complex<PrecisionT>;
@@ -2559,6 +2555,44 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= static_cast<PrecisionT>(
                 1 - 2 * int(std::popcount(k & wires_parity) % 2));
+        }
+        // NOLINTNEXTLINE(readability-magic-numbers)
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    template <class PrecisionT>
+    [[nodiscard]] static auto
+    applyNCGeneratorMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
+                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<size_t> &wires,
+                            [[maybe_unused]] bool adj) -> PrecisionT {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        constexpr size_t one{1};
+        constexpr std::complex<PrecisionT> zero{0.0};
+        auto ctrls_mask = static_cast<size_t>(0U);
+        for (size_t i = 0; i < controlled_wires.size(); i++) {
+            ctrls_mask |= (static_cast<size_t>(controlled_values[i])
+                           << (num_qubits - controlled_wires[i] - 1));
+        }
+        auto ctrls_parity = static_cast<size_t>(0U);
+        for (size_t i = 0; i < controlled_wires.size(); i++) {
+            ctrls_parity |= (one << (num_qubits - controlled_wires[i] - 1));
+        }
+        auto wires_parity = static_cast<size_t>(0U);
+        for (size_t wire : wires) {
+            wires_parity |= (one << (num_qubits - wire - 1));
+        }
+        PL_LOOP_PARALLEL(1)
+        for (size_t k = 0; k < exp2(num_qubits); k++) {
+            if (ctrls_mask == (ctrls_parity & k)) {
+                arr[k] *= static_cast<PrecisionT>(
+                    1 - 2 * int(std::popcount(k & wires_parity) % 2));
+            } else {
+                arr[k] = zero;
+            }
         }
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);

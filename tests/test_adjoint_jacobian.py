@@ -715,6 +715,7 @@ class TestAdjointJacobianQNode:
             qml.DoubleExcitation,
             qml.DoubleExcitationMinus,
             qml.DoubleExcitationPlus,
+            qml.MultiRZ,
         ],
     )
     @pytest.mark.parametrize("control_value", [False, True])
@@ -728,18 +729,18 @@ class TestAdjointJacobianQNode:
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
         init_state = np.array(init_state, requires_grad=False)
-
-        if operation.num_wires > n_qubits:
+        num_wires = max(operation.num_wires, 1)
+        if num_wires > n_qubits:
             return
 
-        for n_controls in range(0, n_qubits - operation.num_wires):
-            control_wires = range(n_controls, n_qubits - operation.num_wires)
+        for n_controls in range(0, n_qubits - num_wires):
+            control_wires = range(n_controls, n_qubits - num_wires)
 
             def circuit(p):
                 qml.StatePrep(init_state, wires=range(n_qubits))
                 qml.RX(p[0], 0)
                 qml.ctrl(
-                    operation(p[1], wires=range(n_qubits - operation.num_wires, n_qubits)),
+                    operation(p[1], wires=range(n_qubits - num_wires, n_qubits)),
                     control_wires,
                     control_values=[
                         control_value or bool(i % 2) for i, _ in enumerate(control_wires)
