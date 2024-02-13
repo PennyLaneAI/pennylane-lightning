@@ -243,7 +243,7 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest pytest tests/lightning_qubit2/
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_qubit2/
 
   cpptestswithOpenBLAS:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
