@@ -24,9 +24,9 @@ build:
     - wget
   jobs:
     pre_install:
-      - wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb && sudo dpkg -i cuda-keyring_1.1-1_all.deb && wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-archive-keyring.gpg && sudo mv cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg && echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/ /" | sudo tee /etc/apt/sources.list.d/cuda-wsl-ubuntu-x86_64.list && wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin && sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
-      - sudo apt-get update
-      - sudo apt-get install cuda-toolkit
+      - wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-keyring_1.1-1_all.deb && dpkg -i cuda-keyring_1.1-1_all.deb && wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-archive-keyring.gpg && mv cuda-archive-keyring.gpg /usr/share/keyrings/cuda-archive-keyring.gpg && echo "deb [signed-by=/usr/share/keyrings/cuda-archive-keyring.gpg] https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/ /" | tee /etc/apt/sources.list.d/cuda-wsl-ubuntu-x86_64.list && wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin && mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+      - apt-get update
+      - apt-get install cuda-toolkit
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
     post_install:
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
