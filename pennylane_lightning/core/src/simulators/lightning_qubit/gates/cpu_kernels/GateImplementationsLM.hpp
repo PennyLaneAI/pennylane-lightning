@@ -160,6 +160,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::RX,
         ControlledGateOperation::RY,
         ControlledGateOperation::RZ,
+        ControlledGateOperation::Rot,
         ControlledGateOperation::SWAP,
         ControlledGateOperation::IsingXX,
         ControlledGateOperation::IsingXY,
@@ -1117,48 +1118,51 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRot(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
-                         ParamT phi, ParamT theta, ParamT omega) {
+    static void
+    applyNCRot(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, const bool inverse,
+               ParamT phi, ParamT theta, ParamT omega) {
         PL_ASSERT(wires.size() == 1);
-
         const auto rotMat =
             (inverse) ? getRot<std::complex, PrecisionT>(-omega, -theta, -phi)
                       : getRot<std::complex, PrecisionT>(phi, theta, omega);
+        applyNCSingleQubitOp(arr, num_qubits, rotMat.data(), controlled_wires,
+                             controlled_values, wires, inverse);
+    }
 
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyRot(std::complex<PrecisionT> *arr,
+                         const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
+                         ParamT phi, ParamT theta, ParamT omega) {
+        PL_ASSERT(wires.size() == 1);
+        const auto rotMat =
+            (inverse) ? getRot<std::complex, PrecisionT>(-omega, -theta, -phi)
+                      : getRot<std::complex, PrecisionT>(phi, theta, omega);
         applySingleQubitOp(arr, num_qubits, rotMat.data(), wires);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRot(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires, bool inverse,
+    static void applyCRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires, bool inverse,
                           ParamT phi, ParamT theta, ParamT omega) {
-        PL_ASSERT(wires.size() == 2);
-
-        const size_t rev_wire0 = num_qubits - wires[1] - 1;
-        const size_t rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
-
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-
-        const auto [parity_high, parity_middle, parity_low] =
-            revWireParity(rev_wire0, rev_wire1);
-
         const auto rotMat =
             (inverse) ? getRot<std::complex, PrecisionT>(-omega, -theta, -phi)
                       : getRot<std::complex, PrecisionT>(phi, theta, omega);
-        PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 2); k++) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | rev_wire1_shift;
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-
+        auto core_function = [&rotMat](std::complex<PrecisionT> *arr,
+                                       [[maybe_unused]] const std::size_t i00,
+                                       [[maybe_unused]] const std::size_t i01,
+                                       const std::size_t i10,
+                                       const std::size_t i11) {
             const std::complex<PrecisionT> v0 = arr[i10];
             const std::complex<PrecisionT> v1 = arr[i11];
             arr[i10] = rotMat[0] * v0 + rotMat[1] * v1;
             arr[i11] = rotMat[2] * v0 + rotMat[3] * v1;
-        }
+        };
+        applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+            arr, num_qubits, {}, {}, wires, core_function);
     }
 
     /* Two-qubit gates */
@@ -1812,9 +1816,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     /* Multi-qubit gates */
 
     template <class PrecisionT, class ParamT>
-    static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires, bool inverse,
-                             ParamT angle) {
+    static void applyMultiRZ(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
         const std::complex<PrecisionT> second =
@@ -1823,13 +1828,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
 
-        size_t wires_parity = 0U;
-        for (size_t wire : wires) {
+        std::size_t wires_parity = 0U;
+        for (std::size_t wire : wires) {
             wires_parity |=
-                (static_cast<size_t>(1U) << (num_qubits - wire - 1));
+                (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits); k++) {
+        for (std::size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
         }
     }
@@ -2543,16 +2548,16 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyGeneratorMultiRZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
-        auto wires_parity = static_cast<size_t>(0U);
-        for (size_t wire : wires) {
+        auto wires_parity = static_cast<std::size_t>(0U);
+        for (std::size_t wire : wires) {
             wires_parity |=
-                (static_cast<size_t>(1U) << (num_qubits - wire - 1));
+                (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits); k++) {
+        for (std::size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= static_cast<PrecisionT>(
                 1 - 2 * int(std::popcount(k & wires_parity) % 2));
         }
@@ -2562,31 +2567,32 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyNCGeneratorMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::vector<size_t> &controlled_wires,
+    applyNCGeneratorMultiRZ(std::complex<PrecisionT> *arr,
+                            std::size_t num_qubits,
+                            const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        constexpr size_t one{1};
+        constexpr std::size_t one{1};
         constexpr std::complex<PrecisionT> zero{0.0};
-        auto ctrls_mask = static_cast<size_t>(0U);
-        for (size_t i = 0; i < controlled_wires.size(); i++) {
-            ctrls_mask |= (static_cast<size_t>(controlled_values[i])
+        auto ctrls_mask = static_cast<std::size_t>(0U);
+        for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+            ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
                            << (num_qubits - controlled_wires[i] - 1));
         }
-        auto ctrls_parity = static_cast<size_t>(0U);
-        for (size_t i = 0; i < controlled_wires.size(); i++) {
-            ctrls_parity |= (one << (num_qubits - controlled_wires[i] - 1));
+        auto ctrls_parity = static_cast<std::size_t>(0U);
+        for (std::size_t wire : controlled_wires) {
+            ctrls_parity |= (one << (num_qubits - wire - 1));
         }
-        auto wires_parity = static_cast<size_t>(0U);
-        for (size_t wire : wires) {
+        auto wires_parity = static_cast<std::size_t>(0U);
+        for (std::size_t wire : wires) {
             wires_parity |= (one << (num_qubits - wire - 1));
         }
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits); k++) {
+        for (std::size_t k = 0; k < exp2(num_qubits); k++) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr[k] *= static_cast<PrecisionT>(
                     1 - 2 * int(std::popcount(k & wires_parity) % 2));

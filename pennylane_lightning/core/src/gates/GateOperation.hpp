@@ -82,6 +82,7 @@ enum class ControlledGateOperation : uint32_t {
     RX,
     RY,
     RZ,
+    Rot,
     /* Two-qubit gates */
     SWAP,
     IsingXX,

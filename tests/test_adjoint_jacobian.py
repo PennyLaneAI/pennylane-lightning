@@ -705,6 +705,7 @@ class TestAdjointJacobianQNode:
             qml.RX,
             qml.RY,
             qml.RZ,
+            qml.Rot,
             qml.IsingXX,
             qml.IsingXY,
             qml.IsingYY,
@@ -738,15 +739,24 @@ class TestAdjointJacobianQNode:
 
             def circuit(p):
                 qml.StatePrep(init_state, wires=range(n_qubits))
-                qml.RX(p[0], 0)
-                qml.ctrl(
-                    operation(p[1], wires=range(n_qubits - num_wires, n_qubits)),
-                    control_wires,
-                    control_values=[
-                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                    ],
-                )
-                qml.RY(p[2], 0)
+                if operation.num_params == 3:
+                    qml.ctrl(
+                        operation(*p, wires=range(n_qubits - num_wires, n_qubits)),
+                        control_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
+                    )
+                else:
+                    qml.RX(p[0], 0)
+                    qml.ctrl(
+                        operation(p[1], wires=range(n_qubits - num_wires, n_qubits)),
+                        control_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
+                    )
+                    qml.RY(p[2], 0)
                 return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
 
             circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")

@@ -328,6 +328,12 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::Rot> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCRot<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::SWAP> {
     constexpr static auto value =
         &GateImplementation::template applyNCSWAP<PrecisionT>;
@@ -788,7 +794,8 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 struct ControlledGateFuncPtr {
-    static_assert(num_params < 2, "The given num_params is not supported.");
+    static_assert(num_params < 2 || num_params == 3,
+                  "The given num_params is not supported.");
 };
 template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 0> {
@@ -803,6 +810,14 @@ struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<size_t> &,
                           const std::vector<bool> &,
                           const std::vector<size_t> &, bool, ParamT);
+};
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 3> {
+    using Type = void (*)(std::complex<PrecisionT> *, size_t,
+                          const std::vector<size_t> &,
+                          const std::vector<bool> &,
+                          const std::vector<size_t> &, bool, ParamT, ParamT,
+                          ParamT);
 };
 
 /**
@@ -963,6 +978,19 @@ callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
     PL_ASSERT(params.size() == 1);
     func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
          params[0]);
+}
+
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 3> func,
+                      std::complex<PrecisionT> *data, size_t num_qubits,
+                      const std::vector<size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
+                      const std::vector<size_t> &wires, bool inverse,
+                      const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 3);
+    func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
+         params[0], params[1], params[2]);
 }
 
 /// @}

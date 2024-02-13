@@ -261,6 +261,9 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::RZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::Rot, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 
     instance.assignKernelForOp(ControlledGateOperation::SWAP, all_threading,
                                all_memory_model, all_qubit_numbers,

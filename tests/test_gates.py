@@ -351,6 +351,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RX,
         qml.RY,
         qml.RZ,
+        qml.Rot,
         qml.SWAP,
         qml.IsingXX,
         qml.IsingXY,
@@ -396,7 +397,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
                     )
                 else:
                     qml.ctrl(
-                        operation(0.1234, target_wires),
+                        operation(*tuple([0.1234] * operation.num_params), target_wires),
                         control_wires,
                         control_values=[
                             control_value or bool(i % 2) for i, _ in enumerate(control_wires)

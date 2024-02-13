@@ -132,6 +132,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "C(RX)",
         "C(RY)",
         "C(RZ)",
+        "C(Rot)",
         "C(SWAP)",
         "C(IsingXX)",
         "C(IsingXY)",
