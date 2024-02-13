@@ -22,13 +22,10 @@ build:
     - libopenblas-dev
     - graphviz
     - nvidia-cuda-toolkit
-    - gcc-10
-    - g++-10
   jobs:
     pre_install:
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
-      - nvcc --version
     post_install:
-      - rm -rf ./build && CC=gcc-10 CXX=g++-10 PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
-      - rm -rf ./build && CC=gcc-10 CXX=g++-10 PL_BACKEND="lightning_gpu" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
+      - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
+      - rm -rf ./build && PL_BACKEND="lightning_gpu" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
       - python -m pip install ./dist/*.whl
