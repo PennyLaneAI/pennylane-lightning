@@ -11,7 +11,7 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-serializinghtml==1.1.5
 pennylane-sphinx-theme
-custatevec-cu11
+custatevec-cu12
 wheel
 sphinxext-opengraph
 matplotlib

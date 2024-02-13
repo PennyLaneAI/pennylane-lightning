@@ -31,12 +31,14 @@ class TestDenseMatrixDecompositionThreshold:
     input = [
         (qml.QFT, 8, True),
         (qml.QFT, 10, False),
+        (qml.QFT, 14, False),
         (qml.GroverOperator, 8, True),
         (qml.GroverOperator, 13, False),
     ]
 
     @pytest.mark.parametrize("op, n_wires, condition", input)
     def test_threshold(self, op, n_wires, condition):
-        wires = np.linspace(0, n_wires - 1, n_wires, dtype=int)
+        wires = range(n_wires)
         op = op(wires=wires)
-        assert ld.stopping_condition.__get__(op)(op) == condition
+        dev = ld(n_wires)
+        assert dev.stopping_condition(op) == condition

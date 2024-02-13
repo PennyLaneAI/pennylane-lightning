@@ -20,7 +20,7 @@ jobs:
       pennylane-version: release
   tests_lgpu_gpu:
     name: Lightning Compatibility test (tests_lgpu_gpu) - release/release
-    uses: ./.github/workflows/tests_gpu_cu11.yml
+    uses: ./.github/workflows/tests_gpu_cuda.yml
     with:
       lightning-version: release
       pennylane-version: release

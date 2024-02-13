@@ -121,7 +121,7 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
     $ brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu11``, etc.), and hence we recommend referring to Lightning-GPU installation section.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to Lightning-GPU installation section.
 Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the Lightning-Kokkos installation section.
 
 Development installation
@@ -227,7 +227,7 @@ Lightning-GPU can be installed using ``pip``:
 
     pip install pennylane-lightning[gpu]
 
-Lightning-GPU requires the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library is required).
+Lightning-GPU requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library is required).
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK`_ install guide for more information.
 
@@ -247,7 +247,7 @@ Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` envi
 
 .. code-block:: console
 
-    python -m pip install wheel custatevec-cu11
+    python -m pip install wheel custatevec-cu12
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
 
 The Lightning-GPU can then be installed with ``pip``:
@@ -261,7 +261,7 @@ To simplify the build, we recommend using the containerized build process descri
 Install Lightning-GPU with MPI
 ==============================
 
-Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu11 <https://pypi.org/project/cuquantum-cu11/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
+Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
 ``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
 Both the ``MPICH`` and ``OpenMPI`` libraries are supported, provided they are compiled with CUDA support.
 The path to ``libmpi.so`` should be found in ``LD_LIBRARY_PATH``.
