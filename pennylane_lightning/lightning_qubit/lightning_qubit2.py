@@ -365,6 +365,7 @@ class LightningQubit2(Device):
 
         results = []
         for circuit in circuits:
+            circuit = circuit.map_to_standard_wires()
             results.append(simulate(circuit, **execution_config.device_options))
 
         return results[0] if is_single_circuit else tuple(results)
