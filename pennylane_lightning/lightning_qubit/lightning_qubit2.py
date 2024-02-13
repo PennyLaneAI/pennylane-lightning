@@ -64,9 +64,7 @@ def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
     Note that this function can return measurements for non-commuting observables simultaneously.
 
     """
-    state = LightningStateVector(
-        num_wires=circuit.num_wires, dtype=dtype
-    ).get_final_state(circuit)
+    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
     return LightningMeasurements(state).measure_final_state(circuit)
 
 
