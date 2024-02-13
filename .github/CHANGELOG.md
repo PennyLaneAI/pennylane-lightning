@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* `C(MultiRZ)` and `C(Rot)` gates are natively supported (with `LM` kernels).
+  [(#614)](https://github.com/PennyLaneAI/pennylane-lightning/pull/614)
+
 * Lower the overheads of Windows CI tests.
   [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
 
