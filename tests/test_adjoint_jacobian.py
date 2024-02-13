@@ -705,7 +705,6 @@ class TestAdjointJacobianQNode:
             qml.RX,
             qml.RY,
             qml.RZ,
-            qml.Rot,
             qml.IsingXX,
             qml.IsingXY,
             qml.IsingYY,

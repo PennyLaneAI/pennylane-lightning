@@ -1844,9 +1844,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool inverse, ParamT angle) {
-        static constexpr std::size_t one{1};
-        const std::size_t dim = one << wires.size();
-
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
         const std::complex<PrecisionT> second =
@@ -1860,12 +1857,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
         auto core_function =
-            [dim, wires_parity, &shifts](
+            [wires_parity, &shifts](
                 std::complex<PrecisionT> *arr,
                 const std::vector<std::size_t> &indices,
                 [[maybe_unused]] const std::vector<std::complex<PrecisionT>>
                     &coeffs_in) {
-                for (auto &k : indices) {
+                for (const auto &k : indices) {
                     arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
                 }
             };
