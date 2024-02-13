@@ -1125,9 +1125,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                const std::vector<std::size_t> &wires, const bool inverse,
                ParamT phi, ParamT theta, ParamT omega) {
         PL_ASSERT(wires.size() == 1);
-        const auto rotMat =
-            (inverse) ? getRot<std::complex, PrecisionT>(-omega, -theta, -phi)
-                      : getRot<std::complex, PrecisionT>(phi, theta, omega);
+        const auto rotMat = getRot<std::complex, PrecisionT>(phi, theta, omega);
         applyNCSingleQubitOp(arr, num_qubits, rotMat.data(), controlled_wires,
                              controlled_values, wires, inverse);
     }
