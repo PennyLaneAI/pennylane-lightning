@@ -25,7 +25,7 @@ build:
   jobs:
     pre_install:
       - wget https://developer.download.nvidia.com/compute/cuda/12.1.0/local_installers/cuda_12.1.0_530.30.02_linux.run
-      - sh cuda_12.1.0_530.30.02_linux.run
+      - sh cuda_12.1.0_530.30.02_linux.run --silent
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
     post_install:
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
