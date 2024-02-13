@@ -234,7 +234,6 @@ class LightningStateVector:
         ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
 
         # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
         output_shape = [2] * self.num_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
@@ -270,20 +269,13 @@ class LightningStateVector:
         """
         state = self.state_vector
 
-        basename = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
+        basename = operation.base.name
         if basename == "Identity":
             return
         method = getattr(state, f"{basename}", None)
-        control_wires = self.wires.indices(operation.control_wires)
-        control_values = (
-            [bool(int(i)) for i in operation.hyperparameters["control_values"]]
-            if operation.name == "MultiControlledX"
-            else operation.control_values
-        )
-        if operation.name == "MultiControlledX":
-            target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
-        else:
-            target_wires = self.wires.indices(operation.target_wires)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        target_wires = list(operation.target_wires)
         if method is not None:  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
@@ -321,16 +313,13 @@ class LightningStateVector:
             if name == "Identity":
                 continue
             method = getattr(state, name, None)
-            wires = self.wires.indices(operation.wires)
+            wires = list(operation.wires)
 
             if method is not None:  # apply specialized gate
                 inv = False
                 param = operation.parameters
                 method(wires, inv, param)
-            elif (
-                name[0:2] == "C(" or name == "ControlledQubitUnitary" or name == "MultiControlledX"
-            ):  # apply n-controlled gate
-                print("hi")
+            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
@@ -353,16 +342,9 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        for operation in operations:
-            if isinstance(operation, (StatePrep, BasisState)):
-                raise DeviceError(
-                    f"Operation {operation.name} cannot be used after other "
-                    f"Operations have already been applied on a {self.short_name} device."
-                )
-
         self.apply_lightning(operations)
 
-    def get_final_state(self, circuit: QuantumScript, debugger=None):
+    def get_final_state(self, circuit: QuantumScript):
         """
         Get the final state that results from executing the given quantum script.
 
@@ -370,17 +352,12 @@ class LightningStateVector:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
-            debugger (._Debugger): The debugger to use
 
         Returns:
             Tuple: A tuple containing the Lightning final state handler of the quantum script and
                 whether the state has a batch dimension.
 
         """
+        self.apply_operations(circuit.operations)
 
-        circuit = circuit.map_to_standard_wires()
-        self.apply_operations(circuit._ops)
-
-        # No batching support yet.
-
-        return self, False  # is_state_batched
+        return self

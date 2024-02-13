@@ -151,7 +151,7 @@ class LightningMeasurements:
         """
         return self.get_measurement_function(measurementprocess)(measurementprocess)
 
-    def measure_final_state(self, circuit: QuantumScript, is_state_batched) -> Result:
+    def measure_final_state(self, circuit: QuantumScript) -> Result:
         """
         Perform the measurements required by the circuit on the provided state.
 
@@ -159,24 +159,14 @@ class LightningMeasurements:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
-            is_state_batched (bool): Whether the state has a batch dimension or not.
 
         Returns:
             Tuple[TensorLike]: The measurement results
         """
-        if set(circuit.wires) != set(range(circuit.num_wires)):
-            wire_map = {w: i for i, w in enumerate(circuit.wires)}
-            circuit = qml.map_wires(circuit, wire_map)
 
         if not circuit.shots:
             # analytic case
             if len(circuit.measurements) == 1:
                 return self.measurement(circuit.measurements[0])
 
-            results = []
-            for mp in circuit.measurements:
-                measure_val = self.measurement(mp)
-                results += [
-                    measure_val,
-                ]
-            return tuple(results)
+            return tuple(self.measurement(mp) for mp in circuit.measurements)
