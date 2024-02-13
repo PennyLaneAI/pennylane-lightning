@@ -238,7 +238,7 @@ class LightningQubit2(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires=None,  # the number of wires are always needed for Lightning. Do we have a better way to get it
+        wires=None,
         *,
         c_dtype=np.complex128,
         shots=None,

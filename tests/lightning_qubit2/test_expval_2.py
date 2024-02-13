@@ -105,11 +105,19 @@ class TestExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    def test_PauliZ_expectation(self, theta, phi, dev, tol):
+    @pytest.mark.parametrize(
+        "wires",
+        [
+            ([0, 1]),
+            (["a", 1]),
+            (["b", "a"]),
+        ],
+    )
+    def test_PauliZ_expectation(self, theta, phi, dev, tol, wires):
         """Tests PauliZ."""
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
+            [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
             [qml.expval(qml.PauliZ(wires=[0])), qml.expval(qml.PauliZ(wires=[1]))],
         )
 

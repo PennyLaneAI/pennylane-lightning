@@ -510,39 +510,6 @@ class TestSerializeOps:
         assert s[0][0] == s_expected[0][0]
         assert s[0][1] == s_expected[0][1]
 
-    # Are we still supporting custom wires???
-    # def test_custom_wires_circuit(self):
-    #     """Test expected serialization for a simple circuit with custom wire labels"""
-    #     with qml.tape.QuantumTape() as tape:
-    #         qml.RX(0.4, wires="a")
-    #         qml.RY(0.6, wires=3.2)
-    #         qml.CNOT(wires=["a", 3.2])
-    #         qml.SingleExcitation(0.5, wires=["a", 3.2])
-    #         qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
-    #         qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
-
-    #     s = QuantumScriptSerializer(device_name).serialize_ops(tape)
-    #     s_expected = (
-    #         (
-    #             [
-    #                 "RX",
-    #                 "RY",
-    #                 "CNOT",
-    #                 "SingleExcitation",
-    #                 "SingleExcitationPlus",
-    #                 "SingleExcitationMinus",
-    #             ],
-    #             [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
-    #             [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-    #             [False, False, False, False, False, False],
-    #             [[], [], [], [], [], []],
-    #             [[], [], [], [], [], []],
-    #             [[], [], [], [], [], []],
-    #         ),
-    #         False,
-    #     )
-    #     assert s == s_expected
-
     @pytest.mark.parametrize("C", [True, False])
     def test_integration(self, C):
         """Test expected serialization for a random circuit"""
