@@ -117,8 +117,8 @@ class TestExpval:
         """Tests PauliZ."""
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            [qml.expval(qml.PauliZ(wires=[0])), qml.expval(qml.PauliZ(wires=[1]))],
+            [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=wires[1]), qml.CNOT(wires=wires)],
+            [qml.expval(qml.PauliZ(wires=wires[0])), qml.expval(qml.PauliZ(wires=wires[1]))],
         )
 
         calculated_val = self.process_and_execute(dev, tape)
