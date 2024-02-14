@@ -498,7 +498,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
 def test_controlled_globalphase(n_qubits, control_value, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
-    dev = qml.device("lightning.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
     threshold = 250
     operation = qml.GlobalPhase
     num_wires = max(operation.num_wires, 1)

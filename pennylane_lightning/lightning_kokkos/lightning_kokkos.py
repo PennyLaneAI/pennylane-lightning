@@ -402,7 +402,6 @@ if LK_CPP_BINARY_AVAILABLE:
                 method = getattr(state, name, None)
 
                 wires = self.wires.indices(ops.wires)
-
                 if ops.name == "C(GlobalPhase)":
                     controls = ops.control_wires
                     control_values = ops.control_values
