@@ -40,7 +40,7 @@ jobs:
         run: sudo apt update && sudo apt -y install python3 python3-pip && python -m pip install pip~=22.0 && python3 -m pip install -r requirements-dev.txt
 
       - name: Run formatter
-        run: PATH=$PATH:$(dirname $(which python3))/ ./bin/format --check ./pennylane_lightning/core/src
+        run: PATH=$PATH:/home/ubuntu/.local/bin/:$(dirname $(which python3))/ ./bin/format --check ./pennylane_lightning/core/src
 
   tidy-cpp:
     strategy:
