@@ -9,7 +9,7 @@ env:
   GCC_VERSION: "11"
 
 on:
-  #pull_request:
+  pull_request:
   push:
     branches:
       - master
