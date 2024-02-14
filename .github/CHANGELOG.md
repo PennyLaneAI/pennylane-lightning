@@ -7,10 +7,31 @@
   
 ### Breaking changes
 
+* Migrate `lightning.gpu` to CUDA 12.
+  [(#606)](https://github.com/PennyLaneAI/pennylane-lightning/pull/606)
+
 ### Improvements
+
+* Lower the overheads of Windows CI tests.
+  [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
+
+* Decouple LightningQubit memory ownership from numpy and migrate it to Lightning-Qubit managed state-vector class.
+  [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
+
+* Expand support for Projector observables on Lightning-Kokkos.
+  [(#601)](https://github.com/PennyLaneAI/pennylane-lightning/pull/601)
+
+* Split Docker build cron job into two jobs: master and latest. This is mainly for reporting in the `plugin-test-matrix` repo.
+  [(#600)](https://github.com/PennyLaneAI/pennylane-lightning/pull/600)
+
+* The `BlockEncode` operation from PennyLane is now supported on all Lightning devices.
+  [(#599)](https://github.com/PennyLaneAI/pennylane-lightning/pull/599)
 
 * OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
+
+* Enable building Docker images for any branch or tag. Set the Docker build cron job to build images for the latest release and `master`.
+  [(#598)](https://github.com/PennyLaneAI/pennylane-lightning/pull/598)
 
 * Enable choosing the PennyLane-Lightning version and disabling push to Docker Hub in the Docker build workflow. Add a cron job calling the Docker build workflow.
   [(#597)](https://github.com/PennyLaneAI/pennylane-lightning/pull/597)
@@ -25,6 +46,12 @@
 
 ### Bug fixes
 
+* Ensure the stopping condition decompositions are respected for larger templated QFT and Grover operators.
+  [(#609)](https://github.com/PennyLaneAI/pennylane-lightning/pull/609)
+
+* Move concurrency group specifications from reusable Docker build workflow to the root workflows.
+  [(#604)](https://github.com/PennyLaneAI/pennylane-lightning/pull/604)
+
 * Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
   [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
 
@@ -32,7 +59,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

@@ -583,11 +583,9 @@ class TestAdjointJacobian:
 
         dM1 = dev.adjoint_jacobian(tape)
 
-        if device_name == "lightning.kokkos":
-            dev._pre_rotated_state = dev.state_vector  # necessary for lightning.kokkos
-
+        if device_name in ["lightning.kokkos", "lightning.qubit"]:
             qml.execute([tape], dev, None)
-            dM2 = dev.adjoint_jacobian(tape, starting_state=dev._pre_rotated_state)
+            dM2 = dev.adjoint_jacobian(tape, starting_state=dev.state_vector)
 
             assert np.allclose(dM1, dM2, atol=tol, rtol=0)
         else:
@@ -729,6 +727,7 @@ class TestAdjointJacobianQNode:
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state = np.array(init_state, requires_grad=False)
 
         if operation.num_wires > n_qubits:
             return

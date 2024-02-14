@@ -20,76 +20,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  cpptests:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    timeout-minutes: 45
-    name: C++ tests (Windows)
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-        pl_backend: ["lightning_qubit"]
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
-
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
-
-      - name: Setup OpenCppCoverage and add to PATH
-        run: |
-          choco install OpenCppCoverage -y
-          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-
-      - name: Build and run unit tests for code coverage
-        run: |
-            cmake -BBuild `
-              -DBUILD_TESTS=ON `
-              -DENABLE_OPENMP=OFF `
-              -DENABLE_PYTHON=OFF `
-              -DENABLE_GATE_DISPATCHER=OFF `
-              -DPL_BACKEND=${{ matrix.pl_backend }} `
-              -DENABLE_LAPACK=ON `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
-              -DENABLE_WARNINGS=OFF
-            cmake --build .\Build --config Debug
-            mkdir -p .\Build\tests\results
-            $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/Debug
-            foreach ($file in $test_bins)
-            {
-              $filename = $file.ToString() -replace '.{4}$'
-              $filename = $filename.Substring($filename.LastIndexOf("\")+1)
-              $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
-              Invoke-Expression $test_call
-              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
-              Invoke-Expression $cov_call
-            }
-            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
-          path: .\Build\tests\results\
-          if-no-files-found: error
-          
-      - name: Upload coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: windows-coverage-report
-          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-          if-no-files-found: error
-
   win-set-matrix-x86:
     name: Set builder matrix
     runs-on: ubuntu-latest
@@ -110,7 +40,7 @@ jobs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}
       kokkos_version: ${{ steps.kokkos_version.outputs.kokkos_version }}
 
-  build_dependencies:
+  build_dependencies_kokkos:
     needs: [win-set-matrix-x86]
     strategy:
       fail-fast: false
@@ -125,7 +55,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
@@ -163,9 +93,111 @@ jobs:
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
 
+  build_dependencies_vcpkg:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    timeout-minutes: 30
+    name: vcpkg dependencies
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Cache installation directories
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
+
+      - name: Clone vcpkg
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p D:\a\install_dir
+          cd D:\a\install_dir\
+          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
+
+      - name: Install dependencies
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install cmake build ninja
+
+      - name: Build Lapack library
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+        run: |
+          cd D:\a\install_dir\vcpkg
+          .\bootstrap-vcpkg.bat
+          vcpkg install lapack
+
+  cpptests:
+    needs: [build_dependencies_vcpkg]
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    timeout-minutes: 30
+    name: C++ tests (Windows)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+        pl_backend: ["lightning_qubit"]
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+
+      - name: Restoring cached vcpkg
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
+
+      - name: Setup OpenCppCoverage and add to PATH
+        run: |
+          choco install OpenCppCoverage -y
+          echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+
+      - name: Build and run unit tests for code coverage
+        run: |
+            cmake -BBuild `
+              -DBUILD_TESTS=ON `
+              -DENABLE_OPENMP=OFF `
+              -DENABLE_PYTHON=OFF `
+              -DENABLE_GATE_DISPATCHER=OFF `
+              -DPL_BACKEND=${{ matrix.pl_backend }} `
+              -DENABLE_LAPACK=ON `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
+              -DENABLE_WARNINGS=OFF
+            cmake --build .\Build --config RelWithDebInfo
+            mkdir -p .\Build\tests\results
+            $test_bins = Get-ChildItem -Include *.exe -Recurse -Path ./Build/RelWithDebInfo
+            foreach ($file in $test_bins)
+            {
+              $filename = $file.ToString() -replace '.{4}$'
+              $filename = $filename.Substring($filename.LastIndexOf("\")+1)
+              $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
+              Invoke-Expression $test_call
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
+              Invoke-Expression $cov_call
+            }
+            Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
+          path: .\Build\tests\results\
+          if-no-files-found: error
+          
+      - name: Upload coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-coverage-report
+          path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          if-no-files-found: error
+
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies, win-set-matrix-x86]
+    needs: [build_dependencies_kokkos, build_dependencies_vcpkg, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
@@ -180,31 +212,26 @@ jobs:
     steps:
       - name: Restoring cached Kokkos
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
+
+      - name: Restoring cached vcpkg
+        id: vcpkg-cache
+        uses: actions/cache@v4
+        with:
+          path: D:\a\install_dir\vcpkg
+          key: ${{ matrix.os }}-vcpkg
       
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      - name: Copy cached libraries
+      - name: Copy cached Kokkos libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
-
-      - name: Configure MSVC for amd64 # Use cl.exe as a default compiler
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: amd64
-      
-      - name: Install lapack with vcpkg
-        run: |
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-          cd vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
 
       - name: Enable long paths
         run: |
@@ -224,7 +251,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DCMAKE_TOOLCHAIN_FILE=D:/a/pennylane-lightning/pennylane-lightning/vcpkg/scripts/buildsystems/vcpkg.cmake `
+              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_LAPACK=ON `
@@ -238,7 +265,7 @@ jobs:
               $filename = $filename.Substring($filename.LastIndexOf("\")+1)
               $test_call = $file.ToString() + " --order lex --reporter junit --out .\Build\tests\results\report_" + $filename + ".xml"
               Invoke-Expression $test_call
-              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --export_type cobertura:coverage.xml " + $file.ToString()
+              $cov_call = "OpenCppCoverage --sources pennylane_lightning\core\src --excluded_modules D:\a\install_dir\* --excluded_modules C:\Windows\System32\* --export_type cobertura:coverage.xml " + $file.ToString()
               Invoke-Expression $cov_call
             }
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml

@@ -1,4 +1,4 @@
-name: Compat Check Docker - Lightning@latest
+name: Compat Check Docker - Lightning@master
 
 on:
   schedule:
@@ -6,14 +6,14 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: docker_linux_x86_64-latest
+  group: docker_linux_x86_64-master
   cancel-in-progress: true
 
 jobs:
-  docker_linux_x86_64_latest:
-    name: Docker latest - Linux::x86_64
+  docker_linux_x86_64_develop:
+    name: Docker develop - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
-      lightning-version: v0.34.0
+      lightning-version: master
       push-to-dockerhub: false
     secrets: inherit # pass all secrets

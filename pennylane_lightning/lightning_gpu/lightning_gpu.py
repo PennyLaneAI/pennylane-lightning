@@ -60,7 +60,7 @@ try:
         "cuquantum"
     ):  # pragma: no cover
         raise ImportError(
-            'custatevec libraries not found. Please pip install appropriate custatevec in a virtual environment and then add its path to the "LD_LIBRARY_PATH" environment variable.'
+            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
         )
     if not DevPool.getTotalDevices():  # pragma: no cover
         raise ValueError("No supported CUDA-capable device found")
@@ -186,6 +186,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
     }
 
     allowed_observables = {

@@ -59,6 +59,7 @@ help:
 clean:
 	find . -type d -name '__pycache__' -exec rm -r {} \+
 	rm -rf build Build BuildTests BuildTidy BuildGBench
+	rm -rf build_*
 	rm -rf .coverage coverage_html_report/
 	rm -rf pennylane_lightning/*_ops*
 
@@ -138,7 +139,7 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := 0.34.0
+    VERSION := v0.34.0
 endif
 docker-build:
 	docker build -f docker/Dockerfile --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) --target wheel-$(TARGET) --build-arg='LIGHTNING_VERSION=$(VERSION)' .

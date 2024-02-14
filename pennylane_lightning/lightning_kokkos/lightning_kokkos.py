@@ -143,6 +143,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
     }
 
     allowed_observables = {
@@ -152,6 +153,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Hadamard",
         "Hermitian",
         "Identity",
+        "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
         "Sum",
@@ -189,6 +191,7 @@ if LK_CPP_BINARY_AVAILABLE:
 
         Args:
             wires (int): the number of wires to initialize the device with
+            sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of
                 ``np.complex64`` or ``np.complex128``.
             kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
@@ -212,12 +215,13 @@ if LK_CPP_BINARY_AVAILABLE:
             self,
             wires,
             *,
+            sync=True,
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
             kokkos_args=None,
             mpi: bool = False,
-        ):  # pylint: disable=unused-argument
+        ):  # pylint: disable=unused-argument, too-many-arguments
             super().__init__(wires, shots=shots, c_dtype=c_dtype, batch_obs=batch_obs, mpi=mpi)
 
             if kokkos_args is None:
@@ -363,9 +367,8 @@ if LK_CPP_BINARY_AVAILABLE:
             """
 
             if isinstance(state, self._kokkos_state.__class__):
-                state_data = np.zeros(state.size, dtype=self.C_DTYPE)
-                state_data = self._asarray(state_data, dtype=self.C_DTYPE)
-                state.DeviceToHost(state_data.ravel(order="C"))
+                state_data = allocate_aligned_array(state.size, np.dtype(self.C_DTYPE), True)
+                state.DeviceToHost(state_data)
                 state = state_data
 
             ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
@@ -484,6 +487,9 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
@@ -513,7 +519,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 return measure.expval(matrix, observable_wires)
 
             if (
-                observable.name == "Hamiltonian"
+                observable.name in ["Hamiltonian", "Hermitian"]
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -567,6 +573,9 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
+                if self.shots is None:
+                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
+                    self.apply(self._get_diagonalizing_gates(qs))
                 return super().var(observable, shot_range=shot_range, bin_size=bin_size)
 
             if self.shots is not None:
