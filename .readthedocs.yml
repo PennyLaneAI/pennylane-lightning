@@ -21,9 +21,11 @@ build:
     - libopenblas-base
     - libopenblas-dev
     - graphviz
-    - nvidia-cuda-toolkit
+    - wget
   jobs:
     pre_install:
+      - wget https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux.run
+      - sh cuda_12.3.2_545.23.08_linux.run --silent --toolkit
       - echo "setuptools~=66.0\npip~=22.0" >> ci_build_requirements.txt
     post_install:
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
