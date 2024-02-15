@@ -120,8 +120,8 @@ static constexpr auto getS() -> std::vector<ComplexT<T>> {
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getT() -> std::vector<ComplexT<T>> {
     return {ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            ConstMult(SQRT2<decltype(ONE<ComplexT, T>().x)>() / 2,
-                      ConstSum(ONE<ComplexT, T>(), -IMAG<ComplexT, T>()))};
+            ConstMult(INVSQRT2<ComplexT, T>(),
+                      ConstSum(ONE<ComplexT, T>(), IMAG<ComplexT, T>()))};
 }
 
 /**

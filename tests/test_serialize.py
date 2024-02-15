@@ -19,7 +19,7 @@ from conftest import device_name, LightningDevice
 
 import numpy as np
 import pennylane as qml
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
+from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -616,3 +616,28 @@ class TestSerializeOps:
         assert s[1] == s_expected[1]
 
         assert all(np.allclose(s1, s2) for s1, s2 in zip(s[0][4], s_expected[0][4]))
+
+
+def check_global_phase_diagonal(par, wires, targets, controls, control_values):
+    op = qml.ctrl(qml.GlobalPhase(par, wires=targets), controls, control_values=control_values)
+    return np.diag(op.matrix(wires))
+
+
+def test_global_phase():
+    """Validate global_phase_diagonal with various combinations of num_qubits, targets and controls."""
+    import itertools
+
+    nmax = 7
+    par = 0.1
+    for nq in range(2, nmax):
+        wires = range(nq)
+        for nw in range(nq, nmax):
+            wire_lists = list(itertools.permutations(wires, nw))
+            for wire_list in wire_lists:
+                for i in range(len(wire_list) - 1):
+                    targets = wire_list[0:i]
+                    controls = wire_list[i:]
+                    control_values = [i % 2 == 0 for i in controls]
+                    D0 = check_global_phase_diagonal(par, wires, targets, controls, control_values)
+                    D1 = global_phase_diagonal(par, wires, controls, control_values)
+                    assert np.allclose(D0, D1)

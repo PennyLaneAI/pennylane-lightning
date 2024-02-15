@@ -95,7 +95,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     import pennylane as qml
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -140,6 +140,8 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -200,6 +202,16 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "Sum",
         "Prod",
         "SProd",
+    }
+
+    gate_cache_needs_hash = {
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PSWAP",
+        "OrbitalRotation",
+        "BlockEncode",
     }
 
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
@@ -511,7 +523,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # matrix multiplication with the identity.
             skipped_ops = ["Identity"]
             invert_param = False
-
             for ops in operations:
                 if str(ops.name) in skipped_ops:
                     continue
@@ -522,21 +533,28 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
-                if method is None:
+                if ops.name == "C(GlobalPhase)":
+                    controls = ops.control_wires
+                    control_values = ops.control_values
+                    param = ops.base.parameters[0]
+                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
+                    self._gpu_state.apply(name, wires, False, [], matrix)
+                elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)
                     except AttributeError:  # pragma: no cover
                         # To support older versions of PL
                         mat = ops.matrix
-
+                    r_dtype = np.float32 if self.use_csingle else np.float64
+                    param = [[r_dtype(ops.hash)]] if ops.name in gate_cache_needs_hash else []
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
                         name,
                         wires,
                         False,
-                        [],
+                        param,
                         mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
 
