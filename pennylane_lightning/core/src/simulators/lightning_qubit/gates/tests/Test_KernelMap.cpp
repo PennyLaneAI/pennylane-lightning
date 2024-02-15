@@ -116,7 +116,8 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
         for_each_enum<Pennylane::Gates::GateOperation>(
             [&gate_map](Pennylane::Gates::GateOperation gate_op) {
                 INFO(lookup(Pennylane::Gates::Constant::gate_names, gate_op));
-                if (gate_op == Pennylane::Gates::GateOperation::MultiRZ) {
+                if (gate_op == Pennylane::Gates::GateOperation::GlobalPhase ||
+                    gate_op == Pennylane::Gates::GateOperation::MultiRZ) {
                     REQUIRE(gate_map[gate_op] ==
                             Pennylane::Gates::KernelType::LM);
                 } else if (lookup(Pennylane::Gates::Constant::gate_wires,

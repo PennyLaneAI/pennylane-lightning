@@ -155,8 +155,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<size_t> &wires, bool inv,
-               [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
-               [[maybe_unused]] const np_arr_c &gate_matrix) {
+               const std::vector<std::vector<ParamT>> &params,
+               const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
                 std::vector<CFP_t> matrix_cu;
                 if (m_buffer.size) {
@@ -164,9 +164,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                     matrix_cu =
                         std::vector<CFP_t>{m_ptr, m_ptr + m_buffer.size};
                 }
-
-                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
-                                  matrix_cu);
+                if (params.empty()) {
+                    sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                                      matrix_cu);
+                } else {
+                    PL_ABORT_IF(params.size() != 1,
+                                "params should be a List[List[float]].")
+                    sv.applyOperation(str, wires, inv, params[0], matrix_cu);
+                }
             },
             "Apply operation via the gate matrix");
 }

@@ -716,6 +716,7 @@ class TestAdjointJacobianQNode:
             qml.DoubleExcitationMinus,
             qml.DoubleExcitationPlus,
             qml.MultiRZ,
+            qml.GlobalPhase,
         ],
     )
     @pytest.mark.parametrize("control_value", [False, True])

@@ -40,13 +40,13 @@ using namespace Pennylane::LightningQubit;
 using Pennylane::Util::createRandomStateVectorData;
 using Pennylane::Util::randomUnitary;
 using Pennylane::Util::TestVector;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
                    "[StateVectorLQubitManaged]", float, double) {
     using PrecisionT = TestType;
+    std::mt19937_64 re{1337};
 
     SECTION("StateVectorLQubitManaged<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorLQubitManaged<TestType>,
@@ -115,6 +115,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::setBasisState",
     using PrecisionT = TestType;
     using ComplexT = std::complex<PrecisionT>;
     using TestVectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
 
     const std::size_t num_qubits = 3;
 
@@ -138,6 +139,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
     using PrecisionT = TestType;
     using ComplexT = std::complex<PrecisionT>;
     using TestVectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
 
     const std::size_t num_qubits = 3;
 

@@ -150,6 +150,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::GlobalPhase, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 
 void assignKernelsForGeneratorOp_Default() {
@@ -210,8 +213,10 @@ void assignKernelsForGeneratorOp_Default() {
     instance.assignKernelForOp(GeneratorOperation::DoubleExcitationMinus,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
-
     instance.assignKernelForOp(GeneratorOperation::MultiRZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::GlobalPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
 }
@@ -302,6 +307,9 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::GlobalPhase,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
 }
 void assignKernelsForControlledGeneratorOp_Default() {
     auto &instance =
@@ -350,6 +358,9 @@ void assignKernelsForControlledGeneratorOp_Default() {
         ControlledGeneratorOperation::DoubleExcitationPlus, all_threading,
         all_memory_model, all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(ControlledGeneratorOperation::MultiRZ,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::GlobalPhase,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }

@@ -18,6 +18,7 @@ import pytest
 from conftest import LightningDevice, device_name
 from conftest import THETA, PHI
 
+import copy
 import itertools
 import numpy as np
 import pennylane as qml
@@ -52,6 +53,7 @@ def op(op_name):
         "ControlledPhaseShift": [qml.ControlledPhaseShift, [], {"phi": 1.777, "wires": [0, 1]}],
         "CPhase": [qml.CPhase, [], {"phi": 1.777, "wires": [0, 1]}],
         "MultiRZ": [qml.MultiRZ, [], {"theta": 0.112, "wires": [0, 1, 2]}],
+        "GlobalPhase": [qml.GlobalPhase, [], {"phi": 0.112, "wires": [0, 1, 2]}],
         "CRX": [qml.CRX, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRY": [qml.CRY, [], {"phi": 0.123, "wires": [0, 1]}],
         "CRZ": [qml.CRZ, [], {"phi": 0.123, "wires": [0, 1]}],
@@ -109,6 +111,33 @@ def test_gate_unitary_correct(op, op_name):
 
     unitary_expected = qml.matrix(op[0](*op[1], **op[2]))
 
+    assert np.allclose(unitary, unitary_expected)
+
+    op1 = copy.deepcopy(op[1])
+    if len(op1) > 0:
+        op1 = (-np.array(op1)).tolist()
+    op2 = copy.deepcopy(op[2])
+    if "phi" in op2.keys():
+        op2["phi"] *= np.sqrt(2)
+    if "theta" in op2.keys():
+        op2["theta"] *= np.sqrt(3)
+    if "U" in op2.keys():
+        op2["U"] *= np.sqrt(3)
+
+    @qml.qnode(dev)
+    def output(input):
+        qml.BasisState(input, wires=range(wires))
+        op[0](*op[1], **op[2])
+        op[0](*op1, **op2)
+        return qml.state()
+
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
+
+    for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
+        out = output(np.array(input))
+        unitary[:, i] = out
+
+    unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
     assert np.allclose(unitary, unitary_expected)
 
 
@@ -364,6 +393,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.DoubleExcitationMinus,
         qml.DoubleExcitationPlus,
         qml.MultiRZ,
+        qml.GlobalPhase,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -463,3 +493,39 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     circ = qml.QNode(circuit, dev)
     circ_def = qml.QNode(cnot_circuit, dev)
     assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_controlled_globalphase(n_qubits, control_value, tol):
+    """Test that multi-controlled gates are correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    threshold = 250
+    operation = qml.GlobalPhase
+    num_wires = max(operation.num_wires, 1)
+    for n_wires in range(num_wires + 1, num_wires + 4):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * n_wires
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            target_wires = all_wires[0:num_wires]
+            control_wires = all_wires[num_wires:]
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.ctrl(
+                    operation(0.1234, target_wires),
+                    control_wires,
+                    control_values=[
+                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                    ],
+                )
+                return qml.state()
+
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)

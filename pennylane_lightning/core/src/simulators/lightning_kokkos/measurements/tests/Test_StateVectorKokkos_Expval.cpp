@@ -39,7 +39,6 @@ using namespace Pennylane::LightningKokkos::Observables;
 using Pennylane::Util::createNonTrivialState;
 using Pennylane::Util::write_CSR_vectors;
 using std::size_t;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -385,6 +384,7 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
                    "[StateVectorKokkos_Expval]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     using VectorT = TestVector<std::complex<TestType>>;
+    std::mt19937_64 re{1337};
     const size_t num_qubits = 7;
     VectorT sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
 
