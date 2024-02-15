@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 
+#include <iostream>
 #include <vector>
 
 #include <Kokkos_Core.hpp>
@@ -187,16 +188,19 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
      * @param sv The statevector to update
      */
     void applyInPlace(StateVectorT &sv) const override {
-        StateVectorT buffer{sv.getNumQubits()};
-        buffer.initZeros();
+        using KV =
+            typename StateVectorT::KokkosVector; // buffer{sv.getNumQubits()};
+        auto buffer = std::make_unique<KV>("data_", sv.getLength());
+        StateVectorT::initZeros(*buffer);
+
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
             StateVectorT tmp{sv};
             this->obs_[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
-                ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
-                buffer.getView(), tmp.getLength());
+                ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(), *buffer,
+                tmp.getLength());
         }
-        sv.updateData(buffer);
+        sv.updateData(std::move(buffer));
     }
 };
 

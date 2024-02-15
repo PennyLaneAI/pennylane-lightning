@@ -105,7 +105,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<ComplexT *, size_t>(&StateVectorT::HostToDevice),
+             py::overload_cast<const ComplexT *, size_t>(
+                 &StateVectorT::HostToDevice),
              "Synchronize data from the host device to GPU.")
         .def(
             "HostToDevice",

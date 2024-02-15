@@ -92,7 +92,7 @@ class StateVectorKokkos final
         Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
@@ -116,9 +116,106 @@ class StateVectorKokkos final
     };
 
     /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(hostdata_, length);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        // const cast required due to Kokkos rules.
+        // Host-data will not be modified.
+        HostToDevice(hostdata_, length);
+    }
+
+    StateVectorKokkos(const std::complex<PrecisionT> *hostdata_,
+                      std::size_t length,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(log2(length), kokkos_args) {
+
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        HostToDevice(reinterpret_cast<const ComplexT *>(hostdata_), length);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkos(const std::vector<ComplexT> &hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
+
+    /**
+     * @brief Copy constructor
+     *
+     * @param other Another state vector
+     */
+    StateVectorKokkos(const StateVectorKokkos &other,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
+        this->DeviceToDevice(other.getView());
+    }
+
+    StateVectorKokkos(StateVectorKokkos &&other)
+        : BaseType(other.getNumQubits()) {
+        gates_indices_ = std::move(other.gates_indices_);
+        generators_indices_ = std::move(other.generators_indices_);
+        num_qubits_ = other.num_qubits_;
+        data_ = std::move(other.data_);
+
+        other.num_qubits_ = 0;
+    }
+
+    /**
+     * @brief Destructor for StateVectorKokkos class
+     *
+     * @param other Another state vector
+     */
+    ~StateVectorKokkos() {
+        data_.reset();
+        {
+            const std::lock_guard<std::mutex> lock(init_mutex_);
+            if (!is_exit_reg_) {
+                is_exit_reg_ = true;
+                std::atexit([]() {
+                    if (!Kokkos::is_finalized()) {
+                        Kokkos::finalize();
+                    }
+                });
+            }
+        }
+    }
+
+    /**
      * @brief Init zeros for the state-vector on device.
      */
     void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }
+
+    /**
+     * @brief Init zeros for the provided statevector buffer.
+     *
+     * @param kv KokkosVector buffer
+     */
+    static void initZeros(KokkosVector &kv) {
+        Kokkos::deep_copy(kv, ComplexT{0.0, 0.0});
+    }
 
     /**
      * @brief Set value for a single element of the state-vector on device.
@@ -166,81 +263,6 @@ class StateVectorKokkos final
     void resetStateVector() {
         if (this->getLength() > 0) {
             setBasisState(0U);
-        }
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        HostToDevice(hostdata_, length);
-    }
-
-    StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t length,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        std::vector<ComplexT> hostdata_copy(hostdata_, hostdata_ + length);
-        HostToDevice(hostdata_copy.data(), length);
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    StateVectorKokkos(std::vector<ComplexT> hostdata_,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
-
-    /**
-     * @brief Copy constructor
-     *
-     * @param other Another state vector
-     */
-    StateVectorKokkos(const StateVectorKokkos &other,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(other.getNumQubits(), kokkos_args) {
-        this->DeviceToDevice(other.getView());
-    }
-
-    /**
-     * @brief Destructor for StateVectorKokkos class
-     *
-     * @param other Another state vector
-     */
-    ~StateVectorKokkos() {
-        data_.reset();
-        {
-            const std::lock_guard<std::mutex> lock(init_mutex_);
-            if (!is_exit_reg_) {
-                is_exit_reg_ = true;
-                std::atexit([]() {
-                    if (!Kokkos::is_finalized()) {
-                        Kokkos::finalize();
-                    }
-                });
-            }
         }
     }
 
@@ -764,6 +786,10 @@ class StateVectorKokkos final
         Kokkos::deep_copy(*data_, other);
     }
 
+    void updateData(std::unique_ptr<KokkosVector> &&other) {
+        data_ = std::move(other);
+    }
+
     /**
      * @brief Update data of the class
      *
@@ -813,26 +839,33 @@ class StateVectorKokkos final
     [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Get a host copy of the statevector data.
+     *
+     * @tparam ComplexTAlt Alternative complex floating-point datatype. Defaults
+     * to `ComplexT`.
+     * @return std::vector<ComplexTAlt>
      */
-    [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
-    }
-
-    [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+    template <class ComplexTAlt = ComplexT>
+    [[nodiscard]] auto getDataVector() const -> std::vector<ComplexTAlt> {
+        std::vector<ComplexTAlt> data(this->getLength());
+        // Local data buffer must be cast to device buffer type before copy.
+        // Copy performed in device-bufer data space.
+        if constexpr (std::is_same_v<ComplexTAlt, ComplexT>) {
+            DeviceToHost(data.data(), data.size());
+        } else {
+            DeviceToHost(reinterpret_cast<ComplexT *>(data.data()),
+                         data.size());
+        }
+        return data;
     }
 
     /**
      * @brief Copy data from the host space to the device space.
      *
      */
-    inline void HostToDevice(ComplexT *sv, std::size_t length) {
-        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(sv, length));
+    inline void HostToDevice(const ComplexT *sv, std::size_t length) {
+        Kokkos::deep_copy(*data_, UnmanagedComplexHostView(
+                                      const_cast<ComplexT *>(sv), length));
     }
 
     /**

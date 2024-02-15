@@ -87,7 +87,7 @@ extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
  * @brief Managed memory CUDA state-vector class using custateVec backed
  * gate-calls.
  *
- * @tparam Precision Floating-point precision type.
+ * @tparam Precision Floating point precision type.
  */
 template <class Precision = double>
 class StateVectorCudaManaged
@@ -101,7 +101,7 @@ class StateVectorCudaManaged
     using CFP_t =
         typename StateVectorCudaBase<Precision,
                                      StateVectorCudaManaged<Precision>>::CFP_t;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
 
     StateVectorCudaManaged() = delete;
     StateVectorCudaManaged(size_t num_qubits)
@@ -973,13 +973,22 @@ class StateVectorCudaManaged
     auto getCusvHandle() const -> custatevecHandle_t { return handle_.get(); }
 
     /**
-     * @brief Get a host data copy.
+     * @brief Get a host copy of the statevector data.
      *
+     * @tparam ComplexTAlt Alternative complex floating-point datatype. Defaults
+     * to `ComplexT`.
      * @return std::vector<std::complex<PrecisionT>>
      */
-    auto getDataVector() -> std::vector<std::complex<PrecisionT>> {
-        std::vector<std::complex<PrecisionT>> data_host(BaseType::getLength());
-        BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
+    template <class ComplexTAlt = ComplexT>
+    [[nodiscard]] auto getDataVector() const -> std::vector<ComplexTAlt> {
+        std::vector<ComplexTAlt> data_host(BaseType::getLength());
+        if constexpr (std::is_same_v<ComplexTAlt, ComplexT>) {
+            BaseType::CopyGpuDataToHost(data_host.data(), data_host.size());
+        } else {
+            BaseType::CopyGpuDataToHost(
+                reinterpret_cast<ComplexT *>(data_host.data()),
+                data_host.size());
+        }
         return data_host;
     }
 

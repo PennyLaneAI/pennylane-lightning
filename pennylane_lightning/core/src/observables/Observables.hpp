@@ -106,6 +106,11 @@ template <class StateVectorT> class Observable {
     };
 
     /**
+     * @brief Get the number of elements in the observable.
+     */
+    [[nodiscard]] virtual auto getNumTerms() const -> std::size_t { return 1; };
+
+    /**
      * @brief Test whether this object is equal to another object
      */
     [[nodiscard]] auto operator==(const Observable<StateVectorT> &other) const
@@ -161,10 +166,10 @@ class NamedObsBase : public Observable<StateVectorT> {
           params_{std::move(params)} {}
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        using Util::operator<<;
-        std::ostringstream obs_stream;
-        obs_stream << obs_name_ << wires_;
-        return obs_stream.str();
+        // using Util::operator<<;
+        // std::ostringstream obs_stream;
+        // obs_stream << obs_name_ << wires_;
+        return obs_name_; // obs_stream.str();
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
@@ -564,7 +569,8 @@ class HamiltonianBase : public Observable<StateVectorT> {
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Util::operator<<;
         std::ostringstream ss;
-        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ << ", 'observables' : [";
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_
+           << ", 'observables' : { 'terms' : [";
         const auto term_size = coeffs_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
@@ -572,7 +578,14 @@ class HamiltonianBase : public Observable<StateVectorT> {
                 ss << ", ";
             }
         }
-        ss << "]}";
+        ss << "], 'wires' : [";
+        for (size_t t = 0; t < term_size; t++) {
+            ss << obs_[t]->getWires();
+            if (t != term_size - 1) {
+                ss << ", ";
+            }
+        }
+        ss << "] } }";
         return ss.str();
     }
 
@@ -589,6 +602,13 @@ class HamiltonianBase : public Observable<StateVectorT> {
      */
     [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> override {
         return coeffs_;
+    };
+
+    /**
+     * @brief Get the number of terms in the observable.
+     */
+    [[nodiscard]] auto getNumTerms() const -> std::size_t override {
+        return coeffs_.size();
     };
 };
 
@@ -681,6 +701,27 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
         PL_ABORT(
             "SparseHamiltonian observables do not support shot measurement.");
     }
+
+    /**
+     * @brief Return a reference to the CSR data vector.
+     *
+     * @return std::vector<ComplexT>
+     */
+    const std::vector<ComplexT> &getData() { return data_; }
+
+    /**
+     * @brief Return a reference to the CSR indices vector.
+     *
+     * @return const std::vector<IdxT>&
+     */
+    const std::vector<IdxT> &getIndices() { return indices_; }
+
+    /**
+     * @brief Return a reference to the CSR offsets vector.
+     *
+     * @return const std::vector<IdxT>&
+     */
+    const std::vector<IdxT> &getOffsets() { return offsets_; }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;

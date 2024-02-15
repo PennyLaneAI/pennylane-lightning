@@ -16,10 +16,13 @@ r"""
 This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-
+import pickle
 from warnings import warn
 from pathlib import Path
+from typing import Callable, Sequence, Union
+from functools import reduce
 import numpy as np
+import itertools
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
@@ -161,6 +164,25 @@ if LK_CPP_BINARY_AVAILABLE:
         "Exp",
     }
 
+    def mpi4py_batch(fn: Callable, data: Sequence):
+        "data is a sequence where each work-item is a packaged tuple"
+        from mpi4py import MPI  # Requires to call MPI_Init
+        from mpi4py.futures import MPIPoolExecutor
+
+        kwargs = {"use_pkl5": True}
+        with MPIPoolExecutor(**kwargs) as executor:
+            output_f = executor.starmap(fn, data)
+        return output_f  # [r.result() for r in output_f]
+
+    def remote_expval(state, obs, use_fp64: bool = True):
+        output = []
+        measure = MeasurementsC128(state) if use_fp64 else MeasurementsC64(state)
+        if isinstance(obs, Sequence):
+            for ob in obs:
+                output.append(measure.expval(ob))
+            return np.sum(output)
+        return measure.expval(obs)
+
     class LightningKokkos(LightningBase):
         """PennyLane Lightning Kokkos device.
 
@@ -180,6 +202,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 the expectation values. Defaults to ``None`` if not specified. Setting
                 to ``None`` results in computing statistics like expectation values and
                 variances analytically.
+            batch_obs (Union[bool, int]): determine whether to use run batches over observables in the adjoint Jacobian pipeline. If true, batches in numbers of available backend resources. If numbered, batches in the given chunk size.
         """
 
         name = "Lightning Kokkos PennyLane plugin"
@@ -197,10 +220,11 @@ if LK_CPP_BINARY_AVAILABLE:
             sync=True,
             c_dtype=np.complex128,
             shots=None,
-            batch_obs=False,
+            batch_obs: Union[bool, int] = False,
             kokkos_args=None,
+            mpi: bool = False,
         ):  # pylint: disable=unused-argument, too-many-arguments
-            super().__init__(wires, shots=shots, c_dtype=c_dtype)
+            super().__init__(wires, shots=shots, c_dtype=c_dtype, batch_obs=batch_obs, mpi=mpi)
 
             if kokkos_args is None:
                 self._kokkos_state = _kokkos_dtype(c_dtype)(self.num_wires)
@@ -211,7 +235,6 @@ if LK_CPP_BINARY_AVAILABLE:
                 raise TypeError(
                     f"Argument kokkos_args must be of type {type0} but it is of {type(kokkos_args)}."
                 )
-            self._sync = sync
 
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
@@ -506,9 +529,32 @@ if LK_CPP_BINARY_AVAILABLE:
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
-                ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                    observable, self.wire_map
-                )
+                if self._batch_obs and self._mpi:
+                    requested_batch = int(getenv("PL_FWD_BATCH", "0"))
+
+                    batch_size = (
+                        max(requested_batch, 1)
+                        if isinstance(self._batch_obs, bool)
+                        else max(requested_batch, self._batch_obs) * 1
+                    )
+
+                    ob_serialized = QuantumScriptSerializer(
+                        self.short_name, self.use_csingle, False, batch_size
+                    )._ob(observable, self.wire_map)
+
+                    if isinstance(ob_serialized, Sequence):
+                        data = list(itertools.product([self._kokkos_state], ob_serialized, [True]))
+                    else:
+                        data = list(
+                            itertools.product([self._kokkos_state], [ob_serialized], [True])
+                        )
+
+                    out = list(mpi4py_batch(remote_expval, data))
+                    return np.sum(out)
+
+                ob_serialized = QuantumScriptSerializer(
+                    self.short_name, self.use_csingle, False, False
+                )._ob(observable, self.wire_map)
                 return measure.expval(ob_serialized)
 
             # translate to wire labels used by device
@@ -709,34 +755,68 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             self._check_adjdiff_supported_operations(tape.operations)
+            requested_batch = int(getenv("PL_BWD_BATCH", "0"))
 
-            processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
+            if self._batch_obs:
+                batch_size = (
+                    max(requested_batch, 1)
+                    if isinstance(self._batch_obs, bool)
+                    else max(requested_batch, self._batch_obs)
+                )
+
+                processed_data = self._process_jacobian_tape(
+                    tape, starting_state, use_device_state, False, batch_size
+                )
+            else:
+                processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
 
             if not processed_data:  # training_params is empty
                 return np.array([], dtype=self.state.dtype)
 
             trainable_params = processed_data["tp_shift"]
-
-            # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-            # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-            # numbers of observables, enabling choice between compute time and memory use.
-            requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
             adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
 
-            if self._batch_obs and requested_threads > 1:  # pragma: no cover
-                obs_partitions = _chunk_iterable(
-                    processed_data["obs_serialized"], requested_threads
+            if self._batch_obs or requested_batch > 0:  # pragma: no cover
+                # num_obs = len(processed_data["obs_serialized"])
+                batch_size = (
+                    requested_batch
+                    if isinstance(self._batch_obs, bool)
+                    else max(requested_batch, self._batch_obs)
+                    * 1  # Single device, multiple threads per device so  * 1
                 )
+
+                obs_partitions = processed_data["obs_serialized"]
                 jac = []
-                for obs_chunk in obs_partitions:
-                    jac_local = adjoint_jacobian(
-                        processed_data["state_vector"],
-                        obs_chunk,
-                        processed_data["ops_serialized"],
-                        trainable_params,
+
+                if self._mpi:
+                    from mpi4py import MPI
+                    from mpi4py.futures import MPIPoolExecutor
+
+                    kwargs = {"use_pkl5": True}
+
+                    if not isinstance(obs_partitions, Sequence):
+                        obs_partitions = [obs_partitions]
+
+                    data_payload = list(
+                        itertools.product(
+                            [[o] for o in obs_partitions],
+                            [processed_data["ops_serialized"]],
+                            [trainable_params],
+                            [len(self.wires)],
+                        )
                     )
-                    jac.extend(jac_local)
+                    res = list(mpi4py_batch(adjoint_jacobian.adjoint_noSVcopy, data_payload))
+                    jac.append(qml.math.hstack(res))
+
+                else:
+                    for obs_chunk in obs_partitions:
+                        jac_local = adjoint_jacobian(
+                            processed_data["state_vector"],
+                            [obs_chunk],
+                            processed_data["ops_serialized"],
+                            trainable_params,
+                        )
+                        jac.extend(jac_local)
             else:
                 jac = adjoint_jacobian(
                     processed_data["state_vector"],
@@ -747,9 +827,32 @@ if LK_CPP_BINARY_AVAILABLE:
             jac = np.array(jac)
             jac = jac.reshape(-1, len(trainable_params))
             jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-            if hasattr(qml, "active_return"):  # pragma: no cover
-                return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+            if not self._batch_obs:
+                jac_r[:, processed_data["record_tp_rows"]] = jac
+            else:
+                # Reduce over decomposed expval(H), if required.
+                for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
+                    if (
+                        processed_data["obs_idx_offsets"][idx + 1]
+                        - processed_data["obs_idx_offsets"][idx]
+                    ) > 1:
+                        jac_r[idx, :] = np.sum(
+                            jac[
+                                processed_data["obs_idx_offsets"][idx] : processed_data[
+                                    "obs_idx_offsets"
+                                ][idx + 1],
+                                :,
+                            ],
+                            axis=0,
+                        )
+                    else:
+                        jac_r[idx, :] = jac[
+                            processed_data["obs_idx_offsets"][idx] : processed_data[
+                                "obs_idx_offsets"
+                            ][idx + 1],
+                            :,
+                        ]
+
             return self._adjoint_jacobian_processing(jac_r)
 
         # pylint: disable=inconsistent-return-statements, line-too-long

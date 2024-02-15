@@ -77,6 +77,7 @@ except (ImportError, ValueError) as e:
 if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
     from itertools import product
+    from os import getenv
 
     from pennylane import (
         math,
@@ -226,13 +227,12 @@ if LGPU_CPP_BINARY_AVAILABLE:
             wires (int): the number of wires to initialize the device with
             mpi (bool): enable MPI support. MPI support will be enabled if ``mpi`` is set as``True``.
             mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-            sync (bool): immediately sync with host-sv after applying operations
             c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
             shots (int): How many times the circuit should be evaluated (or sampled) to estimate
                 the expectation values. Defaults to ``None`` if not specified. Setting
                 to ``None`` results in computing statistics like expectation values and
                 variances analytically.
-            batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
+            batch_obs (Union[bool, int]): determine whether to use run batches over observables in the adjoint Jacobian pipeline. If true, batches in numbers of available backend resources. If numbered, batches in the given chunk size.
         """
 
         name = "Lightning GPU PennyLane plugin"
@@ -249,7 +249,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
             *,
             mpi: bool = False,
             mpi_buf_size: int = 0,
-            sync=False,
             c_dtype=np.complex128,
             shots=None,
             batch_obs: Union[bool, int] = False,
@@ -261,16 +260,14 @@ if LGPU_CPP_BINARY_AVAILABLE:
             else:
                 raise TypeError(f"Unsupported complex Type: {c_dtype}")
 
-            super().__init__(wires, shots=shots, c_dtype=c_dtype)
+            super().__init__(wires, shots=shots, c_dtype=c_dtype, mpi=mpi, batch_obs=batch_obs)
 
             self._dp = DevPool()
 
-            if not mpi:
-                self._mpi = False
+            if not self._mpi or self._batch_obs:
                 self._num_local_wires = self.num_wires
                 self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)
             else:
-                self._mpi = True
                 self._mpi_init_helper(self.num_wires)
 
                 if mpi_buf_size < 0:
@@ -298,8 +295,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                     self._num_local_wires,
                 )
 
-            self._sync = sync
-            self._batch_obs = batch_obs
             self._create_basis_state(0)
 
         def _mpi_init_helper(self, num_wires):
@@ -700,15 +695,34 @@ if LGPU_CPP_BINARY_AVAILABLE:
             - Evenly distribute the observables over all available GPUs (`batch_obs=True`): This will evenly split the data into ceil(num_obs/num_gpus) chunks, and allocate enough space on each GPU up-front before running through them concurrently. This relies on C++ threads to handle the orchestration.
             - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
             """
+            requested_batch = int(getenv("PL_ADJOINT_BATCH", "0"))
+
             adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
-            if self._batch_obs:  # Batching of Measurements
-                if not self._mpi:  # Single-node path, controlled batching over available GPUs
+            if self._batch_obs or requested_batch > 0:  # Batching of Measurements
+                if self._mpi:
+                    from mpi4py import MPI
+                    from mpi4py.futures import MPIPoolExecutor
+
+                    with MPIPoolExecutor() as executor:
+                        jac_f = []
+                        for obs_chunk in obs_partitions:
+                            jac_local = executor.submit(
+                                adjoint_jacobian,
+                                processed_data["state_vector"],
+                                obs_chunk,
+                                processed_data["ops_serialized"],
+                                trainable_params,
+                            )
+                            jac_f.append(jac_local)
+                        jac.append(qml.math.hstack([r.result() for r in jac_f]))
+
+                else:  # self._mpi:  # Single-node path, controlled batching over available GPUs
                     num_obs = len(processed_data["obs_serialized"])
                     batch_size = (
                         num_obs
                         if isinstance(self._batch_obs, bool)
-                        else self._batch_obs * self._dp.getTotalDevices()
+                        else max(self._batch_obs * self._dp.getTotalDevices(), requested_batch)
                     )
                     jac = []
                     for chunk in range(0, num_obs, batch_size):
@@ -720,13 +734,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
                             trainable_params,
                         )
                         jac.extend(jac_chunk)
-                else:  # MPI path, restrict memory per known GPUs
-                    jac = adjoint_jacobian.batched(
-                        self._gpu_state,
-                        processed_data["obs_serialized"],
-                        processed_data["ops_serialized"],
-                        trainable_params,
-                    )
+                # else:  # MPI path, restrict memory per known GPUs
+                #    jac = adjoint_jacobian.batched(
+                #        self._gpu_state,
+                #        processed_data["obs_serialized"],
+                #        processed_data["ops_serialized"],
+                #        trainable_params,
+                #    )
 
             else:
                 jac = adjoint_jacobian(

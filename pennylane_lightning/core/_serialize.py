@@ -14,7 +14,9 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from typing import List, Tuple
+
+from itertools import islice, chain
+from typing import List, Sequence, Tuple, Union
 import numpy as np
 from pennylane import (
     BasisState,
@@ -32,6 +34,8 @@ from pennylane import (
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
 from pennylane.math import unwrap
+from pennylane.pauli import is_pauli_word
+from pennylane.ops import Prod, SProd, Sum
 
 from pennylane import matrix, DeviceError
 
@@ -40,7 +44,19 @@ pauli_name_map = {
     "X": "PauliX",
     "Y": "PauliY",
     "Z": "PauliZ",
+    "Identity": "Identity",
+    "PauliX": "PauliX",
+    "PauliY": "PauliY",
+    "PauliZ": "PauliZ",
 }
+
+
+def _chunk_iterable(iteration, num_chunks):
+    """Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226
+    Replicated from lightning_base to avoid circular import
+    """
+    iteration = iter(iteration)
+    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 
 class QuantumScriptSerializer:
@@ -54,7 +70,11 @@ class QuantumScriptSerializer:
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
     def __init__(
-        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
+        self,
+        device_name,
+        use_csingle: bool = False,
+        use_mpi: bool = False,
+        split_obs: Union[bool, int] = False,
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -190,14 +210,36 @@ class QuantumScriptSerializer:
         assert isinstance(observable, Tensor)
         return self.tensor_obs([self._ob(obs, wires_map) for obs in observable.obs])
 
+    def _chunk_ham_terms(self, coeffs, ops, wires_map: dict, split_num: int) -> List:
+        "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
+        num_terms = len(coeffs)
+        step_size = int(np.ceil((1.0 * num_terms) / split_num))
+        c_coeffs = list(_chunk_iterable(coeffs, step_size))
+        c_ops = list(_chunk_iterable(ops, step_size))
+        return c_coeffs, c_ops
+
     def _hamiltonian(self, observable, wires_map: dict):
-        coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
-        terms = [self._ob(t, wires_map) for t in observable.ops]
+        coeffs, ops = observable.terms()
+        coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
+        ops_l = []
+        for t in ops:
+            term_cpp = self._ob(t, wires_map)
+            if isinstance(term_cpp, Sequence):
+                ops_l.extend(term_cpp)
+            else:
+                ops_l.append(term_cpp)
 
         if self.split_obs:
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
+            if isinstance(self.split_obs, int):
+                "Split into `split_obs` sub-Hamiltonian chunks"
+                c, o = self._chunk_ham_terms(coeffs, ops_l, wires_map, self.split_obs)
+                out = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
+                return out
 
-        return self.hamiltonian_obs(coeffs, terms)
+            "Split until each term is an individual H"
+            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, ops_l)]
+
+        return self.hamiltonian_obs(coeffs, ops_l)
 
     def _sparse_hamiltonian(self, observable, wires_map: dict):
         """Serialize an observable (Sparse Hamiltonian)
@@ -256,14 +298,14 @@ class QuantumScriptSerializer:
     # pylint: disable=protected-access
     def _ob(self, observable, wires_map):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
+        if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
+            return self._named_obs(observable, wires_map)
         if isinstance(observable, Tensor):
             return self._tensor_ob(observable, wires_map)
-        if observable.name == "Hamiltonian":
+        if observable.name in ("Hamiltonian"):
             return self._hamiltonian(observable, wires_map)
         if observable.name == "SparseHamiltonian":
             return self._sparse_hamiltonian(observable, wires_map)
-        if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
-            return self._named_obs(observable, wires_map)
         if observable._pauli_rep is not None:
             return self._pauli_sentence(observable._pauli_rep, wires_map)
         return self._hermitian_ob(observable, wires_map)
@@ -286,11 +328,13 @@ class QuantumScriptSerializer:
         for observable in tape.observables:
             ser_ob = self._ob(observable, wires_map)
             if isinstance(ser_ob, list):
+                num_terms = sum([o.num_terms() for o in ser_ob])
                 serialized_obs.extend(ser_ob)
-                offset_indices.append(offset_indices[-1] + len(ser_ob))
+                offset_indices.append(offset_indices[-1] + num_terms)
             else:
+                num_terms = ser_ob.num_terms()
                 serialized_obs.append(ser_ob)
-                offset_indices.append(offset_indices[-1] + 1)
+                offset_indices.append(offset_indices[-1] + num_terms)
         return serialized_obs, offset_indices
 
     def serialize_ops(
@@ -351,13 +395,16 @@ class QuantumScriptSerializer:
             return single_op, name, wires_list, controlled_wires_list, control_values_list
 
         for operation in tape.operations:
+            op_list = []
             if isinstance(operation, (BasisState, StatePrep)):
                 uses_stateprep = True
+                # TODO: identify state-prep offsets
+                # op_list.extend(chain(*[op.decomposition() for op in operation.expand().operations]))
                 continue
             if isinstance(operation, Rot):
-                op_list = operation.expand().operations
+                op_list.extend(operation.expand().operations)
             else:
-                op_list = [operation]
+                op_list.append(operation)
 
             for single_op in op_list:
                 (
