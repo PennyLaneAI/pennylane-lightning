@@ -1610,8 +1610,16 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
     const size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
     const size_t index = GENERATE(0, 1, 2);
-    // global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
-    // control_values=[0, 1])
+    /* The `phase` array contains the diagonal entries of the controlled-phase
+       operator. It can be created in Python using the following command
+
+       ```
+       global_phase_diagonal(-np.pi/2, wires=[0, 1, 2], controls=[0, 1],
+       control_values=[0, 1])
+       ```
+
+       where the phase angle is chosen as `-np.pi/2` for simplicity.
+    */
     const std::vector<ComplexT> phase = {{1.0, 0.}, {1.0, 0.}, {0.0, 1.},
                                          {0.0, 1.}, {1.0, 0.}, {1.0, 0.},
                                          {1.0, 0.}, {1.0, 0.}};
