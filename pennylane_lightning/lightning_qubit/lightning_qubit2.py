@@ -49,35 +49,37 @@ from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
 
-from .device_modifiers import convert_single_circuit_to_batch
-
-def simulate(
-    circuit,
-    rng=None,
-    c_dtype=np.complex128,
-    batch_obs=False,
-    mcmc=False,
-    kernel_name="Local",
-    num_burnin=100,
-):
-    """Calculate the results for a given circuit."""
-    return 0.0
+from ._state_vector import LightningStateVector
+from ._measurements import LightningMeasurements
 
 
-def jacobian(circuit):
-    """Calculate the jacobian for a given circuit."""
+def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
+    """Simulate a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        dtype: Datatypes for state-vector representation. Must be one of
+            ``np.complex64`` or ``np.complex128``.
+
+    Returns:
+        tuple(TensorLike): The results of the simulation
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+
+    """
+    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
+    return LightningMeasurements(state).measure_final_state(circuit)
+
+
+def dummy_jacobian(circuit: QuantumScript):
     return np.array(0.0)
 
 
-def simulate_and_jacobian(circuit):
-    """Calculate the results and jacobian for a single circuit."""
+def simulate_and_jacobian(circuit: QuantumScript):
     return np.array(0.0), np.array(0.0)
 
 
-Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[qml.tape.QuantumTape]
-QuantumTape_or_Batch = Union[qml.tape.QuantumTape, QuantumTapeBatch]
-
+from pennylane.tape import QuantumScript
 
 _operations = frozenset(
     {
@@ -199,41 +201,19 @@ def accepted_analytic_measurements(m: qml.measurements.MeasurementProcess) -> bo
     return isinstance(m, (qml.measurements.ExpectationMP))
 
 
+try:
+    # pylint: disable=import-error, no-name-in-module
+    from pennylane_lightning.lightning_qubit_ops import (
+        StateVectorC64,
+        StateVectorC128,
+    )
+
 @simulator_tracking
 @convert_single_circuit_to_batch
 class LightningQubit2(Device):
     """PennyLane Lightning Qubit device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
-
-    Use of this device requires pre-built binaries or compilation from source. Check out the
-    :doc:`/lightning_qubit/installation` guide for more details.
-
-    Args:
-        wires (int): the number of wires to initialize the device with
-        c_dtype: Datatypes for statevector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to ``None`` if not specified. Setting
-            to ``None`` results in computing statistics like expectation values and
-            variances analytically.
-        seed (str, int, rng)
-        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
-            sampling method when generating samples.
-        kernel_name (str): name of transition kernel. The current version supports
-            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
-            The local kernel conducts a bit-flip local transition between states.
-            The local kernel generates a random qubit site and then generates a random
-            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
-            randomly transits between states that have nonzero probability.
-        num_burnin (int): number of steps that will be dropped. Increasing this value will
-            result in a closer approximation but increased runtime.
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
     """
-
-    name = "lightning.qubit2"
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
 
