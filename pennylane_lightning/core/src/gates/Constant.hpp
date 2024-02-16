@@ -78,7 +78,8 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitation, "DoubleExcitation"},
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
-    GateView{GateOperation::MultiRZ, "MultiRZ"}};
+    GateView{GateOperation::MultiRZ, "MultiRZ"},
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -107,6 +108,7 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
               "DoubleExcitationMinus"},
     CGateView{ControlledGateOperation::DoubleExcitationPlus,
               "DoubleExcitationPlus"},
+    CGateView{ControlledGateOperation::GlobalPhase, "GlobalPhase"},
 };
 
 /**
@@ -143,6 +145,7 @@ using GeneratorView = typename std::pair<GeneratorOperation, std::string_view>;
                   "GeneratorDoubleExcitationMinus"},
     GeneratorView{GeneratorOperation::DoubleExcitationPlus,
                   "GeneratorDoubleExcitationPlus"},
+    GeneratorView{GeneratorOperation::GlobalPhase, "GeneratorGlobalPhase"},
 };
 
 using CGeneratorView =
@@ -168,6 +171,7 @@ using CGeneratorView =
                    "DoubleExcitationMinus"},
     CGeneratorView{ControlledGeneratorOperation::DoubleExcitationPlus,
                    "DoubleExcitationPlus"},
+    CGeneratorView{ControlledGeneratorOperation::GlobalPhase, "GlobalPhase"},
 };
 
 /**
@@ -226,6 +230,7 @@ using GateNWires = typename std::pair<GateOperation, size_t>;
     GateNWires{GateOperation::DoubleExcitation, 4},
     GateNWires{GateOperation::DoubleExcitationMinus, 4},
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
+    GateNWires{GateOperation::GlobalPhase, 1},
 };
 
 using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
@@ -251,6 +256,7 @@ using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
     CGateNWires{ControlledGateOperation::DoubleExcitation, 4},
     CGateNWires{ControlledGateOperation::DoubleExcitationMinus, 4},
     CGateNWires{ControlledGateOperation::DoubleExcitationPlus, 4},
+    CGateNWires{ControlledGateOperation::GlobalPhase, 1},
 };
 
 /**
@@ -276,6 +282,7 @@ using GeneratorNWires = typename std::pair<GeneratorOperation, size_t>;
     GeneratorNWires{GeneratorOperation::DoubleExcitation, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationMinus, 4},
     GeneratorNWires{GeneratorOperation::DoubleExcitationPlus, 4},
+    GeneratorNWires{GeneratorOperation::GlobalPhase, 1},
 };
 
 using CGeneratorNWires =
@@ -295,6 +302,7 @@ using CGeneratorNWires =
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitation, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationMinus, 4},
     CGeneratorNWires{ControlledGeneratorOperation::DoubleExcitationPlus, 4},
+    CGeneratorNWires{ControlledGeneratorOperation::GlobalPhase, 1},
 };
 
 /**
@@ -336,6 +344,7 @@ using GateNParams = typename std::pair<GateOperation, size_t>;
     GateNParams{GateOperation::DoubleExcitationPlus, 1},
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
+    GateNParams{GateOperation::GlobalPhase, 1},
 };
 
 /**
@@ -364,5 +373,6 @@ using CGateNParams = typename std::pair<ControlledGateOperation, size_t>;
     CGateNParams{ControlledGateOperation::DoubleExcitation, 1},
     CGateNParams{ControlledGateOperation::DoubleExcitationMinus, 1},
     CGateNParams{ControlledGateOperation::DoubleExcitationPlus, 1},
+    CGateNParams{ControlledGateOperation::GlobalPhase, 1},
 };
 } // namespace Pennylane::Gates::Constant

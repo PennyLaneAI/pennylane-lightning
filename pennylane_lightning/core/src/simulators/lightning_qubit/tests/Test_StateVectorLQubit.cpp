@@ -38,7 +38,6 @@
 namespace {
 using namespace Pennylane::LightningQubit;
 using Pennylane::Util::randomUnitary;
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -87,6 +86,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a std::vector",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
@@ -123,6 +123,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
@@ -171,6 +172,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyOperations",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
         const size_t num_qubits = 4;

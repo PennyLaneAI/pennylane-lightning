@@ -104,50 +104,27 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
     const auto params = createParams<PrecisionT>(gate_op);
     const auto all_wires = createAllWires(num_qubits, gate_op, true);
 
+    const bool inverse = GENERATE(true, false);
     for (const auto &wires : all_wires) {
         std::ostringstream ss;
         ss << wires;
         auto wires_str = ss.str();
         INFO(wires_str);
 
-        // Test with inverse = false
-        {
-            std::vector<TestVector<std::complex<PrecisionT>>> res;
+        std::vector<TestVector<std::complex<PrecisionT>>> res;
 
-            // Collect results from all implementing kernels
-            for (auto kernel : implementing_kernels) {
-                auto st = ini;
-                dispatcher.applyOperation(kernel, st.data(), num_qubits,
-                                          gate_op, wires, false, params);
-                res.emplace_back(std::move(st));
-            }
-
-            // And compare them
-            for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
-                    approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
-            }
+        // Collect results from all implementing kernels
+        for (auto kernel : implementing_kernels) {
+            auto st = ini;
+            dispatcher.applyOperation(kernel, st.data(), num_qubits, gate_op,
+                                      wires, inverse, params);
+            res.emplace_back(std::move(st));
         }
 
-        // Test with inverse = true
-        {
-            std::vector<TestVector<std::complex<PrecisionT>>> res;
-
-            // Collect results from all implementing kernels
-            for (auto kernel : implementing_kernels) {
-                auto st = ini;
-                dispatcher.applyOperation(kernel, st.data(), num_qubits,
-                                          gate_op, wires, true, params);
-                res.emplace_back(std::move(st));
-            }
-
-            // And compare them
-            for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
+        // And compare them
+        for (size_t i = 0; i < res.size() - 1; i++) {
+            REQUIRE(res[i] ==
                     approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
-            }
         }
     }
 }
