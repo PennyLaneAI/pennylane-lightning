@@ -324,7 +324,7 @@ class LightningQubit2(Device):
         return self._c_dtype
 
     @property
-    def operation(self) -> frozenset[str]:
+    def operations(self) -> frozenset[str]:
         """The names of the supported operations."""
         return _operations
 
