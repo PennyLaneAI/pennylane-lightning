@@ -19,8 +19,22 @@ from typing import Union, Sequence, Optional
 from dataclasses import replace
 import numpy as np
 
+
+try:
+     # pylint: disable=import-error, no-name-in-module
+     from pennylane_lightning.lightning_qubit_ops import (
+         StateVectorC64,
+         StateVectorC128,
+     )
+
+     LQ_CPP_BINARY_AVAILABLE = True
+ except ImportError:
+     LQ_CPP_BINARY_AVAILABLE = False
+
+
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
+from pennylane.devices.modifiers import convert_single_circuit_to_batch, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
     validate_device_wires,
@@ -33,9 +47,11 @@ from pennylane.devices.qubit.sampling import get_num_shots_and_executions
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
+from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
 
+from .device_modifiers import convert_single_circuit_to_batch
 
-def dummy_simulate(
+def simulate(
     circuit,
     rng=None,
     c_dtype=np.complex128,
@@ -44,14 +60,17 @@ def dummy_simulate(
     kernel_name="Local",
     num_burnin=100,
 ):
-    return tuple(0.0 for _ in circuit.measurements)
+    """Calculate the results for a given circuit."""
+    return 0.0
 
 
-def dummy_jacobian(circuit):
+def jacobian(circuit):
+    """Calculate the jacobian for a given circuit."""
     return np.array(0.0)
 
 
-def dummy_simulate_and_jacobian(circuit):
+def simulate_and_jacobian(circuit):
+    """Calculate the results and jacobian for a single circuit."""
     return np.array(0.0), np.array(0.0)
 
 
@@ -143,6 +162,7 @@ _operations = frozenset(
         "BlockEncode",
     }
 )
+"""The set of supported operations."""
 
 _observables = frozenset(
     {
@@ -161,20 +181,26 @@ _observables = frozenset(
         "Exp",
     }
 )
+"""Test set of supported observables."""
 
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     return op.name in _operations
 
 
 def accepted_observables(obs: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
 
 
-def accepted_measurements(m: qml.measurements.MeasurementProcess) -> bool:
+def accepted_analytic_measurements(m: qml.measurements.MeasurementProcess) -> bool:
+    """Whether or not a state based measurement is supported by ``lightning.qubit``."""
     return isinstance(m, (qml.measurements.ExpectationMP))
 
 
+@simulator_tracking
+@convert_single_circuit_to_batch
 class LightningQubit2(Device):
     """PennyLane Lightning Qubit device.
 
@@ -209,11 +235,11 @@ class LightningQubit2(Device):
 
     name = "lightning.qubit2"
 
-    _device_options = ["rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin"]
+    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires=None,
+        wires,
         *,
         c_dtype=np.complex128,
         shots=None,
@@ -223,6 +249,10 @@ class LightningQubit2(Device):
         num_burnin=100,
         batch_obs=False,
     ):
+        if not LQ_CPP_BINARY_AVAILABLE:
+            raise ImportError("Pre-compiled binaries for lightning.qubit are not available. "
+                "To manually compile from source, follow the instructions at "
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
         super().__init__(wires=wires, shots=shots)
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(seed)
@@ -248,16 +278,24 @@ class LightningQubit2(Device):
             self._num_burnin = None
 
     @property
+    def c_dtype(self):
+        """State vector complex data type."""
+        return self._c_dtype
+
+    @property
     def operation(self) -> frozenset[str]:
-        """The names of supported operations."""
+        """The names of the supported operations."""
         return _operations
 
     @property
     def observables(self) -> frozenset[str]:
-        """The names of supported observables."""
+        """The names of the supported observables."""
         return _observables
 
     def _setup_execution_config(self, config):
+        """
+        Update the execution config with choices for how the device should be used and the device options.
+        """
         updated_values = {}
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
@@ -292,7 +330,7 @@ class LightningQubit2(Device):
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
         program.add_transform(
-            validate_measurements, analytic_measurements=accepted_measurements, name=self.name
+            validate_measurements, analytic_measurements=accepted_analytic_measurements, name=self.name
         )
         program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
@@ -302,81 +340,30 @@ class LightningQubit2(Device):
         program.add_transform(qml.transforms.broadcast_expand)
         return program, self._setup_execution_config(execution_config)
 
-    def _execute_tracking(self, circuits):
-        self.tracker.update(batches=1)
-        self.tracker.record()
-        for c in circuits:
-            qpu_executions, shots = get_num_shots_and_executions(c)
-            if c.shots:
-                self.tracker.update(
-                    simulations=1,
-                    executions=qpu_executions,
-                    shots=shots,
-                )
-            else:
-                self.tracker.update(
-                    simulations=1,
-                    executions=qpu_executions,
-                )
-            self.tracker.record()
-
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
-        is_single_circuit = False
-        if isinstance(circuits, QuantumScript):
-            is_single_circuit = True
-            circuits = (circuits,)
-
-        if self.tracker.active:
-            self._execute_tracking(circuits)
 
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(dummy_simulate(circuit, **execution_config.device_options))
+            results.append(simulate(circuit, **execution_config.device_options))
 
-        return results[0] if is_single_circuit else tuple(results)
+        return tuple(results)
 
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        is_single_circuit = False
-        if isinstance(circuits, QuantumScript):
-            is_single_circuit = True
-            circuits = [circuits]
-
-        if self.tracker.active:
-            self.tracker.update(derivative_batches=1, derivatives=len(circuits))
-            self.tracker.record()
-        res = tuple(dummy_jacobian(circuit) for circuit in circuits)
-
-        return res[0] if is_single_circuit else res
+        return tuple(jacobian(circuit) for circuit in circuits)
 
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        is_single_circuit = False
-        if isinstance(circuits, QuantumScript):
-            is_single_circuit = True
-            circuits = [circuits]
-
-        if self.tracker.active:
-            for c in circuits:
-                self.tracker.update(resources=c.specs["resources"])
-            self.tracker.update(
-                execute_and_derivative_batches=1,
-                executions=len(circuits),
-                derivatives=len(circuits),
-            )
-            self.tracker.record()
-
-        results = tuple(dummy_simulate_and_jacobian(c) for c in circuits)
-        results, jacs = tuple(zip(*results))
-        return (results[0], jacs[0]) if is_single_circuit else (results, jacs)
+        results = tuple(simulate_and_jacobian(c) for c in circuits)
+        return tuple(zip(*results))
