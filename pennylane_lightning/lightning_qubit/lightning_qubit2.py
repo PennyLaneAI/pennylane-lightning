@@ -33,7 +33,6 @@ from pennylane.devices.preprocess import (
 from pennylane.tape import QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
-from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
 
 from .device_modifiers import convert_single_circuit_to_batch
 
