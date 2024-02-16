@@ -54,6 +54,7 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.compl
     Note that this function can return measurements for non-commuting observables simultaneously.
 
     """
+    state = state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state).measure_final_state(circuit)
 
