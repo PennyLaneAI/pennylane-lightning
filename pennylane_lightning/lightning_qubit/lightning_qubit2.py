@@ -55,14 +55,12 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.complex128) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
-        dtype: Datatypes for state-vector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
 
     Returns:
         tuple(TensorLike): The results of the simulation
@@ -75,7 +73,7 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.compl
     return LightningMeasurements(final_state).measure_final_state(circuit)
 
 
-def dummy_jacobian(circuit: QuantumTape):
+def jacobian(circuit: QuantumTape):
     return np.array(0.0)
 
 
@@ -203,13 +201,6 @@ def accepted_analytic_measurements(m: qml.measurements.MeasurementProcess) -> bo
     return isinstance(m, (qml.measurements.ExpectationMP))
 
 
-try:
-    # pylint: disable=import-error, no-name-in-module
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
-
 @simulator_tracking
 @convert_single_circuit_to_batch
 class LightningQubit2(Device):
@@ -236,6 +227,8 @@ class LightningQubit2(Device):
                 "To manually compile from source, follow the instructions at "
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
         super().__init__(wires=wires, shots=shots)
+
+        self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(seed)
 
@@ -331,7 +324,7 @@ class LightningQubit2(Device):
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(simulate(circuit, **execution_config.device_options))
+            results.append(simulate(circuit, self._statevector))
 
         return tuple(results)
 
