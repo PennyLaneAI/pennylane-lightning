@@ -73,14 +73,35 @@ inline static auto Div(const CFP_t_T &a, const CFP_t_U &b) -> CFP_t_T {
  * @tparam CFP_t Complex data type. Supports std::complex<float>,
  * std::complex<double>, cuFloatComplex, cuDoubleComplex
  * @param a The given complex number
- * @return CFP_t The conjuagted complex number
+ * @return CFP_t The conjugated complex number
  */
-template <class CFP_t> inline static constexpr auto Conj(CFP_t a) -> CFP_t {
+template <class CFP_t>
+__host__ __device__ inline static constexpr auto Conj(CFP_t a) -> CFP_t {
     if constexpr (std::is_same_v<CFP_t, cuComplex> ||
                   std::is_same_v<CFP_t, float2>) {
         return cuConjf(a);
     } else {
         return cuConj(a);
+    }
+}
+
+/**
+ * @brief Multiplies two numbers for CXX & CUDA complex types
+ *
+ * @tparam CFP_t Complex data type. Supports std::complex<float>,
+ * std::complex<double>, cuFloatComplex, cuDoubleComplex
+ * @param a Complex number
+ * @param b Complex number
+ * @return CFP_t The multiplication result
+ */
+template <class CFP_t>
+__host__ __device__ inline static constexpr auto Cmul(CFP_t a, CFP_t b)
+    -> CFP_t {
+    if constexpr (std::is_same_v<CFP_t, cuComplex> ||
+                  std::is_same_v<CFP_t, float2>) {
+        return cuCmulf(a, b);
+    } else {
+        return cuCmul(a, b);
     }
 }
 

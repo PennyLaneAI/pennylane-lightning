@@ -36,8 +36,6 @@ using namespace Pennylane::Util;
 
 using Pennylane::Util::isApproxEqual;
 using Pennylane::Util::randomUnitary;
-
-std::mt19937_64 re{1337};
 } // namespace
 /// @endcond
 
@@ -76,6 +74,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::getDataVector",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     const size_t num_qubits = 4;
     VectorT st_data = createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -94,6 +93,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
@@ -130,6 +130,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
@@ -169,6 +170,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
         const size_t num_qubits = 4;
@@ -233,6 +235,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using PrecisionT = TestType;
     using ComplexT = typename StateVectorT::ComplexT;
+    std::mt19937_64 re{1337};
 
     SECTION("StateVectorCudaManaged<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, size_t>);

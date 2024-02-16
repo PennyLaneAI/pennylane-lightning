@@ -65,7 +65,7 @@ if LK_CPP_BINARY_AVAILABLE:
     import pennylane as qml
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -95,6 +95,8 @@ if LK_CPP_BINARY_AVAILABLE:
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -400,8 +402,13 @@ if LK_CPP_BINARY_AVAILABLE:
                 method = getattr(state, name, None)
 
                 wires = self.wires.indices(ops.wires)
-
-                if method is None:
+                if ops.name == "C(GlobalPhase)":
+                    controls = ops.control_wires
+                    control_values = ops.control_values
+                    param = ops.base.parameters[0]
+                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
+                    state.apply(name, wires, False, [[param]], matrix)
+                elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)
@@ -418,7 +425,6 @@ if LK_CPP_BINARY_AVAILABLE:
                         [],
                         mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                     )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
-
                 else:
                     param = ops.parameters
                     method(wires, invert_param, param)

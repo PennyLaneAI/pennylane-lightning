@@ -116,6 +116,8 @@ jobs:
       matrix:
         arch: [x86_64]
         pl_backend: ["lightning_gpu"]
+        cuda_version: ["12"]
+
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:

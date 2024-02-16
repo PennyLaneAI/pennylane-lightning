@@ -30,7 +30,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
     no_sampling,
 )
-from pennylane.tape import QuantumTape
+from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
@@ -55,11 +55,12 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
-    """Simulate a single quantum script.a
+def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.complex128) -> Result:
+    """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
 
@@ -69,8 +70,9 @@ def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
     Note that this function can return measurements for non-commuting observables simultaneously.
 
     """
-    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
-    return LightningMeasurements(state).measure_final_state(circuit)
+    final_state = state.reset_state()
+    final_state = final_state.get_final_state(circuit)
+    return LightningMeasurements(final_state).measure_final_state(circuit)
 
 
 def dummy_jacobian(circuit: QuantumTape):
@@ -347,3 +349,4 @@ class LightningQubit2(Device):
     ):
         results = tuple(simulate_and_jacobian(c) for c in circuits)
         return tuple(zip(*results))
+
