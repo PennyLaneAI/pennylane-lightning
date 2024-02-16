@@ -40,7 +40,7 @@ except ImportError:
     LQ_CPP_BINARY_AVAILABLE = False
 
 
-def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.complex128) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -54,8 +54,8 @@ def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
     Note that this function can return measurements for non-commuting observables simultaneously.
 
     """
-    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
-    return LightningMeasurements(state).measure_final_state(circuit)
+    final_state = state.get_final_state(circuit)
+    return LightningMeasurements(final_state).measure_final_state(circuit)
 
 
 def dummy_jacobian(circuit: QuantumScript):
