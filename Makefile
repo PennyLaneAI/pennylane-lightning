@@ -98,10 +98,10 @@ test-cpp:
 	cmake -BBuildTests -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND) $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
-	OMP_PROC_BIND=false ./BuildTests/$(target)
+	./BuildTests/$(target)
 else
 	cmake --build ./BuildTests $(VERBOSE)
-	OMP_PROC_BIND=false cmake --build ./BuildTests $(VERBOSE) --target test
+	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
 .PHONY: format format-cpp
