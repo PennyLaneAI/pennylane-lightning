@@ -83,6 +83,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
+<<<<<<< HEAD
 def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
     """Simulate a single quantum script.a
 
@@ -90,6 +91,14 @@ def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
         circuit (QuantumTape): The single circuit to simulate
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
+=======
+def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
+    """Simulate a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+>>>>>>> fde61720 (create state vector on initialization)
 
     Returns:
         tuple(TensorLike): The results of the simulation
@@ -101,7 +110,7 @@ def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
     return LightningMeasurements(state).measure_final_state(circuit)
 
 
-def dummy_jacobian(circuit: QuantumTape):
+def jacobian(circuit: QuantumTape):
     return np.array(0.0)
 
 
@@ -285,6 +294,8 @@ class LightningQubit2(Device):
                 "To manually compile from source, follow the instructions at "
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
         super().__init__(wires=wires, shots=shots)
+
+        self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(seed)
 
@@ -380,7 +391,7 @@ class LightningQubit2(Device):
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(simulate(circuit, **execution_config.device_options))
+            results.append(simulate(circuit, self._statevector))
 
         return tuple(results)
 
