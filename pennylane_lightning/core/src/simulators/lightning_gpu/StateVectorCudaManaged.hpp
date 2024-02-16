@@ -684,6 +684,20 @@ class StateVectorCudaManaged
 
     /* Gate generators */
     /**
+     * @brief Gradient generator function associated with the GlobalPhase gate.
+     *
+     * @param sv Statevector
+     * @param wires Wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT
+    applyGeneratorGlobalPhase([[maybe_unused]] const std::vector<size_t> &wires,
+                              [[maybe_unused]] bool adj = false) {
+        return static_cast<PrecisionT>(-1.0);
+    }
+
+    /* Gate generators */
+    /**
      * @brief Gradient generator function associated with the RX gate.
      *
      * @param sv Statevector
@@ -1149,6 +1163,12 @@ class StateVectorCudaManaged
 
     // Holds the mapping from gate labels to associated generator functions.
     const GMap generator_map_{
+        {"GlobalPhase",
+         [&](auto &&wires, auto &&adjoint) {
+             return applyGeneratorGlobalPhase(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
         {"RX",
          [&](auto &&wires, auto &&adjoint) {
              return applyGeneratorRX(std::forward<decltype(wires)>(wires),
