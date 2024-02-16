@@ -42,7 +42,7 @@ using std::size_t;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                    "[StateVectorKokkos_Generator]", float, double) {
     {
         const size_t num_qubits = 3;
