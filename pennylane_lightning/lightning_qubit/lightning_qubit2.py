@@ -15,22 +15,9 @@
 This module contains the LightningQubit2 class that inherits from the new device interface.
 
 """
-from typing import Union, Sequence, Optional
+from typing import Optional, Union, Sequence, Callable
 from dataclasses import replace
 import numpy as np
-
-
-try:
-     # pylint: disable=import-error, no-name-in-module
-     from pennylane_lightning.lightning_qubit_ops import (
-         StateVectorC64,
-         StateVectorC128,
-     )
-
-     LQ_CPP_BINARY_AVAILABLE = True
- except ImportError:
-     LQ_CPP_BINARY_AVAILABLE = False
-
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
@@ -43,8 +30,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
     no_sampling,
 )
-from pennylane.devices.qubit.sampling import get_num_shots_and_executions
-from pennylane.tape import QuantumScript
+from pennylane.tape import QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
@@ -52,9 +38,25 @@ from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_
 from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
 
+try:
+    # pylint: disable=import-error, no-name-in-module
+    from pennylane_lightning.lightning_qubit_ops import (
+        StateVectorC64,
+        StateVectorC128,
+    )
 
-def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
-    """Simulate a single quantum script.
+    LQ_CPP_BINARY_AVAILABLE = True
+except ImportError:
+    LQ_CPP_BINARY_AVAILABLE = False
+
+Result_or_ResultBatch = Union[Result, ResultBatch]
+QuantumTapeBatch = Sequence[QuantumTape]
+QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
+
+
+def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
+    """Simulate a single quantum script.a
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
@@ -71,15 +73,13 @@ def simulate(circuit: QuantumScript, dtype=np.complex128) -> Result:
     return LightningMeasurements(state).measure_final_state(circuit)
 
 
-def dummy_jacobian(circuit: QuantumScript):
+def dummy_jacobian(circuit: QuantumTape):
     return np.array(0.0)
 
 
-def simulate_and_jacobian(circuit: QuantumScript):
+def simulate_and_jacobian(circuit: QuantumTape):
     return np.array(0.0), np.array(0.0)
 
-
-from pennylane.tape import QuantumScript
 
 _operations = frozenset(
     {
