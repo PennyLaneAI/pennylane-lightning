@@ -15,22 +15,9 @@
 This module contains the LightningQubit2 class that inherits from the new device interface.
 
 """
-from typing import Union, Sequence, Optional
+from typing import Optional, Union, Sequence, Callable
 from dataclasses import replace
 import numpy as np
-
-
-try:
-     # pylint: disable=import-error, no-name-in-module
-     from pennylane_lightning.lightning_qubit_ops import (
-         StateVectorC64,
-         StateVectorC128,
-     )
-
-     LQ_CPP_BINARY_AVAILABLE = True
- except ImportError:
-     LQ_CPP_BINARY_AVAILABLE = False
-
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
@@ -43,8 +30,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
     no_sampling,
 )
-from pennylane.devices.qubit.sampling import get_num_shots_and_executions
-from pennylane.tape import QuantumScript
+from pennylane.tape import QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 from pennylane_lightning.lightning_qubit.device_modifiers import convert_single_circuit_to_batch
@@ -63,7 +49,14 @@ def simulate(
     """Calculate the results for a given circuit."""
     return 0.0
 
+try:
+    # pylint: disable=import-error, no-name-in-module
+    from pennylane_lightning.lightning_qubit_ops import (
+        StateVectorC64,
+        StateVectorC128,
+    )
 
+<<<<<<< HEAD
 def jacobian(circuit):
     """Calculate the jacobian for a given circuit."""
     return np.array(0.0)
@@ -79,6 +72,44 @@ QuantumTapeBatch = Sequence[qml.tape.QuantumTape]
 QuantumTape_or_Batch = Union[qml.tape.QuantumTape, QuantumTapeBatch]
 
 
+=======
+    LQ_CPP_BINARY_AVAILABLE = True
+except ImportError:
+    LQ_CPP_BINARY_AVAILABLE = False
+
+Result_or_ResultBatch = Union[Result, ResultBatch]
+QuantumTapeBatch = Sequence[QuantumTape]
+QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
+
+
+def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
+    """Simulate a single quantum script.a
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        dtype: Datatypes for state-vector representation. Must be one of
+            ``np.complex64`` or ``np.complex128``.
+
+    Returns:
+        tuple(TensorLike): The results of the simulation
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+
+    """
+    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
+    return LightningMeasurements(state).measure_final_state(circuit)
+
+
+def dummy_jacobian(circuit: QuantumTape):
+    return np.array(0.0)
+
+
+def simulate_and_jacobian(circuit: QuantumTape):
+    return np.array(0.0), np.array(0.0)
+
+
+>>>>>>> 2a8cd8da (merge conflicts)
 _operations = frozenset(
     {
         "Identity",
