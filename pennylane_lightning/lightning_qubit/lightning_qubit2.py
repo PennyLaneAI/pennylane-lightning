@@ -23,6 +23,7 @@ import pennylane as qml
 
 
 from pennylane.tape import QuantumScript
+from pennylane.typing import Result
 
 from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
