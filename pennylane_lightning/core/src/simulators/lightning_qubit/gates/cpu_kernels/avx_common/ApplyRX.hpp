@@ -51,7 +51,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRX {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto w_diag = diag_real * v;
             const auto w_offdiag = offdiag_imag * permute<perm>(v);
-            PrecisionAVXConcept::store(arr + n, w_diag + w_offdiag);
+            //PrecisionAVXConcept::store(arr + n, w_diag + w_offdiag);
+            PrecisionAVXConcept::stream(arr + n, w_diag + w_offdiag);
         }
     }
 
@@ -84,8 +85,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyRX {
             const auto w0 = cos_factor * v0 + isin_factor * permute<perm>(v1);
             const auto w1 = cos_factor * v1 + isin_factor * permute<perm>(v0);
 
-            PrecisionAVXConcept::store(arr + i0, w0);
-            PrecisionAVXConcept::store(arr + i1, w1);
+            //PrecisionAVXConcept::store(arr + i0, w0);
+            //PrecisionAVXConcept::store(arr + i1, w1);
+            PrecisionAVXConcept::stream(arr + i0, w0);
+            PrecisionAVXConcept::stream(arr + i1, w1);
         }
     }
 };

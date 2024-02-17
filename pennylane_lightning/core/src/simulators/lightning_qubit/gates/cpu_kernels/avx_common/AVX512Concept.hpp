@@ -83,14 +83,27 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static void store(std::complex<PrecisionT> *p, IntrinsicType value) {
         if constexpr (std::is_same_v<PrecisionT, float>) {
-            _mm512_store_ps(p, value);
+            _mm512_store_ps(reinterpret_cast<PrecisionT *>(p), value);
         } else if (std::is_same_v<PrecisionT, double>) {
-            _mm512_store_pd(p, value);
+            _mm512_store_pd(reinterpret_cast<PrecisionT *>(p), value);
         } else {
             static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>);
         }
     }
+
+    PL_FORCE_INLINE
+    static void stream(std::complex<PrecisionT> *p, IntrinsicType value) {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
+            _mm512_stream_ps(reinterpret_cast<PrecisionT *>(p), value);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            _mm512_stream_pd(reinterpret_cast<PrecisionT *>(p), value);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
 
     PL_FORCE_INLINE
     static auto mul(IntrinsicType v0, IntrinsicType v1) {

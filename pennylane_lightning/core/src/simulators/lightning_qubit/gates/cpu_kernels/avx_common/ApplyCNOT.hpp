@@ -67,7 +67,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
         PL_LOOP_PARALLEL(1)
         for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
-            PrecisionAVXConcept::store(arr + n, Permutation::permute<perm>(v));
+            PrecisionAVXConcept::stream(arr + n, Permutation::permute<perm>(v));
         }
     }
 
@@ -114,8 +114,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
             const auto v0 = PrecisionAVXConcept::load(arr + i0);
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
 
-            PrecisionAVXConcept::store(arr + i0, blend<mask>(v0, v1));
-            PrecisionAVXConcept::store(arr + i1, blend<mask>(v1, v0));
+            PrecisionAVXConcept::stream(arr + i0, blend<mask>(v0, v1));
+            PrecisionAVXConcept::stream(arr + i1, blend<mask>(v1, v0));
         }
     }
 
@@ -150,7 +150,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
             const size_t i1 = i0 | control_shift;
 
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
-            PrecisionAVXConcept::store(arr + i1,
+            PrecisionAVXConcept::stream(arr + i1,
                                        Permutation::permute<perm>(v1));
         }
     }
@@ -179,8 +179,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCNOT {
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 
-            PrecisionAVXConcept::store(arr + i10, v11);
-            PrecisionAVXConcept::store(arr + i11, v10);
+            //PrecisionAVXConcept::store(arr + i10, v11);
+            //PrecisionAVXConcept::store(arr + i11, v10);
+            PrecisionAVXConcept::stream(arr + i10, v11);
+            PrecisionAVXConcept::stream(arr + i11, v10);
         }
     }
 };

@@ -52,7 +52,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
             const auto w_diag = mat_diag * v;
             const auto v_offdiag = permute<compiled_permutation>(v);
             const auto w_offdiag = mat_offdiag * v_offdiag;
-            PrecisionAVXConcept::store(arr + k, w_diag + w_offdiag);
+            //PrecisionAVXConcept::store(arr + k, w_diag + w_offdiag);
+            PrecisionAVXConcept::stream(arr + k, w_diag + w_offdiag);
         }
     }
 
@@ -78,8 +79,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyHadamard {
             const auto w0 = (p_isqrt2 * v0) + (p_isqrt2 * v1);
             const auto w1 = (p_isqrt2 * v0) + (m_isqrt2 * v1);
 
-            PrecisionAVXConcept::store(arr + i0, w0);
-            PrecisionAVXConcept::store(arr + i1, w1);
+            //PrecisionAVXConcept::store(arr + i0, w0);
+            //PrecisionAVXConcept::store(arr + i1, w1);
+            PrecisionAVXConcept::stream(arr + i0, w0);
+            PrecisionAVXConcept::stream(arr + i1, w1);
+
         }
     }
 };
