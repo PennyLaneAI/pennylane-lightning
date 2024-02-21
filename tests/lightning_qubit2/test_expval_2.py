@@ -34,13 +34,10 @@ PHI = np.linspace(0.32, 1, 3)
 VARPHI = np.linspace(0.02, 1, 3)
 
 
+@pytest.mark.parametrize("c_dtype", (np.complex64, np.complex128))
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
     """Test expectation value calculations"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit(c_dtype=request.param)
 
     @staticmethod
     def calculate_reference(tape):
@@ -57,53 +54,52 @@ class TestExpval:
         results = dev.execute(tapes)
         return transf_fn(results)
 
-    def test_Identity(self, theta, phi, dev, tol):
+    def test_Identity(self, theta, phi, c_dtype, tol):
         """Tests applying identities."""
 
-        with qml.tape.QuantumTape() as tape:
-            qml.Identity(wires=[0])
-            qml.Identity(wires=[0, 1])
-            qml.Identity(wires=[1, 2])
-            qml.RX(theta, wires=[0])
-            qml.RX(phi, wires=[1])
-            qml.expval(qml.PauliX(0))
+        ops = [
+            qml.Identity(0),
+            qml.Identity((0,1)),
+            qml.Identity((1,2)),
+            qml.RX(theta, 0),
+            qml.RX(phi, 1)
+        ]
+        measurements = [qml.expval(qml.PauliZ(0))]
+        tape = qml.tape.QuantumScript(ops, measurements)
 
-        calculated_val = self.process_and_execute(dev, tape)
-        reference_val = self.calculate_reference(tape)
-
+        dev = LightningQubit(c_dtype=c_dtype, wires=3)
+        result = dev.execute(tape)
+        expected = np.cos(theta)
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        assert np.allclose(result, expected, tol)
 
-    def test_identity_expectation(self, theta, phi, dev, tol):
-        """Tests identity."""
+    def test_identity_expectation(self, theta, phi, c_dtype, tol):
+        """Tests identity expectations."""
 
+        dev = LightningQubit(wires=2, c_dtype=c_dtype)
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
             [qml.expval(qml.Identity(wires=[0])), qml.expval(qml.Identity(wires=[1]))],
         )
-
-        calculated_val = self.process_and_execute(dev, tape)
-        reference_val = self.calculate_reference(tape)
+        result = dev.execute(tape)
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        assert np.allclose(1.0, result, tol)
 
-    def test_multi_wire_identity_expectation(self, theta, phi, dev, tol):
+    def test_multi_wire_identity_expectation(self, theta, phi, c_dtype, tol):
         """Tests multi-wire identity."""
 
+        dev = LightningQubit(wires=2, c_dtype=c_dtype)
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
             [qml.expval(qml.Identity(wires=[0, 1]))],
         )
-
-        calculated_val = self.process_and_execute(dev, tape)
-        reference_val = self.calculate_reference(tape)
-
+        result = dev.execute(tape)
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        assert np.allclose(1.0, result, tol)
 
     @pytest.mark.parametrize(
         "wires",
@@ -113,9 +109,10 @@ class TestExpval:
             (["b", "a"]),
         ],
     )
-    def test_PauliZ_expectation(self, theta, phi, dev, tol, wires):
+    def test_PauliZ_expectation(self, theta, phi, c_dtype, tol, wires):
         """Tests PauliZ."""
 
+        dev = LightningQubit(wires=wires, c_dtype=c_dtype)
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=wires[1]), qml.CNOT(wires=wires)],
             [qml.expval(qml.PauliZ(wires=wires[0])), qml.expval(qml.PauliZ(wires=wires[1]))],
