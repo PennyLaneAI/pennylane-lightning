@@ -785,7 +785,7 @@ class TestAdjointJacobianQNode:
     @pytest.mark.parametrize("n_qubits", range(2, 6))
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
-        """Test that the jacobian of the controlled gate matches the finite-diff formula."""
+        """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
         par = np.array([0.1234, par, 0.5678])
         dev = qml.device("lightning.qubit", wires=n_qubits)
         np.random.seed(1337)
@@ -814,7 +814,7 @@ class TestAdjointJacobianQNode:
                 return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
 
             circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
-            circ_ps = qml.QNode(circuit, dev, diff_method="finite-diff")
+            circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
             jac_ad = np.array(qml.jacobian(circ_ad)(par))
             jac_ps = np.array(qml.jacobian(circ_ps)(par))
 
