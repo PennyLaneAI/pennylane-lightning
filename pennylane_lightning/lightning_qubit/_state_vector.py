@@ -172,8 +172,8 @@ class LightningStateVector:
 
         # special case for integral types
         if state.dtype.kind == "i":
-            state = qml.numpy.array(state, dtype=self.C_DTYPE)
-        state = self._asarray(state, dtype=self.C_DTYPE)
+            state = qml.numpy.array(state, dtype=self.dtype)
+        state = self._asarray(state, dtype=self.dtype)
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             return None, state
