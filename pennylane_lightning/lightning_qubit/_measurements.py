@@ -26,7 +26,6 @@ except ImportError:
 import numpy as np
 from typing import Callable, List
 
-import pennylane as qml
 from pennylane.measurements import StateMeasurement, MeasurementProcess, ExpectationMP
 from pennylane.typing import TensorLike, Result
 from pennylane.tape import QuantumScript
