@@ -717,7 +717,7 @@ class TestAdjointJacobianQNode:
     @pytest.mark.parametrize("n_qubits", range(2, 6))
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_gate_jacobian(self, par, n_qubits, operation, tol):
-        """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
+        """Test that the jacobian of the controlled gate matches the finite-diff formula."""
         par = np.array([0.1234, par, 0.5678])
         dev = qml.device(device_name, wires=n_qubits)
         np.random.seed(1337)
