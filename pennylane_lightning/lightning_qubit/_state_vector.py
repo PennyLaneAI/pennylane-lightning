@@ -201,7 +201,6 @@ class LightningStateVector:
             int: basis state index
         """
         # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
 
         # length of basis state parameter
         n_basis_state = len(state)
