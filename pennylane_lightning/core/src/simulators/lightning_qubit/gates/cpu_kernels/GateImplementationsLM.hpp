@@ -927,26 +927,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void applyProjector(std::complex<PrecisionT> *arr,
                                const size_t num_qubits,
                                const std::vector<size_t> &wires,
-							   [[maybe_unused]] const bool inverse,
-							   [[maybe_unused]] ParamT branch) {
-    	// TODO: right use of param inverse and branch
+                               [[maybe_unused]] const bool inverse,
+                               [[maybe_unused]] ParamT branch) {
+        // TODO: right use of param inverse and branch
 
-    	for (auto w : wires) {
-    		for (size_t k = 0; k < exp2(num_qubits); k++) {
-    			size_t w_mask = w + 1;
-    			if ((k & w_mask) != w_mask) {
-    				arr[k] = 0.;
-    			}
+        for (auto w : wires) {
+            for (size_t k = 0; k < exp2(num_qubits); k++) {
+                size_t w_mask = w + 1;
+                if ((k & w_mask) != w_mask) {
+                    arr[k] = 0.;
+                }
             }
-    	}
+        }
 
-    	std::complex<PrecisionT> inv_norm = std::complex<PrecisionT>{1.0, 0.0} /
-    			std::sqrt(squaredNorm(arr, exp2(num_qubits)));
+        std::complex<PrecisionT> inv_norm = std::complex<PrecisionT>{1.0, 0.0} /
+                std::sqrt(squaredNorm(arr, exp2(num_qubits)));
 
-    	// TODO: handle norm is zero (actually not physical)
+        // TODO: handle norm is zero (actually not physical)
 
-		for (size_t k = 0; k < exp2(num_qubits); k++) {
-			arr[k] *= inv_norm;
+        for (size_t k = 0; k < exp2(num_qubits); k++) {
+            arr[k] *= inv_norm;
         }
     }
 

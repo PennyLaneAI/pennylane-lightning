@@ -150,13 +150,13 @@ void testApplyProjector() {
         {0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.5, 0.5}};
 
     {
-    	auto st = createPlusState<PrecisionT>(num_qubits);
+        auto st = createPlusState<PrecisionT>(num_qubits);
 
-    	const size_t index = 0;
-    	const size_t wire = 1;
-    	const PrecisionT branch = 1;
+        const size_t index = 0;
+        const size_t wire = 1;
+        const PrecisionT branch = 1;
 
-    	GateImplementation::applyProjector(st.data(), num_qubits, {wire},
+        GateImplementation::applyProjector(st.data(), num_qubits, {wire},
                                            false, {branch});
 
         CHECK(st == approx(expected_results[index]));
