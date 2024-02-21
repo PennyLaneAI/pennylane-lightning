@@ -67,7 +67,7 @@ if(ENABLE_WARNINGS)
     if(MSVC)
         target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/W4;/WX>)
     else()
-        target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra>)
+        target_compile_options(lightning_compile_options INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Werror>)  # -Werror
     endif()
 else()
     message(STATUS "ENABLE_WARNINGS is OFF.")

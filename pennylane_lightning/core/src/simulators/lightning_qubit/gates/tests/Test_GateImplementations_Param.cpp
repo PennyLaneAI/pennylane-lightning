@@ -139,7 +139,6 @@ void testApplyPhaseShift() {
 }
 PENNYLANE_RUN_TEST(PhaseShift);
 
-// /*
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyProjector() {
     using ComplexT = std::complex<PrecisionT>;
@@ -147,21 +146,23 @@ void testApplyProjector() {
 
     // Test using |+++> state
 
-    auto expected_results = createPlusState<PrecisionT>(num_qubits);
+    std::vector<std::vector<ComplexT>> expected_results = {
+        {0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.5, 0.5}};
 
     {
     	auto st = createPlusState<PrecisionT>(num_qubits);
-    	const size_t index = 1;
+
+    	const size_t index = 0;
+    	const size_t wire = 1;
     	const PrecisionT branch = 1;
-        GateImplementation::applyProjector(st.data(), num_qubits, {index},
+
+    	GateImplementation::applyProjector(st.data(), num_qubits, {wire},
                                            false, {branch});
 
-        //CHECK(st == expected_results[index]);
+        CHECK(st == approx(expected_results[index]));
     }
-
 }
 PENNYLANE_RUN_TEST(Projector);
-// */
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyRX() {
