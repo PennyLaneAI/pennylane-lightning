@@ -33,6 +33,7 @@ from pennylane.wires import Wires
 
 from typing import List
 
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from ._serialize import QuantumScriptSerializer
 from ._state_vector import LightningStateVector
 
