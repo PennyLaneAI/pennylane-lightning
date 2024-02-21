@@ -21,7 +21,7 @@ import numpy as np
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.modifiers import convert_single_circuit_to_batch, simulator_tracking
+from pennylane.devices.modifiers import single_tape_support, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
     validate_device_wires,
@@ -67,8 +67,8 @@ def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     Note that this function can return measurements for non-commuting observables simultaneously.
 
     """
-    final_state = state.reset_state()
-    final_state = final_state.get_final_state(circuit)
+    state.reset_state()
+    final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state).measure_final_state(circuit)
 
 
@@ -195,13 +195,8 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables
 
 
-def accepted_analytic_measurements(m: qml.measurements.MeasurementProcess) -> bool:
-    """Whether or not a state based measurement is supported by ``lightning.qubit``."""
-    return isinstance(m, (qml.measurements.ExpectationMP))
-
-
 @simulator_tracking
-@convert_single_circuit_to_batch
+@single_tape_support
 class LightningQubit2(Device):
     """PennyLane Lightning Qubit device.
 
@@ -304,7 +299,7 @@ class LightningQubit2(Device):
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
         program.add_transform(
-            validate_measurements, analytic_measurements=accepted_analytic_measurements, name=self.name
+            validate_measurements, name=self.name
         )
         program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
