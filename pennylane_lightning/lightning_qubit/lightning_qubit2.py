@@ -15,12 +15,7 @@
 This module contains the LightningQubit2 class that inherits from the new device interface.
 
 """
-from typing import Union, Sequence, Optional
-from dataclasses import replace
 import numpy as np
-
-import pennylane as qml
-
 
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result
