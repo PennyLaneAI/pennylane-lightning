@@ -26,7 +26,6 @@ except ImportError:
 import numpy as np
 from typing import Callable, List
 
-import pennylane as qml
 from pennylane.measurements import StateMeasurement, MeasurementProcess, ExpectationMP
 from pennylane.typing import TensorLike, Result
 from pennylane.tape import QuantumScript
@@ -34,6 +33,7 @@ from pennylane.wires import Wires
 
 from typing import List
 
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from ._serialize import QuantumScriptSerializer
 from ._state_vector import LightningStateVector
 
@@ -164,9 +164,10 @@ class LightningMeasurements:
             Tuple[TensorLike]: The measurement results
         """
 
-        if not circuit.shots:
-            # analytic case
-            if len(circuit.measurements) == 1:
-                return self.measurement(circuit.measurements[0])
+        if circuit.shots:
+            raise NotImplementedError
+        # analytic case
+        if len(circuit.measurements) == 1:
+            return self.measurement(circuit.measurements[0])
 
-            return tuple(self.measurement(mp) for mp in circuit.measurements)
+        return tuple(self.measurement(mp) for mp in circuit.measurements)
