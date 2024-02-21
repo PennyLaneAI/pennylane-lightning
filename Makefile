@@ -104,6 +104,14 @@ else
 	OMP_PROC_BIND=false cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
+BUILDDIR := build_tests_$(PL_BACKEND)
+
+devel-cpp:
+	# PL_BACKEND=lightning_qubit
+	cmake -B$(BUILDDIR) -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DENABLE_WARNINGS=ON -DPL_BACKEND=$(PL_BACKEND)
+	cmake --build $(BUILDDIR) --verbose
+	#cmake --build ./$(BUILDDIR)  # --target test
+
 .PHONY: format format-cpp
 format: format-cpp format-python
 

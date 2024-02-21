@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add projector gate ...
+  ...
+
 * All backends now support `GlobalPhase` and `C(GlobalPhase)` in forward pass.
   [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
@@ -67,7 +70,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, Thomas Germain, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

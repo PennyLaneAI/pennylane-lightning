@@ -35,6 +35,7 @@ enum class GateOperation : uint32_t {
     S,
     T,
     PhaseShift,
+    Projector,
     RX,
     RY,
     RZ,

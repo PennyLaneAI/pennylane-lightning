@@ -65,6 +65,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::PhaseShift, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::Projector, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::RX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);

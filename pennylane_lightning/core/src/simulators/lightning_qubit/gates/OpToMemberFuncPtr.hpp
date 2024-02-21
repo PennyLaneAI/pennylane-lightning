@@ -100,6 +100,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::Projector> {
+    constexpr static auto value =
+        &GateImplementation::template applyProjector<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::RX> {
     constexpr static auto value =
         &GateImplementation::template applyRX<PrecisionT, ParamT>;

@@ -117,6 +117,10 @@ template void GateImplementationsLM::applyPhaseShift<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 template void GateImplementationsLM::applyPhaseShift<double, double>(
     std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+template void GateImplementationsLM::applyProjector<float, float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+template void GateImplementationsLM::applyProjector<double, double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
 template void GateImplementationsLM::applyRX<float, float>(
     std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
 template void GateImplementationsLM::applyRX<double, double>(

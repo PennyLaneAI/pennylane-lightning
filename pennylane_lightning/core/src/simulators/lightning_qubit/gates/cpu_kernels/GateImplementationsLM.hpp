@@ -121,6 +121,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::S,
         GateOperation::T,
         GateOperation::PhaseShift,
+        GateOperation::Projector,
         GateOperation::RX,
         GateOperation::RY,
         GateOperation::RZ,
@@ -920,6 +921,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                   const std::size_t i11) { arr[i11] *= s; };
         applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
             arr, num_qubits, {}, {}, wires, core_function);
+    }
+
+    template <class PrecisionT, class ParamT = PrecisionT>
+    static void applyProjector(std::complex<PrecisionT> *arr,
+                               const size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               const bool inverse, ParamT branch) {
+    	/* WIP */
+    	const PrecisionT x = 0.5;  /* JUST TO SET A BREAKPOINT. */
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>

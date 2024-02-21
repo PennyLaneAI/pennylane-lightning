@@ -115,6 +115,7 @@ if LQ_CPP_BINARY_AVAILABLE:
         "CZ",
         "PhaseShift",
         "ControlledPhaseShift",
+        "Projector",
         "CPhase",
         "RX",
         "RY",
