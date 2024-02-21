@@ -169,12 +169,11 @@ class LightningStateVector:
         """
 
         # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
 
         # special case for integral types
         if state.dtype.kind == "i":
-            state = qml.numpy.array(state, dtype=self.C_DTYPE)
-        state = self._asarray(state, dtype=self.C_DTYPE)
+            state = qml.numpy.array(state, dtype=self.dtype)
+        state = self._asarray(state, dtype=self.dtype)
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             return None, state
@@ -202,7 +201,6 @@ class LightningStateVector:
             int: basis state index
         """
         # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
 
         # length of basis state parameter
         n_basis_state = len(state)
