@@ -169,7 +169,6 @@ class LightningStateVector:
         """
 
         # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
 
         # special case for integral types
         if state.dtype.kind == "i":
