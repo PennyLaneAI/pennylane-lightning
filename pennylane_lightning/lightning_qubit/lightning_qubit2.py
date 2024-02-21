@@ -13,7 +13,6 @@
 # limitations under the License.
 """
 This module contains the LightningQubit2 class that inherits from the new device interface.
-
 """
 from typing import Optional, Union, Sequence, Callable
 from dataclasses import replace
@@ -21,7 +20,7 @@ import numpy as np
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.modifiers import convert_single_circuit_to_batch, simulator_tracking
+from pennylane.devices.modifiers import single_tape_support, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
     validate_device_wires,
@@ -30,48 +29,17 @@ from pennylane.devices.preprocess import (
     validate_observables,
     no_sampling,
 )
-from pennylane.tape import QuantumTape
+from pennylane.tape import QuantumTape, QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from .device_modifiers import convert_single_circuit_to_batch
-
-def simulate(
-    circuit,
-    rng=None,
-    c_dtype=np.complex128,
-    batch_obs=False,
-    mcmc=False,
-    kernel_name="Local",
-    num_burnin=100,
-):
-    """Calculate the results for a given circuit."""
-    return 0.0
+from ._state_vector import LightningStateVector
+from ._measurements import LightningMeasurements
 
 try:
-    # pylint: disable=import-error, no-name-in-module
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
+    # pylint: disable=import-error, unused-import
+    import pennylane_lightning.lightning_qubit_ops
 
-<<<<<<< HEAD
-def jacobian(circuit):
-    """Calculate the jacobian for a given circuit."""
-    return np.array(0.0)
-
-
-def simulate_and_jacobian(circuit):
-    """Calculate the results and jacobian for a single circuit."""
-    return np.array(0.0), np.array(0.0)
-
-
-Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[qml.tape.QuantumTape]
-QuantumTape_or_Batch = Union[qml.tape.QuantumTape, QuantumTapeBatch]
-
-
-=======
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError:
     LQ_CPP_BINARY_AVAILABLE = False
@@ -82,31 +50,18 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-<<<<<<< HEAD
-def simulate(circuit: QuantumTape, dtype=np.complex128) -> Result:
-    """Simulate a single quantum script.a
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        dtype: Datatypes for state-vector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
-=======
 def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     """Simulate a single quantum script.
-
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
->>>>>>> fde61720 (create state vector on initialization)
-
     Returns:
         tuple(TensorLike): The results of the simulation
-
     Note that this function can return measurements for non-commuting observables simultaneously.
-
     """
-    state = LightningStateVector(num_wires=circuit.num_wires, dtype=dtype).get_final_state(circuit)
-    return LightningMeasurements(state).measure_final_state(circuit)
+    state.reset_state()
+    final_state = state.get_final_state(circuit)
+    return LightningMeasurements(final_state).measure_final_state(circuit)
 
 
 def jacobian(circuit: QuantumTape):
@@ -117,7 +72,6 @@ def simulate_and_jacobian(circuit: QuantumTape):
     return np.array(0.0), np.array(0.0)
 
 
->>>>>>> 2a8cd8da (merge conflicts)
 _operations = frozenset(
     {
         "Identity",
@@ -233,48 +187,14 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables
 
 
-def accepted_analytic_measurements(m: qml.measurements.MeasurementProcess) -> bool:
-    """Whether or not a state based measurement is supported by ``lightning.qubit``."""
-    return isinstance(m, (qml.measurements.ExpectationMP))
-
-
 @simulator_tracking
-@convert_single_circuit_to_batch
+@single_tape_support
 class LightningQubit2(Device):
-    """PennyLane Lightning Qubit device.
-
-    A device that interfaces with C++ to perform fast linear algebra calculations.
-
-    Use of this device requires pre-built binaries or compilation from source. Check out the
-    :doc:`/lightning_qubit/installation` guide for more details.
-
-    Args:
-        wires (int): the number of wires to initialize the device with
-        c_dtype: Datatypes for statevector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to ``None`` if not specified. Setting
-            to ``None`` results in computing statistics like expectation values and
-            variances analytically.
-        seed (str, int, rng)
-        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
-            sampling method when generating samples.
-        kernel_name (str): name of transition kernel. The current version supports
-            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
-            The local kernel conducts a bit-flip local transition between states.
-            The local kernel generates a random qubit site and then generates a random
-            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
-            randomly transits between states that have nonzero probability.
-        num_burnin (int): number of steps that will be dropped. Increasing this value will
-            result in a closer approximation but increased runtime.
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
-    """
-
-    name = "lightning.qubit2"
+    """PennyLane Lightning Qubit device."""
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+
+    _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -289,9 +209,12 @@ class LightningQubit2(Device):
         batch_obs=False,
     ):
         if not LQ_CPP_BINARY_AVAILABLE:
-            raise ImportError("Pre-compiled binaries for lightning.qubit are not available. "
+            raise ImportError(
+                "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+            )
+
         super().__init__(wires=wires, shots=shots)
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
@@ -370,9 +293,7 @@ class LightningQubit2(Device):
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
-        program.add_transform(
-            validate_measurements, analytic_measurements=accepted_analytic_measurements, name=self.name
-        )
+        program.add_transform(validate_measurements, name=self.name)
         program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
@@ -386,7 +307,6 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
-
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
