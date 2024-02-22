@@ -234,7 +234,7 @@ class LightningStateVector:
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
-            state = self._reshape(state, output_shape).ravel(order="C")
+            state = np.reshape(state, output_shape).ravel(order="C")
             self._qubit_state.UpdateData(state)
             return
 
