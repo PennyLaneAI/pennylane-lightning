@@ -37,6 +37,7 @@ from pennylane import (
     StatePrep,
 )
 
+
 class LightningStateVector:
     """Lightning state-vector class.
 
