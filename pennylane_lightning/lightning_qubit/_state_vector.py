@@ -198,8 +198,6 @@ class LightningStateVector:
         Returns:
             int: basis state index
         """
-        # translate to wire labels used by device
-
         # length of basis state parameter
         n_basis_state = len(state)
 
