@@ -15,6 +15,7 @@
 Class implementation for state vector measurements.
 """
 
+# pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
     from pennylane_lightning.lightning_qubit_ops import (
         MeasurementsC64,
@@ -23,18 +24,15 @@ try:
 except ImportError:
     pass
 
-import numpy as np
 from typing import Callable, List
+import numpy as np
 
 from pennylane.measurements import StateMeasurement, MeasurementProcess, ExpectationMP
 from pennylane.typing import TensorLike, Result
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from typing import List
-
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-from ._serialize import QuantumScriptSerializer
 from ._state_vector import LightningStateVector
 
 
@@ -80,6 +78,7 @@ class LightningMeasurements:
         wires = Wires(range(total_wires))
         return measurementprocess.process_state(state_array, wires)
 
+    # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 

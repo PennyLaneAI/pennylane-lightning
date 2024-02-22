@@ -26,6 +26,7 @@ try:
 except ImportError:
     pass
 
+from itertools import product
 import numpy as np
 
 import pennylane as qml
@@ -34,10 +35,7 @@ from pennylane.wires import Wires
 from pennylane import (
     BasisState,
     StatePrep,
-    DeviceError,
 )
-
-from itertools import product
 
 
 class LightningStateVector:
@@ -208,11 +206,11 @@ class LightningStateVector:
         if not set(state.tolist()).issubset({0, 1}):
             raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
 
-        if n_basis_state != len(device_wires):
+        if n_basis_state != len(wires):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # get computational basis state number
-        basis_states = 2 ** (self.num_wires - 1 - np.array(device_wires))
+        basis_states = 2 ** (self.num_wires - 1 - np.array(wires))
         basis_states = qml.math.convert_like(basis_states, state)
         return int(qml.math.dot(state, basis_states))
 
@@ -236,7 +234,7 @@ class LightningStateVector:
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
-            state = self._reshape(state, output_shape).ravel(order="C")
+            state = np.reshape(state, output_shape).ravel(order="C")
             self._qubit_state.UpdateData(state)
             return
 

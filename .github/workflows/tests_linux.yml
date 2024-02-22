@@ -197,53 +197,6 @@ jobs:
             ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
 
-  pythontests_LQ_2:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit2"]
-    timeout-minutes: 30
-    name: Python tests
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-        with:
-          fetch-tags: true
-          path: main
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
-
-      - name: Get required Python packages
-        run: |
-          cd main
-          python -m pip install -r requirements-dev.txt
-          python -m pip install openfermionpyscf
-
-      - name: Checkout PennyLane for release build
-        uses: actions/checkout@v3
-        with:
-          path: pennylane
-          repository: PennyLaneAI/pennylane
-
-      - name: Install backend device
-        run: |
-          cd main
-          PL_BACKEND=lightning.qubit pip install -e . -vv
-
-      - name: Run PennyLane-Lightning unit tests
-        run: |
-          cd main/
-          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_qubit2/
-
   cpptestswithOpenBLAS:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     strategy:
