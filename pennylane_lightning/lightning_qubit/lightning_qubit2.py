@@ -25,7 +25,7 @@ from ._measurements import LightningMeasurements
 
 
 try:
-    # pylint: disable=import-error, no-name-in-module
+    # pylint: disable=import-error, no-name-in-module, unused-import
     from pennylane_lightning.lightning_qubit_ops import (
         StateVectorC64,
         StateVectorC128,
