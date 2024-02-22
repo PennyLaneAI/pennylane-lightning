@@ -36,14 +36,12 @@ except ImportError:
     LQ_CPP_BINARY_AVAILABLE = False
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, dtype=np.complex128) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
-        dtype: Datatypes for state-vector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
 
     Returns:
         tuple(TensorLike): The results of the simulation
