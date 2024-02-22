@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Add adjoint support for `GlobalPhase` in Lightning-GPU and Lightning-Kokkos.
+  [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
+
 * Lower the overheads of Windows CI tests.
   [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
 
@@ -48,6 +51,9 @@
   [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
 
 ### Bug fixes
+
+* List `GlobalPhase` gate in each device's TOML file.
+  [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
 
 * Lightning-GPU's gate cache failed to distinguish between certain gates.
   For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation. 

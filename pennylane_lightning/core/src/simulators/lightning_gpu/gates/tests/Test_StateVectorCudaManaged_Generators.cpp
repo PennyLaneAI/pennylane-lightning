@@ -1645,3 +1645,64 @@ TEST_CASE("Generators::applyGeneratorMultiRZ", "[GateGenerators]") {
         }
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
+                   "[StateVectorCudaManaged_Generator]", float, double) {
+    const bool inverse = GENERATE(true, false);
+    const std::string gate_name = "GlobalPhase";
+    {
+        using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+        const size_t num_qubits = 4;
+        const TestType ep = 1e-3;
+        const TestType EP = 1e-4;
+
+        std::vector<ComplexT> ini_st{
+            ComplexT{0.267462841882, 0.010768564798},
+            ComplexT{0.228575129706, 0.010564590956},
+            ComplexT{0.099492749900, 0.260849823392},
+            ComplexT{0.093690204310, 0.189847108173},
+            ComplexT{0.033390732374, 0.203836830144},
+            ComplexT{0.226979395737, 0.081852150975},
+            ComplexT{0.031235505729, 0.176933497281},
+            ComplexT{0.294287602843, 0.145156781198},
+            ComplexT{0.152742706049, 0.111628061129},
+            ComplexT{0.012553863703, 0.120027860480},
+            ComplexT{0.237156555364, 0.154658769755},
+            ComplexT{0.117001120872, 0.228059505033},
+            ComplexT{0.041495873225, 0.065934827444},
+            ComplexT{0.089653239407, 0.221581340372},
+            ComplexT{0.217892322429, 0.291261296999},
+            ComplexT{0.292993251871, 0.186570798697},
+        };
+
+        StateVectorCudaManaged<TestType> gntr_sv{ini_st.data(), ini_st.size()};
+        StateVectorCudaManaged<TestType> gate_svp{ini_st.data(), ini_st.size()};
+        StateVectorCudaManaged<TestType> gate_svm{ini_st.data(), ini_st.size()};
+
+        auto scale = gntr_sv.applyGenerator(gate_name, {0}, inverse);
+        if (inverse) {
+            gate_svp.applyOperation(gate_name, {0}, inverse, {-ep});
+            gate_svm.applyOperation(gate_name, {0}, inverse, {ep});
+        } else {
+            gate_svp.applyOperation(gate_name, {0}, inverse, {ep});
+            gate_svm.applyOperation(gate_name, {0}, inverse, {-ep});
+        }
+
+        auto result_gntr_sv = gntr_sv.getDataVector();
+        auto result_gate_svp = gate_svp.getDataVector();
+        auto result_gate_svm = gate_svm.getDataVector();
+
+        for (size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep)
+                      .margin(EP));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep)
+                      .margin(EP));
+        }
+    }
+}
