@@ -113,10 +113,10 @@ def get_device():
 
 device_name = get_device()
 
-# if device_name not in qml.plugin_devices:
-#     raise qml.DeviceError(
-#         f"Device {device_name} does not exist. Make sure the required plugin is installed."
-#     )
+if device_name not in qml.plugin_devices:
+    raise qml.DeviceError(
+        f"Device {device_name} does not exist. Make sure the required plugin is installed."
+    )
 
 # Device specification
 import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
