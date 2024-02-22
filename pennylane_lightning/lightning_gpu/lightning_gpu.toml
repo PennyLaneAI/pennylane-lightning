@@ -59,6 +59,7 @@ native = [
         "DoubleExcitationMinus",
         "MultiRZ",
         "QubitUnitary",
+        "GlobalPhase",
 ]
 
 # Operators that should be decomposed according to the algorithm used
