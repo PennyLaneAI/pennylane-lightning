@@ -35,6 +35,7 @@ from pennylane.wires import Wires
 from pennylane import (
     BasisState,
     StatePrep,
+    DeviceError,
 )
 
 
@@ -54,6 +55,13 @@ class LightningStateVector:
         self.num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+
+        if dtype not in [np.complex64, np.complex128]:
+            raise TypeError(f"Unsupported complex type: {dtype}")
+
+        if device_name != "lightning.qubit":
+            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+
         self._name = device_name
         self._qubit_state = self._state_dtype()(self.num_wires)
 
@@ -165,9 +173,6 @@ class LightningStateVector:
                 or broadcasted state of shape ``(batch_size, 2**len(wires))``
             array[int]: indices for which the state is changed to input state vector elements
         """
-
-        # translate to wire labels used by device
-
         # special case for integral types
         if state.dtype.kind == "i":
             state = qml.numpy.array(state, dtype=self.dtype)
@@ -289,7 +294,7 @@ class LightningStateVector:
                 # To support older versions of PL
                 method(operation.base.matrix, control_wires, control_values, target_wires, False)
 
-    def apply_lightning(self, operations):
+    def _apply_lightning(self, operations):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -336,7 +341,7 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        self.apply_lightning(operations)
+        self._apply_lightning(operations)
 
     def get_final_state(self, circuit: QuantumScript):
         """
@@ -348,8 +353,7 @@ class LightningStateVector:
             circuit (QuantumScript): The single circuit to simulate
 
         Returns:
-            Tuple: A tuple containing the Lightning final state handler of the quantum script and
-                whether the state has a batch dimension.
+            LightningStateVector: Lightning final state class.
 
         """
         self.apply_operations(circuit.operations)
