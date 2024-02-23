@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pytest
+from conftest import LightningDevice  # tested device
 
 import numpy as np
 
@@ -29,6 +30,13 @@ except ImportError:
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 
+from pennylane_lightning.lightning_qubit import LightningQubit
+
+if not LightningQubit._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+if LightningDevice != LightningQubit:
+    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 class CustomStateMeasurement(qml.measurements.StateMeasurement):
     def process_state(self, state, wire_order):
