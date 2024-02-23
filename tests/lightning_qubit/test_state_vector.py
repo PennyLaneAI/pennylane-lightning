@@ -41,7 +41,7 @@ def test_device_name_and_init(num_wires, dtype, device_name):
     """Test the class initialization and returned properties."""
     state_vector = LightningStateVector(num_wires, dtype=dtype, device_name=device_name)
     assert state_vector.dtype == dtype
-    assert state_vector.name == device_name
+    assert state_vector.device_name == device_name
     assert state_vector.wires == Wires(range(num_wires))
 
 
