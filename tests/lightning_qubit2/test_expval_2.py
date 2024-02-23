@@ -59,10 +59,10 @@ class TestExpval:
 
         ops = [
             qml.Identity(0),
-            qml.Identity((0,1)),
-            qml.Identity((1,2)),
+            qml.Identity((0, 1)),
+            qml.Identity((1, 2)),
             qml.RX(theta, 0),
-            qml.RX(phi, 1)
+            qml.RX(phi, 1),
         ]
         measurements = [qml.expval(qml.PauliZ(0))]
         tape = qml.tape.QuantumScript(ops, measurements)
