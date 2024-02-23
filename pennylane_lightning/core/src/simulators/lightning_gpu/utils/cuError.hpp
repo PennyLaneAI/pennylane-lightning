@@ -189,12 +189,16 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
         break;
     case CUSTATEVEC_STATUS_DEVICE_ALLOCATOR_ERROR:
         result = "custatevec device allocator error";
-    break case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
+        break;
+    case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
         result = "custatevec communicator failure";
-    break case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
+        break;
+    case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
         result = "custatevec dynmic library load failure";
-        break default : result = "custatevec status not found. Error code=" +
-                                 std::to_string(err);
+        break;
+    default:
+        result =
+            "custatevec status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
