@@ -145,7 +145,7 @@ static const std::string GetCuSparseErrorString(const cusparseStatus_t &err) {
         result = "The resources are not sufficient to complete the operation.";
         break;
     default:
-        result = "cuSparse status not found. Error code=" + std::to_string(err);
+        result = "cuSPARSE status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
