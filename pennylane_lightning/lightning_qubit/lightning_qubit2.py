@@ -198,9 +198,7 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
 @simulator_tracking
 @single_tape_support
 class LightningQubit2(Device):
-    """PennyLane Lightning Qubit device.
-
-    """
+    """PennyLane Lightning Qubit device."""
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
 
@@ -217,9 +215,11 @@ class LightningQubit2(Device):
         batch_obs=False,
     ):
         if not LQ_CPP_BINARY_AVAILABLE:
-            raise ImportError("Pre-compiled binaries for lightning.qubit are not available. "
+            raise ImportError(
+                "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html.")
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+            )
         super().__init__(wires=wires, shots=shots)
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
@@ -298,9 +298,7 @@ class LightningQubit2(Device):
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
-        program.add_transform(
-            validate_measurements, name=self.name
-        )
+        program.add_transform(validate_measurements, name=self.name)
         program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
@@ -314,7 +312,6 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
-
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
@@ -336,4 +333,3 @@ class LightningQubit2(Device):
     ):
         results = tuple(simulate_and_jacobian(c) for c in circuits)
         return tuple(zip(*results))
-
