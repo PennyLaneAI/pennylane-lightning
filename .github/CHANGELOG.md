@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* `C(MultiRZ)` and `C(Rot)` gates are natively supported (with `LM` kernels).
+  [(#614)](https://github.com/PennyLaneAI/pennylane-lightning/pull/614)
+
 * Add adjoint support for `GlobalPhase` in Lightning-GPU and Lightning-Kokkos.
   [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
 
