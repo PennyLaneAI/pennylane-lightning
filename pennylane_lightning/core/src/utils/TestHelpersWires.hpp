@@ -54,14 +54,13 @@ inline auto createWires(Pennylane::Gates::GateOperation op, size_t num_qubits)
 }
 
 inline auto createWires(Pennylane::Gates::ControlledGateOperation op,
-                        [[maybe_unused]] size_t num_qubits)
-    -> std::vector<size_t> {
-    // TODO: needed when introducing C(MultiRZ)
-    // if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates, op)) {
-    //     std::vector<size_t> wires(num_qubits);
-    //     std::iota(wires.begin(), wires.end(), 0);
-    //     return wires;
-    // }
+                        size_t num_qubits) -> std::vector<size_t> {
+    if (array_has_elem(Pennylane::Gates::Constant::controlled_multi_qubit_gates,
+                       op)) {
+        std::vector<size_t> wires(num_qubits - 2);
+        std::iota(wires.begin(), wires.end(), 0);
+        return wires;
+    }
     switch (lookup(Pennylane::Gates::Constant::controlled_gate_wires, op)) {
     case 1:
         return {0};

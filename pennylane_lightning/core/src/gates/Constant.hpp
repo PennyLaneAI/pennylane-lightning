@@ -27,11 +27,16 @@ namespace Pennylane::Gates::Constant {
  * @brief List of multi-qubit gates
  */
 [[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ};
+[[maybe_unused]] constexpr std::array controlled_multi_qubit_gates{
+    ControlledGateOperation::MultiRZ};
 /**
  * @brief List of multi-qubit generators
  */
 [[maybe_unused]] constexpr std::array multi_qubit_generators{
     GeneratorOperation::MultiRZ,
+};
+[[maybe_unused]] constexpr std::array controlled_multi_qubit_generators{
+    ControlledGeneratorOperation::MultiRZ,
 };
 /**
  * @brief List of multi-qubit matrix operation
@@ -93,6 +98,7 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
     CGateView{ControlledGateOperation::RX, "RX"},
     CGateView{ControlledGateOperation::RY, "RY"},
     CGateView{ControlledGateOperation::RZ, "RZ"},
+    CGateView{ControlledGateOperation::Rot, "Rot"},
     CGateView{ControlledGateOperation::SWAP, "SWAP"},
     CGateView{ControlledGateOperation::IsingXX, "IsingXX"},
     CGateView{ControlledGateOperation::IsingXY, "IsingXY"},
@@ -108,6 +114,7 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
               "DoubleExcitationMinus"},
     CGateView{ControlledGateOperation::DoubleExcitationPlus,
               "DoubleExcitationPlus"},
+    CGateView{ControlledGateOperation::MultiRZ, "MultiRZ"},
     CGateView{ControlledGateOperation::GlobalPhase, "GlobalPhase"},
 };
 
@@ -171,6 +178,7 @@ using CGeneratorView =
                    "DoubleExcitationMinus"},
     CGeneratorView{ControlledGeneratorOperation::DoubleExcitationPlus,
                    "DoubleExcitationPlus"},
+    CGeneratorView{ControlledGeneratorOperation::MultiRZ, "MultiRZ"},
     CGeneratorView{ControlledGeneratorOperation::GlobalPhase, "GlobalPhase"},
 };
 
@@ -245,6 +253,7 @@ using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
     CGateNWires{ControlledGateOperation::RX, 1},
     CGateNWires{ControlledGateOperation::RY, 1},
     CGateNWires{ControlledGateOperation::RZ, 1},
+    CGateNWires{ControlledGateOperation::Rot, 1},
     CGateNWires{ControlledGateOperation::SWAP, 2},
     CGateNWires{ControlledGateOperation::IsingXX, 2},
     CGateNWires{ControlledGateOperation::IsingXY, 2},
@@ -362,6 +371,7 @@ using CGateNParams = typename std::pair<ControlledGateOperation, size_t>;
     CGateNParams{ControlledGateOperation::RX, 1},
     CGateNParams{ControlledGateOperation::RY, 1},
     CGateNParams{ControlledGateOperation::RZ, 1},
+    CGateNParams{ControlledGateOperation::Rot, 3},
     CGateNParams{ControlledGateOperation::SWAP, 0},
     CGateNParams{ControlledGateOperation::IsingXX, 1},
     CGateNParams{ControlledGateOperation::IsingXY, 1},
@@ -373,6 +383,7 @@ using CGateNParams = typename std::pair<ControlledGateOperation, size_t>;
     CGateNParams{ControlledGateOperation::DoubleExcitation, 1},
     CGateNParams{ControlledGateOperation::DoubleExcitationMinus, 1},
     CGateNParams{ControlledGateOperation::DoubleExcitationPlus, 1},
+    CGateNParams{ControlledGateOperation::MultiRZ, 1},
     CGateNParams{ControlledGateOperation::GlobalPhase, 1},
 };
 } // namespace Pennylane::Gates::Constant
