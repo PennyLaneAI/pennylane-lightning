@@ -97,7 +97,7 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         result = "cuBLAS internal error";
         break;
     case CUBLAS_STATUS_NOT_SUPPORTED:
-        result = "cuBlas Unsupported operation/device";
+        result = "cuBLAS Unsupported operation/device";
         break;
     case CUBLAS_STATUS_EXECUTION_FAILED:
         result = "cuBlas GPU program failed to execute";
