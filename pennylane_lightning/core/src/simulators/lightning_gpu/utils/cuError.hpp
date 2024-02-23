@@ -94,19 +94,19 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         result = "cuBLAS mapping error";
         break;
     case CUBLAS_STATUS_INTERNAL_ERROR:
-        result = "cublas internal error";
+        result = "cuBLAS internal error";
         break;
     case CUBLAS_STATUS_NOT_SUPPORTED:
-        result = "cuBlas Unsupported operation/device";
+        result = "cuBLAS Unsupported operation/device";
         break;
     case CUBLAS_STATUS_EXECUTION_FAILED:
-        result = "cuBlas GPU program failed to execute";
+        result = "cuBLAS GPU program failed to execute";
         break;
     case CUBLAS_STATUS_LICENSE_ERROR:
-        result = "cuBlas license error";
+        result = "cuBLAS license error";
         break;
     default:
-        result = "cuBlas status not found. Error code=" + std::to_string(err);
+        result = "cuBLAS status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
@@ -145,7 +145,7 @@ static const std::string GetCuSparseErrorString(const cusparseStatus_t &err) {
         result = "The resources are not sufficient to complete the operation.";
         break;
     default:
-        result = "cuSparse status not found. Error code=" + std::to_string(err);
+        result = "cuSPARSE status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
