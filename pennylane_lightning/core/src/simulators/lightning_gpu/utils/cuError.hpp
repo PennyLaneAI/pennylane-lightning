@@ -94,7 +94,7 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         result = "cuBLAS mapping error";
         break;
     case CUBLAS_STATUS_INTERNAL_ERROR:
-        result = "cublas internal error";
+        result = "cuBLAS internal error";
         break;
     case CUBLAS_STATUS_NOT_SUPPORTED:
         result = "cuBlas Unsupported operation/device";
