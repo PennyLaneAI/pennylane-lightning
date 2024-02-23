@@ -47,9 +47,24 @@ class LightningMeasurements:
 
     def __init__(self, qubit_state: LightningStateVector) -> None:
         self._qubit_state = qubit_state
-        self.state = qubit_state.state_vector
-        self.dtype = qubit_state.dtype
-        self.measurement_lightning = self._measurement_dtype()(self.state)
+        self._state = qubit_state.state_vector
+        self._dtype = qubit_state.dtype
+        self._measurement_lightning = self._measurement_dtype()(self.state)
+
+    @property
+    def qubit_state(self):
+        """Returns a handle to the LightningStateVector class."""
+        return self._qubit_state
+
+    @property
+    def state(self):
+        """Returns a handle to the Lightning internal data class."""
+        return self._state
+
+    @property
+    def dtype(self):
+        """Returns the simulation data type."""
+        return self._dtype
 
     def _measurement_dtype(self):
         """Binding to Lightning Managed state vector.
@@ -94,7 +109,7 @@ class LightningMeasurements:
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
-            return self.measurement_lightning.expval(
+            return self._measurement_lightning.expval(
                 CSR_SparseHamiltonian.indptr,
                 CSR_SparseHamiltonian.indices,
                 CSR_SparseHamiltonian.data,
@@ -106,11 +121,11 @@ class LightningMeasurements:
             or isinstance(measurementprocess.obs.name, List)
         ):
             ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.name, self.dtype == np.complex64
+                self._qubit_state.device_name, self.dtype == np.complex64
             )._ob(measurementprocess.obs)
-            return self.measurement_lightning.expval(ob_serialized)
+            return self._measurement_lightning.expval(ob_serialized)
 
-        return self.measurement_lightning.expval(
+        return self._measurement_lightning.expval(
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
