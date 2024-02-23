@@ -195,7 +195,7 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
         result = "custatevec communicator failure";
         break;
     case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
-        result = "custatevec dynmic library load failure";
+        result = "custatevec dynamic library load failure";
         break;
     default:
         result =
