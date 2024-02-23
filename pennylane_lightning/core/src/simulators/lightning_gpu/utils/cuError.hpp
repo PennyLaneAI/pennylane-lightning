@@ -104,8 +104,9 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         break;
     case CUBLAS_STATUS_LICENSE_ERROR:
         result = "cuBlas license error";
-        break default : result = "cuBlas status not found. Error code=" +
-                                 std::to_string(err);
+        break;
+    default:
+        result = "cuBlas status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
