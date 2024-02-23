@@ -103,7 +103,7 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         result = "cuBLAS GPU program failed to execute";
         break;
     case CUBLAS_STATUS_LICENSE_ERROR:
-        result = "cuBlas license error";
+        result = "cuBLAS license error";
         break;
     default:
         result = "cuBlas status not found. Error code=" + std::to_string(err);
