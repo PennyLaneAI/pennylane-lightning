@@ -85,25 +85,27 @@ static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
         result = "cuBLAS memory allocation failed";
         break;
     case CUBLAS_STATUS_INVALID_VALUE:
-        result = "Invalid value";
+        result = "cuBLAS invalid value";
         break;
     case CUBLAS_STATUS_ARCH_MISMATCH:
-        result = "CUDA device architecture mismatch";
+        result = "cuBLAS CUDA device architecture mismatch";
         break;
     case CUBLAS_STATUS_MAPPING_ERROR:
         result = "cuBLAS mapping error";
         break;
     case CUBLAS_STATUS_INTERNAL_ERROR:
-        result = "Internal cuBLAS error";
+        result = "cublas internal error";
         break;
     case CUBLAS_STATUS_NOT_SUPPORTED:
-        result = "Unsupported operation/device";
+        result = "cuBlas Unsupported operation/device";
         break;
     case CUBLAS_STATUS_EXECUTION_FAILED:
-        result = "GPU program failed to execute";
+        result = "cuBlas GPU program failed to execute";
         break;
-    default:
-        result = "Status not found";
+    case CUBLAS_STATUS_LICENSE_ERROR:
+        result = "cuBlas license error";
+        break default : result = "cuBlas status not found. Error code=" +
+                                 std::to_string(err);
     }
     return result;
 }
@@ -142,7 +144,7 @@ static const std::string GetCuSparseErrorString(const cusparseStatus_t &err) {
         result = "The resources are not sufficient to complete the operation.";
         break;
     default:
-        result = "Status not found";
+        result = "cuSparse status not found. Error code=" + std::to_string(err);
     }
     return result;
 }
@@ -161,28 +163,38 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
         result = "custatevec memory allocation failed";
         break;
     case CUSTATEVEC_STATUS_INVALID_VALUE:
-        result = "Invalid value";
+        result = "custatevec invalid value";
         break;
     case CUSTATEVEC_STATUS_ARCH_MISMATCH:
-        result = "CUDA device architecture mismatch";
+        result = "custatevec CUDA device architecture mismatch";
         break;
     case CUSTATEVEC_STATUS_EXECUTION_FAILED:
         result = "custatevec execution failed";
         break;
     case CUSTATEVEC_STATUS_INTERNAL_ERROR:
-        result = "Internal custatevec error";
+        result = "custatevec internal error";
         break;
     case CUSTATEVEC_STATUS_NOT_SUPPORTED:
-        result = "Unsupported operation/device";
+        result = "custatevec unsupported operation/device";
         break;
     case CUSTATEVEC_STATUS_INSUFFICIENT_WORKSPACE:
-        result = "Insufficient memory for gate-application workspace";
+        result =
+            "custatevec insufficient memory for gate-application workspace";
         break;
     case CUSTATEVEC_STATUS_SAMPLER_NOT_PREPROCESSED:
-        result = "Sampler not preprocessed";
+        result = "custatevec sampler not preprocessed";
         break;
-    default:
-        result = "Status not found";
+    case CUSTATEVEC_STATUS_NO_DEVICE_ALLOCATOR:
+        result = "custatevec no device allocator";
+        break;
+    case CUSTATEVEC_STATUS_DEVICE_ALLOCATOR_ERROR:
+        result = "custatevec device allocator error";
+    break case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
+        result = "custatevec communicator failure";
+    break case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
+        result = "custatevec dynmic library load failure";
+        break default : result = "custatevec status not found. Error code=" +
+                                 std::to_string(err);
     }
     return result;
 }
