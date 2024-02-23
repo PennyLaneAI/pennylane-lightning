@@ -38,6 +38,7 @@ if not LightningQubit._CPP_BINARY_AVAILABLE:
 if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
+
 class CustomStateMeasurement(qml.measurements.StateMeasurement):
     def process_state(self, state, wire_order):
         return 1
