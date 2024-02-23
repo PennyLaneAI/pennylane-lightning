@@ -30,8 +30,7 @@ from pennylane_lightning.lightning_qubit._state_vector import LightningStateVect
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 
 
-class CustomStateMeasurment(qml.measurements.StateMeasurement):
-
+class CustomStateMeasurement(qml.measurements.StateMeasurement):
     def process_state(self, state, wire_order):
         return 1
 
@@ -57,6 +56,7 @@ def test_initialization_complex128():
     assert m.dtype == np.complex128
     assert isinstance(m.measurement_lightning, MeasurementsC128)
 
+
 class TestGetMeasurementFunction:
     """Tests for the get_measurement_function method."""
 
@@ -66,17 +66,21 @@ class TestGetMeasurementFunction:
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
         m = LightningMeasurements(statevector)
 
-        mp = qml.counts(wires=(0,1))
+        mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    @pytest.mark.parametrize("mp", (qml.probs(wires=0),
-        qml.var(qml.Z(0)),
-        qml.vn_entropy(wires=0),
-        CustomStateMeasurment(),
-        qml.expval(qml.Identity(0)),
-        qml.expval(qml.Projector([1, 0], wires=(0,1)))
-    ))
+    @pytest.mark.parametrize(
+        "mp",
+        (
+            qml.probs(wires=0),
+            qml.var(qml.Z(0)),
+            qml.vn_entropy(wires=0),
+            CustomStateMeasurement(),
+            qml.expval(qml.Identity(0)),
+            qml.expval(qml.Projector([1, 0], wires=(0, 1))),
+        ),
+    )
     def test_state_diagonalizing_gates_measurements(self, mp):
         """Test that any non-expval measurement is"""
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
@@ -84,17 +88,20 @@ class TestGetMeasurementFunction:
 
         assert m.get_measurement_function(mp) == m.state_diagonalizing_gates
 
-    @pytest.mark.parametrize("obs", (
-        qml.X(0),
-        qml.Y(0),
-        qml.Z(0),
-        qml.sum(qml.X(0), qml.Y(0)),
-        qml.prod(qml.X(0), qml.Y(1)),
-        qml.s_prod(2.0, qml.X(0)),
-        qml.Hamiltonian([1.0, 2.0], [qml.X(0), qml.Y(0)]),
-        qml.Hermitian(np.eye(2), wires=0),
-        qml.SparseHamiltonian(qml.X.compute_sparse_matrix(), wires=0),
-    ))
+    @pytest.mark.parametrize(
+        "obs",
+        (
+            qml.X(0),
+            qml.Y(0),
+            qml.Z(0),
+            qml.sum(qml.X(0), qml.Y(0)),
+            qml.prod(qml.X(0), qml.Y(1)),
+            qml.s_prod(2.0, qml.X(0)),
+            qml.Hamiltonian([1.0, 2.0], [qml.X(0), qml.Y(0)]),
+            qml.Hermitian(np.eye(2), wires=0),
+            qml.SparseHamiltonian(qml.X.compute_sparse_matrix(), wires=0),
+        ),
+    )
     def test_expval_selected(self, obs):
         """Test that expval is chosen for a variety of different expectation values."""
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
@@ -126,7 +133,7 @@ class TestStateDiagonalizingGates:
         """Test that state_diagonalizing_gates can handle an arbitrary measurement process."""
         phi = 0.5
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
-        statevector.apply_operations([qml.IsingXX(phi, wires=(0,1))])
+        statevector.apply_operations([qml.IsingXX(phi, wires=(0, 1))])
         m = LightningMeasurements(statevector)
         measurement = qml.vn_entropy(wires=0)
         result = getattr(m, method_name)(measurement)
@@ -136,10 +143,10 @@ class TestStateDiagonalizingGates:
         """Test that LightningMeasurements can handle a custom state based measurement."""
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
         m = LightningMeasurements(statevector)
-        measurement = CustomStateMeasurment()
+        measurement = CustomStateMeasurement()
         result = getattr(m, method_name)(measurement)
         assert result == 1
-    
+
     def test_measurement_with_diagonalizing_gates(self, method_name):
         statevector = LightningStateVector(num_wires=5, dtype=np.complex64)
         m = LightningMeasurements(statevector)
@@ -162,7 +169,7 @@ class TestStateDiagonalizingGates:
         statevector.apply_operations([qml.RX(phi, 0)])
         m = LightningMeasurements(statevector)
         result = getattr(m, method_name)(qml.expval(qml.Projector([0], wires=0)))
-        assert qml.math.allclose(result, np.cos(phi/2)**2)
+        assert qml.math.allclose(result, np.cos(phi / 2) ** 2)
 
     def test_state_vector_projector_expval(self, method_name):
         """Test expectation value for a state vector projector."""
@@ -171,5 +178,4 @@ class TestStateDiagonalizingGates:
         statevector.apply_operations([qml.RX(phi, 0)])
         m = LightningMeasurements(statevector)
         result = getattr(m, method_name)(qml.expval(qml.Projector([0, 1], wires=0)))
-        assert qml.math.allclose(result, np.sin(phi/2)**2)
-
+        assert qml.math.allclose(result, np.sin(phi / 2) ** 2)

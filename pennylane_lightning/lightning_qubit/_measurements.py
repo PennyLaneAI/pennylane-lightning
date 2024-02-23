@@ -50,7 +50,6 @@ class LightningMeasurements:
         self.state = qubit_state.state_vector
         self.dtype = qubit_state.dtype
         self.measurement_lightning = self._measurement_dtype()(self.state)
-        
 
     def _measurement_dtype(self):
         """Binding to Lightning Managed state vector.
