@@ -280,22 +280,6 @@ class TestExpval:
         assert np.allclose(result, expected, atol=tol, rtol=0)
 
 
-# @pytest.mark.parametrize("operation,input,expected_output,par", test_data_two_wires_with_parameters)
-# def measure_final_state(tol, operation, input, expected_output, par):
-#     """Tests that applying an operation yields the expected output state for two wire
-#     operations that have parameters."""
-#     wires = 2
-#     state_vector = LightningStateVector(wires)
-#     tape = QuantumScript(
-#         [qml.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
-#     )
-#     final_state = state_vector.get_final_state(tape)
-
-#     assert np.allclose(final_state.state, np.array(expected_output), atol=tol, rtol=0)
-#     assert final_state.state.dtype == final_state.dtype
-#     assert final_state == state_vector
-
-
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 
