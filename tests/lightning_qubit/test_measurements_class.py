@@ -375,7 +375,7 @@ class TestExpval:
     def test_single_wire_observables_expectation(
         self, Obs, Op, expected_fn, theta, phi, tol, lightning_sv
     ):
-        """Test that expectation values for single wire observables is correct"""
+        """Test that expectation values for single wire observables are correct"""
         wires = 3
         tape = qml.tape.QuantumScript(
             [Op(theta, wires=[0]), Op(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
