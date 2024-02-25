@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ExpValFunctorsLQubit.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"
@@ -44,6 +45,16 @@ using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
+using namespace Pennylane::LightningQubit::Functors;
+enum class ExpValFunc : uint32_t {
+    BEGIN = 1,
+    Identity = 1,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    END
+};
 } // namespace
 /// @endcond
 
@@ -65,9 +76,39 @@ class Measurements final
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
+    const std::unordered_map<std::string, ExpValFunc> expval_funcs_;
+
   public:
     explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector} {};
+        : BaseType{statevector},
+          expval_funcs_{{"Identity", ExpValFunc::Identity},
+                        {"PauliX", ExpValFunc::PauliX},
+                        {"PauliY", ExpValFunc::PauliY},
+                        {"PauliZ", ExpValFunc::PauliZ},
+                        {"Hadamard", ExpValFunc::Hadamard}} {};
+
+    /**
+     * @brief Templated method that returns the expectation value of named
+     * observables using in-place operations, without creating extra copy of
+     * the statevector.
+     *
+     * @tparam functor_t Expectation value functor class for in-place
+     * operations.
+     * @tparam nqubits Number of wires.
+     * @param wires Wires to which the observable is applied.
+     * @return expectation value of the observable.
+     */
+    template <template <class> class functor_t, size_t num_wires>
+    PrecisionT applyExpValNamedFunctor(const std::vector<size_t> &wires) {
+        if constexpr (num_wires > 0) {
+            PL_ASSERT(wires.size() == num_wires);
+        }
+
+        size_t num_qubits = this->_statevector.getNumQubits();
+        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
+
+        return functor_t<PrecisionT>(arr_data, num_qubits, wires)();
+    }
 
     /**
      * @brief Probabilities of each computational basis state.
@@ -206,17 +247,30 @@ class Measurements final
      */
     PrecisionT expval(const std::string &operation,
                       const std::vector<size_t> &wires) {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
-
-        operator_statevector.applyOperation(operation, wires);
-
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-        return std::real(expected_value);
+        // In-place calculation of expval without creating duplicate of the
+        // statevector.
+        switch (expval_funcs_.at(operation)) {
+        case ExpValFunc::Identity:
+            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
+                                           0>(wires);
+        case ExpValFunc::PauliX:
+            return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
+                wires);
+        case ExpValFunc::PauliY:
+            return applyExpValNamedFunctor<getExpectationValuePauliYFunctor, 1>(
+                wires);
+        case ExpValFunc::PauliZ:
+            return applyExpValNamedFunctor<getExpectationValuePauliZFunctor, 1>(
+                wires);
+        case ExpValFunc::Hadamard:
+            return applyExpValNamedFunctor<getExpectationValueHadamardFunctor,
+                                           1>(wires);
+        default:
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
+            break;
+        }
     };
 
     /**

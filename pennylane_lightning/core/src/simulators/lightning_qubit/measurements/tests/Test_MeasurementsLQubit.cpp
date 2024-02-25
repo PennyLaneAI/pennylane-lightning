@@ -100,6 +100,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
+        operations_list = {"Identity", "Identity", "Identity"};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {1.0, 1.0, 1.0};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
@@ -113,6 +118,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
+        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+
+        operations_list = {"Hadamard", "Hadamard", "Hadamard"};
+        exp_values = Measurer.expval(operations_list, wires_list);
+        exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
         REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }
