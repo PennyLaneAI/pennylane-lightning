@@ -1,4 +1,4 @@
-# Release 0.35.0-dev
+# Release 0.35.0
 
 ### New features since last release
 
@@ -7,7 +7,7 @@
 
 * Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
-  
+
 ### Breaking changes
 
 * Migrate `lightning.gpu` to CUDA 12.
@@ -51,6 +51,9 @@
 * Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
   [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
 
+* Remove deprecated MeasurementProcess.name.
+  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
+
 ### Documentation
 
 * Update requirements to build the documentation.
@@ -62,7 +65,7 @@
   [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
 
 * Lightning-GPU's gate cache failed to distinguish between certain gates.
-  For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation. 
+  For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation.
   This could happen with (at least) the following gates: `QubitUnitary`,`ControlledQubitUnitary`,`MultiControlledX`,`DiagonalQubitUnitary`,`PSWAP`,`OrbitalRotation`.
   [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
@@ -79,7 +82,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, Matthew Silverman
 
 ---
 
@@ -120,7 +123,7 @@ Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
- 
+
 * Ensure aligned memory used for numpy arrays with state-vector without reallocations.
   [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 
