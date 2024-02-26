@@ -80,6 +80,11 @@ class LightningStateVector:
         """All wires that can be addressed on this device"""
         return self._wires
 
+    @property
+    def num_wires(self):
+        """Number of wires addressed on this device"""
+        return self._num_wires
+
     def _state_dtype(self):
         """Binding to Lightning Managed state vector.
 

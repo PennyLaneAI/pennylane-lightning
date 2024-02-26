@@ -90,6 +90,31 @@ def test_apply_operation_state_preparation(tol, operation, expected_output, par)
     assert np.allclose(state_vector.state, np.array(expected_output), atol=tol, rtol=0)
 
 
+@pytest.mark.parametrize(
+    "operation,par",
+    [
+        (qml.BasisState, [1, 0]),
+        (qml.QubitStateVector, [0, 0, 1, 0]),
+        (
+            qml.StatePrep,
+            [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+        ),
+    ],
+)
+def test_reset_state(tol, operation, par):
+    """Tests that applying an operation yields the expected output state for single wire
+    operations that have no parameters."""
+
+    wires = 2
+    state_vector = LightningStateVector(wires)
+    state_vector.apply_operations([operation(np.array(par), Wires(range(wires)))])
+
+    state_vector.reset_state()
+
+    expected_output = state_vector._asarray([1, 0, 0, 0])
+    assert np.allclose(state_vector.state, expected_output, atol=tol, rtol=0)
+
+
 test_data_no_parameters = [
     (qml.PauliX, [1, 0], [0, 1]),
     (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
