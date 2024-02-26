@@ -390,6 +390,43 @@ class TestExpval:
         assert np.allclose(result, expected, tol)
 
 
+class TestSparseExpval:
+    """Tests for the expval function"""
+
+    wires = 2
+
+    @pytest.mark.parametrize(
+        "ham_terms, expected",
+        [
+            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000],
+            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122],
+            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050],
+            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
+        ],
+    )
+    def test_sparse_Pauli_words(self, ham_terms, expected, tol, lightning_sv):
+        """Test expval of some simple sparse Hamiltonian"""
+
+        ops = [qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])]
+        measurements = [
+            qml.expval(
+                qml.SparseHamiltonian(
+                    qml.Hamiltonian([1], [ham_terms]).sparse_matrix(), wires=[0, 1]
+                )
+            )
+        ]
+        tape = qml.tape.QuantumScript(ops, measurements)
+
+        statevector = lightning_sv(self.wires)
+        statevector = statevector.get_final_state(tape)
+        m = LightningMeasurements(statevector)
+        result = m.measure_final_state(tape)
+
+        assert np.allclose(result, expected, tol)
+
+
 @pytest.mark.parametrize("phi", PHI)
 class TestExpOperatorArithmetic:
     """Test integration with SProd, Prod, and Sum."""
