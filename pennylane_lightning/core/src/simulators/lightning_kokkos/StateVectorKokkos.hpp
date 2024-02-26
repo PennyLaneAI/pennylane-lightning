@@ -672,6 +672,7 @@ class StateVectorKokkos final
                           const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
         PL_ASSERT(wires.size() == nqubits);
+        PL_ASSERT(wires.size() <= num_qubits);
         if (!inverse) {
             Kokkos::parallel_for(
                 Kokkos::RangePolicy<KokkosExecSpace>(

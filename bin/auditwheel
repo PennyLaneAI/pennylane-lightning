@@ -9,14 +9,19 @@ from auditwheel.policy import WheelPolicies as WP
 
 # Do not include licensed dynamic libraries
 libs = [
+    "libcudart.so",
     "libcudart.so.11.0",
     "libcudart.so.12.0",
+    "libcublasLt.so",
     "libcublasLt.so.11",
     "libcublasLt.so.12",
+    "libcublas.so",
     "libcublas.so.11",
     "libcublas.so.12",
+    "libcusparse.so",
     "libcusparse.so.11",
     "libcusparse.so.12",
+    "libcustatevec.so",
     "libcustatevec.so.1",
 ]
 

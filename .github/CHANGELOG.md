@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Expand error values and strings returned from CUDA libraries.
+  [(#617)](https://github.com/PennyLaneAI/pennylane-lightning/pull/617)
+
 * `C(MultiRZ)` and `C(Rot)` gates are natively supported (with `LM` kernels).
   [(#614)](https://github.com/PennyLaneAI/pennylane-lightning/pull/614)
 
