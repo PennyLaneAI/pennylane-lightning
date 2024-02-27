@@ -6,9 +6,8 @@
 include_guard()
 
 # Macro to aid in finding CUDA lib
-macro(findCUDA external_libs)
-    find_package(CUDA REQUIRED)
-    find_package(CUDAToolkit REQUIRED)
+macro(findCUDATK external_libs)
+    find_package(CUDAToolkit REQUIRED EXACT 12)
     if(CUDA_FOUND)
         target_link_libraries(${external_libs} INTERFACE CUDA::cudart)
     endif()
