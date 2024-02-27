@@ -14,12 +14,13 @@
 
 import pytest
 from conftest import LightningDevice  # tested device
+from pennylane.devices import DefaultQubit
 
 import numpy as np
 import math
+import itertools
 
 import pennylane as qml
-from pennylane.tape import QuantumScript
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
@@ -425,6 +426,194 @@ class TestSparseExpval:
         result = m.measure_final_state(tape)
 
         assert np.allclose(result, expected, tol)
+
+
+class TestControlledOps:
+    """Tests for controlled operations"""
+
+    @staticmethod
+    def calculate_reference(tape):
+        dev = DefaultQubit(max_workers=1)
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PauliX,
+            qml.PauliY,
+            qml.PauliZ,
+            qml.Hadamard,
+            qml.S,
+            qml.T,
+            qml.PhaseShift,
+            qml.RX,
+            qml.RY,
+            qml.RZ,
+            qml.Rot,
+            qml.SWAP,
+            qml.IsingXX,
+            qml.IsingXY,
+            qml.IsingYY,
+            qml.IsingZZ,
+            qml.SingleExcitation,
+            qml.SingleExcitationMinus,
+            qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
+            qml.MultiRZ,
+            qml.GlobalPhase,
+        ],
+    )
+    @pytest.mark.parametrize("control_value", [False, True])
+    @pytest.mark.parametrize("n_qubits", list(range(2, 5)))
+    def test_controlled_qubit_gates(self, operation, n_qubits, control_value, tol, lightning_sv):
+        """Test that multi-controlled gates are correctly applied to a state"""
+        threshold = 250
+        num_wires = max(operation.num_wires, 1)
+
+        for n_wires in range(num_wires + 1, num_wires + 4):
+            wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+            n_perms = len(wire_lists) * n_wires
+            if n_perms > threshold:
+                wire_lists = wire_lists[0 :: (n_perms // threshold)]
+            for all_wires in wire_lists:
+                target_wires = all_wires[0:num_wires]
+                control_wires = all_wires[num_wires:]
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+                ops = [
+                    qml.StatePrep(init_state, wires=range(n_qubits)),
+                ]
+
+                if operation.num_params == 0:
+                    ops += [
+                        qml.ctrl(
+                            operation(target_wires),
+                            control_wires,
+                            control_values=[
+                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                            ],
+                        ),
+                    ]
+                else:
+                    ops += [
+                        qml.ctrl(
+                            operation(*tuple([0.1234] * operation.num_params), target_wires),
+                            control_wires,
+                            control_values=[
+                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                            ],
+                        ),
+                    ]
+
+                measurements = [qml.state()]
+                tape = qml.tape.QuantumScript(ops, measurements)
+
+                statevector = lightning_sv(n_qubits)
+                statevector = statevector.get_final_state(tape)
+                m = LightningMeasurements(statevector)
+                result = m.measure_final_state(tape)
+                expected = self.calculate_reference(tape)
+
+                assert np.allclose(result, expected, tol)
+
+    def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
+        n_qubits = 10
+        par = 0.1234
+
+        tape = qml.tape.QuantumScript(
+            [
+                qml.ControlledQubitUnitary(
+                    qml.QubitUnitary(qml.RX.compute_matrix(par), wires=5), control_wires=range(5)
+                )
+            ],
+            [qml.expval(qml.PauliX(0))],
+        )
+
+        statevector = lightning_sv(n_qubits)
+        statevector = statevector.get_final_state(tape)
+        m = LightningMeasurements(statevector)
+        result = m.measure_final_state(tape)
+        expected = self.calculate_reference(tape)
+
+        assert np.allclose(result, expected, tol)
+
+    @pytest.mark.parametrize("control_wires", range(4))
+    @pytest.mark.parametrize("target_wires", range(4))
+    def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):
+        """Test that ControlledQubitUnitary is correctly applied to a state"""
+        if control_wires == target_wires:
+            return
+        n_qubits = 4
+        control_wires = [control_wires]
+        target_wires = [target_wires]
+        wires = control_wires + target_wires
+        U = qml.matrix(qml.PauliX(target_wires))
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        tape = qml.tape.QuantumScript(
+            [
+                qml.StatePrep(init_state, wires=range(n_qubits)),
+                qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires),
+            ],
+            [qml.state()],
+        )
+        tape_cnot = qml.tape.QuantumScript(
+            [qml.StatePrep(init_state, wires=range(n_qubits)), qml.CNOT(wires=wires)], [qml.state()]
+        )
+
+        statevector = lightning_sv(n_qubits)
+        statevector = statevector.get_final_state(tape)
+        m = LightningMeasurements(statevector)
+        result = m.measure_final_state(tape)
+        expected = self.calculate_reference(tape_cnot)
+
+        assert np.allclose(result, expected, tol)
+
+    @pytest.mark.parametrize("control_value", [False, True])
+    @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+    def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
+        """Test that multi-controlled gates are correctly applied to a state"""
+        threshold = 250
+        operation = qml.GlobalPhase
+        num_wires = max(operation.num_wires, 1)
+        for n_wires in range(num_wires + 1, num_wires + 4):
+            wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+            n_perms = len(wire_lists) * n_wires
+            if n_perms > threshold:
+                wire_lists = wire_lists[0 :: (n_perms // threshold)]
+            for all_wires in wire_lists:
+                target_wires = all_wires[0:num_wires]
+                control_wires = all_wires[num_wires:]
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+                tape = qml.tape.QuantumScript(
+                    [
+                        qml.StatePrep(init_state, wires=range(n_qubits)),
+                        qml.ctrl(
+                            operation(0.1234, target_wires),
+                            control_wires,
+                            control_values=[
+                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                            ],
+                        ),
+                    ],
+                    [qml.state()],
+                )
+                statevector = lightning_sv(n_qubits)
+                statevector = statevector.get_final_state(tape)
+                m = LightningMeasurements(statevector)
+                result = m.measure_final_state(tape)
+                expected = self.calculate_reference(tape)
+
+                assert np.allclose(result, expected, tol)
 
 
 @pytest.mark.parametrize("phi", PHI)
