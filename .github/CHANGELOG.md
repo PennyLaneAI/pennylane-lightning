@@ -78,6 +78,9 @@
 * Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
   [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
 
+* Update jax.config imports.
+  [(#619)](https://github.com/PennyLaneAI/pennylane-lightning/pull/619)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
