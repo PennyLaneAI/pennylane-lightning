@@ -353,6 +353,7 @@ class LightningStateVector:
             LightningStateVector: Lightning final state class.
 
         """
+        circuit = circuit.map_to_standard_wires()
         self.apply_operations(circuit.operations)
 
         return self
