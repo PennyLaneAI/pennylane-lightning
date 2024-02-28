@@ -218,7 +218,7 @@ class LightningStateVector:
         basis_states = qml.math.convert_like(basis_states, state)
         return int(qml.math.dot(state, basis_states))
 
-    def _apply_state_vector(self, state, device_wires):
+    def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
@@ -228,7 +228,7 @@ class LightningStateVector:
 
         if isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
-            self._qubit_state.getState(state_data)
+            state.getState(state_data)
             state = state_data
 
         ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
@@ -270,8 +270,6 @@ class LightningStateVector:
         state = self.state_vector
 
         basename = operation.base.name
-        if basename == "Identity":
-            return
         method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
@@ -353,7 +351,6 @@ class LightningStateVector:
             LightningStateVector: Lightning final state class.
 
         """
-        circuit = circuit.map_to_standard_wires()
         self.apply_operations(circuit.operations)
 
         return self

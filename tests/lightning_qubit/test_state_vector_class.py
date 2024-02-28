@@ -58,6 +58,34 @@ def test_wrong_dtype(dtype):
         assert LightningStateVector(3, dtype=dtype)
 
 
+@pytest.mark.parametrize("dtype", [np.double, np.complex64, None])
+@pytest.mark.parametrize("data", [1.0, [1.0], [1.0, 2.0]])
+def test_asarray(dtype, data, tol):
+    """Test _asarray returns the right values"""
+    wires = 2
+    state_vector = LightningStateVector(wires)
+    assert np.allclose(data, state_vector._asarray(data, dtype), atol=tol)
+
+
+def test_errors_basis_state():
+    with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
+        state_vector = LightningStateVector(2)
+        state_vector.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
+    with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
+        state_vector = LightningStateVector(1)
+        state_vector.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
+
+
+def test_apply_state_vector_with_lightning_handle(tol):
+    state_vector_1 = LightningStateVector(2)
+    state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
+
+    state_vector_2 = LightningStateVector(2)
+    state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
+
+    assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
+
+
 @pytest.mark.parametrize(
     "operation,expected_output,par",
     [
