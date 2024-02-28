@@ -182,16 +182,20 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
         const ComplexT coef{invsqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
         const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
 
-        std::vector<std::vector<ComplexT>> expected_state = {
-            {coef, coef, coef, coef, zero, zero, zero, zero},
-            {coef, coef, zero, zero, coef, coef, zero, zero},
-            {coef, zero, coef, zero, coef, zero, coef, zero}};
+        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
+            {{coef, coef, coef, coef, zero, zero, zero, zero},
+             {coef, coef, zero, zero, coef, coef, zero, zero},
+             {coef, zero, coef, zero, coef, zero, coef, zero}},
+            {{zero, zero, zero, zero, coef, coef, coef, coef},
+             {zero, zero, coef, coef, zero, zero, coef, coef},
+             {zero, coef, zero, coef, zero, coef, zero, coef}},
+        };
 
         std::size_t wire = GENERATE(0, 1, 2);
-        std::size_t branch = GENERATE(0);
+        std::size_t branch = GENERATE(0, 1);
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
         sv.collapse(wire, branch);
 
-        REQUIRE(sv.getDataVector() == approx(expected_state[wire]));
+        REQUIRE(sv.getDataVector() == approx(expected_state[branch][wire]));
     }
 }
