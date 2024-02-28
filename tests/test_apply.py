@@ -16,7 +16,7 @@ Unit tests for Lightning devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop
 import pytest
-from conftest import THETA, PHI, VARPHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
+from conftest import THETA, PHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
 
 import math
 import numpy as np
@@ -507,6 +507,10 @@ class TestApply:
             dev.reset()
             dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="Only meaningful for LightningQubit.",
+    )
     def test_apply_state_vector_lightning_handle(self, qubit_device, tol):
         dev = qubit_device(wires=2)
         dev.apply([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
@@ -755,7 +759,7 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
-    def test_nonzero_shots(self, tol_stochastic):
+    def test_nonzero_shots(self, TOL_STOCHASTIC):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
@@ -773,7 +777,7 @@ class TestLightningDeviceIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=tol_stochastic, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=TOL_STOCHASTIC, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
