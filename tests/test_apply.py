@@ -507,6 +507,14 @@ class TestApply:
             dev.reset()
             dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
 
+    # @pytest.mark.skipif(
+    #     not ld._CPP_BINARY_AVAILABLE and device_name != "lightning.qubit",
+    #     reason="Only meaningful for LightningQubit.",
+    # )
+    @pytest.mark.skipif(
+        not ld._CPP_BINARY_AVAILABLE,
+        reason="Lightning binary required",
+    )
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
         reason="Only meaningful for LightningQubit.",
