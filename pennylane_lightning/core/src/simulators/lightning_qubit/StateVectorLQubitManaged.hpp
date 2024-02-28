@@ -22,6 +22,7 @@
 #include <algorithm> // fill
 #include <complex>
 #include <iostream>
+#include <random>
 #include <vector>
 
 #include "BitUtil.hpp"        // log2PerfectPower, isPerfectPowerOf2
@@ -64,6 +65,7 @@ class StateVectorLQubitManaged final
     using BaseType =
         StateVectorLQubit<PrecisionT, StateVectorLQubitManaged<PrecisionT>>;
     std::vector<ComplexT, AlignedAllocator<ComplexT>> data_;
+    std::mt19937_64 rng;
 
   public:
     /**
@@ -218,6 +220,10 @@ class StateVectorLQubitManaged final
 
     AlignedAllocator<ComplexT> allocator() const {
         return data_.get_allocator();
+    }
+
+    void seed(const size_t seed) {
+        rng.seed(seed);
     }
 
     /**
