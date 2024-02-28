@@ -13,7 +13,7 @@ project(${PL_BACKEND}
 
 # Include macro and functions supporting Nvidia and cuQuantum libraries.
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
-findCUDA(lightning_external_libs)
+findCUDATK(lightning_external_libs)
 findCustatevec(lightning_external_libs)
 
 if(ENABLE_MPI)
