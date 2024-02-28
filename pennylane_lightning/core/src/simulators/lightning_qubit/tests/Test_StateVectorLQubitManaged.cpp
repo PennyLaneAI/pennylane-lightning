@@ -165,3 +165,33 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
         REQUIRE(sv.getDataVector() == approx(expected_state));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+    std::mt19937_64 re{1337};
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("Prepares a single computational basis state.") {
+        TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
+
+        const auto invsqrt2 = PrecisionT{INVSQRT2<PrecisionT>()};
+        const ComplexT coef{invsqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<std::vector<ComplexT>> expected_state = {
+            {coef, coef, coef, coef, zero, zero, zero, zero},
+            {coef, coef, zero, zero, coef, coef, zero, zero},
+            {coef, zero, coef, zero, coef, zero, coef, zero}};
+
+        std::size_t wire = GENERATE(0, 1, 2);
+        std::size_t branch = GENERATE(0);
+        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+        sv.collapse(wire, branch);
+
+        REQUIRE(sv.getDataVector() == approx(expected_state[wire]));
+    }
+}

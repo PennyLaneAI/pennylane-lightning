@@ -21,6 +21,7 @@
 
 #include <algorithm> // fill
 #include <complex>
+#include <iostream>
 #include <vector>
 
 #include "BitUtil.hpp"        // log2PerfectPower, isPerfectPowerOf2
@@ -216,6 +217,33 @@ class StateVectorLQubitManaged final
 
     AlignedAllocator<ComplexT> allocator() const {
         return data_.get_allocator();
+    }
+
+    /**
+     * @brief Collapse state
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(const std::size_t wire, const bool branch) {
+
+        const auto stride = pow(2, this->num_qubits_ - (1 + wire));
+        const auto vec_size = pow(2, this->num_qubits_);
+        const auto section_size = vec_size / stride;
+        const auto half_section_size = section_size / 2;
+
+        // zero half the entries
+        // the "half" entries depend on the stride
+        // *_*_*_*_ for stride 1
+        // **__**__ for stride 2
+        // ****____ for stride 4
+        const size_t k = branch ? 0 : 1;
+        for (size_t idx = 0; idx < half_section_size; idx++) {
+            for (size_t ids = 0; ids < stride; ids++) {
+                auto v = stride * (k + 2 * idx) + ids;
+                data_[v] = {0., 0.};
+            }
+        }
     }
 };
 } // namespace Pennylane::LightningQubit
