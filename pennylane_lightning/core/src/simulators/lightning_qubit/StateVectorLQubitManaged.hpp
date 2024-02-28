@@ -40,6 +40,7 @@ using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::exp2;
 using Pennylane::Util::isPerfectPowerOf2;
 using Pennylane::Util::log2PerfectPower;
+using Pennylane::Util::squaredNorm;
 } // namespace
 /// @endcond
 
@@ -226,7 +227,6 @@ class StateVectorLQubitManaged final
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
-
         const auto stride = pow(2, this->num_qubits_ - (1 + wire));
         const auto vec_size = pow(2, this->num_qubits_);
         const auto section_size = vec_size / stride;
@@ -242,6 +242,16 @@ class StateVectorLQubitManaged final
             for (size_t ids = 0; ids < stride; ids++) {
                 auto v = stride * (k + 2 * idx) + ids;
                 data_[v] = {0., 0.};
+            }
+        }
+
+        PrecisionT norm =
+            std::sqrt(squaredNorm(data_.data(), this->getLength()));
+
+        if (norm > std::numeric_limits<PrecisionT>::epsilon() * 1e2) {
+            std::complex<PrecisionT> inv_norm = 1. / norm;
+            for (size_t k = 0; k < this->getLength(); k++) {
+                data_[k] *= inv_norm;
             }
         }
     }

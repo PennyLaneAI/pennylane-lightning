@@ -178,8 +178,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
     SECTION("Prepares a single computational basis state.") {
         TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
 
-        const auto invsqrt2 = PrecisionT{INVSQRT2<PrecisionT>()};
-        const ComplexT coef{invsqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
+        const ComplexT coef{0.5, PrecisionT{0.0}};
         const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
 
         std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
