@@ -221,7 +221,7 @@ class StateVectorLQubitManaged final
     }
 
     /**
-     * @brief Compute probabilities of measuring 0 or 1 on one specific wire
+     * @brief Calculate probabilities of measuring 0 or 1 on a specific wire
      *
      * @param wire Wire
      * @return std::vector<PrecisionT> Both probabilities of getting 0 or 1
@@ -246,13 +246,13 @@ class StateVectorLQubitManaged final
             }
         }
 
-        prob_0 = sqrt(prob_0);
         const std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
         return probs;
     }
 
     /**
-     * @brief Collapse state
+     * @brief Collapse the state vector as after having measured one of the
+     * qubits
      *
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.

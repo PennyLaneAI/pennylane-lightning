@@ -166,7 +166,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
     }
 }
 
-
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
                    "[StateVectorLQubitManaged]", float, double) {
     using PrecisionT = TestType;
@@ -175,8 +174,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
 
     const std::size_t num_qubits = 3;
 
-    SECTION("TODO.") { // TODO
-
+    SECTION("Calculate probabilities of measuring 0 or 1 on a specific wire") {
         const ComplexT coef{0.5, PrecisionT{0.0}};
         const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
 
@@ -184,11 +182,10 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
 
         init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
 
-        std::vector<std::vector<PrecisionT>> expected_probs = {
-            {1., 0.}
-        };
+        std::vector<std::vector<PrecisionT>> expected_probs = {{1., 0.},
+                                                               {0.5, 0.5}};
 
-        std::size_t wire = GENERATE(0);
+        std::size_t wire = GENERATE(0, 1);
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
         const std::vector<PrecisionT> probs = sv.probs(wire);
 
@@ -204,7 +201,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
 
     const std::size_t num_qubits = 3;
 
-    SECTION("TODO.") {  // TODO
+    SECTION("Collapse the state vector as after having measured one of the "
+            "qubits.") {
         TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
 
         const ComplexT coef{0.5, PrecisionT{0.0}};
