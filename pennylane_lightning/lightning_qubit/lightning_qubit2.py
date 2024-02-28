@@ -38,11 +38,8 @@ from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
 
 try:
-    # pylint: disable=import-error, no-name-in-module, unused-import
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
+    # pylint: disable=import-error, unused-import
+    import pennylane_lightning.lightning_qubit_ops
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError:

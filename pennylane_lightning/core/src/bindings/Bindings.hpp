@@ -686,6 +686,8 @@ void registerLightningClassBindings(py::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindings<StateVectorT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningException");
     }
 }
 } // namespace Pennylane

@@ -117,7 +117,6 @@ class TestGrover:
             zip([i for i in range(len(index) - 1, -1, -1)], index),
             0,
         )
-        print(prob)
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
         assert np.sum(prob) - prob[index] < 0.05

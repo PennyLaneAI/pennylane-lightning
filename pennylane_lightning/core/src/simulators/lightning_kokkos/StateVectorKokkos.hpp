@@ -648,6 +648,8 @@ class StateVectorKokkos final
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::MultiRZ:
             return applyGeneratorMultiRZ(wires, inverse, params);
+        case GeneratorOperation::GlobalPhase:
+            return static_cast<PrecisionT>(-1.0);
         /// LCOV_EXCL_START
         default:
             PL_ABORT(std::string("Generator does not exist for ") + opName);
@@ -670,6 +672,7 @@ class StateVectorKokkos final
                           const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
         PL_ASSERT(wires.size() == nqubits);
+        PL_ASSERT(wires.size() <= num_qubits);
         if (!inverse) {
             Kokkos::parallel_for(
                 Kokkos::RangePolicy<KokkosExecSpace>(
@@ -924,6 +927,7 @@ class StateVectorKokkos final
         generators_indices_["DoubleExcitationPlus"]  = GeneratorOperation::DoubleExcitationPlus;
         generators_indices_["PhaseShift"]            = GeneratorOperation::PhaseShift;
         generators_indices_["MultiRZ"]               = GeneratorOperation::MultiRZ;
+        generators_indices_["GlobalPhase"]           = GeneratorOperation::GlobalPhase;
     }
     // clang-format on
 };

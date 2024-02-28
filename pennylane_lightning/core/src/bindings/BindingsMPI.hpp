@@ -485,6 +485,8 @@ void registerLightningClassBindingsMPI(py::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindingsMPI<StateVectorT>(m);
         registerLightningClassBindingsMPI<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningExceptionMPI");
     }
 }
 } // namespace Pennylane

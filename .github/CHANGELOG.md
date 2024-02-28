@@ -7,13 +7,22 @@
 
 * Add Hermitian observable support for shot-noise measurement and Lapack support.
   [(#569)](https://github.com/PennyLaneAI/pennylane-lightning/pull/569)
-  
+
 ### Breaking changes
 
 * Migrate `lightning.gpu` to CUDA 12.
   [(#606)](https://github.com/PennyLaneAI/pennylane-lightning/pull/606)
 
 ### Improvements
+
+* Expand error values and strings returned from CUDA libraries.
+  [(#617)](https://github.com/PennyLaneAI/pennylane-lightning/pull/617)
+
+* `C(MultiRZ)` and `C(Rot)` gates are natively supported (with `LM` kernels).
+  [(#614)](https://github.com/PennyLaneAI/pennylane-lightning/pull/614)
+
+* Add adjoint support for `GlobalPhase` in Lightning-GPU and Lightning-Kokkos.
+  [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
 
 * Lower the overheads of Windows CI tests.
   [(#610)](https://github.com/PennyLaneAI/pennylane-lightning/pull/610)
@@ -49,8 +58,14 @@
 
 ### Bug fixes
 
+* Downgrade auditwheel due to changes with library exclusion list.
+  [(#620)](https://github.com/PennyLaneAI/pennylane-lightning/pull/620)
+
+* List `GlobalPhase` gate in each device's TOML file.
+  [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
+
 * Lightning-GPU's gate cache failed to distinguish between certain gates.
-  For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation. 
+  For example, `MultiControlledX([0, 1, 2], "111")` and `MultiControlledX([0, 2], "00")` were applied as the same operation.
   This could happen with (at least) the following gates: `QubitUnitary`,`ControlledQubitUnitary`,`MultiControlledX`,`DiagonalQubitUnitary`,`PSWAP`,`OrbitalRotation`.
   [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
@@ -62,6 +77,9 @@
 
 * Fix `lightning-kokkos-cuda` Docker build and add CI workflow to build images and push to Docker Hub.
   [(#593)](https://github.com/PennyLaneAI/pennylane-lightning/pull/593)
+
+* Update jax.config imports.
+  [(#619)](https://github.com/PennyLaneAI/pennylane-lightning/pull/619)
 
 ### Contributors
 
@@ -108,7 +126,7 @@ Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
   [(#540)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/540)
 
 ### Improvements
- 
+
 * Ensure aligned memory used for numpy arrays with state-vector without reallocations.
   [(#572)](https://github.com/PennyLaneAI/pennylane-lightning/pull/572)
 

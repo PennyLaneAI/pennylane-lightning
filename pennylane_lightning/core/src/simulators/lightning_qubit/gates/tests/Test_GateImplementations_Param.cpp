@@ -2357,6 +2357,28 @@ TEMPLATE_TEST_CASE(
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
+    DYNAMIC_SECTION("N-controlled Rot - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        const bool inverse = GENERATE(false, true);
+        const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+            const std::vector<PrecisionT> params = {
+                param, static_cast<PrecisionT>(2.0) * param,
+                static_cast<PrecisionT>(3.0) * param};
+            sv0.applyOperation("CRot", {control, wire}, inverse, params);
+            sv1.applyOperation("Rot", std::vector<size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<size_t>{wire}, inverse, params);
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE(
@@ -2659,6 +2681,37 @@ TEMPLATE_TEST_CASE(
                                std::vector<bool>{true},
                                std::vector<size_t>{wire0, wire1, wire2, wire3},
                                inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled MultiRZ - "
+                    << "controls = {" << control << ", " << wire0 << ", "
+                    << wire1 << "} "
+                    << ", wires = {" << wire2 << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        const ComplexT e = std::exp(ComplexT{0, -0.5} * param);
+        std::vector<ComplexT> matrix(16, 0.0);
+        matrix[0] = e;
+        matrix[5] = std::conj(e);
+        matrix[10] = std::conj(e);
+        matrix[15] = e;
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+            sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
+                                      std::vector<bool>{true, false, true},
+                                      {wire2, wire3}, inverse);
+            sv1.applyOperation(
+                "MultiRZ", std::vector<size_t>{control, wire0, wire1},
+                std::vector<bool>{true, false, true},
+                std::vector<size_t>{wire2, wire3}, inverse, {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }

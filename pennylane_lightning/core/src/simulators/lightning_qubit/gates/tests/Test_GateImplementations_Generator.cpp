@@ -207,11 +207,11 @@ template <size_t gntr_idx> constexpr auto controlledGeneratorGatePairsIter() {
     }
 }
 
-constexpr auto minNumQubitsFor(ControlledGeneratorOperation gntr_op) -> size_t {
-    // TODO: needed when introducing C(MultiRZ)
-    // if (array_has_elem(Constant::multi_qubit_generators, gntr_op)) {
-    //     return 1;
-    // }
+constexpr auto ctrlMinNumQubitsFor(ControlledGeneratorOperation gntr_op)
+    -> size_t {
+    if (array_has_elem(Constant::controlled_multi_qubit_generators, gntr_op)) {
+        return 1;
+    }
     return lookup(Constant::controlled_generator_wires, gntr_op);
 }
 
@@ -233,7 +233,7 @@ void testControlledGeneratorEqualsGateDerivativeForKernel(
 
     const auto gate_op = lookup(controlled_generator_gate_pairs, gntr_op);
     const auto gate_name = lookup(Constant::controlled_gate_names, gate_op);
-    const auto min_num_qubits = minNumQubitsFor(gntr_op) + 1;
+    const auto min_num_qubits = ctrlMinNumQubitsFor(gntr_op) + 1;
     constexpr static size_t max_num_qubits = 6;
 
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();

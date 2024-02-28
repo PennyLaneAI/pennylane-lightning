@@ -35,6 +35,7 @@ from pennylane.wires import Wires
 from pennylane import (
     BasisState,
     StatePrep,
+    DeviceError,
 )
 
 
@@ -51,11 +52,18 @@ class LightningStateVector:
     """
 
     def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
-        self.num_wires = num_wires
+        self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-        self._name = device_name
-        self._qubit_state = self._state_dtype()(self.num_wires)
+
+        if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
+            raise TypeError(f"Unsupported complex type: {dtype}")
+
+        if device_name != "lightning.qubit":
+            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+
+        self._device_name = device_name
+        self._qubit_state = self._state_dtype()(self._num_wires)
 
     @property
     def dtype(self):
@@ -63,14 +71,19 @@ class LightningStateVector:
         return self._dtype
 
     @property
-    def name(self):
+    def device_name(self):
         """Returns the state vector device name."""
-        return self._name
+        return self._device_name
 
     @property
     def wires(self):
         """All wires that can be addressed on this device"""
         return self._wires
+
+    @property
+    def num_wires(self):
+        """Number of wires addressed on this device"""
+        return self._num_wires
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector.
@@ -80,10 +93,6 @@ class LightningStateVector:
 
         Returns: the state vector class
         """
-        if self.dtype not in [np.complex128, np.complex64]:  # pragma: no cover
-            raise ValueError(
-                f"Data type is not supported for state-vector computation: {self.dtype}"
-            )
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     @staticmethod
@@ -142,7 +151,7 @@ class LightningStateVector:
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
-        state = np.zeros(2**self.num_wires, dtype=self.dtype)
+        state = np.zeros(2**self._num_wires, dtype=self.dtype)
         state = self._asarray(state, dtype=self.dtype)
         self._qubit_state.getState(state)
         return state
@@ -165,26 +174,23 @@ class LightningStateVector:
                 or broadcasted state of shape ``(batch_size, 2**len(wires))``
             array[int]: indices for which the state is changed to input state vector elements
         """
-
-        # translate to wire labels used by device
-
         # special case for integral types
         if state.dtype.kind == "i":
-            state = qml.numpy.array(state, dtype=self.dtype)
+            state = np.array(state, dtype=self.dtype)
         state = self._asarray(state, dtype=self.dtype)
 
-        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
+        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             return None, state
 
         # generate basis states on subset of qubits via the cartesian product
         basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
 
         # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
+        unravelled_indices = np.zeros((2 ** len(device_wires), self._num_wires), dtype=int)
         unravelled_indices[:, device_wires] = basis_states
 
         # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
+        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
         return ravelled_indices, state
 
     def _get_basis_state_index(self, state, wires):
@@ -198,8 +204,6 @@ class LightningStateVector:
         Returns:
             int: basis state index
         """
-        # translate to wire labels used by device
-
         # length of basis state parameter
         n_basis_state = len(state)
 
@@ -210,11 +214,11 @@ class LightningStateVector:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # get computational basis state number
-        basis_states = 2 ** (self.num_wires - 1 - np.array(wires))
+        basis_states = 2 ** (self._num_wires - 1 - np.array(wires))
         basis_states = qml.math.convert_like(basis_states, state)
         return int(qml.math.dot(state, basis_states))
 
-    def _apply_state_vector(self, state, device_wires):
+    def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
@@ -224,15 +228,15 @@ class LightningStateVector:
 
         if isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
-            self._qubit_state.getState(state_data)
+            state.getState(state_data)
             state = state_data
 
         ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
 
         # translate to wire labels used by device
-        output_shape = [2] * self.num_wires
+        output_shape = [2] * self._num_wires
 
-        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
+        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             state = np.reshape(state, output_shape).ravel(order="C")
             self._qubit_state.UpdateData(state)
@@ -266,8 +270,6 @@ class LightningStateVector:
         state = self.state_vector
 
         basename = operation.base.name
-        if basename == "Identity":
-            return
         method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
@@ -279,19 +281,15 @@ class LightningStateVector:
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             target_wires = self.wires.indices(operation.target_wires)
-            try:
-                method(
-                    qml.matrix(operation.base),
-                    control_wires,
-                    control_values,
-                    target_wires,
-                    False,
-                )
-            except AttributeError:  # pragma: no cover
-                # To support older versions of PL
-                method(operation.base.matrix, control_wires, control_values, target_wires, False)
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                False,
+            )
 
-    def apply_lightning(self, operations):
+    def _apply_lightning(self, operations):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -338,7 +336,7 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        self.apply_lightning(operations)
+        self._apply_lightning(operations)
 
     def get_final_state(self, circuit: QuantumScript):
         """
@@ -350,8 +348,7 @@ class LightningStateVector:
             circuit (QuantumScript): The single circuit to simulate
 
         Returns:
-            Tuple: A tuple containing the Lightning final state handler of the quantum script and
-                whether the state has a batch dimension.
+            LightningStateVector: Lightning final state class.
 
         """
         self.apply_operations(circuit.operations)
