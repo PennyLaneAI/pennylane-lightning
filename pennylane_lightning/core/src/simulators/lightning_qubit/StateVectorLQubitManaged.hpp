@@ -291,7 +291,21 @@ class StateVectorLQubitManaged final
         }
     }
 
-    //  private:  // TODO
+    /**
+     * @brief Measure one of the qubits and collapse the state accordingly
+     *
+     * @param wire Wire to measure.
+     * @param branch Branch 0 or 1.
+     */
+    const auto measure(const std::size_t wire) {
+
+        std::vector<PrecisionT> probs_ = probs(wire);
+        auto sample = random_sample(probs_[0]);
+        collapse(wire, sample);
+        return sample;
+    }
+
+    //  private:  // TODO @tomlqc
     /**
      * @brief Sample 0 or 1 for given probabilities
      *
