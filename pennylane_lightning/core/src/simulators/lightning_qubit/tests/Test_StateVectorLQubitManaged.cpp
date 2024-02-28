@@ -14,10 +14,14 @@
 #include <algorithm>
 #include <complex>
 #include <limits>
+#include <map>
 #include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+#include <iomanip>
+#include <iostream>
 
 #include <catch2/catch.hpp>
 
@@ -166,6 +170,31 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::random_sample",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("Sample 0 or 1 for given probabilities") {
+        const ComplexT coef{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
+        init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
+        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+
+        sv.seed(1234);
+        const PrecisionT prob_0 = 0.1;
+        std::map<int, int> map;
+        for (int n = 0; n < 100; ++n)
+            ++map[sv.random_sample(prob_0)];
+        REQUIRE(map[0] == 13);
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
                    "[StateVectorLQubitManaged]", float, double) {
     using PrecisionT = TestType;
@@ -179,7 +208,6 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
         const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
 
         TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
-
         init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
 
         std::vector<std::vector<PrecisionT>> expected_probs = {{1., 0.},

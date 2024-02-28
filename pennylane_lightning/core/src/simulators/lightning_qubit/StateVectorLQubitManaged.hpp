@@ -222,9 +222,7 @@ class StateVectorLQubitManaged final
         return data_.get_allocator();
     }
 
-    void seed(const size_t seed) {
-        rng.seed(seed);
-    }
+    void seed(const size_t seed) { rng.seed(seed); }
 
     /**
      * @brief Calculate probabilities of measuring 0 or 1 on a specific wire
@@ -291,6 +289,17 @@ class StateVectorLQubitManaged final
                 data_[k] *= inv_norm;
             }
         }
+    }
+
+    //  private:  // TODO
+    /**
+     * @brief Sample 0 or 1 for given probabilities
+     *
+     * @param probs Probabilities of 0.
+     */
+    const auto random_sample(const PrecisionT prob_0) {
+        std::discrete_distribution<int> distrib({prob_0, 1. - prob_0});
+        return distrib(rng);
     }
 };
 } // namespace Pennylane::LightningQubit
