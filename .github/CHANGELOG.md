@@ -81,6 +81,9 @@
 * Update jax.config imports.
   [(#619)](https://github.com/PennyLaneAI/pennylane-lightning/pull/619)
 
+* Fix apply state vector when using a Lightning handle.
+  [(#622)](https://github.com/PennyLaneAI/pennylane-lightning/pull/622)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):

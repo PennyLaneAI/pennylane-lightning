@@ -759,7 +759,7 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
-    def test_nonzero_shots(self, TOL_STOCHASTIC):
+    def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
         shots = 10**4
@@ -777,7 +777,7 @@ class TestLightningDeviceIntegration:
         for _ in range(100):
             runs.append(circuit(p))
 
-        assert np.isclose(np.mean(runs), -np.sin(p), atol=TOL_STOCHASTIC, rtol=0)
+        assert np.isclose(np.mean(runs), -np.sin(p), atol=tol_stochastic, rtol=0)
 
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.parametrize(
