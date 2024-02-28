@@ -166,16 +166,45 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
     }
 }
 
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("TODO.") { // TODO
+
+        const ComplexT coef{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
+
+        init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
+
+        std::vector<std::vector<PrecisionT>> expected_probs = {
+            {1., 0.}
+        };
+
+        std::size_t wire = GENERATE(0);
+        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+        const std::vector<PrecisionT> probs = sv.probs(wire);
+
+        REQUIRE(probs == approx(expected_probs[wire]));
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
                    "[StateVectorLQubitManaged]", float, double) {
     using PrecisionT = TestType;
     using ComplexT = std::complex<PrecisionT>;
     using TestVectorT = TestVector<ComplexT>;
-    std::mt19937_64 re{1337};
 
     const std::size_t num_qubits = 3;
 
-    SECTION("Prepares a single computational basis state.") {
+    SECTION("TODO.") {  // TODO
         TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
 
         const ComplexT coef{0.5, PrecisionT{0.0}};

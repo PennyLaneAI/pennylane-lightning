@@ -221,6 +221,37 @@ class StateVectorLQubitManaged final
     }
 
     /**
+     * @brief Compute probabilities of measuring 0 or 1 on one specific wire
+     *
+     * @param wire Wire
+     * @return std::vector<PrecisionT> Both probabilities of getting 0 or 1
+     */
+    auto probs(const std::size_t wire) -> std::vector<PrecisionT> {
+        const auto stride = pow(2, this->num_qubits_ - (1 + wire));
+        const auto vec_size = pow(2, this->num_qubits_);
+        const auto section_size = vec_size / stride;
+        const auto half_section_size = section_size / 2;
+
+        PrecisionT prob_0{0.};
+        // zero half the entries
+        // the "half" entries depend on the stride
+        // *_*_*_*_ for stride 1
+        // **__**__ for stride 2
+        // ****____ for stride 4
+        const size_t k = 0;
+        for (size_t idx = 0; idx < half_section_size; idx++) {
+            for (size_t ids = 0; ids < stride; ids++) {
+                auto v = stride * (k + 2 * idx) + ids;
+                prob_0 += std::norm(data_[v]);
+            }
+        }
+
+        prob_0 = sqrt(prob_0);
+        const std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
+        return probs;
+    }
+
+    /**
      * @brief Collapse state
      *
      * @param wire Wire to collapse.
