@@ -23,7 +23,7 @@ import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
 from pennylane.operation import Operation
-import functools
+from pennylane.wires import Wires
 
 
 class TestApply:
@@ -506,6 +506,15 @@ class TestApply:
         ):
             dev.reset()
             dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
+
+    def test_apply_state_vector_lightning_handle(self, qubit_device, tol):
+        dev = qubit_device(wires=2)
+        dev.apply([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
+
+        dev_2 = qubit_device(wires=2)
+        dev_2._apply_state_vector(dev.state_vector, device_wires=Wires([0, 1]))
+
+        assert np.allclose(dev.state, dev_2.state, atol=tol, rtol=0)
 
 
 class TestExpval:
