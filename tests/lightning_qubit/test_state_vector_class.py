@@ -15,17 +15,17 @@
 Unit tests for the serialization helper functions.
 """
 
-import pytest
-from conftest import LightningDevice  # tested device
-
 import math
+
 import numpy as np
 import pennylane as qml
-from pennylane.wires import Wires
+import pytest
+from conftest import LightningDevice  # tested device
 from pennylane.tape import QuantumScript
+from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 from pennylane_lightning.lightning_qubit import LightningQubit
+from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if not LightningQubit._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -34,7 +34,7 @@ if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("num_wires", [3, 10])
+@pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
 @pytest.mark.parametrize("device_name", ["lightning.qubit"])
 def test_device_name_and_init(num_wires, dtype, device_name):

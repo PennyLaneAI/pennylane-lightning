@@ -17,26 +17,22 @@ Class implementation for state-vector manipulation.
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
-        allocate_aligned_array,
-        get_alignment,
-        best_alignment,
         StateVectorC64,
         StateVectorC128,
+        allocate_aligned_array,
+        best_alignment,
+        get_alignment,
     )
 except ImportError:
     pass
 
 from itertools import product
-import numpy as np
 
+import numpy as np
 import pennylane as qml
+from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
-from pennylane import (
-    BasisState,
-    StatePrep,
-    DeviceError,
-)
 
 
 class LightningStateVector:
@@ -86,10 +82,7 @@ class LightningStateVector:
         return self._num_wires
 
     def _state_dtype(self):
-        """Binding to Lightning Managed state vector.
-
-        Args:
-            dtype (complex): Data complex type
+        """Binding to Lightning Managed state vector C++ class.
 
         Returns: the state vector class
         """

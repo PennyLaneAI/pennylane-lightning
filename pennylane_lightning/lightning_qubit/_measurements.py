@@ -17,22 +17,20 @@ Class implementation for state vector measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 
 from typing import Callable, List
-import numpy as np
 
-from pennylane.measurements import StateMeasurement, MeasurementProcess, ExpectationMP
-from pennylane.typing import TensorLike, Result
+import numpy as np
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
 from pennylane.tape import QuantumScript
+from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
+
 from ._state_vector import LightningStateVector
 
 
@@ -67,12 +65,9 @@ class LightningMeasurements:
         return self._dtype
 
     def _measurement_dtype(self):
-        """Binding to Lightning Managed state vector.
+        """Binding to Lightning Measurements C++ class.
 
-        Args:
-            dtype (complex): Data complex type
-
-        Returns: the state vector class
+        Returns: the Measurements class
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
@@ -89,8 +84,7 @@ class LightningMeasurements:
         self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
 
         state_array = self._qubit_state.state
-        total_wires = int(np.log2(state_array.size))
-        wires = Wires(range(total_wires))
+        wires = Wires(range(self._qubit_state.num_wires))
         return measurementprocess.process_state(state_array, wires)
 
     # pylint: disable=protected-access
