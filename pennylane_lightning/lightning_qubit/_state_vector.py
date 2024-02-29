@@ -82,10 +82,7 @@ class LightningStateVector:
         return self._num_wires
 
     def _state_dtype(self):
-        """Binding to Lightning Managed state vector.
-
-        Args:
-            dtype (complex): Data complex type
+        """Binding to Lightning Managed state vector C++ class.
 
         Returns: the state vector class
         """

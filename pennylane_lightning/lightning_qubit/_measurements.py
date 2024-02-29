@@ -65,12 +65,9 @@ class LightningMeasurements:
         return self._dtype
 
     def _measurement_dtype(self):
-        """Binding to Lightning Managed state vector.
+        """Binding to Lightning Measurements C++ class.
 
-        Args:
-            dtype (complex): Data complex type
-
-        Returns: the state vector class
+        Returns: the Measurements class
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
