@@ -199,6 +199,8 @@ class LightningQubit2(Device):
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
 
+    _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         wires,
@@ -211,15 +213,13 @@ class LightningQubit2(Device):
         num_burnin=100,
         batch_obs=False,
     ):
-        if LQ_CPP_BINARY_AVAILABLE:
-            self._CPP_BINARY_AVAILABLE = True
-        else:
-            self._CPP_BINARY_AVAILABLE = False
+        if not LQ_CPP_BINARY_AVAILABLE:
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
             )
+
         super().__init__(wires=wires, shots=shots)
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
