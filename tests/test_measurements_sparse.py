@@ -14,11 +14,11 @@
 """
 Unit tests for Sparse Measurements Lightning devices.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 from pennylane import qchem
 
 if not ld._CPP_BINARY_AVAILABLE:

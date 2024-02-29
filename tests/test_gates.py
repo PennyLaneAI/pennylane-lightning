@@ -14,14 +14,13 @@
 """
 Unit tests for the correct application of gates with a Lightning device.
 """
-import pytest
-from conftest import LightningDevice, device_name
-from conftest import THETA, PHI
-
 import copy
 import itertools
+
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import PHI, THETA, LightningDevice, device_name
 
 
 @pytest.fixture

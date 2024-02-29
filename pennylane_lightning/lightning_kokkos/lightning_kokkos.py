@@ -17,8 +17,9 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 
-from warnings import warn
 from pathlib import Path
+from warnings import warn
+
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
@@ -30,14 +31,14 @@ from pennylane_lightning.core.lightning_base import (
 try:
     # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops import (
+        InitializationSettings,
+        MeasurementsC64,
+        MeasurementsC128,
+        StateVectorC64,
+        StateVectorC128,
         allocate_aligned_array,
         backend_info,
-        InitializationSettings,
-        MeasurementsC128,
-        MeasurementsC64,
         print_configuration,
-        StateVectorC128,
-        StateVectorC64,
     )
 
     LK_CPP_BINARY_AVAILABLE = True
@@ -45,32 +46,31 @@ except ImportError:
     LK_CPP_BINARY_AVAILABLE = False
 
 if LK_CPP_BINARY_AVAILABLE:
-    from typing import List
     from os import getenv
-
-    from pennylane import (
-        math,
-        BasisState,
-        StatePrep,
-        Projector,
-        Rot,
-        DeviceError,
-        QuantumFunctionError,
-    )
-    from pennylane.operation import Tensor
-    from pennylane.ops.op_math import Adjoint
-    from pennylane.measurements import MeasurementProcess, Expectation, State
-    from pennylane.wires import Wires
+    from typing import List
 
     import pennylane as qml
+    from pennylane import (
+        BasisState,
+        DeviceError,
+        Projector,
+        QuantumFunctionError,
+        Rot,
+        StatePrep,
+        math,
+    )
+    from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
+    from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
-        create_ops_listC64,
         AdjointJacobianC128,
+        create_ops_listC64,
         create_ops_listC128,
     )
 

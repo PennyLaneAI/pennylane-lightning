@@ -16,25 +16,19 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from typing import List
 from itertools import islice, product
+from typing import List
+
 import numpy as np
-
-
 import pennylane as qml
-from pennylane import (
-    BasisState,
-    QubitDevice,
-    StatePrep,
-)
+from pennylane import BasisState, QubitDevice, StatePrep
 from pennylane.devices import DefaultQubitLegacy
 from pennylane.measurements import MeasurementProcess
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
-
-from ._version import __version__
 from ._serialize import QuantumScriptSerializer
+from ._version import __version__
 
 
 def _chunk_iterable(iteration, num_chunks):
