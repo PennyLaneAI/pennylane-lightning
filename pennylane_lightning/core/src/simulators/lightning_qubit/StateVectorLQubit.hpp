@@ -632,5 +632,16 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         applyMatrix(matrix.data(), wires, inverse);
     }
+
+    /**
+     * @brief Apply a mid-circuit measurement.
+     *
+     * @param wires Wires to sample from.
+     */
+    inline auto applyMidMeasureMP(const std::vector<size_t> &wires) -> int {
+        PL_ABORT_IF_NOT(wires.size() == 1,
+                        "MidMeasureMP should have a single wire.")
+        return static_cast<Derived *>(this)->measure(wires[0]);
+    }
 };
 } // namespace Pennylane::LightningQubit

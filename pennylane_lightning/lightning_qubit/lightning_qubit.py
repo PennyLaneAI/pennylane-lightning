@@ -21,6 +21,8 @@ from warnings import warn
 from pathlib import Path
 import numpy as np
 
+from pennylane.ops import Conditional
+from pennylane.measurements import MidMeasureMP
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
@@ -164,6 +166,8 @@ if LQ_CPP_BINARY_AVAILABLE:
         "QFT",
         "ECR",
         "BlockEncode",
+        "MidMeasureMP",
+        "Conditional",
     }
 
     allowed_observables = {
@@ -251,6 +255,15 @@ if LQ_CPP_BINARY_AVAILABLE:
                     raise ValueError("Shots should be greater than num_burnin.")
                 self._kernel_name = kernel_name
                 self._num_burnin = num_burnin
+
+        # pylint: disable=missing-function-docstring
+        @classmethod
+        def capabilities(cls):
+            capabilities = super().capabilities().copy()
+            capabilities.update(
+                supports_mid_measure=True,
+            )
+            return capabilities
 
         @staticmethod
         def _asarray(arr, dtype=None):
@@ -413,7 +426,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                         operation.base.matrix, control_wires, control_values, target_wires, False
                     )
 
-        def apply_lightning(self, operations):
+        def apply_lightning(self, operations, mid_measurements=None):
             """Apply a list of operations to the state tensor.
 
             Args:
@@ -423,7 +436,6 @@ if LQ_CPP_BINARY_AVAILABLE:
                 array[complex]: the output state tensor
             """
             state = self.state_vector
-
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
             for operation in operations:
@@ -433,7 +445,12 @@ if LQ_CPP_BINARY_AVAILABLE:
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
 
-                if method is not None:  # apply specialized gate
+                if isinstance(operation, Conditional):
+                    if operation.meas_val.concretize(mid_measurements):
+                        self.apply_lightning([operation.then_op])
+                elif isinstance(operation, MidMeasureMP):
+                    mid_measurements[operation] = method(wires)
+                elif method is not None:  # apply specialized gate
                     inv = False
                     param = operation.parameters
                     method(wires, inv, param)
@@ -454,7 +471,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                         method(operation.matrix, wires, False)
 
         # pylint: disable=unused-argument
-        def apply(self, operations, rotations=None, **kwargs):
+        def apply(self, operations, rotations=None, mid_measurements=None, **kwargs):
             """Applies operations to the state vector."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
@@ -474,7 +491,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                         f"Operations have already been applied on a {self.short_name} device."
                     )
 
-            self.apply_lightning(operations)
+            self.apply_lightning(operations, mid_measurements=mid_measurements)
 
         # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
