@@ -12,28 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
+import math
+
+import numpy as np
+import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
 
-import numpy as np
-import math
-import itertools
-
-import pennylane as qml
-
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-
 from pennylane_lightning.lightning_qubit import LightningQubit
+from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if not LightningQubit._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -192,104 +187,15 @@ class TestStateDiagonalizingGates:
         assert qml.math.allclose(result, np.sin(phi / 2) ** 2)
 
 
-@pytest.mark.parametrize("method_name", ("expval", "measurement"))
-class TestExpval:
-    """Tests for the expval function"""
-
-    wires = 2
-
-    @pytest.mark.parametrize(
-        "obs, expected",
-        [
-            [qml.PauliX(0), -0.041892271271228736],
-            [qml.PauliX(1), 0.0],
-            [qml.PauliY(0), -0.5516350865364075],
-            [qml.PauliY(1), 0.0],
-            [qml.PauliZ(0), 0.8330328980789793],
-            [qml.PauliZ(1), 1.0],
-        ],
-    )
-    def test_expval_qml_tape_wire0(self, obs, expected, tol, lightning_sv, method_name):
-        """Test expval with a circuit on wires=[0]"""
-
-        x, y, z = [0.5, 0.3, -0.7]
-        statevector = lightning_sv(self.wires)
-        statevector.apply_operations(
-            [qml.RX(0.4, wires=[0]), qml.Rot(x, y, z, wires=[0]), qml.RY(-0.2, wires=[0])]
-        )
-
-        m = LightningMeasurements(statevector)
-        result = getattr(m, method_name)(qml.expval(obs))
-
-        assert np.allclose(result, expected, atol=tol, rtol=0)
-
-    @pytest.mark.parametrize(
-        "obs, expected",
-        [
-            [qml.PauliX(0), 0.0],
-            [qml.PauliX(1), -0.19866933079506122],
-            [qml.PauliY(0), -0.3894183423086505],
-            [qml.PauliY(1), 0.0],
-            [qml.PauliZ(0), 0.9210609940028852],
-            [qml.PauliZ(1), 0.9800665778412417],
-        ],
-    )
-    def test_expval_wire01(self, obs, expected, tol, lightning_sv, method_name):
-        """Test expval with a circuit on wires=[0,1]"""
-
-        statevector = lightning_sv(self.wires)
-        statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
-
-        m = LightningMeasurements(statevector)
-        result = getattr(m, method_name)(qml.expval(obs))
-
-        assert np.allclose(result, expected, atol=tol, rtol=0)
-
-    @pytest.mark.parametrize(
-        "obs, coeffs, expected",
-        [
-            ([qml.PauliX(0) @ qml.PauliZ(1)], [1.0], 0.0),
-            ([qml.PauliZ(0) @ qml.PauliZ(1)], [1.0], math.cos(0.4) * math.cos(-0.2)),
-            (
-                [
-                    qml.PauliX(0) @ qml.PauliZ(1),
-                    qml.Hermitian(
-                        [
-                            [1.0, 0.0, 0.0, 0.0],
-                            [0.0, 3.0, 0.0, 0.0],
-                            [0.0, 0.0, -1.0, 1.0],
-                            [0.0, 0.0, 1.0, -2.0],
-                        ],
-                        wires=[0, 1],
-                    ),
-                ],
-                [0.3, 1.0],
-                0.9319728930156066,
-            ),
-        ],
-    )
-    def test_expval_hamiltonian(self, obs, coeffs, expected, tol, lightning_sv, method_name):
-        """Test expval with Hamiltonian"""
-        ham = qml.Hamiltonian(coeffs, obs)
-
-        statevector = lightning_sv(self.wires)
-        statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
-
-        m = LightningMeasurements(statevector)
-        result = getattr(m, method_name)(qml.expval(ham))
-
-        assert np.allclose(result, expected, atol=tol, rtol=0)
-
-
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
-    """Test expectation value calculations"""
+    """Test expectation value calculations."""
 
-    def test_Identity(self, theta, phi, tol, lightning_sv):
+    def test_identity(self, theta, phi, tol, lightning_sv):
         """Tests applying identities."""
 
         wires = 3
@@ -389,6 +295,48 @@ class TestExpval:
         expected = expected_fn(theta, phi)
 
         assert np.allclose(result, expected, tol)
+
+
+@pytest.mark.parametrize("method_name", ("expval", "measurement"))
+class TestExpvalHamiltonian:
+    """Tests expval for Hamiltonians"""
+
+    wires = 2
+
+    @pytest.mark.parametrize(
+        "obs, coeffs, expected",
+        [
+            ([qml.PauliX(0) @ qml.PauliZ(1)], [1.0], 0.0),
+            ([qml.PauliZ(0) @ qml.PauliZ(1)], [1.0], math.cos(0.4) * math.cos(-0.2)),
+            (
+                [
+                    qml.PauliX(0) @ qml.PauliZ(1),
+                    qml.Hermitian(
+                        [
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 3.0, 0.0, 0.0],
+                            [0.0, 0.0, -1.0, 1.0],
+                            [0.0, 0.0, 1.0, -2.0],
+                        ],
+                        wires=[0, 1],
+                    ),
+                ],
+                [0.3, 1.0],
+                0.9319728930156066,
+            ),
+        ],
+    )
+    def test_expval_hamiltonian(self, obs, coeffs, expected, tol, lightning_sv, method_name):
+        """Test expval with Hamiltonian"""
+        ham = qml.Hamiltonian(coeffs, obs)
+
+        statevector = lightning_sv(self.wires)
+        statevector.apply_operations([qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])])
+
+        m = LightningMeasurements(statevector)
+        result = getattr(m, method_name)(qml.expval(ham))
+
+        assert np.allclose(result, expected, atol=tol, rtol=0)
 
 
 class TestSparseExpval:
