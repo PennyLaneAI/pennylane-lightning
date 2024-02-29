@@ -208,10 +208,7 @@ class LightningQubit2(Device):
         num_burnin=100,
         batch_obs=False,
     ):
-        if LQ_CPP_BINARY_AVAILABLE:
-            self._CPP_BINARY_AVAILABLE = True
-        else:
-            self._CPP_BINARY_AVAILABLE = False
+        if not LQ_CPP_BINARY_AVAILABLE:
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
