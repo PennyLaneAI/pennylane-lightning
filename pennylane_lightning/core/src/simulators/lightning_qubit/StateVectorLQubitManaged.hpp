@@ -21,8 +21,6 @@
 
 #include <algorithm> // fill
 #include <complex>
-#include <iostream>
-#include <random>
 #include <vector>
 
 #include "BitUtil.hpp"        // log2PerfectPower, isPerfectPowerOf2
@@ -41,7 +39,6 @@ using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::exp2;
 using Pennylane::Util::isPerfectPowerOf2;
 using Pennylane::Util::log2PerfectPower;
-using Pennylane::Util::squaredNorm;
 } // namespace
 /// @endcond
 
@@ -65,7 +62,6 @@ class StateVectorLQubitManaged final
     using BaseType =
         StateVectorLQubit<PrecisionT, StateVectorLQubitManaged<PrecisionT>>;
     std::vector<ComplexT, AlignedAllocator<ComplexT>> data_;
-    std::mt19937_64 rng;
 
   public:
     /**
@@ -220,100 +216,6 @@ class StateVectorLQubitManaged final
 
     AlignedAllocator<ComplexT> allocator() const {
         return data_.get_allocator();
-    }
-
-    void seed(const size_t seed) { rng.seed(seed); }
-
-    /**
-     * @brief Calculate probabilities of measuring 0 or 1 on a specific wire
-     *
-     * @param wire Wire
-     * @return std::vector<PrecisionT> Both probabilities of getting 0 or 1
-     */
-    auto probs(const std::size_t wire) -> std::vector<PrecisionT> {
-        const auto stride = pow(2, this->num_qubits_ - (1 + wire));
-        const auto vec_size = pow(2, this->num_qubits_);
-        const auto section_size = vec_size / stride;
-        const auto half_section_size = section_size / 2;
-
-        PrecisionT prob_0{0.};
-        // zero half the entries
-        // the "half" entries depend on the stride
-        // *_*_*_*_ for stride 1
-        // **__**__ for stride 2
-        // ****____ for stride 4
-        const size_t k = 0;
-        for (size_t idx = 0; idx < half_section_size; idx++) {
-            for (size_t ids = 0; ids < stride; ids++) {
-                auto v = stride * (k + 2 * idx) + ids;
-                prob_0 += std::norm(data_[v]);
-            }
-        }
-
-        const std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
-        return probs;
-    }
-
-    /**
-     * @brief Collapse the state vector as after having measured one of the
-     * qubits
-     *
-     * @param wire Wire to collapse.
-     * @param branch Branch 0 or 1.
-     */
-    void collapse(const std::size_t wire, const bool branch) {
-        const auto stride = pow(2, this->num_qubits_ - (1 + wire));
-        const auto vec_size = pow(2, this->num_qubits_);
-        const auto section_size = vec_size / stride;
-        const auto half_section_size = section_size / 2;
-
-        // zero half the entries
-        // the "half" entries depend on the stride
-        // *_*_*_*_ for stride 1
-        // **__**__ for stride 2
-        // ****____ for stride 4
-        const size_t k = branch ? 0 : 1;
-        for (size_t idx = 0; idx < half_section_size; idx++) {
-            for (size_t ids = 0; ids < stride; ids++) {
-                auto v = stride * (k + 2 * idx) + ids;
-                data_[v] = {0., 0.};
-            }
-        }
-
-        PrecisionT norm =
-            std::sqrt(squaredNorm(data_.data(), this->getLength()));
-
-        if (norm > std::numeric_limits<PrecisionT>::epsilon() * 1e2) {
-            std::complex<PrecisionT> inv_norm = 1. / norm;
-            for (size_t k = 0; k < this->getLength(); k++) {
-                data_[k] *= inv_norm;
-            }
-        }
-    }
-
-    /**
-     * @brief Measure one of the qubits and collapse the state accordingly
-     *
-     * @param wire Wire to measure.
-     * @param branch Branch 0 or 1.
-     */
-    const auto measure(const std::size_t wire) {
-
-        std::vector<PrecisionT> probs_ = probs(wire);
-        auto sample = random_sample(probs_[0]);
-        collapse(wire, sample);
-        return sample;
-    }
-
-    //  private:  // TODO @tomlqc
-    /**
-     * @brief Sample 0 or 1 for given probabilities
-     *
-     * @param probs Probabilities of 0.
-     */
-    const auto random_sample(const PrecisionT prob_0) {
-        std::discrete_distribution<int> distrib({prob_0, 1. - prob_0});
-        return distrib(rng);
     }
 };
 } // namespace Pennylane::LightningQubit
