@@ -87,8 +87,7 @@ class LightningMeasurements:
         self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
 
         state_array = self._qubit_state.state
-        total_wires = int(np.log2(state_array.size))
-        wires = Wires(range(total_wires))
+        wires = Wires(range(self._qubit_state.num_wires))
         return measurementprocess.process_state(state_array, wires)
 
     # pylint: disable=protected-access

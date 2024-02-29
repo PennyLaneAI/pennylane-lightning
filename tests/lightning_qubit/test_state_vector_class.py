@@ -34,7 +34,7 @@ if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("num_wires", [3, 10])
+@pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
 @pytest.mark.parametrize("device_name", ["lightning.qubit"])
 def test_device_name_and_init(num_wires, dtype, device_name):
