@@ -15,15 +15,12 @@
 from functools import reduce
 from typing import Sequence
 
-from flaky import flaky
 import numpy as np
-from conftest import device_name, LightningDevice as ld
-import pytest
-
 import pennylane as qml
-from pennylane.devices.qubit.apply_operation import apply_mid_measure, MidMeasureMP
-from pennylane.transforms.dynamic_one_shot import accumulate_native_mcm
-import numpy as np
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
+from flaky import flaky
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -109,21 +106,6 @@ def validate_measurements(func, shots, results1, results2):
         return
 
     validate_expval(shots, results1, results2)
-
-
-def test_apply_mid_measure():
-    with pytest.raises(ValueError, match="MidMeasureMP cannot be applied to batched states."):
-        _ = apply_mid_measure(
-            MidMeasureMP(0), np.zeros((2, 2)), is_state_batched=True, mid_measurements={}
-        )
-    m0 = MidMeasureMP(0, postselect=1)
-    mid_measurements = {}
-    state = apply_mid_measure(m0, np.zeros(2), mid_measurements=mid_measurements)
-    assert mid_measurements[m0] == 0
-    assert np.allclose(state, 0.0)
-    state = apply_mid_measure(m0, np.array([1, 0]), mid_measurements=mid_measurements)
-    assert mid_measurements[m0] == 0
-    assert np.allclose(state, 0.0)
 
 
 def test_all_invalid_shots_circuit():

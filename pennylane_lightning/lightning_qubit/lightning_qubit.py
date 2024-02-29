@@ -17,12 +17,13 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 
-from warnings import warn
 from pathlib import Path
-import numpy as np
+from warnings import warn
 
-from pennylane.ops import Conditional
+import numpy as np
 from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Conditional
+
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
@@ -32,14 +33,14 @@ from pennylane_lightning.core.lightning_base import (
 try:
     # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_qubit_ops import (
-        allocate_aligned_array,
-        get_alignment,
-        best_alignment,
         MeasurementsC64,
-        StateVectorC64,
         MeasurementsC128,
+        StateVectorC64,
         StateVectorC128,
+        allocate_aligned_array,
         backend_info,
+        best_alignment,
+        get_alignment,
     )
 
     LQ_CPP_BINARY_AVAILABLE = True
@@ -47,34 +48,33 @@ except ImportError:
     LQ_CPP_BINARY_AVAILABLE = False
 
 if LQ_CPP_BINARY_AVAILABLE:
-    from typing import List
     from os import getenv
-
-    from pennylane import (
-        math,
-        BasisState,
-        StatePrep,
-        Projector,
-        Rot,
-        DeviceError,
-        QuantumFunctionError,
-    )
-    from pennylane.operation import Tensor
-    from pennylane.measurements import MeasurementProcess, Expectation, State
-    from pennylane.wires import Wires
+    from typing import List
 
     import pennylane as qml
+    from pennylane import (
+        BasisState,
+        DeviceError,
+        Projector,
+        QuantumFunctionError,
+        Rot,
+        StatePrep,
+        math,
+    )
+    from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.operation import Tensor
+    from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
-        create_ops_listC64,
-        VectorJacobianProductC64,
         AdjointJacobianC128,
-        create_ops_listC128,
+        VectorJacobianProductC64,
         VectorJacobianProductC128,
+        create_ops_listC64,
+        create_ops_listC128,
     )
 
     def _state_dtype(dtype):
@@ -492,6 +492,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                     )
 
             self.apply_lightning(operations, mid_measurements=mid_measurements)
+            if rotations is not None and self.shots:
+                self.apply_lightning(rotations)
 
         # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
@@ -646,9 +648,6 @@ if LQ_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if not isinstance(observable, qml.PauliZ):
-                self.apply_lightning(observable.diagonalizing_gates())
-                self._samples = self.generate_samples()
             return super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
