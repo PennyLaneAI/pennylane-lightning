@@ -17,22 +17,20 @@ Class implementation for state vector measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 
 from typing import Callable, List
-import numpy as np
 
-from pennylane.measurements import StateMeasurement, MeasurementProcess, ExpectationMP
-from pennylane.typing import TensorLike, Result
+import numpy as np
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
 from pennylane.tape import QuantumScript
+from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
+
 from ._state_vector import LightningStateVector
 
 
