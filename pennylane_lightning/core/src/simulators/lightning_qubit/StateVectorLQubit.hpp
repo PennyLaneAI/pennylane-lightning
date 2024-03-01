@@ -697,11 +697,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // *_*_*_*_ for stride 1
         // **__**__ for stride 2
         // ****____ for stride 4
-        const size_t k = 0;
         for (size_t idx = 0; idx < half_section_size; idx++) {
+            const size_t offset = stride * 2 * idx;
             for (size_t ids = 0; ids < stride; ids++) {
-                auto v = stride * (k + 2 * idx) + ids;
-                prob_0 += std::norm(arr[v]);
+                prob_0 += std::norm(arr[offset + ids]);
             }
         }
 
@@ -730,9 +729,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // ****____ for stride 4
         const size_t k = branch ? 0 : 1;
         for (size_t idx = 0; idx < half_section_size; idx++) {
+            const size_t offset = stride * (k + 2 * idx);
             for (size_t ids = 0; ids < stride; ids++) {
-                auto v = stride * (k + 2 * idx) + ids;
-                arr[v] = {0., 0.};
+                arr[offset + ids] = {0., 0.};
             }
         }
 
