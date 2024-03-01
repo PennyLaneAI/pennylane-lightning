@@ -272,13 +272,25 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::measure",
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
 
         sv.seed(1234);
+        std::size_t i_case = GENERATE(0, 1);
+        std::vector<int> post_select({-1, -1, 0});
+        std::vector<int> reset({false, true, false});
         std::size_t wire = GENERATE(0, 1);
-        std::vector<int> expected_samples({0, 1});
-        std::vector<std::vector<ComplexT>> expected_state = {
-            {coef, coef, coef, coef, zero, zero, zero, zero},
-            {zero, zero, isqr, isqr, zero, zero, zero, zero}};
-        int sample = sv.measure(wire);
-        REQUIRE(sample == expected_samples[wire]);
-        REQUIRE(sv.getDataVector() == approx(expected_state[wire]));
+        std::vector<std::vector<int>> expected_samples(
+            {{0, 1}, {0, 1}, {0, -1}});
+        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
+            {// postselect -1, reset false
+             {coef, coef, coef, coef, zero, zero, zero, zero},
+             {zero, zero, isqr, isqr, zero, zero, zero, zero}},
+            {// postselect -1, reset true
+             {coef, coef, coef, coef, zero, zero, zero, zero},
+             {isqr, isqr, zero, zero, zero, zero, zero, zero}},
+            {// postselect 0, reset false
+             {coef, coef, coef, coef, zero, zero, zero, zero},
+             {zero, zero, zero, zero, zero, zero, zero, zero}},
+        };
+        int sample = sv.measure(wire, post_select[i_case], reset[i_case]);
+        REQUIRE(sample == expected_samples[i_case][wire]);
+        REQUIRE(sv.getDataVector() == approx(expected_state[i_case][wire]));
     }
 }

@@ -316,6 +316,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    virtual void setBasisState([[maybe_unused]] const std::size_t index) = 0;
+
+    /**
      * @brief Apply a single gate to the state-vector using a given kernel.
      *
      * @param kernel Kernel to run the operation.
@@ -642,10 +649,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param wires Wires to sample from.
      */
-    inline auto applyMidMeasureMP(const std::vector<size_t> &wires) -> int {
+    inline auto applyMidMeasureMP(const std::vector<size_t> &wires,
+                                  const std::vector<size_t> &postselect = {},
+                                  bool reset = false) -> int {
         PL_ABORT_IF_NOT(wires.size() == 1,
                         "MidMeasureMP should have a single wire.")
-        return measure(wires[0]);
+        PL_ABORT_IF_NOT(postselect.size() > 1,
+                        "MidMeasureMP accepts at most one postselect value.")
+        return measure(wires[0], postselect[0], reset);
     }
 
     /**
@@ -737,13 +748,27 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Measure one of the qubits and collapse the state accordingly
      *
      * @param wire Wire to measure.
+     * @param postselect Wire sample value to postselect (0 or 1) or -1 to
+     * ignore
+     * @param reset Flag to reset wire to 0
      * @param branch Branch 0 or 1.
      */
-    const auto measure(const std::size_t wire) {
+    const auto measure(const std::size_t wire, const int postselect = -1,
+                       const bool reset = false) {
 
         std::vector<PrecisionT> probs_ = probs(wire);
         auto sample = random_sample(probs_[0]);
-        collapse(wire, sample);
+        if (postselect != -1 && postselect != sample) {
+            setBasisState(0);
+            this->getData()[0] = 0.;
+            sample = -1;
+        } else {
+            collapse(wire, sample);
+            if (reset && sample == 1) {
+                const std::vector<size_t> wires = {wire};
+                applyOperation("PauliX", wires);
+            }
+        }
         return sample;
     }
 };
