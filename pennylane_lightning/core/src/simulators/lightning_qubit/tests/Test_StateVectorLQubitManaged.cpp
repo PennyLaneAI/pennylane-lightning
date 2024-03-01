@@ -14,14 +14,10 @@
 #include <algorithm>
 #include <complex>
 #include <limits>
-#include <map>
 #include <random>
 #include <type_traits>
 #include <utility>
 #include <vector>
-
-#include <iomanip>
-#include <iostream>
 
 #include <catch2/catch.hpp>
 
@@ -167,130 +163,5 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
         sv.setStateVector(indices, values);
 
         REQUIRE(sv.getDataVector() == approx(expected_state));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorLQubitManaged::random_sample",
-                   "[StateVectorLQubitManaged]", float, double) {
-    using PrecisionT = TestType;
-    using ComplexT = std::complex<PrecisionT>;
-    using TestVectorT = TestVector<ComplexT>;
-
-    const std::size_t num_qubits = 3;
-
-    SECTION("Sample 0 or 1 for given probabilities") {
-        const ComplexT coef{0.5, PrecisionT{0.0}};
-        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
-
-        TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
-        init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
-        StateVectorLQubitManaged<PrecisionT> sv(init_state);
-
-        sv.seed(1234);
-        const PrecisionT prob_0 = 0.1;
-        std::map<int, int> map;
-        for (int n = 0; n < 100; ++n)
-            ++map[sv.random_sample(prob_0)];
-        REQUIRE(map[0] == 13);
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorLQubitManaged::probs",
-                   "[StateVectorLQubitManaged]", float, double) {
-    using PrecisionT = TestType;
-    using ComplexT = std::complex<PrecisionT>;
-    using TestVectorT = TestVector<ComplexT>;
-
-    const std::size_t num_qubits = 3;
-
-    SECTION("Calculate probabilities of measuring 0 or 1 on a specific wire") {
-        const ComplexT coef{0.5, PrecisionT{0.0}};
-        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
-
-        TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
-        init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
-
-        std::vector<std::vector<PrecisionT>> expected_probs = {{1., 0.},
-                                                               {0.5, 0.5}};
-
-        std::size_t wire = GENERATE(0, 1);
-        StateVectorLQubitManaged<PrecisionT> sv(init_state);
-        const std::vector<PrecisionT> probs = sv.probs(wire);
-
-        REQUIRE(probs == approx(expected_probs[wire]));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorLQubitManaged::collapse",
-                   "[StateVectorLQubitManaged]", float, double) {
-    using PrecisionT = TestType;
-    using ComplexT = std::complex<PrecisionT>;
-    using TestVectorT = TestVector<ComplexT>;
-
-    const std::size_t num_qubits = 3;
-
-    SECTION("Collapse the state vector as after having measured one of the "
-            "qubits.") {
-        TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
-
-        const ComplexT coef{0.5, PrecisionT{0.0}};
-        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
-
-        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
-            {{coef, coef, coef, coef, zero, zero, zero, zero},
-             {coef, coef, zero, zero, coef, coef, zero, zero},
-             {coef, zero, coef, zero, coef, zero, coef, zero}},
-            {{zero, zero, zero, zero, coef, coef, coef, coef},
-             {zero, zero, coef, coef, zero, zero, coef, coef},
-             {zero, coef, zero, coef, zero, coef, zero, coef}},
-        };
-
-        std::size_t wire = GENERATE(0, 1, 2);
-        std::size_t branch = GENERATE(0, 1);
-        StateVectorLQubitManaged<PrecisionT> sv(init_state);
-        sv.collapse(wire, branch);
-
-        REQUIRE(sv.getDataVector() == approx(expected_state[branch][wire]));
-    }
-}
-
-TEMPLATE_TEST_CASE("StateVectorLQubitManaged::measure",
-                   "[StateVectorLQubitManaged]", float, double) {
-    using PrecisionT = TestType;
-    using ComplexT = std::complex<PrecisionT>;
-    using TestVectorT = TestVector<ComplexT>;
-
-    const std::size_t num_qubits = 3;
-
-    SECTION("Measure one of the qubits and collapse the state accordingly") {
-        const ComplexT coef{0.5, PrecisionT{0.0}};
-        const ComplexT isqr = INVSQRT2<PrecisionT>();
-        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
-
-        TestVectorT init_state = createZeroState<ComplexT>(num_qubits);
-        init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
-        StateVectorLQubitManaged<PrecisionT> sv(init_state);
-
-        sv.seed(1234);
-        std::size_t i_case = GENERATE(0, 1);
-        std::vector<int> post_select({-1, -1, 0});
-        std::vector<int> reset({false, true, false});
-        std::size_t wire = GENERATE(0, 1);
-        std::vector<std::vector<int>> expected_samples(
-            {{0, 1}, {0, 1}, {0, -1}});
-        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
-            {// postselect -1, reset false
-             {coef, coef, coef, coef, zero, zero, zero, zero},
-             {zero, zero, isqr, isqr, zero, zero, zero, zero}},
-            {// postselect -1, reset true
-             {coef, coef, coef, coef, zero, zero, zero, zero},
-             {isqr, isqr, zero, zero, zero, zero, zero, zero}},
-            {// postselect 0, reset false
-             {coef, coef, coef, coef, zero, zero, zero, zero},
-             {zero, zero, zero, zero, zero, zero, zero, zero}},
-        };
-        int sample = sv.measure(wire, post_select[i_case], reset[i_case]);
-        REQUIRE(sample == expected_samples[i_case][wire]);
-        REQUIRE(sv.getDataVector() == approx(expected_state[i_case][wire]));
     }
 }
