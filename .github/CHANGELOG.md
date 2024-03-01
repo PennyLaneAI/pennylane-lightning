@@ -88,7 +88,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, Thomas Germain, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
