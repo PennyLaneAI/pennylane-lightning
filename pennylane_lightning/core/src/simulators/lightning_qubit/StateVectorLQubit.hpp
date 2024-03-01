@@ -757,7 +757,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     const auto measure(const std::size_t wire, const int postselect = -1,
                        const bool reset = false) {
-
         std::vector<PrecisionT> probs_ = probs(wire);
         auto sample = random_sample(probs_[0]);
         if (postselect != -1 && postselect != sample) {
