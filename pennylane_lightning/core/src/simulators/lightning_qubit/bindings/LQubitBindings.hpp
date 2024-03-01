@@ -157,8 +157,9 @@ void registerControlledGate(PyClass &pyclass) {
         });
 }
 template <class StateVectorT>
-int applyMidMeasureMP(StateVectorT &st, const std::vector<size_t> &wires) {
-    return st.applyMidMeasureMP(wires);
+int applyMidMeasureMP(StateVectorT &st, const std::vector<size_t> &wires,
+                      const std::vector<size_t> &postselect, const bool reset) {
+    return st.applyMidMeasureMP(wires, postselect, reset);
 }
 
 /**

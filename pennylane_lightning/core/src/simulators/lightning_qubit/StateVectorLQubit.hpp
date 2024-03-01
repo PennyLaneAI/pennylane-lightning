@@ -649,14 +649,16 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param wires Wires to sample from.
      */
-    inline auto applyMidMeasureMP(const std::vector<size_t> &wires,
-                                  const std::vector<size_t> &postselect = {},
-                                  bool reset = false) -> int {
+    inline auto
+    applyMidMeasureMP(const std::vector<std::size_t> &wires,
+                      const std::vector<std::size_t> &postselect = {},
+                      bool reset = false) -> int {
         PL_ABORT_IF_NOT(wires.size() == 1,
                         "MidMeasureMP should have a single wire.")
-        PL_ABORT_IF_NOT(postselect.size() > 1,
-                        "MidMeasureMP accepts at most one postselect value.")
-        return measure(wires[0], postselect[0], reset);
+        PL_ABORT_IF(postselect.size() > 1,
+                    "MidMeasureMP accepts at most one postselect value.")
+        const std::size_t ps = (postselect.size() == 0) ? -1 : postselect[0];
+        return measure(wires[0], ps, reset);
     }
 
     /**

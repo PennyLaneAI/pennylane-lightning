@@ -165,7 +165,7 @@ def test_unsupported_measurement():
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [1000, [1000, 1001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.sample, qml.var])
 def test_simple_mcm(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
@@ -195,7 +195,7 @@ def test_simple_mcm(shots, postselect, reset, measure_f):
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [1000, [1000, 1001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_single_measure_mcm(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
@@ -244,7 +244,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize("obs", [qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1)])
 def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs):
@@ -272,7 +272,7 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [3000, [3000, 3001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 @pytest.mark.parametrize("wires", [[0], [0, 1]])
 def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wires):
@@ -302,7 +302,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement with reset
@@ -332,7 +332,7 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.sample, qml.var])
 def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
@@ -365,7 +365,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
@@ -395,7 +395,7 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None])
-@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a

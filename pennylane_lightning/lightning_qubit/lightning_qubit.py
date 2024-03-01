@@ -449,7 +449,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                     if operation.meas_val.concretize(mid_measurements):
                         self.apply_lightning([operation.then_op])
                 elif isinstance(operation, MidMeasureMP):
-                    mid_measurements[operation] = method(wires)
+                    postselect = [] if operation.postselect is None else [operation.postselect]
+                    mid_measurements[operation] = method(wires, postselect, operation.reset)
                 elif method is not None:  # apply specialized gate
                     inv = False
                     param = operation.parameters
