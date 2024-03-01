@@ -339,7 +339,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Returns a handle to the statevector."""
             return self._qubit_state
 
-        def _apply_state_vector(self, state, device_wires):
+        def _apply_state_vector(self, state, device_wires: Wires):
             """Initialize the internal state vector in a specified state.
             Args:
                 state (array[complex]): normalized input state of length ``2**len(wires)``
@@ -349,7 +349,7 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             if isinstance(state, self._qubit_state.__class__):
                 state_data = allocate_aligned_array(state.size, np.dtype(self.C_DTYPE), True)
-                self._qubit_state.getState(state_data)
+                state.getState(state_data)
                 state = state_data
 
             ravelled_indices, state = self._preprocess_state_vector(state, device_wires)

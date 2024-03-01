@@ -58,6 +58,9 @@
 
 ### Bug fixes
 
+* Downgrade auditwheel due to changes with library exclusion list.
+  [(#620)](https://github.com/PennyLaneAI/pennylane-lightning/pull/620)
+
 * List `GlobalPhase` gate in each device's TOML file.
   [(#615)](https://github.com/PennyLaneAI/pennylane-lightning/pull/615)
 
@@ -77,6 +80,9 @@
 
 * Update jax.config imports.
   [(#619)](https://github.com/PennyLaneAI/pennylane-lightning/pull/619)
+
+* Fix apply state vector when using a Lightning handle.
+  [(#622)](https://github.com/PennyLaneAI/pennylane-lightning/pull/622)
 
 ### Contributors
 

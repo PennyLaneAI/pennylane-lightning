@@ -16,14 +16,14 @@ Unit tests for Lightning devices.
 """
 # pylint: disable=protected-access,cell-var-from-loop
 import pytest
-from conftest import THETA, PHI, VARPHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
+from conftest import THETA, PHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
 
 import math
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
 from pennylane.operation import Operation
-import functools
+from pennylane.wires import Wires
 
 
 class TestApply:
@@ -506,6 +506,23 @@ class TestApply:
         ):
             dev.reset()
             dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
+
+    @pytest.mark.skipif(
+        not ld._CPP_BINARY_AVAILABLE,
+        reason="Lightning binary required",
+    )
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="Only meaningful for LightningQubit.",
+    )
+    def test_apply_state_vector_lightning_handle(self, qubit_device, tol):
+        dev = qubit_device(wires=2)
+        dev.apply([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
+
+        dev_2 = qubit_device(wires=2)
+        dev_2._apply_state_vector(dev.state_vector, device_wires=Wires([0, 1]))
+
+        assert np.allclose(dev.state, dev_2.state, atol=tol, rtol=0)
 
 
 class TestExpval:
