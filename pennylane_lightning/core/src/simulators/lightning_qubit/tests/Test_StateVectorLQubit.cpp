@@ -240,8 +240,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::random_sample",
         sv.seed(1234);
         const PrecisionT prob_0 = 0.1;
         std::map<int, int> map;
-        for (int n = 0; n < 100; ++n)
+        for (int n = 0; n < 100; ++n) {
             ++map[sv.random_sample(prob_0)];
+        }
         REQUIRE(map[0] == 13);
     }
 }

@@ -121,7 +121,7 @@ class StateVectorLQubitRaw final
      *
      * @param index Index of the target element.
      */
-    void setBasisState(const std::size_t index) {
+    void setBasisState(const std::size_t index) override {
         for (size_t i = 0; i < length_; i++) {
             data_[i] = {0.0, 0.0};
         }

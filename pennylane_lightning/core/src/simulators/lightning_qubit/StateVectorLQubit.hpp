@@ -320,7 +320,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param index Index of the target element.
      */
-    virtual void setBasisState([[maybe_unused]] const std::size_t index) = 0;
+    virtual void setBasisState([[maybe_unused]] std::size_t index) = 0;
 
     /**
      * @brief Apply a single gate to the state-vector using a given kernel.
@@ -659,7 +659,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         "MidMeasureMP should have a single wire.")
         PL_ABORT_IF(postselect.size() > 1,
                     "MidMeasureMP accepts at most one postselect value.")
-        const int ps = (postselect.size() == 0) ? -1 : postselect[0];
+        const int ps = postselect.empty() ? -1 : postselect[0];
 
         std::vector<PrecisionT> probs_ = probs(wires[0]);
         auto sample = random_sample(probs_[0]);
@@ -686,7 +686,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param probs Probabilities of 0.
      */
-    const auto random_sample(const PrecisionT prob_0) {
+    auto random_sample(const PrecisionT prob_0) {
         std::discrete_distribution<int> distrib({prob_0, 1. - prob_0});
         return distrib(rng);
     }
@@ -718,7 +718,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             }
         }
 
-        const std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
+        std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
         return probs;
     }
 
