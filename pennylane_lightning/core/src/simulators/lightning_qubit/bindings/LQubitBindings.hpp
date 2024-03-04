@@ -225,6 +225,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 }
             },
             "Copy StateVector data into a Numpy array.")
+        .def("normalize", &StateVectorT::normalize)
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation")
         .def("MidMeasureMP", &applyMidMeasureMP<StateVectorT>,
