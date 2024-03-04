@@ -110,8 +110,8 @@ def validate_measurements(func, shots, results1, results2):
 
 def test_all_invalid_shots_circuit():
     dev = qml.device(device_name, wires=2)
+    dq = qml.device("default.qubit", wires=2)
 
-    @qml.qnode(dev)
     def circuit_op():
         m = qml.measure(0, postselect=1)
         qml.cond(m, qml.PauliX)(1)
@@ -121,22 +121,21 @@ def test_all_invalid_shots_circuit():
             qml.var(op=qml.PauliZ(1)),
         )
 
-    res1 = circuit_op()
-    res2 = circuit_op(shots=10)
+    res1 = qml.QNode(circuit_op, dq)()
+    res2 = qml.QNode(circuit_op, dev)(shots=10)
     for r1, r2 in zip(res1, res2):
         if isinstance(r1, Sequence):
             assert len(r1) == len(r2)
         assert np.all(np.isnan(r1))
         assert np.all(np.isnan(r2))
 
-    @qml.qnode(dev)
     def circuit_mcm():
         m = qml.measure(0, postselect=1)
         qml.cond(m, qml.PauliX)(1)
         return qml.expval(op=m), qml.probs(op=m), qml.var(op=m)
 
-    res1 = circuit_mcm()
-    res2 = circuit_mcm(shots=10)
+    res1 = qml.QNode(circuit_mcm, dq)()
+    res2 = qml.QNode(circuit_mcm, dev)(shots=10)
     for r1, r2 in zip(res1, res2):
         if isinstance(r1, Sequence):
             assert len(r1) == len(r2)
@@ -163,10 +162,10 @@ def test_unsupported_measurement():
 
 
 @flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [1000, [1000, 1001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("shots", [5000, [5000, 5001]])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
-@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.sample, qml.var])
+@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_simple_mcm(shots, postselect, reset, measure_f):
     """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of the mid-circuit measurement value is performed at
@@ -180,10 +179,10 @@ def test_simple_mcm(shots, postselect, reset, measure_f):
         qml.RX(x, wires=0)
         m0 = qml.measure(0, reset=reset, postselect=postselect)
         qml.cond(m0, qml.RY)(y, wires=0)
-        return measure_f(qml.PauliZ(0))
+        return measure_f(op=qml.PauliZ(0))
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -194,7 +193,7 @@ def test_simple_mcm(shots, postselect, reset, measure_f):
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [1000, [1000, 1001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_single_measure_mcm(shots, postselect, reset, measure_f):
@@ -213,7 +212,7 @@ def test_single_mcm_single_measure_mcm(shots, postselect, reset, measure_f):
         return measure_f(op=m0)
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -243,7 +242,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize("obs", [qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1)])
@@ -260,7 +259,7 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
         return measure_f(op=obs)
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -271,7 +270,7 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [3000, [3000, 3001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 @pytest.mark.parametrize("wires", [[0], [0, 1]])
@@ -290,7 +289,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
         return measure_f(wires=wires)
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -301,7 +300,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
@@ -319,7 +318,7 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
         return measure_f(op=obs), measure_f(op=mcms[0])
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -331,7 +330,7 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.sample, qml.var])
 def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f):
@@ -353,7 +352,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
         return measure_f(op=(m0 - 2 * m1) * m2 + 7)
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(param)
     results2 = func2(param)
@@ -364,7 +363,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
@@ -383,7 +382,7 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
         return measure_f(op=obs)
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
     results2 = func2(*params)
@@ -394,7 +393,7 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
 
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
-@pytest.mark.parametrize("postselect", [None])
+@pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
@@ -416,7 +415,7 @@ def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
         return measure_f(op=[m0, m1, m2])
 
     func1 = qml.QNode(func, dev)
-    func2 = qml.QNode(func, dq)
+    func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(param)
     results2 = func2(param)
