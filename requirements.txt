@@ -2,6 +2,6 @@ ninja
 flaky
 pennylane>=0.34
 pybind11
-pytest
+pytest~=8.0.0
 pytest-cov
 pytest-mock

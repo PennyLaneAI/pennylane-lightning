@@ -89,11 +89,8 @@ jobs:
             CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          # Testing of built wheels
-          CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
-
           CIBW_BEFORE_TEST: |
-            python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@v0.35.0-rc0
+            python -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
           CIBW_TEST_COMMAND: |

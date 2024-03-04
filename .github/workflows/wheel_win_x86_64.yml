@@ -126,11 +126,8 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 cmake~=3.24.0 build
 
-          # Testing of built wheels
-          CIBW_TEST_REQUIRES: pytest pytest-cov pytest-mock flaky
-
           CIBW_BEFORE_TEST: |
-            python -m pip install pytest-benchmark git+https://github.com/PennyLaneAI/pennylane.git@v0.35.0-rc0
+            python -m pip install -r requirements-tests.txt
 
           CIBW_TEST_COMMAND: |
             pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
