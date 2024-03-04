@@ -664,8 +664,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         std::vector<PrecisionT> probs_ = probs(wires[0]);
         auto sample = random_sample(probs_[0]);
         if (ps != -1 && ps != sample) {
-            setBasisState(0);
-            this->getData()[0] = 0.;
             sample = -1;
         } else {
             collapse(wires[0], sample);

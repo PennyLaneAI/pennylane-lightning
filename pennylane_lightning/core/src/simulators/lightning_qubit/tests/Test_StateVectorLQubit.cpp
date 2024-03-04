@@ -309,7 +309,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::collapse", "[StateVectorLQubit]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP", "[StateVectorLQubit]",
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP",
+                           "[StateVectorLQubit]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
                            (float, double)) {
     using StateVectorT = TestType;
@@ -329,7 +330,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP", "[StateVector
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
 
         sv.seed(1234);
-        std::size_t i_case = GENERATE(0, 1);
+        std::size_t i_case = GENERATE(0, 1, 2);
         std::vector<std::vector<std::size_t>> post_select({{}, {}, {0}});
         std::vector<int> reset({false, true, false});
         std::size_t wire = GENERATE(0, 1);
@@ -344,7 +345,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP", "[StateVector
              {isqr, isqr, zero, zero, zero, zero, zero, zero}},
             {// postselect 0, reset false
              {coef, coef, coef, coef, zero, zero, zero, zero},
-             {zero, zero, zero, zero, zero, zero, zero, zero}},
+             {coef, coef, coef, coef, zero, zero, zero, zero}},
         };
         const std::vector<std::size_t> wires = {wire};
         int sample =
