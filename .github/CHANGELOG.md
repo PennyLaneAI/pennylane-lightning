@@ -84,6 +84,9 @@
 * Fix apply state vector when using a Lightning handle.
   [(#622)](https://github.com/PennyLaneAI/pennylane-lightning/pull/622)
 
+* Pinning Pytest to a version compatible with Flaky.
+  [(#624)](https://github.com/PennyLaneAI/pennylane-lightning/pull/624)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
