@@ -24,7 +24,7 @@ except ImportError:
 from typing import Callable, List
 
 import numpy as np
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -123,6 +123,42 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    # pylint: disable=protected-access
+    def var(self, measurementprocess: MeasurementProcess):
+        """Variance of the supplied observable contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Variance of the observable
+        """
+
+        if measurementprocess.obs.name == "SparseHamiltonian":
+            # ensuring CSR sparse representation.
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                wire_order=list(range(self._qubit_state.num_wires))
+            ).tocsr(copy=False)
+            return self._measurement_lightning.var(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
+            )
+
+        if (
+            measurementprocess.obs.name in ["Hamiltonian", "Hermitian"]
+            or (measurementprocess.obs.arithmetic_depth > 0)
+            or isinstance(measurementprocess.obs.name, List)
+        ):
+            ob_serialized = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64
+            )._ob(measurementprocess.obs)
+            return self._measurement_lightning.var(ob_serialized)
+
+        return self._measurement_lightning.var(
+            measurementprocess.obs.name, measurementprocess.obs.wires
+        )
+
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
@@ -142,6 +178,14 @@ class LightningMeasurements:
                 ]:
                     return self.state_diagonalizing_gates
                 return self.expval
+
+            if isinstance(measurementprocess, VarianceMP):
+                if measurementprocess.obs.name in [
+                    "Identity",
+                    "Projector",
+                ]:
+                    return self.state_diagonalizing_gates
+                return self.var
 
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
