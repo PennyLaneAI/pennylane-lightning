@@ -1,0 +1,6 @@
+pytest~=8.0.0
+pytest-cov
+pytest-mock
+flaky
+pytest-benchmark
+git+https://github.com/PennyLaneAI/pennylane.git@master
