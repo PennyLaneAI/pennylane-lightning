@@ -735,6 +735,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             }
         }
 
+        normalize();
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto *arr = this->getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));
 
         if (norm > std::numeric_limits<PrecisionT>::epsilon() * 1e2) {
