@@ -309,7 +309,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::collapse", "[StateVectorLQubit]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::measure", "[StateVectorLQubit]",
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP", "[StateVectorLQubit]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
                            (float, double)) {
     using StateVectorT = TestType;
@@ -330,7 +330,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::measure", "[StateVectorLQubit]",
 
         sv.seed(1234);
         std::size_t i_case = GENERATE(0, 1);
-        std::vector<int> post_select({-1, -1, 0});
+        std::vector<std::vector<std::size_t>> post_select({{}, {}, {0}});
         std::vector<int> reset({false, true, false});
         std::size_t wire = GENERATE(0, 1);
         std::vector<std::vector<int>> expected_samples(
@@ -346,7 +346,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::measure", "[StateVectorLQubit]",
              {coef, coef, coef, coef, zero, zero, zero, zero},
              {zero, zero, zero, zero, zero, zero, zero, zero}},
         };
-        int sample = sv.measure(wire, post_select[i_case], reset[i_case]);
+        const std::vector<std::size_t> wires = {wire};
+        int sample =
+            sv.applyMidMeasureMP(wires, post_select[i_case], reset[i_case]);
         REQUIRE(sample == expected_samples[i_case][wire]);
         REQUIRE(sv.getDataVector() == approx(expected_state[i_case][wire]));
     }

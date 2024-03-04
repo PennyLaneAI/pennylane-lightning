@@ -648,6 +648,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Apply a mid-circuit measurement.
      *
      * @param wires Wires to sample from.
+     * @param postselect Value to postselect (0 or 1) or empty to ignore
+     * @param reset Flag to reset wire to 0
      */
     inline auto
     applyMidMeasureMP(const std::vector<std::size_t> &wires,
@@ -657,8 +659,21 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         "MidMeasureMP should have a single wire.")
         PL_ABORT_IF(postselect.size() > 1,
                     "MidMeasureMP accepts at most one postselect value.")
-        const std::size_t ps = (postselect.size() == 0) ? -1 : postselect[0];
-        return measure(wires[0], ps, reset);
+        const int ps = (postselect.size() == 0) ? -1 : postselect[0];
+
+        std::vector<PrecisionT> probs_ = probs(wires[0]);
+        auto sample = random_sample(probs_[0]);
+        if (ps != -1 && ps != sample) {
+            setBasisState(0);
+            this->getData()[0] = 0.;
+            sample = -1;
+        } else {
+            collapse(wires[0], sample);
+            if (reset && sample == 1) {
+                applyOperation("PauliX", wires);
+            }
+        }
+        return sample;
     }
 
     /**
@@ -685,6 +700,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @return std::vector<PrecisionT> Both probabilities of getting 0 or 1
      */
     auto probs(const std::size_t wire) -> std::vector<PrecisionT> {
+        // TODO: use Measurements.probs() instead (resolve circular dependency)
         auto *arr = this->getData();
         const size_t stride = pow(2, this->num_qubits_ - (1 + wire));
         const size_t vec_size = pow(2, this->num_qubits_);
@@ -751,33 +767,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 arr[k] *= inv_norm;
             }
         }
-    }
-
-    /**
-     * @brief Measure one of the qubits and collapse the state accordingly
-     *
-     * @param wire Wire to measure.
-     * @param postselect Wire sample value to postselect (0 or 1) or -1 to
-     * ignore
-     * @param reset Flag to reset wire to 0
-     * @param branch Branch 0 or 1.
-     */
-    const auto measure(const std::size_t wire, const int postselect = -1,
-                       const bool reset = false) {
-        std::vector<PrecisionT> probs_ = probs(wire);
-        auto sample = random_sample(probs_[0]);
-        if (postselect != -1 && postselect != sample) {
-            setBasisState(0);
-            this->getData()[0] = 0.;
-            sample = -1;
-        } else {
-            collapse(wire, sample);
-            if (reset && sample == 1) {
-                const std::vector<size_t> wires = {wire};
-                applyOperation("PauliX", wires);
-            }
-        }
-        return sample;
     }
 };
 } // namespace Pennylane::LightningQubit
