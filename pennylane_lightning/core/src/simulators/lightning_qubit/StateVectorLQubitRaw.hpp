@@ -117,18 +117,6 @@ class StateVectorLQubitRaw final
     [[nodiscard]] auto getLength() const -> std::size_t { return length_; }
 
     /**
-     * @brief Prepares a single computational basis state.
-     *
-     * @param index Index of the target element.
-     */
-    void setBasisState(const std::size_t index) override {
-        for (size_t i = 0; i < length_; i++) {
-            data_[i] = {0.0, 0.0};
-        }
-        data_[index] = {1.0, 0.0};
-    }
-
-    /**
      * @brief Update data of the class to new_data
      *
      * @param new_data data pointer to new data.

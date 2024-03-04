@@ -145,7 +145,7 @@ class StateVectorLQubitManaged final
      *
      * @param index Index of the target element.
      */
-    void setBasisState(const std::size_t index) override {
+    void setBasisState(const std::size_t index) {
         std::fill(data_.begin(), data_.end(), 0);
         data_[index] = {1, 0};
     }

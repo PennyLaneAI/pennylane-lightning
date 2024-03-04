@@ -316,13 +316,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Prepares a single computational basis state.
-     *
-     * @param index Index of the target element.
-     */
-    virtual void setBasisState([[maybe_unused]] std::size_t index) = 0;
-
-    /**
      * @brief Apply a single gate to the state-vector using a given kernel.
      *
      * @param kernel Kernel to run the operation.
