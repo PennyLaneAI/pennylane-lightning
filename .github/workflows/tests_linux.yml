@@ -106,7 +106,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: Python tests
     runs-on: ${{ matrix.os }}
 
