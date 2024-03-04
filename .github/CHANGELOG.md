@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.qubit` supports mid-circuit measurements.
+  [(#621)](https://github.com/PennyLaneAI/pennylane-lightning/pull/621)
+
 * All backends now support `GlobalPhase` and `C(GlobalPhase)` in forward pass.
   [(#579)](https://github.com/PennyLaneAI/pennylane-lightning/pull/579)
 
