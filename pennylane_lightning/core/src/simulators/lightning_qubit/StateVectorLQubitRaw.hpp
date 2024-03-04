@@ -123,9 +123,9 @@ class StateVectorLQubitRaw final
      */
     void setBasisState(const std::size_t index) {
         for (size_t i = 0; i < length_; i++) {
-            data_[i] = {0, 0};
+            data_[i] = {0.0, 0.0};
         }
-        data_[index] = {1, 0};
+        data_[index] = {1.0, 0.0};
     }
 
     /**
