@@ -22,7 +22,10 @@ from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_qubit_ops import (
+        MeasurementsC64,
+        MeasurementsC128,
+    )
 except ImportError:
     pass
 
