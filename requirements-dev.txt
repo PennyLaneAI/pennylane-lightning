@@ -3,7 +3,7 @@ git+https://github.com/PennyLaneAI/pennylane.git@master
 ninja
 flaky
 pybind11
-pytest
+pytest~=8.0.0
 pytest-benchmark
 pytest-cov
 pytest-mock
