@@ -575,10 +575,10 @@ class TestMeasurements:
             qml.s_prod(2.0, qml.PauliX(0)),
             qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
             qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
-            # qml.Hamiltonian(
-            #     [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            # ),
-            # qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
+            qml.Hamiltonian(
+                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+            ),
+            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
     def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
@@ -611,8 +611,9 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
+        # a few tests fail in single precision, and hence we increase the tolerance
         for r, e in zip(result, expected):
-            assert np.allclose(r, e, rtol=1.0e-5, atol=0.0)
+            assert np.allclose(r, e, max(tol, 1.0e-5))
 
 
 class TestControlledOps:
