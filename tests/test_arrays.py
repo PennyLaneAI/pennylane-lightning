@@ -14,10 +14,9 @@
 """
 Array tests for Lightning devices.
 """
+import numpy as np
 import pytest
 from conftest import LightningDevice as ld
-
-import numpy as np
 
 try:
     from pennylane_lightning.lightning_qubit_ops import allocate_aligned_array

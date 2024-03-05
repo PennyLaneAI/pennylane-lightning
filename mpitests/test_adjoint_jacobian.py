@@ -17,14 +17,16 @@ Unit tests for the :mod:`pennylane_lightning_gpu.LightningGPU` device (MPI).
 # pylint: disable=protected-access,cell-var-from-loop,c-extension-no-member
 import itertools
 import math
-from mpi4py import MPI
-import pytest
-from conftest import device_name, LightningDevice as ld
 
-from scipy.stats import unitary_group
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
+from mpi4py import MPI
+from pennylane import QNode
 from pennylane import numpy as np
-from pennylane import QNode, qnode
+from pennylane import qnode
+from scipy.stats import unitary_group
 
 I, X, Y, Z = (
     np.eye(2),
