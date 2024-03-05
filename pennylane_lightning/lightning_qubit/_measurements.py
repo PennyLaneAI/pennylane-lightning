@@ -27,6 +27,7 @@ except ImportError:
 from typing import Callable, List
 
 import numpy as np
+import pennylane as qml
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -76,7 +77,7 @@ class LightningMeasurements:
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method will is bypassing the measurement process to default.qubit implementation.
+            This method is bypassing the measurement process to default.qubit implementation.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -84,11 +85,17 @@ class LightningMeasurements:
         Returns:
             TensorLike: the result of the measurement
         """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
 
         state_array = self._qubit_state.state
         wires = Wires(range(self._qubit_state.num_wires))
-        return measurementprocess.process_state(state_array, wires)
+
+        result = measurementprocess.process_state(state_array, wires)
+
+        self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+
+        return result
 
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
