@@ -14,17 +14,14 @@
 """
 Unit tests for Measurements in Lightning devices.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld, lightning_ops
-
-import numpy as np
 import math
 
+import numpy as np
 import pennylane as qml
-from pennylane.measurements import (
-    Variance,
-    Expectation,
-)
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name, lightning_ops
+from pennylane.measurements import Expectation, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

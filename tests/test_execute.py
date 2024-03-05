@@ -15,10 +15,10 @@
 Integration tests for the ``execute`` method of Lightning devices.
 """
 import functools
-import pytest
-from conftest import device_name
 
 import pennylane as qml
+import pytest
+from conftest import device_name
 from pennylane import numpy as np
 
 
