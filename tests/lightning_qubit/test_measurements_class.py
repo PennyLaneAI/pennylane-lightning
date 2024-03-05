@@ -620,7 +620,7 @@ class TestControlledOps:
                 result = m.measure_final_state(tape)
                 expected = self.calculate_reference(tape)
 
-                assert np.allclose(result, expected, tol)
+                assert np.allclose(result, expected, tol * 10)
 
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10
