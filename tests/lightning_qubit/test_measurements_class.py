@@ -25,7 +25,10 @@ from scipy.sparse import csr_matrix, random_array
 from pennylane.measurements import ProbabilityMP, VarianceMP
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_qubit_ops import (
+        MeasurementsC64,
+        MeasurementsC128,
+    )
 except ImportError:
     pass
 
