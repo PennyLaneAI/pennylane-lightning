@@ -24,7 +24,13 @@ except ImportError:
 from typing import Callable, List
 
 import numpy as np
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
+from pennylane.measurements import (
+    ExpectationMP,
+    ProbabilityMP,
+    MeasurementProcess,
+    StateMeasurement,
+    VarianceMP,
+)
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -82,7 +88,6 @@ class LightningMeasurements:
             TensorLike: the result of the measurement
         """
         self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
-
         state_array = self._qubit_state.state
         wires = Wires(range(self._qubit_state.num_wires))
         return measurementprocess.process_state(state_array, wires)
@@ -122,6 +127,32 @@ class LightningMeasurements:
         return self._measurement_lightning.expval(
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
+
+    # pylint: disable=protected-access
+    def probs(self, measurementprocess: MeasurementProcess):
+        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Probabilities of the supplied observable or wires
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        if diagonalizing_gates:
+            qubit_state = LightningStateVector(
+                num_wires=self._qubit_state.num_wires,
+                dtype=self._qubit_state.dtype,
+                device_name=self._qubit_state.device_name,
+            )
+            qubit_state._apply_state_vector(self._state, range(self._qubit_state.num_wires))
+            self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if diagonalizing_gates:
+            self._qubit_state._apply_state_vector(
+                qubit_state.state_vector, range(self._qubit_state.num_wires)
+            )
+        return results
 
     # pylint: disable=protected-access
     def var(self, measurementprocess: MeasurementProcess):
@@ -178,6 +209,9 @@ class LightningMeasurements:
                 ]:
                     return self.state_diagonalizing_gates
                 return self.expval
+
+            if isinstance(measurementprocess, ProbabilityMP):
+                return self.probs
 
             if isinstance(measurementprocess, VarianceMP):
                 if measurementprocess.obs.name in [
