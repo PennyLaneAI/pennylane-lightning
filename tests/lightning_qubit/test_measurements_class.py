@@ -14,15 +14,15 @@
 
 import itertools
 import math
-
 from typing import Sequence
+
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
-from scipy.sparse import csr_matrix, random_array
 from pennylane.measurements import ProbabilityMP, VarianceMP
+from scipy.sparse import csr_matrix, random_array
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
@@ -424,6 +424,8 @@ class TestMeasurements:
     @pytest.mark.parametrize(
         "observable",
         (
+            [0],
+            [1, 2],
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -444,13 +446,19 @@ class TestMeasurements:
             (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
         ):
             return
+        if measurement is not qml.probs and isinstance(observable, list):
+            return
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
-        measurements = [measurement(op=observable)]
+        measurements = (
+            [measurement(wires=observable)]
+            if isinstance(observable, list)
+            else [measurement(op=observable)]
+        )
         tape = qml.tape.QuantumScript(ops, measurements)
 
         expected = self.calculate_reference(tape, lightning_sv)
@@ -459,7 +467,8 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         result = m.measure_final_state(tape)
 
-        assert np.allclose(result, expected, tol)
+        # a few tests may fail in single precision, and hence we increase the tolerance
+        assert np.allclose(result, expected, max(tol, 1.0e-5))
 
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -526,7 +535,7 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
-        # a few tests fail in single precision, and hence we increase the tolerance
+        # a few tests may fail in single precision, and hence we increase the tolerance
         for r, e in zip(result, expected):
             assert np.allclose(r, e, max(tol, 1.0e-5))
 
