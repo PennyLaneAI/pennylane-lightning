@@ -20,8 +20,6 @@ try:
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
-        best_alignment,
-        get_alignment,
     )
 except ImportError:
     pass
