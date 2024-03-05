@@ -435,8 +435,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             Returns:
                 array[complex]: the output state tensor
             """
-            if mid_measurements is not None and np.any(np.array(mid_measurements.values()) == -1):
-                return
             state = self.state_vector
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
@@ -499,8 +497,6 @@ if LQ_CPP_BINARY_AVAILABLE:
             self.apply_lightning(operations, mid_measurements=mid_measurements)
             if rotations is not None and self.shots:
                 self.apply_lightning(rotations)
-            if mid_measurements is not None and np.any(np.array(mid_measurements.values()) == -1):
-                return
 
         # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
