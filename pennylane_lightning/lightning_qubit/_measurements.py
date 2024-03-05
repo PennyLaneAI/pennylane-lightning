@@ -43,7 +43,7 @@ class LightningMeasurements:
     Measures the state provided by the LightningStateVector class.
 
     Args:
-        qubit_state(LightningStateVector)
+        qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
     def __init__(self, qubit_state: LightningStateVector) -> None:

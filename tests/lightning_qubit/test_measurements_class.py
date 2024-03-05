@@ -21,14 +21,6 @@ import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
-except ImportError:
-    pass
-
 from pennylane_lightning.lightning_qubit import LightningQubit
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
@@ -38,6 +30,9 @@ if not LightningQubit._CPP_BINARY_AVAILABLE:
 
 if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+
+THETA = np.linspace(0.11, 1, 3)
+PHI = np.linspace(0.32, 1, 3)
 
 
 # General LightningStateVector fixture, for any number of wires.
@@ -188,10 +183,6 @@ class TestStateDiagonalizingGates:
         m = LightningMeasurements(statevector)
         result = getattr(m, method_name)(qml.expval(qml.Projector([0, 1], wires=0)))
         assert qml.math.allclose(result, np.sin(phi / 2) ** 2)
-
-
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))

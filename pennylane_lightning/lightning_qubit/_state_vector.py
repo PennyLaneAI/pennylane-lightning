@@ -43,7 +43,7 @@ class LightningStateVector:
     Args:
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
+            ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
@@ -81,57 +81,10 @@ class LightningStateVector:
         """Number of wires addressed on this device"""
         return self._num_wires
 
-    def _state_dtype(self):
-        """Binding to Lightning Managed state vector C++ class.
-
-        Returns: the state vector class
-        """
-        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
-
-    @staticmethod
-    def _asarray(arr, dtype=None):
-        """Verify data alignment and allocate aligned memory if needed.
-
-        Args:
-            arr (numpy.array): data array
-            dtype (dtype, optional): if provided will convert the array data type.
-
-        Returns:
-            np.array: numpy array with aligned data.
-        """
-        arr = np.asarray(arr)  # arr is not copied
-
-        if arr.dtype.kind not in ["f", "c"]:
-            return arr
-
-        if not dtype:
-            dtype = arr.dtype
-
-        # We allocate a new aligned memory and copy data to there if alignment or dtype
-        # mismatches
-        # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned)
-        # numpy allocated memory as the memory location happens to be aligned.
-        if int(get_alignment(arr)) < int(best_alignment()) or arr.dtype != dtype:
-            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(arr.shape)
-            if len(arr.shape):
-                new_arr[:] = arr
-            else:
-                np.copyto(new_arr, arr)
-            arr = new_arr
-        return arr
-
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-        Args:
-            _qubit_state: a handle to Lightning qubit state.
-            index (int): integer representing the computational basis state.
-        """
-        self._qubit_state.setBasisState(index)
-
-    def reset_state(self):
-        """Reset the device's state"""
-        # init the state vector to |00..0>
-        self._qubit_state.resetStateVector()
+    @property
+    def state_vector(self):
+        """Returns a handle to the state vector."""
+        return self._qubit_state
 
     @property
     def state(self):
@@ -145,14 +98,28 @@ class LightningStateVector:
         [0.+0.j 1.+0.j]
         """
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
-        state = self._asarray(state, dtype=self.dtype)
         self._qubit_state.getState(state)
         return state
 
-    @property
-    def state_vector(self):
-        """Returns a handle to the state vector."""
-        return self._qubit_state
+    def _state_dtype(self):
+        """Binding to Lightning Managed state vector C++ class.
+
+        Returns: the state vector class
+        """
+        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
+
+    def _create_basis_state(self, index):
+        """Return a computational basis state over all wires.
+
+        Args:
+            index (int): integer representing the computational basis state.
+        """
+        self._qubit_state.setBasisState(index)
+
+    def reset_state(self):
+        """Reset the device's state"""
+        # init the state vector to |00..0>
+        self._qubit_state.resetStateVector()
 
     def _preprocess_state_vector(self, state, device_wires):
         """Initialize the internal state vector in a specified state.
@@ -163,14 +130,13 @@ class LightningStateVector:
             device_wires (Wires): wires that get initialized in the state
 
         Returns:
+            array[int]: indices for which the state is changed to input state vector elements
             array[complex]: normalized input state of length ``2**len(wires)``
                 or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            array[int]: indices for which the state is changed to input state vector elements
         """
         # special case for integral types
         if state.dtype.kind == "i":
             state = np.array(state, dtype=self.dtype)
-        state = self._asarray(state, dtype=self.dtype)
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             return None, state
