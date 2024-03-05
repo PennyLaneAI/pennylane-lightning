@@ -63,6 +63,12 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane.operation import Tensor
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
+    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
+        AdjointJacobianC64,
+        AdjointJacobianC128,
+        create_ops_listC64,
+        create_ops_listC128,
+    )
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import (

@@ -592,7 +592,10 @@ class TestMeasurements:
             obs1_,
             (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
         ):
-            return
+            pytest.skip(
+                f"Observable of type {type(obs1_).__name__} is not supported for rotating probabilities."
+            )
+
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
