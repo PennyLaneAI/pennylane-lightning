@@ -24,6 +24,7 @@ except ImportError:
 from typing import Callable, List
 
 import numpy as np
+import pennylane as qml
 from pennylane.measurements import (
     ExpectationMP,
     ProbabilityMP,
@@ -140,17 +141,11 @@ class LightningMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
-            qubit_state = LightningStateVector(
-                num_wires=self._qubit_state.num_wires,
-                dtype=self._qubit_state.dtype,
-                device_name=self._qubit_state.device_name,
-            )
-            qubit_state._apply_state_vector(self._state, range(self._qubit_state.num_wires))
-            self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
+            self._qubit_state.apply_operations(diagonalizing_gates)
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
-            self._qubit_state._apply_state_vector(
-                qubit_state.state_vector, range(self._qubit_state.num_wires)
+            self._qubit_state.apply_operations(
+                [qml.adjoint(g) for g in reversed(diagonalizing_gates)]
             )
         return results
 
