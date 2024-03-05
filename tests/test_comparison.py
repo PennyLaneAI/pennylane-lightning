@@ -15,13 +15,14 @@
 Integration tests that compare the output states of the
 compiled Lightning device with the ``default.qubit``.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import itertools
-import numpy as np
 import os
+
+import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 
 
 def lightning_backend_dev(wires):

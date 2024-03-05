@@ -16,11 +16,10 @@ Unit tests for the expval method of Lightning devices.
 """
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments,c-extension-no-member
 
-import pytest
-from conftest import THETA, PHI, VARPHI, device_name
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import PHI, THETA, VARPHI, device_name
 from mpi4py import MPI
 
 

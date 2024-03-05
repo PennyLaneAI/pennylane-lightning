@@ -15,7 +15,7 @@
 Unit tests for the serialization helper functions.
 """
 import pytest
-from conftest import device_name, LightningDevice
+from conftest import LightningDevice, device_name
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 

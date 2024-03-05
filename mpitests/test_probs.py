@@ -12,16 +12,13 @@
 """
 Unit tests for the :mod:`pennylane_lightning.LightningGPU` device (MPI).
 """
-# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
-from mpi4py import MPI
-import pytest
-
-from conftest import (
-    device_name,
-)
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import device_name
+
+# pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
+from mpi4py import MPI
 
 numQubits = 8
 

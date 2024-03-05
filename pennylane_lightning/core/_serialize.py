@@ -15,25 +15,26 @@ r"""
 Helper functions for serializing quantum tapes.
 """
 from typing import List, Tuple
+
 import numpy as np
 from pennylane import (
     BasisState,
+    DeviceError,
     Hadamard,
+    Hamiltonian,
+    Identity,
     PauliX,
     PauliY,
     PauliZ,
-    Identity,
-    StatePrep,
-    Rot,
-    Hamiltonian,
-    SparseHamiltonian,
     QubitUnitary,
+    Rot,
+    SparseHamiltonian,
+    StatePrep,
+    matrix,
 )
+from pennylane.math import unwrap
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
-from pennylane.math import unwrap
-
-from pennylane import matrix, DeviceError
 
 pauli_name_map = {
     "I": "Identity",
