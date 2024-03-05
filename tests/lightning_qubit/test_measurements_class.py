@@ -17,6 +17,7 @@ import math
 from typing import Sequence
 
 from typing import Sequence
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -611,7 +612,7 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
-        # a few tests fail in single precision, and hence we increase the tolerance
+        # a few tests may fail in single precision, and hence we increase the tolerance
         for r, e in zip(result, expected):
             assert np.allclose(r, e, max(tol, 1.0e-5))
 

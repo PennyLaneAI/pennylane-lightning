@@ -212,18 +212,9 @@ class LightningMeasurements:
                     return self.state_diagonalizing_gates
                 return self.expval
 
-<<<<<<< HEAD
-<<<<<<< HEAD
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
-=======
->>>>>>> c1c03954 (Add qml.var support.)
-=======
-            if isinstance(measurementprocess, ProbabilityMP):
-                return self.probs
-
->>>>>>> 383efdb1 (Add probs support.)
             if isinstance(measurementprocess, VarianceMP):
                 if measurementprocess.obs.name in [
                     "Identity",
