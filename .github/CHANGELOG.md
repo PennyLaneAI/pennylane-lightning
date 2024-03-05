@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
+  [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
 
 ---
 
@@ -32,9 +37,6 @@ This release contains contributions from (in alphabetical order):
   [(#606)](https://github.com/PennyLaneAI/pennylane-lightning/pull/606)
 
 ### Improvements
-
-* Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
-  [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
 
 * Expand error values and strings returned from CUDA libraries.
   [(#617)](https://github.com/PennyLaneAI/pennylane-lightning/pull/617)

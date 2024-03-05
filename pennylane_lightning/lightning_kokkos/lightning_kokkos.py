@@ -65,7 +65,10 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
     from pennylane_lightning.core._version import __version__
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,

@@ -111,7 +111,7 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	isort ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
+	isort --profile black ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
 	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
 
 .PHONY: check-tidy
