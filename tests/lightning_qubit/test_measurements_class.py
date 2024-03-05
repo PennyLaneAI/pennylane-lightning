@@ -399,7 +399,8 @@ class TestMeasurements:
         use_default = True
         new_meas = []
         for m in tape.measurements:
-            # not supported by DefaultQubit
+            # NotImplementedError in DefaultQubit
+            # We therefore validate against `qml.Hermitian`
             if isinstance(m, VarianceMP) and isinstance(
                 m.obs, (qml.Hamiltonian, qml.SparseHamiltonian)
             ):
@@ -445,9 +446,15 @@ class TestMeasurements:
             observable,
             (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
         ):
-            return
+            pytest.skip(
+                f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
+            )
+
         if measurement is not qml.probs and isinstance(observable, list):
-            return
+            pytest.skip(
+                f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
+            )
+
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
@@ -510,12 +517,18 @@ class TestMeasurements:
             obs0_,
             (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
         ):
-            return
+            pytest.skip(
+                f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
+            )
+
         if measurement is qml.probs and isinstance(
             obs1_,
             (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
         ):
-            return
+            pytest.skip(
+                f"Observable of type {type(obs1_).__name__} is not supported for rotating probabilities."
+            )
+
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
