@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
+  [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
+
 ### Documentation
 
 ### Bug fixes

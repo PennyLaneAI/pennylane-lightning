@@ -16,10 +16,10 @@ Unit tests for Lightning devices creation.
 """
 # pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 from mpi4py import MPI
 
 if not ld._CPP_BINARY_AVAILABLE:
