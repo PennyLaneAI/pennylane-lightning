@@ -19,9 +19,10 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, device_name
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
     """Test expectation values"""
@@ -248,6 +249,7 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(g, expected)
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
     """Test tensor expectation values"""

@@ -91,13 +91,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import (
-        QuantumScriptSerializer,
-        global_phase_diagonal,
-    )
-    from pennylane_lightning.core._version import __version__
-
     # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -105,6 +98,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
+    from pennylane_lightning.core._version import __version__
 
     if MPI_SUPPORT:
         from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
@@ -261,7 +261,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             elif c_dtype is np.complex128:
                 self.use_csingle = False
             else:
-                raise TypeError(f"Unsupported complex Type: {c_dtype}")
+                raise TypeError(f"Unsupported complex type: {c_dtype}")
 
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 

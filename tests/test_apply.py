@@ -30,6 +30,7 @@ from pennylane.operation import Operation
 from pennylane.wires import Wires
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestApply:
     """Tests that operations of certain operations are applied correctly or
     that the proper errors are raised.
@@ -532,6 +533,7 @@ class TestApply:
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -584,6 +586,7 @@ class TestExpval:
 class TestVar:
     """Tests that variances are properly calculated."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -670,6 +673,7 @@ class TestSample:
         s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
         assert np.array_equal(s3.shape, (17,))
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
         the correct values

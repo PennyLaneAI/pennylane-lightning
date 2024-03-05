@@ -14,14 +14,13 @@
 """
 Tests for process and execute (expval calculation).
 """
-import pytest
-
 import numpy as np
 import pennylane as qml
-from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
+import pytest
+from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
 
-from conftest import LightningDevice  # tested device
+from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
 
 if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
