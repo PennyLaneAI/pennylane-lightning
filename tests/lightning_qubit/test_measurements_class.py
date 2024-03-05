@@ -97,10 +97,6 @@ class TestGetMeasurementFunction:
     @pytest.mark.parametrize(
         "mp",
         (
-<<<<<<< HEAD
-=======
-            qml.probs(wires=0),
->>>>>>> c1c03954 (Add qml.var support.)
             qml.vn_entropy(wires=0),
             CustomStateMeasurement(),
             qml.expval(qml.Identity(0)),
