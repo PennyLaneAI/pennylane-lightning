@@ -655,7 +655,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         const int ps = postselect.empty() ? -1 : postselect[0];
 
         std::vector<PrecisionT> probs_ = probs(wires[0]);
-        auto sample = random_sample(probs_[0]);
+        auto sample = randomSample(probs_[0]);
         if (ps != -1 && ps != sample) {
             sample = -1;
         } else {
@@ -672,14 +672,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      * @param seed Seed
      */
-    void seed(const size_t seed) { rng.seed(seed); }
+    void setSeed(const size_t seed) { rng.seed(seed); }
 
     /**
      * @brief Sample 0 or 1 for given probabilities
      *
      * @param probs Probabilities of 0.
      */
-    auto random_sample(const PrecisionT prob_0) {
+    auto randomSample(const PrecisionT prob_0) {
         std::discrete_distribution<int> distrib({prob_0, 1. - prob_0});
         return distrib(rng);
     }

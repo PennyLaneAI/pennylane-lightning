@@ -237,11 +237,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::random_sample",
         init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
 
-        sv.seed(1234);
+        sv.setSeed(1234);
         const PrecisionT prob_0 = 0.1;
         std::map<int, int> map;
         for (int n = 0; n < 100; ++n) {
-            ++map[sv.random_sample(prob_0)];
+            ++map[sv.randomSample(prob_0)];
         }
         REQUIRE(map[0] == 13);
     }
@@ -330,7 +330,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMidMeasureMP",
         init_state = {coef, coef, coef, coef, zero, zero, zero, zero};
         StateVectorLQubitManaged<PrecisionT> sv(init_state);
 
-        sv.seed(1234);
+        sv.setSeed(1234);
         std::size_t i_case = GENERATE(0, 1, 2);
         std::vector<std::vector<std::size_t>> post_select({{}, {}, {0}});
         std::vector<int> reset({false, true, false});
