@@ -114,7 +114,7 @@ Thomas Germain, Vincent Michaud-Rioux
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Thomas Germain, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
