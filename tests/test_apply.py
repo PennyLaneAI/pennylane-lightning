@@ -640,6 +640,7 @@ class TestVar:
 class TestSample:
     """Tests that samples are properly calculated."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_dimensions(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -808,7 +809,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -834,7 +836,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -857,7 +860,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=3)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -884,7 +888,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -1002,7 +1007,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -1044,7 +1050,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
 
-        assert dev.supports_operation(name)
+        if hasattr(dev, "supports_operation"):
+            assert dev.supports_operation(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -1079,7 +1086,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         obs = getattr(qml.ops, name)
 
-        assert dev.supports_observable(name)
+        if hasattr(dev, "supports_observable"):
+            assert dev.supports_observable(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -1104,7 +1112,8 @@ class TestLightningDeviceIntegration:
         dev = qubit_device(wires=1)
         obs = getattr(qml.ops, name)
 
-        assert dev.supports_observable(name)
+        if hasattr(dev, "supports_observable"):
+            assert dev.supports_observable(name)
 
         @qml.qnode(dev)
         def circuit():
@@ -1192,10 +1201,13 @@ class TestLightningDeviceIntegration:
             qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard)(wires=0), [0], [1])
             return qml.probs(wires=[0, 1])
 
-        circuit()
+        probs = circuit()
 
         res_sv = dev.state
-        res_probs = dev.probability([0, 1])
+        if ld._new_API:
+            res_probs = probs
+        else:
+            res_probs = dev.probability([0, 1])
 
         expected_sv = np.array(
             [
@@ -1214,6 +1226,7 @@ class TestLightningDeviceIntegration:
 class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_apply_identity_skipped(self, mocker, tol):
         """Test identity operation does not perform additional computations."""
         dev = qml.device(device_name, wires=1)

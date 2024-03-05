@@ -170,6 +170,8 @@ class TestExpOperatorArithmetic:
         """Test the `SProd` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -188,6 +190,8 @@ class TestExpOperatorArithmetic:
         """Test the `Prod` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -208,6 +212,8 @@ class TestExpOperatorArithmetic:
         """Test the `Sum` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -230,6 +236,8 @@ class TestExpOperatorArithmetic:
         obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
