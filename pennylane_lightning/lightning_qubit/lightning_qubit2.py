@@ -264,6 +264,11 @@ class LightningQubit2(Device):
         """State vector complex data type."""
         return self._c_dtype
 
+    @property
+    def num_wires(self):
+        """State vector complex data type."""
+        return self._statevector.num_wires
+
     @classmethod
     @property
     def operations(self) -> frozenset[str]:
