@@ -206,7 +206,7 @@ class LightningQubit2(Device):
     short_name = "lightning.qubit2"
     operations = _operations
     observables = _observables
-    _backend_info = backend_info
+    _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
     config = Path(__file__).parent / "lightning_qubit.toml"
 
     def __init__(  # pylint: disable=too-many-arguments

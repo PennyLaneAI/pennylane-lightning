@@ -397,6 +397,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
+    _new_API = False
 
     def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
         if c_dtype is np.complex64:
