@@ -24,20 +24,27 @@ try:
 except ImportError:
     pass
 
-from typing import Callable, List
+from typing import Callable, List, Sequence, Union
 
 import numpy as np
 import pennylane as qml
+from pennylane.devices.qubit.sampling import (
+    _group_measurements,
+    _measure_with_samples_diagonalizing_gates,
+)
 from pennylane.measurements import (
+    ClassicalShadowMP,
     CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
     SampleMeasurement,
+    ShadowExpvalMP,
     Shots,
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.ops import Hamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -264,12 +271,9 @@ class LightningMeasurements:
             return tuple(self.measurement(mp) for mp in circuit.measurements)
 
         # finite-shot case
-        results = tuple(
-            self.measure_with_samples(
-                mp,
-                shots=circuit.shots,
-            )
-            for mp in circuit.measurements
+        results = self.measure_with_samples(
+            circuit.measurements,
+            shots=circuit.shots,
         )
 
         if len(circuit.measurements) == 1:
@@ -280,9 +284,74 @@ class LightningMeasurements:
 
         return results
 
+    # pylint:disable = too-many-arguments
     def measure_with_samples(
         self,
-        measurementprocess: SampleMeasurement,
+        mps: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
+        shots: Shots,
+    ) -> List[TensorLike]:
+        """
+        Returns the samples of the measurement process performed on the given state.
+        This function assumes that the user-defined wire labels in the measurement process
+        have already been mapped to integer wires used in the device.
+
+        Args:
+            mps (List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]]):
+                The sample measurements to perform
+            shots (Shots): The number of samples to take
+
+        Returns:
+            List[TensorLike[Any]]: Sample measurement results
+        """
+
+        groups, indices = _group_measurements(mps)
+
+        all_res = []
+        for group in groups:
+            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
+                raise TypeError(f"ExpectationMP(Hamiltonian) cannot be computed with samples.")
+                # measure_fn = _measure_hamiltonian_with_samples
+            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+                raise TypeError(f"ExpectationMP(Sum) cannot be computed with samples.")
+                # measure_fn = _measure_sum_with_samples
+            elif isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
+                raise TypeError(
+                    f"ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
+                )
+                # measure_fn = _measure_classical_shadow
+            else:
+                # measure with the usual method (rotate into the measurement basis)
+                all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
+
+        flat_indices = [_i for i in indices for _i in i]
+
+        # reorder results
+        sorted_res = tuple(
+            res for _, res in sorted(list(enumerate(all_res)), key=lambda r: flat_indices[r[0]])
+        )
+
+        # put the shot vector axis before the measurement axis
+        if shots.has_partitioned_shots:
+            sorted_res = tuple(zip(*sorted_res))
+
+        return sorted_res
+
+    def _apply_diagonalizing_gates(self, mps: List[SampleMeasurement], adjoint: bool = False):
+        if len(mps) == 1:
+            diagonalizing_gates = mps[0].diagonalizing_gates()
+        elif all(mp.obs for mp in mps):
+            diagonalizing_gates = qml.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
+        else:
+            diagonalizing_gates = []
+
+        if adjoint:
+            diagonalizing_gates = [qml.adjoint(g, lazy=False) for g in diagonalizing_gates]
+
+        self._qubit_state.apply_operations(diagonalizing_gates)
+
+    def _measure_with_samples_diagonalizing_gates(
+        self,
+        mps: List[SampleMeasurement],
         shots: Shots,
     ) -> TensorLike:
         """
@@ -291,28 +360,28 @@ class LightningMeasurements:
         given by the measurement process.
 
         Args:
-            mp (~.measurements.SampleMeasurement): The sample measurement to perform
-            state (np.ndarray[complex]): The state vector to sample from
+            mps (~.measurements.SampleMeasurement): The sample measurements to perform
             shots (~.measurements.Shots): The number of samples to take
-            is_state_batched (bool): whether the state is batched or not
-            rng (Union[None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
-                seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``.
-                If no value is provided, a default RNG will be used.
-            prng_key (Optional[jax.random.PRNGKey]): An optional ``jax.random.PRNGKey``. This is
-                the key to the JAX pseudo random number generator. Only for simulation using JAX.
 
         Returns:
             TensorLike[Any]: Sample measurement results
         """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
+        # apply diagonalizing gates
+        self._apply_diagonalizing_gates(mps)
 
-        wires = measurementprocess.wires
+        total_indices = self._qubit_state.num_wires
+        wires = qml.wires.Wires(range(total_indices))
 
         def _process_single_shot(samples):
-            res = measurementprocess.process_samples(samples, wires)
-            return res if isinstance(measurementprocess, CountsMP) else qml.math.squeeze(res)
+            processed = []
+            for mp in mps:
+                res = mp.process_samples(samples, wires)
+                if not isinstance(mp, CountsMP):
+                    res = qml.math.squeeze(res)
+
+                processed.append(res)
+
+            return tuple(processed)
 
         # if there is a shot vector, build a list containing results for each shot entry
         if shots.has_partitioned_shots:
@@ -331,11 +400,7 @@ class LightningMeasurements:
                     samples = qml.math.full((s, len(wires)), 0)
 
                 processed_samples.append(_process_single_shot(samples))
-            if diagonalizing_gates:
-                self._qubit_state.apply_operations(
-                    [qml.adjoint(g) for g in reversed(diagonalizing_gates)]
-                )
-
+            self._apply_diagonalizing_gates(mps, adjoint=True)
             return tuple(zip(*processed_samples))
 
         try:
@@ -347,8 +412,6 @@ class LightningMeasurements:
                 raise e
             samples = qml.math.full((shots.total_shots, len(wires)), 0)
 
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(
-                [qml.adjoint(g) for g in reversed(diagonalizing_gates)]
-            )
+        self._apply_diagonalizing_gates(mps, adjoint=True)
+
         return _process_single_shot(samples)

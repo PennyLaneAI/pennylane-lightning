@@ -533,7 +533,6 @@ class TestApply:
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -561,10 +560,14 @@ class TestExpval:
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-
-        dev.reset()
-        dev.apply([stateprep(np.array(input), wires=[0])], obs.diagonalizing_gates())
-        res = dev.expval(obs)
+        ops = [stateprep(np.array(input), wires=[0])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.reset()
+            dev.apply(ops, obs.diagonalizing_gates())
+            res = dev.expval(obs)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
@@ -586,7 +589,6 @@ class TestExpval:
 class TestVar:
     """Tests that variances are properly calculated."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -614,10 +616,14 @@ class TestVar:
         """Tests that variances are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-
-        dev.reset()
-        dev.apply([stateprep(np.array(input), wires=[0])], obs.diagonalizing_gates())
-        res = dev.var(obs)
+        ops = [stateprep(np.array(input), wires=[0])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.reset()
+            dev.apply(ops, obs.diagonalizing_gates())
+            res = dev.var(obs)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
@@ -1168,7 +1174,6 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
         self, num_wires
@@ -1184,7 +1189,7 @@ class TestLightningDeviceIntegration:
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
             if ld._new_API:
-                return qml.sample(wires=[num_wires - 2, num_wires - 1])
+                return qml.sample(wires=[0, 1])
             else:
                 return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
 
