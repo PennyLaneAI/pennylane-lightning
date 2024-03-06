@@ -754,7 +754,7 @@ class TestLightningDeviceIntegration:
         with pytest.raises(qml.QuantumFunctionError):
             qml.QNode(circuit, dev, diff_method="backprop")
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
+    @pytest.mark.xfail(ld._new_API, reason="New device API currently has the wrong module path.")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning

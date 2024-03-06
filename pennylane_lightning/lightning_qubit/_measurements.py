@@ -63,11 +63,20 @@ class LightningMeasurements:
         qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
-    def __init__(self, qubit_state: LightningStateVector) -> None:
+    def __init__(
+        self,
+        qubit_state: LightningStateVector,
+        mcmc: bool = False,
+        kernel_name: str = "Local",
+        num_burnin: int = 100,
+    ) -> None:
         self._qubit_state = qubit_state
         self._state = qubit_state.state_vector
         self._dtype = qubit_state.dtype
         self._measurement_lightning = self._measurement_dtype()(self.state)
+        self._mcmc = mcmc
+        self._kernel_name = kernel_name
+        self._num_burnin = num_burnin
 
     @property
     def qubit_state(self):
@@ -391,9 +400,14 @@ class LightningMeasurements:
                 # better to call sample_state just once with total_shots, then use
                 # the shot_range keyword argument
                 try:
-                    samples = self._measurement_lightning.generate_samples(len(wires), s).astype(
-                        int, copy=False
-                    )
+                    if self._mcmc:
+                        samples = self._measurement_lightning.generate_mcmc_samples(
+                            len(wires), self._kernel_name, self._num_burnin, s
+                        ).astype(int, copy=False)
+                    else:
+                        samples = self._measurement_lightning.generate_samples(
+                            len(wires), s
+                        ).astype(int, copy=False)
                 except ValueError as e:
                     if str(e) != "probabilities contain NaN":
                         raise e
@@ -404,9 +418,14 @@ class LightningMeasurements:
             return tuple(zip(*processed_samples))
 
         try:
-            samples = self._measurement_lightning.generate_samples(
-                len(wires), shots.total_shots
-            ).astype(int, copy=False)
+            if self._mcmc:
+                samples = self._measurement_lightning.generate_mcmc_samples(
+                    len(wires), self._kernel_name, self._num_burnin, shots.total_shots
+                ).astype(int, copy=False)
+            else:
+                samples = self._measurement_lightning.generate_samples(
+                    len(wires), shots.total_shots
+                ).astype(int, copy=False)
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e

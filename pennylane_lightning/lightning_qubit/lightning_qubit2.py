@@ -51,7 +51,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = {}) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -66,7 +66,7 @@ def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     """
     state.reset_state()
     final_state = state.get_final_state(circuit)
-    return LightningMeasurements(final_state).measure_final_state(circuit)
+    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
 def jacobian(circuit: QuantumTape):
@@ -324,10 +324,15 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
+        mcmc = {
+            "mcmc": self._mcmc,
+            "kernel_name": self._kernel_name,
+            "num_burnin": self._num_burnin,
+        }
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(simulate(circuit, self._statevector))
+            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
 
         return tuple(results)
 
