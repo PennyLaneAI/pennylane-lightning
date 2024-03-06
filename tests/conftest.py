@@ -149,7 +149,7 @@ else:
     params=[np.complex64, np.complex128],
 )
 def qubit_device(request):
-    def _device(wires):
-        return qml.device(device_name, wires=wires, c_dtype=request.param)
+    def _device(wires, shots=None):
+        return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
 
     return _device

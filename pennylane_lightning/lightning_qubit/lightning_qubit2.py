@@ -319,7 +319,6 @@ class LightningQubit2(Device):
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(qml.defer_measurements, device=self)

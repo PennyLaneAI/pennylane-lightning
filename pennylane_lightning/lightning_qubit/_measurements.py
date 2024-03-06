@@ -264,13 +264,13 @@ class LightningMeasurements:
             return tuple(self.measurement(mp) for mp in circuit.measurements)
 
         # finite-shot case
-        results = [
+        results = tuple(
             self.measure_with_samples(
                 mp,
                 shots=circuit.shots,
             )
             for mp in circuit.measurements
-        ]
+        )
 
         if len(circuit.measurements) == 1:
             if circuit.shots.has_partitioned_shots:
@@ -308,18 +308,11 @@ class LightningMeasurements:
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
 
-        total_indices = len(state.shape) - is_state_batched
-        wires = qml.wires.Wires(range(total_indices))
+        wires = measurementprocess.wires
 
         def _process_single_shot(samples):
-            processed = []
             res = measurementprocess.process_samples(samples, wires)
-            if not isinstance(measurementprocess, CountsMP):
-                res = qml.math.squeeze(res)
-
-            processed.append(res)
-
-            return tuple(processed)
+            return res if isinstance(measurementprocess, CountsMP) else qml.math.squeeze(res)
 
         # if there is a shot vector, build a list containing results for each shot entry
         if shots.has_partitioned_shots:
@@ -329,17 +322,9 @@ class LightningMeasurements:
                 # better to call sample_state just once with total_shots, then use
                 # the shot_range keyword argument
                 try:
-                    samples = self._measurement_lightning.generate_samples(
-                        len(measurementprocess.wires), s
-                    ).astype(int, copy=False)
-                    # samples = sample_state(
-                    #     state,
-                    #     shots=s,
-                    #     is_state_batched=is_state_batched,
-                    #     wires=wires,
-                    #     rng=rng,
-                    #     prng_key=prng_key,
-                    # )
+                    samples = self._measurement_lightning.generate_samples(len(wires), s).astype(
+                        int, copy=False
+                    )
                 except ValueError as e:
                     if str(e) != "probabilities contain NaN":
                         raise e
@@ -355,16 +340,8 @@ class LightningMeasurements:
 
         try:
             samples = self._measurement_lightning.generate_samples(
-                len(measurementprocess.wires), shots.total_shots
+                len(wires), shots.total_shots
             ).astype(int, copy=False)
-            # sample_state(
-            #     state,
-            #     shots=shots.total_shots,
-            #     is_state_batched=is_state_batched,
-            #     wires=wires,
-            #     rng=rng,
-            #     prng_key=prng_key,
-            # )
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e
