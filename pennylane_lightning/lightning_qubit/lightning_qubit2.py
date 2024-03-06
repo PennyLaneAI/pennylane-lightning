@@ -280,16 +280,19 @@ class LightningQubit2(Device):
         execution_config: Optional[ExecutionConfig] = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
-        if execution_config is None and circuit is None:
-            return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return (
-            all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
-            and not circuit.shots
-        )
+        if False:
+            # to be used once adjoint differentiation support is added.
+            if execution_config is None and circuit is None:
+                return True
+            if execution_config.gradient_method not in {"adjoint", "best"}:
+                return False
+            if circuit is None:
+                return True
+            return (
+                all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
+                and not circuit.shots
+            )
+        return False
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
