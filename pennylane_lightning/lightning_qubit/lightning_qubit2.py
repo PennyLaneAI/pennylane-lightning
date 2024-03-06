@@ -259,27 +259,12 @@ class LightningQubit2(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    @property
-    def C_DTYPE(self):
-        """State vector complex data type."""
-        return self._c_dtype
+    C_DTYPE = c_dtype
 
     @property
     def num_wires(self):
-        """State vector complex data type."""
+        """Number of wires in the state vector."""
         return self._statevector.num_wires
-
-    @classmethod
-    @property
-    def operations(self) -> frozenset[str]:
-        """The names of the supported operations."""
-        return _operations
-
-    @classmethod
-    @property
-    def observables(self) -> frozenset[str]:
-        """The names of the supported observables."""
-        return _observables
 
     @property
     def state(self):
