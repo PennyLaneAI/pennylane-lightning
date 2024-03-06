@@ -735,7 +735,6 @@ class TestLightningDeviceIntegration:
             assert dev.shots is None
 
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_no_backprop(self):
         """Test that lightning device does not support the backprop
         differentiation method."""
@@ -761,8 +760,6 @@ class TestLightningDeviceIntegration:
             return qml.expval(qml.PauliZ(0))
 
         qnode = qml.QNode(circuit, dev, diff_method="best")
-        print(ld)
-        print(qnode.device.__class__)
         assert isinstance(qnode.device, ld)
 
     def test_args(self):
