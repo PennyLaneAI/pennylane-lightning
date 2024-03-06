@@ -154,7 +154,7 @@ class LightningMeasurements:
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
-                [qml.adjoint(g) for g in reversed(diagonalizing_gates)]
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
         return results
 
