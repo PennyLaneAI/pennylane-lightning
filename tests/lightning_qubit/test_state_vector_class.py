@@ -58,15 +58,6 @@ def test_wrong_dtype(dtype):
         assert LightningStateVector(3, dtype=dtype)
 
 
-@pytest.mark.parametrize("dtype", [np.double, np.complex64, None])
-@pytest.mark.parametrize("data", [1.0, [1.0], [1.0, 2.0]])
-def test_asarray(dtype, data, tol):
-    """Test _asarray returns the right values"""
-    wires = 2
-    state_vector = LightningStateVector(wires)
-    assert np.allclose(data, state_vector._asarray(data, dtype), atol=tol)
-
-
 def test_errors_basis_state():
     with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
         state_vector = LightningStateVector(2)
@@ -139,7 +130,7 @@ def test_reset_state(tol, operation, par):
 
     state_vector.reset_state()
 
-    expected_output = state_vector._asarray([1, 0, 0, 0])
+    expected_output = np.array([1, 0, 0, 0], dtype=state_vector.dtype)
     assert np.allclose(state_vector.state, expected_output, atol=tol, rtol=0)
 
 
