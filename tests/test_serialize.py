@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -108,10 +108,11 @@ def test_wrong_device_name():
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):
-    """Tests that observables get serialized to the expected type."""
+    """Tests that observables get serialized to the expected type, with and without wires map"""
     assert isinstance(
         QuantumScriptSerializer(device_name)._ob(obs, dict(enumerate(obs.wires))), obs_type
     )
+    assert isinstance(QuantumScriptSerializer(device_name)._ob(obs), obs_type)
 
 
 class TestSerializeObs:
@@ -120,7 +121,8 @@ class TestSerializeObs:
     wires_dict = {i: i for i in range(10)}
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_tensor_non_tensor_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_tensor_non_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a mixture of tensor product and non-tensor product
         return"""
         with qml.tape.QuantumTape() as tape:
@@ -130,19 +132,19 @@ class TestSerializeObs:
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
-        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
-        )
-
         s_expected = [
             tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
             named_obs("Hadamard", [1]),
         ]
 
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
         assert s == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_hermitian_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_hermitian_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
@@ -151,7 +153,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
         s_expected = hermitian_obs(
             np.array(
@@ -163,7 +165,8 @@ class TestSerializeObs:
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_hermitian_tensor_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_hermitian_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.Hermitian(np.eye(2), wires=[2]))
@@ -172,7 +175,7 @@ class TestSerializeObs:
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
 
         s_expected = tensor_prod_obs(
@@ -185,7 +188,8 @@ class TestSerializeObs:
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_mixed_tensor_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_mixed_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2))
@@ -196,7 +200,7 @@ class TestSerializeObs:
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
 
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
 
         s_expected = tensor_prod_obs(
@@ -206,7 +210,8 @@ class TestSerializeObs:
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_hamiltonian_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_hamiltonian_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
 
         ham = qml.Hamiltonian(
@@ -229,7 +234,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
 
         s_expected = hamiltonian_obs(
@@ -249,7 +254,8 @@ class TestSerializeObs:
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_hamiltonian_tensor_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_hamiltonian_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
 
         with qml.tape.QuantumTape() as tape:
@@ -271,7 +277,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
 
         # Expression (ham @ obs) is converted internally by Pennylane
@@ -298,7 +304,8 @@ class TestSerializeObs:
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_hamiltonian_mix_return(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_hamiltonian_mix_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
 
         ham1 = qml.Hamiltonian(
@@ -326,7 +333,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
 
         s_expected1 = hamiltonian_obs(
@@ -374,11 +381,12 @@ class TestSerializeObs:
         ],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms, wires_map):
         """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
         res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
         assert len(res) == 1
         assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
@@ -400,11 +408,12 @@ class TestSerializeObs:
         assert res[0] == hamiltonian_obs(coeffs, expected_terms)
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    def test_multi_wire_identity(self, use_csingle):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_multi_wire_identity(self, use_csingle, wires_map):
         """Tests that multi-wire Identity does not fail serialization."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
         res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, self.wires_dict
+            tape, wires_map
         )
         assert len(res) == 1
 
@@ -417,14 +426,15 @@ class TestSerializeOps:
 
     wires_dict = {i: i for i in range(10)}
 
-    def test_basic_circuit(self):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_basic_circuit(self, wires_map):
         """Test expected serialization for a simple circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -439,7 +449,8 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    def test_basic_circuit_not_implemented_ctrl_ops(self):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
         """Test expected serialization for a simple circuit"""
         ops = qml.OrbitalRotation(0.1234, wires=range(4))
         with qml.tape.QuantumTape() as tape:
@@ -447,7 +458,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(ops, [4, 5])
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "QubitUnitary"],
@@ -467,14 +478,15 @@ class TestSerializeOps:
         assert s[0][5] == s_expected[0][5]
         assert s[1] == s_expected[1]
 
-    def test_multicontrolledx(self):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_multicontrolledx(self, wires_map):
         """Test expected serialization for a simple circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "PauliX"],
@@ -489,8 +501,9 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_skips_prep_circuit(self, stateprep):
+    def test_skips_prep_circuit(self, stateprep, wires_map):
         """Test expected serialization for a simple circuit with state preparation, such that
         the state preparation is skipped"""
         with qml.tape.QuantumTape() as tape:
@@ -500,7 +513,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -515,14 +528,15 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
-    def test_unsupported_kernel_circuit(self):
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_unsupported_kernel_circuit(self, wires_map):
         """Test expected serialization for a circuit including gates that do not have a dedicated
         kernel"""
         with qml.tape.QuantumTape() as tape:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["CNOT", "RZ"],
@@ -568,8 +582,9 @@ class TestSerializeOps:
         )
         assert s == s_expected
 
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
     @pytest.mark.parametrize("C", [True, False])
-    def test_integration(self, C):
+    def test_integration(self, C, wires_map):
         """Test expected serialization for a random circuit"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
@@ -581,7 +596,7 @@ class TestSerializeOps:
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = QuantumScriptSerializer(device_name).serialize_ops(tape, self.wires_dict)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
 
         dtype = np.complex64 if C else np.complex128
         s_expected = (
