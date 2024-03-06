@@ -138,7 +138,7 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
-# pylint: disable=protected-access
+    # pylint: disable=protected-access
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
