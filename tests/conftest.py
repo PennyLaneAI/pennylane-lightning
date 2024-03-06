@@ -87,7 +87,7 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.qubit2", "lightning.gpu"}
+supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu"}
 supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 
@@ -113,10 +113,10 @@ def get_device():
 
 device_name = get_device()
 
-# if device_name not in qml.plugin_devices:
-#     raise qml.DeviceError(
-#         f"Device {device_name} does not exist. Make sure the required plugin is installed."
-#     )
+if device_name not in qml.plugin_devices:
+    raise qml.DeviceError(
+        f"Device {device_name} does not exist. Make sure the required plugin is installed."
+    )
 
 # Device specification
 import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
@@ -131,11 +131,6 @@ elif device_name == "lightning.gpu":
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
-elif device_name == "lightning.qubit2":
-    from pennylane_lightning.lightning_qubit import LightningQubit2 as LightningDevice
-
-    if hasattr(pennylane_lightning, "lightning_qubit_ops"):
-        import pennylane_lightning.lightning_qubit_ops as lightning_ops
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
 
