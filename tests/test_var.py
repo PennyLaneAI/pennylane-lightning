@@ -17,7 +17,8 @@ Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` d
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice
+from conftest import PHI, THETA, VARPHI
+from conftest import LightningDevice as ld
 
 np.random.seed(42)
 
@@ -26,23 +27,25 @@ np.random.seed(42)
 class TestVar:
     """Tests for the variance"""
 
-    @pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
     def test_var(self, theta, phi, qubit_device, tol):
         """Tests for variance calculation"""
         dev = qubit_device(wires=3)
 
         # test correct variance for <Z> of a rotated state
-        observable = qml.PauliZ(wires=[0])
-
-        dev.apply(
-            [
-                qml.RX(phi, wires=[0]),
-                qml.RY(theta, wires=[0]),
-            ],
-            rotations=[*observable.diagonalizing_gates()],
-        )
-
-        var = dev.var(observable)
+        obs = qml.PauliZ(wires=[0])
+        ops = [
+            qml.RX(phi, wires=[0]),
+            qml.RY(theta, wires=[0]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+            var = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=[*obs.diagonalizing_gates()],
+            )
+            var = dev.var(obs)
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
 
         assert np.allclose(var, expected, tol)
@@ -72,7 +75,6 @@ class TestVar:
         assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorVar:
     """Tests for variance of tensor observables"""
@@ -81,19 +83,22 @@ class TestTensorVar:
         """Test that a tensor product involving PauliX and PauliY works correctly"""
         dev = qubit_device(wires=3)
         obs = qml.PauliX(0) @ qml.PauliY(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.var(obs)
+        ops = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=obs.diagonalizing_gates(),
+            )
+            res = dev.var(obs)
 
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
@@ -110,19 +115,22 @@ class TestTensorVar:
         """Test that a tensor product involving PauliZ and PauliY and hadamard works correctly"""
         dev = qubit_device(wires=3)
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.var(obs)
+        ops = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=obs.diagonalizing_gates(),
+            )
+            res = dev.var(obs)
 
         expected = (
             3
