@@ -13,11 +13,12 @@
 # limitations under the License.
 import os
 import platform
-import subprocess
 import shutil
+import subprocess
 import sys
 from pathlib import Path
-from setuptools import setup, Extension, find_namespace_packages
+
+from setuptools import Extension, find_namespace_packages, setup
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"

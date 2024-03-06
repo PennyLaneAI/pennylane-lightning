@@ -14,13 +14,16 @@
 """
 Unit tests for Lightning devices.
 """
-# pylint: disable=protected-access,cell-var-from-loop
-import pytest
-from conftest import THETA, PHI, TOL_STOCHASTIC, LightningDevice as ld, device_name
-
 import math
+
 import numpy as np
 import pennylane as qml
+
+# pylint: disable=protected-access,cell-var-from-loop
+import pytest
+from conftest import PHI, THETA, TOL_STOCHASTIC
+from conftest import LightningDevice as ld
+from conftest import device_name
 from pennylane import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires

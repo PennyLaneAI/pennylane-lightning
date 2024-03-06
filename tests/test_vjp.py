@@ -14,11 +14,12 @@
 """
 Tests for the ``vjp`` method of LightningKokkos.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import math
+
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 from pennylane import numpy as np
 
 if not ld._CPP_BINARY_AVAILABLE:

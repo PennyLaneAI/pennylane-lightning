@@ -111,7 +111,8 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
+	black . $(CHECK)
+	isort . $(CHECK)
 
 .PHONY: check-tidy
 check-tidy:

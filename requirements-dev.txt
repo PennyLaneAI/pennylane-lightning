@@ -9,6 +9,7 @@ pytest-cov
 pytest-mock
 pre-commit>=2.19.0
 black==23.7.0
+isort
 clang-tidy~=16.0
 clang-format~=16.0
 cmake

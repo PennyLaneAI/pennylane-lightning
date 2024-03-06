@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import argparse
-from pathlib import Path
 import importlib
-
 import re
+from pathlib import Path
 
 VERSION_FILE_PATH = "pennylane_lightning/core/_version.py"
 

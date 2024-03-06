@@ -1,0 +1,25 @@
+[tool.black]
+line-length = 100
+extend-exclude = '''
+(
+  pennylane_lightning/core/src
+  | doc
+  | Build
+  | BuildCov
+  | BuildTidy
+  | BuildTests
+)
+'''
+
+[tool.isort]
+profile = "black"
+extend_skip_glob = [
+  "pennylane_lightning/core/src/*",
+  "doc/*",
+  "Build/*",
+  "BuildCov/*",
+  "BuildTidy/*",
+  "BuildTests/*",
+  ".git/*",
+  ".vscode/*"
+]

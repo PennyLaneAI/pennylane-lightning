@@ -17,36 +17,34 @@ This module contains the :class:`~.LightningGPU` class, a PennyLane simulator de
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
 
-from warnings import warn
 from pathlib import Path
+from warnings import warn
+
 import numpy as np
 
-from pennylane_lightning.core.lightning_base import (
-    LightningBase,
-    LightningBaseFallBack,
-)
+from pennylane_lightning.core.lightning_base import LightningBase, LightningBaseFallBack
 
 try:
     from pennylane_lightning.lightning_gpu_ops import (
-        backend_info,
-        StateVectorC128,
-        StateVectorC64,
-        MeasurementsC128,
-        MeasurementsC64,
-        is_gpu_supported,
-        get_gpu_arch,
         DevPool,
+        MeasurementsC64,
+        MeasurementsC128,
+        StateVectorC64,
+        StateVectorC128,
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
     )
 
     try:
         # pylint: disable=no-name-in-module
         from pennylane_lightning.lightning_gpu_ops import (
-            StateVectorMPIC128,
-            StateVectorMPIC64,
-            MeasurementsMPIC128,
-            MeasurementsMPIC64,
-            MPIManager,
             DevTag,
+            MeasurementsMPIC64,
+            MeasurementsMPIC128,
+            MPIManager,
+            StateVectorMPIC64,
+            StateVectorMPIC128,
         )
 
         MPI_SUPPORT = True
@@ -75,40 +73,42 @@ except (ImportError, ValueError) as e:
     LGPU_CPP_BINARY_AVAILABLE = False
 
 if LGPU_CPP_BINARY_AVAILABLE:
-    from typing import List, Union
     from itertools import product
-
-    from pennylane import (
-        math,
-        BasisState,
-        StatePrep,
-        DeviceError,
-        Projector,
-        Rot,
-        QuantumFunctionError,
-    )
-    from pennylane.operation import Tensor
-    from pennylane.ops.op_math import Adjoint
-    from pennylane.measurements import Expectation, MeasurementProcess, State
-    from pennylane.wires import Wires
+    from typing import List, Union
 
     import pennylane as qml
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
-    from pennylane_lightning.core._version import __version__
+    from pennylane import (
+        BasisState,
+        DeviceError,
+        Projector,
+        QuantumFunctionError,
+        Rot,
+        StatePrep,
+        math,
+    )
+    from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
+    from pennylane.wires import Wires
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
-        create_ops_listC64,
         AdjointJacobianC128,
+        create_ops_listC64,
         create_ops_listC128,
     )
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
+    from pennylane_lightning.core._version import __version__
 
     if MPI_SUPPORT:
         from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
             AdjointJacobianMPIC64,
-            create_ops_listMPIC64,
             AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
             create_ops_listMPIC128,
         )
 

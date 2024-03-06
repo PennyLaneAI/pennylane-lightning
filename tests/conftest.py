@@ -16,10 +16,10 @@ Pytest configuration file for PennyLane-Lightning test suite.
 """
 import os
 
-import pytest
 import numpy as np
-
 import pennylane as qml
+import pytest
+
 import pennylane_lightning
 
 # defaults
