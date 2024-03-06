@@ -138,7 +138,6 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
-    # pylint: disable=protected-access
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
@@ -158,7 +157,6 @@ class LightningMeasurements:
             )
         return results
 
-    # pylint: disable=protected-access
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
 
