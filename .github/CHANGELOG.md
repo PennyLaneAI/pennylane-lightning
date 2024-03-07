@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add two new python classes (LightningStateVector and LightningMeasurements)to support `lightning.qubit2`.
+* Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
   [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
 
 * Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
