@@ -261,7 +261,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             elif c_dtype is np.complex128:
                 self.use_csingle = False
             else:
-                raise TypeError(f"Unsupported complex Type: {c_dtype}")
+                raise TypeError(f"Unsupported complex type: {c_dtype}")
 
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 

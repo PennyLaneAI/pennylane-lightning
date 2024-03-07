@@ -27,6 +27,7 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 def test_measurements():
     dev = qml.device(device_name, wires=2)
     m = dev.measurements
@@ -54,6 +55,7 @@ class TestProbs:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_probs_dtype64(self, dev):
         """Test if probs changes the state dtype"""
         _state = dev._asarray(
@@ -119,6 +121,7 @@ class TestProbs:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "cases",
         [
@@ -198,6 +201,7 @@ class TestProbs:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "cases",
         [
@@ -235,6 +239,7 @@ class TestExpval:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_expval_dtype64(self, dev):
         """Test if expval changes the state dtype"""
         _state = np.array([1, 0, 0, 0]).astype(dev.C_DTYPE)
@@ -349,7 +354,7 @@ class TestExpval:
             qml.RX(0.52, wires=0)
             return qml.expval(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
+        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
@@ -371,6 +376,7 @@ class TestVar:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_var_dtype64(self, dev):
         """Test if var changes the state dtype"""
         _state = np.array([1, 0, 0, 0]).astype(np.complex64)
@@ -449,7 +455,7 @@ class TestVar:
             qml.RX(0.52, wires=0)
             return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
+        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_variance(self, dev):
@@ -478,13 +484,14 @@ class TestBetaStatisticsError:
             qml.RX(0.52, wires=0)
             return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX not supported"):
+        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
 
 class TestWiresInExpval:
     """Test different Wires settings in Lightning's expval."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "wires1, wires2",
         [
@@ -529,6 +536,7 @@ class TestWiresInExpval:
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "wires1, wires2",
         [
@@ -585,6 +593,7 @@ class TestWiresInExpval:
 class TestSample:
     """Tests that samples are properly calculated."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "shots, wires",
         [
@@ -607,6 +616,7 @@ class TestSample:
         s1 = dev.sample(qml.PauliZ(wires=[0]))
         assert np.array_equal(s1.shape, (dev.shots,))
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
         the correct values
@@ -628,6 +638,7 @@ class TestSample:
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "wires1, wires2",
         [

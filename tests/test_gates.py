@@ -244,6 +244,7 @@ def test_arbitrary_inv_unitary_correct():
     assert np.allclose(unitary, random_unitary_inv)
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.skipif(not LightningDevice._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize(
     "obs,has_rotation",
@@ -320,7 +321,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ("lightning.qubit", "lightning.qubit2"),
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -363,7 +364,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ("lightning.qubit", "lightning.qubit2"),
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize(
@@ -440,7 +441,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ("lightning.qubit", "lightning.qubit2"),
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 def test_controlled_qubit_unitary_from_op(tol):
@@ -461,7 +462,7 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ("lightning.qubit", "lightning.qubit2"),
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_wires", range(4))

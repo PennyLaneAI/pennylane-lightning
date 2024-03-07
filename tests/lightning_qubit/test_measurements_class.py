@@ -21,19 +21,27 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-from pennylane_lightning.lightning_qubit import LightningQubit
+try:
+    from pennylane_lightning.lightning_qubit_ops import (
+        MeasurementsC64,
+        MeasurementsC128,
+    )
+except ImportError:
+    pass
+
+from pennylane_lightning.lightning_qubit2 import LightningQubit2
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningQubit._CPP_BINARY_AVAILABLE:
+if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if LightningDevice != LightningQubit:
+if LightningDevice != LightningQubit2:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
@@ -422,6 +430,7 @@ class TestMeasurements:
         (
             [0],
             [1, 2],
+            [1, 0],
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),

@@ -26,6 +26,9 @@ from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group
 
+if ld._new_API:
+    pytest.skip("Old API required", allow_module_level=True)
+
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),

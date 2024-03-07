@@ -60,6 +60,7 @@ class LightningBase(QubitDevice):
     author = "Xanadu Inc."
     short_name = "lightning.base"
     _CPP_BINARY_AVAILABLE = True
+    _new_API = False
 
     def __init__(
         self,
@@ -76,7 +77,7 @@ class LightningBase(QubitDevice):
             r_dtype = np.float64
             self.use_csingle = False
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
         self._batch_obs = batch_obs
 
@@ -396,6 +397,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
+    _new_API = False
 
     def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
         if c_dtype is np.complex64:
@@ -403,7 +405,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
         elif c_dtype is np.complex128:
             r_dtype = np.float64
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
 
     @property
