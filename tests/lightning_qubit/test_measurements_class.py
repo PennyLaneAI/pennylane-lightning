@@ -21,7 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.devices import DefaultQubit
-from pennylane.measurements import ProbabilityMP, VarianceMP
+from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
 from pennylane_lightning.lightning_qubit import LightningQubit
@@ -96,6 +96,8 @@ class TestGetMeasurementFunction:
             CustomStateMeasurement(),
             qml.expval(qml.Identity(0)),
             qml.expval(qml.Projector([1, 0], wires=(0, 1))),
+            qml.var(qml.Identity(0)),
+            qml.var(qml.Projector([1, 0], wires=(0, 1))),
         ),
     )
     def test_state_diagonalizing_gates_measurements(self, lightning_sv, mp):
