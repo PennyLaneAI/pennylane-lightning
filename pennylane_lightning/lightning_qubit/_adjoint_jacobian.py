@@ -132,7 +132,6 @@ class LightningAdjointJacobian:
                     'the "adjoint" differentiation method'
                 )
 
-    # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
     ):
