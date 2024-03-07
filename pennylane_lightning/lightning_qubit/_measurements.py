@@ -251,9 +251,6 @@ class LightningMeasurements:
             Tuple[TensorLike]: The measurement results
         """
 
-        if circuit.shots:
-            raise NotImplementedError
-        # analytic case
         if len(circuit.measurements) == 1:
             return self.measurement(circuit.measurements[0])
 
