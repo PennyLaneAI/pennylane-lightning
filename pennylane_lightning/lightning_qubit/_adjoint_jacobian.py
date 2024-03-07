@@ -136,7 +136,7 @@ class LightningAdjointJacobian:
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
     ):
-        use_csingle = True if self._dtype == np.complex64 else False
+        use_csingle = (self._dtype == np.complex64)
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
@@ -263,7 +263,7 @@ class LightningAdjointJacobian:
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=line-too-long, inconsistent-return-statements
-    def calculate_vjp(self, tape, grad_vec):
+    def calculate_vjp(self, tape: QuantumTape, grad_vec):
         """Generate the processing function required to compute the vector-Jacobian products
         of a tape.
 
@@ -329,7 +329,7 @@ class LightningAdjointJacobian:
                     return np.array([], dtype=self.qubit_state.dtype)
 
                 new_tape = tape.copy()
-                new_tape._measurements = [qml.expval(ham)]
+                new_tape.measurements = [qml.expval(ham)]
 
                 return self.calculate_jacobian(new_tape)
 
