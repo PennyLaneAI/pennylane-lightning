@@ -136,7 +136,7 @@ class LightningAdjointJacobian:
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
     ):
-        use_csingle = (self._dtype == np.complex64)
+        use_csingle = self._dtype == np.complex64
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
