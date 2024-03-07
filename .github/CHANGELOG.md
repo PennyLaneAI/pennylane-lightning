@@ -5,8 +5,14 @@
 * Add finite shots support in `lightning.qubit2`.
   [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
 
+* Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
+  [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
+
 * Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
   [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
+
+* Add LightningAdjointJacobian to support `lightning.qubit2`.
+  [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
 
 ### Breaking changes
 
