@@ -5,6 +5,9 @@
 * `lightning.qubit` supports mid-circuit measurements.
   [(#621)](https://github.com/PennyLaneAI/pennylane-lightning/pull/621)
 
+* Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
+  [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
+
 ### Breaking changes
 
 ### Improvements
