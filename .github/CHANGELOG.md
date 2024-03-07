@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
+  [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
+
 ### Breaking changes
 
 ### Improvements
