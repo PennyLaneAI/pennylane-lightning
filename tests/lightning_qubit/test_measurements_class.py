@@ -16,8 +16,6 @@ import itertools
 import math
 from typing import Sequence
 
-from typing import Sequence
-
 import numpy as np
 import pennylane as qml
 import pytest
@@ -556,77 +554,28 @@ class TestMeasurements:
         for r, e in zip(result, expected):
             assert np.allclose(r, e, max(tol, 1.0e-5))
 
-    @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
-        "obs0_",
-        (
-            qml.PauliX(0),
-            qml.PauliY(1),
-            qml.PauliZ(2),
-            qml.sum(qml.PauliX(0), qml.PauliY(0)),
-            qml.prod(qml.PauliX(0), qml.PauliY(1)),
-            qml.s_prod(2.0, qml.PauliX(0)),
-            qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
-            qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            ),
-            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
-        ),
+        "cases",
+        [
+            [[0, 1], [1, 0]],
+            [[1, 0], [0, 1]],
+        ],
     )
-    @pytest.mark.parametrize(
-        "obs1_",
-        (
-            qml.PauliX(0),
-            qml.PauliY(1),
-            qml.PauliZ(2),
-            qml.sum(qml.PauliX(0), qml.PauliY(0)),
-            qml.prod(qml.PauliX(0), qml.PauliY(1)),
-            qml.s_prod(2.0, qml.PauliX(0)),
-            qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
-            qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            ),
-            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
-        ),
-    )
-    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
-        if measurement is qml.probs and isinstance(
-            obs0_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
-        ):
-            return
-        if measurement is qml.probs and isinstance(
-            obs1_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
-        ):
-            pytest.skip(
-                f"Observable of type {type(obs1_).__name__} is not supported for rotating probabilities."
-            )
+    def test_probs_tape_unordered_wires(self, cases, tol):
+        """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
 
-        n_qubits = 4
-        n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
-        ops = [qml.Hadamard(i) for i in range(n_qubits)]
-        ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
-        measurements = [measurement(op=obs0_), measurement(op=obs1_)]
-        tape = qml.tape.QuantumScript(ops, measurements)
+        x, y, z = [0.5, 0.3, -0.7]
+        dev = qml.device(device_name, wires=cases[1])
 
-        expected = self.calculate_reference(tape, lightning_sv)
-        if len(expected) == 1:
-            expected = expected[0]
-        statevector = lightning_sv(n_qubits)
-        statevector = statevector.get_final_state(tape)
-        m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            return qml.probs(wires=cases[0])
 
-        assert isinstance(result, Sequence)
-        assert len(result) == len(expected)
-        # a few tests may fail in single precision, and hence we increase the tolerance
-        for r, e in zip(result, expected):
-            assert np.allclose(r, e, max(tol, 1.0e-5))
+        expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
+        results = qml.QNode(circuit, dev)()
+        assert np.allclose(expected, results, tol)
 
 
 class TestControlledOps:
