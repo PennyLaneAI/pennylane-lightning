@@ -15,11 +15,16 @@
 This module contains unit tests for the LightningQubit2 class
 """
 
-import pytest
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice  # tested device
+from pennylane.devices import DefaultQubit
+from pennylane.tape import QuantumScript
+
 from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
+from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     accepted_observables,
     jacobian,
@@ -27,12 +32,6 @@ from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     simulate_and_jacobian,
     stopping_condition,
 )
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-from pennylane.devices import DefaultQubit
-from pennylane.tape import QuantumScript
-
-from conftest import LightningDevice  # tested device
 
 if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)

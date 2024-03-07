@@ -509,7 +509,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
-        # pylint: disable=missing-function-docstring
         def apply_lightning(self, operations):
             """Apply a list of operations to the state tensor.
 
@@ -641,7 +640,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         'the "adjoint" differentiation method'
                     )
 
-        # pylint: disable=missing-function-docstring
         def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
             """Generate an initial state vector for ``_process_jacobian_tape``."""
             if starting_state is not None:
@@ -866,7 +864,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
             return results
 
-        # pylint: disable=missing-function-docstring
         def generate_samples(self):
             """Generate samples
 
@@ -878,7 +875,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
-        # pylint: disable=protected-access, missing-function-docstring
+        # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
             """Expectation value of the supplied observable.
 
@@ -962,7 +959,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
             return local_prob
 
-        # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
             """Variance of the supplied observable.
 
