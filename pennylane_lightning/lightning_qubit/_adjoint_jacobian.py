@@ -321,6 +321,7 @@ class LightningAdjointJacobian:
 
             ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
 
+            # pylint: disable=protected-access
             def processing_fn_expval(tape):
                 nonlocal ham
                 num_params = len(tape.trainable_params)
@@ -329,7 +330,7 @@ class LightningAdjointJacobian:
                     return np.array([], dtype=self.qubit_state.dtype)
 
                 new_tape = tape.copy()
-                new_tape.measurements = [qml.expval(ham)]
+                new_tape._measurements = [qml.expval(ham)]
 
                 return self.calculate_jacobian(new_tape)
 
