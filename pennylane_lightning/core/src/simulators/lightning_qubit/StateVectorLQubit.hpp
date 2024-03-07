@@ -716,7 +716,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Collapse the state vector as after having measured one of the
+     * @brief Collapse the state vector after having measured one of the
      * qubits
      *
      * @param wire Wire to collapse.
