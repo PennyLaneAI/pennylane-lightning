@@ -501,7 +501,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                     self.apply_lightning(diagonalizing_gates)
                 results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
                 if diagonalizing_gates:
-                    self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
                 return results
 
             if self.shots is not None:
@@ -560,7 +562,9 @@ if LQ_CPP_BINARY_AVAILABLE:
                     self.apply_lightning(diagonalizing_gates)
                 results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
                 if diagonalizing_gates:
-                    self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
                 return results
 
             if self.shots is not None:
@@ -640,12 +644,16 @@ if LQ_CPP_BINARY_AVAILABLE:
             diagonalizing_gates = observable.diagonalizing_gates()
             if diagonalizing_gates:
                 self.apply_lightning(diagonalizing_gates)
-            self._samples = self.generate_samples()
-            if diagonalizing_gates:
-                self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
-            return super().sample(
+            if not isinstance(observable, qml.PauliZ):
+                self._samples = self.generate_samples()
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply_lightning(
+                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                )
+            return results
 
         @staticmethod
         def _check_adjdiff_supported_measurements(

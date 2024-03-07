@@ -700,16 +700,23 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
     n_qubits = 2
 
+    if device_name in ("lightning.gpu", "lightning.kokkos") and (mcmc or kernel_name != "Local"):
+        pytest.skip(f"Device {device_name} does not have an mcmc option.")
+
     if measure_f in (qml.expval, qml.var) and isinstance(obs, Sequence):
         pytest.skip("qml.expval, qml.var do not take wire arguments.")
 
-    dev = qml.device(device_name, wires=n_qubits, shots=shots, mcmc=mcmc, kernel_name=kernel_name)
+    if device_name in ("lightning.gpu", "lightning.kokkos"):
+        dev = qml.device(device_name, wires=n_qubits, shots=shots)
+    else:
+        dev = qml.device(
+            device_name, wires=n_qubits, shots=shots, mcmc=mcmc, kernel_name=kernel_name
+        )
     dq = qml.device("default.qubit", wires=n_qubits, shots=shots)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
-        for i in range(n_qubits):
-            qml.Hadamard(i)
+        qml.Hadamard(0)
         qml.RX(x, 0)
         qml.RX(y, 1)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)

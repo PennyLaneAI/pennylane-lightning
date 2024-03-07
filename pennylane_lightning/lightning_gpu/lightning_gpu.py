@@ -91,6 +91,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
+    from pennylane_lightning.core._version import __version__
+
     # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -98,13 +105,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import (
-        QuantumScriptSerializer,
-        global_phase_diagonal,
-    )
-    from pennylane_lightning.core._version import __version__
 
     if MPI_SUPPORT:
         from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
@@ -852,12 +852,19 @@ if LGPU_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if observable.name != "PauliZ":
-                self.apply_lightning(observable.diagonalizing_gates())
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply_lightning(diagonalizing_gates)
+            if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply_lightning(
+                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                )
+            return results
 
         # pylint: disable=missing-function-docstring
         def generate_samples(self):
