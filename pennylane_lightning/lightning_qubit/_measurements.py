@@ -28,7 +28,13 @@ from typing import Callable, List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
+from pennylane.measurements import (
+    ExpectationMP,
+    MeasurementProcess,
+    ProbabilityMP,
+    StateMeasurement,
+    VarianceMP,
+)
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -87,7 +93,6 @@ class LightningMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
-
         state_array = self._qubit_state.state
         wires = Wires(range(self._qubit_state.num_wires))
 
@@ -133,6 +138,60 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    def probs(self, measurementprocess: MeasurementProcess):
+        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Probabilities of the supplied observable or wires
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(diagonalizing_gates)
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+        return results
+
+    def var(self, measurementprocess: MeasurementProcess):
+        """Variance of the supplied observable contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Variance of the observable
+        """
+
+        if measurementprocess.obs.name == "SparseHamiltonian":
+            # ensuring CSR sparse representation.
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                wire_order=list(range(self._qubit_state.num_wires))
+            ).tocsr(copy=False)
+            return self._measurement_lightning.var(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
+            )
+
+        if (
+            measurementprocess.obs.name in ["Hamiltonian", "Hermitian"]
+            or (measurementprocess.obs.arithmetic_depth > 0)
+            or isinstance(measurementprocess.obs.name, List)
+        ):
+            ob_serialized = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64
+            )._ob(measurementprocess.obs)
+            return self._measurement_lightning.var(ob_serialized)
+
+        return self._measurement_lightning.var(
+            measurementprocess.obs.name, measurementprocess.obs.wires
+        )
+
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
@@ -153,6 +212,16 @@ class LightningMeasurements:
                     return self.state_diagonalizing_gates
                 return self.expval
 
+            if isinstance(measurementprocess, ProbabilityMP):
+                return self.probs
+
+            if isinstance(measurementprocess, VarianceMP):
+                if measurementprocess.obs.name in [
+                    "Identity",
+                    "Projector",
+                ]:
+                    return self.state_diagonalizing_gates
+                return self.var
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
@@ -182,9 +251,6 @@ class LightningMeasurements:
             Tuple[TensorLike]: The measurement results
         """
 
-        if circuit.shots:
-            raise NotImplementedError
-        # analytic case
         if len(circuit.measurements) == 1:
             return self.measurement(circuit.measurements[0])
 
