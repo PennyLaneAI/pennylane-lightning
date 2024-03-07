@@ -261,7 +261,7 @@ class LightningAdjointJacobian:
             return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
         return self._adjoint_jacobian_processing(jac_r)
 
-    # pylint: disable=line-too-long, inconsistent-return-statements
+    # pylint: disable=inconsistent-return-statements
     def calculate_vjp(self, tape: QuantumTape, grad_vec):
         """Generate the processing function required to compute the vector-Jacobian products
         of a tape.
