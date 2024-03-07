@@ -15,12 +15,14 @@
 Unit tests for Measurements in Lightning devices.
 """
 import math
+from typing import Sequence
 
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name, lightning_ops
+from conftest import device_name, lightning_ops, validate_measurements
+from flaky import flaky
 from pennylane.measurements import Expectation, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -684,3 +686,38 @@ class TestWiresInVar:
             return [qml.var(qml.PauliZ(wires=w)) for w in wires2]
 
         assert np.allclose(circuit1(), circuit2(), atol=tol)
+
+
+@flaky(max_runs=5)
+@pytest.mark.parametrize("shots", [10000, [10000, 11111]])
+@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+@pytest.mark.parametrize(
+    "obs", [[0], [0, 1], qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1)]
+)
+@pytest.mark.parametrize("mcmc", [False, True])
+@pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
+def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
+    """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
+    n_qubits = 2
+
+    if measure_f in (qml.expval, qml.var) and isinstance(obs, Sequence):
+        pytest.skip("qml.expval, qml.var do not take wire arguments.")
+
+    dev = qml.device(device_name, wires=n_qubits, shots=shots, mcmc=mcmc, kernel_name=kernel_name)
+    dq = qml.device("default.qubit", wires=n_qubits, shots=shots)
+    params = [np.pi / 4, -np.pi / 4]
+
+    def func(x, y):
+        for i in range(n_qubits):
+            qml.Hadamard(i)
+        qml.RX(x, 0)
+        qml.RX(y, 1)
+        return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
+
+    func1 = qml.QNode(func, dev)
+    results1 = func1(*params)
+
+    func2 = qml.QNode(func, dq)
+    results2 = func2(*params)
+
+    validate_measurements(measure_f, shots, results1, results2)

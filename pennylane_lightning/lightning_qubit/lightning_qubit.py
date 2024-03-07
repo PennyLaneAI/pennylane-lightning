@@ -18,6 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from pathlib import Path
+from typing import Sequence
 from warnings import warn
 
 import numpy as np
@@ -247,7 +248,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                         f"The {kernel_name} is not supported and currently "
                         "only 'Local' and 'NonZeroRandom' kernels are supported."
                     )
-                if num_burnin >= shots:
+                shots = shots if isinstance(shots, Sequence) else [shots]
+                if any(num_burnin >= s for s in shots):
                     raise ValueError("Shots should be greater than num_burnin.")
                 self._kernel_name = kernel_name
                 self._num_burnin = num_burnin
@@ -494,10 +496,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
+                return results
 
             if self.shots is not None:
                 # estimate the expectation value
@@ -550,10 +555,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
+                return results
 
             if self.shots is not None:
                 # estimate the var
@@ -629,9 +637,12 @@ if LQ_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if not isinstance(observable, qml.PauliZ):
-                self.apply_lightning(observable.diagonalizing_gates())
-                self._samples = self.generate_samples()
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply_lightning(diagonalizing_gates)
+            self._samples = self.generate_samples()
+            if diagonalizing_gates:
+                self.apply_lightning([qml.adjoint(g, lazy=False) for g in diagonalizing_gates])
             return super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )

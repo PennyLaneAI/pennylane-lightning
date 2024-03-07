@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* Add finite shots support in `lightning.qubit2`.
+  [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
+
+* Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
+  [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
+
 ### Breaking changes
 
 ### Improvements
@@ -12,6 +18,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix finite shots support in `lightning.qubit`.
+  [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
 
 ### Contributors
 
