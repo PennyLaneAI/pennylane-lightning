@@ -13,32 +13,33 @@
 # limitations under the License.
 """
 This module contains the LightningQubit2 class that inherits from the new device interface.
-"""
-from typing import Optional, Union, Sequence, Callable
-from dataclasses import replace
-import numpy as np
 
+"""
+from dataclasses import replace
+from pathlib import Path
+from typing import Callable, Optional, Sequence, Union
+
+import numpy as np
 import pennylane as qml
-from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.modifiers import single_tape_support, simulator_tracking
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    no_sampling,
     validate_device_wires,
-    decompose,
     validate_measurements,
     validate_observables,
-    no_sampling,
 )
-from pennylane.tape import QuantumTape, QuantumScript
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
+from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, unused-import
-    import pennylane_lightning.lightning_qubit_ops
+    from pennylane_lightning.lightning_qubit_ops import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError:
@@ -52,12 +53,16 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
     """Simulate a single quantum script.
+
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
+
     Returns:
         tuple(TensorLike): The results of the simulation
+
     Note that this function can return measurements for non-commuting observables simultaneously.
+
     """
     state.reset_state()
     final_state = state.get_final_state(circuit)
@@ -153,6 +158,8 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "GlobalPhase",
+        "C(GlobalPhase)",
     }
 )
 """The set of supported operations."""
@@ -194,7 +201,13 @@ class LightningQubit2(Device):
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
 
+    _new_API = True
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
+    short_name = "lightning.qubit2"
+    operations = _operations
+    observables = _observables
+    _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
+    config = Path(__file__).parent / "lightning_qubit.toml"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -247,14 +260,19 @@ class LightningQubit2(Device):
         return self._c_dtype
 
     @property
-    def operations(self) -> frozenset[str]:
-        """The names of the supported operations."""
-        return _operations
+    def C_DTYPE(self):
+        """State vector complex data type."""
+        return self._c_dtype
 
     @property
-    def observables(self) -> frozenset[str]:
-        """The names of the supported observables."""
-        return _observables
+    def num_wires(self):
+        """State vector complex data type."""
+        return self._statevector.num_wires
+
+    @property
+    def state(self):
+        """Returns a copy of the state vector data in a NumPy array."""
+        return self._statevector.state
 
     def _setup_execution_config(self, config):
         """

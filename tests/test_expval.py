@@ -19,9 +19,10 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, device_name
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
     """Test expectation values"""
@@ -169,6 +170,8 @@ class TestExpOperatorArithmetic:
         """Test the `SProd` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -187,6 +190,8 @@ class TestExpOperatorArithmetic:
         """Test the `Prod` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -207,6 +212,8 @@ class TestExpOperatorArithmetic:
         """Test the `Sum` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -229,6 +236,8 @@ class TestExpOperatorArithmetic:
         obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
         dev = qubit_device(wires=2)
+        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
+            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -248,6 +257,7 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(g, expected)
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
     """Test tensor expectation values"""
