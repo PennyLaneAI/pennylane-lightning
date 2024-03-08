@@ -20,9 +20,9 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, Projector, QuantumFunctionError, Rot, StatePrep
+from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
-from pennylane.operation import Operation, Tensor
+from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
