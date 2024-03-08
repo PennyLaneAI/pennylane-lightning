@@ -227,9 +227,7 @@ class LightningAdjointJacobian:
             return np.array([], dtype=self._dtype)
 
         if tape_return_type is State:
-            raise QuantumFunctionError(
-                "This method does not support statevector return type. "
-            )
+            raise QuantumFunctionError("This method does not support statevector return type. ")
 
         self._check_adjdiff_supported_operations(tape.operations)
 
