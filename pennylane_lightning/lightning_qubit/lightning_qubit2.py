@@ -353,8 +353,9 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
-            jacobian(circuit, self._statevector, batch_obs=self._batch_obs) for circuit in circuits
+            jacobian(circuit, self._statevector, batch_obs=batch_obs) for circuit in circuits
         )
 
     def execute_and_compute_derivatives(
@@ -362,7 +363,8 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_jacobian(c, self._statevector, batch_obs=self._batch_obs) for c in circuits
+            simulate_and_jacobian(c, self._statevector, batch_obs=batch_obs) for c in circuits
         )
         return tuple(zip(*results))
