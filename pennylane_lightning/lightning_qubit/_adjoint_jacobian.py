@@ -144,7 +144,7 @@ class LightningAdjointJacobian:
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
         Returns:
-            _type_: _description_
+            dictionary: dictionary providing serialized data for Jacobian calculation.
         """
         use_csingle = self._dtype == np.complex64
 
@@ -224,7 +224,7 @@ class LightningAdjointJacobian:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
 
         Returns:
-            The adjoint Jacobian of a tape.
+            The Jacobian of a tape.
         """
 
         if tape.shots:
