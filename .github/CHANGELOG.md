@@ -66,13 +66,13 @@ Vincent Michaud-Rioux
 * Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
   [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
 
+* Remove deprecated MeasurementProcess.name.
+  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
+
 ### Documentation
 
 * Update requirements to build the documentation.
   [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
-
-* Remove deprecated MeasurementProcess.name.
-  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
 
 ### Bug fixes
 
