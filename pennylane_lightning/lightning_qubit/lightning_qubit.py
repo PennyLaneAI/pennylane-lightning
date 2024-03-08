@@ -496,10 +496,15 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
+                return results
 
             if self.shots is not None:
                 # estimate the expectation value
@@ -552,10 +557,15 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
+                return results
 
             if self.shots is not None:
                 # estimate the var
@@ -631,12 +641,19 @@ if LQ_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply_lightning(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
-                self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply_lightning(
+                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                )
+            return results
 
         @staticmethod
         def _check_adjdiff_supported_measurements(
