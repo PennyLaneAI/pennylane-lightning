@@ -79,7 +79,6 @@ if LK_CPP_BINARY_AVAILABLE:
     )
     from pennylane_lightning.core._version import __version__
 
-
     def _kokkos_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
