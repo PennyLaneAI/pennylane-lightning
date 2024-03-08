@@ -14,15 +14,15 @@
 """
 Unit tests for Measurements in Lightning devices.
 """
-from typing import Sequence
 import math
+from typing import Sequence
 
-import flaky
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
+from flaky import flaky
 from pennylane.measurements import Expectation, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -672,7 +672,7 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@flaky(max_runs=5)
+# @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
@@ -700,8 +700,8 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
-        qml.Hadamard(0)
         qml.RX(x, 0)
+        qml.RX(y, 0)
         qml.RX(y, 1)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
 

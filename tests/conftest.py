@@ -16,6 +16,7 @@ Pytest configuration file for PennyLane-Lightning test suite.
 """
 import os
 from functools import reduce
+from typing import Sequence
 
 import numpy as np
 import pennylane as qml

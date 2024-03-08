@@ -17,8 +17,9 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 
-from warnings import warn
 from pathlib import Path
+from warnings import warn
+
 import numpy as np
 
 from pennylane_lightning.core.lightning_base import (
@@ -30,14 +31,14 @@ from pennylane_lightning.core.lightning_base import (
 try:
     # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops import (
+        InitializationSettings,
+        MeasurementsC64,
+        MeasurementsC128,
+        StateVectorC64,
+        StateVectorC128,
         allocate_aligned_array,
         backend_info,
-        InitializationSettings,
-        MeasurementsC128,
-        MeasurementsC64,
         print_configuration,
-        StateVectorC128,
-        StateVectorC64,
     )
 
     LK_CPP_BINARY_AVAILABLE = True
@@ -45,32 +46,33 @@ except ImportError:
     LK_CPP_BINARY_AVAILABLE = False
 
 if LK_CPP_BINARY_AVAILABLE:
-    from typing import List
     from os import getenv
-
-    from pennylane import (
-        math,
-        BasisState,
-        StatePrep,
-        Projector,
-        Rot,
-        DeviceError,
-        QuantumFunctionError,
-    )
-    from pennylane.operation import Tensor
-    from pennylane.ops.op_math import Adjoint
-    from pennylane.measurements import MeasurementProcess, Expectation, State
-    from pennylane.wires import Wires
+    from typing import List
 
     import pennylane as qml
+    from pennylane import (
+        BasisState,
+        DeviceError,
+        Projector,
+        QuantumFunctionError,
+        Rot,
+        StatePrep,
+        math,
+    )
+    from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
+    from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
     from pennylane_lightning.core._version import __version__
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
-        create_ops_listC64,
         AdjointJacobianC128,
+        create_ops_listC64,
         create_ops_listC128,
     )
 
@@ -95,8 +97,6 @@ if LK_CPP_BINARY_AVAILABLE:
         "PauliY",
         "PauliZ",
         "MultiRZ",
-        "GlobalPhase",
-        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -402,13 +402,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 method = getattr(state, name, None)
 
                 wires = self.wires.indices(ops.wires)
-                if ops.name == "C(GlobalPhase)":
-                    controls = ops.control_wires
-                    control_values = ops.control_values
-                    param = ops.base.parameters[0]
-                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
-                    state.apply(name, wires, False, [[param]], matrix)
-                elif method is None:
+                if method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)
@@ -470,10 +464,15 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
+                return results
 
             if self.shots is not None:
                 # estimate the expectation value
@@ -533,10 +532,15 @@ if LK_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply_lightning(diagonalizing_gates)
+                results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                if diagonalizing_gates:
+                    self.apply_lightning(
+                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                    )
+                return results
 
             if self.shots is not None:
                 # estimate the var
@@ -603,12 +607,19 @@ if LK_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if observable.name != "PauliZ":
-                self.apply_lightning(observable.diagonalizing_gates())
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply_lightning(diagonalizing_gates)
+            if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply_lightning(
+                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                )
+            return results
 
         @staticmethod
         def _check_adjdiff_supported_measurements(

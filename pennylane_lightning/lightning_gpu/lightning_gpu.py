@@ -17,36 +17,34 @@ This module contains the :class:`~.LightningGPU` class, a PennyLane simulator de
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
 
-from warnings import warn
 from pathlib import Path
+from warnings import warn
+
 import numpy as np
 
-from pennylane_lightning.core.lightning_base import (
-    LightningBase,
-    LightningBaseFallBack,
-)
+from pennylane_lightning.core.lightning_base import LightningBase, LightningBaseFallBack
 
 try:
     from pennylane_lightning.lightning_gpu_ops import (
-        backend_info,
-        StateVectorC128,
-        StateVectorC64,
-        MeasurementsC128,
-        MeasurementsC64,
-        is_gpu_supported,
-        get_gpu_arch,
         DevPool,
+        MeasurementsC64,
+        MeasurementsC128,
+        StateVectorC64,
+        StateVectorC128,
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
     )
 
     try:
         # pylint: disable=no-name-in-module
         from pennylane_lightning.lightning_gpu_ops import (
-            StateVectorMPIC128,
-            StateVectorMPIC64,
-            MeasurementsMPIC128,
-            MeasurementsMPIC64,
-            MPIManager,
             DevTag,
+            MeasurementsMPIC64,
+            MeasurementsMPIC128,
+            MPIManager,
+            StateVectorMPIC64,
+            StateVectorMPIC128,
         )
 
         MPI_SUPPORT = True
@@ -75,40 +73,41 @@ except (ImportError, ValueError) as e:
     LGPU_CPP_BINARY_AVAILABLE = False
 
 if LGPU_CPP_BINARY_AVAILABLE:
-    from typing import List, Union
     from itertools import product
-
-    from pennylane import (
-        math,
-        BasisState,
-        StatePrep,
-        DeviceError,
-        Projector,
-        Rot,
-        QuantumFunctionError,
-    )
-    from pennylane.operation import Tensor
-    from pennylane.ops.op_math import Adjoint
-    from pennylane.measurements import Expectation, MeasurementProcess, State
-    from pennylane.wires import Wires
+    from typing import List, Union
 
     import pennylane as qml
+    from pennylane import (
+        BasisState,
+        DeviceError,
+        Projector,
+        QuantumFunctionError,
+        Rot,
+        StatePrep,
+        math,
+    )
+    from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
+    from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
+
+    # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
-        create_ops_listC64,
         AdjointJacobianC128,
+        create_ops_listC64,
         create_ops_listC128,
     )
 
     if MPI_SUPPORT:
         from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
             AdjointJacobianMPIC64,
-            create_ops_listMPIC64,
             AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
             create_ops_listMPIC128,
         )
 
@@ -259,7 +258,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
             elif c_dtype is np.complex128:
                 self.use_csingle = False
             else:
-                raise TypeError(f"Unsupported complex Type: {c_dtype}")
+                raise TypeError(f"Unsupported complex type: {c_dtype}")
 
             super().__init__(wires, shots=shots, c_dtype=c_dtype)
 
@@ -507,7 +506,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
-        # pylint: disable=missing-function-docstring
         def apply_lightning(self, operations):
             """Apply a list of operations to the state tensor.
 
@@ -639,7 +637,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         'the "adjoint" differentiation method'
                     )
 
-        # pylint: disable=missing-function-docstring
         def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
             """Generate an initial state vector for ``_process_jacobian_tape``."""
             if starting_state is not None:
@@ -850,14 +847,20 @@ if LGPU_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if observable.name != "PauliZ":
-                self.apply_lightning(observable.diagonalizing_gates())
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply_lightning(diagonalizing_gates)
+            if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply_lightning(
+                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+                )
+            return results
 
-        # pylint: disable=missing-function-docstring
         def generate_samples(self):
             """Generate samples
 
@@ -869,7 +872,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
-        # pylint: disable=protected-access, missing-function-docstring
+        # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
             """Expectation value of the supplied observable.
 
@@ -953,7 +956,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
             return local_prob
 
-        # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
             """Variance of the supplied observable.
 

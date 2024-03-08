@@ -16,25 +16,19 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from typing import List
 from itertools import islice, product
+from typing import List
+
 import numpy as np
-
-
 import pennylane as qml
-from pennylane import (
-    BasisState,
-    QubitDevice,
-    StatePrep,
-)
+from pennylane import BasisState, QubitDevice, StatePrep
 from pennylane.devices import DefaultQubitLegacy
 from pennylane.measurements import MeasurementProcess
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
-
-from ._version import __version__
 from ._serialize import QuantumScriptSerializer
+from ._version import __version__
 
 
 def _chunk_iterable(iteration, num_chunks):
@@ -82,7 +76,7 @@ class LightningBase(QubitDevice):
             r_dtype = np.float64
             self.use_csingle = False
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
         self._batch_obs = batch_obs
 
@@ -409,7 +403,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
         elif c_dtype is np.complex128:
             r_dtype = np.float64
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
 
     @property

@@ -14,11 +14,11 @@
 """
 Unit tests for Lightning devices creation.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -37,7 +37,7 @@ def test_create_device_with_dtype(C):
     not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
 )
 def test_create_device_with_unsupported_dtype():
-    with pytest.raises(TypeError, match="Unsupported complex Type:"):
+    with pytest.raises(TypeError, match="Unsupported complex type:"):
         dev = qml.device(device_name, wires=1, c_dtype=np.complex256)
 
 
