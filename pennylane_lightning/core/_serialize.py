@@ -50,6 +50,8 @@ class QuantumScriptSerializer:
     Args:
     device_name: device shortname.
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
+    use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
+    split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
     """
 

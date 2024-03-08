@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -135,6 +135,17 @@ class LightningAdjointJacobian:
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
     ):
+        """Process a tape, serializing and building a dictionary proper for
+        the adjoint Jacobian calculation in the C++ layer.
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
+            split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
+
+        Returns:
+            _type_: _description_
+        """
         use_csingle = self._dtype == np.complex64
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
@@ -218,7 +229,6 @@ class LightningAdjointJacobian:
         if tape_return_type is State:
             raise QuantumFunctionError(
                 "This method does not support statevector return type. "
-                "Use vjp method instead for this purpose."
             )
 
         self._check_adjdiff_supported_operations(tape.operations)
@@ -289,7 +299,7 @@ class LightningAdjointJacobian:
                 the return type is expectation or :math:`2^N` if the return type is statevector
 
         Returns:
-            The processing function required to compute the vector-Jacobian products of a tape.
+            The vector-Jacobian products of a tape.
         """
         if tape.shots is not None:
             warn(
@@ -305,40 +315,40 @@ class LightningAdjointJacobian:
         if qml.math.allclose(grad_vec, 0) or tape_return_type is None:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
 
-        if tape_return_type is Expectation:
-            if len(grad_vec) != len(measurements):
-                raise ValueError(
-                    "Number of observables in the tape must be the same as the "
-                    "length of grad_vec in the vjp method"
-                )
-
-            if np.iscomplexobj(grad_vec):
-                raise ValueError(
-                    "The vjp method only works with a real-valued grad_vec when the "
-                    "tape is returning an expectation value"
-                )
-
-            ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
-
-            def processing_fn_expval(tape):
-                nonlocal ham
-                num_params = len(tape.trainable_params)
-
-                if num_params == 0:
-                    return np.array([], dtype=self.qubit_state.dtype)
-
-                new_tape = qml.tape.QuantumScript(
-                    tape.operations,
-                    [qml.expval(ham)],
-                    shots=tape.shots,
-                    trainable_params=tape.trainable_params,
-                )
-
-                return self.calculate_jacobian(new_tape)
-
-            return processing_fn_expval(tape)
-
         if tape_return_type is State:
             raise QuantumFunctionError(
                 "Adjoint differentiation does not support State measurements."
             )
+
+        # Proceed, because tape_return_type is Expectation.
+        if len(grad_vec) != len(measurements):
+            raise ValueError(
+                "Number of observables in the tape must be the same as the "
+                "length of grad_vec in the vjp method"
+            )
+
+        if np.iscomplexobj(grad_vec):
+            raise ValueError(
+                "The vjp method only works with a real-valued grad_vec when the "
+                "tape is returning an expectation value"
+            )
+
+        ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
+
+        def processing_fn_expval(tape):
+            nonlocal ham
+            num_params = len(tape.trainable_params)
+
+            if num_params == 0:
+                return np.array([], dtype=self.qubit_state.dtype)
+
+            new_tape = qml.tape.QuantumScript(
+                tape.operations,
+                [qml.expval(ham)],
+                shots=tape.shots,
+                trainable_params=tape.trainable_params,
+            )
+
+            return self.calculate_jacobian(new_tape)
+
+        return processing_fn_expval(tape)
