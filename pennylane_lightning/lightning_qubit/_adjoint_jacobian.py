@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, Projector, QuantumFunctionError, Rot, StatePrep
+from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
-from pennylane.operation import Operation, Tensor
+from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
@@ -78,16 +78,16 @@ class LightningAdjointJacobian:
         return self._dtype
 
     @staticmethod
-    def _check_adjdiff_supported_measurements(
+    def _get_return_type(
         measurements: List[MeasurementProcess],
     ):
-        """Check whether given list of measurement is supported by adjoint_differentiation.
+        """Get the measurement return type.
 
         Args:
             measurements (List[MeasurementProcess]): a list of measurement processes to check.
 
         Returns:
-            Expectation or State: a common return type of measurements.
+            None, Expectation or State: a common return type of measurements.
         """
         if not measurements:
             return None
@@ -95,46 +95,22 @@ class LightningAdjointJacobian:
         if len(measurements) == 1 and measurements[0].return_type is State:
             return State
 
-        # Now the return_type of measurement processes must be expectation
-        if any(measurement.return_type is not Expectation for measurement in measurements):
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types"
-            )
-
-        for measurement in measurements:
-            if isinstance(measurement.obs, Tensor):
-                if any(isinstance(obs, Projector) for obs in measurement.obs.non_identity_obs):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does "
-                        "not support the Projector observable"
-                    )
-            elif isinstance(measurement.obs, Projector):
-                raise QuantumFunctionError(
-                    "Adjoint differentiation method does not support the Projector observable"
-                )
         return Expectation
-
-    @staticmethod
-    def _check_adjdiff_supported_operations(operations):
-        """Check Lightning adjoint differentiation method support for a tape.
-
-        Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
-        observables, or operations by the Lightning adjoint differentiation method.
-
-        Args:
-            tape (.QuantumTape): quantum tape to differentiate.
-        """
-        for operation in operations:
-            if operation.num_params > 1 and not isinstance(operation, Rot):
-                raise QuantumFunctionError(
-                    f"The {operation.name} operation is not supported using "
-                    'the "adjoint" differentiation method'
-                )
 
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
     ):
+        """Process a tape, serializing and building a dictionary proper for
+        the adjoint Jacobian calculation in the C++ layer.
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
+            split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
+
+        Returns:
+            dictionary: dictionary providing serialized data for Jacobian calculation.
+        """
         use_csingle = self._dtype == np.complex64
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
@@ -201,7 +177,21 @@ class LightningAdjointJacobian:
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
     def calculate_jacobian(self, tape: QuantumTape):
-        """Computes and returns the Jacobian with the adjoint method."""
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The Jacobian of a tape.
+        """
+
         if tape.shots:
             warn(
                 "Requested adjoint differentiation to be computed with finite shots. "
@@ -210,18 +200,13 @@ class LightningAdjointJacobian:
                 UserWarning,
             )
 
-        tape_return_type = self._check_adjdiff_supported_measurements(tape.measurements)
+        tape_return_type = self._get_return_type(tape.measurements)
 
         if not tape_return_type:  # the tape does not have measurements
             return np.array([], dtype=self._dtype)
 
         if tape_return_type is State:
-            raise QuantumFunctionError(
-                "This method does not support statevector return type. "
-                "Use vjp method instead for this purpose."
-            )
-
-        self._check_adjdiff_supported_operations(tape.operations)
+            raise QuantumFunctionError("This method does not support statevector return type. ")
 
         processed_data = self._process_jacobian_tape(tape)
 
@@ -257,39 +242,34 @@ class LightningAdjointJacobian:
         jac = jac.reshape(-1, len(trainable_params))
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
-        if hasattr(qml, "active_return"):  # pragma: no cover
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
+
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=inconsistent-return-statements
     def calculate_vjp(self, tape: QuantumTape, grad_vec):
-        """Generate the processing function required to compute the vector-Jacobian products
-        of a tape.
+        """Compute the vector-Jacobian products of a tape.
 
         .. code-block:: python
 
-            vjp_f = dev.vjp([qml.state()], grad_vec)
-            vjp = vjp_f(tape)
+            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            vjp = LightningAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
-        computes :math:`w = (w_1,\\cdots,w_m)` where
+        computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 
         .. math::
 
-            w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
+            w_k = dy_k \\cdot J_{k,j}
 
-        Here, :math:`m` is the total number of trainable parameters, :math:`\\pmb{\\theta}`
-        is the vector of trainable parameters and :math:`\\psi_{\\pmb{\\theta}}`
-        is the output quantum state.
+        Here, :math:`dy` is the workflow cotangent (grad_vec), and :math:`J` the Jacobian.
 
         Args:
-            measurements (list): List of measurement processes for vector-Jacobian product.
-                Now it must be expectation values or a quantum state.
-            grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
-                shape of the corresponding tape, i.e. number of measurements if
-                the return type is expectation or :math:`2^N` if the return type is statevector
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            grad_vec (tensor_like): Gradient-output vector, also called dy or cotangent. Must have shape matching the output
+                shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
         Returns:
-            The processing function required to compute the vector-Jacobian products of a tape.
+            The vector-Jacobian products of a tape.
         """
         if tape.shots is not None:
             warn(
@@ -300,45 +280,41 @@ class LightningAdjointJacobian:
             )
 
         measurements = tape.measurements
-        tape_return_type = self._check_adjdiff_supported_measurements(measurements)
+        tape_return_type = self._get_return_type(measurements)
 
         if qml.math.allclose(grad_vec, 0) or tape_return_type is None:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
-
-        if tape_return_type is Expectation:
-            if len(grad_vec) != len(measurements):
-                raise ValueError(
-                    "Number of observables in the tape must be the same as the "
-                    "length of grad_vec in the vjp method"
-                )
-
-            if np.iscomplexobj(grad_vec):
-                raise ValueError(
-                    "The vjp method only works with a real-valued grad_vec when the "
-                    "tape is returning an expectation value"
-                )
-
-            ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
-
-            def processing_fn_expval(tape):
-                nonlocal ham
-                num_params = len(tape.trainable_params)
-
-                if num_params == 0:
-                    return np.array([], dtype=self.qubit_state.dtype)
-
-                new_tape = qml.tape.QuantumScript(
-                    tape.operations,
-                    [qml.expval(ham)],
-                    shots=tape.shots,
-                    trainable_params=tape.trainable_params,
-                )
-
-                return self.calculate_jacobian(new_tape)
-
-            return processing_fn_expval(tape)
 
         if tape_return_type is State:
             raise QuantumFunctionError(
                 "Adjoint differentiation does not support State measurements."
             )
+
+        # Proceed, because tape_return_type is Expectation.
+        if len(grad_vec) != len(measurements):
+            raise ValueError(
+                "Number of observables in the tape must be the same as the "
+                "length of grad_vec in the vjp method"
+            )
+
+        if np.iscomplexobj(grad_vec):
+            raise ValueError(
+                "The vjp method only works with a real-valued grad_vec when the "
+                "tape is returning an expectation value"
+            )
+
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in measurements]))
+
+        num_params = len(tape.trainable_params)
+
+        if num_params == 0:
+            return np.array([], dtype=self.qubit_state.dtype)
+
+        new_tape = qml.tape.QuantumScript(
+            tape.operations,
+            [qml.expval(ham)],
+            shots=tape.shots,
+            trainable_params=tape.trainable_params,
+        )
+
+        return self.calculate_jacobian(new_tape)
