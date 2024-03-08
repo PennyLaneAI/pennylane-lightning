@@ -740,6 +740,7 @@ class TestLightningDeviceIntegration:
         if not ld._new_API:
             assert dev.shots is None
 
+    @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_no_backprop(self):
         """Test that lightning device does not support the backprop

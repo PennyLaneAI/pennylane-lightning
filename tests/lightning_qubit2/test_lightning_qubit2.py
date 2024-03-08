@@ -19,7 +19,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
-from pennylane.devices import DefaultQubit
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
 from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
@@ -27,10 +27,15 @@ from pennylane_lightning.lightning_qubit._measurements import LightningMeasureme
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     accepted_observables,
+    decompose,
     jacobian,
+    no_sampling,
     simulate,
     simulate_and_jacobian,
     stopping_condition,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
 )
 
 if LightningDevice != LightningQubit:
@@ -45,32 +50,7 @@ VARPHI = np.linspace(0.02, 1, 3)
 
 
 class TestHelpers:
-    """Unit tests for the simulate function"""
-
-    # Test simulate
-    # Test jacobian + xfail tests
-    # Test simulate_and_jacobian + xfail tests
-    # Test stopping_condition
-    # Test accepted_observables
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit2(wires=3, c_dtype=request.param)
-
-    @staticmethod
-    def calculate_reference(tape):
-        dev = DefaultQubit(max_workers=1)
-        program, _ = dev.preprocess()
-        tapes, transf_fn = program([tape])
-        results = dev.execute(tapes)
-        return transf_fn(results)
-
-    @staticmethod
-    def process_and_execute(dev, tape):
-        program, _ = dev.preprocess()
-        tapes, transf_fn = program([tape])
-        results = dev.execute(tapes)
-        return transf_fn(results)
+    """Unit tests for helper functions"""
 
     class DummyOperator(qml.operation.Operation, qml.operation.Observable):
         """Dummy operator"""
@@ -105,43 +85,9 @@ class TestHelpers:
         """Test that simulate returns the correct results with multiple measurements."""
         return
 
-    @pytest.mark.parametrize("theta", THETA)
-    def test_jacobian_returns_zero(self, theta):
-        """Test that jacobian always returns zero."""
-        tape = QuantumScript([qml.RX(theta, wires=0)], [qml.expval(qml.Z(0))])
-        assert np.allclose(jacobian(tape), 0)
-
-    @pytest.mark.xfail
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_jacobian_single_expval(self, theta, phi, dev):
-        """Test that the jacobian is correct when a tape has a single expectation value"""
-        return
-
-    @pytest.mark.xfail
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_jacobian_multi_expval(self, theta, phi, dev):
-        """Test that the jacobian is correct when a tape has multiple expectation values"""
-        return
-
-    @pytest.mark.xfail
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_simulate_and_jacobian_single_expval(self, theta, phi, dev):
-        """Test that the result and jacobian is correct when a tape has a single
-        expectation value"""
-        return
-
-    @pytest.mark.xfail
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_simulate_and_jacobian_multi_expval(self, theta, phi, dev):
-        """Test that the result and jacobian is correct when a tape has multiple
-        expectation values"""
-        return
-
 
 class TestInitialization:
     """Unit tests for LightningQubit2 initialization"""
-
-    # Test __init__ errors: invalid num_burnin, kernel name
 
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
@@ -166,13 +112,163 @@ class TestInitialization:
 class TestExecution:
     """Unit tests for executing quantum tapes on LightningQubit2"""
 
-    # Test preprocess
-    # Test execute
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return LightningQubit2(wires=3, c_dtype=request.param)
+
+    @staticmethod
+    def calculate_reference(tape):
+        dev = DefaultQubit(max_workers=1)
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
+    @staticmethod
+    def process_and_execute(dev, tape):
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
+    _default_device_options = {
+        "c_dtype": np.complex128,
+        "batch_obs": False,
+        "mcmc": False,
+        "kernel_name": None,
+        "num_burnin": None,
+    }
+
+    @pytest.mark.parametrize(
+        "config, expected_config",
+        [
+            (
+                DefaultExecutionConfig,
+                ExecutionConfig(
+                    grad_on_execution=True,
+                    use_device_gradient=False,
+                    device_options=_default_device_options,
+                ),
+            ),
+            (
+                ExecutionConfig(gradient_method="best"),
+                ExecutionConfig(
+                    gradient_method="adjoint",
+                    grad_on_execution=True,
+                    use_device_gradient=True,
+                    device_options=_default_device_options,
+                ),
+            ),
+            (
+                ExecutionConfig(
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "mcmc": True,
+                    }
+                ),
+                ExecutionConfig(
+                    grad_on_execution=True,
+                    use_device_gradient=False,
+                    device_options={
+                        "c_dtype": np.complex64,
+                        "batch_obs": False,
+                        "mcmc": True,
+                        "kernel_name": None,
+                        "num_burnin": None,
+                    },
+                ),
+            ),
+            (
+                ExecutionConfig(
+                    gradient_method="backprop", use_device_gradient=False, grad_on_execution=False
+                ),
+                ExecutionConfig(
+                    gradient_method="backprop",
+                    use_device_gradient=False,
+                    grad_on_execution=False,
+                    device_options=_default_device_options,
+                ),
+            ),
+        ],
+    )
+    def test_preprocess_correct_config_setup(self, config, expected_config):
+        """Test that the execution config is set up correctly in preprocess"""
+        dev = LightningQubit2(wires=2)
+        _, new_config = dev.preprocess(config)
+        del new_config.device_options["rng"]
+
+        assert new_config == expected_config
+
+    def test_preprocess_correct_transforms(self):
+        """Test that the transform program returned by preprocess is correct"""
+        dev = LightningQubit2(wires=2)
+
+        expected_program = qml.transforms.core.TransformProgram()
+        expected_program.add_transform(validate_measurements, name="LightningQubit2")
+        expected_program.add_transform(no_sampling)
+        expected_program.add_transform(
+            validate_observables, accepted_observables, name="LightningQubit2"
+        )
+        expected_program.add_transform(validate_device_wires, dev.wires, name="LightningQubit2")
+        expected_program.add_transform(qml.defer_measurements, device=dev)
+        expected_program.add_transform(
+            decompose, stopping_condition=stopping_condition, name="LightningQubit2"
+        )
+        expected_program.add_transform(qml.transforms.broadcast_expand)
+
+        actual_program, _ = dev.preprocess(DefaultExecutionConfig)
+        assert actual_program == expected_program
+
+    # Execution tests
 
 
 class TestDerivatives:
     """Unit tests for calculating derivatives with LightningQubit2"""
 
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return LightningQubit2(wires=3, c_dtype=request.param)
+
+    @staticmethod
+    def calculate_reference(tape):
+        dev = DefaultQubit(max_workers=1)
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
+    @staticmethod
+    def process_and_execute(dev, tape):
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+        results = dev.execute(tapes)
+        return transf_fn(results)
+
     # Test supports derivative + xfail tests
-    # Test compute_derivatives + xfail tests
-    # Test execute_and_compute_derivatives + xfail tests
+
+    @pytest.mark.parametrize("config, tape, expected", [])
+    def test_supports_derivatives(self, dev, config, tape, expected):
+        """Test that supports_derivative returns the correct boolean value."""
+        assert dev.supports_derivatives(config, tape) == expected
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    def test_derivative_single_expval(self, theta, phi, dev):
+        """Test that the jacobian is correct when a tape has a single expectation value"""
+        return
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    def test_derivative_multi_expval(self, theta, phi, dev):
+        """Test that the jacobian is correct when a tape has multiple expectation values"""
+        return
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    def test_execute_and_derivative_single_expval(self, theta, phi, dev):
+        """Test that the result and jacobian is correct when a tape has a single
+        expectation value"""
+        return
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    def test_execute_and_derivative_multi_expval(self, theta, phi, dev):
+        """Test that the result and jacobian is correct when a tape has multiple
+        expectation values"""
+        return

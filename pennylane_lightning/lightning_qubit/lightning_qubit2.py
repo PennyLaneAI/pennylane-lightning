@@ -13,11 +13,10 @@
 # limitations under the License.
 """
 This module contains the LightningQubit2 class that inherits from the new device interface.
-
 """
 from dataclasses import replace
-from pathlib import Path
 from typing import Callable, Optional, Sequence, Union
+from pathlib import Path
 
 import numpy as np
 import pennylane as qml
@@ -34,6 +33,7 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
+from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
@@ -59,22 +59,51 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = {
         state (LightningStateVector): handle to Lightning state vector
 
     Returns:
-        tuple(TensorLike): The results of the simulation
+        Tuple[TensorLike]: The results of the simulation
 
     Note that this function can return measurements for non-commuting observables simultaneously.
-
     """
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
-def jacobian(circuit: QuantumTape):
-    return np.array(0.0)
+def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):
+    """Compute the Jacobian for a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+
+    Returns:
+        TensorLike: The Jacobian of the quantum script
+    """
+    state.reset_state()
+    final_state = state.get_final_state(circuit)
+    return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
-def simulate_and_jacobian(circuit: QuantumTape):
-    return np.array(0.0), np.array(0.0)
+def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):
+    """Simulate a single quantum script and compute its Jacobian.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+
+    Returns:
+        Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+    """
+    res = simulate(circuit, state)
+    jacobian = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    return [res, jacobian]
 
 
 _operations = frozenset(
@@ -208,6 +237,8 @@ class LightningQubit2(Device):
     observables = _observables
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
     config = Path(__file__).parent / "lightning_qubit.toml"
+    operations = _operations
+    observables = _observables
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -296,19 +327,16 @@ class LightningQubit2(Device):
         execution_config: Optional[ExecutionConfig] = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
-        if False:
-            # to be used once adjoint differentiation support is added.
-            if execution_config is None and circuit is None:
-                return True
-            if execution_config.gradient_method not in {"adjoint", "best"}:
-                return False
-            if circuit is None:
-                return True
-            return (
-                all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
-                and not circuit.shots
-            )
-        return False
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return (
+            all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
+            and not circuit.shots
+        )
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         program = TransformProgram()
@@ -342,12 +370,16 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        return tuple(jacobian(circuit) for circuit in circuits)
+        return tuple(
+            jacobian(circuit, self._statevector, batch_obs=self._batch_obs) for circuit in circuits
+        )
 
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        results = tuple(simulate_and_jacobian(c) for c in circuits)
+        results = tuple(
+            simulate_and_jacobian(c, self._statevector, batch_obs=self._batch_obs) for c in circuits
+        )
         return tuple(zip(*results))

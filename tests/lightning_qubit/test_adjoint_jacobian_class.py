@@ -102,33 +102,6 @@ def test_initialization(lightning_sv):
 class TestAdjointJacobian:
     """Tests for the adjoint Jacobian functionality"""
 
-    def test_not_supported_var(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for a tape with measurements that are not
-        supported"""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.1, wires=0)
-            qml.var(qml.PauliZ(0))
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
-            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
-
-    def test_not_supported_state(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for a tape with measurements that are not
-        supported"""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.1, wires=0)
-            qml.state()
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="This method does not support statevector return type",
-        ):
-            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
-
     def test_finite_shots_warns(self, lightning_sv):
         """Tests warning raised when finite shots specified"""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.PauliZ(0))], shots=1)
@@ -144,6 +117,20 @@ class TestAdjointJacobian:
 
         return LightningAdjointJacobian(statevector).calculate_jacobian(tape)
 
+    def test_not_supported_state(self, lightning_sv):
+        """Test if a QuantumFunctionError is raised for a tape with measurements that are not
+        supported"""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.1, wires=0)
+            qml.state()
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="This method does not support statevector return type",
+        ):
+            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
+
     def test_empty_measurements(self, lightning_sv):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
@@ -152,33 +139,6 @@ class TestAdjointJacobian:
 
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
-
-    def test_unsupported_op(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
-        multi-parameter operations that are not qml.Rot"""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="The CRot operation is not supported using the"
-        ):
-            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
-
-    @pytest.mark.parametrize(
-        "op", [qml.Projector([0, 1], wires=[0, 1]), qml.Projector([0], wires=[0]) @ qml.PauliZ(0)]
-    )
-    def test_proj_unsupported(self, op, lightning_sv):
-        """Test if a QuantumFunctionError is raised for a Projector observable"""
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(op)
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
-        ):
-            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
 
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
@@ -463,22 +423,6 @@ class TestVectorJacobianProduct:
         ):
             self.calculate_vjp(statevector, tape1, dy2)
 
-    def test_not_expval(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for a tape with measurements that are not
-        expectation values"""
-        statevector = lightning_sv(num_wires=2)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.1, wires=0)
-            qml.var(qml.PauliZ(0))
-
-        dy = np.array([1.0])
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-        ):
-            self.calculate_vjp(statevector, tape, dy)
-
     def test_finite_shots_warns(self, lightning_sv):
         """Tests warning raised when finite shots specified"""
 
@@ -492,53 +436,6 @@ class TestVectorJacobianProduct:
         with pytest.warns(
             UserWarning,
             match="Requested adjoint differentiation to be computed with finite shots.",
-        ):
-            self.calculate_vjp(statevector, tape, dy)
-
-    def test_unsupported_op(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
-        multi-parameter operations that are not qml.Rot"""
-
-        statevector = lightning_sv(num_wires=2)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        dy = np.array([1.0])
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="The CRot operation is not supported using the",
-        ):
-            self.calculate_vjp(statevector, tape, dy)
-
-    def test_proj_unsupported(self, lightning_sv):
-        """Test if a QuantumFunctionError is raised for a Projector observable"""
-
-        statevector = lightning_sv(num_wires=2)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0, 1], wires=[0, 1]))
-
-        dy = np.array([1.0])
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="differentiation method does not support the Projector",
-        ):
-            self.calculate_vjp(statevector, tape, dy)
-
-        statevector.reset_state()
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="differentiation method does not support the Projector",
         ):
             self.calculate_vjp(statevector, tape, dy)
 
@@ -676,27 +573,3 @@ class TestVectorJacobianProduct:
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
-
-    def test_prob_expectation_values(self, lightning_sv):
-        """Tests correct output shape and evaluation for a tape
-        with prob and expval outputs"""
-        statevector = lightning_sv(num_wires=2)
-
-        x = 0.543
-        y = -0.654
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=[0])
-            qml.RY(y, wires=[1])
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-            qml.probs(wires=[0, 1])
-
-        tape.trainable_params = {0, 1}
-        dy = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="Adjoint differentiation method does not support",
-        ):
-            self.calculate_vjp(statevector, tape, dy)
