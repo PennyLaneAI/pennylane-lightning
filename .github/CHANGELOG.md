@@ -71,6 +71,9 @@ Vincent Michaud-Rioux
 * Update requirements to build the documentation.
   [(#594)](https://github.com/PennyLaneAI/pennylane-lightning/pull/594)
 
+* Remove deprecated MeasurementProcess.name.
+  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
+
 ### Bug fixes
 
 * Downgrade auditwheel due to changes with library exclusion list.
@@ -106,7 +109,7 @@ Vincent Michaud-Rioux
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, Matthew Silverman
 
 ---
 
