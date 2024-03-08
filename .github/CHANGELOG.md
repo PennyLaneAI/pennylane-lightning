@@ -1,3 +1,18 @@
+# Release 0.35.1
+
+### Bug fixes
+
+* Fix finite shots support in `lightning.qubit`, `lightning.gpu` and `lightning.kokkos`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
+
+---
+
 # Release 0.35.0
 
 ### New features since last release

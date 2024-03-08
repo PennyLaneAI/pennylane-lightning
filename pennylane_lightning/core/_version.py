@@ -16,8 +16,4 @@
    Version number (major.minor.patch[-label])
 """
 
-<<<<<<< HEAD
-__version__ = "0.35.0"
-=======
-__version__ = "0.34.1-rc0"
->>>>>>> dd3ce172 (Update version)
+__version__ = "0.35.1-rc0"
