@@ -126,7 +126,6 @@ check-tidy:
 		  -DCLANG_TIDY_BINARY=clang-tidy \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  $(OPTIONS)
-
 ifdef target
 	cmake --build ./BuildTidy $(VERBOSE) --target $(target)
 else
