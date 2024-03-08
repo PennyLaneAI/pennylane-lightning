@@ -212,7 +212,21 @@ class LightningAdjointJacobian:
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
     def calculate_jacobian(self, tape: QuantumTape):
-        """Computes and returns the Jacobian with the adjoint method."""
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The adjoint Jacobian of a tape.
+        """
+
         if tape.shots:
             warn(
                 "Requested adjoint differentiation to be computed with finite shots. "
@@ -271,30 +285,26 @@ class LightningAdjointJacobian:
 
     # pylint: disable=inconsistent-return-statements
     def calculate_vjp(self, tape: QuantumTape, grad_vec):
-        """Generate the processing function required to compute the vector-Jacobian products
-        of a tape.
+        """Compute the vector-Jacobian products of a tape.
 
         .. code-block:: python
 
-            vjp_f = dev.vjp([qml.state()], grad_vec)
-            vjp = vjp_f(tape)
+            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            vjp = LightningAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
-        computes :math:`w = (w_1,\\cdots,w_m)` where
+        computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 
         .. math::
 
-            w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
+            w_k = dy_k \\cdot J_{k,j}
 
-        Here, :math:`m` is the total number of trainable parameters, :math:`\\pmb{\\theta}`
-        is the vector of trainable parameters and :math:`\\psi_{\\pmb{\\theta}}`
-        is the output quantum state.
+        Here, :math:`dy` is the workflow cotangent (grad_vec), and :math:`J` the Jacobian.
 
         Args:
-            measurements (list): List of measurement processes for vector-Jacobian product.
-                Now it must be expectation values or a quantum state.
-            grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
-                shape of the corresponding tape, i.e. number of measurements if
-                the return type is expectation or :math:`2^N` if the return type is statevector
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            grad_vec (tensor_like): Gradient-output vector, also called dy or cotangent. Must have shape matching the output
+                shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
         Returns:
             The vector-Jacobian products of a tape.
