@@ -758,6 +758,62 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Collapse the state vector as after having measured one of the
+     * qubits.
+     *
+     * The branch parameter imposes the measurement result on the given wire.
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(const std::size_t wire, const bool branch) {
+
+        // file:///home/thomas.germain/Downloads/KokkosTutorial_04_HierarchicalParallelism.pdf
+        // pp. 14, 20, 26,
+
+        auto &&num_qubits = this->getNumQubits();
+
+        const size_t stride = pow(2, num_qubits_ - (1 + wire));
+        const size_t vec_size = pow(2, num_qubits_);
+        const auto section_size = vec_size / stride;
+        const auto half_section_size = section_size / 2;
+
+        const size_t negbranch = branch ? 0 : 1;
+
+        Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d(
+            {0, 0}, {half_section_size, stride});
+        Kokkos::parallel_for(
+            policy_2d,
+            collapseFunctor<fp_t>(*data_, num_qubits, stride, negbranch));
+
+        normalize();
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+
+        // TODO: @tomlqc what about squaredNorm()
+        PrecisionT squaredNorm = 0.0;
+        Kokkos::parallel_reduce(
+            sv_view.size(),
+            KOKKOS_LAMBDA(const size_t i, PrecisionT &sum) {
+                sum += std::norm<PrecisionT>(sv_view(i));
+            },
+            squaredNorm);
+
+        // TODO: @tomlqc add PL_ABORT_IF
+
+        std::complex<PrecisionT> inv_norm = 1. / std::sqrt(squaredNorm);
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(const size_t i) { sv_view(i) *= inv_norm; });
+    }
+
+    /**
      * @brief Update data of the class
      *
      * @param other Kokkos View
