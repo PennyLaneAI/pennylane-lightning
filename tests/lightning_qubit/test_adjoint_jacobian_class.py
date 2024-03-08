@@ -117,6 +117,20 @@ class TestAdjointJacobian:
 
         return LightningAdjointJacobian(statevector).calculate_jacobian(tape)
 
+    def test_not_supported_state(self, lightning_sv):
+        """Test if a QuantumFunctionError is raised for a tape with measurements that are not
+        supported"""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(0.1, wires=0)
+            qml.state()
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="This method does not support statevector return type",
+        ):
+            self.calculate_jacobian(lightning_sv(num_wires=3), tape)
+
     def test_empty_measurements(self, lightning_sv):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
