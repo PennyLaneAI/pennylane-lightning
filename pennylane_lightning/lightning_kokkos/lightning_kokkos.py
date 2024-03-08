@@ -65,7 +65,7 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
     from pennylane_lightning.core._version import __version__
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
@@ -143,6 +143,8 @@ if LK_CPP_BINARY_AVAILABLE:
         "QFT",
         "ECR",
         "BlockEncode",
+        "GlobalPhase",
+        "C(GlobalPhase)",
     }
 
     allowed_observables = {
@@ -402,7 +404,13 @@ if LK_CPP_BINARY_AVAILABLE:
                 method = getattr(state, name, None)
 
                 wires = self.wires.indices(ops.wires)
-                if method is None:
+                if ops.name == "C(GlobalPhase)":
+                    controls = ops.control_wires
+                    control_values = ops.control_values
+                    param = ops.base.parameters[0]
+                    matrix = global_phase_diagonal(param, self.wires, controls, control_values)
+                    state.apply(name, wires, False, [[param]], matrix)
+                elif method is None:
                     # Inverse can be set to False since qml.matrix(ops) is already in inverted form
                     try:
                         mat = qml.matrix(ops)
