@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from pathlib import Path
-from typing import Sequence
+from typing import List, Sequence
 from warnings import warn
 
 import numpy as np
@@ -48,7 +48,6 @@ except ImportError:
 
 if LQ_CPP_BINARY_AVAILABLE:
     from os import getenv
-    from typing import List
 
     import pennylane as qml
     from pennylane import (
