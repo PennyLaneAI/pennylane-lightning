@@ -101,11 +101,9 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    state.reset_state()
-    final_state = state.get_final_state(circuit)
-    measurements = LightningMeasurements(final_state).measure_final_state(circuit)
-    jacobian = LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
-    return [measurements, jacobian]
+    res = simulate(circuit, state)
+    jacobian = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    return [res, jacobian]
 
 
 _operations = frozenset(
