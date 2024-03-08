@@ -341,7 +341,7 @@ class LightningAdjointJacobian:
                 "tape is returning an expectation value"
             )
 
-        ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in measurements]))
 
         def processing_fn_expval(tape):
             nonlocal ham
