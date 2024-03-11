@@ -519,15 +519,11 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
-            skipped_ops = ["Identity"]
             invert_param = False
             for ops in operations:
-                if str(ops.name) in skipped_ops:
-                    continue
                 name = ops.name
-                if isinstance(ops, Adjoint):
-                    name = ops.base.name
-                    invert_param = True
+                if name == "Identity":
+                    continue
                 method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
@@ -849,16 +845,14 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """Return samples of an observable."""
             diagonalizing_gates = observable.diagonalizing_gates()
             if diagonalizing_gates:
-                self.apply_lightning(diagonalizing_gates)
+                self.apply(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
             results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
             if diagonalizing_gates:
-                self.apply_lightning(
-                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                )
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
             return results
 
         def generate_samples(self):

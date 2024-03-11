@@ -497,12 +497,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -558,12 +556,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -642,16 +638,14 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Return samples of an observable."""
             diagonalizing_gates = observable.diagonalizing_gates()
             if diagonalizing_gates:
-                self.apply_lightning(diagonalizing_gates)
+                self.apply(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
             results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
             if diagonalizing_gates:
-                self.apply_lightning(
-                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                )
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
             return results
 
         @staticmethod
