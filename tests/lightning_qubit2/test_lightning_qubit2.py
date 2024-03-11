@@ -552,25 +552,97 @@ class TestTapeBatch:
 
         results = device.execute((qs1, qs2))
 
-        expected1 = (-qml.math.sin(phi) - 1, 3 * qml.math.cos(phi))
-        x1 = qml.math.cos(phi / 2) ** 2 / 2
-        x2 = qml.math.sin(phi / 2) ** 2 / 2
+        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
+        x1 = np.cos(phi / 2) ** 2 / 2
+        x2 = np.sin(phi / 2) ** 2 / 2
         expected2 = x1 * np.array([1, 0, 1, 0]) + x2 * np.array([0, 1, 0, 1])
         expected = (expected1, expected2)
 
         assert len(results) == len(expected)
         assert len(results[0]) == len(expected[0])
-        assert qml.math.allclose(results[0][0], expected[0][0])
-        assert qml.math.allclose(results[0][1], expected[0][1])
-        assert qml.math.allclose(results[1], expected[1])
+        assert np.allclose(results[0][0], expected[0][0])
+        assert np.allclose(results[0][1], expected[0][1])
+        assert np.allclose(results[1], expected[1])
 
-    def test_derivatives_tape_batch(self):
+    @pytest.mark.parametrize("phi", PHI)
+    def test_derivatives_tape_batch(self, phi):
         """Test that results are correct when we compute derivatives for a batch of tapes."""
-        # device = LightningQubit2(wires=4)
-        assert True
+        device = LightningQubit2(wires=4)
 
-    def test_execute_and_derivatives_tape_batch(self):
+        ops = [
+            qml.X(0),
+            qml.X(1),
+            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+        ]
+
+        qs1 = QuantumScript(
+            ops,
+            [
+                qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
+                qml.expval(qml.s_prod(3, qml.Z(2))),
+            ],
+            trainable_params=[0],
+        )
+
+        ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
+        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
+
+        jacs = device.compute_derivatives([qs1, qs2])
+
+        expected1 = (-np.cos(phi), -3 * np.sin(phi))
+        expected2 = 0.0
+        expected = (expected1, expected2)
+
+        assert len(jacs) == len(expected)
+        assert len(jacs[0]) == len(expected[0])
+        assert np.allclose(jacs[0], expected[0])
+        assert np.allclose(jacs[1], expected[1])
+
+    @pytest.mark.parametrize("phi", PHI)
+    def test_execute_and_derivatives_tape_batch(self, phi):
         """Test that results are correct when we execute and compute derivatives for a batch
         of tapes."""
-        # device = LightningQubit2(wires=4)
-        assert True
+        device = LightningQubit2(wires=4)
+
+        ops = [
+            qml.X(0),
+            qml.X(1),
+            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+        ]
+
+        qs1 = QuantumScript(
+            ops,
+            [
+                qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
+                qml.expval(qml.s_prod(3, qml.Z(2))),
+            ],
+            trainable_params=[0],
+        )
+
+        ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
+        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
+
+        results, jacs = device.execute_and_compute_derivatives([qs1, qs2])
+
+        # Assert results
+        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
+        x1 = np.cos(phi / 2) ** 2 / 2
+        x2 = np.sin(phi / 2) ** 2 / 2
+        expected2 = sum([x1, -x2, -x1, x2])
+        expected = (expected1, expected2)
+
+        assert len(results) == len(expected)
+        assert len(results[0]) == len(expected[0])
+        assert np.allclose(results[0][0], expected[0][0])
+        assert np.allclose(results[0][1], expected[0][1])
+        assert np.allclose(results[1], expected[1])
+
+        # Assert derivatives
+        expected_jac1 = (-np.cos(phi), -3 * np.sin(phi))
+        expected_jac2 = 0.0
+        expected_jac = (expected_jac1, expected_jac2)
+
+        assert len(jacs) == len(expected_jac)
+        assert len(jacs[0]) == len(expected_jac[0])
+        assert np.allclose(jacs[0], expected_jac[0])
+        assert np.allclose(jacs[1], expected_jac[1])
