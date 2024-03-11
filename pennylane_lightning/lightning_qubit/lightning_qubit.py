@@ -61,6 +61,7 @@ if LQ_CPP_BINARY_AVAILABLE:
     )
     from pennylane.measurements import Expectation, MeasurementProcess, State
     from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
@@ -428,16 +429,20 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
             for operation in operations:
-                name = operation.name
+                if isinstance(operation, Adjoint):
+                    name = operation.base.name
+                    invert_param = True
+                else:
+                    name = operation.name
+                    invert_param = False
                 if name == "Identity":
                     continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
 
                 if method is not None:  # apply specialized gate
-                    inv = False
                     param = operation.parameters
-                    method(wires, inv, param)
+                    method(wires, invert_param, param)
                 elif (
                     name[0:2] == "C("
                     or name == "ControlledQubitUnitary"

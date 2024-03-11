@@ -519,9 +519,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
-            invert_param = False
             for ops in operations:
-                name = ops.name
+                if isinstance(ops, Adjoint):
+                    name = ops.base.name
+                    invert_param = True
+                else:
+                    name = ops.name
+                    invert_param = False
                 if name == "Identity":
                     continue
                 method = getattr(self._gpu_state, name, None)
