@@ -12,14 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for process and execute (expval calculation).
+Tests for process and execute (variance calculation).
 """
 # pylint: disable=too-many-arguments, redefined-outer-name
+import pytest
+from conftest import LightningDevice, PHI, THETA, VARPHI
+
 import numpy as np
 import pennylane as qml
-import pytest
-from conftest import LightningDevice, THETA, PHI, VARPHI
-from pennylane.devices import DefaultQubit
+from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
 
@@ -35,16 +36,14 @@ def dev(request):
     return LightningQubit2(wires=3, c_dtype=request.param)
 
 
-@staticmethod
 def calculate_reference(tape):
-    dev = DefaultQubit(max_workers=1)
+    dev = qml.device("default.qubit", max_workers=1)
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])
     results = dev.execute(tapes)
     return transf_fn(results)
 
 
-@staticmethod
 def process_and_execute(dev, tape):
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])
@@ -53,10 +52,10 @@ def process_and_execute(dev, tape):
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-class TestExpval:
-    """Test expectation value calculations"""
+class TestVar:
+    """Tests for the variance"""
 
-    def test_Identity(self, theta, phi, dev, tol):
+    def test_Identity(self, theta, phi, dev):
         """Tests applying identities."""
 
         ops = [
@@ -66,39 +65,37 @@ class TestExpval:
             qml.RX(theta, 0),
             qml.RX(phi, 1),
         ]
-        measurements = [qml.expval(qml.PauliZ(0))]
+        measurements = [qml.var(qml.PauliZ(0))]
         tape = qml.tape.QuantumScript(ops, measurements)
 
         result = dev.execute(tape)
-        expected = np.cos(theta)
+        expected = 1 - np.cos(theta) ** 2
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
 
-        assert np.allclose(result, expected, tol)
+        assert np.allclose(result, expected, atol=tol, rtol=0)
 
-    def test_identity_expectation(self, theta, phi, dev, tol):
-        """Tests identity expectations."""
+    def test_identity_variance(self, theta, phi, dev):
+        """Tests identity variances."""
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            [qml.expval(qml.Identity(wires=[0])), qml.expval(qml.Identity(wires=[1]))],
+            [qml.var(qml.Identity(wires=[0])), qml.var(qml.Identity(wires=[1]))],
         )
         result = dev.execute(tape)
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(0.0, result, atol=tol, rtol=0)
 
-        assert np.allclose(1.0, result, tol)
-
-    def test_multi_wire_identity_expectation(self, theta, phi, dev, tol):
+    def test_multi_wire_identity_variance(self, theta, phi, dev):
         """Tests multi-wire identity."""
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            [qml.expval(qml.Identity(wires=[0, 1]))],
+            [qml.var(qml.Identity(wires=[0, 1]))],
         )
         result = dev.execute(tape)
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(1.0, result, tol)
+        assert np.allclose(0.0, result, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
         "wires",
@@ -108,21 +105,22 @@ class TestExpval:
             (["b", "a"]),
         ],
     )
-    def test_custom_wires(self, theta, phi, tol, wires):
+    def test_custom_wires(self, theta, phi, wires):
         """Tests custom wires."""
-        dev = LightningQubit2(wires=wires)
+        device = LightningQubit2(wires=wires)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=wires[1]), qml.CNOT(wires=wires)],
-            [qml.expval(qml.PauliZ(wires=wires[0])), qml.expval(qml.PauliZ(wires=wires[1]))],
+            [qml.var(qml.PauliZ(wires=wires[0])), qml.var(qml.PauliZ(wires=wires[1]))],
         )
 
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = np.array([np.cos(theta), np.cos(theta) * np.cos(phi)])
+        calculated_val = process_and_execute(device, tape)
+        reference_val = np.array(
+            [1 - np.cos(theta) ** 2, 1 - np.cos(theta) ** 2 * np.cos(phi) ** 2]
+        )
 
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(calculated_val, reference_val, tol)
+        tol = 1e-5 if device.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
         "Obs, Op, expected_fn",
@@ -130,44 +128,48 @@ class TestExpval:
             (
                 [qml.PauliX(wires=[0]), qml.PauliX(wires=[1])],
                 qml.RY,
-                lambda theta, phi: np.array([np.sin(theta) * np.sin(phi), np.sin(phi)]),
+                lambda theta, phi: np.array(
+                    [1 - np.sin(theta) ** 2 * np.sin(phi) ** 2, 1 - np.sin(phi) ** 2]
+                ),
             ),
             (
                 [qml.PauliY(wires=[0]), qml.PauliY(wires=[1])],
                 qml.RX,
-                lambda theta, phi: np.array([0, -np.cos(theta) * np.sin(phi)]),
+                lambda theta, phi: np.array([1, 1 - np.cos(theta) ** 2 * np.sin(phi) ** 2]),
             ),
             (
                 [qml.PauliZ(wires=[0]), qml.PauliZ(wires=[1])],
                 qml.RX,
-                lambda theta, phi: np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]),
+                lambda theta, phi: np.array(
+                    [1 - np.cos(theta) ** 2, 1 - np.cos(theta) ** 2 * np.cos(phi) ** 2]
+                ),
             ),
             (
                 [qml.Hadamard(wires=[0]), qml.Hadamard(wires=[1])],
                 qml.RY,
                 lambda theta, phi: np.array(
                     [
-                        np.sin(theta) * np.sin(phi) + np.cos(theta),
-                        np.cos(theta) * np.cos(phi) + np.sin(phi),
+                        1 - (np.sin(theta) * np.sin(phi) + np.cos(theta)) ** 2 / 2,
+                        1 - (np.cos(theta) * np.cos(phi) + np.sin(phi)) ** 2 / 2,
                     ]
-                )
-                / np.sqrt(2),
+                ),
             ),
         ],
     )
-    def test_single_wire_observables_expectation(self, Obs, Op, expected_fn, theta, phi, tol, dev):
-        """Test that expectation values for single wire observables are correct"""
+    def test_single_wire_observables_variance(self, Obs, Op, expected_fn, theta, phi, dev):
+        """Test that variance values for single wire observables are correct"""
 
         tape = qml.tape.QuantumScript(
             [Op(theta, wires=[0]), Op(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            [qml.expval(Obs[0]), qml.expval(Obs[1])],
+            [qml.var(Obs[0]), qml.var(Obs[1])],
         )
         result = process_and_execute(dev, tape)
         expected = expected_fn(theta, phi)
 
-        assert np.allclose(result, expected, tol)
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(result, expected, atol=tol, rtol=0)
 
-    def test_hermitian_expectation(self, theta, phi, tol, dev):
+    def test_hermitian_variance(self, theta, phi, dev):
         """Tests an Hermitian operator."""
 
         with qml.tape.QuantumTape() as tape:
@@ -176,14 +178,15 @@ class TestExpval:
             qml.RX(theta + phi, wires=2)
 
             for idx in range(3):
-                qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
+                qml.var(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
-    def test_hamiltonian_expectation(self, theta, phi, tol, dev):
+    def test_hamiltonian_variance(self, theta, phi, dev):
         """Tests a Hamiltonian."""
 
         ham = qml.Hamiltonian(
@@ -196,19 +199,22 @@ class TestExpval:
             ],
         )
 
-        with qml.tape.QuantumTape() as tape:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(theta, wires=0)
             qml.RX(phi, wires=1)
             qml.RX(theta + phi, wires=2)
 
-            qml.expval(ham)
+            qml.var(ham)
 
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = calculate_reference(tape)
+        tape2 = QuantumScript(tape1.operations, [qml.var(qml.dot(ham.coeffs, ham.ops))])
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        calculated_val = process_and_execute(dev, tape1)
+        reference_val = calculate_reference(tape2)
 
-    def test_sparse_hamiltonian_expectation(self, theta, phi, tol, dev):
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
+
+    def test_sparse_hamiltonian_variance(self, theta, phi, dev):
         """Tests a Hamiltonian."""
 
         ham = qml.SparseHamiltonian(
@@ -224,16 +230,21 @@ class TestExpval:
             wires=[0, 1],
         )
 
-        with qml.tape.QuantumTape() as tape:
+        with qml.tape.QuantumTape() as tape1:
             qml.RX(theta, wires=0)
             qml.RX(phi, wires=1)
 
-            qml.expval(ham)
+            qml.var(ham)
 
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = calculate_reference(tape)
+        tape2 = QuantumScript(
+            tape1.operations, [qml.var(qml.Hermitian(ham.matrix(), wires=[0, 1]))]
+        )
 
-        assert np.allclose(calculated_val, reference_val, tol)
+        calculated_val = process_and_execute(dev, tape1)
+        reference_val = calculate_reference(tape2)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize("phi", PHI)
@@ -245,7 +256,7 @@ class TestOperatorArithmetic:
 
         tape = qml.tape.QuantumScript(
             [qml.RX(phi, wires=[0])],
-            [qml.expval(qml.s_prod(0.5, qml.PauliZ(0)))],
+            [qml.var(qml.s_prod(0.5, qml.PauliZ(0)))],
         )
 
         calculated_val = process_and_execute(dev, tape)
@@ -260,7 +271,7 @@ class TestOperatorArithmetic:
 
         tape = qml.tape.QuantumScript(
             [qml.RX(phi, wires=[0]), qml.Hadamard(wires=[1]), qml.PauliZ(wires=[1])],
-            [qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)))],
+            [qml.var(qml.prod(qml.PauliZ(0), qml.PauliX(1)))],
         )
 
         calculated_val = process_and_execute(dev, tape)
@@ -274,7 +285,7 @@ class TestOperatorArithmetic:
         """Tests the `Sum` class."""
         tape = qml.tape.QuantumScript(
             [qml.RX(phi, wires=[0]), qml.RX(-1.1 * phi, wires=[0])],
-            [qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1)))],
+            [qml.var(qml.sum(qml.PauliZ(0), qml.PauliX(1)))],
         )
 
         calculated_val = process_and_execute(dev, tape)
@@ -291,7 +302,7 @@ class TestOperatorArithmetic:
 
         tape = qml.tape.QuantumScript(
             [qml.RX(phi, wires=[0]), qml.RX(-1.1 * phi, wires=[0])],
-            [qml.expval(obs)],
+            [qml.var(obs)],
         )
 
         calculated_val = process_and_execute(dev, tape)
@@ -303,8 +314,8 @@ class TestOperatorArithmetic:
 
 
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
-class TestTensorExpval:
-    """Test tensor expectation values"""
+class TestTensorVar:
+    """Test tensor variances"""
 
     def test_PauliX_PauliY(self, theta, phi, varphi, dev, tol):
         """Tests a tensor product involving PauliX and PauliY."""
@@ -315,7 +326,7 @@ class TestTensorExpval:
             qml.RX(varphi, wires=[2])
             qml.CNOT(wires=[0, 1])
             qml.CNOT(wires=[1, 2])
-            qml.expval(qml.PauliX(0) @ qml.PauliY(2))
+            qml.var(qml.PauliX(0) @ qml.PauliY(2))
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -334,7 +345,7 @@ class TestTensorExpval:
             qml.RX(varphi, wires=[2])
             qml.CNOT(wires=[0, 1])
             qml.CNOT(wires=[1, 2])
-            qml.expval(qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2))
+            qml.var(qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2))
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)
@@ -352,7 +363,7 @@ class TestTensorExpval:
             qml.RX(varphi, wires=[2])
             qml.CNOT(wires=[0, 1])
             qml.CNOT(wires=[1, 2])
-            qml.expval(qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2))
+            qml.var(qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2))
 
         calculated_val = process_and_execute(dev, tape)
         reference_val = calculate_reference(tape)

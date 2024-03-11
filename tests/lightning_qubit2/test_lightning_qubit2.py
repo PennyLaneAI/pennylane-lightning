@@ -17,7 +17,7 @@ This module contains unit tests for the LightningQubit2 class
 # pylint: disable=too-many-arguments
 
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, THETA, PHI, VARPHI
 
 import numpy as np
 import pennylane as qml
@@ -44,9 +44,10 @@ if LightningDevice != LightningQubit:
 if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
-VARPHI = np.linspace(0.02, 1, 3)
+
+@pytest.fixture(params=[np.complex64, np.complex128])
+def dev(request):
+    return LightningQubit2(wires=3, c_dtype=request.param)
 
 
 class TestHelpers:
@@ -101,10 +102,6 @@ class TestInitialization:
 
 class TestExecution:
     """Unit tests for executing quantum tapes on LightningQubit2"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit2(wires=3, c_dtype=request.param)
 
     @staticmethod
     def calculate_reference(tape):
@@ -284,10 +281,6 @@ class TestExecution:
 
 class TestDerivatives:
     """Unit tests for calculating derivatives with LightningQubit2"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit2(wires=3, c_dtype=request.param)
 
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):
