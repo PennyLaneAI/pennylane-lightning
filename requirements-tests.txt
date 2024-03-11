@@ -3,4 +3,4 @@ pytest-cov
 pytest-mock
 flaky
 pytest-benchmark
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@v0.35.1-rc
