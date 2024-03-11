@@ -1,8 +1,16 @@
 # Release 0.35.1
 
+### Improvements
+
+* Use the `adjoint` gate parameter to apply `qml.Adjoint` operations instead of matrix methods in `lightning.qubit`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
 ### Bug fixes
 
-* Fix finite shots support in `lightning.qubit`, `lightning.gpu` and `lightning.kokkos`.
+* Fix `qml.Adjoint` support in `lightning.gpu` and `lightning.kokkos`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+* Fix finite shots support in `lightning.qubit`, `lightning.gpu` and `lightning.kokkos`. The bug would impact calculations with measurements on observables with non-trivial diagonalizing gates and calculations with shot vectors.
   [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
 
 ### Contributors
