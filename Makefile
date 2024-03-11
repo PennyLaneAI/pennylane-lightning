@@ -37,7 +37,7 @@ help:
 	@echo "                           Default: lightning.qubit"
 	@echo "  coverage [device=?]      to generate a coverage report for python interface"
 	@echo "                           Default: lightning.qubit"
-	@echo "  coverage-cpp [backend=?] to generate a coverage report for python interface"
+	@echo "  coverage-cpp [backend=?] to generate a coverage report for C++ interface"
 	@echo "                           Default: lightning_qubit"
 	@echo "  format [check=1]         to apply C++ and Python formatter;"
 	@echo "                           use with 'check=1' to check instead of modify (requires black and clang-format)"
