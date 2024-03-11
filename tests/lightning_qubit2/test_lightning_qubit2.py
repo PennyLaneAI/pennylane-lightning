@@ -590,7 +590,9 @@ class TestTapeBatch:
         jacs = device.compute_derivatives([qs1, qs2])
 
         expected1 = (-np.cos(phi), -3 * np.sin(phi))
-        expected2 = 0.0
+        x1 = -np.cos(phi / 2) * np.sin(phi / 2) / 2
+        x2 = np.sin(phi / 2) * np.cos(phi / 2) / 2
+        expected2 = sum([x1, -x2, -x1, x2])  # zero
         expected = (expected1, expected2)
 
         assert len(jacs) == len(expected)
@@ -628,7 +630,7 @@ class TestTapeBatch:
         expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
         x1 = np.cos(phi / 2) ** 2 / 2
         x2 = np.sin(phi / 2) ** 2 / 2
-        expected2 = sum([x1, -x2, -x1, x2])
+        expected2 = sum([x1, -x2, -x1, x2])  # zero
         expected = (expected1, expected2)
 
         assert len(results) == len(expected)
@@ -639,7 +641,9 @@ class TestTapeBatch:
 
         # Assert derivatives
         expected_jac1 = (-np.cos(phi), -3 * np.sin(phi))
-        expected_jac2 = 0.0
+        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
+        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
+        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
         expected_jac = (expected_jac1, expected_jac2)
 
         assert len(jacs) == len(expected_jac)
