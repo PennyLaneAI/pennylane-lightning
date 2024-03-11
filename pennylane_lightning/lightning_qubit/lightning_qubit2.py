@@ -103,7 +103,7 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
     """
     res = simulate(circuit, state)
     jacobian = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
-    return [res, jacobian]
+    return res, jacobian
 
 
 _operations = frozenset(

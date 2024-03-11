@@ -14,38 +14,34 @@
 """
 This module contains unit tests for the LightningQubit2 class
 """
+# pylint: disable=too-many-arguments
 
 import pytest
+from conftest import LightningDevice  # tested device
 
 import numpy as np
 import pennylane as qml
+from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionConfig
+from pennylane.tape import QuantumScript
+
 from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     accepted_observables,
-    jacobian,
-    simulate,
-    simulate_and_jacobian,
     stopping_condition,
     decompose,
     validate_device_wires,
-    decompose,
     validate_measurements,
     validate_observables,
     no_sampling,
 )
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionConfig
-from pennylane.tape import QuantumScript
 
-from conftest import LightningDevice  # tested device
 
 # TODO: Change this to point to LightningQubit2 after it's available as an installable
 # device separate from LightningQubit
 if LightningDevice != LightningQubit:
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
-if not LightningQubit2._CPP_BINARY_AVAILABLE:
+if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
@@ -218,9 +214,9 @@ class TestExecution:
         "mp",
         [
             qml.probs(wires=[1, 2]),
-            qml.probs(op=qml.PauliZ(2)),
-            qml.expval(qml.PauliZ(2)),
-            qml.var(qml.PauliX(2)),
+            qml.probs(op=qml.Z(2)),
+            qml.expval(qml.Z(2)),
+            qml.var(qml.X(2)),
         ],
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
@@ -243,16 +239,16 @@ class TestExecution:
         "mp1",
         [
             qml.probs(wires=[1, 2]),
-            qml.expval(qml.PauliZ(2)),
-            qml.var(qml.PauliX(2)),
+            qml.expval(qml.Z(2)),
+            qml.var(qml.X(2)),
         ],
     )
     @pytest.mark.parametrize(
         "mp2",
         [
-            qml.probs(op=qml.PauliX(2)),
-            qml.expval(qml.PauliY(2)),
-            qml.var(qml.PauliY(2)),
+            qml.probs(op=qml.X(2)),
+            qml.expval(qml.Y(2)),
+            qml.var(qml.Y(2)),
         ],
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
@@ -275,9 +271,7 @@ class TestExecution:
     @pytest.mark.parametrize("phi", PHI)
     def test_basic_circuit(self, dev, phi):
         """Test execution with a basic circuit without preprocessing"""
-        qs = QuantumScript(
-            [qml.RX(phi, wires=0)], [qml.expval(qml.PauliY(0)), qml.expval(qml.PauliZ(0))]
-        )
+        qs = QuantumScript([qml.RX(phi, wires=0)], [qml.expval(qml.Y(0)), qml.expval(qml.Z(0))])
 
         result = dev.execute(qs)
 
@@ -287,22 +281,269 @@ class TestExecution:
         assert np.allclose(result[0], -np.sin(phi))
         assert np.allclose(result[1], np.cos(phi))
 
+
+class TestDerivatives:
+    """Unit tests for calculating derivatives with LightningQubit2"""
+
+    @pytest.fixture(params=[np.complex64, np.complex128])
+    def dev(self, request):
+        return LightningQubit2(wires=3, c_dtype=request.param)
+
+    @staticmethod
+    def calculate_reference(tape, execute_and_derivatives=False):
+        device = DefaultQubit(max_workers=1)
+        program, _ = device.preprocess()
+        tapes, transf_fn = program([tape])
+
+        if execute_and_derivatives:
+            results, jac = device.execute_and_compute_derivatives(tapes)
+        else:
+            results = device.execute(tapes)
+            jac = device.compute_derivatives(tapes)
+        return transf_fn(results), jac
+
+    @staticmethod
+    def process_and_execute(dev, tape, execute_and_derivatives=False):
+        program, _ = dev.preprocess()
+        tapes, transf_fn = program([tape])
+
+        if execute_and_derivatives:
+            results, jac = dev.execute_and_compute_derivatives(tapes)
+        else:
+            results = dev.execute(tapes)
+            jac = dev.compute_derivatives(tapes)
+        return transf_fn(results), jac
+
+    # Test supports derivative + xfail tests
+
+    @pytest.mark.parametrize(
+        "config, tape, expected",
+        [
+            (None, None, True),
+            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(gradient_method="backprop"), None, False),
+            (
+                ExecutionConfig(gradient_method="backprop"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                False,
+            ),
+            (ExecutionConfig(gradient_method="best"), None, True),
+            (ExecutionConfig(gradient_method="adjoint"), None, True),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                True,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.Z(0))]),
+                False,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))], shots=10),
+                False,
+            ),
+        ],
+    )
+    def test_supports_derivatives(self, dev, config, tape, expected):
+        """Test that supports_derivative returns the correct boolean value."""
+        assert dev.supports_derivatives(config, tape) == expected
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.Z(1),
+            qml.s_prod(2.5, qml.Z(0)),
+            qml.prod(qml.Z(0), qml.X(1)),
+            qml.sum(qml.Z(1), qml.X(1)),
+        ],
+    )
+    def test_derivatives_single_expval(self, theta, phi, dev, obs):
+        """Test that the jacobian is correct when a tape has a single expectation value"""
+        qs = QuantumScript(
+            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
+            [qml.expval(obs)],
+            trainable_params=[0, 1],
+        )
+
+        res, jac = self.process_and_execute(dev, qs)
+        expected, expected_jac = self.calculate_reference(qs)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
+    @pytest.mark.parametrize(
+        "obs1",
+        [qml.Z(1), qml.s_prod(2.5, qml.Y(2))],
+    )
+    @pytest.mark.parametrize(
+        "obs2",
+        [qml.prod(qml.Y(0), qml.X(2)), qml.sum(qml.Z(1), qml.X(1))],
+    )
+    def test_derivatives_multi_expval(self, theta, phi, omega, dev, obs1, obs2, tol):
+        """Test that the jacobian is correct when a tape has multiple expectation values"""
+        qs = QuantumScript(
+            [
+                qml.RX(theta, 0),
+                qml.CNOT([0, 1]),
+                qml.RY(phi, 1),
+                qml.CNOT([1, 2]),
+                qml.RZ(omega, 2),
+            ],
+            [qml.expval(obs1), qml.expval(obs2)],
+            trainable_params=[0, 1, 2],
+        )
+
+        res, jac = self.process_and_execute(dev, qs)
+        expected, expected_jac = self.calculate_reference(qs)
+        res = res[0]
+        jac = jac[0]
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 2
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    def test_derivatives_no_trainable_params(self, dev):
+        """Test that the derivatives are empty with there are no trainable parameters."""
+        qs = QuantumScript(
+            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
+        )
+        res, jac = self.process_and_execute(dev, qs)
+        expected, _ = self.calculate_reference(qs)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert jac == (np.array([]),)
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.Z(1),
+            qml.s_prod(2.5, qml.Z(0)),
+            qml.prod(qml.Z(0), qml.X(1)),
+            qml.sum(qml.Z(1), qml.X(1)),
+        ],
+    )
+    def test_execute_and_derivatives_single_expval(self, theta, phi, dev, obs, tol):
+        """Test that the result and jacobian is correct when a tape has a single
+        expectation value"""
+        qs = QuantumScript(
+            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
+            [qml.expval(obs)],
+            trainable_params=[0, 1],
+        )
+
+        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
+        expected, expected_jac = self.calculate_reference(qs, execute_and_derivatives=True)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac)
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
+    @pytest.mark.parametrize(
+        "obs1",
+        [qml.Z(1), qml.s_prod(2.5, qml.Y(2))],
+    )
+    @pytest.mark.parametrize(
+        "obs2",
+        [qml.prod(qml.Y(0), qml.X(2)), qml.sum(qml.Z(1), qml.X(1))],
+    )
+    def test_execute_and_derivatives_multi_expval(self, theta, phi, omega, dev, obs1, obs2, tol):
+        """Test that the result and jacobian is correct when a tape has multiple
+        expectation values"""
+        qs = QuantumScript(
+            [
+                qml.RX(theta, 0),
+                qml.CNOT([0, 1]),
+                qml.RY(phi, 1),
+                qml.CNOT([1, 2]),
+                qml.RZ(omega, 2),
+            ],
+            [qml.expval(obs1), qml.expval(obs2)],
+            trainable_params=[0, 1, 2],
+        )
+
+        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
+        expected, expected_jac = self.calculate_reference(qs, execute_and_derivatives=True)
+        res = res[0]
+        jac = jac[0]
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 2
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    def test_execute_and_derivatives_no_trainable_params(self, dev):
+        """Test that the derivatives are empty with there are no trainable parameters."""
+        qs = QuantumScript(
+            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
+        )
+        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
+        expected, _ = self.calculate_reference(qs, execute_and_derivatives=True)
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert jac == (np.array([]),)
+
+    def test_state_jacobian_not_supported(self, dev):
+        """Test that an error is raised if derivatives are requested for state measurement"""
+        qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="This method does not support statevector return type"
+        ):
+            _ = dev.compute_derivatives(qs)
+
+        with pytest.raises(
+            qml.QuantumFunctionError, match="This method does not support statevector return type"
+        ):
+            _ = dev.execute_and_compute_derivatives(qs)
+
+    def test_shots_warning_with_derivatives(self, dev):
+        """Test that a warning is raised if derivatives are requested when the tape has shots"""
+        qs = QuantumScript(
+            [qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0]
+        )
+
+        with pytest.warns(
+            UserWarning, match="Requested adjoint differentiation to be computed with finite shots"
+        ):
+            _ = dev.compute_derivatives(qs)
+
+        with pytest.warns(
+            UserWarning, match="Requested adjoint differentiation to be computed with finite shots"
+        ):
+            _ = dev.execute_and_compute_derivatives(qs)
+
+
+class TestTapeBatch:
+    """Tests for executing and computing derivatives of a batch of tapes"""
+
     @pytest.mark.parametrize("phi", PHI)
     def test_execute_tape_batch(self, phi):
         """Test that results are expected with a batch of tapes wiht custom wire labels"""
         device = LightningQubit2(wires=["a", "b", "target", -3])
 
         ops = [
-            qml.PauliX("a"),
-            qml.PauliX("b"),
+            qml.X("a"),
+            qml.X("b"),
             qml.ctrl(qml.RX(phi, "target"), ("a", "b", -3), control_values=[1, 1, 0]),
         ]
 
         qs1 = qml.tape.QuantumScript(
             ops,
             [
-                qml.expval(qml.sum(qml.PauliY("target"), qml.PauliZ("b"))),
-                qml.expval(qml.s_prod(3, qml.PauliZ("target"))),
+                qml.expval(qml.sum(qml.Y("target"), qml.Z("b"))),
+                qml.expval(qml.s_prod(3, qml.Z("target"))),
             ],
         )
 
@@ -323,83 +564,13 @@ class TestExecution:
         assert qml.math.allclose(results[0][1], expected[0][1])
         assert qml.math.allclose(results[1], expected[1])
 
-
-class TestDerivatives:
-    """Unit tests for calculating derivatives with LightningQubit2"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return LightningQubit2(wires=3, c_dtype=request.param)
-
-    @staticmethod
-    def calculate_reference(tape):
-        device = DefaultQubit(max_workers=1)
-        program, _ = device.preprocess()
-        tapes, transf_fn = program([tape])
-        results = device.execute(tapes)
-        return transf_fn(results)
-
-    @staticmethod
-    def process_and_execute(dev, tape):
-        program, _ = dev.preprocess()
-        tapes, transf_fn = program([tape])
-        results = dev.execute(tapes)
-        return transf_fn(results)
-
-    # Test supports derivative + xfail tests
-
-    @pytest.mark.parametrize(
-        "config, tape, expected",
-        [
-            (None, None, True),
-            (DefaultExecutionConfig, None, False),
-            (ExecutionConfig(gradient_method="backprop"), None, False),
-            (
-                ExecutionConfig(gradient_method="backprop"),
-                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.PauliZ(0))]),
-                False,
-            ),
-            (ExecutionConfig(gradient_method="best"), None, True),
-            (ExecutionConfig(gradient_method="adjoint"), None, True),
-            (
-                ExecutionConfig(gradient_method="adjoint"),
-                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.PauliZ(0))]),
-                True,
-            ),
-            (
-                ExecutionConfig(gradient_method="adjoint"),
-                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.PauliZ(0))]),
-                False,
-            ),
-            (
-                ExecutionConfig(gradient_method="adjoint"),
-                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.PauliZ(0))], shots=10),
-                False,
-            ),
-        ],
-    )
-    def test_supports_derivatives(self, dev, config, tape, expected):
-        """Test that supports_derivative returns the correct boolean value."""
-        assert dev.supports_derivatives(config, tape) == expected
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_derivative_single_expval(self, theta, phi, dev):
-        """Test that the jacobian is correct when a tape has a single expectation value"""
+    def test_derivatives_tape_batch(self):
+        """Test that results are correct when we compute derivatives for a batch of tapes."""
+        # device = LightningQubit2(wires=4)
         assert True
 
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_derivative_multi_expval(self, theta, phi, dev):
-        """Test that the jacobian is correct when a tape has multiple expectation values"""
-        assert True
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_execute_and_derivative_single_expval(self, theta, phi, dev):
-        """Test that the result and jacobian is correct when a tape has a single
-        expectation value"""
-        assert True
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    def test_execute_and_derivative_multi_expval(self, theta, phi, dev):
-        """Test that the result and jacobian is correct when a tape has multiple
-        expectation values"""
+    def test_execute_and_derivatives_tape_batch(self):
+        """Test that results are correct when we execute and compute derivatives for a batch
+        of tapes."""
+        # device = LightningQubit2(wires=4)
         assert True
