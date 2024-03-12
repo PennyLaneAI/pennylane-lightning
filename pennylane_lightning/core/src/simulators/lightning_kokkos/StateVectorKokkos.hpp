@@ -870,7 +870,7 @@ class StateVectorKokkos final
      * keywords.
      */
     void init_gates_indices_() {
-        for (auto &pair : Pennylane::Gates::Constant::gate_names) {
+        for (const auto &pair : Pennylane::Gates::Constant::gate_names) {
             gates_indices_[std::string{pair.second}] = pair.first;
         }
     }
@@ -881,7 +881,7 @@ class StateVectorKokkos final
      * enumeration keywords.
      */
     void init_generators_indices_() {
-        for (auto &pair : Pennylane::Gates::Constant::generator_names) {
+        for (const auto &pair : Pennylane::Gates::Constant::generator_names) {
             generators_indices_[std::string{pair.second.substr(9)}] =
                 pair.first;
         }
