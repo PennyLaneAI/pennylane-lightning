@@ -34,7 +34,6 @@ def dev(request):
     return LightningQubit2(wires=3, c_dtype=request.param)
 
 
-@staticmethod
 def calculate_reference(tape):
     dev = qml.device("default.qubit", max_workers=1)
     program, _ = dev.preprocess()
@@ -43,7 +42,6 @@ def calculate_reference(tape):
     return transf_fn(results)
 
 
-@staticmethod
 def process_and_execute(dev, tape):
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])

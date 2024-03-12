@@ -24,7 +24,6 @@ from pennylane.devices.modifiers import single_tape_support, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
     validate_device_wires,
-    decompose,
     validate_measurements,
     validate_observables,
     no_sampling,
@@ -102,8 +101,8 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     res = simulate(circuit, state)
-    jacobian = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
-    return res, jacobian
+    jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    return res, jac
 
 
 _operations = frozenset(

@@ -353,7 +353,8 @@ class TestDerivatives:
             qml.sum(qml.Z(1), qml.X(1)),
         ],
     )
-    def test_derivatives_single_expval(self, theta, phi, dev, obs):
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_derivatives_single_expval(self, theta, phi, dev, obs, execute_and_derivatives):
         """Test that the jacobian is correct when a tape has a single expectation value"""
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
@@ -361,8 +362,12 @@ class TestDerivatives:
             trainable_params=[0, 1],
         )
 
-        res, jac = self.process_and_execute(dev, qs)
-        expected, expected_jac = self.calculate_reference(qs)
+        res, jac = self.process_and_execute(
+            dev, qs, execute_and_derivatives=execute_and_derivatives
+        )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
+        )
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert len(res) == len(jac) == 1
@@ -378,7 +383,10 @@ class TestDerivatives:
         "obs2",
         [qml.prod(qml.Y(0), qml.X(2)), qml.sum(qml.Z(1), qml.X(1))],
     )
-    def test_derivatives_multi_expval(self, theta, phi, omega, dev, obs1, obs2, tol):
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_derivatives_multi_expval(
+        self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives
+    ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
         qs = QuantumScript(
             [
@@ -392,8 +400,12 @@ class TestDerivatives:
             trainable_params=[0, 1, 2],
         )
 
-        res, jac = self.process_and_execute(dev, qs)
-        expected, expected_jac = self.calculate_reference(qs)
+        res, jac = self.process_and_execute(
+            dev, qs, execute_and_derivatives=execute_and_derivatives
+        )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
+        )
         res = res[0]
         jac = jac[0]
 
@@ -402,90 +414,20 @@ class TestDerivatives:
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
-    def test_derivatives_no_trainable_params(self, dev):
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_derivatives_no_trainable_params(self, dev, execute_and_derivatives):
         """Test that the derivatives are empty with there are no trainable parameters."""
         qs = QuantumScript(
             [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
         )
-        res, jac = self.process_and_execute(dev, qs)
-        expected, _ = self.calculate_reference(qs)
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert jac == (np.array([]),)
-
-    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize(
-        "obs",
-        [
-            qml.Z(1),
-            qml.s_prod(2.5, qml.Z(0)),
-            qml.prod(qml.Z(0), qml.X(1)),
-            qml.sum(qml.Z(1), qml.X(1)),
-        ],
-    )
-    def test_execute_and_derivatives_single_expval(self, theta, phi, dev, obs, tol):
-        """Test that the result and jacobian is correct when a tape has a single
-        expectation value"""
-        qs = QuantumScript(
-            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
-            [qml.expval(obs)],
-            trainable_params=[0, 1],
+        res, jac = self.process_and_execute(
+            dev, qs, execute_and_derivatives=execute_and_derivatives
         )
-
-        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
-        expected, expected_jac = self.calculate_reference(qs, execute_and_derivatives=True)
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac)
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
-
-    @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
-    @pytest.mark.parametrize(
-        "obs1",
-        [qml.Z(1), qml.s_prod(2.5, qml.Y(2))],
-    )
-    @pytest.mark.parametrize(
-        "obs2",
-        [qml.prod(qml.Y(0), qml.X(2)), qml.sum(qml.Z(1), qml.X(1))],
-    )
-    def test_execute_and_derivatives_multi_expval(self, theta, phi, omega, dev, obs1, obs2, tol):
-        """Test that the result and jacobian is correct when a tape has multiple
-        expectation values"""
-        qs = QuantumScript(
-            [
-                qml.RX(theta, 0),
-                qml.CNOT([0, 1]),
-                qml.RY(phi, 1),
-                qml.CNOT([1, 2]),
-                qml.RZ(omega, 2),
-            ],
-            [qml.expval(obs1), qml.expval(obs2)],
-            trainable_params=[0, 1, 2],
-        )
-
-        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
-        expected, expected_jac = self.calculate_reference(qs, execute_and_derivatives=True)
-        res = res[0]
-        jac = jac[0]
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-        assert len(res) == len(jac) == 2
-        assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
-
-    def test_execute_and_derivatives_no_trainable_params(self, dev):
-        """Test that the derivatives are empty with there are no trainable parameters."""
-        qs = QuantumScript(
-            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
-        )
-        res, jac = self.process_and_execute(dev, qs, execute_and_derivatives=True)
-        expected, _ = self.calculate_reference(qs, execute_and_derivatives=True)
+        expected, _ = self.calculate_reference(qs, execute_and_derivatives=execute_and_derivatives)
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert jac == (np.array([]),)
+        assert jac == (np.array([]).astype(dev.c_dtype),)
 
     def test_state_jacobian_not_supported(self, dev):
         """Test that an error is raised if derivatives are requested for state measurement"""
