@@ -15,25 +15,26 @@ r"""
 Helper functions for serializing quantum tapes.
 """
 from typing import List, Tuple
+
 import numpy as np
 from pennylane import (
     BasisState,
+    DeviceError,
     Hadamard,
+    Hamiltonian,
+    Identity,
     PauliX,
     PauliY,
     PauliZ,
-    Identity,
-    StatePrep,
-    Rot,
-    Hamiltonian,
-    SparseHamiltonian,
     QubitUnitary,
+    Rot,
+    SparseHamiltonian,
+    StatePrep,
+    matrix,
 )
+from pennylane.math import unwrap
 from pennylane.operation import Tensor
 from pennylane.tape import QuantumTape
-from pennylane.math import unwrap
-
-from pennylane import matrix, DeviceError
 
 pauli_name_map = {
     "I": "Identity",
@@ -49,6 +50,8 @@ class QuantumScriptSerializer:
     Args:
     device_name: device shortname.
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
+    use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
+    split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
     """
 
@@ -171,26 +174,26 @@ class QuantumScriptSerializer:
             )
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
-    def _named_obs(self, observable, wires_map: dict):
+    def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""
-        wires = [wires_map[w] for w in observable.wires]
+        wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
         if observable.name == "Identity":
             wires = wires[:1]
         return self.named_obs(observable.name, wires)
 
-    def _hermitian_ob(self, observable, wires_map: dict):
+    def _hermitian_ob(self, observable, wires_map: dict = None):
         """Serializes a Hermitian observable"""
         assert not isinstance(observable, Tensor)
 
-        wires = [wires_map[w] for w in observable.wires]
+        wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 
-    def _tensor_ob(self, observable, wires_map: dict):
+    def _tensor_ob(self, observable, wires_map: dict = None):
         """Serialize a tensor observable"""
         assert isinstance(observable, Tensor)
         return self.tensor_obs([self._ob(obs, wires_map) for obs in observable.obs])
 
-    def _hamiltonian(self, observable, wires_map: dict):
+    def _hamiltonian(self, observable, wires_map: dict = None):
         coeffs = np.array(unwrap(observable.coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in observable.ops]
 
@@ -199,7 +202,7 @@ class QuantumScriptSerializer:
 
         return self.hamiltonian_obs(coeffs, terms)
 
-    def _sparse_hamiltonian(self, observable, wires_map: dict):
+    def _sparse_hamiltonian(self, observable, wires_map: dict = None):
         """Serialize an observable (Sparse Hamiltonian)
 
         Args:
@@ -214,7 +217,7 @@ class QuantumScriptSerializer:
             Hmat = Hamiltonian([1.0], [Identity(0)]).sparse_matrix()
             H_sparse = SparseHamiltonian(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()
-            # Only root 0 needs the overall sparsematrix data
+            # Only root 0 needs the overall sparse matrix data
             if self._mpi_manager().getRank() == 0:
                 spm = observable.sparse_matrix()
             self._mpi_manager().Barrier()
@@ -224,26 +227,28 @@ class QuantumScriptSerializer:
         indices = np.array(spm.indices).astype(np.int64)
         offsets = np.array(spm.indptr).astype(np.int64)
 
-        wires = []
-        wires_list = observable.wires.tolist()
-        wires.extend([wires_map[w] for w in wires_list])
+        wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
 
         return self.sparse_hamiltonian_obs(data, indices, offsets, wires)
 
-    def _pauli_word(self, observable, wires_map: dict):
+    def _pauli_word(self, observable, wires_map: dict = None):
         """Serialize a :class:`pennylane.pauli.PauliWord` into a Named or Tensor observable."""
+
+        def map_wire(wire: int):
+            return wires_map[wire] if wires_map else wire
+
         if len(observable) == 1:
             wire, pauli = list(observable.items())[0]
-            return self.named_obs(pauli_name_map[pauli], [wires_map[wire]])
+            return self.named_obs(pauli_name_map[pauli], [map_wire(wire)])
 
         return self.tensor_obs(
             [
-                self.named_obs(pauli_name_map[pauli], [wires_map[wire]])
+                self.named_obs(pauli_name_map[pauli], [map_wire(wire)])
                 for wire, pauli in observable.items()
             ]
         )
 
-    def _pauli_sentence(self, observable, wires_map: dict):
+    def _pauli_sentence(self, observable, wires_map: dict = None):
         """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
         pwords, coeffs = zip(*observable.items())
         terms = [self._pauli_word(pw, wires_map) for pw in pwords]
@@ -254,7 +259,7 @@ class QuantumScriptSerializer:
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access
-    def _ob(self, observable, wires_map):
+    def _ob(self, observable, wires_map: dict = None):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
         if isinstance(observable, Tensor):
             return self._tensor_ob(observable, wires_map)
@@ -268,7 +273,7 @@ class QuantumScriptSerializer:
             return self._pauli_sentence(observable._pauli_rep, wires_map)
         return self._hermitian_ob(observable, wires_map)
 
-    def serialize_observables(self, tape: QuantumTape, wires_map: dict) -> List:
+    def serialize_observables(self, tape: QuantumTape, wires_map: dict = None) -> List:
         """Serializes the observables of an input tape.
 
         Args:
@@ -294,7 +299,7 @@ class QuantumScriptSerializer:
         return serialized_obs, offset_indices
 
     def serialize_ops(
-        self, tape: QuantumTape, wires_map: dict
+        self, tape: QuantumTape, wires_map: dict = None
     ) -> Tuple[
         List[List[str]],
         List[np.ndarray],
@@ -348,7 +353,7 @@ class QuantumScriptSerializer:
                 wires_list = single_op.wires.tolist()
                 controlled_wires_list = []
                 control_values_list = []
-            return single_op, name, wires_list, controlled_wires_list, control_values_list
+            return single_op, name, list(wires_list), controlled_wires_list, control_values_list
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -381,8 +386,12 @@ class QuantumScriptSerializer:
                     mats.append([])
 
                 controlled_values.append(controlled_values_list)
-                controlled_wires.append([wires_map[w] for w in controlled_wires_list])
-                wires.append([wires_map[w] for w in wires_list])
+                controlled_wires.append(
+                    [wires_map[w] for w in controlled_wires_list]
+                    if wires_map
+                    else list(controlled_wires_list)
+                )
+                wires.append([wires_map[w] for w in wires_list] if wires_map else wires_list)
 
         inverses = [False] * len(names)
         return (

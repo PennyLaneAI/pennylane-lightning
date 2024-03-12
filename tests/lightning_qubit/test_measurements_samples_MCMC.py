@@ -14,16 +14,12 @@
 """
 Unit tests for MCMC sampling in lightning.qubit.
 """
+import numpy as np
+import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
 
-import numpy as np
-import pennylane as qml
-
-import pytest
-
 from pennylane_lightning.lightning_qubit import LightningQubit
-
 
 if not LightningQubit._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

@@ -1,6 +1,7 @@
 pytest~=8.0.0
+pytest-benchmark
 pytest-cov
 pytest-mock
+pytest-xdist
 flaky
-pytest-benchmark
-git+https://github.com/PennyLaneAI/pennylane.git@v0.35.1-rc
+git+https://github.com/PennyLaneAI/pennylane.git@master

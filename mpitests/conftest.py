@@ -18,10 +18,10 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 
 import itertools
 import os
-import pytest
 
-from pennylane import numpy as np
 import pennylane as qml
+import pytest
+from pennylane import numpy as np
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False

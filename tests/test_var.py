@@ -14,11 +14,10 @@
 """
 Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` device.
 """
-import pytest
-from conftest import THETA, PHI, VARPHI
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import PHI, THETA, VARPHI
 
 np.random.seed(42)
 

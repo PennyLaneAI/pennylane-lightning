@@ -1,3 +1,35 @@
+# Release 0.36.0-dev
+
+### New features since last release
+
+* Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
+  [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
+
+* Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
+  [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
+
+* Add LightningAdjointJacobian to support `lightning.qubit2`.
+  [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
+
+### Breaking changes
+
+### Improvements
+
+* Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
+  [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Vincent Michaud-Rioux
+
+---
+
 # Release 0.35.1
 
 ### Improvements
