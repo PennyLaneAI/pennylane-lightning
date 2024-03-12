@@ -100,6 +100,8 @@ if LK_CPP_BINARY_AVAILABLE:
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -146,8 +148,6 @@ if LK_CPP_BINARY_AVAILABLE:
         "QFT",
         "ECR",
         "BlockEncode",
-        "GlobalPhase",
-        "C(GlobalPhase)",
     }
 
     allowed_observables = {
