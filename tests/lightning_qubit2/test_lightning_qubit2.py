@@ -427,7 +427,8 @@ class TestDerivatives:
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert np.allclose(res, expected, atol=tol, rtol=0)
-        assert jac == (np.array([]).astype(dev.c_dtype),)
+        assert len(jac) == 1
+        assert qml.math.shape(jac[0]) == (0,)
 
     def test_state_jacobian_not_supported(self, dev):
         """Test that an error is raised if derivatives are requested for state measurement"""
