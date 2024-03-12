@@ -226,10 +226,13 @@ class LightningQubit2(Device):
     """PennyLane Lightning Qubit device."""
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
-
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
-
     _new_API = True
+
+    operations = _operations
+    """The names of the supported operations."""
+    observables = _observables
+    """The names of the supported observables."""
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -280,16 +283,6 @@ class LightningQubit2(Device):
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
-
-    @property
-    def operations(self) -> frozenset[str]:
-        """The names of the supported operations."""
-        return _operations
-
-    @property
-    def observables(self) -> frozenset[str]:
-        """The names of the supported observables."""
-        return _observables
 
     def _setup_execution_config(self, config):
         """

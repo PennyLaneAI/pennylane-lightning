@@ -1213,10 +1213,12 @@ class TestLightningDeviceIntegration:
 
         probs = circuit()
 
-        res_sv = dev.state
         if ld._new_API:
+            # pylint: disable=protected-access
+            res_sv = dev._statevector.state
             res_probs = probs
         else:
+            res_sv = dev.state
             res_probs = dev.probability([0, 1])
 
         expected_sv = np.array(
