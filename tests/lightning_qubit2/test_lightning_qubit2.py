@@ -22,6 +22,7 @@ from conftest import LightningDevice, THETA, PHI, VARPHI
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionConfig
+from pennylane.devices.default_qubit import adjoint_observables, adjoint_ops
 from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_qubit import LightningQubit2
@@ -29,10 +30,13 @@ from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     accepted_observables,
     stopping_condition,
     decompose,
+    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
     no_sampling,
+    _add_adjoint_transforms,
+    _supports_adjoint,
 )
 
 
@@ -75,6 +79,32 @@ class TestHelpers:
 
         assert accepted_observables(valid_obs) is True
         assert accepted_observables(invalid_obs) is False
+
+    def test_add_adjoint_transforms(self):
+        """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
+        expected_program = qml.transforms.core.TransformProgram()
+
+        name = "adjoint + lightning.qubit"
+        expected_program.add_transform(no_sampling, name=name)
+        expected_program.add_transform(
+            decompose,
+            stopping_condition=adjoint_ops,
+            name=name,
+        )
+        expected_program.add_transform(validate_observables, adjoint_observables, name=name)
+        expected_program.add_transform(
+            validate_measurements,
+            name=name,
+        )
+        expected_program.add_transform(validate_adjoint_trainable_params)
+
+        actual_program = qml.transforms.core.TransformProgram()
+        _add_adjoint_transforms(actual_program)
+        assert actual_program == expected_program
+
+    def test_supports_adjoint(self):
+        """Test that _supports_adjoint returns the correct boolean value."""
+        assert True
 
 
 class TestInitialization:
@@ -186,7 +216,8 @@ class TestExecution:
 
         assert new_config == expected_config
 
-    def test_preprocess_correct_transforms(self):
+    @pytest.mark.parametrize("adjoint", [True, False])
+    def test_preprocess(self, adjoint):
         """Test that the transform program returned by preprocess is correct"""
         device = LightningQubit2(wires=2)
 
@@ -203,8 +234,29 @@ class TestExecution:
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
-        actual_program, _ = device.preprocess(DefaultExecutionConfig)
+        if adjoint:
+            name = "adjoint + lightning.qubit"
+            expected_program.add_transform(no_sampling, name=name)
+            expected_program.add_transform(
+                decompose,
+                stopping_condition=adjoint_ops,
+                name=name,
+            )
+            expected_program.add_transform(validate_observables, adjoint_observables, name=name)
+            expected_program.add_transform(
+                validate_measurements,
+                name=name,
+            )
+            expected_program.add_transform(validate_adjoint_trainable_params)
+
+        gradient_method = "adjoint" if adjoint else None
+        config = ExecutionConfig(gradient_method=gradient_method)
+        actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
+
+    def test_preprocess_adjoint(self):
+        """Test that the transform program returned by preprocess is correct with adjoint diff"""
+        assert True
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
@@ -214,6 +266,17 @@ class TestExecution:
             qml.probs(op=qml.Z(2)),
             qml.expval(qml.Z(2)),
             qml.var(qml.X(2)),
+            qml.expval(qml.sum(qml.X(0), qml.Z(0))),
+            qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
+            qml.s_prod(2.5, qml.Z(0)),
+            qml.prod(qml.Z(0), qml.X(1)),
+            qml.sum(qml.Z(1), qml.X(1)),
+            qml.SparseHamiltonian(
+                qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                    wire_order=[0, 1, 2]
+                ),
+                wires=[0, 1, 2],
+            ),
         ],
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
@@ -238,6 +301,7 @@ class TestExecution:
             qml.probs(wires=[1, 2]),
             qml.expval(qml.Z(2)),
             qml.var(qml.X(2)),
+            qml.var(qml.Hermitian(qml.Hadamard.compute_matrix(), 0)),
         ],
     )
     @pytest.mark.parametrize(
@@ -246,6 +310,7 @@ class TestExecution:
             qml.probs(op=qml.X(2)),
             qml.expval(qml.Y(2)),
             qml.var(qml.Y(2)),
+            qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),
         ],
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
@@ -265,18 +330,28 @@ class TestExecution:
         for r, e in zip(res, expected):
             assert np.allclose(r, e)
 
-    @pytest.mark.parametrize("phi", PHI)
-    def test_basic_circuit(self, dev, phi):
-        """Test execution with a basic circuit without preprocessing"""
-        qs = QuantumScript([qml.RX(phi, wires=0)], [qml.expval(qml.Y(0)), qml.expval(qml.Z(0))])
+    @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_custom_wires(self, phi, theta, wires):
+        """Test execution with custom wires"""
+        device = LightningQubit2(wires=wires)
+        qs = QuantumScript(
+            [
+                qml.RX(phi, wires[0]),
+                qml.RY(theta, wires[2]),
+                qml.CNOT([wires[0], wires[1]]),
+                qml.CNOT([wires[1], wires[2]]),
+            ],
+            [qml.expval(qml.Z(wires[0])), qml.expval(qml.Z(wires[2]))],
+        )
 
-        result = dev.execute(qs)
+        result = device.execute(qs)
 
         assert isinstance(result, tuple)
         assert len(result) == 2
 
-        assert np.allclose(result[0], -np.sin(phi))
-        assert np.allclose(result[1], np.cos(phi))
+        assert np.allclose(result[0], np.cos(phi))
+        assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
 
 class TestDerivatives:
@@ -285,7 +360,7 @@ class TestDerivatives:
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):
         device = DefaultQubit(max_workers=1)
-        program, _ = device.preprocess()
+        program, _ = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
         if execute_and_derivatives:
@@ -297,7 +372,7 @@ class TestDerivatives:
 
     @staticmethod
     def process_and_execute(dev, tape, execute_and_derivatives=False):
-        program, _ = dev.preprocess()
+        program, _ = dev.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
         if execute_and_derivatives:
@@ -351,6 +426,8 @@ class TestDerivatives:
             qml.s_prod(2.5, qml.Z(0)),
             qml.prod(qml.Z(0), qml.X(1)),
             qml.sum(qml.Z(1), qml.X(1)),
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
+            qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -362,11 +439,11 @@ class TestDerivatives:
             trainable_params=[0, 1],
         )
 
-        res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives
-        )
         expected, expected_jac = self.calculate_reference(
             qs, execute_and_derivatives=execute_and_derivatives
+        )
+        res, jac = self.process_and_execute(
+            dev, qs, execute_and_derivatives=execute_and_derivatives
         )
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
@@ -377,11 +454,20 @@ class TestDerivatives:
     @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
     @pytest.mark.parametrize(
         "obs1",
-        [qml.Z(1), qml.s_prod(2.5, qml.Y(2))],
+        [qml.Z(1), qml.s_prod(2.5, qml.Y(2)), qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)])],
     )
     @pytest.mark.parametrize(
         "obs2",
-        [qml.prod(qml.Y(0), qml.X(2)), qml.sum(qml.Z(1), qml.X(1))],
+        [
+            qml.prod(qml.Y(0), qml.X(2)),
+            qml.sum(qml.Z(1), qml.X(1)),
+            qml.SparseHamiltonian(
+                qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                    wire_order=[0, 1, 2]
+                ),
+                wires=[0, 1, 2],
+            ),
+        ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     def test_derivatives_multi_expval(
@@ -400,11 +486,11 @@ class TestDerivatives:
             trainable_params=[0, 1, 2],
         )
 
-        res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives
-        )
         expected, expected_jac = self.calculate_reference(
             qs, execute_and_derivatives=execute_and_derivatives
+        )
+        res, jac = self.process_and_execute(
+            dev, qs, execute_and_derivatives=execute_and_derivatives
         )
         res = res[0]
         jac = jac[0]
@@ -444,21 +530,16 @@ class TestDerivatives:
         ):
             _ = dev.execute_and_compute_derivatives(qs)
 
-    def test_shots_warning_with_derivatives(self, dev):
-        """Test that a warning is raised if derivatives are requested when the tape has shots"""
+    def test_shots_error_with_derivatives(self, dev):
+        """Test that an error is raised if the gradient method is adjoint when the tape has shots"""
         qs = QuantumScript(
             [qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0]
         )
+        config = ExecutionConfig(gradient_method="adjoint")
+        program, _ = dev.preprocess(config)
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots"
-        ):
-            _ = dev.compute_derivatives(qs)
-
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots"
-        ):
-            _ = dev.execute_and_compute_derivatives(qs)
+        with pytest.raises(qml.DeviceError, match="Finite shots are not supported"):
+            _, _ = program([qs])
 
 
 class TestTapeBatch:

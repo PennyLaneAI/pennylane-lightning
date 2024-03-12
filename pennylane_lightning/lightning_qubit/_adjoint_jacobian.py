@@ -192,14 +192,6 @@ class LightningAdjointJacobian:
             The Jacobian of a tape.
         """
 
-        if tape.shots:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots. "
-                "The derivative is always exact when using the adjoint "
-                "differentiation method.",
-                UserWarning,
-            )
-
         tape_return_type = self._get_return_type(tape.measurements)
 
         if not tape_return_type:  # the tape does not have measurements
@@ -271,13 +263,6 @@ class LightningAdjointJacobian:
         Returns:
             The vector-Jacobian products of a tape.
         """
-        if tape.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots. "
-                "The derivative is always exact when using the adjoint differentiation "
-                "method.",
-                UserWarning,
-            )
 
         measurements = tape.measurements
         tape_return_type = self._get_return_type(measurements)

@@ -26,8 +26,8 @@ from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group
 
-if ld._new_API:
-    pytest.skip("Old API required", allow_module_level=True)
+# if ld._new_API:
+#     pytest.skip("Old API required", allow_module_level=True)
 
 I, X, Y, Z = (
     np.eye(2),
@@ -81,6 +81,7 @@ def Rz(theta):
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
 
@@ -642,6 +643,7 @@ class TestAdjointJacobianQNode:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_finite_shots_warning(self):
         """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
 
@@ -681,15 +683,19 @@ class TestAdjointJacobianQNode:
             return qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
 
         qnode1 = QNode(circuit, dev, diff_method="adjoint")
-        spy = mocker.spy(dev, "adjoint_jacobian")
+        if ld._new_API:
+            spy = mocker.spy(dev, "execute_and_compute_derivatives")
+            h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        else:
+            spy = mocker.spy(dev, "adjoint_jacobian")
+            h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         grad_fn = qml.grad(qnode1)
         grad_A = grad_fn(*args)
 
         spy.assert_called()
-
-        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         qnode2 = QNode(circuit, dev, diff_method="finite-diff", h=h)
         grad_fn = qml.grad(qnode2)
@@ -863,7 +869,10 @@ class TestAdjointJacobianQNode:
         zero_state = np.array([1.0, 0.0])
         cost(reused_p, other_p)
 
-        spy = mocker.spy(dev, "adjoint_jacobian")
+        if ld._new_API:
+            spy = mocker.spy(dev, "execute_and_compute_derivatives")
+        else:
+            spy = mocker.spy(dev, "adjoint_jacobian")
 
         # analytic gradient
         grad_fn = qml.grad(cost)
@@ -903,10 +912,14 @@ class TestAdjointJacobianQNode:
             qml.Rot(params[1], params[0], 2 * params[0], wires=[0])
             return qml.expval(qml.PauliX(0))
 
-        spy_analytic = mocker.spy(dev, "adjoint_jacobian")
-
-        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        if ld._new_API:
+            spy_analytic = mocker.spy(dev, "execute_and_compute_derivatives")
+            h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        else:
+            spy_analytic = mocker.spy(dev, "adjoint_jacobian")
+            h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         cost = QNode(circuit, dev, diff_method="finite-diff", h=h)
 
@@ -1506,9 +1519,7 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1544,15 +1555,16 @@ def test_diff_qubit_unitary(n_targets):
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
-    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+    if ld._new_API:
+        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+    else:
+        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

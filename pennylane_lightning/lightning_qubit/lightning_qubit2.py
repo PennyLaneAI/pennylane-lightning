@@ -20,9 +20,11 @@ import numpy as np
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops, adjoint_observables
 from pennylane.devices.modifiers import single_tape_support, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
+    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
@@ -62,6 +64,7 @@ def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
+    circuit = circuit.map_to_standard_wires()
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state).measure_final_state(circuit)
@@ -80,6 +83,8 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False)
     Returns:
         TensorLike: The Jacobian of the quantum script
     """
+    print("jacobian")
+    circuit = circuit.map_to_standard_wires()
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
@@ -100,6 +105,8 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
+    print("simulate_and_jacobian")
+    circuit = circuit.map_to_standard_wires()
     res = simulate(circuit, state)
     jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
     return res, jac
@@ -222,6 +229,47 @@ def stopping_condition(op: qml.operation.Operator) -> bool:
 def accepted_observables(obs: qml.operation.Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
+
+
+def _supports_adjoint(circuit):
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+        return False
+    return True
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.qubit"
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(
+        decompose,
+        stopping_condition=adjoint_ops,
+        name=name,
+    )
+    program.add_transform(validate_observables, adjoint_observables, name=name)
+    program.add_transform(
+        validate_measurements,
+        name=name,
+    )
+    program.add_transform(validate_adjoint_trainable_params)
 
 
 @simulator_tracking
@@ -351,21 +399,24 @@ class LightningQubit2(Device):
             return False
         if circuit is None:
             return True
-        return (
-            all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
-            and not circuit.shots
-        )
+        return _supports_adjoint(circuit=circuit)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        config = self._setup_execution_config(execution_config)
         program = TransformProgram()
+
         program.add_transform(validate_measurements, name=self.name)
+        # TODO: Remove no_sampling from preprocess after shots support is added
         program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(qml.defer_measurements, device=self)
         program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
         program.add_transform(qml.transforms.broadcast_expand)
-        return program, self._setup_execution_config(execution_config)
+
+        if config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, config
 
     def execute(
         self,
