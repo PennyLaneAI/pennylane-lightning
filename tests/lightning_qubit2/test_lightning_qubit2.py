@@ -22,7 +22,7 @@ from conftest import LightningDevice, THETA, PHI, VARPHI
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.default_qubit import adjoint_observables, adjoint_ops
+from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_qubit import LightningQubit2
@@ -36,7 +36,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     validate_observables,
     no_sampling,
     _add_adjoint_transforms,
-    _supports_adjoint,
+    adjoint_measurements,
 )
 
 
@@ -91,20 +91,18 @@ class TestHelpers:
             stopping_condition=adjoint_ops,
             name=name,
         )
-        expected_program.add_transform(validate_observables, adjoint_observables, name=name)
+        expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
             validate_measurements,
+            analytic_measurements=adjoint_measurements,
             name=name,
         )
+        expected_program.add_transform(qml.transforms.broadcast_expand)
         expected_program.add_transform(validate_adjoint_trainable_params)
 
         actual_program = qml.transforms.core.TransformProgram()
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
-
-    def test_supports_adjoint(self):
-        """Test that _supports_adjoint returns the correct boolean value."""
-        assert True
 
 
 class TestInitialization:
@@ -142,10 +140,10 @@ class TestExecution:
         return transf_fn(results)
 
     @staticmethod
-    def process_and_execute(dev, tape):
-        program, _ = dev.preprocess()
+    def process_and_execute(device, tape):
+        program, _ = device.preprocess()
         tapes, transf_fn = program([tape])
-        results = dev.execute(tapes)
+        results = device.execute(tapes)
         return transf_fn(results)
 
     _default_device_options = {
@@ -242,21 +240,19 @@ class TestExecution:
                 stopping_condition=adjoint_ops,
                 name=name,
             )
-            expected_program.add_transform(validate_observables, adjoint_observables, name=name)
+            expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
                 validate_measurements,
+                analytic_measurements=adjoint_measurements,
                 name=name,
             )
+            expected_program.add_transform(qml.transforms.broadcast_expand)
             expected_program.add_transform(validate_adjoint_trainable_params)
 
         gradient_method = "adjoint" if adjoint else None
         config = ExecutionConfig(gradient_method=gradient_method)
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
-
-    def test_preprocess_adjoint(self):
-        """Test that the transform program returned by preprocess is correct with adjoint diff"""
-        assert True
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
@@ -268,15 +264,18 @@ class TestExecution:
             qml.var(qml.X(2)),
             qml.expval(qml.sum(qml.X(0), qml.Z(0))),
             qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
-            qml.s_prod(2.5, qml.Z(0)),
-            qml.prod(qml.Z(0), qml.X(1)),
-            qml.sum(qml.Z(1), qml.X(1)),
-            qml.SparseHamiltonian(
-                qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
-                    wire_order=[0, 1, 2]
-                ),
-                wires=[0, 1, 2],
+            qml.expval(qml.s_prod(2.5, qml.Z(0))),
+            qml.expval(qml.prod(qml.Z(0), qml.X(1))),
+            qml.expval(qml.sum(qml.Z(1), qml.X(1))),
+            qml.expval(
+                qml.SparseHamiltonian(
+                    qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                        wire_order=[0, 1, 2]
+                    ),
+                    wires=[0, 1, 2],
+                )
             ),
+            qml.expval(qml.Projector([1], wires=2)),
         ],
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
@@ -371,15 +370,15 @@ class TestDerivatives:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(dev, tape, execute_and_derivatives=False):
-        program, _ = dev.preprocess(ExecutionConfig(gradient_method="adjoint"))
+    def process_and_execute(device, tape, execute_and_derivatives=False):
+        program, _ = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
         if execute_and_derivatives:
-            results, jac = dev.execute_and_compute_derivatives(tapes)
+            results, jac = device.execute_and_compute_derivatives(tapes)
         else:
-            results = dev.execute(tapes)
-            jac = dev.compute_derivatives(tapes)
+            results = device.execute(tapes)
+            jac = device.compute_derivatives(tapes)
         return transf_fn(results), jac
 
     # Test supports derivative + xfail tests
@@ -428,6 +427,7 @@ class TestDerivatives:
             qml.sum(qml.Z(1), qml.X(1)),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
+            qml.Projector([1], 1),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -439,11 +439,17 @@ class TestDerivatives:
             trainable_params=[0, 1],
         )
 
-        expected, expected_jac = self.calculate_reference(
-            qs, execute_and_derivatives=execute_and_derivatives
-        )
         res, jac = self.process_and_execute(
             dev, qs, execute_and_derivatives=execute_and_derivatives
+        )
+        if isinstance(obs, qml.Hamiltonian):
+            qs = QuantumScript(
+                qs.operations,
+                [qml.expval(qml.Hermitian(qml.matrix(obs), wires=obs.wires))],
+                trainable_params=qs.trainable_params,
+            )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
         )
 
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
@@ -486,11 +492,17 @@ class TestDerivatives:
             trainable_params=[0, 1, 2],
         )
 
-        expected, expected_jac = self.calculate_reference(
-            qs, execute_and_derivatives=execute_and_derivatives
-        )
         res, jac = self.process_and_execute(
             dev, qs, execute_and_derivatives=execute_and_derivatives
+        )
+        if isinstance(obs1, qml.Hamiltonian):
+            qs = QuantumScript(
+                qs.operations,
+                [qml.expval(qml.Hermitian(qml.matrix(obs1), wires=obs1.wires)), qml.expval(obs2)],
+                trainable_params=qs.trainable_params,
+            )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
         )
         res = res[0]
         jac = jac[0]

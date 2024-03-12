@@ -20,7 +20,7 @@ import numpy as np
 
 import pennylane as qml
 from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops, adjoint_observables
+from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import single_tape_support, simulator_tracking
 from pennylane.devices.preprocess import (
     decompose,
@@ -231,6 +231,11 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables
 
 
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return isinstance(mp, (qml.measurements.ExpectationMP, qml.measurements.StateMP))
+
+
 def _supports_adjoint(circuit):
     if circuit is None:
         return True
@@ -259,16 +264,12 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.qubit"
     program.add_transform(no_sampling, name=name)
+    program.add_transform(decompose, stopping_condition=adjoint_ops, name=name)
+    program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
-        decompose,
-        stopping_condition=adjoint_ops,
-        name=name,
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
     )
-    program.add_transform(validate_observables, adjoint_observables, name=name)
-    program.add_transform(
-        validate_measurements,
-        name=name,
-    )
+    program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
 
