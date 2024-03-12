@@ -94,11 +94,11 @@ supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 def get_device():
     """Return the pennylane lightning device.
 
-    The device is ``lightning.qubit`` by default.
-    Allowed values are: "lightning.kokkos" and "lightning.qubit".
-    An underscore can also be used instead of a dot.
-    If the environment variable ``PL_DEVICE`` is defined, its value is used.
-    Underscores are replaced by dots upon exiting.
+    The device is ``lightning.qubit`` by default. Allowed values are:
+    "lightning.kokkos", "lightning.qubit2", and "lightning.qubit". An
+    underscore can also be used instead of a dot. If the environment
+    variable ``PL_DEVICE`` is defined, its value is used. Underscores
+    are replaced by dots upon exiting.
     """
     device = None
     if "PL_DEVICE" in os.environ:
@@ -132,7 +132,7 @@ elif device_name == "lightning.gpu":
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
 elif device_name == "lightning.qubit2":
-    from pennylane_lightning.lightning_qubit2 import LightningQubit2 as LightningDevice
+    from pennylane_lightning.lightning_qubit import LightningQubit2 as LightningDevice
 
     if hasattr(pennylane_lightning, "lightning_qubit_ops"):
         import pennylane_lightning.lightning_qubit_ops as lightning_ops

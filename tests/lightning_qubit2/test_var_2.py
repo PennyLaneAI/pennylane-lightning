@@ -22,10 +22,10 @@ import numpy as np
 import pennylane as qml
 from pennylane.tape import QuantumScript
 
-from pennylane_lightning.lightning_qubit import LightningQubit, LightningQubit2
+from pennylane_lightning.lightning_qubit import LightningQubit2
 
-if LightningDevice != LightningQubit:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if LightningDevice != LightningQubit2:
+    pytest.skip("Exclusive tests for lightning.qubit2. Skipping.", allow_module_level=True)
 
 if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

@@ -229,6 +229,8 @@ class LightningQubit2(Device):
 
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
 
+    _new_API = True
+
     def __init__(  # pylint: disable=too-many-arguments
         self,
         wires,
