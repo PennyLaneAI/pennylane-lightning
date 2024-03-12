@@ -162,6 +162,7 @@ class TestExpval:
             assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""

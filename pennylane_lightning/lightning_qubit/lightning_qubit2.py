@@ -119,6 +119,7 @@ _operations = frozenset(
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -158,6 +159,7 @@ _operations = frozenset(
         "C(RX)",
         "C(RY)",
         "C(RZ)",
+        "C(Rot)",
         "C(SWAP)",
         "C(IsingXX)",
         "C(IsingXY)",
@@ -169,6 +171,8 @@ _operations = frozenset(
         "C(DoubleExcitation)",
         "C(DoubleExcitationMinus)",
         "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -223,7 +227,40 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
 @simulator_tracking
 @single_tape_support
 class LightningQubit2(Device):
-    """PennyLane Lightning Qubit device."""
+    """PennyLane Lightning Qubit device.
+
+    A device that interfaces with C++ to perform fast linear algebra calculations.
+
+    Use of this device requires pre-built binaries or compilation from source. Check out the
+    :doc:`/lightning_qubit/installation` guide for more details.
+
+    Args:
+        wires (int): the number of wires to initialize the device with
+        c_dtype: Datatypes for statevector representation. Must be one of
+            ``np.complex64`` or ``np.complex128``.
+        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+            the expectation values. Defaults to ``None`` if not specified. Setting
+            to ``None`` results in computing statistics like expectation values and
+            variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
+        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
+            sampling method when generating samples.
+        kernel_name (str): name of transition kernel. The current version supports
+            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
+            The local kernel conducts a bit-flip local transition between states.
+            The local kernel generates a random qubit site and then generates a random
+            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
+            randomly transits between states that have nonzero probability.
+        num_burnin (int): number of steps that will be dropped. Increasing this value will
+            result in a closer approximation but increased runtime.
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+    """
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
