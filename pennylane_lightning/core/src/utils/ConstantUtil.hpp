@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <tuple>
+#include <unordered_map>
 
 #if __has_include(<version>)
 #include <version>

@@ -29,6 +29,7 @@
 #include <Kokkos_Random.hpp>
 
 #include "BitUtil.hpp" // isPerfectPowerOf2
+#include "Constant.hpp"
 #include "Error.hpp"
 #include "GateFunctors.hpp"
 #include "GateOperation.hpp"
@@ -39,12 +40,13 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::Gates::Constant;
+using namespace Pennylane::LightningKokkos::Functors;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
 using Pennylane::Util::exp2;
 using Pennylane::Util::isPerfectPowerOf2;
 using Pennylane::Util::log2;
-using namespace Pennylane::LightningKokkos::Functors;
 using std::size_t;
 } // namespace
 /// @endcond
@@ -110,7 +112,6 @@ class StateVectorKokkos final
             data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
             setBasisState(0U);
         }
-
         init_gates_indices_();
         init_generators_indices_();
     };
@@ -862,74 +863,29 @@ class StateVectorKokkos final
     std::mutex init_mutex_;
     std::unique_ptr<KokkosVector> data_;
     inline static bool is_exit_reg_ = false;
-    // clang-format off
+
     /**
-    * @brief Register gate operations in the gates_indices_ attribute:
-    *        an unordered_map mapping strings to GateOperation enumeration keywords.
-    */
+     * @brief Register gate operations in the gates_indices_ attribute:
+     *        an unordered_map mapping strings to GateOperation enumeration
+     * keywords.
+     */
     void init_gates_indices_() {
-        gates_indices_["PauliX"]                = GateOperation::PauliX;
-        gates_indices_["PauliY"]                = GateOperation::PauliY;
-        gates_indices_["PauliZ"]                = GateOperation::PauliZ;
-        gates_indices_["Hadamard"]              = GateOperation::Hadamard;
-        gates_indices_["S"]                     = GateOperation::S;
-        gates_indices_["T"]                     = GateOperation::T;
-        gates_indices_["RX"]                    = GateOperation::RX;
-        gates_indices_["RY"]                    = GateOperation::RY;
-        gates_indices_["RZ"]                    = GateOperation::RZ;
-        gates_indices_["PhaseShift"]            = GateOperation::PhaseShift;
-        gates_indices_["Rot"]                   = GateOperation::Rot;
-        gates_indices_["CY"]                    = GateOperation::CY;
-        gates_indices_["CZ"]                    = GateOperation::CZ;
-        gates_indices_["CNOT"]                  = GateOperation::CNOT;
-        gates_indices_["SWAP"]                  = GateOperation::SWAP;
-        gates_indices_["ControlledPhaseShift"]  = GateOperation::ControlledPhaseShift;
-        gates_indices_["CRX"]                   = GateOperation::CRX;
-        gates_indices_["CRY"]                   = GateOperation::CRY;
-        gates_indices_["CRZ"]                   = GateOperation::CRZ;
-        gates_indices_["CRot"]                  = GateOperation::CRot;
-        gates_indices_["IsingXX"]               = GateOperation::IsingXX;
-        gates_indices_["IsingXY"]               = GateOperation::IsingXY;
-        gates_indices_["IsingYY"]               = GateOperation::IsingYY;
-        gates_indices_["IsingZZ"]               = GateOperation::IsingZZ;
-        gates_indices_["SingleExcitation"]      = GateOperation::SingleExcitation;
-        gates_indices_["SingleExcitationMinus"] = GateOperation::SingleExcitationMinus;
-        gates_indices_["SingleExcitationPlus"]  = GateOperation::SingleExcitationPlus;
-        gates_indices_["DoubleExcitation"]      = GateOperation::DoubleExcitation;
-        gates_indices_["DoubleExcitationMinus"] = GateOperation::DoubleExcitationMinus;
-        gates_indices_["DoubleExcitationPlus"]  = GateOperation::DoubleExcitationPlus;
-        gates_indices_["MultiRZ"]               = GateOperation::MultiRZ;
-        gates_indices_["GlobalPhase"]           = GateOperation::GlobalPhase;
-        gates_indices_["CSWAP"]                 = GateOperation::CSWAP;
-        gates_indices_["Toffoli"]               = GateOperation::Toffoli;
+        for (auto &pair : Pennylane::Gates::Constant::gate_names) {
+            gates_indices_[std::string{pair.second}] = pair.first;
+        }
     }
+
     /**
-    * @brief Register generator operations in the generators_indices_ attribute:
-    *        an unordered_map mapping strings to GateOperation enumeration keywords.
-    */
+     * @brief Register generator operations in the generators_indices_
+     * attribute: an unordered_map mapping strings to GeneratorOperation
+     * enumeration keywords.
+     */
     void init_generators_indices_() {
-        generators_indices_["RX"]                    = GeneratorOperation::RX;
-        generators_indices_["RY"]                    = GeneratorOperation::RY;
-        generators_indices_["RZ"]                    = GeneratorOperation::RZ;
-        generators_indices_["ControlledPhaseShift"]  = GeneratorOperation::ControlledPhaseShift;
-        generators_indices_["CRX"]                   = GeneratorOperation::CRX;
-        generators_indices_["CRY"]                   = GeneratorOperation::CRY;
-        generators_indices_["CRZ"]                   = GeneratorOperation::CRZ;
-        generators_indices_["IsingXX"]               = GeneratorOperation::IsingXX;
-        generators_indices_["IsingXY"]               = GeneratorOperation::IsingXY;
-        generators_indices_["IsingYY"]               = GeneratorOperation::IsingYY;
-        generators_indices_["IsingZZ"]               = GeneratorOperation::IsingZZ;
-        generators_indices_["SingleExcitation"]      = GeneratorOperation::SingleExcitation;
-        generators_indices_["SingleExcitationMinus"] = GeneratorOperation::SingleExcitationMinus;
-        generators_indices_["SingleExcitationPlus"]  = GeneratorOperation::SingleExcitationPlus;
-        generators_indices_["DoubleExcitation"]      = GeneratorOperation::DoubleExcitation;
-        generators_indices_["DoubleExcitationMinus"] = GeneratorOperation::DoubleExcitationMinus;
-        generators_indices_["DoubleExcitationPlus"]  = GeneratorOperation::DoubleExcitationPlus;
-        generators_indices_["PhaseShift"]            = GeneratorOperation::PhaseShift;
-        generators_indices_["MultiRZ"]               = GeneratorOperation::MultiRZ;
-        generators_indices_["GlobalPhase"]           = GeneratorOperation::GlobalPhase;
+        for (auto &pair : Pennylane::Gates::Constant::generator_names) {
+            generators_indices_[std::string{pair.second.substr(9)}] =
+                pair.first;
+        }
     }
-    // clang-format on
 };
 
 }; // namespace Pennylane::LightningKokkos
