@@ -27,3 +27,25 @@ if LightningDevice != LightningQubit:
 
 if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+
+@pytest.fixture(params=[np.complex64, np.complex128])
+def dev(request):
+    return LightningQubit2(wires=3, c_dtype=request.param)
+
+
+@staticmethod
+def calculate_reference(tape):
+    dev = qml.device("default.qubit", max_workers=1)
+    program, _ = dev.preprocess()
+    tapes, transf_fn = program([tape])
+    results = dev.execute(tapes)
+    return transf_fn(results)
+
+
+@staticmethod
+def process_and_execute(dev, tape):
+    program, _ = dev.preprocess()
+    tapes, transf_fn = program([tape])
+    results = dev.execute(tapes)
+    return transf_fn(results)
