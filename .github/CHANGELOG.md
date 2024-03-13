@@ -32,7 +32,30 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Thomas Germain, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Thomas Germain, Vincent Michaud-Rioux
+
+---
+
+# Release 0.35.1
+
+### Improvements
+
+* Use the `adjoint` gate parameter to apply `qml.Adjoint` operations instead of matrix methods in `lightning.qubit`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+### Bug fixes
+
+* Fix `qml.Adjoint` support in `lightning.gpu` and `lightning.kokkos`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+* Fix finite shots support in `lightning.qubit`, `lightning.gpu` and `lightning.kokkos`. The bug would impact calculations with measurements on observables with non-trivial diagonalizing gates and calculations with shot vectors.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
 
 ---
 
@@ -89,6 +112,9 @@ Ali Asadi, Thomas Germain, Vincent Michaud-Rioux
 * Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
   [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
 
+* Remove deprecated MeasurementProcess.name.
+  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
+
 ### Documentation
 
 * Update requirements to build the documentation.
@@ -129,7 +155,7 @@ Ali Asadi, Thomas Germain, Vincent Michaud-Rioux
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, Matthew Silverman
 
 ---
 
