@@ -64,6 +64,13 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
+    from pennylane_lightning.core._version import __version__
+
     # pylint: disable=ungrouped-imports
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -71,13 +78,6 @@ if LK_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import (
-        QuantumScriptSerializer,
-        global_phase_diagonal,
-    )
-    from pennylane_lightning.core._version import __version__
 
     def _kokkos_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover

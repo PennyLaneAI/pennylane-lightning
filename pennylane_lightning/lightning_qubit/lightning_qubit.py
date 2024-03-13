@@ -449,10 +449,15 @@ if LQ_CPP_BINARY_AVAILABLE:
                     if operation.meas_val.concretize(mid_measurements):
                         self.apply_lightning([operation.then_op])
                 elif isinstance(operation, MidMeasureMP):
-                    postselect = [] if operation.postselect is None else [operation.postselect]
-                    mid_measurements[operation] = method(wires, postselect, operation.reset)
-                    if mid_measurements[operation] == -1:
-                        break
+                    wire = list(wires)[0]
+                    sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
+                    if operation.postselect is not None and sample != operation.postselect:
+                        mid_measurements[operation] = -1
+                        return
+                    mid_measurements[operation] = sample
+                    getattr(state, "collapse")(wire, bool(sample))
+                    if operation.reset and bool(sample):
+                        self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
                 elif method is not None:  # apply specialized gate
                     inv = False
                     param = operation.parameters
@@ -612,7 +617,7 @@ if LQ_CPP_BINARY_AVAILABLE:
 
             return measurements.var(observable.name, observable_wires)
 
-        def generate_samples(self):
+        def generate_samples(self, shots=None):
             """Generate samples
 
             Returns:
@@ -624,13 +629,12 @@ if LQ_CPP_BINARY_AVAILABLE:
                 if self.use_csingle
                 else MeasurementsC128(self.state_vector)
             )
+            shots = self.shots if shots is None else shots
             if self._mcmc:
                 return measurements.generate_mcmc_samples(
-                    len(self.wires), self._kernel_name, self._num_burnin, self.shots
+                    len(self.wires), self._kernel_name, self._num_burnin, shots
                 ).astype(int, copy=False)
-            return measurements.generate_samples(len(self.wires), self.shots).astype(
-                int, copy=False
-            )
+            return measurements.generate_samples(len(self.wires), shots).astype(int, copy=False)
 
         def probability_lightning(self, wires):
             """Return the probability of each computational basis state.
