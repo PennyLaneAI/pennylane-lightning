@@ -22,11 +22,14 @@
 
 ### Bug fixes
 
+* Fix random `coverage xml` CI issues.
+  [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux
 
 ---
 
