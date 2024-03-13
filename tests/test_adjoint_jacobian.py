@@ -26,9 +26,6 @@ from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group
 
-# if ld._new_API:
-#     pytest.skip("Old API required", allow_module_level=True)
-
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -42,7 +39,7 @@ if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-if device_name == "lightning.qubit2" and ld._CPP_BINARY_AVAILABLE:
+if ld._new_API and ld._CPP_BINARY_AVAILABLE:
     from pennylane_lightning.lightning_qubit_ops import LightningException
 
 fixture_params = itertools.product(

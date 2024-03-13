@@ -103,7 +103,7 @@ class TestHelpers:
 
 
 class TestInitialization:
-    """Unit tests for LightningQubit2 initialization"""
+    """Unit tests for device initialization"""
 
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
@@ -126,7 +126,7 @@ class TestInitialization:
 
 
 class TestExecution:
-    """Unit tests for executing quantum tapes on LightningQubit2"""
+    """Unit tests for executing quantum tapes on a device"""
 
     @staticmethod
     def calculate_reference(tape):
@@ -349,7 +349,7 @@ class TestExecution:
 
 
 class TestDerivatives:
-    """Unit tests for calculating derivatives with LightningQubit2"""
+    """Unit tests for calculating derivatives with a device"""
 
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):

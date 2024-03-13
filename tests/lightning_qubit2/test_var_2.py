@@ -27,13 +27,13 @@ from pennylane_lightning.lightning_qubit import LightningQubit2
 if LightningDevice != LightningQubit2:
     pytest.skip("Exclusive tests for lightning.qubit2. Skipping.", allow_module_level=True)
 
-if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.fixture(params=[np.complex64, np.complex128])
 def dev(request):
-    return LightningQubit2(wires=3, c_dtype=request.param)
+    return LightningDevice(wires=3, c_dtype=request.param)
 
 
 def calculate_reference(tape):
@@ -103,7 +103,7 @@ class TestVar:
     )
     def test_custom_wires(self, theta, phi, wires):
         """Tests custom wires."""
-        device = LightningQubit2(wires=wires)
+        device = LightningDevice(wires=wires)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=wires[1]), qml.CNOT(wires=wires)],
