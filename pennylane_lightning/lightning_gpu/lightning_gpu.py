@@ -509,7 +509,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
 
             self._create_basis_state(num)
 
-        # pylint: disable=missing-function-docstring
         def apply_lightning(self, operations):
             """Apply a list of operations to the state tensor.
 
@@ -523,15 +522,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
             """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
-            skipped_ops = ["Identity"]
-            invert_param = False
             for ops in operations:
-                if str(ops.name) in skipped_ops:
-                    continue
-                name = ops.name
                 if isinstance(ops, Adjoint):
                     name = ops.base.name
                     invert_param = True
+                else:
+                    name = ops.name
+                    invert_param = False
+                if name == "Identity":
+                    continue
                 method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
@@ -641,7 +640,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         'the "adjoint" differentiation method'
                     )
 
-        # pylint: disable=missing-function-docstring
         def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
             """Generate an initial state vector for ``_process_jacobian_tape``."""
             if starting_state is not None:
@@ -852,14 +850,18 @@ if LGPU_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
-            if observable.name != "PauliZ":
-                self.apply_lightning(observable.diagonalizing_gates())
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply(diagonalizing_gates)
+            if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+            return results
 
-        # pylint: disable=missing-function-docstring
         def generate_samples(self):
             """Generate samples
 
@@ -871,7 +873,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 int, copy=False
             )
 
-        # pylint: disable=protected-access, missing-function-docstring
+        # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
             """Expectation value of the supplied observable.
 
@@ -955,7 +957,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
             return local_prob
 
-        # pylint: disable=missing-function-docstring
         def var(self, observable, shot_range=None, bin_size=None):
             """Variance of the supplied observable.
 

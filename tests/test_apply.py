@@ -14,15 +14,12 @@
 """
 Unit tests for Lightning devices.
 """
-# pylint: disable=protected-access,cell-var-from-loop
 import math
 
 import numpy as np
 import pennylane as qml
-
-# pylint: disable=protected-access,cell-var-from-loop
 import pytest
-from conftest import PHI, THETA, TOL_STOCHASTIC, VARPHI
+from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
 from pennylane import DeviceError
@@ -1270,6 +1267,48 @@ class TestApplyLightningMethod:
 
         with pytest.raises(ValueError, match="Unsupported operation"):
             dev.apply_lightning([EmptyGate(0)])
+
+    @pytest.mark.parametrize(
+        "ops0",
+        [
+            qml.PauliZ(0),
+            qml.PauliY(0),
+            qml.S(0),
+            qml.RX(0.1234, 0),
+            qml.Rot(0.1, 0.2, 0.3, 0),
+            qml.T(0) @ qml.RY(0.1234, 0),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "ops1",
+        [
+            qml.PauliZ(2),
+            qml.PauliY(2),
+            qml.S(2),
+            qml.RX(0.1234, 2),
+            qml.Rot(0.1, 0.2, 0.3, 2),
+            qml.T(2) @ qml.RY(0.1234, 2),
+        ],
+    )
+    def test_multiple_adjoint_operations(self, ops0, ops1, tol):
+        """Test that multiple adjoint operations are handled correctly."""
+        n_qubits = 4
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.adjoint(ops0)
+            qml.PhaseShift(0.1234, wires=0)
+            qml.adjoint(ops1)
+            return qml.state()
+
+        results = qml.QNode(circuit, dev)()
+        expected = qml.QNode(circuit, dq)()
+        assert np.allclose(results, expected)
 
 
 @pytest.mark.skipif(
