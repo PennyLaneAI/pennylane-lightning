@@ -100,11 +100,7 @@ class TestExpval:
 
     @pytest.mark.parametrize(
         "wires",
-        [
-            ([0, 1]),
-            (["a", 1]),
-            (["b", "a"]),
-        ],
+        [([0, 1]), (["a", 1]), (["b", "a"]), ([-1, 2.5])],
     )
     def test_custom_wires(self, theta, phi, tol, wires):
         """Tests custom wires."""
@@ -238,41 +234,25 @@ class TestExpval:
 class TestOperatorArithmetic:
     """Test integration with SProd, Prod, and Sum."""
 
-    def test_s_prod(self, phi, dev, tol):
-        """Tests the `SProd` class."""
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.s_prod(0.5, qml.PauliZ(0)),
+            qml.prod(qml.PauliZ(0), qml.PauliX(1)),
+            qml.sum(qml.PauliZ(0), qml.PauliX(1)),
+        ],
+    )
+    def test_op_math(self, phi, dev, obs, tol):
+        """Tests the `SProd`, `Prod`, and `Sum` classes."""
 
         tape = qml.tape.QuantumScript(
-            [qml.RX(phi, wires=[0])],
-            [qml.expval(qml.s_prod(0.5, qml.PauliZ(0)))],
-        )
-
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = calculate_reference(tape)
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(calculated_val, reference_val, tol)
-
-    def test_prod(self, phi, dev, tol):
-        """Tests the `Prod` class."""
-
-        tape = qml.tape.QuantumScript(
-            [qml.RX(phi, wires=[0]), qml.Hadamard(wires=[1]), qml.PauliZ(wires=[1])],
-            [qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)))],
-        )
-
-        calculated_val = process_and_execute(dev, tape)
-        reference_val = calculate_reference(tape)
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(calculated_val, reference_val, tol)
-
-    def test_sum(self, phi, dev, tol):
-        """Tests the `Sum` class."""
-        tape = qml.tape.QuantumScript(
-            [qml.RX(phi, wires=[0]), qml.RX(-1.1 * phi, wires=[0])],
-            [qml.expval(qml.sum(qml.PauliZ(0), qml.PauliX(1)))],
+            [
+                qml.RX(phi, wires=[0]),
+                qml.Hadamard(wires=[1]),
+                qml.PauliZ(wires=[1]),
+                qml.RX(-1.1 * phi, wires=[1]),
+            ],
+            [qml.expval(obs)],
         )
 
         calculated_val = process_and_execute(dev, tape)
