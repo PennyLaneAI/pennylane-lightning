@@ -378,17 +378,21 @@ if LQ_CPP_BINARY_AVAILABLE:
             """
             state = self.state_vector
 
-            basename = "PauliX" if operation.name == "MultiControlledX" else operation.base.name
-            if basename == "Identity":
+            baseop = (
+                qml.PauliX(operation.wires[0])
+                if isinstance(operation, qml.MultiControlledX)
+                else operation.base
+            )
+            if isinstance(baseop, qml.Identity):
                 return
-            method = getattr(state, f"{basename}", None)
+            method = getattr(state, f"{baseop.name}", None)
             control_wires = self.wires.indices(operation.control_wires)
             control_values = (
                 [bool(int(i)) for i in operation.hyperparameters["control_values"]]
-                if operation.name == "MultiControlledX"
+                if isinstance(operation, qml.MultiControlledX)
                 else operation.control_values
             )
-            if operation.name == "MultiControlledX":
+            if isinstance(operation, qml.MultiControlledX):
                 target_wires = list(set(self.wires.indices(operation.wires)) - set(control_wires))
             else:
                 target_wires = self.wires.indices(operation.target_wires)
@@ -428,7 +432,7 @@ if LQ_CPP_BINARY_AVAILABLE:
             # matrix multiplication with it.
             for operation in operations:
                 name = operation.name
-                if name == "Identity":
+                if isinstance(operation, qml.Identity):
                     continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
@@ -439,8 +443,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                     method(wires, inv, param)
                 elif (
                     name[0:2] == "C("
-                    or name == "ControlledQubitUnitary"
-                    or name == "MultiControlledX"
+                    or isinstance(operation, qml.ControlledQubitUnitary)
+                    or isinstance(name, qml.MultiControlledX)
                 ):  # apply n-controlled gate
                     self._apply_lightning_controlled(operation)
                 else:  # apply gate as a matrix
@@ -510,7 +514,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                 if self.use_csingle
                 else MeasurementsC128(self.state_vector)
             )
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measurements.expval(
                     csr_hamiltonian.indptr,
@@ -567,7 +571,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                 else MeasurementsC128(self.state_vector)
             )
 
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measurements.var(
                     csr_hamiltonian.indptr,

@@ -912,7 +912,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             # use specialized functors to compute expval(Hermitian)
-            if observable.name == "Hermitian":
+            if isinstance(observable, qml.Hermitian):
                 observable_wires = self.map_wires(observable.wires)
                 if self._mpi and len(observable_wires) > self._num_local_wires:
                     raise RuntimeError(
@@ -922,7 +922,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return self.measurements.expval(matrix, observable_wires)
 
             if (
-                observable.name in ["Hermitian", "Hamiltonian"]
+                isinstance(observable, (qml.Hermitian, qml.Hamiltonian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -976,7 +976,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.var(samples, axis=0))
 
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return self.measurements.var(
                     csr_hamiltonian.indptr,
@@ -985,7 +985,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):

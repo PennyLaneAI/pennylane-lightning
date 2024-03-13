@@ -398,7 +398,7 @@ if LK_CPP_BINARY_AVAILABLE:
             state = self.state_vector
 
             for ops in operations:
-                if str(ops.name) == "Identity":
+                if isinstance(ops, qml.Identity):
                     continue
                 name = ops.name
                 if isinstance(ops, Adjoint):
@@ -492,7 +492,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 if self.use_csingle
                 else MeasurementsC128(self.state_vector)
             )
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measure.expval(
                     csr_hamiltonian.indptr,
@@ -501,7 +501,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             # use specialized functors to compute expval(Hermitian)
-            if observable.name == "Hermitian":
+            if isinstance(observable, qml.Hermitian):
                 observable_wires = self.map_wires(observable.wires)
                 matrix = observable.matrix()
                 return measure.expval(matrix, observable_wires)
@@ -556,7 +556,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 else MeasurementsC128(self.state_vector)
             )
 
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measure.var(
                     csr_hamiltonian.indptr,
@@ -565,7 +565,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
