@@ -199,6 +199,7 @@ _operations = frozenset(
 )
 """The set of supported operations."""
 
+
 _observables = frozenset(
     {
         "PauliX",
@@ -216,7 +217,7 @@ _observables = frozenset(
         "Exp",
     }
 )
-"""Test set of supported observables."""
+"""The set of supported observables."""
 
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
@@ -315,6 +316,7 @@ class LightningQubit2(Device):
 
     operations = _operations
     """The names of the supported operations."""
+
     observables = _observables
     """The names of the supported observables."""
 

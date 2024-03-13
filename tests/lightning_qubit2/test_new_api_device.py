@@ -36,6 +36,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     no_sampling,
     _add_adjoint_transforms,
     adjoint_measurements,
+    _supports_adjoint,
 )
 
 
@@ -100,6 +101,20 @@ class TestHelpers:
         actual_program = qml.transforms.core.TransformProgram()
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
+
+    @pytest.mark.parametrize(
+        "circuit, expected",
+        [
+            (None, True),
+            (QuantumScript([], [qml.state()]), False),
+            (QuantumScript([qml.RX(1.23, 0)], [qml.expval(qml.Z(0))]), True),
+            (QuantumScript([qml.CRot(1.23, 4.56, 7.89, [0, 1])], [qml.expval(qml.Z(0))]), True),
+            (QuantumScript([qml.Rot(1.23, 4.56, 7.89, 1)], [qml.var(qml.X(0))]), False),
+        ],
+    )
+    def test_supports_adjoint(self, circuit, expected):
+        """Test that _supports_adjoint returns the correct boolean value."""
+        assert _supports_adjoint(circuit) == expected
 
 
 class TestInitialization:
@@ -428,7 +443,7 @@ class TestDerivatives:
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
             qml.Projector([1], 1),
-            qml.operation.Tensor(qml.PauliZ(0), qml.PauliX(1)),
+            qml.operation.Tensor(qml.Z(0), qml.X(1)),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -465,7 +480,7 @@ class TestDerivatives:
             qml.Z(1),
             qml.s_prod(2.5, qml.Y(2)),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
-            qml.operation.Tensor(qml.PauliZ(0), qml.PauliX(1)),
+            qml.operation.Tensor(qml.Z(0), qml.X(1)),
         ],
     )
     @pytest.mark.parametrize(
