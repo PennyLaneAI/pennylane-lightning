@@ -25,7 +25,6 @@ from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionCon
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
-from pennylane_lightning.lightning_qubit import LightningQubit2
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     accepted_observables,
     stopping_condition,
@@ -40,18 +39,16 @@ from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
 )
 
 
-# TODO: Change this to point to LightningQubit2 after it's available as an installable
-# device separate from LightningQubit
-if LightningDevice != LightningQubit2:
-    pytest.skip("Exclusive tests for lightning.qubit2. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
 
-if not LightningQubit2._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.fixture(params=[np.complex64, np.complex128])
 def dev(request):
-    return LightningQubit2(wires=3, c_dtype=request.param)
+    return LightningDevice(wires=3, c_dtype=request.param)
 
 
 class TestHelpers:
@@ -114,18 +111,18 @@ class TestInitialization:
         num_burnin = 11
 
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            _ = LightningQubit2(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
+            _ = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
 
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
-        _ = LightningQubit2(wires=2, shots=1000, mcmc=True, kernel_name="Local")
-        _ = LightningQubit2(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom")
+        _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="Local")
+        _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="NonZeroRandom")
 
         with pytest.raises(
             NotImplementedError, match="only 'Local' and 'NonZeroRandom' kernels are supported"
         ):
-            _ = LightningQubit2(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
+            _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
 
 
 class TestExecution:
@@ -208,7 +205,7 @@ class TestExecution:
     )
     def test_preprocess_correct_config_setup(self, config, expected_config):
         """Test that the execution config is set up correctly in preprocess"""
-        device = LightningQubit2(wires=2)
+        device = LightningDevice(wires=2)
         _, new_config = device.preprocess(config)
         del new_config.device_options["rng"]
 
@@ -217,18 +214,16 @@ class TestExecution:
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
         """Test that the transform program returned by preprocess is correct"""
-        device = LightningQubit2(wires=2)
+        device = LightningDevice(wires=2)
 
         expected_program = qml.transforms.core.TransformProgram()
-        expected_program.add_transform(validate_measurements, name="LightningQubit2")
+        expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(no_sampling)
-        expected_program.add_transform(
-            validate_observables, accepted_observables, name="LightningQubit2"
-        )
-        expected_program.add_transform(validate_device_wires, device.wires, name="LightningQubit2")
+        expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(qml.defer_measurements, device=device)
         expected_program.add_transform(
-            decompose, stopping_condition=stopping_condition, name="LightningQubit2"
+            decompose, stopping_condition=stopping_condition, name=device.name
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
@@ -333,7 +328,7 @@ class TestExecution:
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
     def test_custom_wires(self, phi, theta, wires):
         """Test execution with custom wires"""
-        device = LightningQubit2(wires=wires)
+        device = LightningDevice(wires=wires)
         qs = QuantumScript(
             [
                 qml.RX(phi, wires[0]),
@@ -428,6 +423,7 @@ class TestDerivatives:
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
             qml.Projector([1], 1),
+            qml.operation.Tensor(qml.PauliZ(0), qml.PauliX(1)),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -460,7 +456,12 @@ class TestDerivatives:
     @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
     @pytest.mark.parametrize(
         "obs1",
-        [qml.Z(1), qml.s_prod(2.5, qml.Y(2)), qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)])],
+        [
+            qml.Z(1),
+            qml.s_prod(2.5, qml.Y(2)),
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
+            qml.operation.Tensor(qml.PauliZ(0), qml.PauliX(1)),
+        ],
     )
     @pytest.mark.parametrize(
         "obs2",
@@ -473,6 +474,7 @@ class TestDerivatives:
                 ),
                 wires=[0, 1, 2],
             ),
+            qml.Projector([1], wires=2),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -553,50 +555,12 @@ class TestDerivatives:
         with pytest.raises(qml.DeviceError, match="Finite shots are not supported"):
             _, _ = program([qs])
 
-
-class TestTapeBatch:
-    """Tests for executing and computing derivatives of a batch of tapes"""
-
     @pytest.mark.parametrize("phi", PHI)
-    def test_execute_tape_batch(self, phi):
-        """Test that results are expected with a batch of tapes wiht custom wire labels"""
-        device = LightningQubit2(wires=["a", "b", "target", -3])
-
-        ops = [
-            qml.X("a"),
-            qml.X("b"),
-            qml.ctrl(qml.RX(phi, "target"), ("a", "b", -3), control_values=[1, 1, 0]),
-        ]
-
-        qs1 = qml.tape.QuantumScript(
-            ops,
-            [
-                qml.expval(qml.sum(qml.Y("target"), qml.Z("b"))),
-                qml.expval(qml.s_prod(3, qml.Z("target"))),
-            ],
-        )
-
-        ops = [qml.Hadamard("a"), qml.IsingXX(phi, wires=("a", "b"))]
-        qs2 = qml.tape.QuantumScript(ops, [qml.probs(wires=("a", "b"))])
-
-        results = device.execute((qs1, qs2))
-
-        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
-        x1 = np.cos(phi / 2) ** 2 / 2
-        x2 = np.sin(phi / 2) ** 2 / 2
-        expected2 = x1 * np.array([1, 0, 1, 0]) + x2 * np.array([0, 1, 0, 1])
-        expected = (expected1, expected2)
-
-        assert len(results) == len(expected)
-        assert len(results[0]) == len(expected[0])
-        assert np.allclose(results[0][0], expected[0][0])
-        assert np.allclose(results[0][1], expected[0][1])
-        assert np.allclose(results[1], expected[1])
-
-    @pytest.mark.parametrize("phi", PHI)
-    def test_derivatives_tape_batch(self, phi):
-        """Test that results are correct when we compute derivatives for a batch of tapes."""
-        device = LightningQubit2(wires=4)
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_derivatives_tape_batch(self, phi, execute_and_derivatives):
+        """Test that results are correct when we execute and compute derivatives for a batch of
+        tapes."""
+        device = LightningDevice(wires=4)
 
         ops = [
             qml.X(0),
@@ -616,44 +580,11 @@ class TestTapeBatch:
         ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
 
-        jacs = device.compute_derivatives([qs1, qs2])
-
-        expected1 = (-np.cos(phi), -3 * np.sin(phi))
-        x1 = -np.cos(phi / 2) * np.sin(phi / 2) / 2
-        x2 = np.sin(phi / 2) * np.cos(phi / 2) / 2
-        expected2 = sum([x1, -x2, -x1, x2])  # zero
-        expected = (expected1, expected2)
-
-        assert len(jacs) == len(expected)
-        assert len(jacs[0]) == len(expected[0])
-        assert np.allclose(jacs[0], expected[0])
-        assert np.allclose(jacs[1], expected[1])
-
-    @pytest.mark.parametrize("phi", PHI)
-    def test_execute_and_derivatives_tape_batch(self, phi):
-        """Test that results are correct when we execute and compute derivatives for a batch
-        of tapes."""
-        device = LightningQubit2(wires=4)
-
-        ops = [
-            qml.X(0),
-            qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
-        ]
-
-        qs1 = QuantumScript(
-            ops,
-            [
-                qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
-                qml.expval(qml.s_prod(3, qml.Z(2))),
-            ],
-            trainable_params=[0],
-        )
-
-        ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
-        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
-
-        results, jacs = device.execute_and_compute_derivatives([qs1, qs2])
+        if execute_and_derivatives:
+            results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
+        else:
+            results = device.execute((qs1, qs2))
+            jacs = device.compute_derivatives((qs1, qs2))
 
         # Assert results
         expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))

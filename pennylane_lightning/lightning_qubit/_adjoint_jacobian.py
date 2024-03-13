@@ -192,6 +192,13 @@ class LightningAdjointJacobian:
             The Jacobian of a tape.
         """
 
+        if tape.shots:
+            raise QuantumFunctionError(
+                "Requested adjoint differentiation to be computed with finite shots. "
+                "The derivative is always exact when using the adjoint "
+                "differentiation method."
+            )
+
         tape_return_type = self._get_return_type(tape.measurements)
 
         if not tape_return_type:  # the tape does not have measurements
@@ -199,6 +206,12 @@ class LightningAdjointJacobian:
 
         if tape_return_type is State:
             raise QuantumFunctionError("This method does not support statevector return type. ")
+
+        elif any(m.return_type is not Expectation for m in tape.measurements):
+            raise QuantumFunctionError(
+                "Adjoint differentiation method does not support expectation return type "
+                "mixed with other return types"
+            )
 
         processed_data = self._process_jacobian_tape(tape)
 
@@ -263,6 +276,12 @@ class LightningAdjointJacobian:
         Returns:
             The vector-Jacobian products of a tape.
         """
+        if tape.shots is not None:
+            raise QuantumFunctionError(
+                "Requested adjoint differentiation to be computed with finite shots. "
+                "The derivative is always exact when using the adjoint differentiation "
+                "method."
+            )
 
         measurements = tape.measurements
         tape_return_type = self._get_return_type(measurements)

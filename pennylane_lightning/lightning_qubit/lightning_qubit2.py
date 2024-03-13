@@ -83,7 +83,6 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False)
     Returns:
         TensorLike: The Jacobian of the quantum script
     """
-    print("jacobian")
     circuit = circuit.map_to_standard_wires()
     state.reset_state()
     final_state = state.get_final_state(circuit)
