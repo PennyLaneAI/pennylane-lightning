@@ -21,10 +21,8 @@ import pytest
 from conftest import LightningDevice, THETA, PHI, VARPHI
 from pennylane.devices import DefaultQubit
 
-from pennylane_lightning.lightning_qubit import LightningQubit2
-
-if LightningDevice != LightningQubit2:
-    pytest.skip("Exclusive tests for lightning.qubit2. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -104,7 +102,7 @@ class TestExpval:
     )
     def test_custom_wires(self, theta, phi, tol, wires):
         """Tests custom wires."""
-        dev = LightningQubit2(wires=wires)
+        dev = LightningDevice(wires=wires)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=wires[0]), qml.RX(phi, wires=wires[1]), qml.CNOT(wires=wires)],
