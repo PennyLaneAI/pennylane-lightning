@@ -104,7 +104,6 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    print("simulate_and_jacobian")
     circuit = circuit.map_to_standard_wires()
     res = simulate(circuit, state)
     jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
@@ -232,7 +231,7 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return isinstance(mp, (qml.measurements.ExpectationMP, qml.measurements.StateMP))
+    return isinstance(mp, qml.measurements.ExpectationMP)
 
 
 def _supports_adjoint(circuit):
@@ -388,31 +387,6 @@ class LightningQubit2(Device):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def supports_derivatives(
-        self,
-        execution_config: Optional[ExecutionConfig] = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
-    ) -> bool:
-        """Check whether or not derivatives are available for a given configuration and circuit.
-
-        ``LightningQubit2`` supports adjoint differentiation with analytic results.
-
-        Args:
-            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
-            circuit (QuantumTape): An optional circuit to check derivatives support for.
-
-        Returns:
-            Bool: Whether or not a derivative can be calculated provided the given information
-
-        """
-        if execution_config is None and circuit is None:
-            return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
-
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -469,6 +443,31 @@ class LightningQubit2(Device):
             results.append(simulate(circuit, self._statevector))
 
         return tuple(results)
+
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
+
+        ``LightningQubit2`` supports adjoint differentiation with analytic results.
+
+        Args:
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
+
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+
+        """
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return _supports_adjoint(circuit=circuit)
 
     def compute_derivatives(
         self,

@@ -403,6 +403,11 @@ class TestDerivatives:
             ),
             (
                 ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.state()]),
+                False,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
                 QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))], shots=10),
                 False,
             ),
