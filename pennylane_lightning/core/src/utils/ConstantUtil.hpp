@@ -29,6 +29,7 @@
 #include <version>
 #endif
 
+#include "Error.hpp"
 #include "TypeTraits.hpp"
 #include "Util.hpp"
 
@@ -50,7 +51,29 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
             return std::get<1>(arr[idx]);
         }
     }
-    throw std::range_error("The given key does not exist.");
+    PL_ABORT("The given key does not exist.");
+}
+
+/**
+ * @brief Reverse lookup value in array of pairs. For a constexpr map-like
+ * behavior.
+ *
+ * @tparam Key Type of keys
+ * @tparam Value Type of values
+ * @tparam size Size of std::array
+ * @param arr Array to lookup
+ * @param value Value to find
+ */
+template <typename Key, typename Value, size_t size>
+constexpr auto
+reverse_lookup(const std::array<std::pair<Key, Value>, size> &arr,
+               const Value &value) -> Key {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<1>(arr[idx]) == value) {
+            return std::get<0>(arr[idx]);
+        }
+    }
+    PL_ABORT("The given value does not exist.");
 }
 
 /**
@@ -66,6 +89,27 @@ constexpr auto array_has_elem(const std::array<U, size> &arr, const U &elem)
     -> bool {
     for (size_t idx = 0; idx < size; idx++) {
         if (arr[idx] == elem) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief Check an array of pairs contains a certain value.
+ *
+ * @tparam Key Type of keys
+ * @tparam Value Type of values
+ * @tparam size Size of std::array
+ * @param arr Array to lookup
+ * @param value Value to find
+ */
+template <typename Key, typename Value, size_t size>
+constexpr auto
+array_contains(const std::array<std::pair<Key, Value>, size> &arr,
+               const Value &value) -> bool {
+    for (size_t idx = 0; idx < size; idx++) {
+        if (std::get<1>(arr[idx]) == value) {
             return true;
         }
     }

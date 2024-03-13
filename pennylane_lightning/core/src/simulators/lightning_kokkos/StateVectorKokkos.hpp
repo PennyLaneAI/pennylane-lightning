@@ -30,6 +30,7 @@
 
 #include "BitUtil.hpp" // isPerfectPowerOf2
 #include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "Error.hpp"
 #include "GateFunctors.hpp"
 #include "GateOperation.hpp"
@@ -44,9 +45,11 @@ using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos::Functors;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
+using Pennylane::Util::array_contains;
 using Pennylane::Util::exp2;
 using Pennylane::Util::isPerfectPowerOf2;
 using Pennylane::Util::log2;
+using Pennylane::Util::reverse_lookup;
 using std::size_t;
 } // namespace
 /// @endcond
@@ -112,8 +115,6 @@ class StateVectorKokkos final
             data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
             setBasisState(0U);
         }
-        init_gates_indices_();
-        init_generators_indices_();
     };
 
     /**
@@ -266,7 +267,7 @@ class StateVectorKokkos final
             } else {
                 applyControlledGlobalPhase<false>(gate_matrix);
             }
-        } else if (gates_indices_.contains(opName)) {
+        } else if (array_contains(gate_names, std::string_view{opName})) {
             applyNamedOperation(opName, wires, inverse, params);
         } else {
             PL_ABORT_IF(gate_matrix.size() == 0,
@@ -450,7 +451,7 @@ class StateVectorKokkos final
                              const std::vector<size_t> &wires,
                              bool inverse = false,
                              const std::vector<fp_t> &params = {}) {
-        switch (gates_indices_[opName]) {
+        switch (reverse_lookup(gate_names, std::string_view{opName})) {
         case GateOperation::PauliX:
             applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
             return;
@@ -577,10 +578,7 @@ class StateVectorKokkos final
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
-        if (!generators_indices_.contains(opName)) {
-            PL_ABORT(std::string("Generator does not exist for ") + opName);
-        }
-        switch (generators_indices_[opName]) {
+        switch (reverse_lookup(generator_names, std::string_view{opName})) {
         case GeneratorOperation::RX:
             applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
             return -static_cast<fp_t>(0.5);
@@ -856,36 +854,10 @@ class StateVectorKokkos final
     }
 
   private:
-    std::unordered_map<std::string, GateOperation> gates_indices_;
-    std::unordered_map<std::string, GeneratorOperation> generators_indices_;
-
     size_t num_qubits_;
     std::mutex init_mutex_;
     std::unique_ptr<KokkosVector> data_;
     inline static bool is_exit_reg_ = false;
-
-    /**
-     * @brief Register gate operations in the gates_indices_ attribute:
-     *        an unordered_map mapping strings to GateOperation enumeration
-     * keywords.
-     */
-    void init_gates_indices_() {
-        for (const auto &pair : Pennylane::Gates::Constant::gate_names) {
-            gates_indices_[std::string{pair.second}] = pair.first;
-        }
-    }
-
-    /**
-     * @brief Register generator operations in the generators_indices_
-     * attribute: an unordered_map mapping strings to GeneratorOperation
-     * enumeration keywords.
-     */
-    void init_generators_indices_() {
-        for (const auto &pair : Pennylane::Gates::Constant::generator_names) {
-            generators_indices_[std::string{pair.second.substr(9)}] =
-                pair.first;
-        }
-    }
 };
 
 }; // namespace Pennylane::LightningKokkos
