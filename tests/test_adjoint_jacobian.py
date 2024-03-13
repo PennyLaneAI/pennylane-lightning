@@ -837,7 +837,7 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        device_name not in ("lightning.qubit", "lightning.qubit2") or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize(
@@ -1018,16 +1018,17 @@ class TestAdjointJacobianQNode:
             qml.RY(tf.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        if dev.R_DTYPE == np.float32:
-            tf_r_dtype = tf.float32
+        if dev._new_API:
+            tf_r_dtype = tf.float32 if dev.c_dtype == np.complex64 else tf.float64
+            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
         else:
-            tf_r_dtype = tf.float64
+            tf_r_dtype = tf.float32 if dev.R_DTYPE == np.float32 else tf.float64
+            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         params1 = tf.Variable(0.3, dtype=tf_r_dtype)
         params2 = tf.Variable(0.4, dtype=tf_r_dtype)
-
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", h=h)
@@ -1059,8 +1060,12 @@ class TestAdjointJacobianQNode:
         params1 = torch.tensor(0.3, requires_grad=True)
         params2 = torch.tensor(0.4, requires_grad=True)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        if dev._new_API:
+            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        else:
+            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
@@ -1093,11 +1098,17 @@ class TestAdjointJacobianQNode:
             qml.RY(jax.numpy.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        params1 = jax.numpy.array(0.3, dev.R_DTYPE)
-        params2 = jax.numpy.array(0.4, dev.R_DTYPE)
-
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        if dev._new_API:
+            dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
+            params1 = jax.numpy.array(0.3, dtype)
+            params2 = jax.numpy.array(0.4, dtype)
+            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        else:
+            params1 = jax.numpy.array(0.3, dev.R_DTYPE)
+            params2 = jax.numpy.array(0.4, dev.R_DTYPE)
+            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
         qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
