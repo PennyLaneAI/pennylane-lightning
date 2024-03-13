@@ -36,11 +36,11 @@ from pennylane_lightning.lightning_qubit2 import LightningQubit2
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
+if LightningDevice != LightningQubit2:
+    pytest.skip("Exclusive tests for lightning.qubit2. Skipping.", allow_module_level=True)
+
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-if LightningDevice != LightningQubit2:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)

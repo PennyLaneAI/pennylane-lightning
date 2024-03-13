@@ -393,6 +393,18 @@ class LightningQubit2(Device):
         execution_config: Optional[ExecutionConfig] = None,
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
+
+        ``LightningQubit2`` supports adjoint differentiation with analytic results.
+
+        Args:
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
+
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+
+        """
         if execution_config is None and circuit is None:
             return True
         if execution_config.gradient_method not in {"adjoint", "best"}:
@@ -402,6 +414,24 @@ class LightningQubit2(Device):
         return _supports_adjoint(circuit=circuit)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
+
+        Args:
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
+
+        Returns:
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
+        """
         config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
@@ -423,6 +453,15 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a datastructure with additional information required for execution
+
+        Returns:
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
+        """
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
@@ -435,6 +474,15 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        """Calculate the jacobian of either a single or a batch of circuits on the device.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            Tuple: The jacobian for each trainable parameter
+        """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
             jacobian(circuit, self._statevector, batch_obs=batch_obs) for circuit in circuits
@@ -445,6 +493,15 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        """Compute the results and jacobians of circuits at the same time.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            tuple: A numeric result of the computation and the gradient.
+        """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             simulate_and_jacobian(c, self._statevector, batch_obs=batch_obs) for c in circuits

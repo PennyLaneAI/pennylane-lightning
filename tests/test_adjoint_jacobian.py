@@ -18,7 +18,6 @@ import itertools
 import math
 
 import pennylane as qml
-from pennylane_lightning.lightning_qubit_ops import LightningException
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -42,6 +41,9 @@ if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
+
+if device_name == "lightning.qubit2" and ld._CPP_BINARY_AVAILABLE:
+    from pennylane_lightning.lightning_qubit_ops import LightningException
 
 fixture_params = itertools.product(
     [np.complex64, np.complex128],
@@ -1586,9 +1588,7 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1633,9 +1633,7 @@ def test_diff_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

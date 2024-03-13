@@ -276,7 +276,7 @@ class LightningAdjointJacobian:
         Returns:
             The vector-Jacobian products of a tape.
         """
-        if tape.shots is not None:
+        if tape.shots:
             raise QuantumFunctionError(
                 "Requested adjoint differentiation to be computed with finite shots. "
                 "The derivative is always exact when using the adjoint differentiation "
