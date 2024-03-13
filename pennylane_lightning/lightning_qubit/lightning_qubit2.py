@@ -448,11 +448,12 @@ class LightningQubit2(Device):
             _add_adjoint_transforms(program)
         return program, config
 
+    # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ) -> Result_or_ResultBatch:  # pylint: disable=unused-argument
+    ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
