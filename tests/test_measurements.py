@@ -684,6 +684,7 @@ class TestWiresInVar:
 
 
 @flaky(max_runs=5)
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 @pytest.mark.parametrize("shots", [10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
