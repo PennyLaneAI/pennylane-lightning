@@ -452,7 +452,7 @@ class LightningQubit2(Device):
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ) -> Result_or_ResultBatch:
+    ) -> Result_or_ResultBatch:  # pylint: disable=unused-argument
         """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:

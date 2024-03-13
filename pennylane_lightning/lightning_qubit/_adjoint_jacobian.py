@@ -16,7 +16,6 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 from os import getenv
 from typing import List
-from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -207,7 +206,7 @@ class LightningAdjointJacobian:
         if tape_return_type is State:
             raise QuantumFunctionError("This method does not support statevector return type. ")
 
-        elif any(m.return_type is not Expectation for m in tape.measurements):
+        if any(m.return_type is not Expectation for m in tape.measurements):
             raise QuantumFunctionError(
                 "Adjoint differentiation method does not support expectation return type "
                 "mixed with other return types"
