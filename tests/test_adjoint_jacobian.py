@@ -1087,7 +1087,12 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
-        if dev.R_DTYPE == np.float64:
+        if dev._new_API:
+            dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
+        else:
+            dtype = dev.R_DTYPE
+
+        if dtype == np.float64:
             from jax import config
 
             config.update("jax_enable_x64", True)
@@ -1098,17 +1103,11 @@ class TestAdjointJacobianQNode:
             qml.RY(jax.numpy.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        if dev._new_API:
-            dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
-            params1 = jax.numpy.array(0.3, dtype)
-            params2 = jax.numpy.array(0.4, dtype)
-            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            params1 = jax.numpy.array(0.3, dev.R_DTYPE)
-            params2 = jax.numpy.array(0.4, dev.R_DTYPE)
-            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        params1 = jax.numpy.array(0.3, dtype)
+        params2 = jax.numpy.array(0.4, dtype)
+
+        h = 2e-3 if dtype == np.float32 else 1e-7
+        tol = 1e-3 if dtype == np.float32 else 1e-7
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
         qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
