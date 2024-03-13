@@ -37,7 +37,7 @@ def test_create_device_with_dtype(C):
     not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
 )
 def test_create_device_with_unsupported_dtype():
-    with pytest.raises(TypeError, match="Unsupported complex Type:"):
+    with pytest.raises(TypeError, match="Unsupported complex type:"):
         dev = qml.device(device_name, wires=1, c_dtype=np.complex256)
 
 
