@@ -390,10 +390,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Apply an arbitrary controlled operation to the state tensor.
 
             Args:
-                operation (~pennylane.operation.Operation): operation to apply
+                operation (~pennylane.operation.Operation): controlled operation to apply
 
             Returns:
-                array[complex]: the output state tensor
+                None
             """
             state = self.state_vector
 
@@ -432,7 +432,26 @@ if LQ_CPP_BINARY_AVAILABLE:
                         operation.base.matrix, control_wires, control_values, target_wires, False
                     )
 
-        # pylint: disable=too-many-branches
+        def _apply_lightning_midmeasure(self, operation: MidMeasureMP, mid_measurements: dict):
+            """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+
+            Args:
+                operation (~pennylane.operation.Operation): mid-circuit measurement
+
+            Returns:
+                None
+            """
+            wires = self.wires.indices(operation.wires)
+            wire = list(wires)[0]
+            sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
+            if operation.postselect is not None and sample != operation.postselect:
+                mid_measurements[operation] = -1
+                return
+            mid_measurements[operation] = sample
+            getattr(self.state_vector, "collapse")(wire, bool(sample))
+            if operation.reset and bool(sample):
+                self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+
         def apply_lightning(self, operations, mid_measurements=None):
             """Apply a list of operations to the state tensor.
 
@@ -440,7 +459,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                 operations (list[~pennylane.operation.Operation]): operations to apply
 
             Returns:
-                array[complex]: the output state tensor
+                None
             """
             state = self.state_vector
             # Skip over identity operations instead of performing
@@ -461,15 +480,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                     if operation.meas_val.concretize(mid_measurements):
                         self.apply_lightning([operation.then_op])
                 elif isinstance(operation, MidMeasureMP):
-                    wire = list(wires)[0]
-                    sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
-                    if operation.postselect is not None and sample != operation.postselect:
-                        mid_measurements[operation] = -1
-                        return
-                    mid_measurements[operation] = sample
-                    getattr(state, "collapse")(wire, bool(sample))
-                    if operation.reset and bool(sample):
-                        self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+                    self._apply_lightning_midmeasure(operation, mid_measurements)
                 elif method is not None:  # apply specialized gate
                     param = operation.parameters
                     method(wires, invert_param, param)
