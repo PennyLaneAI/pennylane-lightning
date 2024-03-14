@@ -18,8 +18,11 @@ import functools
 
 import pennylane as qml
 import pytest
-from conftest import device_name
+from conftest import device_name, LightningDevice
 from pennylane import numpy as np
+
+if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.mark.parametrize("diff_method", ("param_shift", "finite_diff"))

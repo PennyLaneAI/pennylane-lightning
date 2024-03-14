@@ -26,6 +26,9 @@ from pennylane import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 @pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestApply:

@@ -19,6 +19,9 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
 
+if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 np.random.seed(42)
 
 

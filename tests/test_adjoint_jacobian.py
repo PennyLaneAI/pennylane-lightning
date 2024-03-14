@@ -28,19 +28,22 @@ from scipy.stats import unitary_group
 
 I, X, Y, Z = (
     np.eye(2),
-    qml.PauliX.compute_matrix(),
-    qml.PauliY.compute_matrix(),
-    qml.PauliZ.compute_matrix(),
+    qml.X.compute_matrix(),
+    qml.Y.compute_matrix(),
+    qml.Z.compute_matrix(),
 )
+
+if ld._new_API:
+    if not ld._CPP_BINARY_AVAILABLE:
+        pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+    else:
+        from pennylane_lightning.lightning_qubit_ops import LightningException
 
 kokkos_args = [None]
 if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
-
-if ld._new_API and ld._CPP_BINARY_AVAILABLE:
-    from pennylane_lightning.lightning_qubit_ops import LightningException
 
 fixture_params = itertools.product(
     [np.complex64, np.complex128],
