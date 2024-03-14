@@ -22,11 +22,11 @@ from conftest import PHI, THETA, VARPHI, LightningDevice
 np.random.seed(42)
 
 
-@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestVar:
     """Tests for the variance"""
 
+    @pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
     def test_var(self, theta, phi, qubit_device, tol):
         """Tests for variance calculation"""
         dev = qubit_device(wires=3)

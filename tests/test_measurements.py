@@ -592,10 +592,10 @@ class TestWiresInExpval:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "shots, wires",
         [
@@ -618,7 +618,6 @@ class TestSample:
         s1 = dev.sample(qml.PauliZ(wires=[0]))
         assert np.array_equal(s1.shape, (dev.shots,))
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
         the correct values

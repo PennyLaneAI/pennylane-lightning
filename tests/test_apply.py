@@ -636,10 +636,10 @@ class TestVar:
         assert var != 1.0
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_dimensions(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -673,7 +673,6 @@ class TestSample:
         s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
         assert np.array_equal(s3.shape, (17,))
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
         the correct values
@@ -701,16 +700,18 @@ class TestLightningDeviceIntegration:
     """Integration tests for lightning device. This test ensures it integrates
     properly with the PennyLane interface, in particular QNode."""
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_load_default_qubit_device(self):
         """Test that the default plugin loads correctly"""
 
         dev = qml.device(device_name, wires=2)
-        assert dev.num_wires == 2
-        assert dev.shots is None
-        assert dev.short_name == device_name
+        if dev._new_API:
+            assert not dev.shots
+            assert len(dev.wires) == 2
+        else:
+            assert dev.shots is None
+            assert dev.num_wires == 2
+            assert dev.short_name == device_name
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_no_backprop(self):
         """Test that lightning device does not support the backprop
@@ -725,7 +726,6 @@ class TestLightningDeviceIntegration:
         with pytest.raises(qml.QuantumFunctionError):
             qml.QNode(circuit, dev, diff_method="backprop")
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
@@ -1143,8 +1143,8 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     @pytest.mark.xfail(ld._new_API, reason="Old API required")
+    @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
         self, num_wires
     ):
