@@ -30,11 +30,11 @@ namespace Pennylane::LightningKokkos::Functors {
 
 template <class PrecisionT, class FuncT> class applyNC1Functor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-    FuncT core_function;
-    std::size_t rev_wire;
-    std::size_t rev_wire_shift;
-    std::size_t wire_parity;
-    std::size_t wire_parity_inv;
+    const FuncT core_function;
+    const std::size_t rev_wire;
+    const std::size_t rev_wire_shift;
+    const std::size_t wire_parity;
+    const std::size_t wire_parity_inv;
 
   public:
     template <class ExecutionSpace>
@@ -81,10 +81,10 @@ void applyPauliY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            const auto v0 = arr[i0];
-            const auto v1 = arr[i1];
-            arr[i0] = Kokkos::complex<PrecisionT>{imag(v1), -real(v1)};
-            arr[i1] = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
+            const auto v0 = arr(i0);
+            const auto v1 = arr(i1);
+            arr(i0) = Kokkos::complex<PrecisionT>{imag(v1), -real(v1)};
+            arr(i1) = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
         });
 }
 
@@ -97,7 +97,7 @@ void applyPauliZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       [[maybe_unused]] const std::size_t i0,
-                      const std::size_t i1) { arr[i1] *= -1.0; });
+                      const std::size_t i1) { arr(i1) *= -1.0; });
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -111,12 +111,12 @@ void applyHadamard(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       [[maybe_unused]] const std::size_t i0,
                       const std::size_t i1) {
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
+            const Kokkos::complex<PrecisionT> v0 = arr(i0);
             const Kokkos::complex<PrecisionT> v1 =
-                (inverse) ? -arr[i1] : arr[i1];
-            arr[i0] = M_SQRT1_2 * v0 +
+                (inverse) ? -arr(i1) : arr(i1);
+            arr(i0) = M_SQRT1_2 * v0 +
                       M_SQRT1_2 * v1; // NOLINT(readability-magic-numbers)
-            arr[i1] = M_SQRT1_2 * v0 +
+            arr(i1) = M_SQRT1_2 * v0 +
                       -M_SQRT1_2 * v1; // NOLINT(readability-magic-numbers)
         });
 }
@@ -132,7 +132,7 @@ void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       [[maybe_unused]] const std::size_t i0,
-                      const std::size_t i1) { arr[i1] *= shift; });
+                      const std::size_t i1) { arr(i1) *= shift; });
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -149,7 +149,7 @@ void applyT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       [[maybe_unused]] const std::size_t i0,
-                      const std::size_t i1) { arr[i1] *= shift; });
+                      const std::size_t i1) { arr(i1) *= shift; });
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -166,7 +166,7 @@ void applyPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       [[maybe_unused]] const std::size_t i0,
-                      const std::size_t i1) { arr[i1] *= shift; });
+                      const std::size_t i1) { arr(i1) *= shift; });
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -182,11 +182,11 @@ void applyRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            const auto v0 = arr[i0];
-            const auto v1 = arr[i1];
-            arr[i0] = c * v0 +
+            const auto v0 = arr(i0);
+            const auto v1 = arr(i1);
+            arr(i0) = c * v0 +
                       Kokkos::complex<PrecisionT>{-imag(v1) * s, real(v1) * s};
-            arr[i1] = Kokkos::complex<PrecisionT>{-imag(v0) * s, real(v0) * s} +
+            arr(i1) = Kokkos::complex<PrecisionT>{-imag(v0) * s, real(v0) * s} +
                       c * v1;
         });
 }
@@ -204,11 +204,11 @@ void applyRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            const auto v0 = arr[i0];
-            const auto v1 = arr[i1];
-            arr[i0] = Kokkos::complex<PrecisionT>{c * real(v0) - s * real(v1),
+            const auto v0 = arr(i0);
+            const auto v1 = arr(i1);
+            arr(i0) = Kokkos::complex<PrecisionT>{c * real(v0) - s * real(v1),
                                                   c * imag(v0) - s * imag(v1)};
-            arr[i1] = Kokkos::complex<PrecisionT>{s * real(v0) + c * real(v1),
+            arr(i1) = Kokkos::complex<PrecisionT>{s * real(v0) + c * real(v1),
                                                   s * imag(v0) + c * imag(v1)};
         });
 }
@@ -228,8 +228,8 @@ void applyRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            arr[i0] *= shift_0;
-            arr[i1] *= shift_1;
+            arr(i0) *= shift_0;
+            arr(i1) *= shift_1;
         });
 }
 
@@ -251,10 +251,422 @@ void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
-            const Kokkos::complex<PrecisionT> v1 = arr[i1];
-            arr[i0] = mat_0b00 * v0 + mat_0b01 * v1;
-            arr[i1] = mat_0b10 * v0 + mat_0b11 * v1;
+            const Kokkos::complex<PrecisionT> v0 = arr(i0);
+            const Kokkos::complex<PrecisionT> v1 = arr(i1);
+            arr(i0) = mat_0b00 * v0 + mat_0b01 * v1;
+            arr(i1) = mat_0b10 * v0 + mat_0b11 * v1;
+        });
+}
+
+template <class PrecisionT, class FuncT> class applyNC2Functor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+    const FuncT core_function;
+    const std::size_t rev_wire0;
+    const std::size_t rev_wire1;
+    const std::size_t rev_wire0_shift;
+    const std::size_t rev_wire1_shift;
+    const std::size_t rev_wire_min;
+    const std::size_t rev_wire_max;
+    const std::size_t parity_low;
+    const std::size_t parity_high;
+    const std::size_t parity_middle;
+
+  public:
+    template <class ExecutionSpace>
+    applyNC2Functor([[maybe_unused]] ExecutionSpace exec,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    std::size_t num_qubits, const std::vector<size_t> &wires,
+                    FuncT core_function_)
+        : arr(arr_), core_function(core_function_),
+          rev_wire0(num_qubits - wires[1] - 1),
+          rev_wire1(num_qubits - wires[0] - 1),
+          rev_wire0_shift(static_cast<size_t>(1U) << rev_wire0),
+          rev_wire1_shift(static_cast<size_t>(1U) << rev_wire1),
+          rev_wire_min(std::min(rev_wire0, rev_wire1)),
+          rev_wire_max(std::max(rev_wire0, rev_wire1)),
+          parity_low(fillTrailingOnes(rev_wire_min)),
+          parity_high(fillLeadingOnes(rev_wire_max + 1)),
+          parity_middle(fillLeadingOnes(rev_wire_min + 1) &
+                        fillTrailingOnes(rev_wire_max)) {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 2)),
+            *this);
+    }
+    KOKKOS_FUNCTION void operator()(const std::size_t k) const {
+        const std::size_t i00 = ((k << 2U) & parity_high) |
+                                ((k << 1U) & parity_middle) | (k & parity_low);
+        const std::size_t i01 = i00 | rev_wire0_shift;
+        const std::size_t i10 = i00 | rev_wire1_shift;
+        const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+        core_function(arr, i00, i01, i10, i11);
+    }
+};
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCNOT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+               const std::size_t num_qubits, const std::vector<size_t> &wires,
+               [[maybe_unused]] const bool inverse = false,
+               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            Kokkos::Experimental::swap(arr(i10), arr(i11));
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+             const std::size_t num_qubits, const std::vector<size_t> &wires,
+             [[maybe_unused]] const bool inverse = false,
+             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            Kokkos::complex<PrecisionT> v10 = arr(i10);
+            arr(i10) =
+                Kokkos::complex<PrecisionT>{imag(arr(i11)), -real(arr(i11))};
+            arr(i11) = Kokkos::complex<PrecisionT>{-imag(v10), real(v10)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+             const std::size_t num_qubits, const std::vector<size_t> &wires,
+             [[maybe_unused]] const bool inverse = false,
+             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      [[maybe_unused]] const std::size_t i10,
+                      const std::size_t i11) { arr(i11) *= -1; });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+               const std::size_t num_qubits, const std::vector<size_t> &wires,
+               [[maybe_unused]] const bool inverse = false,
+               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      const std::size_t i01, const std::size_t i10,
+                      [[maybe_unused]] const std::size_t i11) {
+            swap(arr(i10), arr(i01));
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyControlledPhaseShift(
+    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    const std::size_t num_qubits, const std::vector<size_t> &wires,
+    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+
+    const PrecisionT &angle = params[0];
+    const Kokkos::complex<PrecisionT> s =
+        (inverse) ? exp(-Kokkos::complex<PrecisionT>(0, angle))
+                  : exp(Kokkos::complex<PrecisionT>(0, angle));
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      [[maybe_unused]] const std::size_t i10,
+                      const std::size_t i11) { arr(i11) *= s; });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+              const std::size_t num_qubits, const std::vector<size_t> &wires,
+              const bool inverse = false,
+              const std::vector<PrecisionT> &params = {}) {
+
+    const PrecisionT &angle = params[0];
+    const PrecisionT c = std::cos(angle / 2);
+    const PrecisionT js =
+        (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            const Kokkos::complex<PrecisionT> v11 = arr(i11);
+            arr(i10) = Kokkos::complex<PrecisionT>{
+                c * real(v10) + js * imag(v11), c * imag(v10) - js * real(v11)};
+            arr(i11) = Kokkos::complex<PrecisionT>{
+                c * real(v11) + js * imag(v10), c * imag(v11) - js * real(v10)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+              const std::size_t num_qubits, const std::vector<size_t> &wires,
+              const bool inverse = false,
+              const std::vector<PrecisionT> &params = {}) {
+
+    const PrecisionT &angle = params[0];
+    const PrecisionT c = std::cos(angle / 2);
+    const PrecisionT s = (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            const Kokkos::complex<PrecisionT> v11 = arr(i11);
+            arr(i10) = c * v10 - s * v11;
+            arr(i11) = s * v10 + c * v11;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+              const std::size_t num_qubits, const std::vector<size_t> &wires,
+              const bool inverse = false,
+              const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cos_angle = cos(angle * static_cast<PrecisionT>(0.5));
+    const PrecisionT sin_angle = sin(angle * static_cast<PrecisionT>(0.5));
+    const Kokkos::complex<PrecisionT> shift_0{
+        cos_angle, (inverse) ? sin_angle : -sin_angle};
+    const Kokkos::complex<PrecisionT> shift_1 = Kokkos::conj(shift_0);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            arr(i10) *= shift_0;
+            arr(i11) *= shift_1;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyCRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+               const std::size_t num_qubits, const std::vector<size_t> &wires,
+               const bool inverse = false,
+               const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT phi = (inverse) ? -params[2] : params[0];
+    const PrecisionT theta = (inverse) ? -params[1] : params[1];
+    const PrecisionT omega = (inverse) ? -params[0] : params[2];
+    const auto mat = Pennylane::Gates::getRot<Kokkos::complex, PrecisionT>(
+        phi, theta, omega);
+    const Kokkos::complex<PrecisionT> mat_0b00 = mat[0b00];
+    const Kokkos::complex<PrecisionT> mat_0b01 = mat[0b01];
+    const Kokkos::complex<PrecisionT> mat_0b10 = mat[0b10];
+    const Kokkos::complex<PrecisionT> mat_0b11 = mat[0b11];
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      [[maybe_unused]] const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v0 = arr(i10);
+            const Kokkos::complex<PrecisionT> v1 = arr(i11);
+            arr(i10) = mat_0b00 * v0 + mat_0b01 * v1;
+            arr(i11) = mat_0b10 * v0 + mat_0b11 * v1;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                  const std::size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj =
+        (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i00, const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v00 = arr(i00);
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            const Kokkos::complex<PrecisionT> v11 = arr(i11);
+            arr(i00) =
+                Kokkos::complex<PrecisionT>{cr * real(v00) + sj * imag(v11),
+                                            cr * imag(v00) - sj * real(v11)};
+            arr(i01) =
+                Kokkos::complex<PrecisionT>{cr * real(v01) + sj * imag(v10),
+                                            cr * imag(v01) - sj * real(v10)};
+            arr(i10) =
+                Kokkos::complex<PrecisionT>{cr * real(v10) + sj * imag(v01),
+                                            cr * imag(v10) - sj * real(v01)};
+            arr(i11) =
+                Kokkos::complex<PrecisionT>{cr * real(v11) + sj * imag(v00),
+                                            cr * imag(v11) - sj * real(v00)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                  const std::size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj =
+        (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i00, const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v00 = arr(i00);
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            const Kokkos::complex<PrecisionT> v11 = arr(i11);
+            arr(i00) = Kokkos::complex<PrecisionT>{real(v00), imag(v00)};
+            arr(i01) =
+                Kokkos::complex<PrecisionT>{cr * real(v01) - sj * imag(v10),
+                                            cr * imag(v01) + sj * real(v10)};
+            arr(i10) =
+                Kokkos::complex<PrecisionT>{cr * real(v10) - sj * imag(v01),
+                                            cr * imag(v10) + sj * real(v01)};
+            arr(i11) = Kokkos::complex<PrecisionT>{real(v11), imag(v11)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                  const std::size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj =
+        (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i00, const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v00 = arr(i00);
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            const Kokkos::complex<PrecisionT> v11 = arr(i11);
+            arr(i00) =
+                Kokkos::complex<PrecisionT>{cr * real(v00) - sj * imag(v11),
+                                            cr * imag(v00) + sj * real(v11)};
+            arr(i01) =
+                Kokkos::complex<PrecisionT>{cr * real(v01) + sj * imag(v10),
+                                            cr * imag(v01) - sj * real(v10)};
+            arr(i10) =
+                Kokkos::complex<PrecisionT>{cr * real(v10) + sj * imag(v01),
+                                            cr * imag(v10) - sj * real(v01)};
+            arr(i11) =
+                Kokkos::complex<PrecisionT>{cr * real(v11) - sj * imag(v00),
+                                            cr * imag(v11) + sj * real(v00)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                  const std::size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
+        std::cos(angle / 2),
+        (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
+    const Kokkos::complex<PrecisionT> shift_1 = conj(shift_0);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i00, const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            arr(i00) *= shift_0;
+            arr(i01) *= shift_1;
+            arr(i10) *= shift_1;
+            arr(i11) *= shift_0;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applySingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                           const std::size_t num_qubits,
+                           const std::vector<size_t> &wires,
+                           const bool inverse = false,
+                           const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj =
+        (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      const std::size_t i01, const std::size_t i10,
+                      [[maybe_unused]] const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            arr(i01) = cr * v01 - sj * v10;
+            arr(i10) = sj * v01 + cr * v10;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applySingleExcitationMinus(
+    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    const std::size_t num_qubits, const std::vector<size_t> &wires,
+    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+    const Kokkos::complex<PrecisionT> e =
+        inverse ? exp(Kokkos::complex<PrecisionT>(0, angle / 2))
+                : exp(Kokkos::complex<PrecisionT>(0, -angle / 2));
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i00, const std::size_t i01,
+                      const std::size_t i10, const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            arr(i00) *= e;
+            arr(i01) = cr * v01 - sj * v10;
+            arr(i10) = sj * v01 + cr * v10;
+            arr(i11) *= e;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applySingleExcitationPlus(
+    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    const std::size_t num_qubits, const std::vector<size_t> &wires,
+    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const PrecisionT cr = std::cos(angle / 2);
+    const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
+    const Kokkos::complex<PrecisionT> e =
+        inverse ? exp(Kokkos::complex<PrecisionT>(0, -angle / 2))
+                : exp(Kokkos::complex<PrecisionT>(0, angle / 2));
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      const std::size_t i01, const std::size_t i10,
+                      [[maybe_unused]] const std::size_t i11) {
+            const Kokkos::complex<PrecisionT> v01 = arr(i01);
+            const Kokkos::complex<PrecisionT> v10 = arr(i10);
+            arr(i00) *= e;
+            arr(i01) = cr * v01 - sj * v10;
+            arr(i10) = sj * v01 + cr * v10;
+            arr(i11) *= e;
         });
 }
 
@@ -282,22 +694,22 @@ template <class PrecisionT, bool inverse = false> struct hadamardFunctor {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
-            const Kokkos::complex<PrecisionT> v1 = arr[i1];
-            arr[i0] = M_SQRT1_2 * v0 +
+            const Kokkos::complex<PrecisionT> v0 = arr(i0);
+            const Kokkos::complex<PrecisionT> v1 = arr(i1);
+            arr(i0) = M_SQRT1_2 * v0 +
                       M_SQRT1_2 * v1; // NOLINT(readability-magic-numbers)
-            arr[i1] = M_SQRT1_2 * v0 +
+            arr(i1) = M_SQRT1_2 * v0 +
                       (-M_SQRT1_2) * v1; // NOLINT(readability-magic-numbers)
                                          // }
         } else {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;
-            const Kokkos::complex<PrecisionT> v0 = arr[i0];
-            const Kokkos::complex<PrecisionT> v1 = arr[i1];
-            arr[i0] = M_SQRT1_2 * v0 +
+            const Kokkos::complex<PrecisionT> v0 = arr(i0);
+            const Kokkos::complex<PrecisionT> v1 = arr(i1);
+            arr(i0) = M_SQRT1_2 * v0 +
                       M_SQRT1_2 * v1; // NOLINT(readability-magic-numbers)
-            arr[i1] = M_SQRT1_2 * v0 +
+            arr(i1) = M_SQRT1_2 * v0 +
                       -M_SQRT1_2 * v1; // NOLINT(readability-magic-numbers)
                                        // }
         }
@@ -327,7 +739,7 @@ template <class PrecisionT, bool inverse = false> struct pauliXFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        swap(arr[i0], arr[i1]);
+        swap(arr(i0), arr(i1));
     }
 };
 
@@ -354,10 +766,10 @@ template <class PrecisionT, bool inverse = false> struct pauliYFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        const auto v0 = arr[i0];
-        const auto v1 = arr[i1];
-        arr[i0] = Kokkos::complex<PrecisionT>{imag(v1), -real(v1)};
-        arr[i1] = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
+        const auto v0 = arr(i0);
+        const auto v1 = arr(i1);
+        arr(i0) = Kokkos::complex<PrecisionT>{imag(v1), -real(v1)};
+        arr(i1) = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
     }
 };
 
@@ -384,7 +796,7 @@ template <class PrecisionT, bool inverse = false> struct pauliZFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        arr[i1] *= -1;
+        arr(i1) *= -1;
     }
 };
 
@@ -414,7 +826,7 @@ template <class PrecisionT, bool inverse = false> struct sFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        arr[i1] *= shift;
+        arr(i1) *= shift;
     }
 };
 
@@ -446,7 +858,7 @@ template <class PrecisionT, bool inverse = false> struct tFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        arr[i1] *= shift;
+        arr(i1) *= shift;
     }
 };
 
@@ -490,7 +902,7 @@ template <class PrecisionT, bool inverse = false> struct cnotFunctor {
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
 
-        swap(arr[i10], arr[i11]);
+        swap(arr(i10), arr(i11));
     }
 };
 
@@ -533,9 +945,9 @@ template <class PrecisionT, bool inverse = false> struct cyFunctor {
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
-        Kokkos::complex<PrecisionT> v10 = arr[i10];
-        arr[i10] = Kokkos::complex<PrecisionT>{imag(arr[i11]), -real(arr[i11])};
-        arr[i11] = Kokkos::complex<PrecisionT>{-imag(v10), real(v10)};
+        Kokkos::complex<PrecisionT> v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{imag(arr(i11)), -real(arr(i11))};
+        arr(i11) = Kokkos::complex<PrecisionT>{-imag(v10), real(v10)};
     }
 };
 
@@ -577,7 +989,7 @@ template <class PrecisionT, bool inverse = false> struct czFunctor {
         const std::size_t i00 = ((k << 2U) & parity_high) |
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
-        arr[i11] *= -1;
+        arr(i11) *= -1;
     }
 };
 
@@ -620,7 +1032,7 @@ template <class PrecisionT, bool inverse = false> struct swapFunctor {
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i01 = i00 | rev_wire0_shift;
-        swap(arr[i10], arr[i01]);
+        swap(arr(i10), arr(i01));
     }
 };
 
@@ -687,7 +1099,7 @@ template <class PrecisionT, bool inverse = false> struct cSWAPFunctor {
         const std::size_t i101 = i000 | rev_wire2_shift | rev_wire0_shift;
         const std::size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
 
-        swap(arr[i101], arr[i110]);
+        swap(arr(i101), arr(i110));
     }
 };
 
@@ -755,7 +1167,7 @@ template <class PrecisionT, bool inverse = false> struct toffoliFunctor {
             i000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
         const std::size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
 
-        swap(arr[i111], arr[i110]);
+        swap(arr(i111), arr(i110));
     }
 };
 

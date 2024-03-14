@@ -497,57 +497,69 @@ class StateVectorKokkos final
             applyRot<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
                                       params);
             return;
+        case GateOperation::CNOT:
+            applyCNOT<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                       params);
+            return;
         case GateOperation::CY:
-            applyGateFunctor<cyFunctor, 2>(wires, inverse, params);
+            applyCY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                     params);
             return;
         case GateOperation::CZ:
-            applyGateFunctor<czFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CNOT:
-            applyGateFunctor<cnotFunctor, 2>(wires, inverse, params);
+            applyCZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                     params);
             return;
         case GateOperation::SWAP:
-            applyGateFunctor<swapFunctor, 2>(wires, inverse, params);
+            applySWAP<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                       params);
             return;
         case GateOperation::ControlledPhaseShift:
-            applyGateFunctor<controlledPhaseShiftFunctor, 2>(wires, inverse,
-                                                             params);
+            applyControlledPhaseShift<KokkosExecSpace>(*data_, num_qubits,
+                                                       wires, inverse, params);
             return;
         case GateOperation::CRX:
-            applyGateFunctor<crxFunctor, 2>(wires, inverse, params);
+            applyCRX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                      params);
             return;
         case GateOperation::CRY:
-            applyGateFunctor<cryFunctor, 2>(wires, inverse, params);
+            applyCRY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                      params);
             return;
         case GateOperation::CRZ:
-            applyGateFunctor<crzFunctor, 2>(wires, inverse, params);
+            applyCRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                      params);
             return;
         case GateOperation::CRot:
-            applyGateFunctor<cRotFunctor, 2>(wires, inverse, params);
+            applyCRot<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                       params);
             return;
         case GateOperation::IsingXX:
-            applyGateFunctor<isingXXFunctor, 2>(wires, inverse, params);
+            applyIsingXX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
             return;
         case GateOperation::IsingXY:
-            applyGateFunctor<isingXYFunctor, 2>(wires, inverse, params);
+            applyIsingXY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
             return;
         case GateOperation::IsingYY:
-            applyGateFunctor<isingYYFunctor, 2>(wires, inverse, params);
+            applyIsingYY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
             return;
         case GateOperation::IsingZZ:
-            applyGateFunctor<isingZZFunctor, 2>(wires, inverse, params);
+            applyIsingZZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
             return;
         case GateOperation::SingleExcitation:
-            applyGateFunctor<singleExcitationFunctor, 2>(wires, inverse,
-                                                         params);
+            applySingleExcitation<KokkosExecSpace>(*data_, num_qubits, wires,
+                                                   inverse, params);
             return;
         case GateOperation::SingleExcitationMinus:
-            applyGateFunctor<singleExcitationMinusFunctor, 2>(wires, inverse,
-                                                              params);
+            applySingleExcitationMinus<KokkosExecSpace>(*data_, num_qubits,
+                                                        wires, inverse, params);
             return;
         case GateOperation::SingleExcitationPlus:
-            applyGateFunctor<singleExcitationPlusFunctor, 2>(wires, inverse,
-                                                             params);
+            applySingleExcitationPlus<KokkosExecSpace>(*data_, num_qubits,
+                                                       wires, inverse, params);
             return;
         case GateOperation::DoubleExcitation:
             applyGateFunctor<doubleExcitationFunctor, 4>(wires, inverse,
