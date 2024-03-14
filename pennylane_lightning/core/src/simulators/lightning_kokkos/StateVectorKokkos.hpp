@@ -450,16 +450,19 @@ class StateVectorKokkos final
                              bool inverse = false,
                              const std::vector<fp_t> &params = {}) {
         std::size_t num_qubits = this->getNumQubits();
-        auto core_function = [](KokkosVector arr, const std::size_t i0,
-                                const std::size_t i1) {
-            Kokkos::Experimental::swap(arr(i0), arr(i1));
-        };
+        // auto core_function = [=](KokkosVector arr, const std::size_t i0,
+        //                         const std::size_t i1) {
+        //     Kokkos::Experimental::swap(arr(i0), arr(i1));
+        // };
         switch (gates_indices_[opName]) {
         case GateOperation::PauliX:
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 1)),
-                applyNC1Functor<fp_t, decltype(core_function)>(
-                    *data_, num_qubits, wires, params, core_function));
+            applyNC1Functor(KokkosExecSpace{}, *data_, num_qubits, wires, KOKKOS_LAMBDA(KokkosVector arr, const std::size_t i0,
+                                const std::size_t i1) {
+            Kokkos::Experimental::swap(arr(i0), arr(i1));});
+            // Kokkos::parallel_for(
+            //     Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 1)),
+            //     applyNC1Functor(
+            //         *data_, num_qubits, wires, corePauliX<PrecisionT>()));
             // applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
             return;
         case GateOperation::PauliY:

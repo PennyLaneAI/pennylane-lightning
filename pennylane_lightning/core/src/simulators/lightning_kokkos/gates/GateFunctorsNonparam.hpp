@@ -27,35 +27,77 @@ using Kokkos::Experimental::swap;
 
 namespace Pennylane::LightningKokkos::Functors {
 
-template <class PrecisionT, class FuncT> struct applyNC1Functor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
+template <class PrecisionT, class FuncT>
+class applyNC1Functor {
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+    FuncT core_function;
     std::size_t rev_wire;
     std::size_t rev_wire_shift;
     std::size_t wire_parity;
     std::size_t wire_parity_inv;
-    FuncT core_function;
 
-    applyNC1Functor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                    std::size_t num_qubits, const std::vector<size_t> &wires,
-                    [[maybe_unused]] const std::vector<PrecisionT> &params,
-                    FuncT core_function_) {
-        arr = arr_;
-        rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        wire_parity = fillTrailingOnes(rev_wire);
-        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
-        core_function = core_function_;
+  public:
+    template <class ExecutionSpace>
+    applyNC1Functor([[maybe_unused]]ExecutionSpace exec, Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    std::size_t num_qubits, const std::vector<size_t> &wires, FuncT core_function_) :
+        arr(arr_), 
+        core_function(core_function_), 
+        rev_wire(num_qubits - wires[0] - 1), 
+        rev_wire_shift((static_cast<size_t>(1U) << rev_wire)),
+        wire_parity(fillTrailingOnes(rev_wire)), 
+        wire_parity_inv(fillLeadingOnes(rev_wire + 1))
+    {
+        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 1)), *this);
     }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    KOKKOS_FUNCTION void operator()(const std::size_t k) const { 
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
         core_function(arr, i0, i1);
-    }
+ }
 };
+
+// template <class PrecisionT, typename FuncT> struct applyNC1Functor {
+//     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+
+//     std::size_t rev_wire;
+//     std::size_t rev_wire_shift;
+//     std::size_t wire_parity;
+//     std::size_t wire_parity_inv;
+
+//     FuncT core_function;
+
+//     applyNC1Functor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+//                     std::size_t num_qubits, const std::vector<size_t> &wires, FuncT &core_function_) {
+//         arr = arr_;
+//         rev_wire = num_qubits - wires[0] - 1;
+//         rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+//         wire_parity = fillTrailingOnes(rev_wire);
+//         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+// core_function = core_function_;
+//     }
+
+//     KOKKOS_INLINE_FUNCTION
+//     void operator()(const std::size_t k) const {
+//         const std::size_t i0 =
+//             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+//         const std::size_t i1 = i0 | rev_wire_shift;
+//         core_function(arr, i0, i1);
+//     }
+// };
+
+// template <class PrecisionT>
+// struct corePauliX{
+// KOKKOS_INLINE_FUNCTION void operator()(Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i0,
+//                                 const std::size_t i1) {
+//             Kokkos::Experimental::swap(arr(i0), arr(i1));
+//         };
+// };
+
+// template <class PrecisionT>
+// using applyPauliXFunctor = applyNC1Functor<PrecisionT, corePauliX<PrecisionT>()>;
+
 
 template <class PrecisionT, bool inverse = false> struct hadamardFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
