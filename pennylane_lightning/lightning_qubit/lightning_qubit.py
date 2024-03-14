@@ -18,6 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from pathlib import Path
+from typing import List, Sequence
 from warnings import warn
 
 import numpy as np
@@ -47,9 +48,10 @@ except ImportError:
 
 if LQ_CPP_BINARY_AVAILABLE:
     from os import getenv
-    from typing import List
 
     import pennylane as qml
+
+    # pylint: disable=ungrouped-imports
     from pennylane import (
         BasisState,
         DeviceError,
@@ -61,11 +63,10 @@ if LQ_CPP_BINARY_AVAILABLE:
     )
     from pennylane.measurements import Expectation, MeasurementProcess, State
     from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-    from pennylane_lightning.core._version import __version__
+    # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
@@ -74,6 +75,10 @@ if LQ_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._version import __version__
 
     def _state_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
@@ -247,7 +252,8 @@ if LQ_CPP_BINARY_AVAILABLE:
                         f"The {kernel_name} is not supported and currently "
                         "only 'Local' and 'NonZeroRandom' kernels are supported."
                     )
-                if num_burnin >= shots:
+                shots = shots if isinstance(shots, Sequence) else [shots]
+                if any(num_burnin >= s for s in shots):
                     raise ValueError("Shots should be greater than num_burnin.")
                 self._kernel_name = kernel_name
                 self._num_burnin = num_burnin
@@ -427,16 +433,20 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
             for operation in operations:
-                name = operation.name
+                if isinstance(operation, Adjoint):
+                    name = operation.base.name
+                    invert_param = True
+                else:
+                    name = operation.name
+                    invert_param = False
                 if name == "Identity":
                     continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
 
                 if method is not None:  # apply specialized gate
-                    inv = False
                     param = operation.parameters
-                    method(wires, inv, param)
+                    method(wires, invert_param, param)
                 elif (
                     name[0:2] == "C("
                     or name == "ControlledQubitUnitary"
@@ -494,10 +504,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.expval(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply(diagonalizing_gates)
+                results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+                return results
 
             if self.shots is not None:
                 # estimate the expectation value
@@ -550,10 +563,13 @@ if LQ_CPP_BINARY_AVAILABLE:
             if observable.name in [
                 "Projector",
             ]:
-                if self.shots is None:
-                    qs = qml.tape.QuantumScript([], [qml.var(observable)])
-                    self.apply(self._get_diagonalizing_gates(qs))
-                return super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                diagonalizing_gates = observable.diagonalizing_gates()
+                if self.shots is None and diagonalizing_gates:
+                    self.apply(diagonalizing_gates)
+                results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+                return results
 
             if self.shots is not None:
                 # estimate the var
@@ -629,12 +645,17 @@ if LQ_CPP_BINARY_AVAILABLE:
         # pylint: disable=attribute-defined-outside-init
         def sample(self, observable, shot_range=None, bin_size=None, counts=False):
             """Return samples of an observable."""
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if diagonalizing_gates:
+                self.apply(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
-                self.apply_lightning(observable.diagonalizing_gates())
                 self._samples = self.generate_samples()
-            return super().sample(
+            results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
+            if diagonalizing_gates:
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+            return results
 
         @staticmethod
         def _check_adjdiff_supported_measurements(
