@@ -51,7 +51,6 @@ using Pennylane::Util::PairHash;
 
 namespace Pennylane::LightningQubit::Internal {
 constexpr auto generatorNamesWithoutPrefix() {
-    constexpr std::string_view prefix{"Generator"};
     namespace GateConstant = Pennylane::Gates::Constant;
     std::array<std::pair<GeneratorOperation, std::string_view>,
                GateConstant::generator_names.size()>
@@ -60,7 +59,7 @@ constexpr auto generatorNamesWithoutPrefix() {
         // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
         const auto [gntr_op, gntr_name] = GateConstant::generator_names[i];
         res[i].first = gntr_op;
-        res[i].second = gntr_name.substr(prefix.size());
+        res[i].second = gntr_name.substr(0);
         // NOLINTEND(cppcoreguidelines-pro-bounds-constant-array-index)
     }
     return res;

@@ -91,6 +91,13 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import (
+        QuantumScriptSerializer,
+        global_phase_diagonal,
+    )
+    from pennylane_lightning.core._version import __version__
+
     # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -98,13 +105,6 @@ if LGPU_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import (
-        QuantumScriptSerializer,
-        global_phase_diagonal,
-    )
-    from pennylane_lightning.core._version import __version__
 
     if MPI_SUPPORT:
         from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
