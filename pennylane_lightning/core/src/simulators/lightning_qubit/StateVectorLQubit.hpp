@@ -22,7 +22,6 @@
 
 #pragma once
 #include <complex>
-#include <random>
 #include <unordered_map>
 
 #include "CPUMemoryModel.hpp"
@@ -76,8 +75,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         std::unordered_map<ControlledGeneratorOperation, KernelType>;
     using ControlledMatrixKernelMap =
         std::unordered_map<ControlledMatrixOperation, KernelType>;
-
-    std::mt19937_64 rng;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
@@ -638,86 +635,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a mid-circuit measurement.
+     * @brief Collapse the state vector as after having measured one of the
+     * qubits.
      *
-     * @param wires Wires to sample from.
-     * @param postselect Value to postselect (0 or 1) or empty to ignore
-     * @param reset Flag to reset wire to 0
-     */
-    inline auto
-    applyMidMeasureMP(const std::vector<std::size_t> &wires,
-                      const std::vector<std::size_t> &postselect = {},
-                      bool reset = false) -> int {
-        PL_ABORT_IF_NOT(wires.size() == 1,
-                        "MidMeasureMP should have a single wire.")
-        PL_ABORT_IF(postselect.size() > 1,
-                    "MidMeasureMP accepts at most one postselect value.")
-        const int ps = postselect.empty() ? -1 : postselect[0];
-
-        std::vector<PrecisionT> probs_ = probs(wires[0]);
-        auto sample = randomSample(probs_[0]);
-        if (ps != -1 && ps != sample) {
-            sample = -1;
-        } else {
-            collapse(wires[0], sample);
-            if (reset && sample == 1) {
-                applyOperation("PauliX", wires);
-            }
-        }
-        return sample;
-    }
-
-    /**
-     * @brief Set the seed of the internal random generator
-     *
-     * @param seed Seed
-     */
-    void setSeed(const size_t seed) { rng.seed(seed); }
-
-    /**
-     * @brief Sample 0 or 1 for given probabilities
-     *
-     * @param probs Probabilities of 0.
-     */
-    auto randomSample(const PrecisionT prob_0) {
-        std::discrete_distribution<int> distrib({prob_0, 1. - prob_0});
-        return distrib(rng);
-    }
-
-    /**
-     * @brief Calculate probabilities of measuring 0 or 1 on a specific wire
-     *
-     * @param wire Wire
-     * @return std::vector<PrecisionT> Both probabilities of getting 0 or 1
-     */
-    auto probs(const std::size_t wire) -> std::vector<PrecisionT> {
-        // TODO: use Measurements.probs() instead (resolve circular dependency)
-        auto *arr = this->getData();
-        const size_t stride = pow(2, this->num_qubits_ - (1 + wire));
-        const size_t vec_size = pow(2, this->num_qubits_);
-        const auto section_size = vec_size / stride;
-        const auto half_section_size = section_size / 2;
-
-        PrecisionT prob_0{0.};
-        // zero half the entries
-        // the "half" entries depend on the stride
-        // *_*_*_*_ for stride 1
-        // **__**__ for stride 2
-        // ****____ for stride 4
-        for (size_t idx = 0; idx < half_section_size; idx++) {
-            const size_t offset = stride * 2 * idx;
-            for (size_t ids = 0; ids < stride; ids++) {
-                prob_0 += std::norm(arr[offset + ids]);
-            }
-        }
-
-        std::vector<PrecisionT> probs{prob_0, PrecisionT(1.) - prob_0};
-        return probs;
-    }
-
-    /**
-     * @brief Collapse the state vector after having measured one of the
-     * qubits
+     * The branch parameter imposes the measurement result on the given wire.
      *
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.

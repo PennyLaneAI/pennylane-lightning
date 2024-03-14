@@ -156,11 +156,6 @@ void registerControlledGate(PyClass &pyclass) {
             pyclass.def(gate_name.c_str(), func, doc.c_str());
         });
 }
-template <class StateVectorT>
-int applyMidMeasureMP(StateVectorT &st, const std::vector<size_t> &wires,
-                      const std::vector<size_t> &postselect, const bool reset) {
-    return st.applyMidMeasureMP(wires, postselect, reset);
-}
 
 /**
  * @brief Get a controlled matrix and kernel map for a statevector.
@@ -230,8 +225,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("normalize", &StateVectorT::normalize,
              "Normalizes the statevector to norm 1.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
-             "Apply controlled operation")
-        .def("MidMeasureMP", &applyMidMeasureMP<StateVectorT>,
              "Apply controlled operation")
         .def("kernel_map", &svKernelMap<StateVectorT>,
              "Get internal kernels for operations");
