@@ -247,7 +247,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize("obs", [qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1)])
 def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs):
-    """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of a common observable is performed at the end."""
 
     dev = qml.device(device_name, wires=2, shots=shots)
@@ -275,7 +275,7 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 @pytest.mark.parametrize("wires", [[0], [0, 1]])
 def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wires):
-    """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of one or several wires is performed at the end."""
 
     dev = qml.device(device_name, wires=2, shots=shots)
@@ -304,7 +304,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
-    """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement with reset
+    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
     and a conditional gate. Multiple measurements of the mid-circuit measurement value are
     performed."""
 
@@ -334,7 +334,7 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.sample, qml.var])
 def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f):
-    """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
@@ -367,7 +367,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
-    """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a common observable is performed at the end."""
 
     dev = qml.device(device_name, wires=2, shots=shots)
@@ -397,7 +397,7 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
-    """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
