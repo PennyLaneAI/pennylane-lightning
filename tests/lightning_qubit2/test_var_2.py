@@ -14,12 +14,12 @@
 """
 Tests for process and execute (variance calculation).
 """
-# pylint: disable=too-many-arguments, redefined-outer-name
-import pytest
-from conftest import LightningDevice, PHI, THETA, VARPHI
-
 import numpy as np
 import pennylane as qml
+
+# pylint: disable=too-many-arguments, redefined-outer-name
+import pytest
+from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane.tape import QuantumScript
 
 if not LightningDevice._new_API:

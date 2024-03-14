@@ -18,7 +18,7 @@ Tests for process and execute (expval calculation).
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, THETA, PHI, VARPHI
+from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane.devices import DefaultQubit
 
 if not LightningDevice._new_API:

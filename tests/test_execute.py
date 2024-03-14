@@ -18,7 +18,7 @@ import functools
 
 import pennylane as qml
 import pytest
-from conftest import device_name, LightningDevice
+from conftest import LightningDevice, device_name
 from pennylane import numpy as np
 
 if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:

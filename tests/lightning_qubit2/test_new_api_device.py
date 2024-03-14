@@ -16,29 +16,27 @@ This module contains unit tests for new device API Lightning classes.
 """
 # pylint: disable=too-many-arguments
 
-import pytest
-from conftest import LightningDevice, THETA, PHI, VARPHI
-
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultQubit, ExecutionConfig, DefaultExecutionConfig
+import pytest
+from conftest import PHI, THETA, VARPHI, LightningDevice
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
+    _add_adjoint_transforms,
+    _supports_adjoint,
     accepted_observables,
-    stopping_condition,
+    adjoint_measurements,
     decompose,
+    no_sampling,
+    stopping_condition,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
-    no_sampling,
-    _add_adjoint_transforms,
-    adjoint_measurements,
-    _supports_adjoint,
 )
-
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)

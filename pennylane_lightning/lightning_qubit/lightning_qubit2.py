@@ -14,29 +14,29 @@
 """
 This module contains the LightningQubit2 class that inherits from the new device interface.
 """
-from typing import Optional, Union, Sequence, Callable
 from dataclasses import replace
-import numpy as np
+from typing import Callable, Optional, Sequence, Union
 
+import numpy as np
 import pennylane as qml
-from pennylane.devices import Device, ExecutionConfig, DefaultExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
-from pennylane.devices.modifiers import single_tape_support, simulator_tracking
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    no_sampling,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
-    no_sampling,
 )
-from pennylane.tape import QuantumTape, QuantumScript
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from ._adjoint_jacobian import LightningAdjointJacobian
-from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
+from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, unused-import
