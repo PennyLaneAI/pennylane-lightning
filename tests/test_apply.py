@@ -1311,6 +1311,7 @@ class TestApplyLightningMethod:
         assert np.allclose(results, expected)
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required.")
 @pytest.mark.skipif(
     ld._CPP_BINARY_AVAILABLE, reason="Test only applies when binaries are unavailable"
 )

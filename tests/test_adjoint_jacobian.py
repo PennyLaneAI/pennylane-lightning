@@ -81,8 +81,20 @@ def Rz(theta):
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
 
 
+def get_tolerance_and_stepsize(device, step_size=False):
+    """Helper function to get tolerance and finite diff step size for
+    different device dtypes"""
+    tol = 1e-3 if device.dtype == np.complex64 else 1e-7
+    h = tol if step_size else None
+    return tol, h
+
+
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
+
+    @staticmethod
+    def get_derivatives_method(device):
+        return device.compute_derivatives if device._new_API else device.adjoint_jacobian
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
@@ -99,7 +111,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
 
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
@@ -158,7 +170,7 @@ class TestAdjointJacobian:
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         jac = method(tape)
         assert len(jac) == 0
 
@@ -191,7 +203,7 @@ class TestAdjointJacobian:
             qml.CRX(0.1, wires=[0, 1])
             qml.expval(qml.Projector([0, 1], wires=[0, 1]))
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
 
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
@@ -222,13 +234,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1}
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         calculated_val = method(tape)
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
         # compare to finite differences
         tapes, fn = qml.gradients.param_shift(tape)
@@ -249,13 +258,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         calculated_val = method(tape)
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
         # compare to finite differences
         tapes, fn = qml.gradients.param_shift(tape)
@@ -283,7 +289,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         exact = np.cos(par)
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_A = method(tape)
 
         # different methods must agree
@@ -300,7 +306,7 @@ class TestAdjointJacobian:
 
         # gradients
         exact = np.cos(par)
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_A = method(tape)
 
         # different methods must agree
@@ -315,7 +321,7 @@ class TestAdjointJacobian:
             qml.expval(qml.PauliZ(0))
 
         # circuit jacobians
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         dev_jacobian = method(tape)
         expected_jacobian = -np.sin(a)
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -333,7 +339,7 @@ class TestAdjointJacobian:
                 qml.expval(qml.PauliZ(idx))
 
         # circuit jacobians
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         dev_jacobian = method(tape)
         expected_jacobian = -np.diag(np.sin(params))
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -354,7 +360,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {0, 1, 2}
         # circuit jacobians
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         dev_jacobian = method(tape)
         expected_jacobian = -np.diag(np.sin(params))
 
@@ -381,7 +387,7 @@ class TestAdjointJacobian:
             )
 
         tape.trainable_params = {0, 1, 2}
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         dev_jacobian = method(tape)
         expected_jacobian = np.array(
             [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
@@ -419,7 +425,7 @@ class TestAdjointJacobian:
             qml.expval(ham)
 
         tape.trainable_params = {0, 1, 2}
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         dev_jacobian = method(tape)
         expected_jacobian = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
@@ -468,13 +474,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_D = method(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -515,13 +518,10 @@ class TestAdjointJacobian:
 
         tape.trainable_params = set(range(1, 1 + op.num_params))
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_D = method(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -537,12 +537,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -565,12 +562,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -598,12 +592,9 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        if dev._new_API:
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -694,7 +685,7 @@ class TestAdjointJacobian:
             qml.state()
 
         tape.trainable_params = {0}
-        method = dev.compute_derivatives if dev._new_API else dev.adjoint_jacobian
+        method = self.get_derivatives_method(dev)
 
         with pytest.raises(
             qml.QuantumFunctionError, match="This method does not support statevector return type."
@@ -749,14 +740,12 @@ class TestAdjointJacobianQNode:
             return qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
 
         qnode1 = QNode(circuit, dev, diff_method="adjoint")
-        if ld._new_API:
-            spy = mocker.spy(dev, "execute_and_compute_derivatives")
-            h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            spy = mocker.spy(dev, "adjoint_jacobian")
-            h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        spy = (
+            mocker.spy(dev, "execute_and_compute_derivatives")
+            if ld._new_API
+            else mocker.spy(dev, "adjoint_jacobian")
+        )
+        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         grad_fn = qml.grad(qnode1)
         grad_A = grad_fn(*args)
@@ -978,14 +967,12 @@ class TestAdjointJacobianQNode:
             qml.Rot(params[1], params[0], 2 * params[0], wires=[0])
             return qml.expval(qml.PauliX(0))
 
-        if ld._new_API:
-            spy_analytic = mocker.spy(dev, "execute_and_compute_derivatives")
-            h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            spy_analytic = mocker.spy(dev, "adjoint_jacobian")
-            h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        spy_analytic = (
+            mocker.spy(dev, "execute_and_compute_derivatives")
+            if ld._new_API
+            else mocker.spy(dev, "adjoint_jacobian")
+        )
+        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         cost = QNode(circuit, dev, diff_method="finite-diff", h=h)
 
@@ -1021,9 +1008,8 @@ class TestAdjointJacobianQNode:
             h = 2e-3
             tol = 1e-3
         else:
-            tf_r_dtype = tf.float32 if dev.R_DTYPE == np.float32 else tf.float64
-            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+            tf_r_dtype = tf.float32 if dev.dtype == np.complex64 else tf.float64
+            tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         params1 = tf.Variable(0.3, dtype=tf_r_dtype)
         params2 = tf.Variable(0.4, dtype=tf_r_dtype)
@@ -1058,12 +1044,7 @@ class TestAdjointJacobianQNode:
         params1 = torch.tensor(0.3, requires_grad=True)
         params2 = torch.tensor(0.4, requires_grad=True)
 
-        if dev._new_API:
-            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        else:
-            h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-            tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
@@ -1085,10 +1066,7 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
-        if dev._new_API:
-            dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
-        else:
-            dtype = dev.R_DTYPE
+        dtype = np.float32 if dev.dtype == np.complex64 else np.float64
 
         if dtype == np.float64:
             from jax import config
@@ -1103,9 +1081,7 @@ class TestAdjointJacobianQNode:
 
         params1 = jax.numpy.array(0.3, dtype)
         params2 = jax.numpy.array(0.4, dtype)
-
-        h = 2e-3 if dtype == np.float32 else 1e-7
-        tol = 1e-3 if dtype == np.float32 else 1e-7
+        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
         qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
@@ -1634,10 +1610,7 @@ def test_diff_qubit_unitary(n_targets):
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
-    if ld._new_API:
-        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-    else:
-        h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+    _, h = get_tolerance_and_stepsize(dev, step_size=True)
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
