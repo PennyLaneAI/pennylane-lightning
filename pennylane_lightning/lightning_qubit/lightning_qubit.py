@@ -432,6 +432,7 @@ if LQ_CPP_BINARY_AVAILABLE:
                         operation.base.matrix, control_wires, control_values, target_wires, False
                     )
 
+        # pylint: disable=too-many-branches
         def apply_lightning(self, operations, mid_measurements=None):
             """Apply a list of operations to the state tensor.
 
@@ -445,14 +446,14 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
             for operation in operations:
+                if isinstance(operation, qml.Identity):
+                    continue
                 if isinstance(operation, Adjoint):
                     name = operation.base.name
                     invert_param = True
                 else:
                     name = operation.name
                     invert_param = False
-                if name == "Identity":
-                    continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
 

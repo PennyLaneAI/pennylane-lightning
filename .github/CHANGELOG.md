@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
+  [(#641)](https://github.com/PennyLaneAI/pennylane-lightning/pull/641)
+
 * Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
 
