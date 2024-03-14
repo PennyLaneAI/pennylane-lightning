@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <random>
 #include <string>
 #include <vector>
 
@@ -66,7 +67,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         : _statevector{statevector} {};
 #endif
 
-  public:
     /**
      * @brief Set the seed of the internal random generator
      *
