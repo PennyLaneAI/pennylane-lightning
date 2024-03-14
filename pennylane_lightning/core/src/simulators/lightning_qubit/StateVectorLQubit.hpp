@@ -673,11 +673,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         auto *arr = this->getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));
 
-        if (norm > std::numeric_limits<PrecisionT>::epsilon() * 1e2) {
-            std::complex<PrecisionT> inv_norm = 1. / norm;
-            for (size_t k = 0; k < this->getLength(); k++) {
-                arr[k] *= inv_norm;
-            }
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        std::complex<PrecisionT> inv_norm = 1. / norm;
+        for (size_t k = 0; k < this->getLength(); k++) {
+            arr[k] *= inv_norm;
         }
     }
 };
