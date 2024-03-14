@@ -167,7 +167,7 @@ def test_unsupported_measurement():
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_simple_mcm(shots, postselect, reset, measure_f):
-    """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of the mid-circuit measurement value is performed at
     the end."""
 
