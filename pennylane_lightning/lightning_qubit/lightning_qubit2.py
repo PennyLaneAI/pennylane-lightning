@@ -197,7 +197,7 @@ _operations = frozenset(
         "BlockEncode",
     }
 )
-"""The set of supported operations."""
+# The set of supported operations.
 
 
 _observables = frozenset(
@@ -217,7 +217,7 @@ _observables = frozenset(
         "Exp",
     }
 )
-"""The set of supported observables."""
+# The set of supported observables.
 
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
@@ -315,10 +315,10 @@ class LightningQubit2(Device):
     _new_API = True
 
     operations = _operations
-    """The names of the supported operations."""
+    # The names of the supported operations.
 
     observables = _observables
-    """The names of the supported observables."""
+    # The names of the supported observables.
 
     def __init__(  # pylint: disable=too-many-arguments
         self,

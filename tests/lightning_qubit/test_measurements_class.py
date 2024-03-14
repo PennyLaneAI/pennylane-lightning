@@ -33,7 +33,7 @@ try:
 except ImportError:
     pass
 
-from pennylane_lightning.lightning_qubit2 import LightningQubit
+from pennylane_lightning.lightning_qubit import LightningQubit
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
