@@ -417,3 +417,8 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     def state_vector(self):
         """Returns a handle to the statevector."""
         return self._state
+
+    @property
+    def dtype(self):
+        """State vector complex data type."""
+        return self.C_DTYPE
