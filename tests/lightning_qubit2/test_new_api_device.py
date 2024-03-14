@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module contains unit tests for the LightningQubit2 class
+This module contains unit tests for new device API Lightning classes.
 """
 # pylint: disable=too-many-arguments
 

@@ -1017,9 +1017,9 @@ class TestAdjointJacobianQNode:
 
         if dev._new_API:
             # tf expects float32 with new device API
-            tf_r_dtype = tf.float32 if dev.c_dtype == np.complex64 else tf.float64
-            h = 2e-3 if dev.c_dtype == np.complex64 else 1e-7
-            tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+            tf_r_dtype = tf.float32
+            h = 2e-3
+            tol = 1e-3
         else:
             tf_r_dtype = tf.float32 if dev.R_DTYPE == np.float32 else tf.float64
             h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
