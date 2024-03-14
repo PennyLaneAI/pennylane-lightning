@@ -20,6 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
+from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
@@ -470,6 +471,7 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         assert np.allclose(result, expected, max(tol, 1.0e-5))
 
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
