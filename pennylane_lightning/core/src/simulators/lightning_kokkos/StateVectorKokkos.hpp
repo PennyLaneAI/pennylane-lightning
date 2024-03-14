@@ -456,44 +456,46 @@ class StateVectorKokkos final
         // };
         switch (gates_indices_[opName]) {
         case GateOperation::PauliX:
-            applyNC1Functor(KokkosExecSpace{}, *data_, num_qubits, wires, KOKKOS_LAMBDA(KokkosVector arr, const std::size_t i0,
-                                const std::size_t i1) {
-            Kokkos::Experimental::swap(arr(i0), arr(i1));});
-            // Kokkos::parallel_for(
-            //     Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits - 1)),
-            //     applyNC1Functor(
-            //         *data_, num_qubits, wires, corePauliX<PrecisionT>()));
-            // applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
+            applyPauliX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                         params);
             return;
         case GateOperation::PauliY:
-            applyGateFunctor<pauliYFunctor, 1>(wires, inverse, params);
+            applyPauliY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                         params);
             return;
         case GateOperation::PauliZ:
-            applyGateFunctor<pauliZFunctor, 1>(wires, inverse, params);
+            applyPauliZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                         params);
             return;
         case GateOperation::Hadamard:
-            applyGateFunctor<hadamardFunctor, 1>(wires, inverse, params);
+            applyHadamard<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                           params);
             return;
         case GateOperation::S:
-            applyGateFunctor<sFunctor, 1>(wires, inverse, params);
+            applyS<KokkosExecSpace>(*data_, num_qubits, wires, inverse, params);
             return;
         case GateOperation::T:
-            applyGateFunctor<tFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RX:
-            applyGateFunctor<rxFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RY:
-            applyGateFunctor<ryFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RZ:
-            applyGateFunctor<rzFunctor, 1>(wires, inverse, params);
+            applyT<KokkosExecSpace>(*data_, num_qubits, wires, inverse, params);
             return;
         case GateOperation::PhaseShift:
-            applyGateFunctor<phaseShiftFunctor, 1>(wires, inverse, params);
+            applyPhaseShift<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                             params);
+            return;
+        case GateOperation::RX:
+            applyRX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                     params);
+            return;
+        case GateOperation::RY:
+            applyRY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                     params);
+            return;
+        case GateOperation::RZ:
+            applyRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                     params);
             return;
         case GateOperation::Rot:
-            applyGateFunctor<rotFunctor, 1>(wires, inverse, params);
+            applyRot<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                      params);
             return;
         case GateOperation::CY:
             applyGateFunctor<cyFunctor, 2>(wires, inverse, params);
