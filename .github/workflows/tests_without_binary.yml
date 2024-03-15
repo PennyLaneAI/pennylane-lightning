@@ -107,7 +107,7 @@ jobs:
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          if [ ${{ matrix.pl_backend }} == "lightning_qubit" ]; then PL_DEVICE=${DEVICENAME}2 python -m pytest tests/ $COVERAGE_FLAGS --cov-append; fi
+          if [ ${{ matrix.pl_backend }} == "lightning_qubit" ]; then PL_DEVICE=lightning_qubit2 python -m pytest tests/ $COVERAGE_FLAGS --cov-append; fi
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
