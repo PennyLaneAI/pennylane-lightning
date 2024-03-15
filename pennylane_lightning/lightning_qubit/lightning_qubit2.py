@@ -314,6 +314,7 @@ class LightningQubit2(Device):
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
 
+    # TODO: Move supported ops/obs to TOML file
     operations = _operations
     # The names of the supported operations.
 
@@ -342,6 +343,8 @@ class LightningQubit2(Device):
         super().__init__(wires=wires, shots=shots)
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+
+        # TODO: Investigate usefulness of creating numpy random generator
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(seed)
 

@@ -361,32 +361,35 @@ class TestExecution:
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
 
+@pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
     """Unit tests for calculating derivatives with a device"""
 
     @staticmethod
     def calculate_reference(tape, execute_and_derivatives=False):
         device = DefaultQubit(max_workers=1)
-        program, _ = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
+        program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
         tapes, transf_fn = program([tape])
 
         if execute_and_derivatives:
-            results, jac = device.execute_and_compute_derivatives(tapes)
+            results, jac = device.execute_and_compute_derivatives(tapes, config)
         else:
-            results = device.execute(tapes)
-            jac = device.compute_derivatives(tapes)
+            results = device.execute(tapes, config)
+            jac = device.compute_derivatives(tapes, config)
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(device, tape, execute_and_derivatives=False):
-        program, _ = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
+    def process_and_execute(device, tape, execute_and_derivatives=False, obs_batch=False):
+        program, config = device.preprocess(
+            ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
+        )
         tapes, transf_fn = program([tape])
 
         if execute_and_derivatives:
-            results, jac = device.execute_and_compute_derivatives(tapes)
+            results, jac = device.execute_and_compute_derivatives(tapes, config)
         else:
-            results = device.execute(tapes)
-            jac = device.compute_derivatives(tapes)
+            results = device.execute(tapes, config)
+            jac = device.compute_derivatives(tapes, config)
         return transf_fn(results), jac
 
     # Test supports derivative + xfail tests
@@ -426,7 +429,7 @@ class TestDerivatives:
             ),
         ],
     )
-    def test_supports_derivatives(self, dev, config, tape, expected):
+    def test_supports_derivatives(self, dev, config, tape, expected, batch_obs):
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
@@ -445,7 +448,9 @@ class TestDerivatives:
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_single_expval(self, theta, phi, dev, obs, execute_and_derivatives):
+    def test_derivatives_single_expval(
+        self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
+    ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
@@ -454,7 +459,7 @@ class TestDerivatives:
         )
 
         res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives
+            dev, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
@@ -497,7 +502,7 @@ class TestDerivatives:
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     def test_derivatives_multi_expval(
-        self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives
+        self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
         qs = QuantumScript(
@@ -513,7 +518,7 @@ class TestDerivatives:
         )
 
         res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives
+            dev, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
         )
         if isinstance(obs1, qml.Hamiltonian):
             qs = QuantumScript(
@@ -533,13 +538,13 @@ class TestDerivatives:
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_no_trainable_params(self, dev, execute_and_derivatives):
+    def test_derivatives_no_trainable_params(self, dev, execute_and_derivatives, batch_obs):
         """Test that the derivatives are empty with there are no trainable parameters."""
         qs = QuantumScript(
             [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
         )
         res, jac = self.process_and_execute(
-            dev, qs, execute_and_derivatives=execute_and_derivatives
+            dev, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
         )
         expected, _ = self.calculate_reference(qs, execute_and_derivatives=execute_and_derivatives)
 
@@ -548,26 +553,27 @@ class TestDerivatives:
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
 
-    def test_state_jacobian_not_supported(self, dev):
+    def test_state_jacobian_not_supported(self, dev, batch_obs):
         """Test that an error is raised if derivatives are requested for state measurement"""
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
             qml.QuantumFunctionError, match="This method does not support statevector return type"
         ):
-            _ = dev.compute_derivatives(qs)
+            _ = dev.compute_derivatives(qs, config)
 
         with pytest.raises(
             qml.QuantumFunctionError, match="This method does not support statevector return type"
         ):
-            _ = dev.execute_and_compute_derivatives(qs)
+            _ = dev.execute_and_compute_derivatives(qs, config)
 
-    def test_shots_error_with_derivatives(self, dev):
+    def test_shots_error_with_derivatives(self, dev, batch_obs):
         """Test that an error is raised if the gradient method is adjoint when the tape has shots"""
         qs = QuantumScript(
             [qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0]
         )
-        config = ExecutionConfig(gradient_method="adjoint")
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
         program, _ = dev.preprocess(config)
 
         with pytest.raises(qml.DeviceError, match="Finite shots are not supported"):
@@ -575,10 +581,10 @@ class TestDerivatives:
 
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_tape_batch(self, phi, execute_and_derivatives):
+    def test_derivatives_tape_batch(self, phi, execute_and_derivatives, batch_obs):
         """Test that results are correct when we execute and compute derivatives for a batch of
         tapes."""
-        device = LightningDevice(wires=4)
+        device = LightningDevice(wires=4, batch_obs=batch_obs)
 
         ops = [
             qml.X(0),
