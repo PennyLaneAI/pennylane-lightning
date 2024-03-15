@@ -11,6 +11,10 @@
 * Add LightningAdjointJacobian to support `lightning.qubit2`.
   [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
 
+* Add `lightning.qubit2` device which uses the new device API.
+  [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
+  [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
+
 ### Breaking changes
 
 ### Improvements
@@ -32,7 +36,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey
 
 ---
 

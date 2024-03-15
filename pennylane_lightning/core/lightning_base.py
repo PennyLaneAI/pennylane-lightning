@@ -60,6 +60,7 @@ class LightningBase(QubitDevice):
     author = "Xanadu Inc."
     short_name = "lightning.base"
     _CPP_BINARY_AVAILABLE = True
+    _new_API = False
 
     def __init__(
         self,
@@ -79,6 +80,11 @@ class LightningBase(QubitDevice):
             raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
         self._batch_obs = batch_obs
+
+    @property
+    def dtype(self):
+        """State vector complex data type."""
+        return self.C_DTYPE
 
     @property
     def stopping_condition(self):
@@ -396,6 +402,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     version = __version__
     author = "Xanadu Inc."
     _CPP_BINARY_AVAILABLE = False
+    _new_API = False
 
     def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
         if c_dtype is np.complex64:
@@ -410,3 +417,8 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     def state_vector(self):
         """Returns a handle to the statevector."""
         return self._state
+
+    @property
+    def dtype(self):
+        """State vector complex data type."""
+        return self.C_DTYPE
