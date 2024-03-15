@@ -259,23 +259,6 @@ void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
         });
 }
 
-template <class ExecutionSpace, class PrecisionT>
-void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                      const std::size_t num_qubits,
-                      const std::vector<size_t> &wires,
-                      const bool inverse = false,
-                      const std::vector<PrecisionT> &params = {}) {
-    const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
-        Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
-    applyNC1Functor(
-        ExecutionSpace{}, arr_, num_qubits, wires,
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0, const std::size_t i1) {
-            arr(i0) *= phase;
-            arr(i1) *= phase;
-        });
-}
-
 template <class PrecisionT, class FuncT> class applyNC2Functor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     const FuncT core_function;
@@ -1025,58 +1008,40 @@ void applyDoubleExcitationPlus(
         });
 }
 
-template <class PrecisionT, bool inverse = false> struct multiRZFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-
-    size_t wires_parity;
-
-    Kokkos::complex<PrecisionT> shift_0;
-    Kokkos::complex<PrecisionT> shift_1;
-
-    multiRZFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                   size_t num_qubits, const std::vector<size_t> &wires,
-                   const std::vector<PrecisionT> &params) {
-        const PrecisionT &angle = params[0];
-        const Kokkos::complex<PrecisionT> first = Kokkos::complex<PrecisionT>{
-            std::cos(angle / 2), -std::sin(angle / 2)};
-        const Kokkos::complex<PrecisionT> second = Kokkos::complex<PrecisionT>{
-            std::cos(angle / 2), std::sin(angle / 2)};
-
-        shift_0 = (inverse) ? conj(first) : first;
-        shift_1 = (inverse) ? conj(second) : second;
-
-        size_t wires_parity_ = 0U;
-        for (size_t wire : wires) {
-            wires_parity_ |=
-                (static_cast<size_t>(1U) << (num_qubits - wire - 1));
-        }
-
-        wires_parity = wires_parity_;
-        arr = arr_;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
-        arr(k) *= (Kokkos::Impl::bit_count(k & wires_parity) % 2 == 0)
-                      ? shift_0
-                      : shift_1;
-    }
-};
-
 template <class ExecutionSpace, class PrecisionT>
 void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
-    if (!inverse) {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
-            multiRZFunctor<PrecisionT, false>(arr_, num_qubits, wires, params));
-    } else {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
-            multiRZFunctor<PrecisionT, true>(arr_, num_qubits, wires, params));
+    const PrecisionT &angle = params[0];
+    const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
+        std::cos(angle / 2),
+        (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
+    const Kokkos::complex<PrecisionT> shift_1 = conj(shift_0);
+    std::size_t wires_parity = 0U;
+    for (size_t wire : wires) {
+        wires_parity |= (static_cast<size_t>(1U) << (num_qubits - wire - 1));
     }
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(const std::size_t k) {
+            arr_(k) *= (Kokkos::Impl::bit_count(k & wires_parity) % 2 == 0)
+                           ? shift_0
+                           : shift_1;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                      const std::size_t num_qubits,
+                      [[maybe_unused]] const std::vector<size_t> &wires,
+                      const bool inverse = false,
+                      const std::vector<PrecisionT> &params = {}) {
+    const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
+        Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(const std::size_t k) { arr_(k) *= phase; });
 }
 
 template <class ExecutionSpace, class PrecisionT>
