@@ -13,6 +13,7 @@
 
 * Add `lightning.qubit2` device which uses the new device API.
   [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
+  [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
 
 ### Breaking changes
 
