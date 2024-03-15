@@ -466,11 +466,10 @@ class Measurements final
     generate_samples_metropolis(const std::string &kernelname,
                                 size_t num_burnin, size_t num_samples) {
         size_t num_qubits = this->_statevector.getNumQubits();
-        std::random_device rd;
-        std::mt19937 gen(rd());
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<size_t, size_t> cache;
+        this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -484,13 +483,14 @@ class Measurements final
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
-            idx = metropolis_step(this->_statevector, tk, gen, distrib,
+            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
         for (size_t i = 0; i < num_samples; i++) {
-            idx = metropolis_step(this->_statevector, tk, gen, distrib, idx);
+            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+                                  idx);
 
             if (cache.contains(idx)) {
                 size_t cache_id = cache[idx];
@@ -562,9 +562,9 @@ class Measurements final
         auto &&probabilities = probs();
 
         std::vector<size_t> samples(num_samples * num_qubits, 0);
-        std::mt19937 generator(std::random_device{}());
         std::uniform_real_distribution<PrecisionT> distribution(0.0, 1.0);
         std::unordered_map<size_t, size_t> cache;
+        this->setRandomSeed();
 
         const size_t N = probabilities.size();
         std::vector<double> bucket(N);
@@ -611,7 +611,7 @@ class Measurements final
 
         // Pick samples
         for (size_t i = 0; i < num_samples; i++) {
-            PrecisionT pct = distribution(generator) * N;
+            PrecisionT pct = distribution(this->rng) * N;
             auto idx = static_cast<size_t>(pct);
             if (pct - idx > bucket[idx]) {
                 idx = bucket_partner[idx];
