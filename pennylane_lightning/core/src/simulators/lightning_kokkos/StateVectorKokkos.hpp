@@ -450,10 +450,6 @@ class StateVectorKokkos final
                              bool inverse = false,
                              const std::vector<fp_t> &params = {}) {
         std::size_t num_qubits = this->getNumQubits();
-        // auto core_function = [=](KokkosVector arr, const std::size_t i0,
-        //                         const std::size_t i1) {
-        //     Kokkos::Experimental::swap(arr(i0), arr(i1));
-        // };
         switch (gates_indices_[opName]) {
         case GateOperation::PauliX:
             applyPauliX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
@@ -570,22 +566,24 @@ class StateVectorKokkos final
                                           params);
             return;
         case GateOperation::DoubleExcitation:
-            applyGateFunctor<doubleExcitationFunctor, 4>(wires, inverse,
-                                                         params);
+            applyDoubleExcitation<KokkosExecSpace>(*data_, num_qubits, wires,
+                                                   inverse, params);
             return;
         case GateOperation::DoubleExcitationMinus:
-            applyGateFunctor<doubleExcitationMinusFunctor, 4>(wires, inverse,
-                                                              params);
+            applyDoubleExcitationMinus<KokkosExecSpace>(*data_, num_qubits,
+                                                        wires, inverse, params);
             return;
         case GateOperation::DoubleExcitationPlus:
-            applyGateFunctor<doubleExcitationPlusFunctor, 4>(wires, inverse,
-                                                             params);
-            return;
-        case GateOperation::MultiRZ:
-            applyMultiRZ(wires, inverse, params);
+            applyDoubleExcitationPlus<KokkosExecSpace>(*data_, num_qubits,
+                                                       wires, inverse, params);
             return;
         case GateOperation::GlobalPhase:
-            applyGlobalPhase(wires, inverse, params);
+            applyGlobalPhase<KokkosExecSpace>(*data_, num_qubits, wires,
+                                              inverse, params);
+            return;
+        case GateOperation::MultiRZ:
+            applyMultiRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
             return;
         default:
             PL_ABORT(std::string("Operation does not exist for ") + opName);
@@ -711,53 +709,6 @@ class StateVectorKokkos final
                 Kokkos::RangePolicy<KokkosExecSpace>(
                     0, exp2(num_qubits - nqubits)),
                 functor_t<fp_t, true>(*data_, num_qubits, wires, params));
-        }
-    }
-
-    /**
-     * @brief Apply a MultiRZ operator to the state vector using a matrix
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    void applyMultiRZ(const std::vector<size_t> &wires, bool inverse = false,
-                      const std::vector<fp_t> &params = {}) {
-        auto &&num_qubits = this->getNumQubits();
-
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                multiRZFunctor<fp_t, false>(*data_, num_qubits, wires, params));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                multiRZFunctor<fp_t, true>(*data_, num_qubits, wires, params));
-        }
-    }
-
-    /**
-     * @brief Apply a GlobalPhase operator to the state vector using a matrix
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    void applyGlobalPhase(const std::vector<size_t> &wires,
-                          bool inverse = false,
-                          const std::vector<fp_t> &params = {}) {
-        auto &&num_qubits = this->getNumQubits();
-
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                globalPhaseFunctor<fp_t, false>(*data_, num_qubits, wires,
-                                                params));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                globalPhaseFunctor<fp_t, true>(*data_, num_qubits, wires,
-                                               params));
         }
     }
 

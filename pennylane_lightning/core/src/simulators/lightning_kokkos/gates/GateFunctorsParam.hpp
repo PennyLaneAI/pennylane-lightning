@@ -1400,44 +1400,6 @@ template <class PrecisionT, bool inverse = false> struct crzFunctor {
     }
 };
 
-template <class PrecisionT, bool inverse = false> struct multiRZFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-
-    size_t wires_parity;
-
-    Kokkos::complex<PrecisionT> shift_0;
-    Kokkos::complex<PrecisionT> shift_1;
-
-    multiRZFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                   size_t num_qubits, const std::vector<size_t> &wires,
-                   const std::vector<PrecisionT> &params) {
-        const PrecisionT &angle = params[0];
-        const Kokkos::complex<PrecisionT> first = Kokkos::complex<PrecisionT>{
-            std::cos(angle / 2), -std::sin(angle / 2)};
-        const Kokkos::complex<PrecisionT> second = Kokkos::complex<PrecisionT>{
-            std::cos(angle / 2), std::sin(angle / 2)};
-
-        shift_0 = (inverse) ? conj(first) : first;
-        shift_1 = (inverse) ? conj(second) : second;
-
-        size_t wires_parity_ = 0U;
-        for (size_t wire : wires) {
-            wires_parity_ |=
-                (static_cast<size_t>(1U) << (num_qubits - wire - 1));
-        }
-
-        wires_parity = wires_parity_;
-        arr = arr_;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
-        arr[k] *= (Kokkos::Impl::bit_count(k & wires_parity) % 2 == 0)
-                      ? shift_0
-                      : shift_1;
-    }
-};
-
 template <class PrecisionT, bool inverse = false> struct globalPhaseFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     Kokkos::complex<PrecisionT> phase;
