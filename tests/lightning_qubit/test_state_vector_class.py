@@ -24,11 +24,10 @@ from conftest import LightningDevice  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_qubit import LightningQubit
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if LightningDevice != LightningQubit:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
