@@ -76,7 +76,7 @@ class LightningBase(QubitDevice):
             r_dtype = np.float64
             self.use_csingle = False
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
         self._batch_obs = batch_obs
 
@@ -403,7 +403,7 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
         elif c_dtype is np.complex128:
             r_dtype = np.float64
         else:
-            raise TypeError(f"Unsupported complex Type: {c_dtype}")
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
         super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
 
     @property
