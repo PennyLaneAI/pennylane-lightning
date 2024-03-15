@@ -71,14 +71,14 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::CopyConstructor",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyNamedOperation",
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation",
                    "[StateVectorKokkos_Nonparam]", float, double) {
     {
         const size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
-        PL_REQUIRE_THROWS_MATCHES(state_vector.applyNamedOperation("XXX", {0}),
-                                  LightningException,
-                                  "The given value does not exist.");
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("XXX", {0}), LightningException,
+            "Operation does not exist for XXX and no matrix provided.");
     }
 }
 

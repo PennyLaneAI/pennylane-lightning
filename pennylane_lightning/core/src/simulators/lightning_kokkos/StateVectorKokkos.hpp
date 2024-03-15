@@ -268,7 +268,11 @@ class StateVectorKokkos final
                 applyControlledGlobalPhase<false>(gate_matrix);
             }
         } else if (array_contains(gate_names, std::string_view{opName})) {
-            applyNamedOperation(opName, wires, inverse, params);
+            const std::size_t num_qubits = this->getNumQubits();
+            const auto gateop =
+                reverse_lookup(gate_names, std::string_view{opName});
+            applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
+                                                 wires, inverse, params);
         } else {
             PL_ABORT_IF(gate_matrix.size() == 0,
                         std::string("Operation does not exist for ") + opName +
@@ -447,151 +451,6 @@ class StateVectorKokkos final
         applyMatrix(matrix.data(), wires, inverse);
     }
 
-    void applyNamedOperation(const std::string &opName,
-                             const std::vector<size_t> &wires,
-                             bool inverse = false,
-                             const std::vector<fp_t> &params = {}) {
-        std::size_t num_qubits = this->getNumQubits();
-        switch (reverse_lookup(gate_names, std::string_view{opName})) {
-        case GateOperation::PauliX:
-            applyPauliX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                         params);
-            return;
-        case GateOperation::PauliY:
-            applyPauliY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                         params);
-            return;
-        case GateOperation::PauliZ:
-            applyPauliZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                         params);
-            return;
-        case GateOperation::Hadamard:
-            applyHadamard<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                           params);
-            return;
-        case GateOperation::S:
-            applyS<KokkosExecSpace>(*data_, num_qubits, wires, inverse, params);
-            return;
-        case GateOperation::T:
-            applyT<KokkosExecSpace>(*data_, num_qubits, wires, inverse, params);
-            return;
-        case GateOperation::PhaseShift:
-            applyPhaseShift<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                             params);
-            return;
-        case GateOperation::RX:
-            applyRX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                     params);
-            return;
-        case GateOperation::RY:
-            applyRY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                     params);
-            return;
-        case GateOperation::RZ:
-            applyRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                     params);
-            return;
-        case GateOperation::Rot:
-            applyRot<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                      params);
-            return;
-        case GateOperation::CNOT:
-            applyCNOT<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                       params);
-            return;
-        case GateOperation::CY:
-            applyCY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                     params);
-            return;
-        case GateOperation::CZ:
-            applyCZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                     params);
-            return;
-        case GateOperation::SWAP:
-            applySWAP<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                       params);
-            return;
-        case GateOperation::ControlledPhaseShift:
-            applyControlledPhaseShift<KokkosExecSpace>(*data_, num_qubits,
-                                                       wires, inverse, params);
-            return;
-        case GateOperation::CRX:
-            applyCRX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                      params);
-            return;
-        case GateOperation::CRY:
-            applyCRY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                      params);
-            return;
-        case GateOperation::CRZ:
-            applyCRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                      params);
-            return;
-        case GateOperation::CRot:
-            applyCRot<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                       params);
-            return;
-        case GateOperation::IsingXX:
-            applyIsingXX<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        case GateOperation::IsingXY:
-            applyIsingXY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        case GateOperation::IsingYY:
-            applyIsingYY<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        case GateOperation::IsingZZ:
-            applyIsingZZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        case GateOperation::SingleExcitation:
-            applySingleExcitation<KokkosExecSpace>(*data_, num_qubits, wires,
-                                                   inverse, params);
-            return;
-        case GateOperation::SingleExcitationMinus:
-            applySingleExcitationMinus<KokkosExecSpace>(*data_, num_qubits,
-                                                        wires, inverse, params);
-            return;
-        case GateOperation::SingleExcitationPlus:
-            applySingleExcitationPlus<KokkosExecSpace>(*data_, num_qubits,
-                                                       wires, inverse, params);
-            return;
-        case GateOperation::CSWAP:
-            applyCSWAP<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                        params);
-            return;
-        case GateOperation::Toffoli:
-            applyToffoli<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        case GateOperation::DoubleExcitation:
-            applyDoubleExcitation<KokkosExecSpace>(*data_, num_qubits, wires,
-                                                   inverse, params);
-            return;
-        case GateOperation::DoubleExcitationMinus:
-            applyDoubleExcitationMinus<KokkosExecSpace>(*data_, num_qubits,
-                                                        wires, inverse, params);
-            return;
-        case GateOperation::DoubleExcitationPlus:
-            applyDoubleExcitationPlus<KokkosExecSpace>(*data_, num_qubits,
-                                                       wires, inverse, params);
-            return;
-        case GateOperation::GlobalPhase:
-            applyGlobalPhase<KokkosExecSpace>(*data_, num_qubits, wires,
-                                              inverse, params);
-            return;
-        case GateOperation::MultiRZ:
-            applyMultiRZ<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
-                                          params);
-            return;
-        default:
-            PL_ABORT(std::string("Operation does not exist for ") + opName);
-        }
-    }
-
     /**
      * @brief Apply a single generator to the state vector using the given
      * kernel.
@@ -604,15 +463,22 @@ class StateVectorKokkos final
     auto applyGenerator(const std::string &opName,
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
+        const std::size_t num_qubits = this->getNumQubits();
         switch (reverse_lookup(generator_names, std::string_view{opName})) {
         case GeneratorOperation::RX:
-            applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
+            applyNamedOperation<KokkosExecSpace>(GateOperation::PauliX, *data_,
+                                                 num_qubits, wires, inverse,
+                                                 params);
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::RY:
-            applyGateFunctor<pauliYFunctor, 1>(wires, inverse, params);
+            applyNamedOperation<KokkosExecSpace>(GateOperation::PauliY, *data_,
+                                                 num_qubits, wires, inverse,
+                                                 params);
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::RZ:
-            applyGateFunctor<pauliZFunctor, 1>(wires, inverse, params);
+            applyNamedOperation<KokkosExecSpace>(GateOperation::PauliZ, *data_,
+                                                 num_qubits, wires, inverse,
+                                                 params);
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::PhaseShift:
             applyGateFunctor<generatorPhaseShiftFunctor, 1>(wires, inverse,
