@@ -561,6 +561,14 @@ class StateVectorKokkos final
             applySingleExcitationPlus<KokkosExecSpace>(*data_, num_qubits,
                                                        wires, inverse, params);
             return;
+        case GateOperation::CSWAP:
+            applyCSWAP<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                        params);
+            return;
+        case GateOperation::Toffoli:
+            applyToffoli<KokkosExecSpace>(*data_, num_qubits, wires, inverse,
+                                          params);
+            return;
         case GateOperation::DoubleExcitation:
             applyGateFunctor<doubleExcitationFunctor, 4>(wires, inverse,
                                                          params);
@@ -578,12 +586,6 @@ class StateVectorKokkos final
             return;
         case GateOperation::GlobalPhase:
             applyGlobalPhase(wires, inverse, params);
-            return;
-        case GateOperation::CSWAP:
-            applyGateFunctor<cSWAPFunctor, 3>(wires, inverse, params);
-            return;
-        case GateOperation::Toffoli:
-            applyGateFunctor<toffoliFunctor, 3>(wires, inverse, params);
             return;
         default:
             PL_ABORT(std::string("Operation does not exist for ") + opName);
