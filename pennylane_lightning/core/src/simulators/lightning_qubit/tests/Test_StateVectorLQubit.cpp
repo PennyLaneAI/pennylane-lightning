@@ -216,3 +216,38 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyOperations",
             LightningException, "must all be equal"); // invalid parameters
     }
 }
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::collapse", "[StateVectorLQubit]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    SECTION("Collapse the state vector as after having measured one of the "
+            "qubits.") {
+        TestVectorT init_state = createPlusState<PrecisionT>(num_qubits);
+
+        const ComplexT coef{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
+            {{coef, coef, coef, coef, zero, zero, zero, zero},
+             {coef, coef, zero, zero, coef, coef, zero, zero},
+             {coef, zero, coef, zero, coef, zero, coef, zero}},
+            {{zero, zero, zero, zero, coef, coef, coef, coef},
+             {zero, zero, coef, coef, zero, zero, coef, coef},
+             {zero, coef, zero, coef, zero, coef, zero, coef}},
+        };
+
+        std::size_t wire = GENERATE(0, 1, 2);
+        std::size_t branch = GENERATE(0, 1);
+        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+        sv.collapse(wire, branch);
+
+        REQUIRE(sv.getDataVector() == approx(expected_state[branch][wire]));
+    }
+}

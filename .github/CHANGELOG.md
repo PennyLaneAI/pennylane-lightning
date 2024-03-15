@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.qubit` supports mid-circuit measurements.
+  [(#621)](https://github.com/PennyLaneAI/pennylane-lightning/pull/621)
+
 * Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
   [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
 
@@ -32,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Thomas Germain, Vincent Michaud-Rioux
 
 ---
 
