@@ -533,7 +533,6 @@ class TestApply:
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -572,7 +571,6 @@ class TestExpval:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
         dev = qml.device(device_name, wires=1, shots=3)
@@ -591,7 +589,6 @@ class TestExpval:
 class TestVar:
     """Tests that variances are properly calculated."""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -630,7 +627,6 @@ class TestVar:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
@@ -647,7 +643,6 @@ class TestVar:
         assert var != 1.0
 
 
-@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -812,7 +807,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
@@ -1163,7 +1157,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_multi_samples_return_correlated_results(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -1185,7 +1178,6 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
         self, num_wires
@@ -1211,7 +1203,6 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_snapshot_is_ignored_without_shot(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4)
@@ -1228,7 +1219,6 @@ class TestLightningDeviceIntegration:
 
         assert np.allclose(outcomes, [0.0])
 
-    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4, shots=1000)

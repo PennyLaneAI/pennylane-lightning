@@ -592,7 +592,6 @@ class TestWiresInExpval:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 

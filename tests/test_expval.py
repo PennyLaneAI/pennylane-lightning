@@ -30,7 +30,6 @@ if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
 class TestExpval:
     """Test expectation values"""
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_identity_expectation(self, theta, phi, qubit_device, tol):
         """Test that identity expectation value (i.e. the trace) is 1"""
         dev = qubit_device(wires=3)
@@ -49,7 +48,6 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliZ expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -69,7 +67,6 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliX expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -92,7 +89,6 @@ class TestExpval:
             res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
         )
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliY expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -113,7 +109,6 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -279,7 +274,6 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(g, expected)
 
 
-@pytest.mark.skipif(ld._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
     """Test tensor expectation values"""
