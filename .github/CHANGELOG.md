@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `collapse` and `normalize` methods to the `StateVectorLQubit` classes, enabling "branching" of the wavefunction. Add methods to create and seed an RNG in the `Measurements` modules.
+  [(#645)](https://github.com/PennyLaneAI/pennylane-lightning/pull/645)
+
 * Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
   [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
 
