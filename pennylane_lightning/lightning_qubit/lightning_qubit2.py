@@ -15,8 +15,8 @@
 This module contains the LightningQubit2 class that inherits from the new device interface.
 """
 from dataclasses import replace
-from typing import Callable, Optional, Sequence, Union
 from pathlib import Path
+from typing import Callable, Optional, Sequence, Union
 
 import numpy as np
 import pennylane as qml
@@ -228,7 +228,6 @@ def stopping_condition(op: qml.operation.Operator) -> bool:
 def accepted_observables(obs: qml.operation.Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
-
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -458,10 +457,10 @@ class LightningQubit2(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
         mcmc = {
-                    "mcmc": self._mcmc,
-                    "kernel_name": self._kernel_name,
-                    "num_burnin": self._num_burnin,
-                }
+            "mcmc": self._mcmc,
+            "kernel_name": self._kernel_name,
+            "num_burnin": self._num_burnin,
+        }
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
