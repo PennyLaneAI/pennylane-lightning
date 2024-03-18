@@ -375,6 +375,7 @@ class LightningQubit2(Device):
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
+
     C_DTYPE = c_dtype
     dtype = c_dtype
 
@@ -382,7 +383,6 @@ class LightningQubit2(Device):
     def state(self):
         """Returns a copy of the state vector data in a NumPy array."""
         return self._statevector.state
-
 
     def _setup_execution_config(self, config):
         """
