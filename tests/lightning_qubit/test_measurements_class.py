@@ -80,7 +80,6 @@ def test_initialization(lightning_sv):
     m = LightningMeasurements(statevector)
 
     assert m.qubit_state is statevector
-    assert m.state is statevector.state_vector
     assert m.dtype == statevector.dtype
 
 
@@ -480,7 +479,7 @@ class TestMeasurements:
         assert np.allclose(result, expected, max(tol, 1.0e-5))
 
     @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 100000])
+    @pytest.mark.parametrize("shots", [None, 1000000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -531,11 +530,6 @@ class TestMeasurements:
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
             )
 
-        if shots is not None and (isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)):
-            pytest.skip(
-                f"Observable of type {type(obs0_).__name__} is not supported when finite shots."
-            )
-
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
@@ -545,13 +539,29 @@ class TestMeasurements:
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        expected = self.calculate_reference(tape, lightning_sv)
-        if len(expected) == 1:
-            expected = expected[0]
         statevector = lightning_sv(n_qubits)
         statevector = statevector.get_final_state(tape)
         m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
+
+        skip_list = (
+            qml.ops.Sum,
+            qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        if (
+            (measurement is qml.expval or measurement is qml.var)
+            and shots is not None
+            and (isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list))
+        ):
+            with pytest.raises(TypeError):
+                _ = m.measure_final_state(tape)
+            return
+        else:
+            result = m.measure_final_state(tape)
+
+        expected = self.calculate_reference(tape, lightning_sv)
+        if len(expected) == 1:
+            expected = expected[0]
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)

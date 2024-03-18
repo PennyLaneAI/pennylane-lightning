@@ -41,7 +41,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
-from pennylane.ops import Hamiltonian, Sum
+from pennylane.ops import Hamiltonian, SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -68,9 +68,8 @@ class LightningMeasurements:
         num_burnin: int = 100,
     ) -> None:
         self._qubit_state = qubit_state
-        self._state = qubit_state.state_vector
         self._dtype = qubit_state.dtype
-        self._measurement_lightning = self._measurement_dtype()(self.state)
+        self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
         self._mcmc = mcmc
         self._kernel_name = kernel_name
         self._num_burnin = num_burnin
@@ -79,11 +78,6 @@ class LightningMeasurements:
     def qubit_state(self):
         """Returns a handle to the LightningStateVector class."""
         return self._qubit_state
-
-    @property
-    def state(self):
-        """Returns a handle to the Lightning internal data class."""
-        return self._state
 
     @property
     def dtype(self):
@@ -108,14 +102,11 @@ class LightningMeasurements:
             TensorLike: the result of the measurement
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
-        self._qubit_state.apply_operations(measurementprocess.diagonalizing_gates())
+        self._qubit_state.apply_operations(diagonalizing_gates)
         state_array = self._qubit_state.state
         wires = Wires(range(self._qubit_state.num_wires))
-
         result = measurementprocess.process_state(state_array, wires)
-
         self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
-
         return result
 
     # pylint: disable=protected-access
@@ -312,17 +303,20 @@ class LightningMeasurements:
 
         all_res = []
         for group in groups:
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
+                group[0].obs, SparseHamiltonian
+            ):
+                raise TypeError("ExpectationMP(SparseHamiltonian) cannot be computed with samples.")
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
+                group[0].obs, Hamiltonian
+            ):
                 raise TypeError("ExpectationMP(Hamiltonian) cannot be computed with samples.")
-                # measure_fn = _measure_hamiltonian_with_samples
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(group[0].obs, Sum):
                 raise TypeError("ExpectationMP(Sum) cannot be computed with samples.")
-                # measure_fn = _measure_sum_with_samples
             if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-                # measure_fn = _measure_classical_shadow
             all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
 
         flat_indices = [_i for i in indices for _i in i]
@@ -347,7 +341,9 @@ class LightningMeasurements:
             diagonalizing_gates = []
 
         if adjoint:
-            diagonalizing_gates = [qml.adjoint(g, lazy=False) for g in diagonalizing_gates]
+            diagonalizing_gates = [
+                qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)
+            ]
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 
