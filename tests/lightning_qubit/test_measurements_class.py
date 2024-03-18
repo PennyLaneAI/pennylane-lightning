@@ -80,7 +80,6 @@ def test_initialization(lightning_sv):
     m = LightningMeasurements(statevector)
 
     assert m.qubit_state is statevector
-    assert m.state is statevector.state_vector
     assert m.dtype == statevector.dtype
 
 
@@ -480,6 +479,7 @@ class TestMeasurements:
         assert np.allclose(result, expected, max(tol, 1.0e-5))
 
     @flaky(max_runs=5)
+    @pytest.mark.parametrize("shots", [None, 1000000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -515,21 +515,19 @@ class TestMeasurements:
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
-    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
-        if measurement is qml.probs and isinstance(
-            obs0_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
+    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+        skip_list = (
+            qml.ops.Sum,
+            qml.ops.SProd,
+            qml.ops.Prod,
+            qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        if measurement is qml.probs and (
+            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
         ):
             pytest.skip(
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
-            )
-
-        if measurement is qml.probs and isinstance(
-            obs1_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
-        ):
-            pytest.skip(
-                f"Observable of type {type(obs1_).__name__} is not supported for rotating probabilities."
             )
 
         n_qubits = 4
@@ -539,21 +537,38 @@ class TestMeasurements:
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
-        tape = qml.tape.QuantumScript(ops, measurements)
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+
+        statevector = lightning_sv(n_qubits)
+        statevector = statevector.get_final_state(tape)
+        m = LightningMeasurements(statevector)
+
+        skip_list = (
+            qml.ops.Sum,
+            qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        if (
+            (measurement is qml.expval or measurement is qml.var)
+            and shots is not None
+            and (isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list))
+        ):
+            with pytest.raises(TypeError):
+                _ = m.measure_final_state(tape)
+            return
+        else:
+            result = m.measure_final_state(tape)
 
         expected = self.calculate_reference(tape, lightning_sv)
         if len(expected) == 1:
             expected = expected[0]
-        statevector = lightning_sv(n_qubits)
-        statevector = statevector.get_final_state(tape)
-        m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
+        dtol = tol if shots is None else max(tol, 1.0e-2)
         for r, e in zip(result, expected):
-            assert np.allclose(r, e, max(tol, 1.0e-5))
+            assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.parametrize(
         "cases",

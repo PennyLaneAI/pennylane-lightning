@@ -29,6 +29,7 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
+from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -259,16 +260,20 @@ class LightningStateVector:
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
-            name = operation.name
-            if name == "Identity":
+            if isinstance(operation, qml.Identity):
                 continue
+            if isinstance(operation, Adjoint):
+                name = operation.base.name
+                invert_param = True
+            else:
+                name = operation.name
+                invert_param = False
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
             if method is not None:  # apply specialized gate
-                inv = False
                 param = operation.parameters
-                method(wires, inv, param)
+                method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix

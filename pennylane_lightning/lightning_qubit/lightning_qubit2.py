@@ -15,6 +15,7 @@
 This module contains the LightningQubit2 class that inherits from the new device interface.
 """
 from dataclasses import replace
+from pathlib import Path
 from typing import Callable, Optional, Sequence, Union
 
 import numpy as np
@@ -40,7 +41,7 @@ from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, unused-import
-    import pennylane_lightning.lightning_qubit_ops
+    from pennylane_lightning.lightning_qubit_ops import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError:
@@ -52,7 +53,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -64,10 +65,11 @@ def simulate(circuit: QuantumScript, state: LightningStateVector) -> Result:
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    circuit = circuit.map_to_standard_wires()
+    if mcmc is None:
+        mcmc = {}
     state.reset_state()
     final_state = state.get_final_state(circuit)
-    return LightningMeasurements(final_state).measure_final_state(circuit)
+    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
 def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):
@@ -313,6 +315,8 @@ class LightningQubit2(Device):
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
+    _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
+    _config = Path(__file__).parent / "lightning_qubit.toml"
 
     # TODO: Move supported ops/obs to TOML file
     operations = _operations
@@ -360,7 +364,8 @@ class LightningQubit2(Device):
                     f"The {kernel_name} is not supported and currently "
                     "only 'Local' and 'NonZeroRandom' kernels are supported."
                 )
-            if num_burnin >= shots:
+            shots = shots if isinstance(shots, Sequence) else [shots]
+            if any(num_burnin >= s for s in shots):
                 raise ValueError("Shots should be greater than num_burnin.")
             self._kernel_name = kernel_name
             self._num_burnin = num_burnin
@@ -373,6 +378,7 @@ class LightningQubit2(Device):
         """State vector complex data type."""
         return self._c_dtype
 
+    C_DTYPE = c_dtype
     dtype = c_dtype
 
     def _setup_execution_config(self, config):
@@ -417,8 +423,6 @@ class LightningQubit2(Device):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        # TODO: Remove no_sampling from preprocess after shots support is added
-        program.add_transform(no_sampling)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(qml.defer_measurements, device=self)
@@ -444,10 +448,15 @@ class LightningQubit2(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
+        mcmc = {
+            "mcmc": self._mcmc,
+            "kernel_name": self._kernel_name,
+            "num_burnin": self._num_burnin,
+        }
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(simulate(circuit, self._statevector))
+            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
 
         return tuple(results)
 

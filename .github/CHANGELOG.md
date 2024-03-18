@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add finite shots support in `lightning.qubit2`.
+  [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
+
 * Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
   [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
 
