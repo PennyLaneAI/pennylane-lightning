@@ -237,7 +237,6 @@ class LightningStateVector:
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
-            target_wires = self.wires.indices(operation.target_wires)
             method(
                 qml.matrix(operation.base),
                 control_wires,
