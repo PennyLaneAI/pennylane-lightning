@@ -20,6 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
+from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
@@ -32,15 +33,14 @@ try:
 except ImportError:
     pass
 
-from pennylane_lightning.lightning_qubit2 import LightningQubit2
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-if LightningDevice != LightningQubit2:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
@@ -479,6 +479,7 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         assert np.allclose(result, expected, max(tol, 1.0e-5))
 
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",

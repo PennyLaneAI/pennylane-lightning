@@ -121,38 +121,34 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 /**
  * @brief Generator names.
  *
- * Note that a name of generators must be "Generator" +
- * the name of the corresponding gate.
  */
 using GeneratorView = typename std::pair<GeneratorOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array generator_names = {
-    GeneratorView{GeneratorOperation::PhaseShift, "GeneratorPhaseShift"},
-    GeneratorView{GeneratorOperation::RX, "GeneratorRX"},
-    GeneratorView{GeneratorOperation::RY, "GeneratorRY"},
-    GeneratorView{GeneratorOperation::RZ, "GeneratorRZ"},
-    GeneratorView{GeneratorOperation::CRX, "GeneratorCRX"},
-    GeneratorView{GeneratorOperation::CRY, "GeneratorCRY"},
-    GeneratorView{GeneratorOperation::CRZ, "GeneratorCRZ"},
-    GeneratorView{GeneratorOperation::IsingXX, "GeneratorIsingXX"},
-    GeneratorView{GeneratorOperation::IsingXY, "GeneratorIsingXY"},
-    GeneratorView{GeneratorOperation::IsingYY, "GeneratorIsingYY"},
-    GeneratorView{GeneratorOperation::IsingZZ, "GeneratorIsingZZ"},
+    GeneratorView{GeneratorOperation::PhaseShift, "PhaseShift"},
+    GeneratorView{GeneratorOperation::RX, "RX"},
+    GeneratorView{GeneratorOperation::RY, "RY"},
+    GeneratorView{GeneratorOperation::RZ, "RZ"},
+    GeneratorView{GeneratorOperation::CRX, "CRX"},
+    GeneratorView{GeneratorOperation::CRY, "CRY"},
+    GeneratorView{GeneratorOperation::CRZ, "CRZ"},
+    GeneratorView{GeneratorOperation::IsingXX, "IsingXX"},
+    GeneratorView{GeneratorOperation::IsingXY, "IsingXY"},
+    GeneratorView{GeneratorOperation::IsingYY, "IsingYY"},
+    GeneratorView{GeneratorOperation::IsingZZ, "IsingZZ"},
     GeneratorView{GeneratorOperation::ControlledPhaseShift,
-                  "GeneratorControlledPhaseShift"},
-    GeneratorView{GeneratorOperation::SingleExcitation,
-                  "GeneratorSingleExcitation"},
+                  "ControlledPhaseShift"},
+    GeneratorView{GeneratorOperation::SingleExcitation, "SingleExcitation"},
     GeneratorView{GeneratorOperation::SingleExcitationMinus,
-                  "GeneratorSingleExcitationMinus"},
+                  "SingleExcitationMinus"},
     GeneratorView{GeneratorOperation::SingleExcitationPlus,
-                  "GeneratorSingleExcitationPlus"},
-    GeneratorView{GeneratorOperation::MultiRZ, "GeneratorMultiRZ"},
-    GeneratorView{GeneratorOperation::DoubleExcitation,
-                  "GeneratorDoubleExcitation"},
+                  "SingleExcitationPlus"},
+    GeneratorView{GeneratorOperation::MultiRZ, "MultiRZ"},
+    GeneratorView{GeneratorOperation::DoubleExcitation, "DoubleExcitation"},
     GeneratorView{GeneratorOperation::DoubleExcitationMinus,
-                  "GeneratorDoubleExcitationMinus"},
+                  "DoubleExcitationMinus"},
     GeneratorView{GeneratorOperation::DoubleExcitationPlus,
-                  "GeneratorDoubleExcitationPlus"},
-    GeneratorView{GeneratorOperation::GlobalPhase, "GeneratorGlobalPhase"},
+                  "DoubleExcitationPlus"},
+    GeneratorView{GeneratorOperation::GlobalPhase, "GlobalPhase"},
 };
 
 using CGeneratorView =

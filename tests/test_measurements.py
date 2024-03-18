@@ -592,6 +592,7 @@ class TestWiresInExpval:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -717,9 +718,8 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
 
     def func(x, y):
         qml.RX(x, 0)
-        qml.RX(x, 1)
-        qml.RZ(y, 0)
-        qml.RZ(y, 1)
+        qml.RX(y, 0)
+        qml.RX(y, 1)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
 
     func1 = qml.QNode(func, dev)

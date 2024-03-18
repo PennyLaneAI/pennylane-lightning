@@ -21,10 +21,12 @@ from pathlib import Path
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
     no_sampling,
+    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
@@ -76,11 +78,12 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False)
         state (LightningStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
+            qubit is built with OpenMP. Default is False.
 
     Returns:
         TensorLike: The Jacobian of the quantum script
     """
+    circuit = circuit.map_to_standard_wires()
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
@@ -94,16 +97,17 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
         state (LightningStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
+            qubit is built with OpenMP. Default is False.
 
     Returns:
         Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
+    circuit = circuit.map_to_standard_wires()
     res = simulate(circuit, state)
-    jacobian = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
-    return [res, jacobian]
+    jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    return res, jac
 
 
 _operations = frozenset(
@@ -120,6 +124,7 @@ _operations = frozenset(
         "PauliY",
         "PauliZ",
         "MultiRZ",
+        "GlobalPhase",
         "Hadamard",
         "S",
         "Adjoint(S)",
@@ -159,6 +164,7 @@ _operations = frozenset(
         "C(RX)",
         "C(RY)",
         "C(RZ)",
+        "C(Rot)",
         "C(SWAP)",
         "C(IsingXX)",
         "C(IsingXY)",
@@ -170,6 +176,8 @@ _operations = frozenset(
         "C(DoubleExcitation)",
         "C(DoubleExcitationMinus)",
         "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -187,11 +195,10 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
-        "GlobalPhase",
-        "C(GlobalPhase)",
     }
 )
-"""The set of supported operations."""
+# The set of supported operations.
+
 
 _observables = frozenset(
     {
@@ -210,7 +217,7 @@ _observables = frozenset(
         "Exp",
     }
 )
-"""Test set of supported observables."""
+# The set of supported observables.
 
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
@@ -223,22 +230,99 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables
 
 
+
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return isinstance(mp, qml.measurements.ExpectationMP)
+
+
+def _supports_adjoint(circuit):
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+        return False
+    return True
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.qubit"
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(decompose, stopping_condition=adjoint_ops, name=name)
+    program.add_transform(validate_observables, accepted_observables, name=name)
+    program.add_transform(
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
+    )
+    program.add_transform(qml.transforms.broadcast_expand)
+    program.add_transform(validate_adjoint_trainable_params)
+
+
 @simulator_tracking
 @single_tape_support
 class LightningQubit2(Device):
-    """PennyLane Lightning Qubit device."""
+    """PennyLane Lightning Qubit device.
+
+    A device that interfaces with C++ to perform fast linear algebra calculations.
+
+    Use of this device requires pre-built binaries or compilation from source. Check out the
+    :doc:`/lightning_qubit/installation` guide for more details.
+
+    Args:
+        wires (int): the number of wires to initialize the device with
+        c_dtype: Datatypes for statevector representation. Must be one of
+            ``np.complex64`` or ``np.complex128``.
+        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+            the expectation values. Defaults to ``None`` if not specified. Setting
+            to ``None`` results in computing statistics like expectation values and
+            variances analytically.
+        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
+            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
+            a request to seed from numpy's global random number generator.
+            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
+            will pull a seed from the OS entropy.
+        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
+            sampling method when generating samples.
+        kernel_name (str): name of transition kernel. The current version supports
+            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
+            The local kernel conducts a bit-flip local transition between states.
+            The local kernel generates a random qubit site and then generates a random
+            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
+            randomly transits between states that have nonzero probability.
+        num_burnin (int): number of steps that will be dropped. Increasing this value will
+            result in a closer approximation but increased runtime.
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+    """
 
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
-
-    _new_API = True
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
-    short_name = "lightning.qubit2"
-    operations = _operations
-    observables = _observables
+    _new_API = True
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
-    config = Path(__file__).parent / "lightning_qubit.toml"
+    _config = Path(__file__).parent / "lightning_qubit.toml"
+
+    # TODO: Move supported ops/obs to TOML file
     operations = _operations
+    # The names of the supported operations.
+
     observables = _observables
+    # The names of the supported observables.
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -252,7 +336,7 @@ class LightningQubit2(Device):
         num_burnin=100,
         batch_obs=False,
     ):
-        if not LQ_CPP_BINARY_AVAILABLE:
+        if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
@@ -262,6 +346,8 @@ class LightningQubit2(Device):
         super().__init__(wires=wires, shots=shots)
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+
+        # TODO: Investigate usefulness of creating numpy random generator
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._rng = np.random.default_rng(seed)
 
@@ -292,6 +378,7 @@ class LightningQubit2(Device):
         return self._c_dtype
 
     C_DTYPE = c_dtype
+    dtype = c_dtype
 
     @property
     def num_wires(self):
@@ -322,42 +409,59 @@ class LightningQubit2(Device):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def supports_derivatives(
-        self,
-        execution_config: Optional[ExecutionConfig] = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
-    ) -> bool:
-        if execution_config is None and circuit is None:
-            return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return (
-            all(isinstance(m, qml.measurements.ExpectationMP) for m in circuit.measurements)
-            and not circuit.shots
-        )
-
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
+
+        Args:
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
+
+        Returns:
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
+        """
+        config = self._setup_execution_config(execution_config)
         program = TransformProgram()
+
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(qml.defer_measurements, device=self)
         program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
         program.add_transform(qml.transforms.broadcast_expand)
-        return program, self._setup_execution_config(execution_config)
 
+        if config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, config
+
+    # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a datastructure with additional information required for execution
+
+        Returns:
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
+        """
         mcmc = {
-            "mcmc": self._mcmc,
-            "kernel_name": self._kernel_name,
-            "num_burnin": self._num_burnin,
-        }
+                    "mcmc": self._mcmc,
+                    "kernel_name": self._kernel_name,
+                    "num_burnin": self._num_burnin,
+                }
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
@@ -365,13 +469,48 @@ class LightningQubit2(Device):
 
         return tuple(results)
 
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
+
+        ``LightningQubit2`` supports adjoint differentiation with analytic results.
+
+        Args:
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
+
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+
+        """
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return _supports_adjoint(circuit=circuit)
+
     def compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        """Calculate the jacobian of either a single or a batch of circuits on the device.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            Tuple: The jacobian for each trainable parameter
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
-            jacobian(circuit, self._statevector, batch_obs=self._batch_obs) for circuit in circuits
+            jacobian(circuit, self._statevector, batch_obs=batch_obs) for circuit in circuits
         )
 
     def execute_and_compute_derivatives(
@@ -379,7 +518,17 @@ class LightningQubit2(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
+        """Compute the results and jacobians of circuits at the same time.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            tuple: A numeric result of the computation and the gradient.
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_jacobian(c, self._statevector, batch_obs=self._batch_obs) for c in circuits
+            simulate_and_jacobian(c, self._statevector, batch_obs=batch_obs) for c in circuits
         )
         return tuple(zip(*results))

@@ -22,11 +22,15 @@ import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
 
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:
     """Test expectation values"""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_identity_expectation(self, theta, phi, qubit_device, tol):
         """Test that identity expectation value (i.e. the trace) is 1"""
         dev = qubit_device(wires=3)
@@ -45,6 +49,7 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliZ expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -64,6 +69,7 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliX expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -86,6 +92,7 @@ class TestExpval:
             res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
         )
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
         """Test that PauliY expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -106,6 +113,7 @@ class TestExpval:
             res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
         """Test that Hadamard expectation value is correct"""
         dev = qubit_device(wires=3)
@@ -192,8 +200,6 @@ class TestExpOperatorArithmetic:
         """Test the `SProd` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
-        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
-            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -212,8 +218,6 @@ class TestExpOperatorArithmetic:
         """Test the `Prod` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
-        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
-            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x):
@@ -234,8 +238,6 @@ class TestExpOperatorArithmetic:
         """Test the `Sum` class with lightning qubit."""
 
         dev = qubit_device(wires=2)
-        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
-            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -258,8 +260,6 @@ class TestExpOperatorArithmetic:
         obs = qml.sum(qml.s_prod(2.3, qml.PauliZ(0)), -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)))
 
         dev = qubit_device(wires=2)
-        if diff_method == "adjoint" and dev.short_name == "lightning.qubit2":
-            return
 
         @qml.qnode(dev, diff_method=diff_method)
         def circuit(x, y):
@@ -279,6 +279,7 @@ class TestExpOperatorArithmetic:
         assert qml.math.allclose(g, expected)
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta,phi,varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorExpval:
     """Test tensor expectation values"""

@@ -88,7 +88,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
@@ -132,7 +133,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
@@ -183,7 +185,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
@@ -239,7 +242,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
@@ -276,7 +280,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 

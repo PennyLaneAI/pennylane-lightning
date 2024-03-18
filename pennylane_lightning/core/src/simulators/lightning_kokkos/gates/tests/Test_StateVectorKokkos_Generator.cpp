@@ -49,7 +49,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         StateVectorKokkos<TestType> state_vector{num_qubits};
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
-                                  "Generator does not exist for");
+                                  "The given value does not exist.");
     }
 }
 

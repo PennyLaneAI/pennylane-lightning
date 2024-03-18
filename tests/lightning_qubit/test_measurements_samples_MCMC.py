@@ -20,14 +20,11 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-from pennylane_lightning.lightning_qubit import LightningQubit
-from pennylane_lightning.lightning_qubit2 import LightningQubit2
-
-if not LightningQubit._CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
 if device_name not in ("lightning.qubit", "lightning.qubit2"):
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+
+if not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 class TestMCMCSample:

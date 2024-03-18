@@ -75,8 +75,6 @@ static_assert(
     Util::count_unique(Util::second_elems_of(Constant::generator_names)) ==
         Constant::generator_names.size(),
     "Second elements of generator_names must be distinct.");
-static_assert(check_generator_names_starts_with(),
-              "Names of generators must start with \"Generator\"");
 
 /*******************************************************************************
  * Check gate_wires is well defined

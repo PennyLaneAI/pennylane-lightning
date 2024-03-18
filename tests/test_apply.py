@@ -14,21 +14,20 @@
 """
 Unit tests for Lightning devices.
 """
-# pylint: disable=protected-access,cell-var-from-loop
 import math
 
 import numpy as np
 import pennylane as qml
-
-# pylint: disable=protected-access,cell-var-from-loop
 import pytest
-from conftest import PHI, THETA, TOL_STOCHASTIC, VARPHI
+from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
 from pennylane import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 @pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestApply:
@@ -533,6 +532,7 @@ class TestApply:
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -571,6 +571,7 @@ class TestExpval:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
         dev = qml.device(device_name, wires=1, shots=3)
@@ -589,6 +590,7 @@ class TestExpval:
 class TestVar:
     """Tests that variances are properly calculated."""
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "operation,input,expected_output",
         [
@@ -627,6 +629,7 @@ class TestVar:
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
 
@@ -643,6 +646,7 @@ class TestVar:
         assert var != 1.0
 
 
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -735,10 +739,13 @@ class TestLightningDeviceIntegration:
         """Test that the default plugin loads correctly"""
 
         dev = qml.device(device_name, wires=2)
-        assert dev.short_name == device_name
-        assert dev.num_wires == 2
-        if not ld._new_API:
+        if dev._new_API:
+            assert not dev.shots
+            assert len(dev.wires) == 2
+        else:
             assert dev.shots is None
+            assert dev.num_wires == 2
+            assert dev.short_name == device_name
 
     @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
@@ -804,6 +811,7 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(p), 1, atol=tol, rtol=0)
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
 
@@ -1154,6 +1162,7 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_multi_samples_return_correlated_results(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -1175,6 +1184,7 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
         self, num_wires
@@ -1200,6 +1210,7 @@ class TestLightningDeviceIntegration:
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_snapshot_is_ignored_without_shot(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4)
@@ -1216,6 +1227,7 @@ class TestLightningDeviceIntegration:
 
         assert np.allclose(outcomes, [0.0])
 
+    @pytest.mark.xfail(ld._new_API, reason="Old API required")
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4, shots=1000)
@@ -1244,15 +1256,17 @@ class TestLightningDeviceIntegration:
         @qml.qnode(dev)
         def circuit():
             qml.Hadamard(wires=0)
-            qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard)(wires=0), [0], [1])
+            qml.QuantumPhaseEstimation(qml.matrix(qml.Hadamard, wire_order=[0])(wires=0), [0], [1])
             return qml.probs(wires=[0, 1])
 
         probs = circuit()
 
-        res_sv = dev.state
         if ld._new_API:
+            # pylint: disable=protected-access
+            res_sv = dev._statevector.state
             res_probs = probs
         else:
+            res_sv = dev.state
             res_probs = dev.probability([0, 1])
 
         expected_sv = np.array(
@@ -1305,7 +1319,50 @@ class TestApplyLightningMethod:
         with pytest.raises(ValueError, match="Unsupported operation"):
             dev.apply_lightning([EmptyGate(0)])
 
+    @pytest.mark.parametrize(
+        "ops0",
+        [
+            qml.PauliZ(0),
+            qml.PauliY(0),
+            qml.S(0),
+            qml.RX(0.1234, 0),
+            qml.Rot(0.1, 0.2, 0.3, 0),
+            qml.T(0) @ qml.RY(0.1234, 0),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "ops1",
+        [
+            qml.PauliZ(2),
+            qml.PauliY(2),
+            qml.S(2),
+            qml.RX(0.1234, 2),
+            qml.Rot(0.1, 0.2, 0.3, 2),
+            qml.T(2) @ qml.RY(0.1234, 2),
+        ],
+    )
+    def test_multiple_adjoint_operations(self, ops0, ops1, tol):
+        """Test that multiple adjoint operations are handled correctly."""
+        n_qubits = 4
 
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.adjoint(ops0)
+            qml.PhaseShift(0.1234, wires=0)
+            qml.adjoint(ops1)
+            return qml.state()
+
+        results = qml.QNode(circuit, dev)()
+        expected = qml.QNode(circuit, dq)()
+        assert np.allclose(results, expected)
+
+
+@pytest.mark.skipif(ld._new_API, reason="Old API required.")
 @pytest.mark.skipif(
     ld._CPP_BINARY_AVAILABLE, reason="Test only applies when binaries are unavailable"
 )

@@ -394,19 +394,20 @@ if LK_CPP_BINARY_AVAILABLE:
             """
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
-            invert_param = False
             state = self.state_vector
 
             for ops in operations:
-                if str(ops.name) == "Identity":
-                    continue
-                name = ops.name
                 if isinstance(ops, Adjoint):
                     name = ops.base.name
                     invert_param = True
+                else:
+                    name = ops.name
+                    invert_param = False
+                if name == "Identity":
+                    continue
                 method = getattr(state, name, None)
-
                 wires = self.wires.indices(ops.wires)
+
                 if ops.name == "C(GlobalPhase)":
                     controls = ops.control_wires
                     control_values = ops.control_values
@@ -477,12 +478,10 @@ if LK_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -545,12 +544,10 @@ if LK_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -620,16 +617,14 @@ if LK_CPP_BINARY_AVAILABLE:
             """Return samples of an observable."""
             diagonalizing_gates = observable.diagonalizing_gates()
             if diagonalizing_gates:
-                self.apply_lightning(diagonalizing_gates)
+                self.apply(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
             results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
             if diagonalizing_gates:
-                self.apply_lightning(
-                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                )
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
             return results
 
         @staticmethod

@@ -24,6 +24,9 @@ from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
 
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 @pytest.fixture
 def op(op_name):

@@ -82,6 +82,11 @@ class LightningBase(QubitDevice):
         self._batch_obs = batch_obs
 
     @property
+    def dtype(self):
+        """State vector complex data type."""
+        return self.C_DTYPE
+
+    @property
     def stopping_condition(self):
         """.BooleanFn: Returns the stopping condition for the device. The returned
         function accepts a queueable object (including a PennyLane operation
@@ -412,3 +417,8 @@ class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
     def state_vector(self):
         """Returns a handle to the statevector."""
         return self._state
+
+    @property
+    def dtype(self):
+        """State vector complex data type."""
+        return self.C_DTYPE

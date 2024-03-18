@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 from pathlib import Path
-from typing import Sequence
+from typing import List, Sequence
 from warnings import warn
 
 import numpy as np
@@ -48,9 +48,10 @@ except ImportError:
 
 if LQ_CPP_BINARY_AVAILABLE:
     from os import getenv
-    from typing import List
 
     import pennylane as qml
+
+    # pylint: disable=ungrouped-imports
     from pennylane import (
         BasisState,
         DeviceError,
@@ -62,11 +63,10 @@ if LQ_CPP_BINARY_AVAILABLE:
     )
     from pennylane.measurements import Expectation, MeasurementProcess, State
     from pennylane.operation import Tensor
+    from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-    from pennylane_lightning.core._version import __version__
+    # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
@@ -75,6 +75,10 @@ if LQ_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._version import __version__
 
     def _state_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
@@ -429,16 +433,20 @@ if LQ_CPP_BINARY_AVAILABLE:
             # Skip over identity operations instead of performing
             # matrix multiplication with it.
             for operation in operations:
-                name = operation.name
+                if isinstance(operation, Adjoint):
+                    name = operation.base.name
+                    invert_param = True
+                else:
+                    name = operation.name
+                    invert_param = False
                 if name == "Identity":
                     continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(operation.wires)
 
                 if method is not None:  # apply specialized gate
-                    inv = False
                     param = operation.parameters
-                    method(wires, inv, param)
+                    method(wires, invert_param, param)
                 elif (
                     name[0:2] == "C("
                     or name == "ControlledQubitUnitary"
@@ -498,12 +506,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -559,12 +565,10 @@ if LQ_CPP_BINARY_AVAILABLE:
             ]:
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
-                    self.apply_lightning(diagonalizing_gates)
+                    self.apply(diagonalizing_gates)
                 results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
-                if diagonalizing_gates:
-                    self.apply_lightning(
-                        [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                    )
+                if self.shots is None and diagonalizing_gates:
+                    self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
                 return results
 
             if self.shots is not None:
@@ -643,16 +647,14 @@ if LQ_CPP_BINARY_AVAILABLE:
             """Return samples of an observable."""
             diagonalizing_gates = observable.diagonalizing_gates()
             if diagonalizing_gates:
-                self.apply_lightning(diagonalizing_gates)
+                self.apply(diagonalizing_gates)
             if not isinstance(observable, qml.PauliZ):
                 self._samples = self.generate_samples()
             results = super().sample(
                 observable, shot_range=shot_range, bin_size=bin_size, counts=counts
             )
             if diagonalizing_gates:
-                self.apply_lightning(
-                    [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-                )
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
             return results
 
         @staticmethod

@@ -185,7 +185,7 @@ jobs:
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          PL_DEVICE=${DEVICENAME}2 python -m pytest tests/ $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning_qubit2 python -m pytest tests/ $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -645,7 +645,9 @@ jobs:
         run: |
           python -m pip install coverage
           python -m coverage combine .coverage-python*
-          python -m coverage xml -o coverage-${{ github.job }}.xml
+          # Added cov xml -i to ignore "No source for code" random errors
+          # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
+          python -m coverage xml -i -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
