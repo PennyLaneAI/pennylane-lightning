@@ -23,17 +23,16 @@ from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-from pennylane_lightning.lightning_qubit import LightningQubit
 from pennylane_lightning.lightning_qubit._adjoint_jacobian import (
     LightningAdjointJacobian,
 )
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningQubit._CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-if LightningDevice != LightningQubit:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 I, X, Y, Z = (
@@ -102,12 +101,13 @@ def test_initialization(lightning_sv):
 class TestAdjointJacobian:
     """Tests for the adjoint Jacobian functionality"""
 
-    def test_finite_shots_warns(self, lightning_sv):
-        """Tests warning raised when finite shots specified"""
+    def test_finite_shots_error(self, lightning_sv):
+        """Tests error raised when finite shots specified"""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.PauliZ(0))], shots=1)
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
@@ -145,7 +145,7 @@ class TestAdjointJacobian:
     def test_phaseshift_gradient(self, n_qubits, par, tol, lightning_sv):
         """Test that the gradient of the phaseshift gate matches the exact analytic formula."""
         par = np.array(par)
-        # dev = qml.device("lightning.qubit", wires=n_qubits)
+
         init_state = np.zeros(2**n_qubits)
         init_state[-2::] = np.array([1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], requires_grad=False)
 
@@ -423,18 +423,16 @@ class TestVectorJacobianProduct:
         ):
             self.calculate_vjp(statevector, tape1, dy2)
 
-    def test_finite_shots_warns(self, lightning_sv):
-        """Tests warning raised when finite shots specified"""
+    def test_finite_shots_error(self, lightning_sv):
+        """Tests error raised when finite shots specified"""
 
         statevector = lightning_sv(num_wires=2)
 
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0))
-
+        tape = qml.tape.QuantumScript([], [qml.expval(qml.PauliZ(0))], shots=1)
         dy = np.array([1.0])
 
-        with pytest.warns(
-            UserWarning,
+        with pytest.raises(
+            qml.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
             self.calculate_vjp(statevector, tape, dy)
@@ -507,7 +505,6 @@ class TestVectorJacobianProduct:
 
         tape.trainable_params = {}
         dy = np.array([1.0])
-
         vjp = self.calculate_vjp(statevector, tape, dy)
 
         assert len(vjp) == 0

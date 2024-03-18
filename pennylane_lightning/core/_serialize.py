@@ -62,7 +62,7 @@ class QuantumScriptSerializer:
         self.use_csingle = use_csingle
         self.device_name = device_name
         self.split_obs = split_obs
-        if device_name == "lightning.qubit":
+        if device_name in ("lightning.qubit", "lightning.qubit2"):
             try:
                 import pennylane_lightning.lightning_qubit_ops as lightning_ops
             except ImportError as exception:
