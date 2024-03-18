@@ -481,8 +481,8 @@ class StateVectorKokkos final
                                                  params);
             return -static_cast<fp_t>(0.5);
         case GeneratorOperation::PhaseShift:
-            applyGateFunctor<generatorPhaseShiftFunctor, 1>(wires, inverse,
-                                                            params);
+            applyGenPhaseShift<KokkosExecSpace>(*data_, num_qubits, wires,
+                                                inverse, params);
             return static_cast<fp_t>(1.0);
         case GeneratorOperation::IsingXX:
             applyGateFunctor<generatorIsingXXFunctor, 2>(wires, inverse,

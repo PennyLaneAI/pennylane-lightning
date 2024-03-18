@@ -16,6 +16,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 
+#include "BasicGateFunctors.hpp"
 #include "BitUtil.hpp"
 
 /// @cond DEV
@@ -26,6 +27,22 @@ using Kokkos::Experimental::swap;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Functors {
+
+template <class ExecutionSpace, class PrecisionT>
+void applyGenPhaseShift(
+    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    const std::size_t num_qubits, const std::vector<size_t> &wires,
+    [[maybe_unused]] const bool inverse = false,
+    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC1Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i0,
+                      [[maybe_unused]] const std::size_t i1) {
+            arr[i0] = Kokkos::complex<PrecisionT>{0.0, 0.0};
+        });
+}
+
 template <class PrecisionT, bool adj = false>
 struct generatorPhaseShiftFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
