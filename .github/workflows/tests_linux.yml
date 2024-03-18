@@ -184,9 +184,11 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          PL_DEVICE=lightning_qubit2 python -m pytest tests/ $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning_qubit2 python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning_qubit2 python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append --cov-append
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
@@ -393,8 +395,9 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
@@ -591,8 +594,9 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          OMP_NUM_THREADS=2 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 
@@ -610,11 +614,13 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          OMP_NUM_THREADS=2 PL_DEVICE=lightning.qubit python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          OMP_NUM_THREADS=2 PL_DEVICE=lightning.kokkos python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning.kokkos python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.kokkos --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
 

@@ -381,11 +381,6 @@ class LightningQubit2(Device):
     C_DTYPE = c_dtype
     dtype = c_dtype
 
-    @property
-    def state(self):
-        """Returns a copy of the state vector data in a NumPy array."""
-        return self._statevector.state
-
     def _setup_execution_config(self, config):
         """
         Update the execution config with choices for how the device should be used and the device options.
