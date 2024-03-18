@@ -11,9 +11,16 @@
 * Add LightningAdjointJacobian to support `lightning.qubit2`.
   [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
 
+* Add `lightning.qubit2` device which uses the new device API.
+  [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
+  [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
+
 ### Breaking changes
 
 ### Improvements
+
+* Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
+  [(#641)](https://github.com/PennyLaneAI/pennylane-lightning/pull/641)
 
 * Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
@@ -29,7 +36,30 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey
+
+---
+
+# Release 0.35.1
+
+### Improvements
+
+* Use the `adjoint` gate parameter to apply `qml.Adjoint` operations instead of matrix methods in `lightning.qubit`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+### Bug fixes
+
+* Fix `qml.Adjoint` support in `lightning.gpu` and `lightning.kokkos`.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+* Fix finite shots support in `lightning.qubit`, `lightning.gpu` and `lightning.kokkos`. The bug would impact calculations with measurements on observables with non-trivial diagonalizing gates and calculations with shot vectors.
+  [(#632)](https://github.com/PennyLaneAI/pennylane-lightning/pull/632)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
 
 ---
 
@@ -86,6 +116,9 @@ Ali Asadi, Vincent Michaud-Rioux
 * Pull Kokkos v4.2.00 from the official Kokkos repository to test Lightning-Kokkos with the CUDA backend.
   [(#596)](https://github.com/PennyLaneAI/pennylane-lightning/pull/596)
 
+* Remove deprecated MeasurementProcess.name.
+  [(#605)](https://github.com/PennyLaneAI/pennylane-lightning/pull/605)
+
 ### Documentation
 
 * Update requirements to build the documentation.
@@ -126,7 +159,7 @@ Ali Asadi, Vincent Michaud-Rioux
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Amintor Dusko, David Ittah, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu, Matthew Silverman
 
 ---
 

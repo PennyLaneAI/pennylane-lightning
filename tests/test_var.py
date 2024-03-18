@@ -17,7 +17,10 @@ Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` d
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI
+from conftest import PHI, THETA, VARPHI, LightningDevice
+
+if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 np.random.seed(42)
 
@@ -26,6 +29,7 @@ np.random.seed(42)
 class TestVar:
     """Tests for the variance"""
 
+    @pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
     def test_var(self, theta, phi, qubit_device, tol):
         """Tests for variance calculation"""
         dev = qubit_device(wires=3)
@@ -71,6 +75,7 @@ class TestVar:
         assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
 @pytest.mark.parametrize("theta, phi, varphi", list(zip(THETA, PHI, VARPHI)))
 class TestTensorVar:
     """Tests for variance of tensor observables"""

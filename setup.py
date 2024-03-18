@@ -186,6 +186,7 @@ if suffix == "gpu":
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
+pennylane_plugins.append("lightning.qubit2 = pennylane_lightning.lightning_qubit.lightning_qubit2:LightningQubit2")
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
@@ -203,9 +204,9 @@ info = {
     "long_description": open("README.rst").read(),
     "long_description_content_type": "text/x-rst",
     "install_requires": requirements,
-    "ext_modules": []
-    if os.environ.get("SKIP_COMPILATION", False)
-    else [CMakeExtension(f"{backend}_ops")],
+    "ext_modules": (
+        [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
+    ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
     "extras_require": {
