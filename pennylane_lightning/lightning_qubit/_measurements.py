@@ -24,14 +24,11 @@ try:
 except ImportError:
     pass
 
-from typing import Callable, List, Sequence, Union
+from typing import Callable, List, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices.qubit.sampling import (
-    _group_measurements,
-    _measure_with_samples_diagonalizing_gates,
-)
+from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
     CountsMP,
@@ -316,19 +313,17 @@ class LightningMeasurements:
         all_res = []
         for group in groups:
             if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
-                raise TypeError(f"ExpectationMP(Hamiltonian) cannot be computed with samples.")
+                raise TypeError("ExpectationMP(Hamiltonian) cannot be computed with samples.")
                 # measure_fn = _measure_hamiltonian_with_samples
-            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
-                raise TypeError(f"ExpectationMP(Sum) cannot be computed with samples.")
+            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+                raise TypeError("ExpectationMP(Sum) cannot be computed with samples.")
                 # measure_fn = _measure_sum_with_samples
-            elif isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
+            if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
                 raise TypeError(
-                    f"ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
+                    "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
                 # measure_fn = _measure_classical_shadow
-            else:
-                # measure with the usual method (rotate into the measurement basis)
-                all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
+            all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
 
         flat_indices = [_i for i in indices for _i in i]
 

@@ -53,7 +53,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = {}) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -65,6 +65,8 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = {
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
+    if mcmc is None:
+        mcmc = {}
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
