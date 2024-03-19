@@ -112,6 +112,7 @@ def test_obs_returns_expected_type(obs, obs_type):
     assert isinstance(
         QuantumScriptSerializer(device_name)._ob(obs, dict(enumerate(obs.wires))), obs_type
     )
+    print(type(QuantumScriptSerializer(device_name)._ob(obs)))
     assert isinstance(QuantumScriptSerializer(device_name)._ob(obs), obs_type)
 
 

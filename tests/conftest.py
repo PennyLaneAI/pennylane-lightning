@@ -152,6 +152,34 @@ def qubit_device(request):
     return _device
 
 
+#######################################################################
+# Fixtures for testing under new and old opmath
+
+
+@pytest.fixture(scope="function")
+def use_legacy_opmath():
+    with qml.operation.disable_new_opmath_cm() as cm:
+        yield cm
+
+
+@pytest.fixture(scope="function")
+def use_new_opmath():
+    with qml.operation.enable_new_opmath_cm() as cm:
+        yield cm
+
+
+@pytest.fixture(
+    params=[qml.operation.disable_new_opmath_cm, qml.operation.enable_new_opmath_cm],
+    scope="function",
+)
+def use_legacy_and_new_opmath(request):
+    with request.param() as cm:
+        yield cm
+
+
+#######################################################################
+
+
 def validate_counts(shots, results1, results2):
     """Compares two counts.
 
