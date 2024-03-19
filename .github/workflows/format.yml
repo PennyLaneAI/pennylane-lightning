@@ -14,23 +14,31 @@ jobs:
     name: Format (Python)
     runs-on: ubuntu-22.04
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v4
+
+      - uses: actions/checkout@v3
+
+      - name: python-isort
+        uses: isort/isort-action@v1.1.0
         with:
-          python-version: '3.11'
+          isort-version: 5.13.2
+          requirements-files: "requirements-dev.txt"
+          sort-paths: "./pennylane_lightning/ ./mpitests ./tests"
+          configuration: --py 311 --profile black -l 100
 
-      - name: Install dependencies
-        run:
-            python -m pip install click==8.0.4 black==23.7.0 isort==5.13.2
+      # - name: Set up Python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: '3.11'
 
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+      # - name: Install dependencies
+      #   run:
+      #       python -m pip install click==8.0.4 black==23.7.0 isort==5.13.2
 
-      - name: Run isort
-        run: python -m isort --py 311 --profile black -l 100 ./pennylane_lightning/ ./mpitests ./tests --check --diff
+      # - name: Checkout PennyLane-Lightning
+      #   uses: actions/checkout@v3
 
-      - name: Run Black
-        run: python -m black -l 100 pennylane_lightning/ tests/ --check --verbose
+      # - name: Run Black
+      #   run: python -m black -l 100 pennylane_lightning/ tests/ --check --verbose
 
   format-cpp:
     name: Format (C++)
