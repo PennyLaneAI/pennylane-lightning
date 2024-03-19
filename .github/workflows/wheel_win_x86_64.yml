@@ -130,7 +130,8 @@ jobs:
             python -m pip install -r requirements-tests.txt
 
           CIBW_TEST_COMMAND: |
-            pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
