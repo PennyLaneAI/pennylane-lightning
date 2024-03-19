@@ -89,7 +89,7 @@ class TestExpval:
             res,
             np.array(
                 [np.sin(theta) * np.sin(phi), np.sin(phi)],
-                dtype=dev.c_dtype if ld._new_API else ld._new_API,
+                dtype=dev.dtype
             ),
             tol * 10,
         )
