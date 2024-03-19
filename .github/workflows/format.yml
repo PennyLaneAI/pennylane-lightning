@@ -20,10 +20,10 @@ jobs:
       - name: python-isort
         uses: isort/isort-action@v1.1.0
         with:
+          configuration: --py 311 --profile black -l 100 -p pennylane_lightning --check --diff
           isort-version: 5.13.2
           requirements-files: "requirements-dev.txt"
           sort-paths: "./pennylane_lightning/ ./mpitests ./tests"
-          configuration: --py 311 --profile black -l 100 -p pennylane_lightning --check --diff
 
       - uses: psf/black@stable
         with:
