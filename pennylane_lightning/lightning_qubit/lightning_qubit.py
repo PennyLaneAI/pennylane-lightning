@@ -377,6 +377,11 @@ class LightningQubit(Device):
             self._num_burnin = None
 
     @property
+    def name(self):
+        """The name of the device."""
+        return "lightning.qubit"
+
+    @property
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
