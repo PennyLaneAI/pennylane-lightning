@@ -26,8 +26,8 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
-      # - name: Run isort
-      #   run: python -m isort --profile black ./pennylane_lightning/ ./mpitests ./tests --check --diff
+      - name: Run isort
+        run: python -m isort --profile black ./pennylane_lightning/ ./mpitests ./tests --check --diff
 
       - name: Run Black
         run: python -m black -l 100 pennylane_lightning/ tests/ --check --verbose
