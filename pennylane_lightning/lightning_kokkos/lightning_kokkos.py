@@ -60,9 +60,9 @@ if LK_CPP_BINARY_AVAILABLE:
         math,
     )
     from pennylane.measurements import Expectation, MeasurementProcess, State
+    from pennylane.wires import Wires
     from pennylane.operation import Tensor
     from pennylane.ops.op_math import Adjoint
-    from pennylane.wires import Wires
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
