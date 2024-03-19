@@ -22,7 +22,6 @@ from typing import List, Sequence
 from warnings import warn
 
 import numpy as np
-
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,
@@ -66,6 +65,10 @@ if LQ_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
+    from pennylane_lightning.core._version import __version__
+
     # pylint: disable=no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
         AdjointJacobianC64,
@@ -75,10 +78,6 @@ if LQ_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import QuantumScriptSerializer
-    from pennylane_lightning.core._version import __version__
 
     def _state_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover

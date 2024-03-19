@@ -23,7 +23,6 @@ from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
-
 from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
     _add_adjoint_transforms,
     _supports_adjoint,

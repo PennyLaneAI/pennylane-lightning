@@ -27,7 +27,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run isort
-        run: python -m isort --profile black ./pennylane_lightning/ ./mpitests ./tests --check --diff
+        run: python -m isort --py 311 --profile black -l 100 ./pennylane_lightning/ ./mpitests ./tests --check --diff
 
       - name: Run Black
         run: python -m black -l 100 pennylane_lightning/ tests/ --check --verbose
@@ -62,7 +62,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: sudo apt update && sudo apt -y install cmake gcc-11 g++-11 ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt

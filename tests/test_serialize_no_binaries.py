@@ -16,7 +16,6 @@ Unit tests for the serialization helper functions.
 """
 import pytest
 from conftest import LightningDevice, device_name
-
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 if LightningDevice._CPP_BINARY_AVAILABLE:
