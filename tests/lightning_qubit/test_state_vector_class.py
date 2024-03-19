@@ -23,6 +23,7 @@ import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
+
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if not LightningDevice._new_API:

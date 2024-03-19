@@ -23,7 +23,7 @@ jobs:
           isort-version: 5.13.2
           requirements-files: "requirements-dev.txt"
           sort-paths: "./pennylane_lightning/ ./mpitests ./tests"
-          configuration: --py 311 --profile black -l 100
+          configuration: --py 311 --profile black -l 100 -p pennylane_lightning
 
       # - name: Set up Python
       #   uses: actions/setup-python@v4

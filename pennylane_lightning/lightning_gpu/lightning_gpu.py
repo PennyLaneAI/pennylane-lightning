@@ -21,6 +21,7 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
+
 from pennylane_lightning.core.lightning_base import LightningBase, LightningBaseFallBack
 
 try:

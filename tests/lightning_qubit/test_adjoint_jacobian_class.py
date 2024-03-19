@@ -21,9 +21,10 @@ import pytest
 from conftest import LightningDevice  # tested device
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
+from scipy.stats import unitary_group
+
 from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-from scipy.stats import unitary_group
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)

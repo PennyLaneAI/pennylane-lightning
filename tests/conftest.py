@@ -20,8 +20,9 @@ from typing import Sequence
 
 import numpy as np
 import pennylane as qml
-import pennylane_lightning
 import pytest
+
+import pennylane_lightning
 
 # defaults
 TOL = 1e-6

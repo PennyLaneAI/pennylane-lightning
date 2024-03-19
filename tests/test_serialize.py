@@ -18,6 +18,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
+
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:

@@ -22,6 +22,7 @@ from typing import List, Sequence
 from warnings import warn
 
 import numpy as np
+
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
     LightningBaseFallBack,

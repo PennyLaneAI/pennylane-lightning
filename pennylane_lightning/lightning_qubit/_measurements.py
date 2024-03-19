@@ -42,6 +42,7 @@ from pennylane.ops import Hamiltonian, SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
+
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 from ._state_vector import LightningStateVector
