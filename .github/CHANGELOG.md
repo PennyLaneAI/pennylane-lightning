@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add finite shots support in `lightning.qubit2`.
+  [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
+
 * Add `collapse` and `normalize` methods to the `StateVectorLQubit` classes, enabling "branching" of the wavefunction. Add methods to create and seed an RNG in the `Measurements` modules.
   [(#645)](https://github.com/PennyLaneAI/pennylane-lightning/pull/645)
 

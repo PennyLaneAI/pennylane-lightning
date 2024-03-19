@@ -20,9 +20,11 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, LightningDevice, device_name
+from conftest import PHI, THETA
+from conftest import LightningDevice as ld
+from conftest import device_name
 
-if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
@@ -85,7 +87,7 @@ def op(op_name):
     return ops_list.get(op_name)
 
 
-@pytest.mark.parametrize("op_name", LightningDevice.operations)
+@pytest.mark.parametrize("op_name", ld.operations)
 def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
@@ -143,7 +145,7 @@ def test_gate_unitary_correct(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", LightningDevice.operations)
+@pytest.mark.parametrize("op_name", ld.operations)
 def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
@@ -247,8 +249,8 @@ def test_arbitrary_inv_unitary_correct():
     assert np.allclose(unitary, random_unitary_inv)
 
 
-@pytest.mark.skipif(LightningDevice._new_API, reason="Old API required")
-@pytest.mark.skipif(not LightningDevice._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.skipif(ld._new_API, reason="Old API required")
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize(
     "obs,has_rotation",
     [
