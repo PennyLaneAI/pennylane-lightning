@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <random>
 #include <string>
 #include <vector>
 
@@ -55,6 +56,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 #else
     const StateVectorT &_statevector;
 #endif
+    std::mt19937 rng;
 
   public:
 #ifdef _ENABLE_PLGPU
@@ -64,6 +66,23 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     explicit MeasurementsBase(const StateVectorT &statevector)
         : _statevector{statevector} {};
 #endif
+
+    /**
+     * @brief Set the seed of the internal random generator
+     *
+     * @param seed Seed
+     */
+    void setSeed(const size_t seed) { rng.seed(seed); }
+
+    /**
+     * @brief Randomly set the seed of the internal random generator
+     *
+     * @param seed Seed
+     */
+    void setRandomSeed() {
+        std::random_device rd;
+        setSeed(rd());
+    }
 
     /**
      * @brief Calculate the expectation value for a general Observable.
