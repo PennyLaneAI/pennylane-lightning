@@ -59,6 +59,9 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
+        mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
+            parameters: mcmc, kernel_name, num_burnin. Descriptions of
+            these fields are found in :class:`~.LightningQubit2`.
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
@@ -299,13 +302,13 @@ class LightningQubit2(Device):
             will pull a seed from the OS entropy.
         mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
             sampling method when generating samples.
-        kernel_name (str): name of transition kernel. The current version supports
+        kernel_name (str): name of transition MCMC kernel. The current version supports
             two kernels: ``"Local"`` and ``"NonZeroRandom"``.
             The local kernel conducts a bit-flip local transition between states.
             The local kernel generates a random qubit site and then generates a random
             number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
             randomly transits between states that have nonzero probability.
-        num_burnin (int): number of steps that will be dropped. Increasing this value will
+        num_burnin (int): number of MCMC steps that will be dropped. Increasing this value will
             result in a closer approximation but increased runtime.
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
@@ -378,7 +381,6 @@ class LightningQubit2(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    C_DTYPE = c_dtype
     dtype = c_dtype
 
     def _setup_execution_config(self, config):
