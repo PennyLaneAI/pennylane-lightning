@@ -23,6 +23,9 @@
 
 ### Breaking changes
 
+* Introduce `ci:build_wheel` label, which controls wheel building on `pull_request` and other triggers.
+  [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
+
 ### Improvements
 
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
