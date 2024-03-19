@@ -160,6 +160,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
+        "LinearCombination",
         "Sum",
         "SProd",
         "Prod",

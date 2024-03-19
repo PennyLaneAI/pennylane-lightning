@@ -199,6 +199,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "Hadamard",
         "SparseHamiltonian",
         "Hamiltonian",
+        "LinearCombination",
         "Hermitian",
         "Identity",
         "Sum",

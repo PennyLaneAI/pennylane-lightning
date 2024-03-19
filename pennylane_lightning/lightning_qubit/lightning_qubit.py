@@ -216,6 +216,7 @@ _observables = frozenset(
         "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
+        "LinearCombination",
         "Sum",
         "SProd",
         "Prod",
