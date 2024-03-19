@@ -73,9 +73,9 @@ class LightningMeasurements:
     def __init__(
         self,
         qubit_state: LightningStateVector,
-        mcmc: bool = False,
-        kernel_name: str = "Local",
-        num_burnin: int = 100,
+        mcmc: bool = None,
+        kernel_name: str = None,
+        num_burnin: int = None,
     ) -> None:
         self._qubit_state = qubit_state
         self._dtype = qubit_state.dtype
@@ -83,6 +83,10 @@ class LightningMeasurements:
         self._mcmc = mcmc
         self._kernel_name = kernel_name
         self._num_burnin = num_burnin
+        if self._mcmc and not self._kernel_name:
+            self._kernel_name = "Local"
+        if self._mcmc and not self._num_burnin:
+            self._num_burnin = 100
 
     @property
     def qubit_state(self):
@@ -329,9 +333,10 @@ class LightningMeasurements:
                 )
             all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
 
-        flat_indices = [_i for i in indices for _i in i]
-
         # reorder results
+        flat_indices = []
+        for row in indices:
+            flat_indices += row
         sorted_res = tuple(
             res for _, res in sorted(list(enumerate(all_res)), key=lambda r: flat_indices[r[0]])
         )
