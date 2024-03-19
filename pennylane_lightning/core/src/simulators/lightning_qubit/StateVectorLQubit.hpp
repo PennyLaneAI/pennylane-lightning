@@ -36,6 +36,7 @@ namespace {
 using Pennylane::LightningQubit::Util::Threading;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::exp2;
+using Pennylane::Util::squaredNorm;
 using namespace Pennylane::LightningQubit::Gates;
 } // namespace
 /// @endcond
@@ -631,6 +632,54 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     "number of wires");
 
         applyMatrix(matrix.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Collapse the state vector as after having measured one of the
+     * qubits.
+     *
+     * The branch parameter imposes the measurement result on the given wire.
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(const std::size_t wire, const bool branch) {
+        auto *arr = this->getData();
+        const size_t stride = pow(2, this->num_qubits_ - (1 + wire));
+        const size_t vec_size = pow(2, this->num_qubits_);
+        const auto section_size = vec_size / stride;
+        const auto half_section_size = section_size / 2;
+
+        // zero half the entries
+        // the "half" entries depend on the stride
+        // *_*_*_*_ for stride 1
+        // **__**__ for stride 2
+        // ****____ for stride 4
+        const size_t k = branch ? 0 : 1;
+        for (size_t idx = 0; idx < half_section_size; idx++) {
+            const size_t offset = stride * (k + 2 * idx);
+            for (size_t ids = 0; ids < stride; ids++) {
+                arr[offset + ids] = {0., 0.};
+            }
+        }
+
+        normalize();
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto *arr = this->getData();
+        PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));
+
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        std::complex<PrecisionT> inv_norm = 1. / norm;
+        for (size_t k = 0; k < this->getLength(); k++) {
+            arr[k] *= inv_norm;
+        }
     }
 };
 } // namespace Pennylane::LightningQubit
