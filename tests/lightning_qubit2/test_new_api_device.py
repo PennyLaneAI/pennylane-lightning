@@ -231,7 +231,6 @@ class TestExecution:
 
         expected_program = qml.transforms.core.TransformProgram()
         expected_program.add_transform(validate_measurements, name=device.name)
-        expected_program.add_transform(no_sampling)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(qml.defer_measurements, device=device)
