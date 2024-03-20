@@ -375,6 +375,8 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         .def("__repr__", &TensorProdObs<StateVectorT>::getObsName)
         .def("get_wires", &TensorProdObs<StateVectorT>::getWires,
              "Get wires of observables")
+        .def("get_ops", &TensorProdObs<StateVectorT>::getObs,
+             "Get operations list")
         .def(
             "__eq__",
             [](const TensorProdObs<StateVectorT> &self,
