@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   mac-set-matrix-arm:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') || github.ref == 'refs/heads/master' }}
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
     timeout-minutes: 30
     name: Set builder matrix
     runs-on: ubuntu-latest
