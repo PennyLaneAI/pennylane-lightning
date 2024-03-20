@@ -23,7 +23,7 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') || github.ref == 'refs/heads/master' }}
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
