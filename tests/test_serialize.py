@@ -357,8 +357,12 @@ class TestSerializeObs:
                 [
                     tensor_prod_obs(
                         [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
+                            tensor_prod_obs(
+                                [
+                                    hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                                    named_obs("PauliY", [2]),
+                                ]
+                            ),
                             named_obs("PauliZ", [3]),
                         ]
                     ),

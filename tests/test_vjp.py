@@ -203,7 +203,7 @@ class TestVectorJacobianProduct:
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
+            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(1))
 
         with pytest.raises(
             qml.QuantumFunctionError,
