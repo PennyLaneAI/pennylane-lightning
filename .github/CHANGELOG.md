@@ -23,6 +23,9 @@
 
 ### Breaking changes
 
+* Migrate `lightning.qubit` to the new device API.
+  [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
+
 ### Improvements
 
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
