@@ -61,7 +61,7 @@ namespace Pennylane::LightningKokkos {
  * @tparam fp_t Floating-point precision type.
  */
 template <class fp_t = double>
-class StateVectorKokkos final
+class StateVectorKokkos
     : public StateVectorBase<fp_t, StateVectorKokkos<fp_t>> {
   private:
     using BaseType = StateVectorBase<fp_t, StateVectorKokkos<fp_t>>;
@@ -214,6 +214,10 @@ class StateVectorKokkos final
     StateVectorKokkos(std::vector<ComplexT> hostdata_,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
+    StateVectorKokkos(std::vector<std::complex<PrecisionT>> hostdata_,
+                      const Kokkos::InitializationSettings &kokkos_args = {})
+        : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
+                            hostdata_.size(), kokkos_args) {}
 
     /**
      * @brief Copy constructor
@@ -231,7 +235,7 @@ class StateVectorKokkos final
      *
      * @param other Another state vector
      */
-    ~StateVectorKokkos() {
+    virtual ~StateVectorKokkos() {
         data_.reset();
         {
             const std::lock_guard<std::mutex> lock(init_mutex_);
