@@ -71,6 +71,18 @@ inline void errhandler(int errcode, const char *str) {
             errhandler(errcode, #fn);                                          \
     }
 
+template <class T> [[maybe_unused]] MPI_Datatype get_mpi_type() {
+    PL_ABORT("No corresponding MPI type.");
+}
+template <>
+[[maybe_unused]] MPI_Datatype get_mpi_type<Kokkos::complex<float>>() {
+    return MPI_C_FLOAT_COMPLEX;
+}
+template <>
+[[maybe_unused]] MPI_Datatype get_mpi_type<Kokkos::complex<double>>() {
+    return MPI_C_DOUBLE_COMPLEX;
+}
+
 } // namespace
 /// @endcond
 
@@ -152,19 +164,21 @@ class StateVectorKokkosMPI final
         }
     };
 
-    std::size_t get_mpi_rank() {
+    int get_mpi_rank() {
         int rank;
         PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank));
-        return static_cast<std::size_t>(rank);
+        return rank;
     }
-    std::size_t get_mpi_size() {
+    int get_mpi_size() {
         int size;
         PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size));
-        return static_cast<std::size_t>(size);
+        return size;
     }
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
 
-    std::size_t get_num_global_qubits() { return log2(get_mpi_size()); }
+    std::size_t get_num_global_qubits() {
+        return log2(static_cast<std::size_t>(get_mpi_size()));
+    }
     std::size_t get_num_local_qubits() {
         return num_qubits_ - get_num_global_qubits();
     }
@@ -189,7 +203,7 @@ class StateVectorKokkosMPI final
         KokkosVector sv_view = getView(); // circumvent error capturing this
                                           // with KOKKOS_LAMBDA
         auto index = global_2_local_index(global_index);
-        auto rank = get_mpi_rank();
+        auto rank = static_cast<std::size_t>(get_mpi_rank());
         Kokkos::parallel_for(
             sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(i) = (index.first == rank && index.second == i)
@@ -326,9 +340,16 @@ class StateVectorKokkosMPI final
     /**
      * @brief Get underlying data vector
      */
-    [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_((*sv_).getLength());
-        (*sv_).DeviceToHost(data_.data(), data_.size());
+    [[nodiscard]] auto getDataVector(const int root = 0)
+        -> std::vector<ComplexT> {
+        std::vector<ComplexT> data_((get_mpi_rank() == root) ? this->getLength()
+                                                             : 0);
+        std::vector<ComplexT> local_((*sv_).getLength());
+        (*sv_).DeviceToHost(local_.data(), local_.size());
+        PL_MPI_IS_SUCCESS(MPI_Gather(local_.data(), local_.size(),
+                                     get_mpi_type<ComplexT>(), data_.data(),
+                                     local_.size(), get_mpi_type<ComplexT>(),
+                                     root, communicator_));
         return data_;
     }
 

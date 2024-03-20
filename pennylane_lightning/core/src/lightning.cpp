@@ -54,11 +54,9 @@ void print(const std::vector<ComplexT> &vec,
 
 void print(StateVectorKokkosMPI<double> sv,
            const std::string &name = "statevector") {
-    for (std::size_t rank = 0; rank < sv.get_mpi_size(); rank++) {
-        if (rank == sv.get_mpi_rank()) {
-            print(sv.getDataVector(), name + "-" + std::to_string(rank));
-        }
-        sv.mpi_barrier();
+    auto data = sv.getDataVector();
+    if (0 == sv.get_mpi_rank()) {
+        print(data, name);
     }
 }
 
