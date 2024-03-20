@@ -23,7 +23,7 @@
 
 ### Breaking changes
 
-* Introduce `ci:build_wheel` label, which controls wheel building on `pull_request` and other triggers.
+* Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
 ### Improvements
