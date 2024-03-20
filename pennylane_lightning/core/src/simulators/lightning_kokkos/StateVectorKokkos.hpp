@@ -101,8 +101,9 @@ class StateVectorKokkos
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
+                      const Kokkos::InitializationSettings &kokkos_args = {}, const bool skip_init = false)
         : BaseType{num_qubits} {
+        if (skip_init){return;}
         num_qubits_ = num_qubits;
 
         {
@@ -211,10 +212,8 @@ class StateVectorKokkos
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(std::vector<ComplexT> hostdata_,
-                      const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
-    StateVectorKokkos(std::vector<std::complex<PrecisionT>> hostdata_,
+    template <class complex>
+    StateVectorKokkos(std::vector<complex> hostdata_,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
                             hostdata_.size(), kokkos_args) {}
