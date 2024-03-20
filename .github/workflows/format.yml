@@ -22,8 +22,8 @@ jobs:
         with:
           configuration: --py 311 --profile black -l 100 -p pennylane_lightning --check --diff
           isort-version: 5.13.2
-          requirements-files: "requirements-dev.txt"
-          sort-paths: "./pennylane_lightning/ ./mpitests ./tests"
+          requirements-files: 'requirements-dev.txt'
+          sort-paths: './pennylane_lightning/ ./mpitests ./tests'
 
       - uses: psf/black@stable
         with:
