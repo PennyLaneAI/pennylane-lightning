@@ -350,6 +350,8 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         .def("__repr__", &HermitianObs<StateVectorT>::getObsName)
         .def("get_wires", &HermitianObs<StateVectorT>::getWires,
              "Get wires of observables")
+        .def("get_matrix", &HermitianObs<StateVectorT>::getMatrix,
+             "Get matrix representation of Hermitian operator")
         .def(
             "__eq__",
             [](const HermitianObs<StateVectorT> &self,
@@ -401,6 +403,10 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         .def("__repr__", &Hamiltonian<StateVectorT>::getObsName)
         .def("get_wires", &Hamiltonian<StateVectorT>::getWires,
              "Get wires of observables")
+        .def("get_ops", &Hamiltonian<StateVectorT>::getObs,
+             "Get operations contained by Hamiltonian")
+        .def("get_coeffs", &Hamiltonian<StateVectorT>::getCoeffs,
+             "Get Hamiltonian coefficients")
         .def(
             "__eq__",
             [](const Hamiltonian<StateVectorT> &self,
