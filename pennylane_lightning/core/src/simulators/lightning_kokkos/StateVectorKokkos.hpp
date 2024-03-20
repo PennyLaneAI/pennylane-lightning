@@ -61,7 +61,7 @@ namespace Pennylane::LightningKokkos {
  * @tparam fp_t Floating-point precision type.
  */
 template <class fp_t = double>
-class StateVectorKokkos
+class StateVectorKokkos final
     : public StateVectorBase<fp_t, StateVectorKokkos<fp_t>> {
   private:
     using BaseType = StateVectorBase<fp_t, StateVectorKokkos<fp_t>>;
@@ -101,11 +101,9 @@ class StateVectorKokkos
 
     StateVectorKokkos() = delete;
     StateVectorKokkos(size_t num_qubits,
-                      const Kokkos::InitializationSettings &kokkos_args = {}, const bool skip_init = false)
+                      const Kokkos::InitializationSettings &kokkos_args = {})
         : BaseType{num_qubits} {
-        if (skip_init){return;}
         num_qubits_ = num_qubits;
-
         {
             const std::lock_guard<std::mutex> lock(init_mutex_);
             if (!Kokkos::is_initialized()) {
@@ -234,7 +232,7 @@ class StateVectorKokkos
      *
      * @param other Another state vector
      */
-    virtual ~StateVectorKokkos() {
+    ~StateVectorKokkos() {
         data_.reset();
         {
             const std::lock_guard<std::mutex> lock(init_mutex_);

@@ -81,72 +81,75 @@ namespace Pennylane::LightningKokkos {
  * @tparam PrecisionT Floating-point precision type.
  */
 template <class PrecisionT = double>
-class StateVectorKokkosMPI final : public StateVectorKokkos<PrecisionT> {
+class StateVectorKokkosMPI final
+    : public StateVectorBase<PrecisionT, StateVectorKokkosMPI<PrecisionT>> {
 
   private:
-    using BaseType = StateVectorKokkos<PrecisionT>;
+    using BaseType =
+        StateVectorBase<PrecisionT, StateVectorKokkosMPI<PrecisionT>>;
 
   public:
     using ComplexT = Kokkos::complex<PrecisionT>;
-    using CFP_t = ComplexT;
-    using DoubleLoopRank = Kokkos::Rank<2>;
-    using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
-    using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
-    using KokkosVector = Kokkos::View<ComplexT *>;
-    using KokkosSizeTVector = Kokkos::View<size_t *>;
-    using UnmanagedComplexHostView =
-        Kokkos::View<ComplexT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedSizeTHostView =
-        Kokkos::View<size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedConstComplexHostView =
-        Kokkos::View<const ComplexT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedConstSizeTHostView =
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using UnmanagedPrecisionHostView =
-        Kokkos::View<PrecisionT *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using ScratchViewComplex =
-        Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using ScratchViewSizeT =
-        Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using TeamPolicy = Kokkos::TeamPolicy<>;
-    using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using SVK = StateVectorKokkos<PrecisionT>;
+    using KokkosVector = SVK::KokkosVector;
+    // using CFP_t = ComplexT;
+    // using DoubleLoopRank = Kokkos::Rank<2>;
+    // using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
+    // using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
+    // using KokkosVector = Kokkos::View<ComplexT *>;
+    // using KokkosSizeTVector = Kokkos::View<size_t *>;
+    // using UnmanagedComplexHostView =
+    //     Kokkos::View<ComplexT *, Kokkos::HostSpace,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using UnmanagedSizeTHostView =
+    //     Kokkos::View<size_t *, Kokkos::HostSpace,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using UnmanagedConstComplexHostView =
+    //     Kokkos::View<const ComplexT *, Kokkos::HostSpace,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using UnmanagedConstSizeTHostView =
+    //     Kokkos::View<const std::size_t *, Kokkos::HostSpace,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using UnmanagedPrecisionHostView =
+    //     Kokkos::View<PrecisionT *, Kokkos::HostSpace,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using ScratchViewComplex =
+    //     Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using ScratchViewSizeT =
+    //     Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
+    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    // using TeamPolicy = Kokkos::TeamPolicy<>;
+    // using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkosMPI() = delete;
     StateVectorKokkosMPI(std::size_t num_qubits,
                          const Kokkos::InitializationSettings &kokkos_args = {})
-        : BaseType{0, kokkos_args, false} {
-printf("SVKMPI::l125\n");        // Init MPI
-printf("SVKMPI::l126\n");        int status = 0;
-printf("SVKMPI::l127\n");        MPI_Initialized(&status);
-printf("SVKMPI::l128\n");        if (!status) {
-printf("SVKMPI::l129\n");            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
-printf("SVKMPI::l130\n");        }
-printf("SVKMPI::l131\n");        communicator_ = MPI_COMM_WORLD;
-printf("SVKMPI::l132\n");        // Init Kokkos
-printf("SVKMPI::l133\n");        {
-printf("SVKMPI::l134\n");            const std::lock_guard<std::mutex> lock(init_mutex_);
-printf("SVKMPI::l135\n");            if (!Kokkos::is_initialized()) {
-printf("SVKMPI::l136\n");                Kokkos::initialize(kokkos_args);
-printf("SVKMPI::l137\n");            }
-printf("SVKMPI::l138\n");        }
-printf("SVKMPI::l139\n");        // Init attrs
-printf("SVKMPI::l140\n");        num_qubits_ = num_qubits;
-printf("SVKMPI::l141\n");        if (num_qubits > 0) {
-printf("SVKMPI::l142\n");            data_ = std::make_unique<KokkosVector>("data_", get_blk_size());
-printf("SVKMPI::l144\n");            recvbuf_ =
-                std::make_unique<KokkosVector>("recvbuf_", get_blk_size());
-printf("SVKMPI::l145\n");            sendbuf_ =
-                std::make_unique<KokkosVector>("sendbuf_", get_blk_size());
-printf("SVKMPI::l147\n");            setBasisState(0U);
+        : BaseType{num_qubits} {
+        // Init MPI
+        int status = 0;
+        MPI_Initialized(&status);
+        if (!status) {
+            PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
         }
-printf("SVKMPI::l149\n");
+        communicator_ = MPI_COMM_WORLD;
+        // Init Kokkos
+        // {
+        //     const std::lock_guard<std::mutex> lock(init_mutex_);
+        //     if (!Kokkos::is_initialized()) {
+        //         Kokkos::initialize(kokkos_args);
+        //     }
+        // }
+        // Init attrs
+        num_qubits_ = num_qubits;
+        if (num_qubits > 0) {
+            sv_ = std::make_unique<SVK>(get_num_local_qubits(), kokkos_args);
+            // recvbuf_ =
+            //     std::make_unique<KokkosVector>("recvbuf_", get_blk_size());
+            // sendbuf_ =
+            //     std::make_unique<KokkosVector>("sendbuf_", get_blk_size());
+            setBasisState(0U);
+        }
     };
 
     std::size_t get_mpi_rank() {
@@ -159,11 +162,13 @@ printf("SVKMPI::l149\n");
         PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size));
         return static_cast<std::size_t>(size);
     }
-
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
 
-    std::size_t get_blk_size() { return exp2(num_qubits_ - get_mpi_size()); }
-
+    std::size_t get_num_global_qubits() { return log2(get_mpi_size()); }
+    std::size_t get_num_local_qubits() {
+        return num_qubits_ - get_num_global_qubits();
+    }
+    std::size_t get_blk_size() { return exp2(get_num_local_qubits()); }
     std::pair<std::size_t, std::size_t>
     global_2_local_index(const std::size_t index) {
         auto blk = get_blk_size();
@@ -173,9 +178,7 @@ printf("SVKMPI::l149\n");
     /**
      * @brief Init zeros for the state-vector on device.
      */
-    void initZeros() {
-        Kokkos::deep_copy(BaseType::getView(), ComplexT{0.0, 0.0});
-    }
+    void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }
 
     /**
      * @brief Set value for a single element of the state-vector on device.
@@ -183,12 +186,11 @@ printf("SVKMPI::l149\n");
      * @param index Index of the target element.
      */
     void setBasisState(const std::size_t global_index) {
-printf("SVKMPI::line186\n");KokkosVector sv_view =
-            BaseType::getView(); // circumvent error capturing this with
-                                 // KOKKOS_LAMBDA
-printf("SVKMPI::line189\n");        auto index = global_2_local_index(global_index);
-printf("SVKMPI::line190\n");        auto rank = get_mpi_rank();
-printf("SVKMPI::line191\n");        Kokkos::parallel_for(
+        KokkosVector sv_view = getView(); // circumvent error capturing this
+                                          // with KOKKOS_LAMBDA
+        auto index = global_2_local_index(global_index);
+        auto rank = get_mpi_rank();
+        Kokkos::parallel_for(
             sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(i) = (index.first == rank && index.second == i)
                                  ? ComplexT{1.0, 0.0}
@@ -202,23 +204,23 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
      * @param values Values to be set for the target elements.
      * @param indices Indices of the target elements.
      */
-    void setStateVector(const std::vector<std::size_t> &indices,
-                        const std::vector<ComplexT> &values) {
-        initZeros();
-        KokkosSizeTVector d_indices("d_indices", indices.size());
-        KokkosVector d_values("d_values", values.size());
-        Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
-                                         indices.data(), indices.size()));
-        Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
-                                        values.data(), values.size()));
-        KokkosVector sv_view =
-            BaseType::getView(); // circumvent error capturing this with
-                                 // KOKKOS_LAMBDA
-        Kokkos::parallel_for(
-            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(d_indices[i]) = d_values[i];
-            });
-    }
+    // void setStateVector(const std::vector<std::size_t> &indices,
+    //                     const std::vector<ComplexT> &values) {
+    //     initZeros();
+    //     KokkosSizeTVector d_indices("d_indices", indices.size());
+    //     KokkosVector d_values("d_values", values.size());
+    //     Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
+    //                                      indices.data(), indices.size()));
+    //     Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
+    //                                     values.data(), values.size()));
+    //     KokkosVector sv_view =
+    //         getView(); // circumvent error capturing this with
+    //                              // KOKKOS_LAMBDA
+    //     Kokkos::parallel_for(
+    //         indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+    //             sv_view(d_indices[i]) = d_values[i];
+    //         });
+    // }
 
     /**
      * @brief Reset the data back to the \f$\ket{0}\f$ state.
@@ -241,7 +243,7 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
         : StateVectorKokkosMPI(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        BaseType::HostToDevice(hostdata_, length);
+        (*sv_).HostToDevice(hostdata_, length);
     }
 
     StateVectorKokkosMPI(std::complex<PrecisionT> *hostdata_,
@@ -250,7 +252,7 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
         : StateVectorKokkosMPI(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        BaseType::HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
     }
 
     /**
@@ -264,7 +266,7 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
         std::vector<ComplexT> hostdata_copy(hostdata_, hostdata_ + length);
-        BaseType::HostToDevice(hostdata_copy.data(), length);
+        (*sv_).HostToDevice(hostdata_copy.data(), length);
     }
 
     /**
@@ -286,7 +288,7 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
     StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(other.getNumQubits(), kokkos_args) {
-        BaseType::DeviceToDevice(other.getView());
+        (*sv_).DeviceToDevice(other.getView());
     }
 
     /**
@@ -295,24 +297,46 @@ printf("SVKMPI::line191\n");        Kokkos::parallel_for(
      * @param other Another state vector
      */
     ~StateVectorKokkosMPI() {
-        int initflag;
-        int finflag;
-        PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        if (initflag && !finflag) {
-            // finalize Kokkos first
-            BaseType::StateVectorKokkos::~StateVectorKokkos();
-            PL_MPI_IS_SUCCESS(MPI_Finalize());
-        }
+        // int initflag;
+        // int finflag;
+        // PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
+        // PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
+        // if (initflag && !finflag) {
+        //     // finalize Kokkos first
+        //     PL_MPI_IS_SUCCESS(MPI_Finalize());
+        // }
+    }
+
+    /**
+     * @brief Get the Kokkos data of the state vector.
+     *
+     * @return The pointer to the data of state vector
+     */
+    [[nodiscard]] auto getView() const -> KokkosVector & {
+        return (*sv_).getView();
+    }
+
+    /**
+     * @brief Get the Kokkos data of the state vector
+     *
+     * @return The pointer to the data of state vector
+     */
+    [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
+
+    /**
+     * @brief Get underlying data vector
+     */
+    [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
+        std::vector<ComplexT> data_((*sv_).getLength());
+        (*sv_).DeviceToHost(data_.data(), data_.size());
+        return data_;
     }
 
   private:
     std::size_t num_qubits_;
-    std::mutex init_mutex_;
-    std::unique_ptr<KokkosVector> data_;
-    std::unique_ptr<KokkosVector> recvbuf_;
-    std::unique_ptr<KokkosVector> sendbuf_;
-    inline static bool is_exit_reg_ = false;
+    std::unique_ptr<SVK> sv_;
+    // std::unique_ptr<KokkosVector> recvbuf_;
+    // std::unique_ptr<KokkosVector> sendbuf_;
     MPI_Comm communicator_;
 };
 
