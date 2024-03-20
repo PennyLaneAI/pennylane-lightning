@@ -154,6 +154,13 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+      
+      - name: Get site-packages directory
+        id: get_site_packages
+        shell: pwsh
+        run: |
+          $pythonSitePackages = python -c "import site; Write-Host site.getsitepackages()[0]"
+          echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -163,7 +170,6 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
-              -DENABLE_LAPACK=ON `
               -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -241,6 +247,13 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+      
+          - name: Get site-packages directory
+        id: get_site_packages
+        shell: pwsh
+        run: |
+          $pythonSitePackages = python -c "import site; Write-Host site.getsitepackages()[0]"
+          echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -254,7 +267,6 @@ jobs:
               -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
-              -DENABLE_LAPACK=ON `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results

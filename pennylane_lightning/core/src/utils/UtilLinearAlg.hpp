@@ -23,19 +23,24 @@
 #include <complex>
 #include <vector>
 
+#if defined(__APPLE__) || defined(__linux__)
+#include <dlfcn.h>
+#elif defined(_MSC_VER)
+#include <cstdlib>
+#include <filesystem>
+#include <windows.h>
+#endif
+
 /// @cond DEV
 namespace {
-extern "C" {
 // LAPACK routine for complex Hermitian eigensystems
-extern void cheev_(const char *jobz, const char *uplo, const int *n,
-                   std::complex<float> *a, const int *lda, float *w,
-                   std::complex<float> *work, const int *lwork, float *rwork,
-                   int *info);
-extern void zheev_(const char *jobz, const char *uplo, const int *n,
-                   std::complex<double> *a, const int *lda, double *w,
-                   std::complex<double> *work, const int *lwork, double *rwork,
-                   int *info);
-}
+typedef void (*zheevPtr)(const char *, const char *, const int *,
+                         std::complex<double> *, const int *, double *,
+                         std::complex<double> *, const int *, double *, int *);
+typedef void (*cheevPtr)(const char *, const char *, const int *,
+                         std::complex<float> *, const int *, float *,
+                         std::complex<float> *, const int *, float *, int *);
+
 } // namespace
 /// @endcond
 
@@ -52,6 +57,7 @@ namespace Pennylane::Util {
  * @param eigenVals eigenvalue results.
  * @param unitaries unitary result.
  */
+
 template <typename T>
 void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
@@ -69,6 +75,50 @@ void compute_diagonalizing_gates(int n, int lda,
             ah[j * n + i] = Ah[i * lda + j];
         }
     }
+#ifdef __APPLE__
+    void *handle =
+        dlopen("/System/Library/Frameworks/Accelerate.framework/Versions/"
+               "Current/Frameworks/vecLib.framework/libLAPACK.dylib",
+               RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle) {
+        handle = dlopen("/usr/local/opt/lapack/lib/liblapack.dylib",
+                        RTLD_LAZY | RTLD_GLOBAL);
+    }
+    if (!handle) {
+        fprintf(stderr, "%s\n", dlerror());
+    }
+#elif defined(__linux__)
+    void *handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
+#elif defined(_MSC_VER)
+    const char *PythonSitePackagePath = std::getenv("PYTHON_SITE_PACKAGES");
+    std::string openblasLib;
+    if (PythonSitePackagePath != nullptr) {
+        std::filesystem::path scipyLibsPath(PythonSitePackagePath);
+        scipyLibsPath = scipyLibsPath / "scipy.libs";
+        for (const auto &lib :
+             std::filesystem::directory_iterator(scipyLibsPath)) {
+            if (lib.is_regular_file()) {
+                if (lib.path().filename().find("openblas") !=
+                    std::string::npos) {
+                    openblasLib = lib.path().filename().c_str();
+                }
+            }
+        }
+    } else {
+        auto currentPath = std::filesystem::currentPath();
+        auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        for (const auto &lib :
+             std::filesystem::directory_iterator(scipyLibsPath)) {
+            if (lib.is_regular_file()) {
+                if (lib.path().filename().find("openblas") !=
+                    std::string::npos) {
+                    openblasLib = lib.path().filename().c_str();
+                }
+            }
+        }
+    }
+    HMODULE handle = LoadLibrary(openblasLib.c_str());
+#endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
     char uplo = 'L'; // Upper triangle of matrix is stored
@@ -78,26 +128,44 @@ void compute_diagonalizing_gates(int n, int lda,
     int info;
 
     if constexpr (std::is_same<T, float>::value) {
+#if defined(__APPLE__) || defined(__linux__)
+        cheevPtr cheev = reinterpret_cast<cheevPtr>(dlsym(handle, "cheev_"));
+#elif defined(_MSC_VER)
+        cheevPtr cheev =
+            reinterpret_cast<cheevPtr>(GetProcAddress(handle, "cheev_"));
+#endif
         // Query optimal workspace size
-        cheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
-               work_query.data(), &lwork, rwork.data(), &info);
+        cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+              work_query.data(), &lwork, rwork.data(), &info);
         // Allocate workspace
         lwork = static_cast<int>(work_query[0].real());
         std::vector<std::complex<T>> work_optimal(lwork, {0, 0});
         // Perform eigenvalue and eigenvector computation
-        cheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
-               work_optimal.data(), &lwork, rwork.data(), &info);
+        cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+              work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
+#if defined(__APPLE__) || defined(__linux__)
+        zheevPtr zheev = reinterpret_cast<zheevPtr>(dlsym(handle, "zheev_"));
+#elif defined(_MSC_VER)
+        zheevPtr zheev =
+            reinterpret_cast<zheevPtr>(GetProcAddress(handle, "zheev_"));
+#endif
         // Query optimal workspace size
-        zheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
-               work_query.data(), &lwork, rwork.data(), &info);
+        zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+              work_query.data(), &lwork, rwork.data(), &info);
         // Allocate workspace
         lwork = static_cast<int>(work_query[0].real());
         std::vector<std::complex<T>> work_optimal(lwork, {0, 0});
         // Perform eigenvalue and eigenvector computation
-        zheev_(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
-               work_optimal.data(), &lwork, rwork.data(), &info);
+        zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
+              work_optimal.data(), &lwork, rwork.data(), &info);
     }
+
+#if defined(__APPLE__) || defined(__linux__)
+    dlclose(handle);
+#elif defined(_MSC_VER)
+    FreeLibrary(handle);
+#endif
 
     std::transform(ah.begin(), ah.end(), unitary.begin(),
                    [](std::complex<T> value) {

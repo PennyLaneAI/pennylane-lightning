@@ -118,13 +118,13 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          export LD_LIBRARY_PATH=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs/')"):$LD_LIBRARY_PATH
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DENABLE_MPI=ON \
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
-            -DENABLE_LAPACK=ON \
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \

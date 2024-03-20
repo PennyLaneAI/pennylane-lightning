@@ -2,11 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_utils LANGUAGES CXX)
 
-set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
+set(LQUBIT_UTILS_FILES RuntimeInfo.cpp UtilLinearAlg.cpp CACHE INTERNAL "" FORCE)
 
-if(ENABLE_LAPACK)
-    list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
-endif()
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 

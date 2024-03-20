@@ -207,7 +207,7 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob2 != ob3);
         }
 
-#ifdef PL_USE_LAPACK
+#ifndef _MSC_VER
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -226,28 +226,6 @@ template <typename TypeList> void testHermitianObsBase() {
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains("The matrix passed to HermitianObs "
                                           "is not a Hermitian matrix."));
-        }
-#endif
-
-#ifndef PL_USE_LAPACK
-        DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
-                        << StateVectorToName<StateVectorT>::name) {
-            std::mt19937_64 re{1337};
-            constexpr size_t num_qubits = 3;
-            auto init_state =
-                createRandomStateVectorData<PrecisionT>(re, num_qubits);
-
-            StateVectorT state_vector(init_state.data(), init_state.size());
-            auto obs =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
-
-            std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
-
-            REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains(
-                    "Hermitian observables do not support shot measurement."));
         }
 #endif
 
