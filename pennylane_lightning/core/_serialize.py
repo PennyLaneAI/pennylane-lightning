@@ -34,8 +34,8 @@ from pennylane import (
 )
 from pennylane.math import unwrap
 from pennylane.operation import Tensor
+from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumTape
-from pennylane.ops import Prod, Sum, SProd
 
 pauli_name_map = {
     "I": "Identity",
