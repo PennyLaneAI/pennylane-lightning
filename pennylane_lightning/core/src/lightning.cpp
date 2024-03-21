@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     allclose(svmpi, sv);
     // print(svmpi);
     // print_basis_states(indices.q);
-    // print_local_wires(indices.q);
+    print_local_wires(indices.q);
 
     // Create vector for run-times to average
     std::vector<double> times;

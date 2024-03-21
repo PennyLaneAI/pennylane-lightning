@@ -758,6 +758,25 @@ class StateVectorKokkos final
         return -static_cast<fp_t>(0.5);
     }
 
+    template <typename T> void rescale(const T scale) {
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(const std::size_t i) { sv_view(i) *= scale; });
+    }
+
+    template <typename T> void axpby(const T alpha, KokkosVector vec) {
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        PL_ABORT_IF_NOT(sv_view.size() == vec.size(),
+                        "Input vector must of the same size.");
+        Kokkos::parallel_for(
+            sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(i) += alpha * vec(i);
+            });
+    }
+
     /**
      * @brief Update data of the class
      *

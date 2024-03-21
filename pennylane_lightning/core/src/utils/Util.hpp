@@ -26,6 +26,10 @@
 #include <type_traits> // is_same_v
 #include <vector>
 
+#if _ENABLE_PLKOKKOS == 1
+#include <Kokkos_Core.hpp>
+#endif
+
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
 
@@ -226,6 +230,23 @@ template <class T> inline static constexpr auto INVSQRT2() -> T {
 template <template <class> class ComplexT, class T>
 inline static constexpr auto INVSQRT2() -> ComplexT<T> {
     return static_cast<ComplexT<T>>(INVSQRT2<T>());
+}
+
+/**
+ * @brief Returns the complex exponential.
+ *
+ * @tparam ComplexT Complex type.
+ * @tparam T Precision of result. `double`, `float` are accepted values.
+ * @param ComplexT<T> The complex phase.
+ * @return exp(angle)
+ */
+template <template <class> class ComplexT, class T>
+inline auto exp(const ComplexT<T> angle) -> ComplexT<T> {
+    if constexpr (std::is_same_v<ComplexT, Kokkos::complex>) {
+        return Kokkos::exp(angle);
+    } else {
+        return std::exp(angle);
+    }
 }
 
 /**

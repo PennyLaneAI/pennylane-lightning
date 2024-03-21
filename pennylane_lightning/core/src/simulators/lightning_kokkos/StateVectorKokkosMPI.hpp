@@ -38,21 +38,19 @@
 #include "Error.hpp"
 #include "GateFunctors.hpp"
 #include "GateOperation.hpp"
+#include "Gates.hpp"
 #include "StateVectorBase.hpp"
 #include "StateVectorKokkos.hpp"
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::Gates;
 using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::Util;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
-using Pennylane::Util::array_contains;
-using Pennylane::Util::exp2;
-using Pennylane::Util::isPerfectPowerOf2;
-using Pennylane::Util::log2;
-using Pennylane::Util::reverse_lookup;
 using std::size_t;
 
 // LCOV_EXCL_START
@@ -158,10 +156,8 @@ class StateVectorKokkosMPI final
         num_qubits_ = num_qubits;
         if (num_qubits > 0) {
             sv_ = std::make_unique<SVK>(get_num_local_qubits(), kokkos_args);
-            // recvbuf_ =
-            //     std::make_unique<KokkosVector>("recvbuf_", get_blk_size());
-            // sendbuf_ =
-            //     std::make_unique<KokkosVector>("sendbuf_", get_blk_size());
+            recvbuf_ = KokkosVector("recvbuf_", get_blk_size());
+            sendbuf_ = KokkosVector("sendbuf_", get_blk_size());
             setBasisState(0U);
         }
     };
@@ -184,6 +180,30 @@ class StateVectorKokkosMPI final
         mpi_barrier();
     }
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
+    MPI_Request mpi_irecv(const std::size_t rank) {
+        MPI_Request request;
+        PL_MPI_IS_SUCCESS(MPI_Irecv(
+            recvbuf_.data(), recvbuf_.size(), get_mpi_type<ComplexT>(),
+            static_cast<int>(rank), 0, communicator_, &request));
+        return request;
+    }
+    MPI_Request mpi_isend(const std::size_t rank) {
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(const std::size_t i) { sendbuf_(i) = sv_view(i); });
+        Kokkos::fence();
+        MPI_Request request;
+        PL_MPI_IS_SUCCESS(MPI_Isend(
+            sendbuf_.data(), sendbuf_.size(), get_mpi_type<ComplexT>(),
+            static_cast<int>(rank), 0, communicator_, &request));
+        return request;
+    }
+    void mpi_wait(MPI_Request &request) {
+        MPI_Status status;
+        PL_MPI_IS_SUCCESS(MPI_Wait(&request, &status));
+    }
     std::size_t get_num_global_qubits() {
         return log2(static_cast<std::size_t>(get_mpi_size()));
     }
@@ -214,7 +234,7 @@ class StateVectorKokkosMPI final
         auto n_local{get_num_local_qubits()};
         return std::find_if(wires.begin(), wires.end(),
                             [=, this](const std::size_t wire) {
-                                return get_rev_wire(wire) > n_local;
+                                return get_rev_wire(wire) > (n_local - 1);
                             }) == wires.end();
     }
 
@@ -361,6 +381,7 @@ class StateVectorKokkosMPI final
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<PrecisionT> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t one{1U};
         if (opName == "Identity") {
             return;
         }
@@ -369,7 +390,24 @@ class StateVectorKokkosMPI final
                                   params, gate_matrix);
             return;
         }
-        PL_ABORT("applyOperation is not implemented on global wires.");
+        PL_ABORT_IF(wires.size() > 1, "applyOperation is not implemented on "
+                                      "when global wires and n_wires > 1.");
+        auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
+        auto matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
+            gate_op, params);
+        auto ncol = exp2(wires.size());
+        auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        auto rev_wire = get_num_global_qubits() - 1 - wires[0];
+        auto rank = myrank ^ (one << rev_wire); // toggle nth bit
+        auto recv_req = mpi_irecv(rank);
+        auto send_req = mpi_isend(rank);
+        auto myrow = (myrank & (one << rev_wire)) >> rev_wire; // select nth bit
+        auto col = myrow;
+        (*sv_).rescale(matrix[col + myrow * ncol]);
+        mpi_wait(recv_req);
+        mpi_wait(send_req);
+        col = (rank & (one << rev_wire)) >> rev_wire; // select nth bit
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
     }
 
     /**
@@ -407,8 +445,8 @@ class StateVectorKokkosMPI final
   private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
-    // std::unique_ptr<KokkosVector> recvbuf_;
-    // std::unique_ptr<KokkosVector> sendbuf_;
+    KokkosVector recvbuf_;
+    KokkosVector sendbuf_;
     MPI_Comm communicator_;
 };
 
