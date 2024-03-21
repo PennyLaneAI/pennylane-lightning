@@ -23,7 +23,7 @@ from conftest import device_name
 from pennylane import numpy as np
 
 if ld._CPP_BINARY_AVAILABLE:
-    if device_name == "lightning.qubit2":
+    if ld._new_API:
         from pennylane_lightning.lightning_qubit_ops import LightningException
 
 else:
