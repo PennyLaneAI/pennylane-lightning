@@ -146,7 +146,7 @@ void compute_diagonalizing_gates(int n, int lda,
                 std::string libname_str = lib.path().filename();
                 if (libname_str.find("openblas") !=
                     std::string::npos) {
-                    openblasLib = lib.path().filename().c_str();
+                    openblasLib = libname_str;
                 }
             }
         }
@@ -160,12 +160,13 @@ void compute_diagonalizing_gates(int n, int lda,
                 std::string libname_str = lib.path().filename();
                 if (libname_str.find("openblas") !=
                     std::string::npos) {
-                    openblasLib = lib.path().filename().c_str();
+                    openblasLib = libname_str;
                 }
             }
         }
     }
-    HMODULE handle = LoadLibrary(openblasLib.c_str());
+    auto libPath = scipyLibsPath / openblasLib.c_str();
+    HMODULE handle = LoadLibrary(libPath.c_str());
 #endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
