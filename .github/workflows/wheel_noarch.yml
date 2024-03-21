@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   build-pure-python-wheel:
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
     strategy:
       matrix:
         os: [ubuntu-latest]
