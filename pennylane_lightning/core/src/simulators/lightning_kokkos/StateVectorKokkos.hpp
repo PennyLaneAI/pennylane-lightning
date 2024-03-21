@@ -767,10 +767,6 @@ class StateVectorKokkos final
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
-
-        // file:///home/thomas.germain/Downloads/KokkosTutorial_04_HierarchicalParallelism.pdf
-        // pp. 14, 20, 26,
-
         auto &&num_qubits = this->getNumQubits();
 
         const size_t stride = pow(2, num_qubits_ - (1 + wire));
