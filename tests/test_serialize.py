@@ -24,8 +24,6 @@ from pennylane_lightning.core._serialize import (
     global_phase_diagonal,
 )
 
-# qml.operation.disable_new_opmath()
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -75,41 +73,6 @@ def test_wrong_device_name():
 
     with pytest.raises(qml.DeviceError, match="The device name"):
         QuantumScriptSerializer("thunder.qubit")
-
-
-# def get_obs_returns_cases():
-#     return [
-#         (qml.PauliZ(0), NamedObsC128),
-#         (
-#             qml.PauliZ(0) @ qml.PauliZ(1),
-#             HamiltonianC128 if qml.operation.active_new_opmath() else TensorProdObsC128,
-#         ),
-#         (qml.Hadamard(0), NamedObsC128),
-#         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
-#         (
-#             qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-#             TensorProdObsC128 if qml.operation.active_new_opmath() else HamiltonianC128,
-#         ),
-#         (
-#             (
-#                 qml.Hermitian(np.eye(2), wires=0)
-#                 @ qml.Hermitian(np.eye(2), wires=1)
-#                 @ qml.Projector([0], wires=2)
-#             ),
-#             TensorProdObsC128,
-#         ),
-#         (
-#             qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
-#             TensorProdObsC128,
-#         ),
-#         (qml.Projector([0], wires=0), HermitianObsC128),
-#         (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
-#         (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
-#         (
-#             qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
-#             SparseHamiltonianC128,
-#         ),
-#     ]
 
 
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
@@ -235,9 +198,6 @@ class TestSerializeObs:
 
         assert s[0] == s_expected
 
-    # Hamiltonian: { 'coeffs' : [0.3, 0.5, 0.4], 'observables' : [Hermitian @ PauliY[2] @ PauliZ[3], Hamiltonian: { 'coeffs' : [1], 'observables' : [PauliY[2] @ PauliX[0] @ PauliZ[3]]}, Hermitian @ PauliZ[3]]}
-    # Hamiltonian: { 'coeffs' : [0.3, 0.5, 0.4], 'observables' : [Hermitian @ PauliY[2] @ PauliZ[3], Hamiltonian: { 'coeffs' : [1], 'observables' : [PauliY[2] @ PauliX[0] @ PauliZ[3]]}, Hermitian @ PauliZ[3]]}
-
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_mixed_tensor_return(self, use_csingle, wires_map):
@@ -325,7 +285,7 @@ class TestSerializeObs:
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_hamiltonian_tensor_return(self, use_csingle, wires_map):
-        """Test expected serialization for a Hamiltonian return"""
+        """Test expected serialization for a tensor Hamiltonian return"""
 
         with qml.tape.QuantumTape() as tape:
             ham = qml.Hamiltonian(
