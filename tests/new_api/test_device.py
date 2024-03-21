@@ -28,6 +28,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit import (
     _add_adjoint_transforms,
     _supports_adjoint,
     accepted_observables,
+    adjoint_observables,
     adjoint_measurements,
     decompose,
     no_sampling,
@@ -75,6 +76,27 @@ class TestHelpers:
 
         assert accepted_observables(valid_obs) is True
         assert accepted_observables(invalid_obs) is False
+
+    @pytest.mark.parametrize(
+        "obs, expected",
+        [
+            (qml.operation.Tensor(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.s_prod(1.5, qml.Projector([0], 0)), False),
+            (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
+            (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
+            (qml.operation.Tensor(qml.Y(0), qml.Z(1)), True),
+            (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
+            (qml.s_prod(1.5, qml.Y(1)), True),
+            (qml.sum(qml.Y(1), qml.Hadamard(1)), True),
+            (qml.X(0), True),
+            (qml.Hermitian(np.eye(4), [0, 1]), True),
+        ],
+    )
+    def test_adjoint_observables(self, obs, expected):
+        """Test that adjoint_observables returns the expected boolean result for
+        a given observable"""
+        assert adjoint_observables(obs) == expected
 
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""

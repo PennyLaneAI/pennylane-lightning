@@ -198,7 +198,7 @@ class TestAdjointJacobian:
             ):
                 dev.adjoint_jacobian(tape)
 
-    @pytest.mark.usefixtures("use_legacy_opmath")
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
