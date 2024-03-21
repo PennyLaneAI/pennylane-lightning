@@ -98,11 +98,8 @@ class TestVectorJacobianProduct:
         dy = np.array([1.0, 2.0, 3.0])
         tape1.trainable_params = {1, 2, 3}
 
-        ham = qml.Hamiltonian(dy, [qml.PauliX(0), qml.PauliY(1), qml.PauliY(1)])
-        print(ham)
-
         with qml.tape.QuantumTape() as tape2:
-            ham
+            ham = qml.Hamiltonian(dy, [qml.PauliX(0), qml.PauliY(1), qml.PauliY(1)])
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
