@@ -31,6 +31,8 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
+from pennylane.operation import Tensor
+from pennylane.ops import Sum, Prod, SProd
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
@@ -233,6 +235,26 @@ def stopping_condition(op: qml.operation.Operator) -> bool:
 
 def accepted_observables(obs: qml.operation.Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
+    return obs.name in _observables
+
+
+def adjoint_observables(obs: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.qubit``
+    when using the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
     return obs.name in _observables
 
 
