@@ -26,6 +26,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
@@ -137,10 +139,12 @@ void compute_diagonalizing_gates(int n, int lda,
     if (PythonSitePackagePath != nullptr) {
         std::filesystem::path scipyLibsPath(PythonSitePackagePath);
         scipyLibsPath = scipyLibsPath / "scipy.libs";
+        std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
-                if (lib.path().filename().find("openblas") !=
+                std::string libname_str = lib.path().filename();
+                if (libname_str.find("openblas") !=
                     std::string::npos) {
                     openblasLib = lib.path().filename().c_str();
                 }
@@ -149,10 +153,12 @@ void compute_diagonalizing_gates(int n, int lda,
     } else {
         auto currentPath = std::filesystem::current_path();
         auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
-                if (lib.path().filename().find("openblas") !=
+                std::string libname_str = lib.path().filename();
+                if (libname_str.find("openblas") !=
                     std::string::npos) {
                     openblasLib = lib.path().filename().c_str();
                 }
