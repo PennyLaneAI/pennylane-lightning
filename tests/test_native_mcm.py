@@ -305,7 +305,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
-    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
+    """Tests that LightningDevice handles a circuit with a single mid-circuit measurement with reset
     and a conditional gate. Multiple measurements of the mid-circuit measurement value are
     performed."""
 
