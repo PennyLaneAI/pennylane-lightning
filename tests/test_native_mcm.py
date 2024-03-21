@@ -398,7 +398,7 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
-    """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
+    """Tests that LightningDevice handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
