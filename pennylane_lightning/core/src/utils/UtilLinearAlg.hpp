@@ -44,6 +44,8 @@ typedef void (*cheevPtr)(const char *, const char *, const int *,
                          std::complex<float> *, const int *, float *,
                          std::complex<float> *, const int *, float *, int *);
 
+std::unordered_map<std::string, std::size_t> priority_lib = {
+    {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
 } // namespace
 /// @endcond
 
@@ -79,6 +81,7 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
+    std::vector<void *> handles;
     void *handle =
         dlopen("/System/Library/Frameworks/Accelerate.framework/Versions/"
                "Current/Frameworks/vecLib.framework/libLAPACK.dylib",
@@ -90,26 +93,25 @@ void compute_diagonalizing_gates(int n, int lda,
     if (!handle) {
         fprintf(stderr, "%s\n", dlerror());
     }
+    handles.push_back(handle);
 #elif defined(__linux__)
-    void *handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
+    std::vector<void *> handles;
+    void *handle;
+
+    handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
+
     if (!handle) {
-        std::unordered_map<std::string, std::size_t> priority_lib = {
-            {"stdc", 0},
-            {"gcc", 1},
-            {"quadmath", 2},
-            {"gfortran", 3},
-            {"openblas", 4}};
-        auto currentPath = std::filesystem::currentPath();
+        auto currentPath = std::filesystem::current_path();
         auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
-                for (auto &iter : priority_lib) {
-                    if (lib.path().filename().find(iter->first) != std::string
-                        : npos) {
+                for (const auto &iter : priority_lib) {
+                    std::string libname_str = lib.path().filename();
+                    if (libname_str.find(iter.first) != std::string ::npos) {
                         availableLibs.emplace_back(
-                            {lib.path().filename().c_str(), iter->second});
+                            std::make_pair(libname_str, iter.second));
                     }
                 }
             }
@@ -120,11 +122,15 @@ void compute_diagonalizing_gates(int n, int lda,
                       return lhs.second < rhs.second;
                   });
 
-        for (auto &lib : availableLibs) {
-            handle = dlopen(lib->first.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+        for (const auto &lib : availableLibs) {
+            auto libPath = scipyLibsPath / lib.first.c_str();
+            handle = dlopen(libPath.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+            if (!handle) {
+                fprintf(stderr, "%s\n", dlerror());
+            }
+            handles.push_back(handle);
         }
     }
-
 #elif defined(_MSC_VER)
     const char *PythonSitePackagePath = std::getenv("PYTHON_SITE_PACKAGES");
     std::string openblasLib;
@@ -199,6 +205,9 @@ void compute_diagonalizing_gates(int n, int lda,
 
 #if defined(__APPLE__) || defined(__linux__)
     dlclose(handle);
+    for (auto handle : handles) {
+        dlclose(handle);
+    }
 #elif defined(_MSC_VER)
     FreeLibrary(handle);
 #endif
