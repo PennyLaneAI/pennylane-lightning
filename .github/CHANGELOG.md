@@ -23,6 +23,9 @@
 
 ### Breaking changes
 
+* Migrate `lightning.qubit` to the new device API.
+  [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
+
 * Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
@@ -37,6 +40,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
+  [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
 
 * Fix random `coverage xml` CI issues.
   [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)

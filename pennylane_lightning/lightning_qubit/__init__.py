@@ -16,4 +16,3 @@
 from pennylane_lightning.core import __version__
 
 from .lightning_qubit import LightningQubit
-from .lightning_qubit2 import LightningQubit2
