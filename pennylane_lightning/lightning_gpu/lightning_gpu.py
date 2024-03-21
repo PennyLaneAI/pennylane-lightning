@@ -77,14 +77,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
     from typing import List, Union
 
     import pennylane as qml
-    from pennylane import (
-        BasisState,
-        DeviceError,
-        QuantumFunctionError,
-        Rot,
-        StatePrep,
-        math,
-    )
+    from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StatePrep, math
     from pennylane.measurements import Expectation, State
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
