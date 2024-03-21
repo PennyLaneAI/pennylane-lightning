@@ -6,7 +6,7 @@ PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 
 ifdef check
     CHECK := --check
-	ICHECK := --check --diff
+    ICHECK := --check --diff
 else
     CHECK :=
     ICHECK :=
