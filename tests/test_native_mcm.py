@@ -109,6 +109,9 @@ def validate_measurements(func, shots, results1, results2):
 
 
 def test_all_invalid_shots_circuit():
+    """Test all invalid cases: var and probs.
+    """
+
     dev = qml.device(device_name, wires=2)
     dq = qml.device("default.qubit", wires=2)
 
