@@ -32,7 +32,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.operation import Tensor
-from pennylane.ops import Sum, Prod, SProd
+from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch

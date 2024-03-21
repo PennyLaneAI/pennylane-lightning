@@ -23,9 +23,9 @@ import numpy as np
 import pennylane as qml
 from pennylane import BasisState, QubitDevice, StatePrep
 from pennylane.devices import DefaultQubitLegacy
-from pennylane.measurements import MeasurementProcess, State, Expectation
+from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation, Tensor
-from pennylane.ops import Projector, Sum, Prod, SProd
+from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
 
 from ._serialize import QuantumScriptSerializer
