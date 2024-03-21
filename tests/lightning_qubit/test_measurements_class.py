@@ -545,11 +545,17 @@ class TestMeasurements:
             qml.Hamiltonian,
             qml.SparseHamiltonian,
         )
-        if (
-            (measurement is qml.expval or measurement is qml.var)
-            and shots is not None
-            and (isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list))
-        ):
+        do_skip = measurement is qml.var and (
+            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
+        )
+        do_skip = do_skip or (
+            measurement is qml.expval
+            and (
+                isinstance(obs0_, qml.SparseHamiltonian) or isinstance(obs1_, qml.SparseHamiltonian)
+            )
+        )
+        do_skip = do_skip and shots is not None
+        if do_skip:
             with pytest.raises(TypeError):
                 _ = m.measure_final_state(tape)
             return

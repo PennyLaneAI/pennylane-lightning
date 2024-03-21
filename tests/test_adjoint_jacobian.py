@@ -272,7 +272,7 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.qubit2") or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
@@ -826,7 +826,7 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.qubit2") or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize(
