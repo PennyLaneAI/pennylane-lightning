@@ -12,7 +12,6 @@ observables = [
         "Hadamard",
         "Hermitian",
         "Identity",
-        "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
         "Sum",
