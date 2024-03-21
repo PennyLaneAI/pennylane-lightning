@@ -123,7 +123,7 @@ void compute_diagonalizing_gates(int n, int lda,
     if (!handle) {
         std::string pathStr(getPath());
         std::filesystem::path currentPath(pathStr);
-        auto scipyLibsPath = pathStr.parent_path().parent_path() / "scipy.libs";
+        auto scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
@@ -173,7 +173,7 @@ void compute_diagonalizing_gates(int n, int lda,
     } else {
         std::string pathStr(getPath());
         std::filesystem::path currentPath(pathStr);
-        auto scipyLibsPath = pathStr.parent_path().parent_path() / "scipy.libs";
+        auto scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
         std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
