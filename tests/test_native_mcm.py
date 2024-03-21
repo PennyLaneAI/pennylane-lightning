@@ -23,11 +23,11 @@ from conftest import device_name
 from flaky import flaky
 from pennylane._device import DeviceError
 
-if not ld._CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
 
-if device_name != "lightning.qubit":
-    pytest.skip(f"Native MCM not supported in device {device_name}.", allow_module_level=True)
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 def validate_counts(shots, results1, results2):
