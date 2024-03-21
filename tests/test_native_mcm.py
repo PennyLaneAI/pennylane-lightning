@@ -276,7 +276,7 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.probs, qml.sample])
 @pytest.mark.parametrize("wires", [[0], [0, 1]])
 def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wires):
-    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement and a
+    """Tests that LightningDevice handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of one or several wires is performed at the end."""
 
     dev = qml.device(device_name, wires=2, shots=shots)
