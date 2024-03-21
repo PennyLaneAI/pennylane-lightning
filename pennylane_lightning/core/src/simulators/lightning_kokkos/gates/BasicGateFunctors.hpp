@@ -41,7 +41,7 @@ template <class PrecisionT, class FuncT> class applyNC1Functor {
   public:
     template <class ExecutionSpace>
     applyNC1Functor([[maybe_unused]] ExecutionSpace exec,
-                    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     std::size_t num_qubits, const std::vector<size_t> &wires,
                     FuncT core_function_)
         : arr(arr_), core_function(core_function_),
@@ -62,7 +62,7 @@ template <class PrecisionT, class FuncT> class applyNC1Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyPauliX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyPauliX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -75,7 +75,7 @@ void applyPauliX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyPauliY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyPauliY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -91,7 +91,7 @@ void applyPauliY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyPauliZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyPauliZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -104,7 +104,7 @@ void applyPauliZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applyHadamard(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -123,7 +123,7 @@ void applyHadamard(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             const std::size_t num_qubits, const std::vector<size_t> &wires,
             const bool inverse = false,
             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -137,7 +137,7 @@ void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             const std::size_t num_qubits, const std::vector<size_t> &wires,
             const bool inverse = false,
             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -154,7 +154,7 @@ void applyT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      const std::size_t num_qubits,
                      const std::vector<size_t> &wires,
                      const bool inverse = false,
@@ -171,7 +171,7 @@ void applyPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
              const std::size_t num_qubits, const std::vector<size_t> &wires,
              const bool inverse = false,
              const std::vector<PrecisionT> &params = {}) {
@@ -193,7 +193,7 @@ void applyRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
              const std::size_t num_qubits, const std::vector<size_t> &wires,
              const bool inverse = false,
              const std::vector<PrecisionT> &params = {}) {
@@ -215,7 +215,7 @@ void applyRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
              const std::size_t num_qubits, const std::vector<size_t> &wires,
              const bool inverse = false,
              const std::vector<PrecisionT> &params = {}) {
@@ -235,7 +235,7 @@ void applyRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               const std::size_t num_qubits, const std::vector<size_t> &wires,
               const bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
@@ -275,7 +275,7 @@ template <class PrecisionT, class FuncT> class applyNC2Functor {
   public:
     template <class ExecutionSpace>
     applyNC2Functor([[maybe_unused]] ExecutionSpace exec,
-                    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     std::size_t num_qubits, const std::vector<size_t> &wires,
                     FuncT core_function_)
         : arr(arr_), core_function(core_function_),
@@ -304,7 +304,7 @@ template <class PrecisionT, class FuncT> class applyNC2Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCNOT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCNOT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::size_t num_qubits, const std::vector<size_t> &wires,
                [[maybe_unused]] const bool inverse = false,
                [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -319,7 +319,7 @@ void applyCNOT(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
              const std::size_t num_qubits, const std::vector<size_t> &wires,
              [[maybe_unused]] const bool inverse = false,
              [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -337,7 +337,7 @@ void applyCY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
              const std::size_t num_qubits, const std::vector<size_t> &wires,
              [[maybe_unused]] const bool inverse = false,
              [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -351,7 +351,7 @@ void applyCZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::size_t num_qubits, const std::vector<size_t> &wires,
                [[maybe_unused]] const bool inverse = false,
                [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -366,10 +366,11 @@ void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyControlledPhaseShift(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-    const std::size_t num_qubits, const std::vector<size_t> &wires,
-    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                               const std::size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               const bool inverse = false,
+                               const std::vector<PrecisionT> &params = {}) {
 
     const PrecisionT &angle = params[0];
     const Kokkos::complex<PrecisionT> s =
@@ -385,7 +386,7 @@ void applyControlledPhaseShift(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               const std::size_t num_qubits, const std::vector<size_t> &wires,
               const bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
@@ -409,7 +410,7 @@ void applyCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               const std::size_t num_qubits, const std::vector<size_t> &wires,
               const bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
@@ -430,7 +431,7 @@ void applyCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               const std::size_t num_qubits, const std::vector<size_t> &wires,
               const bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
@@ -452,7 +453,7 @@ void applyCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::size_t num_qubits, const std::vector<size_t> &wires,
                const bool inverse = false,
                const std::vector<PrecisionT> &params = {}) {
@@ -479,7 +480,7 @@ void applyCRot(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
@@ -512,7 +513,7 @@ void applyIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
@@ -541,7 +542,7 @@ void applyIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
@@ -574,7 +575,7 @@ void applyIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
@@ -596,7 +597,7 @@ void applyIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applySingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applySingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                            const std::size_t num_qubits,
                            const std::vector<size_t> &wires,
                            const bool inverse = false,
@@ -620,7 +621,7 @@ void applySingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applySingleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
@@ -645,10 +646,11 @@ void applySingleExcitationMinus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applySingleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-    const std::size_t num_qubits, const std::vector<size_t> &wires,
-    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+void applySingleExcitationPlus(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                               const std::size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               const bool inverse = false,
+                               const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
@@ -688,7 +690,7 @@ template <class PrecisionT, class FuncT> class applyNC3Functor {
   public:
     template <class ExecutionSpace>
     applyNC3Functor([[maybe_unused]] ExecutionSpace exec,
-                    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     std::size_t num_qubits, const std::vector<size_t> &wires,
                     FuncT core_function_)
         : arr(arr_), core_function(core_function_),
@@ -737,7 +739,7 @@ template <class PrecisionT, class FuncT> class applyNC3Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyCSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyCSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                 const std::size_t num_qubits, const std::vector<size_t> &wires,
                 [[maybe_unused]] const bool inverse = false,
                 [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -756,7 +758,7 @@ void applyCSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyToffoli(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyToffoli(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires,
                   [[maybe_unused]] const bool inverse = false,
@@ -794,7 +796,7 @@ template <class PrecisionT, class FuncT> class applyNC4Functor {
   public:
     template <class ExecutionSpace>
     applyNC4Functor([[maybe_unused]] ExecutionSpace exec,
-                    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     std::size_t num_qubits, const std::vector<size_t> &wires,
                     FuncT core_function_)
         : arr(arr_), core_function(core_function_),
@@ -888,7 +890,7 @@ template <class PrecisionT, class FuncT> class applyNC4Functor {
 };
 
 template <class ExecutionSpace, class PrecisionT>
-void applyDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                            const std::size_t num_qubits,
                            const std::vector<size_t> &wires,
                            const bool inverse = false,
@@ -924,7 +926,7 @@ void applyDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applyDoubleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
@@ -966,10 +968,11 @@ void applyDoubleExcitationMinus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyDoubleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-    const std::size_t num_qubits, const std::vector<size_t> &wires,
-    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+void applyDoubleExcitationPlus(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                               const std::size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               const bool inverse = false,
+                               const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1009,7 +1012,7 @@ void applyDoubleExcitationPlus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   const std::size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
@@ -1032,7 +1035,7 @@ void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       const std::size_t num_qubits,
                       [[maybe_unused]] const std::vector<size_t> &wires,
                       const bool inverse = false,
@@ -1046,7 +1049,7 @@ void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNamedOperation(const GateOperation gateop,
-                         Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+                         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                          const std::size_t num_qubits,
                          const std::vector<size_t> &wires,
                          const bool inverse = false,

@@ -105,7 +105,7 @@ class Measurements final
      * @param wires Wires to apply the observable to.
      */
     template <template <class> class functor_t, int num_wires>
-    PrecisionT applyExpValFunctor(const KokkosVector &matrix,
+    PrecisionT applyExpValFunctor(const KokkosVector matrix,
                                   const std::vector<size_t> &wires) {
         PL_ASSERT(wires.size() == num_wires);
         const size_t num_qubits = this->_statevector.getNumQubits();
@@ -127,7 +127,7 @@ class Measurements final
      * @return Expectation value with respect to observable applied to specified
      * wires.
      */
-    auto getExpValMatrix(const KokkosVector &matrix,
+    auto getExpValMatrix(const KokkosVector matrix,
                          const std::vector<std::size_t> &wires) -> PrecisionT {
         std::size_t num_qubits = this->_statevector.getNumQubits();
         std::size_t two2N = std::exp2(num_qubits - wires.size());

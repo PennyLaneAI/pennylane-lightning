@@ -32,7 +32,7 @@ namespace Pennylane::LightningKokkos::Functors {
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenPhaseShift(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -47,7 +47,7 @@ void applyGenPhaseShift(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenControlledPhaseShift(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -64,7 +64,7 @@ void applyGenControlledPhaseShift(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -80,7 +80,7 @@ void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -99,7 +99,7 @@ void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits, const std::vector<size_t> &wires,
                  [[maybe_unused]] const bool inverse = false,
                  [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -117,7 +117,7 @@ void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingXX(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -133,7 +133,7 @@ void applyGenIsingXX(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingXY(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -150,7 +150,7 @@ void applyGenIsingXY(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingYY(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -168,7 +168,7 @@ void applyGenIsingYY(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingZZ(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -185,7 +185,7 @@ void applyGenIsingZZ(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitation(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -204,7 +204,7 @@ void applyGenSingleExcitation(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -222,7 +222,7 @@ void applyGenSingleExcitationMinus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -242,7 +242,7 @@ void applyGenSingleExcitationPlus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitation(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -280,7 +280,7 @@ void applyGenDoubleExcitation(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -310,7 +310,7 @@ void applyGenDoubleExcitationMinus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -340,7 +340,7 @@ void applyGenDoubleExcitationPlus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyGenMultiRZ(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
@@ -357,11 +357,12 @@ void applyGenMultiRZ(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-PrecisionT applyNamedGenerator(
-    const GeneratorOperation generator_op,
-    Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-    const std::size_t num_qubits, const std::vector<size_t> &wires,
-    const bool inverse = false, const std::vector<PrecisionT> &params = {}) {
+PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
+                               Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                               const std::size_t num_qubits,
+                               const std::vector<size_t> &wires,
+                               const bool inverse = false,
+                               const std::vector<PrecisionT> &params = {}) {
     switch (generator_op) {
     case GeneratorOperation::RX:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliX, arr_,

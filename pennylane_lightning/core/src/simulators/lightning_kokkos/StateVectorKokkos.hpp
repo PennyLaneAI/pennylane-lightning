@@ -330,7 +330,7 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      */
-    void applyMultiQubitOp(const KokkosVector &matrix,
+    void applyMultiQubitOp(const KokkosVector matrix,
                            const std::vector<std::size_t> &wires,
                            bool inverse = false) {
         auto &&num_qubits = this->getNumQubits();
@@ -475,7 +475,7 @@ class StateVectorKokkos final
      *
      * @param other Kokkos View
      */
-    void updateData(const KokkosVector &other) {
+    void updateData(const KokkosVector other) {
         Kokkos::deep_copy(*data_, other);
     }
 
@@ -518,14 +518,14 @@ class StateVectorKokkos final
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() const -> KokkosVector & { return *data_; }
+    [[nodiscard]] auto getView() const -> KokkosVector { return *data_; }
 
     /**
      * @brief Get the Kokkos data of the state vector
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
+    [[nodiscard]] auto getView() -> KokkosVector { return *data_; }
 
     /**
      * @brief Get underlying data vector
