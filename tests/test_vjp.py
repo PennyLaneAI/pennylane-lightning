@@ -29,10 +29,6 @@ if ld._CPP_BINARY_AVAILABLE:
 else:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-# if ld._new_API:
-#     pytest.skip("Old API required", allow_module_level=True)
-
-
 def get_vjp(device, tapes, dy):
     """Helper to get VJP for a tape or batch of tapes"""
     if device._new_API:
@@ -78,7 +74,7 @@ class TestVectorJacobianProduct:
 
         qml.execute([tape], dev, None)
         fn2 = dev.vjp(tape.measurements, dy, use_device_state=True)
-        vjp2 = fn2(tape.measure)
+        vjp2 = fn2(tape)
 
         assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
@@ -131,10 +127,10 @@ class TestVectorJacobianProduct:
 
         tape2.trainable_params = {1, 2, 3}
 
-        vjp1 = get_vjp(dev, tape1, dy)
-        vjp2 = get_jacobian(dev, tape2)
+        vjp = get_vjp(dev, tape1, dy)
+        jac = get_jacobian(dev, tape2)
 
-        assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
+        assert np.allclose(vjp, jac, atol=tol, rtol=0)
 
     def test_wrong_dy_expval(self, dev):
         """Tests raise an exception when dy is incorrect"""
@@ -152,27 +148,16 @@ class TestVectorJacobianProduct:
         dy2 = np.array([1.0 + 3.0j, 0.3 + 2.0j, 0.5 + 0.1j])
         tape1.trainable_params = {1, 2, 3}
 
-        if dev._new_API:
-            with pytest.raises(
-                ValueError, match="Number of observables in the tape must be the same as"
-            ):
-                dev.compute_vjp(tape1, dy1)
+        with pytest.raises(
+            ValueError, match="Number of observables in the tape must be the same as"
+        ):
+            get_vjp(dev, tape1, dy1)
 
-            with pytest.raises(
-                ValueError, match="The vjp method only works with a real-valued grad_vec"
-            ):
-                dev.compute_vjp(tape1, dy2)
+        with pytest.raises(
+            ValueError, match="The vjp method only works with a real-valued grad_vec"
+        ):
+            get_vjp(dev, tape1, dy2)
 
-        else:
-            with pytest.raises(
-                ValueError, match="Number of observables in the tape must be the same as"
-            ):
-                dev.vjp(tape1.measurements, dy1)
-
-            with pytest.raises(
-                ValueError, match="The vjp method only works with a real-valued grad_vec"
-            ):
-                dev.vjp(tape1.measurements, dy2)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -183,17 +168,10 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        if dev._new_API:
-            with pytest.raises(
-                qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-            ):
-                dev.compute_vjp(tape, dy)
-
-        else:
-            with pytest.raises(
-                qml.QuantumFunctionError, match="Adjoint differentiation method does not"
-            ):
-                dev.vjp(tape.measurements, dy)(tape)
+        with pytest.raises(
+            qml.QuantumFunctionError, match="Adjoint differentiation method does not"
+        ):
+            get_vjp(dev, tape, dy)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_finite_shots_warns(self):
@@ -250,6 +228,7 @@ class TestVectorJacobianProduct:
             ):
                 dev.vjp(tape.measurements, dy)(tape)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
 
@@ -276,17 +255,18 @@ class TestVectorJacobianProduct:
             dev.vjp(tape.measurements, dy)(tape)
 
 
-#     def test_hermitian_expectation(self, dev, tol):
-#         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
-#         dy = np.array([0.8])
+    def test_hermitian_expectation(self, dev, tol):
+        obs = np.array([[1, 0], [0, -1]], dtype=dev.dtype, requires_grad=False)
+        dy = np.array([0.8])
 
-#         fn = dev.vjp([qml.expval(qml.Hermitian(obs, wires=(0,)))], dy)
+        for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
+            with qml.tape.QuantumTape() as tape:
+                qml.RY(x, wires=(0,))
+                qml.expval(qml.Hermitian(obs, wires=(0,)))
 
-#         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
-#             with qml.tape.QuantumTape() as tape:
-#                 qml.RY(x, wires=(0,))
-#             vjp = fn(tape)
-#             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
+            tape.trainable_params = {0}
+            vjp = get_vjp(dev, tape, dy)
+            assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
 
 #     def test_hermitian_tensor_expectation(self, dev, tol):
 #         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
