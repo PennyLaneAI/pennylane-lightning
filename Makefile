@@ -6,8 +6,10 @@ PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 
 ifdef check
     CHECK := --check
+	ICHECK := --check --diff
 else
     CHECK :=
+    ICHECK :=
 endif
 
 ifdef build_options
@@ -113,7 +115,7 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	isort --profile black ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
+	isort --profile black ./pennylane_lightning/ ./mpitests ./tests $(ICHECK)
 	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
 
 .PHONY: check-tidy
