@@ -17,10 +17,7 @@ Class implementation for state vector measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 

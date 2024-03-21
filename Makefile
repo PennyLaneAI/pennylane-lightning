@@ -5,9 +5,11 @@ TESTRUNNER := -m pytest tests --tb=short
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
 
 ifdef check
-    CHECK := --check
+    CHECK := --check --diff
+    ICHECK := --check
 else
     CHECK :=
+    ICHECK :=
 endif
 
 ifdef build_options
@@ -113,8 +115,8 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	isort --profile black ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
-	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK)
+	isort --py 311 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning/ ./mpitests ./tests $(ICHECK) $(VERBOSE)
+	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK) $(VERBOSE)
 
 .PHONY: check-tidy
 check-tidy:
