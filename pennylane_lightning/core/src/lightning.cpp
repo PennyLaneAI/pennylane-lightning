@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <complex>
@@ -8,6 +9,7 @@
 
 #include <mpi.h>
 
+#include "Error.hpp"
 #include "StateVectorKokkos.hpp"
 #include "StateVectorKokkosMPI.hpp"
 
@@ -79,6 +81,24 @@ template <class ComplexT>
     }
 }
 
+[[maybe_unused]] void allclose(StateVectorKokkosMPI<double> svmpi,
+                               StateVectorKokkos<double> sv) {
+    [[maybe_unused]] constexpr double tol = 1.0e-6;
+    auto dat = svmpi.getDataVector();
+    if (svmpi.get_mpi_rank() == 0) {
+        auto ref = sv.getDataVector();
+        PL_ABORT_IF_NOT(dat.size() == ref.size(), "Wrong statevector size.");
+        for (std::size_t i = 0; i < ref.size(); i++) {
+            auto diff = dat[i] - ref[i];
+            [[maybe_unused]] double err =
+                norm(std::complex<double>{real(diff), imag(diff)});
+            std::cout << err << std::endl;
+            PL_ABORT_IF_NOT(err < tol, "Wrong statevector entry.");
+        }
+    }
+    svmpi.barrier();
+}
+
 } // namespace
 
 int main(int argc, char *argv[]) {
@@ -90,10 +110,11 @@ int main(int argc, char *argv[]) {
 
     // Create PennyLane Lightning statevector
     StateVectorKokkos<double> sv(sv_data);
-    StateVectorKokkosMPI<double> svmpi(indices.q);
+    StateVectorKokkosMPI<double> svmpi(sv_data);
+    allclose(svmpi, sv);
     // print(svmpi);
     // print_basis_states(indices.q);
-    print_local_wires(indices.q);
+    // print_local_wires(indices.q);
 
     // Create vector for run-times to average
     std::vector<double> times;
@@ -103,13 +124,16 @@ int main(int argc, char *argv[]) {
     // Apply the gates `run_avg` times on the indicated targets
     for (std::size_t i = 0; i < run_avg; i++) {
         TIMING(sv.applyOperation(gate, targets));
+        TIMING(svmpi.applyOperation(gate, targets));
     }
+    allclose(svmpi, sv);
 
     if (svmpi.get_mpi_rank() == 0) {
         CSVOutput<decltype(indices), t_scale> csv(indices, gate,
                                                   average_times(times));
         std::cout << csv << std::endl;
     }
+
     svmpi.barrier();
     int finflag;
     MPI_Finalized(&finflag);

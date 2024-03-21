@@ -17,6 +17,8 @@
  */
 
 #pragma once
+#include <iostream>
+
 #include <complex>
 #include <cstddef>
 #include <cstdlib>
@@ -195,10 +197,18 @@ class StateVectorKokkosMPI final
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
     }
     /*
-    wire-related methods
+    Wires-related methods
     */
     std::size_t get_rev_wire(const std::size_t wire) {
         return num_qubits_ - 1 - wire;
+    }
+    std::vector<std::size_t>
+    get_local_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires(wires.size());
+        auto n_global{get_num_global_qubits()};
+        std::transform(wires.begin(), wires.end(), local_wires.begin(),
+                       [=](const std::size_t wire) { return wire - n_global; });
+        return local_wires;
     }
     bool is_wires_local(const std::vector<std::size_t> &wires) {
         auto n_local{get_num_local_qubits()};
@@ -271,21 +281,16 @@ class StateVectorKokkosMPI final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkosMPI(ComplexT *hostdata_, std::size_t length,
+    template <class complex>
+    StateVectorKokkosMPI(complex *hostdata_, const std::size_t length,
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        (*sv_).HostToDevice(hostdata_, length);
-    }
-
-    StateVectorKokkosMPI(std::complex<PrecisionT> *hostdata_,
-                         std::size_t length,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_), length);
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
+                            blk);
     }
 
     /**
@@ -293,13 +298,16 @@ class StateVectorKokkosMPI final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkosMPI(const ComplexT *hostdata_, std::size_t length,
+    StateVectorKokkosMPI(const ComplexT *hostdata_, const std::size_t length,
                          const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkosMPI(log2(length), kokkos_args) {
         PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
                         "The size of provided data must be a power of 2.");
-        std::vector<ComplexT> hostdata_copy(hostdata_, hostdata_ + length);
-        (*sv_).HostToDevice(hostdata_copy.data(), length);
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
+                                            hostdata_ + offset + blk);
+        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
     }
 
     /**
@@ -349,33 +357,20 @@ class StateVectorKokkosMPI final
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
-    // void applyOperation(const std::string &opName,
-    //                     const std::vector<size_t> &wires, bool inverse =
-    //                     false, const std::vector<fp_t> &params = {}, const
-    //                     std::vector<ComplexT> &gate_matrix = {}) {
-    //     if
-    //     if (opName == "Identity") {
-    //         // No op
-    //     } else if (opName == "C(GlobalPhase)") {
-    //         if (inverse) {
-    //             applyControlledGlobalPhase<true>(gate_matrix);
-    //         } else {
-    //             applyControlledGlobalPhase<false>(gate_matrix);
-    //         }
-    //     } else if (array_contains(gate_names, std::string_view{opName})) {
-    //         applyNamedOperation(opName, wires, inverse, params);
-    //     } else {
-    //         PL_ABORT_IF(gate_matrix.size() == 0,
-    //                     std::string("Operation does not exist for ") + opName
-    //                     +
-    //                         std::string(" and no matrix provided."));
-    //         KokkosVector matrix("gate_matrix", gate_matrix.size());
-    //         Kokkos::deep_copy(
-    //             matrix, UnmanagedConstComplexHostView(gate_matrix.data(),
-    //                                                   gate_matrix.size()));
-    //         return applyMultiQubitOp(matrix, wires, inverse);
-    //     }
-    // }
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<PrecisionT> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        if (opName == "Identity") {
+            return;
+        }
+        if (is_wires_local(wires)) {
+            (*sv_).applyOperation(opName, get_local_wires(wires), inverse,
+                                  params, gate_matrix);
+            return;
+        }
+        PL_ABORT("applyOperation is not implemented on global wires.");
+    }
 
     /**
      * @brief Get the Kokkos data of the state vector.
