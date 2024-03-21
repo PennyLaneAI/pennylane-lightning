@@ -14,11 +14,10 @@
 """
 This module contains the LightningQubit class that inherits from the new device interface.
 """
-from numbers import Number
-from typing import Optional, Union, Sequence, Callable, Tuple
 from dataclasses import replace
+from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Union
+from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
@@ -115,6 +114,7 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
     res = simulate(circuit, state)
     jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
     return res, jac
+
 
 def vjp(
     circuit: QuantumTape, cotangents: Tuple[Number], state: LightningStateVector, batch_obs=False
