@@ -20,7 +20,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-if device_name not in ("lightning.qubit", "lightning.qubit2"):
+if device_name != "lightning.qubit":
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 if not ld._CPP_BINARY_AVAILABLE:
