@@ -144,6 +144,9 @@ def test_all_invalid_shots_circuit():
 
 
 def test_unsupported_measurement():
+    """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit``.
+    """
+
     dev = qml.device(device_name, wires=2, shots=1000)
     params = np.pi / 4 * np.ones(2)
 
