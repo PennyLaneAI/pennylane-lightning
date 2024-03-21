@@ -48,6 +48,24 @@ typedef void (*cheevPtr)(const char *, const char *, const int *,
 
 std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
+#ifdef __linux__
+const char *getPath() {
+    Dl_info dl_info;
+    if (dladdr((const void *)getPath, &dl_info) != 0) {
+        return dl_info.dli_fname;
+    } else {
+        return nullptr;
+    }
+}
+#elif defined(_MSC_VER)
+std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
+#endif
 } // namespace
 /// @endcond
 
@@ -103,8 +121,9 @@ void compute_diagonalizing_gates(int n, int lda,
     handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
 
     if (!handle) {
-        auto currentPath = std::filesystem::current_path();
-        auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        std::string pathStr(getPath());
+        std::filesystem::path currentPath(pathStr);
+        auto scipyLibsPath = pathStr.parent_path().parent_path() / "scipy.libs";
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
@@ -152,8 +171,9 @@ void compute_diagonalizing_gates(int n, int lda,
             }
         }
     } else {
-        auto currentPath = std::filesystem::current_path();
-        scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        std::string pathStr(getPath());
+        std::filesystem::path currentPath(pathStr);
+        auto scipyLibsPath = pathStr.parent_path().parent_path() / "scipy.libs";
         std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
