@@ -14,10 +14,6 @@ observables = [
         "Identity",
         "SparseHamiltonian",
         "Hamiltonian",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
 ]
 
 # The union of all gate types listed in this section must match what
