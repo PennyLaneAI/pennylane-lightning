@@ -145,7 +145,7 @@ void compute_diagonalizing_gates(int n, int lda,
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
-                std::string libname_str = lib.path().filename();
+                std::string libname_str = lib.path().filename().string();
                 if (libname_str.find("openblas") != std::string::npos) {
                     openblasLib = libname_str;
                 }
@@ -158,7 +158,7 @@ void compute_diagonalizing_gates(int n, int lda,
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
-                std::string libname_str = lib.path().filename();
+                std::string libname_str = lib.path().filename().string();
                 if (libname_str.find("openblas") != std::string::npos) {
                     openblasLib = libname_str;
                 }
