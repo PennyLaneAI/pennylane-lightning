@@ -18,7 +18,7 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import device_name, LightningDevice
+from conftest import LightningDevice, device_name
 from flaky import flaky
 from pennylane._device import DeviceError
 
