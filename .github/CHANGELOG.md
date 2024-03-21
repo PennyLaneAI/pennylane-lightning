@@ -23,6 +23,12 @@
 
 ### Breaking changes
 
+* Migrate `lightning.qubit` to the new device API.
+  [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
+
+* Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
+  [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
+
 ### Improvements
 
 * Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
