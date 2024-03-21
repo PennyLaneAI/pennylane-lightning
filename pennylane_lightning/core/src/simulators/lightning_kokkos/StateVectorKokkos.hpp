@@ -801,7 +801,8 @@ class StateVectorKokkos final
             },
             squaredNorm);
 
-        PL_ABORT_IF(squaredNorm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+        PL_ABORT_IF(squaredNorm <
+                        std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "vector has norm close to zero and can't be normalized");
 
         std::complex<PrecisionT> inv_norm = 1. / std::sqrt(squaredNorm);

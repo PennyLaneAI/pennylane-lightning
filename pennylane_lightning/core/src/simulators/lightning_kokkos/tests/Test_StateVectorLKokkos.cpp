@@ -348,3 +348,32 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::collapse", "[StateVectorKokkos]", float,
                               expected_state[branch][wire].size(), eps));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::normalize", "[StateVectorKokkos]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using ComplexT = typename StateVectorKokkos<PrecisionT>::ComplexT;
+
+    // TODO @tomlqc use same template for testing all Lightning flavours?
+
+    SECTION("Normalize state vector.") {
+        const ComplexT init{1.0, PrecisionT{0.0}};
+        const ComplexT half{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<ComplexT> init_state = {init, zero, init, init,
+                                            zero, zero, init, zero};
+
+        std::vector<ComplexT> expected_state = {half, zero, half, half,
+                                                zero, zero, half, zero};
+
+        StateVectorKokkos<PrecisionT> sv(
+            reinterpret_cast<ComplexT *>(init_state.data()), init_state.size());
+        sv.normalize();
+
+        PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 1e3;
+        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
+                              expected_state.data(), expected_state.size(),
+                              eps));
+    }
+}
