@@ -166,7 +166,7 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
     auto libPath = scipyLibsPath / openblasLib.c_str();
-    HMODULE handle = LoadLibrary(libPath.c_str());
+    HMODULE handle = LoadLibrary(libPath.string().c_str());
 #endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
