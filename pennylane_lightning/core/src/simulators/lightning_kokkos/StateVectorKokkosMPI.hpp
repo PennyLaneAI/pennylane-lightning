@@ -164,6 +164,9 @@ class StateVectorKokkosMPI final
         }
     };
 
+    /*
+    MPI-related methods
+    */
     int get_mpi_rank() {
         int rank;
         PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank));
@@ -174,8 +177,11 @@ class StateVectorKokkosMPI final
         PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size));
         return size;
     }
+    void barrier() {
+        Kokkos::fence();
+        mpi_barrier();
+    }
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
-
     std::size_t get_num_global_qubits() {
         return log2(static_cast<std::size_t>(get_mpi_size()));
     }
@@ -187,6 +193,19 @@ class StateVectorKokkosMPI final
     global_2_local_index(const std::size_t index) {
         auto blk = get_blk_size();
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
+    }
+    /*
+    wire-related methods
+    */
+    std::size_t get_rev_wire(const std::size_t wire) {
+        return num_qubits_ - 1 - wire;
+    }
+    bool is_wires_local(const std::vector<std::size_t> &wires) {
+        auto n_local{get_num_local_qubits()};
+        return std::find_if(wires.begin(), wires.end(),
+                            [=, this](const std::size_t wire) {
+                                return get_rev_wire(wire) > n_local;
+                            }) == wires.end();
     }
 
     /**
@@ -320,6 +339,43 @@ class StateVectorKokkosMPI final
         //     PL_MPI_IS_SUCCESS(MPI_Finalize());
         // }
     }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    // void applyOperation(const std::string &opName,
+    //                     const std::vector<size_t> &wires, bool inverse =
+    //                     false, const std::vector<fp_t> &params = {}, const
+    //                     std::vector<ComplexT> &gate_matrix = {}) {
+    //     if
+    //     if (opName == "Identity") {
+    //         // No op
+    //     } else if (opName == "C(GlobalPhase)") {
+    //         if (inverse) {
+    //             applyControlledGlobalPhase<true>(gate_matrix);
+    //         } else {
+    //             applyControlledGlobalPhase<false>(gate_matrix);
+    //         }
+    //     } else if (array_contains(gate_names, std::string_view{opName})) {
+    //         applyNamedOperation(opName, wires, inverse, params);
+    //     } else {
+    //         PL_ABORT_IF(gate_matrix.size() == 0,
+    //                     std::string("Operation does not exist for ") + opName
+    //                     +
+    //                         std::string(" and no matrix provided."));
+    //         KokkosVector matrix("gate_matrix", gate_matrix.size());
+    //         Kokkos::deep_copy(
+    //             matrix, UnmanagedConstComplexHostView(gate_matrix.data(),
+    //                                                   gate_matrix.size()));
+    //         return applyMultiQubitOp(matrix, wires, inverse);
+    //     }
+    // }
 
     /**
      * @brief Get the Kokkos data of the state vector.
