@@ -136,8 +136,10 @@ void compute_diagonalizing_gates(int n, int lda,
 #elif defined(_MSC_VER)
     const char *PythonSitePackagePath = std::getenv("PYTHON_SITE_PACKAGES");
     std::string openblasLib;
+    std::filesystem::path scipyLibsPath;
     if (PythonSitePackagePath != nullptr) {
-        std::filesystem::path scipyLibsPath(PythonSitePackagePath);
+        std::filesystem::path tmpPath(PythonSitePackagePath);
+        scipyLibsPath=tmpPath;
         scipyLibsPath = scipyLibsPath / "scipy.libs";
         std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
@@ -152,7 +154,7 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     } else {
         auto currentPath = std::filesystem::current_path();
-        auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        scipyLibsPath = currentPath.parent_path() / "scipy.libs";
         std::cout << scipyLibsPath << std::endl;
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
