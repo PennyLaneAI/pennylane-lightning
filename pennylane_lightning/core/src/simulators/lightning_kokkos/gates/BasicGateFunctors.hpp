@@ -371,7 +371,6 @@ void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::vector<size_t> &wires,
                                const bool inverse = false,
                                const std::vector<PrecisionT> &params = {}) {
-
     const PrecisionT &angle = params[0];
     const Kokkos::complex<PrecisionT> s =
         (inverse) ? exp(-Kokkos::complex<PrecisionT>(0, angle))
