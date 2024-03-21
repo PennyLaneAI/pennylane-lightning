@@ -1,5 +1,5 @@
 pip~=22.0
-git+https://github.com/PennyLaneAI/pennylane.git@ham-tests
+git+https://github.com/PennyLaneAI/pennylane.git@lightning-op-math
 ninja
 flaky
 pybind11
