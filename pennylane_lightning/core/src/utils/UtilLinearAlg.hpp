@@ -147,7 +147,7 @@ void compute_diagonalizing_gates(int n, int lda,
             }
         }
     } else {
-        auto currentPath = std::filesystem::currentPath();
+        auto currentPath = std::filesystem::current_path();
         auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
