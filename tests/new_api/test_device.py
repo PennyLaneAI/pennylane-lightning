@@ -283,6 +283,7 @@ class TestExecution:
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
@@ -291,11 +292,11 @@ class TestExecution:
             qml.probs(op=qml.Z(2)),
             qml.expval(qml.Z(2)),
             qml.var(qml.X(2)),
-            qml.expval(qml.sum(qml.X(0), qml.Z(0))),
+            qml.expval(qml.X(0) + qml.Z(0)),
             qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
-            qml.expval(qml.s_prod(2.5, qml.Z(0))),
-            qml.expval(qml.prod(qml.Z(0), qml.X(1))),
-            qml.expval(qml.sum(qml.Z(1), qml.X(1))),
+            qml.expval(2.5 * qml.Z(0)),
+            qml.expval(qml.Z(0) @ qml.X(1)),
+            qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
             qml.expval(
                 qml.SparseHamiltonian(
                     qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
@@ -309,6 +310,9 @@ class TestExecution:
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
+        if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
+
         qs = QuantumScript(
             [
                 qml.RX(phi, 0),
@@ -322,6 +326,7 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert np.allclose(res, expected)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
@@ -343,6 +348,9 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
+        if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
+
         qs = QuantumScript(
             [
                 qml.RX(phi, 0),
@@ -454,18 +462,19 @@ class TestDerivatives:
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
         [
             qml.Z(1),
-            qml.s_prod(2.5, qml.Z(0)),
-            qml.prod(qml.Z(0), qml.X(1)),
-            qml.sum(qml.Z(1), qml.X(1)),
+            2.5 * qml.Z(0),
+            qml.Z(0) @ qml.X(1),
+            qml.operation.Tensor(qml.Z(0), qml.X(1)),
+            qml.Z(1) + qml.X(1),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
             qml.Projector([1], 1),
-            qml.operation.Tensor(qml.Z(0), qml.X(1)),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -473,6 +482,9 @@ class TestDerivatives:
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
+        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs = qml.operation.convert_to_legacy_H(obs)
+
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
             [qml.expval(obs)],
@@ -526,6 +538,11 @@ class TestDerivatives:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
+        if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs1 = qml.operation.convert_to_legacy_H(obs1)
+        if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs2 = qml.operation.convert_to_legacy_H(obs2)
+
         qs = QuantumScript(
             [
                 qml.RX(theta, 0),

@@ -21,6 +21,9 @@
   [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
   [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
 
+* Add support for using new operator arithmetic as the default.
+  [(#649)](https://github.com/PennyLaneAI/pennylane-lightning/pull/649)
+
 ### Breaking changes
 
 * Migrate `lightning.qubit` to the new device API.
