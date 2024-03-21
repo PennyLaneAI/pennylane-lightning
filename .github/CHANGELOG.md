@@ -23,6 +23,12 @@
 
 ### Breaking changes
 
+* Migrate `lightning.qubit` to the new device API.
+  [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
+
+* Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
+  [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
+
 ### Improvements
 
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
