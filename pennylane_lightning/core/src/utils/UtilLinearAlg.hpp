@@ -89,6 +89,39 @@ void compute_diagonalizing_gates(int n, int lda,
     }
 #elif defined(__linux__)
     void *handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle) {
+        std::unordered_map<std::string, std::size_t> priority_lib = {
+            {"stdc", 0},
+            {"gcc", 1},
+            {"quadmath", 2},
+            {"gfortran", 3},
+            {"openblas", 4}};
+        auto currentPath = std::filesystem::currentPath();
+        auto scipyLibsPath = currentPath.parent_path() / "scipy.libs";
+        std::vector<std::pair<std::string, std::size_t>> availableLibs;
+        for (const auto &lib :
+             std::filesystem::directory_iterator(scipyLibsPath)) {
+            if (lib.is_regular_file()) {
+                for (auto &iter : priority_lib) {
+                    if (lib.path().filename().find(iter->first) != std::string
+                        : npos) {
+                        availableLibs.emplace_back(
+                            {lib.path().filename().c_str(), iter->second});
+                    }
+                }
+            }
+        }
+
+        std::sort(availableLibs.begin(), availableLibs.end(),
+                  [](const auto &lhs, const auto &rhs) {
+                      return lhs.second < rhs.second;
+                  });
+
+        for (auto &lib : availableLibs) {
+            handle = dlopen(lib->first.c_str(), RTLD_LAZY | RTLD_GLOBAL);
+        }
+    }
+
 #elif defined(_MSC_VER)
     const char *PythonSitePackagePath = std::getenv("PYTHON_SITE_PACKAGES");
     std::string openblasLib;
