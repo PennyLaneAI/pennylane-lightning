@@ -21,6 +21,9 @@
   [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
   [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
 
+* Add Vector-Jacobian Product calculation support to `lightning.qubit`.
+  [(#644)](https://github.com/PennyLaneAI/pennylane-lightning/pull/644)
+
 ### Breaking changes
 
 * Migrate `lightning.qubit` to the new device API.
