@@ -21,6 +21,9 @@
 
 #include <algorithm>
 #include <complex>
+#include <filesystem>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #if defined(__APPLE__) || defined(__linux__)
