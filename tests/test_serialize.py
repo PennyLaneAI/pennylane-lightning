@@ -245,37 +245,24 @@ class TestSerializeObs:
             tape, wires_map
         )
 
-        if qml.operation.active_new_opmath():
-            s_expected = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    hamiltonian_obs(
-                        np.array([1], dtype=r_dtype),
-                        [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
-                    ),
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                ],
-            )
-        else:
-            s_expected = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                ],
-            )
+        s_expected = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                    ]
+                ),
+                hamiltonian_obs(
+                    np.array([1], dtype=r_dtype),
+                    [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
+                )
+                if qml.operation.active_new_opmath()
+                else tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
+                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+            ],
+        )
 
         assert s[0] == s_expected
 
@@ -405,32 +392,41 @@ class TestSerializeObs:
             tape, wires_map
         )
 
-        if qml.operation.active_new_opmath():
-            s_expected1 = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    hamiltonian_obs(
-                        np.array([1], dtype=r_dtype),
-                        [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
-                    ),
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                ],
-            )
-            s_expected2 = hamiltonian_obs(
-                np.array([0.7, 0.3], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            named_obs("PauliX", [0]),
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
-                        ]
-                    ),
+        s_expected1 = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                    ]
+                ),
+                hamiltonian_obs(
+                    np.array([1], dtype=r_dtype),
+                    [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
+                )
+                if qml.operation.active_new_opmath()
+                else tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
+                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+            ],
+        )
+        s_expected2 = hamiltonian_obs(
+            np.array([0.7, 0.3], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        named_obs("PauliX", [0]),
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
+                    ]
+                ),
+                hamiltonian_obs(
+                    np.array([1], dtype=r_dtype),
+                    [tensor_prod_obs([named_obs("PauliX", [2]), named_obs("PauliY", [0])])],
+                )
+                if qml.operation.active_new_opmath()
+                else tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),
+            ],
+        )
                     hamiltonian_obs(
                         np.array([1], dtype=r_dtype),
                         [tensor_prod_obs([named_obs("PauliX", [2]), named_obs("PauliY", [0])])],

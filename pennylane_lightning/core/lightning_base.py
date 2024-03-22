@@ -313,7 +313,7 @@ class LightningBase(QubitDevice):
         Projectors
 
         Args:
-            observable (.Operator): Observable to check
+            observable (~pennylane.operation.Operator): Observable to check
 
         Raises:
             ~pennylane.QuantumFunctionError: if a ``Projector`` is found.

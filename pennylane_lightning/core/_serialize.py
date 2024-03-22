@@ -184,14 +184,12 @@ class QuantumScriptSerializer:
 
     def _hermitian_ob(self, observable, wires_map: dict = None):
         """Serializes a Hermitian observable"""
-        assert not isinstance(observable, (Tensor, Prod))
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 
     def _tensor_ob(self, observable, wires_map: dict = None):
         """Serialize a tensor observable"""
-        assert isinstance(observable, (Tensor, Prod))
         obs = observable.obs if isinstance(observable, Tensor) else observable.operands
         return self.tensor_obs([self._ob(o, wires_map) for o in obs])
 
