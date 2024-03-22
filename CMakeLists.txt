@@ -89,7 +89,7 @@ execute_process(
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-message("Python site-packages directory: ${PYTHON_SITE_PACKAGES}")
+message("Python site-packages directory: ${Python_SITELIB}")
 
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
