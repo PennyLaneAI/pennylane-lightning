@@ -17,10 +17,7 @@ Class implementation for state vector measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 
@@ -48,8 +45,6 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-from ._state_vector import LightningStateVector
-
 
 class LightningMeasurements:
     """Lightning Measurements class
@@ -72,7 +67,7 @@ class LightningMeasurements:
 
     def __init__(
         self,
-        qubit_state: LightningStateVector,
+        qubit_state,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
@@ -320,18 +315,21 @@ class LightningMeasurements:
             if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
                 group[0].obs, SparseHamiltonian
             ):
-                raise TypeError("ExpectationMP(SparseHamiltonian) cannot be computed with samples.")
-            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
-                group[0].obs, Hamiltonian
-            ):
-                raise TypeError("ExpectationMP(Hamiltonian) cannot be computed with samples.")
-            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(group[0].obs, Sum):
-                raise TypeError("ExpectationMP(Sum) cannot be computed with samples.")
+                raise TypeError(
+                    "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
+                )
+            if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, (Hamiltonian, Sum)):
+                raise TypeError("VarianceMP(Hamiltonian/Sum) cannot be computed with samples.")
             if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-            all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
+            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
+                all_res.extend(self._measure_hamiltonian_with_samples(group, shots))
+            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+                all_res.extend(self._measure_sum_with_samples(group, shots))
+            else:
+                all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
 
         # reorder results
         flat_indices = []
@@ -438,3 +436,43 @@ class LightningMeasurements:
         self._apply_diagonalizing_gates(mps, adjoint=True)
 
         return _process_single_shot(samples)
+
+    def _measure_hamiltonian_with_samples(
+        self,
+        mp: List[SampleMeasurement],
+        shots: Shots,
+    ):
+        # the list contains only one element based on how we group measurements
+        mp = mp[0]
+
+        # if the measurement process involves a Hamiltonian, measure each
+        # of the terms separately and sum
+        def _sum_for_single_shot(s):
+            results = self.measure_with_samples(
+                [ExpectationMP(t) for t in mp.obs.terms()[1]],
+                s,
+            )
+            return sum(c * res for c, res in zip(mp.obs.terms()[0], results))
+
+        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
+
+    def _measure_sum_with_samples(
+        self,
+        mp: List[SampleMeasurement],
+        shots: Shots,
+    ):
+        # the list contains only one element based on how we group measurements
+        mp = mp[0]
+
+        # if the measurement process involves a Sum, measure each
+        # of the terms separately and sum
+        def _sum_for_single_shot(s):
+            results = self.measure_with_samples(
+                [ExpectationMP(t) for t in mp.obs],
+                s,
+            )
+            return sum(results)
+
+        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]

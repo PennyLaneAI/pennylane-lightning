@@ -272,7 +272,7 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.qubit2") or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
@@ -826,7 +826,7 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.qubit2") or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize(
@@ -1575,9 +1575,7 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1619,9 +1617,7 @@ def test_diff_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

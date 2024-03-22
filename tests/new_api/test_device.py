@@ -24,7 +24,7 @@ from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionCon
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
-from pennylane_lightning.lightning_qubit.lightning_qubit2 import (
+from pennylane_lightning.lightning_qubit.lightning_qubit import (
     _add_adjoint_transforms,
     _supports_adjoint,
     accepted_observables,
@@ -233,7 +233,9 @@ class TestExecution:
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
-        expected_program.add_transform(qml.defer_measurements, device=device)
+        expected_program.add_transform(
+            qml.devices.preprocess.mid_circuit_measurements, device=device
+        )
         expected_program.add_transform(
             decompose, stopping_condition=stopping_condition, name=device.name
         )

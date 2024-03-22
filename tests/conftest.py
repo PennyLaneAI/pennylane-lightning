@@ -89,7 +89,7 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.qubit2", "lightning.gpu"}
+supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu"}
 supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 
@@ -97,7 +97,7 @@ def get_device():
     """Return the pennylane lightning device.
 
     The device is ``lightning.qubit`` by default. Allowed values are:
-    "lightning.kokkos", "lightning.qubit2", and "lightning.qubit". An
+    "lightning.kokkos", and "lightning.qubit". An
     underscore can also be used instead of a dot. If the environment
     variable ``PL_DEVICE`` is defined, its value is used. Underscores
     are replaced by dots upon exiting.
@@ -133,11 +133,6 @@ elif device_name == "lightning.gpu":
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
-elif device_name == "lightning.qubit2":
-    from pennylane_lightning.lightning_qubit import LightningQubit2 as LightningDevice
-
-    if hasattr(pennylane_lightning, "lightning_qubit_ops"):
-        import pennylane_lightning.lightning_qubit_ops as lightning_ops
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
 
@@ -202,7 +197,7 @@ def validate_samples(shots, results1, results2):
         np.allclose(np.sum(results1), np.sum(results2), rtol=20, atol=0.2)
 
 
-def validate_expval(shots, results1, results2):
+def validate_others(shots, results1, results2):
     """Compares two expval, probs or var.
 
     If the results are ``Sequence``s, validate the average of items.
@@ -215,7 +210,7 @@ def validate_expval(shots, results1, results2):
         assert len(results1) == len(results2)
         results1 = reduce(lambda x, y: x + y, results1) / len(results1)
         results2 = reduce(lambda x, y: x + y, results2) / len(results2)
-        validate_expval(shots, results1, results2)
+        validate_others(shots, results1, results2)
         return
     if shots is None:
         assert np.allclose(results1, results2)
@@ -233,4 +228,4 @@ def validate_measurements(func, shots, results1, results2):
         validate_samples(shots, results1, results2)
         return
 
-    validate_expval(shots, results1, results2)
+    validate_others(shots, results1, results2)

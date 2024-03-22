@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.qubit` supports mid-circuit measurements.
+  [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
+
 * Add finite shots support in `lightning.qubit2`.
   [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
 
@@ -23,6 +26,12 @@
 
 ### Breaking changes
 
+* Migrate `lightning.qubit` to the new device API.
+  [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
+
+* Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
+  [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
+
 ### Improvements
 
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
@@ -34,6 +43,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
+  [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
 
 * Fix random `coverage xml` CI issues.
   [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)
