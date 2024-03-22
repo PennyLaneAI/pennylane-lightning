@@ -41,6 +41,9 @@
 
 ### Bug fixes
 
+* Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
+  [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
+
 * Fix random `coverage xml` CI issues.
   [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)
 
