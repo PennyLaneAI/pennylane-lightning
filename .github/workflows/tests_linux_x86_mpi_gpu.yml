@@ -240,7 +240,7 @@ jobs:
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           python -m pip install -r requirements-dev.txt
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          SKIP_COMPILATION=True PL_BACKEND=lightning_qubit python -m pip install -e . -vv
+          SKIP_COMPILATION=False PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
