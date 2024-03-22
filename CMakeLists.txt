@@ -83,13 +83,16 @@ include(FetchContent)
 
 find_package(Python COMPONENTS Interpreter Development)
 
-execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}" "-c" "import site; print(site.getsitepackages()[0])"
-    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-
 message("Python site-packages directory: ${Python_SITELIB}")
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(SCIPY_PATH "${Python_SITELIB}/scipy.libs")
+    if(NOT EXISTS SCIPY_PATH)
+        message(FATAL_ERROR "Can't find the scipy.libs in the python package_sites.")
+    endif()
+    set(ENV{SCIPY_LIBS} ${SCIPY_PATH})
+    message("$ENV{SCIPY_LIBS}")
+endif()
 
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
