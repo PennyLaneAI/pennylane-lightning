@@ -109,9 +109,10 @@ template <class ComplexT>
 int main(int argc, char *argv[]) {
     auto indices = prep_input_1q<unsigned int>(argc, argv);
     constexpr std::size_t run_avg = 1;
-    std::vector<std::string> gates = {
+    std::vector<std::string> gates_1q = {
         "Identity", "PauliX",     "PauliY", "PauliZ", "Hadamard", "S",
         "T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"};
+    std::vector<std::string> gates_2q = {"CNOT"};
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
@@ -129,7 +130,7 @@ int main(int argc, char *argv[]) {
     // std::vector<std::size_t> targets{indices.t};
 
     // Test 1q-gates
-    for (auto &gate : gates) {
+    for (auto &gate : gates_1q) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < indices.q; target++) {
                 auto gate_op =
@@ -164,6 +165,24 @@ int main(int argc, char *argv[]) {
             CSVOutput<decltype(indices), t_scale> csv(indices, "Matrix",
                                                       average_times(times));
             std::cout << csv << std::endl;
+        }
+    }
+    // Test 2q-gates
+    for (auto &gate : gates_2q) {
+        for (auto inverse : std::vector<bool>({false, true})) {
+            // for (std::size_t target = 0; target < indices.q; target++) {
+            auto gate_op = reverse_lookup(gate_names, std::string_view{gate});
+            auto npar = lookup(gate_num_params, gate_op);
+            std::vector<double> params(npar, 0.1);
+            TIMING(sv.applyOperation(gate, {0, 1}, inverse, params));
+            TIMING(svmpi.applyOperation(gate, {0, 1}, inverse, params));
+            allclose(svmpi, sv);
+            // }
+            if (svmpi.get_mpi_rank() == 0) {
+                CSVOutput<decltype(indices), t_scale> csv(indices, gate,
+                                                          average_times(times));
+                std::cout << csv << std::endl;
+            }
         }
     }
     svmpi.barrier();

@@ -181,25 +181,25 @@ class StateVectorKokkosMPI final
         mpi_barrier();
     }
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
-    MPI_Request mpi_irecv(const std::size_t rank) {
-        MPI_Request request;
+    void mpi_irecv(const std::size_t rank, MPI_Request &request) {
         PL_MPI_IS_SUCCESS(MPI_Irecv(
             recvbuf_.data(), recvbuf_.size(), get_mpi_type<ComplexT>(),
             static_cast<int>(rank), 0, communicator_, &request));
-        return request;
     }
-    MPI_Request mpi_isend(const std::size_t rank) {
-        KokkosVector sv_view =
-            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
-        Kokkos::parallel_for(
-            sv_view.size(),
-            KOKKOS_LAMBDA(const std::size_t i) { sendbuf_(i) = sv_view(i); });
-        Kokkos::fence();
-        MPI_Request request;
+    void mpi_isend(const std::size_t rank, MPI_Request &request,
+                   const bool copy = false) {
+        if (copy) {
+            KokkosVector sv_view =
+                getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+            Kokkos::parallel_for(
+                sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                    sendbuf_(i) = sv_view(i);
+                });
+            Kokkos::fence();
+        }
         PL_MPI_IS_SUCCESS(MPI_Isend(
             sendbuf_.data(), sendbuf_.size(), get_mpi_type<ComplexT>(),
             static_cast<int>(rank), 0, communicator_, &request));
-        return request;
     }
     void mpi_wait(MPI_Request &request) {
         MPI_Status status;
@@ -237,6 +237,31 @@ class StateVectorKokkosMPI final
                             [=, this](const std::size_t wire) {
                                 return get_rev_wire(wire) > (n_local - 1);
                             }) == wires.end();
+    }
+    bool has_local_wires(const std::vector<std::size_t> &wires) {
+        auto n_local{get_num_local_qubits()};
+        return std::find_if(wires.begin(), wires.end(),
+                            [=, this](const std::size_t wire) {
+                                return get_rev_wire(wire) <= (n_local - 1);
+                            }) != wires.end();
+    }
+    std::vector<std::size_t>
+    get_global_rev_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> rev_wires(wires.size());
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            rev_wires[i] = get_num_global_qubits() - 1 - wires[i];
+        }
+        return rev_wires;
+    }
+    std::size_t rank_2_matrix_index(const std::size_t rank,
+                                    const std::vector<std::size_t> &rev_wires) {
+        [[maybe_unused]] auto n = rev_wires.size();
+        std::size_t index{0U};
+        for (std::size_t i = 0; i < rev_wires.size(); i++) {
+            index = index | ((rank & (one << rev_wires[n - 1 - i])) >>
+                             (rev_wires[n - 1 - i] - i)); // select ith bit
+        }
+        return index;
     }
 
     /**
@@ -393,12 +418,13 @@ class StateVectorKokkosMPI final
         }
         if (wires.size() == 1) {
             apply1QOperation(opName, wires, inverse, params, gate_matrix);
+            return;
         }
-        // if (wires.size() == 2) {
-        //     apply2QOperation();
-        // }
-        PL_ABORT_IF(wires.size() > 1, "applyOperation is not implemented on "
-                                      "when global wires and n_wires > 1.");
+        if (wires.size() == 2) {
+            apply2QOperation(opName, wires, inverse, params, gate_matrix);
+            return;
+        }
+        PL_ABORT("applyOperation is not implemented on many global wires.");
     }
 
     /**
@@ -418,7 +444,62 @@ class StateVectorKokkosMPI final
         constexpr std::size_t one{1U};
         PL_ABORT_IF_NOT(wires.size() == one,
                         "Wires must contain a single wire index.")
-        std::vector<ComplexT> matrix(4);
+        PL_ABORT_IF(has_local_wires(wires), "Target wires must be global.")
+        std::vector<ComplexT> matrix(exp2(wires.size() * 2));
+        if (array_contains(gate_names, std::string_view{opName})) {
+            auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
+            matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
+                gate_op, params, inverse);
+        } else {
+            PL_ABORT_IF_NOT(
+                gate_matrix.size() == matrix.size(),
+                std::string("Operation does not exist for ") + opName +
+                    std::string(" and/or incorrect matrix provided."));
+            if (inverse) {
+                matrix = transpose(gate_matrix, true);
+            } else {
+                matrix = gate_matrix;
+            }
+        }
+        const auto ncol = exp2(wires.size());
+        const auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        const auto rev_wires = get_global_rev_wires(wires);
+        auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        MPI_Request send_req;
+        MPI_Request recv_req;
+        mpi_isend(rank, send_req, true);
+        mpi_irecv(rank, recv_req);
+        auto col = myrow;
+        (*sv_).rescale(matrix[col + myrow * ncol]);
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        mpi_wait(send_req);
+        barrier();
+    }
+
+    /**
+     * @brief Apply a single 2-qubit gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void apply2QOperation(const std::string &opName,
+                          const std::vector<size_t> &wires,
+                          const bool inverse = false,
+                          const std::vector<PrecisionT> &params = {},
+                          const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t one{1U};
+        constexpr std::size_t two{2U};
+        PL_ABORT_IF_NOT(wires.size() == two,
+                        "Wires must contain a single wire index.")
+        PL_ABORT_IF(has_local_wires(wires), "Target wires must be global.")
+        std::vector<ComplexT> matrix(exp2(wires.size() * 2));
         if (array_contains(gate_names, std::string_view{opName})) {
             auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
             matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
@@ -436,17 +517,69 @@ class StateVectorKokkosMPI final
         }
         auto ncol = exp2(wires.size());
         auto myrank = static_cast<std::size_t>(get_mpi_rank());
-        auto rev_wire = get_num_global_qubits() - 1 - wires[0];
-        auto rank = myrank ^ (one << rev_wire); // toggle nth bit
-        auto recv_req = mpi_irecv(rank);
-        auto send_req = mpi_isend(rank);
-        auto myrow = (myrank & (one << rev_wire)) >> rev_wire; // select nth bit
+        auto rev_wires = get_global_rev_wires(wires);
+        if (get_mpi_rank() == 0) {
+            for (auto &e : rev_wires) {
+                std::cout << e << std::endl;
+            }
+        }
+        barrier();
+        auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        MPI_Request send_req;
+        MPI_Request recv_req;
+        mpi_isend(rank, send_req, true);
+        mpi_irecv(rank, recv_req);
+        barrier();
+        std::cout << "Process-" << get_mpi_rank()
+                  << " receiving/sending from/to " << rank << std::endl;
         auto col = myrow;
+        barrier();
+        std::cout << "Process-" << get_mpi_rank() << " scaling with factor "
+                  << "matrix[" << myrow << "," << col
+                  << "] = " << matrix[col + myrow * ncol] << std::endl;
         (*sv_).rescale(matrix[col + myrow * ncol]);
+
         mpi_wait(recv_req);
-        mpi_wait(send_req);
-        col = (rank & (one << rev_wire)) >> rev_wire; // select nth bit
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        barrier();
+        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
+                  << "matrix[" << myrow << "," << col
+                  << "] = " << matrix[col + myrow * ncol] << std::endl;
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
+        mpi_irecv(rank, recv_req);
+        mpi_wait(send_req);
+        mpi_isend(rank, send_req);
+        barrier();
+        std::cout << "Process-" << get_mpi_rank()
+                  << " receiving/sending from/to " << rank << std::endl;
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        barrier();
+        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
+                  << "matrix[" << myrow << "," << col
+                  << "] = " << matrix[col + myrow * ncol] << std::endl;
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        rank = myrank ^ (one << rev_wires[1]) ^
+               (one << rev_wires[0]); // toggle nth bit
+        mpi_irecv(rank, recv_req);
+        mpi_wait(send_req);
+        mpi_isend(rank, send_req);
+        barrier();
+        std::cout << "Process-" << get_mpi_rank()
+                  << " receiving/sending from/to " << rank << std::endl;
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        barrier();
+        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
+                  << "matrix[" << myrow << "," << col
+                  << "] = " << matrix[col + myrow * ncol] << std::endl;
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        mpi_wait(send_req);
+        barrier();
     }
 
     /**
