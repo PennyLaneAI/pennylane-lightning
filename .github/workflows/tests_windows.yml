@@ -116,8 +116,6 @@ jobs:
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
       
       - name: Get site-packages directory
-        id: get_site_packages
-        shell: pwsh
         run: |
           python -c "import site; print(site.getsitepackages()[0])
           $pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
