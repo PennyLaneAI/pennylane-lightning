@@ -118,7 +118,7 @@ void compute_diagonalizing_gates(int n, int lda,
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
     if (!blasLib->getHandle()) {
         const std::string currentPathStr(getPath());
-        const std::filesystem::path currentPath(pathStr);
+        const std::filesystem::path currentPath(currentPathStr);
         const auto scipyLibsPath =
             currentPath.parent_path().parent_path() / "scipy.libs";
 
