@@ -235,13 +235,6 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install required packages
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          python -m pip install -r requirements-dev.txt
-          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          PL_BACKEND=lightning_qubit python -m pip install -e . -vv
-
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v3
@@ -256,6 +249,13 @@ jobs:
           git fetch --all
           git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+
+      - name: Install required packages
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          python -m pip install -r requirements-dev.txt
+          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
+          PL_BACKEND=lightning_qubit python -m pip install -e . -vv
 
       - name: Build and install package
         env:
