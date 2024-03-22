@@ -449,8 +449,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-        dev_cpu.reset()
+        dev_cpu._statevector.reset_state()
 
         def circuit():
             qml.PauliX(wires=[0])
