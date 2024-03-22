@@ -46,6 +46,7 @@ The Lightning ecosystem provides the following devices:
    installation
    docker
    support
+   release_note
 
 .. toctree::
    :maxdepth: 2
