@@ -14,7 +14,7 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from typing import List, Tuple
+from typing import List, Sequence, Tuple
 
 import numpy as np
 from pennylane import (
@@ -199,6 +199,7 @@ class QuantumScriptSerializer:
         coeffs, ops = observable.terms()
         coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in ops]
+        terms = [t[0] if isinstance(t, Sequence) and len(t) == 1 else t for t in terms]
 
         if self.split_obs:
             return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
@@ -309,9 +310,7 @@ class QuantumScriptSerializer:
                 offset_indices.append(offset_indices[-1] + 1)
         return serialized_obs, offset_indices
 
-    def serialize_ops(
-        self, tape: QuantumTape, wires_map: dict = None
-    ) -> Tuple[
+    def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
         List[List[str]],
         List[np.ndarray],
         List[List[int]],
