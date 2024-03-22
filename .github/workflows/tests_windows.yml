@@ -117,7 +117,7 @@ jobs:
       
       - name: Get site-packages directory
         run: |
-          python -c "import site; print(site.getsitepackages()[0])
+          python -c "import site; print(site.getsitepackages()[0])"
           $pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
           echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
