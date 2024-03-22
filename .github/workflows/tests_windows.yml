@@ -103,6 +103,11 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
       
@@ -168,6 +173,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Restoring cached Kokkos
         id: kokkos-cache
         uses: actions/cache@v4
