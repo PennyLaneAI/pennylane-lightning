@@ -114,14 +114,6 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-      
-      - name: Get site-packages directory
-        run: |
-          $pythonSitePackages = & python -c "import site; print( f'{site.getsitepackages()[0]}/Lib')"
-          Get-ChildItem $pythonSitePackages
-          $pythonSitePackages2 = & python -c "import site; print( f'{site.getsitepackages()[0]}/libs')"
-          Get-ChildItem $pythonSitePackages2
-          echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -204,13 +196,6 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-      
-      - name: Get site-packages directory
-        id: get_site_packages
-        shell: pwsh
-        run: |
-          $pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
-          echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
