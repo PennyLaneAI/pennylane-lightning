@@ -52,14 +52,10 @@ class SharedLibLoader final {
 #if defined(__APPLE__) || defined(__linux__)
         handle_ = dlopen(filename.c_str(), rtld_flags);
         // This allows users to use pre-installed LAPACK package
-        if (filename != "liblapack.so") {
-            PL_ABORT_IF(!handle_, dlerror());
-        }
+        PL_ABORT_IF(!handle_, dlerror());
 #elif defined(_MSC_VER)
         handle_ = LoadLibrary(filename.c_str());
-        if (filename != "libopenblas.dll") {
-            PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
-        }
+        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
     }
 

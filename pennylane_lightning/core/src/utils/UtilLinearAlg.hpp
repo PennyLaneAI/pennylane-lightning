@@ -128,7 +128,7 @@ void compute_diagonalizing_gates(int n, int lda,
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
                 for (const auto &iter : priority_lib) {
-                    std::string libname_str = lib.path().filename();
+                    std::string libname_str = lib.path().filename().string();
                     if (libname_str.find(iter.first) != std::string ::npos) {
                         availableLibs.emplace_back(
                             std::make_pair(libname_str, iter.second));
@@ -144,7 +144,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
         for (const auto &lib : availableLibs) {
             auto libPath = scipyLibsPath / lib.first.c_str();
-            const std::string libPathStr = libPath.c_str();
+            const std::string libPathStr = libPath.string().c_str();
             blasLibs.emplace_back(
                 std::make_shared<SharedLibLoader>(libPathStr));
         }
