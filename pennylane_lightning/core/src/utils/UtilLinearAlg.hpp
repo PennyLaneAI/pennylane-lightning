@@ -27,15 +27,14 @@
 #include <unordered_map>
 #include <vector>
 
-#include <iostream>
-
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
 #include <cstdlib>
-#include <filesystem>
 #include <windows.h>
 #endif
+
+#include "SharedLibLoader.hpp"
 
 /// @cond DEV
 namespace {
