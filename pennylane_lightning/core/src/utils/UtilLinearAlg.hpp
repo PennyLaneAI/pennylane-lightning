@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <complex>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -48,14 +49,14 @@ typedef void (*cheevPtr)(const char *, const char *, const int *,
 
 std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
+
 #ifdef __linux__
-const char *getPath() {
+std::string getPath() {
     Dl_info dl_info;
-    if (dladdr((const void *)getPath, &dl_info) != 0) {
-        return dl_info.dli_fname;
-    } else {
-        return nullptr;
-    }
+    auto flag = dladdr((const void *)getPath, &dl_info);
+    PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
+    std::string path(dl_info.dli_fname);
+    return path;
 }
 #elif defined(_MSC_VER)
 std::string getPath() {
@@ -101,30 +102,29 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
-    std::vector<void *> handles;
-    void *handle =
-        dlopen("/System/Library/Frameworks/Accelerate.framework/Versions/"
-               "Current/Frameworks/vecLib.framework/libLAPACK.dylib",
-               RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle) {
-        handle = dlopen("/usr/local/opt/lapack/lib/liblapack.dylib",
-                        RTLD_LAZY | RTLD_GLOBAL);
-    }
-    if (!handle) {
-        fprintf(stderr, "%s\n", dlerror());
-    }
-    handles.push_back(handle);
-#elif defined(__linux__)
-    std::vector<void *> handles;
-    void *handle;
+    const std::string libName =
+        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
+        "Frameworks/vecLib.framework/libLAPACK.dylib";
+    std::shared_ptr<SharedLibLoader> blasLib =
+        std::make_shared<SharedLibLoader>(libName);
+#else
+#if defined(__linux__)
+    const std::string defaultLibName = "liblapack.so";
+#else
+    const std::string defaultLibName = "libopenblas.dll";
+#endif
+    std::shared_ptr<SharedLibLoader> blasLib =
+        std::make_shared<SharedLibLoader>(defaultLibName);
 
-    handle = dlopen("liblapack.so", RTLD_LAZY | RTLD_GLOBAL);
+    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
+    if (!blasLib->getHandle()) {
+        const std::string currentPathStr(getPath());
+        const std::filesystem::path currentPath(pathStr);
+        const auto scipyLibsPath =
+            currentPath.parent_path().parent_path() / "scipy.libs";
 
-    if (!handle) {
-        std::string pathStr(getPath());
-        std::filesystem::path currentPath(pathStr);
-        auto scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
+
         for (const auto &lib :
              std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
@@ -145,48 +145,12 @@ void compute_diagonalizing_gates(int n, int lda,
 
         for (const auto &lib : availableLibs) {
             auto libPath = scipyLibsPath / lib.first.c_str();
-            handle = dlopen(libPath.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-            if (!handle) {
-                fprintf(stderr, "%s\n", dlerror());
-            }
-            handles.push_back(handle);
+            const std::string libPathStr = libPath.c_str();
+            blasLibs.emplace_back(
+                std::make_shared<SharedLibLoader>(libPathStr));
         }
+        blasLib = blasLibs.back();
     }
-#elif defined(_MSC_VER)
-    const char *PythonSitePackagePath = std::getenv("PYTHON_SITE_PACKAGES");
-    std::string openblasLib;
-    std::filesystem::path scipyLibsPath;
-    if (PythonSitePackagePath != nullptr) {
-        std::filesystem::path tmpPath(PythonSitePackagePath);
-        scipyLibsPath = tmpPath;
-        scipyLibsPath = scipyLibsPath / "scipy.libs";
-        std::cout << scipyLibsPath << std::endl;
-        for (const auto &lib :
-             std::filesystem::directory_iterator(scipyLibsPath)) {
-            if (lib.is_regular_file()) {
-                std::string libname_str = lib.path().filename().string();
-                if (libname_str.find("openblas") != std::string::npos) {
-                    openblasLib = libname_str;
-                }
-            }
-        }
-    } else {
-        std::string pathStr(getPath());
-        std::filesystem::path currentPath(pathStr);
-        auto scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
-        std::cout << scipyLibsPath << std::endl;
-        for (const auto &lib :
-             std::filesystem::directory_iterator(scipyLibsPath)) {
-            if (lib.is_regular_file()) {
-                std::string libname_str = lib.path().filename().string();
-                if (libname_str.find("openblas") != std::string::npos) {
-                    openblasLib = libname_str;
-                }
-            }
-        }
-    }
-    auto libPath = scipyLibsPath / openblasLib.c_str();
-    HMODULE handle = LoadLibrary(libPath.string().c_str());
 #endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
@@ -197,12 +161,8 @@ void compute_diagonalizing_gates(int n, int lda,
     int info;
 
     if constexpr (std::is_same<T, float>::value) {
-#if defined(__APPLE__) || defined(__linux__)
-        cheevPtr cheev = reinterpret_cast<cheevPtr>(dlsym(handle, "cheev_"));
-#elif defined(_MSC_VER)
         cheevPtr cheev =
-            reinterpret_cast<cheevPtr>(GetProcAddress(handle, "cheev_"));
-#endif
+            reinterpret_cast<cheevPtr>(blasLib->getSymbol("cheev_"));
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -213,12 +173,8 @@ void compute_diagonalizing_gates(int n, int lda,
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
-#if defined(__APPLE__) || defined(__linux__)
-        zheevPtr zheev = reinterpret_cast<zheevPtr>(dlsym(handle, "zheev_"));
-#elif defined(_MSC_VER)
         zheevPtr zheev =
-            reinterpret_cast<zheevPtr>(GetProcAddress(handle, "zheev_"));
-#endif
+            reinterpret_cast<zheevPtr>(blasLib->getSymbol("zheev_"));
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -229,15 +185,6 @@ void compute_diagonalizing_gates(int n, int lda,
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     }
-
-#if defined(__APPLE__) || defined(__linux__)
-    dlclose(handle);
-    for (auto handle : handles) {
-        dlclose(handle);
-    }
-#elif defined(_MSC_VER)
-    FreeLibrary(handle);
-#endif
 
     std::transform(ah.begin(), ah.end(), unitary.begin(),
                    [](std::complex<T> value) {
