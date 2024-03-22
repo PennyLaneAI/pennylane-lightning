@@ -263,7 +263,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+    except (qml.operation.DecompositionUndefinedError, qml.DeviceError, AttributeError):
         return False
     return True
 
