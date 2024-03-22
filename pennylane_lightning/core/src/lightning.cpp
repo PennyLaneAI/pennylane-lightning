@@ -5,10 +5,13 @@
 #include <complex>
 #include <iostream>
 #include <numeric>
+#include <string_view>
 #include <vector>
 
 #include <mpi.h>
 
+#include "Constant.hpp"
+#include "ConstantUtil.hpp"
 #include "Error.hpp"
 #include "StateVectorKokkos.hpp"
 #include "StateVectorKokkosMPI.hpp"
@@ -19,8 +22,10 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Gates;
-using t_scale = std::milli;
+using namespace Pennylane::Gates::Constant;
+using namespace Pennylane::Util;
 using namespace BMUtils;
+using t_scale = std::milli;
 
 void normalize(std::vector<std::complex<double>> &vec) {
     double sum{0.0};
@@ -106,7 +111,7 @@ int main(int argc, char *argv[]) {
     constexpr std::size_t run_avg = 1;
     std::vector<std::string> gates = {
         "Identity", "PauliX",     "PauliY", "PauliZ", "Hadamard", "S",
-        "T",        "PhaseShift", "RX",     "RY",     "RZ"};
+        "T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"};
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
@@ -123,12 +128,16 @@ int main(int argc, char *argv[]) {
     times.reserve(run_avg);
     // std::vector<std::size_t> targets{indices.t};
 
-    // Apply the gates `run_avg` times on the indicated targets
+    // Test 1q-gates
     for (auto &gate : gates) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < indices.q; target++) {
-                TIMING(sv.applyOperation(gate, {target}, inverse, {0.1}));
-                TIMING(svmpi.applyOperation(gate, {target}, inverse, {0.1}));
+                auto gate_op =
+                    reverse_lookup(gate_names, std::string_view{gate});
+                auto npar = lookup(gate_num_params, gate_op);
+                std::vector<double> params(npar, 0.1);
+                TIMING(sv.applyOperation(gate, {target}, inverse, params));
+                TIMING(svmpi.applyOperation(gate, {target}, inverse, params));
                 allclose(svmpi, sv);
             }
             if (svmpi.get_mpi_rank() == 0) {
@@ -138,7 +147,25 @@ int main(int argc, char *argv[]) {
             }
         }
     }
-
+    // Test 1q-unitary
+    for (auto inverse : std::vector<bool>({false, true})) {
+        for (std::size_t target = 0; target < indices.q; target++) {
+            std::vector<Kokkos::complex<double>> matrix = {
+                {0.97517033, 0.19767681},
+                {-0.09933467, 0.00996671},
+                {0.09933467, 0.00996671},
+                {0.97517033, 0.19767681}}; // qml.Rot(0.1,0.2,0.3,wires=[0])
+            TIMING(sv.applyOperation("Matrix", {target}, inverse, {}, matrix));
+            TIMING(
+                svmpi.applyOperation("Matrix", {target}, inverse, {}, matrix));
+            allclose(svmpi, sv);
+        }
+        if (svmpi.get_mpi_rank() == 0) {
+            CSVOutput<decltype(indices), t_scale> csv(indices, "Matrix",
+                                                      average_times(times));
+            std::cout << csv << std::endl;
+        }
+    }
     svmpi.barrier();
     int finflag;
     MPI_Finalized(&finflag);
