@@ -118,7 +118,9 @@ jobs:
       - name: Get site-packages directory
         run: |
           $pythonSitePackages = & python -c "import site; print(site.getsitepackages()[0])"
-          Write-Host $pythonSitePackages
+          Get-ChildItem $pythonSitePackages
+          $pythonSitePackage += "\Lib\site-packages\scip.libs\" 
+          Get-ChildItem $pythonSitePackages
           echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
