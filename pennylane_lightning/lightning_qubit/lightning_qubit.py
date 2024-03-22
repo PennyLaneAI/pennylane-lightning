@@ -25,12 +25,14 @@ from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    mid_circuit_measurements,
     no_sampling,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
+from pennylane.measurements import MidMeasureMP
 from pennylane.operation import Tensor
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
@@ -73,6 +75,16 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     if mcmc is None:
         mcmc = {}
     state.reset_state()
+    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    if circuit.shots and has_mcm:
+        mid_measurements = {}
+        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
+        if any(v == -1 for v in mid_measurements.values()):
+            return None, mid_measurements
+        return (
+            LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
+            mid_measurements,
+        )
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
@@ -202,6 +214,8 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "MidMeasureMP",
+        "Conditional",
     }
 )
 # The set of supported operations.
@@ -455,7 +469,7 @@ class LightningQubit(Device):
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
-        program.add_transform(qml.defer_measurements, device=self)
+        program.add_transform(mid_circuit_measurements, device=self)
         program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
         program.add_transform(qml.transforms.broadcast_expand)
 
