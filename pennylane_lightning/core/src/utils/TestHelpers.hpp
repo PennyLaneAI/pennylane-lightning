@@ -291,6 +291,19 @@ auto createZeroState(size_t num_qubits) -> TestVector<ComplexT> {
 /**
  * @brief create |+>^N
  */
+template <typename ComplexT>
+auto createPlusState_(size_t num_qubits) -> TestVector<ComplexT> {
+    TestVector<ComplexT> res(size_t{1U} << num_qubits, 1.0,
+                             getBestAllocator<ComplexT>());
+    for (auto &elem : res) {
+        elem /= std::sqrt(1U << num_qubits);
+    }
+    return res;
+}
+
+/**
+ * @brief create |+>^N
+ */
 template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {

@@ -972,4 +972,35 @@ template <class PrecisionT, bool adj = false> struct generatorMultiRZFunctor {
             1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
     }
 };
+
+template <class PrecisionT> struct collapseFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+
+    KokkosComplexVector arr;
+    std::size_t num_qubits;
+    std::size_t stride;
+    std::size_t negbranch;
+
+    collapseFunctor(KokkosComplexVector &arr_, std::size_t num_qubits_,
+                    std::size_t stride_, std::size_t negbranch_) {
+        arr = arr_;
+        num_qubits = num_qubits_;
+        stride = stride_;
+        negbranch = negbranch_;
+    }
+
+    // zero half the entries
+    // the "half" entries depend on the stride
+    // *_*_*_*_ for stride 1
+    // **__**__ for stride 2
+    // ****____ for stride 4
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t left, const std::size_t right) const {
+        const size_t offset = stride * (negbranch + 2 * left);
+        arr[offset + right] = ComplexT{0., 0.};
+    }
+};
+
 } // namespace Pennylane::LightningKokkos::Functors

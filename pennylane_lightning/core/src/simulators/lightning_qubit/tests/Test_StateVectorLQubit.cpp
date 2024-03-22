@@ -245,9 +245,35 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::collapse", "[StateVectorLQubit]",
 
         std::size_t wire = GENERATE(0, 1, 2);
         std::size_t branch = GENERATE(0, 1);
-        StateVectorLQubitManaged<PrecisionT> sv(init_state);
+        StateVectorT sv(init_state.data(), init_state.size());
         sv.collapse(wire, branch);
 
         REQUIRE(sv.getDataVector() == approx(expected_state[branch][wire]));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::normalize",
+                           "[StateVectorLQubit]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    SECTION("Normalize state vector.") {
+        const ComplexT init{1.0, PrecisionT{0.0}};
+        const ComplexT half{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<ComplexT> init_state = {init, zero, init, init,
+                                            zero, zero, init, zero};
+
+        std::vector<ComplexT> expected_state = {half, zero, half, half,
+                                                zero, zero, half, zero};
+
+        StateVectorT sv(init_state.data(), init_state.size());
+        sv.normalize();
+
+        REQUIRE(sv.getDataVector() == approx(expected_state));
     }
 }
