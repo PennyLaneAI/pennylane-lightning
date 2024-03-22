@@ -42,6 +42,9 @@ jobs:
         name: Install Python
         with:
           python-version: '3.9'
+      
+      - name: Get required Python packages
+        run: python -m pip install scipy
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
@@ -215,6 +218,9 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
+      
+      - name: Get required Python packages
+        run: python -m pip install scipy
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
