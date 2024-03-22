@@ -119,7 +119,8 @@ jobs:
         id: get_site_packages
         shell: pwsh
         run: |
-          pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
+          python -c "import site; print(site.getsitepackages()[0])
+          $pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
           echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
@@ -208,7 +209,7 @@ jobs:
         id: get_site_packages
         shell: pwsh
         run: |
-          pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
+          $pythonSitePackages = $(python -c "import site; print(site.getsitepackages()[0])")
           echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
