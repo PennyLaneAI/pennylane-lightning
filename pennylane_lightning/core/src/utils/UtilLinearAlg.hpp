@@ -20,6 +20,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 #include <complex>
 #include <vector>
 
@@ -40,6 +41,27 @@ extern void zheev_(const char *jobz, const char *uplo, const int *n,
 /// @endcond
 
 namespace Pennylane::Util {
+
+/**
+ * @brief Computes the transpose of a linear array.
+ *
+ * @tparam T Data type (complex).
+ *
+ * @param array Array to transpose.
+ */
+template <typename T>
+std::vector<T> transpose(const std::vector<T> &array,
+                         const bool conjg = false) {
+    std::vector<T> trans(array.size());
+    std::size_t dim = std::sqrt(array.size());
+    for (std::size_t i = 0; i < dim; i++) {
+        for (std::size_t j = 0; j < dim; j++) {
+            trans[i + j * dim] =
+                (conjg) ? conj(array[i * dim + j]) : array[i * dim + j];
+        }
+    };
+    return trans;
+}
 
 /**
  * @brief Decompose Hermitian matrix into diagonal matrix and unitaries

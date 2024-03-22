@@ -41,6 +41,7 @@
 #include "Gates.hpp"
 #include "StateVectorBase.hpp"
 #include "StateVectorKokkos.hpp"
+#include "UtilLinearAlg.hpp"
 
 /// @cond DEV
 namespace {
@@ -428,11 +429,7 @@ class StateVectorKokkosMPI final
                 std::string("Operation does not exist for ") + opName +
                     std::string(" and/or incorrect matrix provided."));
             if (inverse) {
-                for (std::size_t i = 0; i < 2; i++) {
-                    for (std::size_t j = 0; j < 2; j++) {
-                        matrix[i + j * 2] = conj(gate_matrix[i * 2 + j]);
-                    }
-                };
+                matrix = transpose(gate_matrix, true);
             } else {
                 matrix = gate_matrix;
             }
