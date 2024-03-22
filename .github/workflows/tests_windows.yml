@@ -117,9 +117,9 @@ jobs:
       
       - name: Get site-packages directory
         run: |
-          $pythonSitePackages = & python -c "import site; print( f'{site.getsitepackages()[0]}/Lib')")"
+          $pythonSitePackages = & python -c "import site; print( f'{site.getsitepackages()[0]}/Lib')"
           Get-ChildItem $pythonSitePackages
-          $pythonSitePackages2 = & python -c "import site; print( f'{site.getsitepackages()[0]}/libs')")"
+          $pythonSitePackages2 = & python -c "import site; print( f'{site.getsitepackages()[0]}/libs')"
           Get-ChildItem $pythonSitePackages2
           echo "PYTHON_SITE_PACKAGES=$pythonSitePackages" >> $GITHUB_ENV
 
