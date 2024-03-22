@@ -92,7 +92,7 @@ template <class ComplexT>
             auto diff = dat[i] - ref[i];
             [[maybe_unused]] double err =
                 norm(std::complex<double>{real(diff), imag(diff)});
-            std::cout << err << std::endl;
+            // std::cout << err << std::endl;
             PL_ABORT_IF_NOT(err < tol, "Wrong statevector entry.");
         }
     }
@@ -104,7 +104,9 @@ template <class ComplexT>
 int main(int argc, char *argv[]) {
     auto indices = prep_input_1q<unsigned int>(argc, argv);
     constexpr std::size_t run_avg = 1;
-    std::string gate = "Hadamard";
+    std::vector<std::string> gates = {
+        "Identity", "PauliX",     "PauliY", "PauliZ", "Hadamard", "S",
+        "T",        "PhaseShift", "RX",     "RY",     "RZ"};
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
@@ -119,19 +121,22 @@ int main(int argc, char *argv[]) {
     // Create vector for run-times to average
     std::vector<double> times;
     times.reserve(run_avg);
-    std::vector<std::size_t> targets{indices.t};
+    // std::vector<std::size_t> targets{indices.t};
 
     // Apply the gates `run_avg` times on the indicated targets
-    for (std::size_t i = 0; i < run_avg; i++) {
-        TIMING(sv.applyOperation(gate, targets));
-        TIMING(svmpi.applyOperation(gate, targets));
-    }
-    allclose(svmpi, sv);
-
-    if (svmpi.get_mpi_rank() == 0) {
-        CSVOutput<decltype(indices), t_scale> csv(indices, gate,
-                                                  average_times(times));
-        std::cout << csv << std::endl;
+    for (auto &gate : gates) {
+        for (auto inverse : std::vector<bool>({false, true})) {
+            for (std::size_t target = 0; target < indices.q; target++) {
+                TIMING(sv.applyOperation(gate, {target}, inverse, {0.1}));
+                TIMING(svmpi.applyOperation(gate, {target}, inverse, {0.1}));
+                allclose(svmpi, sv);
+            }
+            if (svmpi.get_mpi_rank() == 0) {
+                CSVOutput<decltype(indices), t_scale> csv(indices, gate,
+                                                          average_times(times));
+                std::cout << csv << std::endl;
+            }
+        }
     }
 
     svmpi.barrier();

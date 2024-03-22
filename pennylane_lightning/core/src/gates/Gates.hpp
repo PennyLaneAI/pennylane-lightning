@@ -113,9 +113,10 @@ static constexpr auto getHadamard() -> std::vector<ComplexT<T>> {
  * of S gate data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getS() -> std::vector<ComplexT<T>> {
+static constexpr auto getS(const bool inverse = false)
+    -> std::vector<ComplexT<T>> {
     return {ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            IMAG<ComplexT, T>()};
+            (inverse) ? -IMAG<ComplexT, T>() : IMAG<ComplexT, T>()};
 }
 
 /**
@@ -127,10 +128,12 @@ static constexpr auto getS() -> std::vector<ComplexT<T>> {
  * of T gate data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getT() -> std::vector<ComplexT<T>> {
+static constexpr auto getT(const bool inverse = false)
+    -> std::vector<ComplexT<T>> {
     return {ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
             INVSQRT2<ComplexT, T>() *
-                (ONE<ComplexT, T>() + IMAG<ComplexT, T>())};
+                (ONE<ComplexT, T>() +
+                 ((inverse) ? -IMAG<ComplexT, T>() : IMAG<ComplexT, T>()))};
 }
 
 /**
@@ -1156,7 +1159,8 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
 
 template <template <typename...> class ComplexT, typename T>
 std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
-                                   const std::vector<T> &params) {
+                                   const std::vector<T> &params,
+                                   const bool inverse = false) {
     switch (gate_op) {
     case GateOperation::Identity:
         return getIdentity<ComplexT, T>();
@@ -1169,19 +1173,21 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
     case GateOperation::Hadamard:
         return getHadamard<ComplexT, T>();
     case GateOperation::S:
-        return getS<ComplexT, T>();
+        return getS<ComplexT, T>(inverse);
     case GateOperation::T:
-        return getT<ComplexT, T>();
+        return getT<ComplexT, T>(inverse);
     case GateOperation::RX:
-        return getRX<ComplexT, T>(params[0]);
+        return getRX<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::RY:
-        return getRY<ComplexT, T>(params[0]);
+        return getRY<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::RZ:
-        return getRZ<ComplexT, T>(params[0]);
+        return getRZ<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::PhaseShift:
-        return getPhaseShift<ComplexT, T>(params[0]);
+        return getPhaseShift<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::Rot:
-        return getRot<ComplexT, T>(params[0], params[1], params[2]);
+        return (inverse)
+                   ? getRot<ComplexT, T>(-params[2], -params[1], -params[0])
+                   : getRot<ComplexT, T>(params[0], params[1], params[2]);
     case GateOperation::CY:
         return getCY<ComplexT, T>();
     case GateOperation::CZ:
@@ -1191,35 +1197,44 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
     case GateOperation::SWAP:
         return getSWAP<ComplexT, T>();
     case GateOperation::ControlledPhaseShift:
-        return getControlledPhaseShift<ComplexT, T>(params[0]);
+        return getControlledPhaseShift<ComplexT, T>((inverse) ? -params[0]
+                                                              : params[0]);
     case GateOperation::CRX:
-        return getCRX<ComplexT, T>(params[0]);
+        return getCRX<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::CRY:
-        return getCRY<ComplexT, T>(params[0]);
+        return getCRY<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::CRZ:
-        return getCRZ<ComplexT, T>(params[0]);
+        return getCRZ<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::CRot:
-        return getCRot<ComplexT, T>(params[0], params[1], params[2]);
+        return (inverse)
+                   ? getCRot<ComplexT, T>(-params[2], -params[1], -params[0])
+                   : getCRot<ComplexT, T>(params[0], params[1], params[2]);
     case GateOperation::IsingXX:
-        return getIsingXX<ComplexT, T>(params[0]);
+        return getIsingXX<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::IsingXY:
-        return getIsingXY<ComplexT, T>(params[0]);
+        return getIsingXY<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::IsingYY:
-        return getIsingYY<ComplexT, T>(params[0]);
+        return getIsingYY<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::IsingZZ:
-        return getIsingZZ<ComplexT, T>(params[0]);
+        return getIsingZZ<ComplexT, T>((inverse) ? -params[0] : params[0]);
     case GateOperation::SingleExcitation:
-        return getSingleExcitation<ComplexT, T>(params[0]);
+        return getSingleExcitation<ComplexT, T>((inverse) ? -params[0]
+                                                          : params[0]);
     case GateOperation::SingleExcitationMinus:
-        return getSingleExcitationMinus<ComplexT, T>(params[0]);
+        return getSingleExcitationMinus<ComplexT, T>((inverse) ? -params[0]
+                                                               : params[0]);
     case GateOperation::SingleExcitationPlus:
-        return getSingleExcitationPlus<ComplexT, T>(params[0]);
+        return getSingleExcitationPlus<ComplexT, T>((inverse) ? -params[0]
+                                                              : params[0]);
     case GateOperation::DoubleExcitation:
-        return getDoubleExcitation<ComplexT, T>(params[0]);
+        return getDoubleExcitation<ComplexT, T>((inverse) ? -params[0]
+                                                          : params[0]);
     case GateOperation::DoubleExcitationMinus:
-        return getDoubleExcitationMinus<ComplexT, T>(params[0]);
+        return getDoubleExcitationMinus<ComplexT, T>((inverse) ? -params[0]
+                                                               : params[0]);
     case GateOperation::DoubleExcitationPlus:
-        return getDoubleExcitationPlus<ComplexT, T>(params[0]);
+        return getDoubleExcitationPlus<ComplexT, T>((inverse) ? -params[0]
+                                                              : params[0]);
     case GateOperation::CSWAP:
         return getCSWAP<ComplexT, T>();
     case GateOperation::Toffoli:

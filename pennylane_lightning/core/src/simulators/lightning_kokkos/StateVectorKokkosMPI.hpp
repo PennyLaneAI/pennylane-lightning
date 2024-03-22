@@ -378,10 +378,10 @@ class StateVectorKokkosMPI final
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<size_t> &wires,
+                        const bool inverse = false,
                         const std::vector<PrecisionT> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        constexpr std::size_t one{1U};
         if (opName == "Identity") {
             return;
         }
@@ -390,11 +390,53 @@ class StateVectorKokkosMPI final
                                   params, gate_matrix);
             return;
         }
+        if (wires.size() == 1) {
+            apply1QOperation(opName, wires, inverse, params, gate_matrix);
+        }
+        // if (wires.size() == 2) {
+        //     apply2QOperation();
+        // }
         PL_ABORT_IF(wires.size() > 1, "applyOperation is not implemented on "
                                       "when global wires and n_wires > 1.");
-        auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
-        auto matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
-            gate_op, params);
+    }
+
+    /**
+     * @brief Apply a single 1-qubit gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void apply1QOperation(const std::string &opName,
+                          const std::vector<size_t> &wires,
+                          const bool inverse = false,
+                          const std::vector<PrecisionT> &params = {},
+                          const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t one{1U};
+        PL_ABORT_IF_NOT(wires.size() == one,
+                        "Wires must contain a single wire index.")
+        std::vector<ComplexT> matrix(4);
+        if (array_contains(gate_names, std::string_view{opName})) {
+            auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
+            matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
+                gate_op, params, inverse);
+        } else {
+            PL_ABORT_IF_NOT(
+                gate_matrix.size() == matrix.size(),
+                std::string("Operation does not exist for ") + opName +
+                    std::string(" and/or incorrect matrix provided."));
+            if (inverse) {
+                for (std::size_t i = 0; i < 2; i++) {
+                    for (std::size_t j = 0; j < 2; j++) {
+                        matrix[i + j * 2] = conj(gate_matrix[i * 2 + j]);
+                    }
+                };
+            } else {
+                matrix = gate_matrix;
+            }
+        }
         auto ncol = exp2(wires.size());
         auto myrank = static_cast<std::size_t>(get_mpi_rank());
         auto rev_wire = get_num_global_qubits() - 1 - wires[0];
