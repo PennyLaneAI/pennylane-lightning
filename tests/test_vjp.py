@@ -29,6 +29,7 @@ if ld._CPP_BINARY_AVAILABLE:
 else:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def get_vjp(device, tapes, dy):
     """Helper to get VJP for a tape or batch of tapes"""
     if device._new_API:
@@ -158,7 +159,6 @@ class TestVectorJacobianProduct:
         ):
             get_vjp(dev, tape1, dy2)
 
-
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
         expectation values"""
@@ -254,7 +254,6 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
-
     def test_hermitian_expectation(self, dev, tol):
         obs = np.array([[1, 0], [0, -1]], dtype=dev.dtype, requires_grad=False)
         dy = np.array([0.8])
@@ -267,6 +266,7 @@ class TestVectorJacobianProduct:
             tape.trainable_params = {0}
             vjp = get_vjp(dev, tape, dy)
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
+
 
 #     def test_hermitian_tensor_expectation(self, dev, tol):
 #         obs = np.array([[1, 0], [0, -1]], dtype=dev.C_DTYPE, requires_grad=False)
