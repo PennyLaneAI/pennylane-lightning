@@ -84,7 +84,7 @@ include(FetchContent)
 find_package(Python COMPONENTS Interpreter Development)
 
 execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    COMMAND "${PYTHON_EXECUTABLE}" "-c" "import site; print(site.getsitepackages()[0])"
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
