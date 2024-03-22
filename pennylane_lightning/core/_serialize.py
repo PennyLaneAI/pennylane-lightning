@@ -199,6 +199,8 @@ class QuantumScriptSerializer:
         coeffs, ops = observable.terms()
         coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
         terms = [self._ob(t, wires_map) for t in ops]
+        # TODO: This is in case `_hamiltonian` is called recursively which would cause a list
+        # to be passed where `_ob` expects an observable.
         terms = [t[0] if isinstance(t, Sequence) and len(t) == 1 else t for t in terms]
 
         if self.split_obs:
