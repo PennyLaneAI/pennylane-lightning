@@ -91,7 +91,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
         set(SCIPY_PATH ${Python_SITELIB})
     else()
         execute_process(
-            COMMAND ${Python_EXECUTABLE} -c "import site; print( f'{site.getsitepackages()[0]}/Lib/site-packages/scipy.libs')"
+            COMMAND ${Python_EXECUTABLE} -c "import site; print(str(r'{}'.format(site.getsitepackages()[0]).replace(r'\\', '/')))"
             OUTPUT_VARIABLE Python_PACKAGES_SITE
             OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(SCIPY_PATH ${Python_PACKAGES_SITE})
