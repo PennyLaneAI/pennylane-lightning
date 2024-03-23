@@ -86,15 +86,19 @@ find_package(Python COMPONENTS Interpreter Development)
 message("Python site-packages directory: ${Python_SITELIB}")
 
 
+#set(my_string "\\a\\b")
+#message("+++++++++++++++++${my_string}")
+#string(REPLACE "\\" "/" my_string ${my_string})
+#message("+++++++++++++++++${my_string}")
+
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+    set(SCIPY_PATH ${Python_SITELIB})
     if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        set(SCIPY_PATH ${Python_SITELIB})
+        string(APPEND SCIPY_PATH "/scipy.libs")
     else()
-        execute_process(
-            COMMAND ${Python_EXECUTABLE} -c "import site; print(str(r'{}'.format(site.getsitepackages()[0]).replace(r'\\', '/')))"
-            OUTPUT_VARIABLE Python_PACKAGES_SITE
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        set(SCIPY_PATH ${Python_PACKAGES_SITE})
+        string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
+        string(APPEND SCIPY_PATH "/scipy.libs")
     endif()
     message(STATUS "${SCIPY_PATH}")
     if(NOT EXISTS ${SCIPY_PATH})
