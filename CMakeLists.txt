@@ -96,7 +96,11 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     endif()
     message(STATUS "${SCIPY_PATH}")
     if(NOT EXISTS ${SCIPY_PATH})
-         message(FATAL_ERROR "Can't find the scipy.libs in the python package_sites.")
+        #install scipy with available python interpreter
+        execute_process(
+            COMMAND ${Python_EXECUTABLE} -m pip install scipy
+            RESULT_VARIABLE result
+        )
     endif()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
  endif()
