@@ -87,7 +87,7 @@ find_package(Python COMPONENTS Interpreter Development)
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import site; print( f'{site.getsitepackages()[0]}')"
-        OUTPUT_VARIABLE PYTHON_PACKAGE_SITE
+        OUTPUT_VARIABLE PYTHON_PACKAGE_SITE OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     set(SCIPY_PATH ${PYTHON_PACKAGE_SITE})
     message("Python site-packages directory: ${SCIPY_PATH}")
