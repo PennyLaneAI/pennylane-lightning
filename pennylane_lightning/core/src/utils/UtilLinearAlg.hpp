@@ -56,8 +56,7 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 #ifdef __linux__
 std::string getPath() {
     Dl_info dl_info;
-    auto flag =
-        dladdr((const void *)getPath, &dl_info); // noinspection CodeFactor
+    auto flag = dladdr((const void *)getPath, &dl_info);
     PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
     std::string path(dl_info.dli_fname);
     return path;
@@ -65,7 +64,7 @@ std::string getPath() {
 #elif defined(_MSC_VER)
 std::string getPath() {
     char buffer[MAX_PATH];
-    GetModuleFileName(nullptr, buffer, MAX_PATH); // noinspection CodeFactor
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
     std::string fullPath(buffer);
     std::size_t pos = fullPath.find_last_of("\\/");
     return fullPath.substr(0, pos);
