@@ -98,14 +98,25 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
         string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
         string(APPEND SCIPY_PATH "/Lib/site-packages/scipy.libs")
     endif()
-    message(STATUS "++++++++${SCIPY_PATH}++++++++++++++")
-    if(NOT EXISTS ${SCIPY_PATH})
+    message(STATUS "Scipy directory: ${SCIPY_PATH}")
+    if(EXISTS ${SCIPY_PATH})
+        message(STATUS "Scipy directory found.")
+    else()
         #install scipy with available python interpreter
+        message(STATUS "Can't find scipy with available python and install.")
         execute_process(
-            COMMAND ${Python_EXECUTABLE} -m pip install scipy
+            COMMAND ${Python_EXECUTABLE} -m pip install scipy --user
             RESULT_VARIABLE result
         )
-    message("${result}----------------")    
+        set(PYTHON_LOCAL_SITE_PACKAGES "~/.local/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
+        string(APPEND PYTHON_LOCAL_SITE_PACKAGES "/scipy.libs")
+        set(SCIPY_PATH ${PYTHON_LOCAL_SITE_PACKAGES})
+        if(EXISTS ${SCIPY_PATH})
+            message(STATUS "Scipy directory found in local site_packages dir.")
+        else()
+            message(FATAL_ERROR "Scipy is not found.")
+        endif()
+
     endif()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
  endif()
