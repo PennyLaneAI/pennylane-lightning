@@ -98,7 +98,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
         if(EXISTS ${SCIPY_LIBS_DIR})
             message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
         else()
-            message(FATAL_ERROR "Scipy.libs directory not found.")
+            message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
         endif()
     endif()
 
