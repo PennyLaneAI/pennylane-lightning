@@ -85,8 +85,13 @@ find_package(Python COMPONENTS Interpreter Development)
 
 message("Python site-packages directory: ${Python_SITELIB}")
 
+execute_process(
+    COMMAND ${Python_EXECUTABLE} -c "import site; print(site.getsitepackages()[0])"
+    OUTPUT_VARIABLE Python_PACKAGES_SITE
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set(SCIPY_PATH ${Python_SITELIB})
+    set(SCIPY_PATH ${Python_PACKAGES_SITE})
     if(CMAKE_SYSTEM_NAME MATCHES "Linux")
         string(APPEND SCIPY_PATH "/scipy.libs")
     else()
@@ -98,7 +103,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     endif()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
  endif()
- 
+
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
