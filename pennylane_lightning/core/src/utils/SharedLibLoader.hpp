@@ -54,9 +54,8 @@ class SharedLibLoader final {
         // This allows users to use pre-installed LAPACK package
         PL_ABORT_IF(!handle_, dlerror());
 #elif defined(_MSC_VER)
-#pragma warning(push, 0)
+        // codefactor[skip]
         handle_ = LoadLibrary(filename.c_str());
-#pragma warning(pop)
         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
     }
