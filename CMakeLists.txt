@@ -83,16 +83,20 @@ include(FetchContent)
 
 find_package(Python COMPONENTS Interpreter Development)
 
-message("Python site-packages directory: ${Python_SITELIB}")
-
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
-    set(SCIPY_PATH ${Python_SITELIB})
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -c "import site; print( f'{site.getsitepackages()[0]}')"
+        OUTPUT_VARIABLE PYTHON_PACKAGE_SITE
+    )
+    set(SCIPY_PATH ${PYTHON_PACKAGE_SITE})
+    message("Python site-packages directory: ${SCIPY_PATH}")
+    #set(SCIPY_PATH ${Python_SITELIB})
     if(CMAKE_SYSTEM_NAME MATCHES "Linux")
         string(APPEND SCIPY_PATH "/scipy.libs")
     else()
         string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
-        string(APPEND SCIPY_PATH "/scipy.libs")
+        string(APPEND SCIPY_PATH "/Lib/site-packages/scipy.libs")
     endif()
     message(STATUS "${SCIPY_PATH}")
     if(NOT EXISTS ${SCIPY_PATH})
