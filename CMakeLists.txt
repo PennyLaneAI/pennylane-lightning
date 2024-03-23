@@ -83,41 +83,53 @@ include(FetchContent)
 
 find_package(Python COMPONENTS Interpreter Development)
 
-
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "import site; print( f'{site.getsitepackages()[0]}')"
-        OUTPUT_VARIABLE PYTHON_PACKAGE_SITE OUTPUT_STRIP_TRAILING_WHITESPACE
+        COMMAND ${Python_EXECUTABLE} -c "import scipy; print(scipy.__file__)"
+        OUTPUT_VARIABLE SCIPY_INIT_FILE OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    set(SCIPY_PATH ${PYTHON_PACKAGE_SITE})
-    message("Python site-packages directory: ${SCIPY_PATH}")
-    #set(SCIPY_PATH ${Python_SITELIB})
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        string(APPEND SCIPY_PATH "/scipy.libs")
+    get_filename_component(SCIPY_PYTHON_DIR "${SCIPY_INIT_FILE}" DIRECTORY)  # Get the directory containing __init__.py
+    set(SCIPY_LIBS_DIR ${SCIPY_PYTHON_DIR}/../scipy.libs)
+    message(STATUS "${SCIPY_PYTHON_DIR}")
+    if(EXISTS ${SCIPY_LIBS_DIR})
+        message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
     else()
-        string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
-        string(APPEND SCIPY_PATH "/Lib/site-packages/scipy.libs")
+        message(FATAL_ERROR "Scipy.libs directory not found.")
     endif()
-    message(STATUS "Scipy directory: ${SCIPY_PATH}")
-    if(EXISTS ${SCIPY_PATH})
-        message(STATUS "Scipy directory found.")
-    else()
-        #install scipy with available python interpreter
-        message(STATUS "Can't find scipy with available python and install.")
-        execute_process(
-            COMMAND ${Python_EXECUTABLE} -m pip install scipy --user
-            RESULT_VARIABLE result
-        )
-        set(PYTHON_LOCAL_SITE_PACKAGES "~/.local/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
-        string(APPEND PYTHON_LOCAL_SITE_PACKAGES "/scipy.libs")
-        set(SCIPY_PATH ${PYTHON_LOCAL_SITE_PACKAGES})
-        if(EXISTS ${SCIPY_PATH})
-            message(STATUS "Scipy directory found in local site_packages dir.")
-        else()
-            message(FATAL_ERROR "Scipy is not found.")
-        endif()
-
-    endif()
+#if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+#    execute_process(
+#        COMMAND ${Python_EXECUTABLE} -c "import site; print( f'{site.getsitepackages()[0]}')"
+#        OUTPUT_VARIABLE PYTHON_PACKAGE_SITE OUTPUT_STRIP_TRAILING_WHITESPACE
+#    )
+#    set(SCIPY_PATH ${PYTHON_PACKAGE_SITE})
+#    message("Python site-packages directory: ${SCIPY_PATH}")
+#    #set(SCIPY_PATH ${Python_SITELIB})
+#    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+#        string(APPEND SCIPY_PATH "/scipy.libs")
+#    else()
+#        string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
+#        string(APPEND SCIPY_PATH "/Lib/site-packages/scipy.libs")
+#    endif()
+#    message(STATUS "Scipy directory: ${SCIPY_PATH}")
+#    if(EXISTS ${SCIPY_PATH})
+#        message(STATUS "Scipy directory found.")
+#    else()
+#        #install scipy with available python interpreter
+#        message(STATUS "Can't find scipy with available python and install.")
+#        execute_process(
+#            COMMAND ${Python_EXECUTABLE} -m pip install scipy --user
+#            RESULT_VARIABLE result
+#        )
+#        set(PYTHON_LOCAL_SITE_PACKAGES "~/.local/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
+#        string(APPEND PYTHON_LOCAL_SITE_PACKAGES "/scipy.libs")
+#        set(SCIPY_PATH ${PYTHON_LOCAL_SITE_PACKAGES})
+#        if(EXISTS ${SCIPY_PATH})
+#            message(STATUS "Scipy directory found in local site_packages dir.")
+#        else()
+#            message(FATAL_ERROR "Scipy is not found.")
+#        endif()
+#
+#    endif()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
  endif()
 
