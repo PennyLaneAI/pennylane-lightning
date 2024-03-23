@@ -98,7 +98,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
         string(REPLACE "\\" "/" SCIPY_PATH ${SCIPY_PATH})
         string(APPEND SCIPY_PATH "/Lib/site-packages/scipy.libs")
     endif()
-    message(STATUS "${SCIPY_PATH}++++++++++++++")
+    message(STATUS "++++++++${SCIPY_PATH}++++++++++++++")
     if(NOT EXISTS ${SCIPY_PATH})
         #install scipy with available python interpreter
         execute_process(
