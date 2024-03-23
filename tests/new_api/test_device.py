@@ -86,6 +86,7 @@ class TestHelpers:
             decompose,
             stopping_condition=adjoint_ops,
             name=name,
+            skip_initial_state_prep=False,
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -248,6 +249,7 @@ class TestExecution:
                 decompose,
                 stopping_condition=adjoint_ops,
                 name=name,
+                skip_initial_state_prep=False,
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
