@@ -84,6 +84,8 @@ include(FetchContent)
 find_package(Python COMPONENTS Interpreter Development)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+    execute_process(COMMAND ${Python_EXECUTABLE} -m pip install scipy)
+
     execute_process(
         COMMAND ${Python_EXECUTABLE} -c "import scipy; print(scipy.__file__)"
         OUTPUT_VARIABLE SCIPY_INIT_FILE OUTPUT_STRIP_TRAILING_WHITESPACE
