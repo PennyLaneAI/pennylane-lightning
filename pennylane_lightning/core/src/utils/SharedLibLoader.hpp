@@ -32,6 +32,9 @@ namespace Pennylane::Util {
  */
 // Adapted from Catalyst
 // (https://github.com/PennyLaneAI/catalyst/blob/f016a31f69d1b8a84bc9612af1bc64f0575506e9/runtime/lib/capi/ExecutionContext.hpp#L75)
+
+// Ignore invalid warnings for compile-time checks without kernel specifics
+// NOLINTBEGIN
 class SharedLibLoader final {
   private:
 #if defined(__APPLE__) || defined(__linux__)
@@ -81,5 +84,6 @@ class SharedLibLoader final {
         return sym;
     }
 };
+// NOLINTEND
 
 } // namespace Pennylane::Util
