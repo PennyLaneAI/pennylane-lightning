@@ -43,12 +43,12 @@
 /// @cond DEV
 namespace {
 // LAPACK routine for complex Hermitian eigensystems
-typedef void (*zheevPtr)(const char *, const char *, const int *,
-                         std::complex<double> *, const int *, double *,
-                         std::complex<double> *, const int *, double *, int *);
-typedef void (*cheevPtr)(const char *, const char *, const int *,
-                         std::complex<float> *, const int *, float *,
-                         std::complex<float> *, const int *, float *, int *);
+using zheevPtr = void (*)(const char *, const char *, const int *,
+                          std::complex<double> *, const int *, double *,
+                          std::complex<double> *, const int *, double *, int *);
+using cheevPtr = void (*)(const char *, const char *, const int *,
+                          std::complex<float> *, const int *, float *,
+                          std::complex<float> *, const int *, float *, int *);
 
 std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
@@ -132,8 +132,7 @@ void compute_diagonalizing_gates(int n, int lda,
             for (const auto &iter : priority_lib) {
                 std::string libname_str = lib.path().filename().string();
                 if (libname_str.find(iter.first) != std::string ::npos) {
-                    availableLibs.emplace_back(
-                        std::make_pair(libname_str, iter.second));
+                    availableLibs.emplace_back(libname_str, iter.second);
                 }
             }
         }
@@ -146,7 +145,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
     for (const auto &lib : availableLibs) {
         auto libPath = scipyLibsPath / lib.first.c_str();
-        const std::string libPathStr = libPath.string().c_str();
+        const std::string libPathStr = libPath.string();
         blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
     }
     blasLib = blasLibs.back();

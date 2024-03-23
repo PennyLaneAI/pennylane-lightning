@@ -69,12 +69,12 @@ class SharedLibLoader final {
 
     void *getHandle() { return handle_; }
 
-    auto getSymbol(const std::string &symbol) {
+    void *getSymbol(const std::string &symbol) {
 #if defined(__APPLE__) || defined(__linux__)
-        auto sym = dlsym(handle_, symbol.c_str());
+        void *sym = dlsym(handle_, symbol.c_str());
         PL_ABORT_IF(!sym, dlerror());
 #elif defined(_MSC_VER)
-        auto sym = GetProcAddress(handle_, symbol.c_str());
+        void *sym = GetProcAddress(handle_, symbol.c_str());
         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
         return sym;

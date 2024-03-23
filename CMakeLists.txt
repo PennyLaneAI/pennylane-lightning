@@ -86,12 +86,6 @@ find_package(Python COMPONENTS Interpreter Development)
 message("Python site-packages directory: ${Python_SITELIB}")
 
 
-#set(my_string "\\a\\b")
-#message("+++++++++++++++++${my_string}")
-#string(REPLACE "\\" "/" my_string ${my_string})
-#message("+++++++++++++++++${my_string}")
-
-
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     set(SCIPY_PATH ${Python_SITELIB})
     if(CMAKE_SYSTEM_NAME MATCHES "Linux")
