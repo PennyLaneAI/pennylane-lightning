@@ -1092,7 +1092,6 @@ TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
     }
 }
 
-
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
