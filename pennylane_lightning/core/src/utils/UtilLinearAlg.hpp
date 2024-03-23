@@ -27,6 +27,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
@@ -120,6 +122,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
     if (std::filesystem::exists(currentPathStr)) {
         scipyLibsPath = currentPathStr;
+        std::cout<<currentPathStr<<std::endl;
     } else {
         std::filesystem::path currentPath(getPath());
         scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
