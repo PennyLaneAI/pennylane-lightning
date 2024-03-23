@@ -207,7 +207,6 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob2 != ob3);
         }
 
-#ifndef _MSC_VER
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -227,7 +226,6 @@ template <typename TypeList> void testHermitianObsBase() {
                 Catch::Matchers::Contains("The matrix passed to HermitianObs "
                                           "is not a Hermitian matrix."));
         }
-#endif
 
         testHermitianObsBase<typename TypeList::Next>();
     }
