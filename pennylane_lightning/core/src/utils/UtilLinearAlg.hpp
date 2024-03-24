@@ -34,7 +34,7 @@
 #include <windows.h>
 #endif
 
-#if _ENABLE_PYTHON == 1
+#ifndef _ENABLE_PYTHON
 #ifndef __APPLE__
 #include "config.h"
 #endif
