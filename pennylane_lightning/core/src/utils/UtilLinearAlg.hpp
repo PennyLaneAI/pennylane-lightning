@@ -35,9 +35,11 @@
 #endif
 
 #ifndef _ENABLE_PYTHON
-#ifndef __APPLE__
 #include "config.h"
 #endif
+
+#ifdef __APPLE__
+#include "config.h"
 #endif
 
 #include "SharedLibLoader.hpp"
@@ -107,9 +109,7 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
-    const std::string libName =
-        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
-        "Frameworks/vecLib.framework/libLAPACK.dylib";
+    const std::string libName = SCIPY_LIBS_PATH;
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else

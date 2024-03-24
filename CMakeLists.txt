@@ -111,8 +111,17 @@ else()
                 message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
             endif()
         endif()
-
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    endif()
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    set(SCIPY_LIBS_DIR "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework")
+    if(EXISTS ${SCIPY_LIBS_DIR})
+        set(SCIPY_LIBS_DIR "${SCIPY_LIBS_DIR}/libLAPACK.dylib")
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    else()
+        message(FATAL_ERROR "Apple BLAS library not found.")
     endif()
 endif()
 
