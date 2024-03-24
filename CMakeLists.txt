@@ -83,45 +83,37 @@ include(FetchContent)
 
 find_package(Python COMPONENTS Interpreter Development)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
-    #execute_process(COMMAND ${Python_EXECUTABLE} -m pip install scipy)
-
-    execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "import scipy; print(scipy.__file__)"
-        OUTPUT_VARIABLE SCIPY_INIT_FILE OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    get_filename_component(SCIPY_PYTHON_DIR "${SCIPY_INIT_FILE}" DIRECTORY)  # Get the directory containing __init__.py
-    set(SCIPY_LIBS_DIR ${SCIPY_PYTHON_DIR}/../scipy.libs)
-    message(STATUS "${SCIPY_PYTHON_DIR}")
-    if(EXISTS ${SCIPY_LIBS_DIR})
-        message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
-    else()
-        set(SCIPY_LIBS_DIR ${Python_SITELIB}/scipy.libs)
-        if(EXISTS ${SCIPY_LIBS_DIR})
-            message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
-        else()
-            if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-                set(SCIPY_LIBS_DIR ${Python_SITELIB})
-                string(REPLACE "\\" "/" SCIPY_LIBS_DIR ${SCIPY_LIBS_DIR})
-                set(SCIPY_LIBS_DIR ${SCIPY_LIBS_DIR}/scipy.libs)
-                if(NOT EXISTS ${SCIPY_LIBS_DIR})
-                    message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
-                endif()
-            else()
-                message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
-            endif()
-        endif()
-    endif()
-
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
- endif()
-
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.11.1
     )
     FetchContent_MakeAvailable(pybind11)
+else()
+    #For direct cpp backend usage. 
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
+        execute_process(
+            COMMAND ${Python_EXECUTABLE} -c "import scipy; print(scipy.__file__)"
+            OUTPUT_VARIABLE SCIPY_INIT_FILE OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        get_filename_component(SCIPY_PYTHON_DIR "${SCIPY_INIT_FILE}" DIRECTORY)  # Get the directory containing __init__.py
+        set(SCIPY_LIBS_DIR ${SCIPY_PYTHON_DIR}/../scipy.libs)
+        message(STATUS "${SCIPY_PYTHON_DIR}")
+
+        if(EXISTS ${SCIPY_LIBS_DIR})
+            message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
+        else()
+            set(SCIPY_LIBS_DIR ${Python_SITELIB}/scipy.libs)
+            if(EXISTS ${SCIPY_LIBS_DIR})
+                message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
+            else()
+                message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
+            endif()
+        endif()
+
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    endif()
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

@@ -34,8 +34,10 @@
 #include <windows.h>
 #endif
 
+#ifndef _ENABLE_PYTHON
 #ifndef __APPLE__
 #include "config.h"
+#endif
 #endif
 
 #include "SharedLibLoader.hpp"
@@ -115,15 +117,16 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-    const std::string currentPathStr(SCIPY_LIBS_PATH);
-    std::filesystem::path scipyLibsPath;
-
-    if (std::filesystem::exists(currentPathStr)) {
-        scipyLibsPath = currentPathStr;
-    } else {
-        std::filesystem::path currentPath(getPath());
-        scipyLibsPath = currentPath.parent_path().parent_path() / "scipy.libs";
-    }
+#ifdef _ENABLE_PYTHON
+    std::filesystem::path currentPath(getPath());
+    std::filesystem::path scipyLibsPath =
+        currentPath.parent_path().parent_path() / "scipy.libs";
+#else
+    const std::string scipyPathStr(SCIPY_LIBS_PATH);
+    PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
+                "scipy.libs is not available.");
+    std::filesystem::path scipyLibsPath = scipyPathStr;
+#endif
 
     std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
