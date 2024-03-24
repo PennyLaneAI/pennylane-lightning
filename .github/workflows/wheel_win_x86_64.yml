@@ -98,6 +98,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+          
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v3
@@ -115,7 +120,7 @@ jobs:
                     -Destination "D:\a\Lightning-Unification\Lightning-Unification\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.16.0 wheel scipy
+        run: python -m pip install cibuildwheel~=2.16.0 wheel
 
       - name: Build wheels
         env:
