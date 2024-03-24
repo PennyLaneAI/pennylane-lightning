@@ -36,9 +36,7 @@
 
 #ifndef _ENABLE_PYTHON
 #include "config.h"
-#endif
-
-#ifdef __APPLE__
+#elif defined(__APPLE__)
 #include "config.h"
 #endif
 
@@ -58,12 +56,19 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
 
 #ifdef __linux__
-std::string getPath() {
+/*std::string getPath() {
     Dl_info dl_info;
     auto flag = dladdr((const void *)getPath, &dl_info);
     PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
     std::string path(dl_info.dli_fname);
     return path;
+}*/
+
+const char *getPath() {
+    Dl_info dl_info;
+    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
+                "Can't get the path to the shared library.");
+    return dl_info.dli_fname;
 }
 #elif defined(_MSC_VER)
 std::string getPath() {
