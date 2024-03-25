@@ -111,13 +111,11 @@ class StateVectorKokkosMPI final
     // using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     // using KokkosVector = Kokkos::View<ComplexT *>;
     // using KokkosSizeTVector = Kokkos::View<size_t *>;
-    // using UnmanagedComplexHostView =
-    //     Kokkos::View<ComplexT *, Kokkos::HostSpace,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using UnmanagedComplexHostView = SVK::UnmanagedComplexHostView;
+    using UnmanagedConstComplexHostView = SVK::UnmanagedConstComplexHostView;
     // using UnmanagedSizeTHostView =
     //     Kokkos::View<size_t *, Kokkos::HostSpace,
     //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using UnmanagedConstComplexHostView =
     //     Kokkos::View<const ComplexT *, Kokkos::HostSpace,
     //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     // using UnmanagedConstSizeTHostView =
@@ -224,11 +222,27 @@ class StateVectorKokkosMPI final
         return num_qubits_ - 1 - wire;
     }
     std::vector<std::size_t>
-    get_local_wires(const std::vector<std::size_t> &wires) {
+    get_local_wires_indices(const std::vector<std::size_t> &wires) {
         std::vector<std::size_t> local_wires(wires.size());
         auto n_global{get_num_global_qubits()};
         std::transform(wires.begin(), wires.end(), local_wires.begin(),
                        [=](const std::size_t wire) { return wire - n_global; });
+        return local_wires;
+    }
+    std::vector<std::size_t>
+    get_local_wires(const std::vector<std::size_t> &wires) {
+        return get_local_wires_indices(prune_global_wires(wires));
+    }
+    std::vector<std::size_t>
+    prune_global_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires;
+        local_wires.reserve(wires.size());
+        auto n_global{get_num_global_qubits()};
+        for (auto e : wires) {
+            if (e >= n_global) {
+                local_wires.push_back(e);
+            }
+        }
         return local_wires;
     }
     bool is_wires_local(const std::vector<std::size_t> &wires) {
@@ -255,13 +269,68 @@ class StateVectorKokkosMPI final
     }
     std::size_t rank_2_matrix_index(const std::size_t rank,
                                     const std::vector<std::size_t> &wires) {
-        [[maybe_unused]] auto n = wires.size();
+        constexpr std::size_t one{1U};
+        auto n = wires.size();
         std::size_t index{0U};
         for (std::size_t i = 0; i < wires.size(); i++) {
             index = index | (((rank & (one << wires[i])) >> wires[i])
                              << (n - 1 - i)); // select ith bit
         }
         return index;
+    }
+    std::vector<std::size_t>
+    rank_2_matrix_indices(const std::size_t rank,
+                          const std::vector<std::size_t> &wires,
+                          const std::vector<bool> &local_wires) {
+        constexpr std::size_t one{1U};
+        PL_ABORT_IF_NOT(wires.size() == local_wires.size(), "")
+        auto n = wires.size();
+        std::size_t nlw =
+            std::count(local_wires.begin(), local_wires.end(), true);
+        std::vector<std::size_t> indices;
+        indices.reserve(nlw);
+        std::size_t index{0U};
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            if (local_wires[i]) {
+                continue;
+            }
+            index = index | (((rank & (one << wires[i])) >> wires[i])
+                             << (n - 1 - i)); // select ith bit
+        }
+        indices.push_back(index);
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            if (local_wires[i]) {
+                auto ub = indices.size();
+                for (std::size_t j = 0; j < ub; j++) {
+                    indices.push_back(indices[j] ^ (one << (n - 1 - i)));
+                }
+            }
+        }
+        return indices;
+    }
+    std::vector<bool>
+    get_local_wire_mask(const std::vector<std::size_t> &wires) {
+        std::vector<bool> local_wire_mask(wires.size());
+        auto n_global{get_num_global_qubits()};
+        std::transform(
+            wires.begin(), wires.end(), local_wire_mask.begin(),
+            [=](const std::size_t wire) { return wire >= n_global; });
+        return local_wire_mask;
+    }
+    template <typename T>
+    std::vector<T> select_sub_matrix(const std::vector<T> &matrix,
+                                     const std::vector<std::size_t> &rows,
+                                     const std::vector<std::size_t> &cols) {
+        auto n = std::sqrt(matrix.size());
+        auto nsc = cols.size();
+        auto nsr = rows.size();
+        std::vector<T> sub_matrix(nsr * nsc);
+        for (std::size_t i = 0; i < nsr; i++) {
+            for (std::size_t j = 0; j < nsc; j++) {
+                sub_matrix[i * nsr + j] = matrix[rows[i] * n + cols[j]];
+            }
+        }
+        return sub_matrix;
     }
 
     /**
@@ -412,8 +481,8 @@ class StateVectorKokkosMPI final
             return;
         }
         if (is_wires_local(wires)) {
-            (*sv_).applyOperation(opName, get_local_wires(wires), inverse,
-                                  params, gate_matrix);
+            (*sv_).applyOperation(opName, get_local_wires_indices(wires),
+                                  inverse, params, gate_matrix);
             return;
         }
         if (wires.size() == 1) {
@@ -455,11 +524,7 @@ class StateVectorKokkosMPI final
                 gate_matrix.size() == matrix.size(),
                 std::string("Operation does not exist for ") + opName +
                     std::string(" and/or incorrect matrix provided."));
-            if (inverse) {
-                matrix = transpose(gate_matrix, true);
-            } else {
-                matrix = gate_matrix;
-            }
+            matrix = (inverse) ? transpose(gate_matrix, true) : gate_matrix;
         }
         const auto ncol = exp2(wires.size());
         const auto myrank = static_cast<std::size_t>(get_mpi_rank());
@@ -514,15 +579,16 @@ class StateVectorKokkosMPI final
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applySemiLocal2QOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
-        const bool inverse = false, const std::vector<PrecisionT> &params = {},
-        const std::vector<ComplexT> &gate_matrix = {}) {
-        constexpr std::size_t one{1U};
-        constexpr std::size_t two{2U};
+        [[maybe_unused]] const std::string &opName,
+        [[maybe_unused]] const std::vector<size_t> &wires,
+        [[maybe_unused]] const bool inverse = false,
+        [[maybe_unused]] const std::vector<PrecisionT> &params = {},
+        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+        [[maybe_unused]] constexpr std::size_t one{1U};
+        [[maybe_unused]] constexpr std::size_t two{2U};
         PL_ABORT_IF_NOT(wires.size() == two,
                         "Wires must contain a single wire index.")
-        PL_ABORT_IF(has_local_wires(wires), "Target wires must be global.")
-        std::vector<ComplexT> matrix(exp2(wires.size() * 2));
+        [[maybe_unused]] std::vector<ComplexT> matrix(exp2(wires.size() * 2));
         if (array_contains(gate_names, std::string_view{opName})) {
             auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
             matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
@@ -532,44 +598,90 @@ class StateVectorKokkosMPI final
                 gate_matrix.size() == matrix.size(),
                 std::string("Operation does not exist for ") + opName +
                     std::string(" and/or incorrect matrix provided."));
-            if (inverse) {
-                matrix = transpose(gate_matrix, true);
-            } else {
-                matrix = gate_matrix;
-            }
+            matrix = (inverse) ? transpose(gate_matrix, true) : gate_matrix;
         }
-        auto ncol = exp2(wires.size());
-        auto myrank = static_cast<std::size_t>(get_mpi_rank());
-        auto rev_wires = get_global_rev_wires(wires);
-        auto myrow = rank_2_matrix_index(myrank, wires);
+        [[maybe_unused]] auto ncol = exp2(wires.size());
+        [[maybe_unused]] auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        [[maybe_unused]] auto local_wires = prune_global_wires(wires);
+        [[maybe_unused]] auto rev_wires = get_global_rev_wires(wires);
+        [[maybe_unused]] auto loc_wire_mask = get_local_wire_mask(wires);
+        [[maybe_unused]] auto myrows =
+            rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
+        auto cols = myrows;
+        for (int rank = 0; rank < get_mpi_size(); rank++) {
+            if (rank == get_mpi_rank()) {
+                std::cout << "Process-" << rank << " owns rows ";
+                for (auto &e : myrows) {
+                    std::cout << e << ",";
+                }
+                std::cout << std::endl;
+            }
+            barrier();
+        }
+
         auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
-        auto col = myrow;
-        (*sv_).rescale(matrix[col + myrow * ncol]);
+        auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
+        for (int rank = 0; rank < get_mpi_size(); rank++) {
+            if (rank == get_mpi_rank()) {
+                std::cout << "Process-" << rank << " owns submatrix ";
+                for (auto &e : sub_matrix) {
+                    std::cout << e << ",";
+                }
+                std::cout << " applied to wire " << local_wires;
+                std::cout << std::endl;
+            }
+            barrier();
+        }
+        applyOperation("Matrix", local_wires, false, {}, sub_matrix);
 
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
-        rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
-        mpi_irecv(rank, recv_req);
-        mpi_wait(send_req);
-        mpi_isend(rank, send_req);
+        // mpi_wait(recv_req);
+        // col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        // (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        // rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
+        // mpi_irecv(rank, recv_req);
+        // mpi_wait(send_req);
+        // mpi_isend(rank, send_req);
 
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
-        rank = myrank ^ (one << rev_wires[1]) ^
-               (one << rev_wires[0]); // toggle nth bit
-        mpi_irecv(rank, recv_req);
-        mpi_wait(send_req);
-        mpi_isend(rank, send_req);
+        // mpi_wait(recv_req);
+        // col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        // (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        // rank = myrank ^ (one << rev_wires[1]) ^
+        //        (one << rev_wires[0]); // toggle nth bit
+        // mpi_irecv(rank, recv_req);
+        // mpi_wait(send_req);
+        // mpi_isend(rank, send_req);
 
+        cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
+        sub_matrix = select_sub_matrix(matrix, myrows, cols);
+
+        for (int rank = 0; rank < get_mpi_size(); rank++) {
+            if (rank == get_mpi_rank()) {
+                std::cout << "Process-" << rank << " owns submatrix ";
+                for (auto &e : sub_matrix) {
+                    std::cout << e << ",";
+                }
+                std::cout << " applied to wire " << local_wires;
+                std::cout << std::endl;
+            }
+            barrier();
+        }
+
+        auto num_qubits = get_num_local_qubits();
+        KokkosVector sub_matrix_("sub_matrix_", sub_matrix.size());
+        Kokkos::deep_copy(
+            sub_matrix_,
+            UnmanagedComplexHostView(sub_matrix.data(), sub_matrix.size()));
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        Kokkos::parallel_for(
+            exp2(num_qubits - local_wires.size()),
+            apply1QubitOpFunctor<PrecisionT>(recvbuf_, num_qubits, sub_matrix_,
+                                             get_local_wires(wires)));
+        Kokkos::fence();
+        (*sv_).axpby(Kokkos::complex{1.0, 0.0}, recvbuf_);
         mpi_wait(send_req);
     }
 
@@ -603,11 +715,7 @@ class StateVectorKokkosMPI final
                 gate_matrix.size() == matrix.size(),
                 std::string("Operation does not exist for ") + opName +
                     std::string(" and/or incorrect matrix provided."));
-            if (inverse) {
-                matrix = transpose(gate_matrix, true);
-            } else {
-                matrix = gate_matrix;
-            }
+            matrix = (inverse) ? transpose(gate_matrix, true) : gate_matrix;
         }
         auto ncol = exp2(wires.size());
         auto myrank = static_cast<std::size_t>(get_mpi_rank());
