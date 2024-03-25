@@ -343,6 +343,7 @@ jobs:
       - name: Install backend device
         run: |
           cd main
+          python -m pip install scipy
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_BLAS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
@@ -544,6 +545,7 @@ jobs:
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
           cd main
+          python -m pip install scipy
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
