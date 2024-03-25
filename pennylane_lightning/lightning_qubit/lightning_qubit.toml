@@ -72,19 +72,14 @@ SX                     = {}
 # Observables supported by the device
 [operators.observables]
 
-Exp                    = { properties = [ "differentiable" ] }
-Hadamard               = { properties = [ "differentiable" ] }
-Hamiltonian            = { properties = [ "differentiable" ] }
-Hermitian              = { properties = [ "differentiable" ] }
 Identity               = { properties = [ "differentiable" ] }
 PauliX                 = { properties = [ "differentiable" ] }
 PauliY                 = { properties = [ "differentiable" ] }
 PauliZ                 = { properties = [ "differentiable" ] }
-Prod                   = { properties = [ "differentiable" ] }
-Projector              = {                                   }
+Hadamard               = { properties = [ "differentiable" ] }
+Hermitian              = { properties = [ "differentiable" ] }
+Hamiltonian            = { properties = [ "differentiable" ] }
 SparseHamiltonian      = { properties = [ "differentiable" ] }
-SProd                  = { properties = [ "differentiable" ] }
-Sum                    = { properties = [ "differentiable" ] }
 
 [measurement_processes]
 

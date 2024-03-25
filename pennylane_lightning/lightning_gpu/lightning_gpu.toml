@@ -6,18 +6,14 @@ name = "lightning.gpu"
 [operators]
 # Observables supported by the device
 observables = [
+        "Identity",
         "PauliX",
         "PauliY",
         "PauliZ",
         "Hadamard",
         "Hermitian",
-        "Identity",
-        "SparseHamiltonian",
         "Hamiltonian",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
+        "SparseHamiltonian",
 ]
 
 # The union of all gate types listed in this section must match what

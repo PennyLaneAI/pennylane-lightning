@@ -74,19 +74,14 @@ SX                     = {}
 # Observables supported by the device
 [operators.observables]
 
-Exp                    = {}
-Hadamard               = {}
-Hamiltonian            = {}
-Hermitian              = {}
 Identity               = {}
 PauliX                 = {}
 PauliY                 = {}
 PauliZ                 = {}
-Prod                   = {}
-Projector              = {}
+Hadamard               = {}
+Hermitian              = {}
+Hamiltonian            = {}
 SparseHamiltonian      = {}
-SProd                  = {}
-Sum                    = {}
 
 [measurement_processes]
 
