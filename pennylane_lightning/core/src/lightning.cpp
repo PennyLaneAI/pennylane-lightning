@@ -112,14 +112,29 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> gates_1q = {
         "Identity", "PauliX",     "PauliY", "PauliZ", "Hadamard", "S",
         "T",        "PhaseShift", "RX",     "RY",     "RZ",       "Rot"};
-    std::vector<std::string> gates_2q = {"CNOT"};
+    std::vector<std::string> gates_2q = {"CNOT",
+                                         "CY",
+                                         "CZ",
+                                         "SWAP",
+                                         "IsingXX",
+                                         "IsingXY",
+                                         "IsingYY",
+                                         "IsingZZ",
+                                         "ControlledPhaseShift",
+                                         "CRX",
+                                         "CRY",
+                                         "CRZ",
+                                         "CRot",
+                                         "SingleExcitation",
+                                         "SingleExcitationMinus",
+                                         "SingleExcitationPlus"};
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
     // Create PennyLane Lightning statevector
     StateVectorKokkos<double> sv(sv_data);
     StateVectorKokkosMPI<double> svmpi(sv_data);
-    allclose(svmpi, sv);
+    auto mpisize = svmpi.get_num_global_qubits();
     // print(svmpi);
     // print_basis_states(indices.q);
     print_local_wires(indices.q);
@@ -170,14 +185,23 @@ int main(int argc, char *argv[]) {
     // Test 2q-gates
     for (auto &gate : gates_2q) {
         for (auto inverse : std::vector<bool>({false, true})) {
-            // for (std::size_t target = 0; target < indices.q; target++) {
-            auto gate_op = reverse_lookup(gate_names, std::string_view{gate});
-            auto npar = lookup(gate_num_params, gate_op);
-            std::vector<double> params(npar, 0.1);
-            TIMING(sv.applyOperation(gate, {0, 1}, inverse, params));
-            TIMING(svmpi.applyOperation(gate, {0, 1}, inverse, params));
-            allclose(svmpi, sv);
-            // }
+            for (std::size_t target0 = 0; target0 < mpisize - 1; target0++) {
+                for (std::size_t target1 = 0; target1 < mpisize - 1;
+                     target1++) {
+                    if (target0 == target1) {
+                        continue;
+                    }
+                    auto gate_op =
+                        reverse_lookup(gate_names, std::string_view{gate});
+                    auto npar = lookup(gate_num_params, gate_op);
+                    std::vector<double> params(npar, 0.1);
+                    TIMING(sv.applyOperation(gate, {target0, target1}, inverse,
+                                             params));
+                    TIMING(svmpi.applyOperation(gate, {target0, target1},
+                                                inverse, params));
+                    allclose(svmpi, sv);
+                }
+            }
             if (svmpi.get_mpi_rank() == 0) {
                 CSVOutput<decltype(indices), t_scale> csv(indices, gate,
                                                           average_times(times));

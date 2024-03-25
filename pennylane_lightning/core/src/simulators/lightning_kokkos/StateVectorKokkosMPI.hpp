@@ -254,12 +254,12 @@ class StateVectorKokkosMPI final
         return rev_wires;
     }
     std::size_t rank_2_matrix_index(const std::size_t rank,
-                                    const std::vector<std::size_t> &rev_wires) {
-        [[maybe_unused]] auto n = rev_wires.size();
+                                    const std::vector<std::size_t> &wires) {
+        [[maybe_unused]] auto n = wires.size();
         std::size_t index{0U};
-        for (std::size_t i = 0; i < rev_wires.size(); i++) {
-            index = index | ((rank & (one << rev_wires[n - 1 - i])) >>
-                             (rev_wires[n - 1 - i] - i)); // select ith bit
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            index = index | (((rank & (one << wires[i])) >> wires[i])
+                             << i); // select ith bit
         }
         return index;
     }
@@ -518,68 +518,36 @@ class StateVectorKokkosMPI final
         auto ncol = exp2(wires.size());
         auto myrank = static_cast<std::size_t>(get_mpi_rank());
         auto rev_wires = get_global_rev_wires(wires);
-        if (get_mpi_rank() == 0) {
-            for (auto &e : rev_wires) {
-                std::cout << e << std::endl;
-            }
-        }
-        barrier();
-        auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto myrow = rank_2_matrix_index(myrank, wires);
         auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
-        barrier();
-        std::cout << "Process-" << get_mpi_rank()
-                  << " receiving/sending from/to " << rank << std::endl;
         auto col = myrow;
-        barrier();
-        std::cout << "Process-" << get_mpi_rank() << " scaling with factor "
-                  << "matrix[" << myrow << "," << col
-                  << "] = " << matrix[col + myrow * ncol] << std::endl;
         (*sv_).rescale(matrix[col + myrow * ncol]);
 
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        barrier();
-        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
-                  << "matrix[" << myrow << "," << col
-                  << "] = " << matrix[col + myrow * ncol] << std::endl;
+        col = rank_2_matrix_index(rank, wires); // select nth bit
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
         rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
         mpi_irecv(rank, recv_req);
         mpi_wait(send_req);
         mpi_isend(rank, send_req);
-        barrier();
-        std::cout << "Process-" << get_mpi_rank()
-                  << " receiving/sending from/to " << rank << std::endl;
 
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        barrier();
-        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
-                  << "matrix[" << myrow << "," << col
-                  << "] = " << matrix[col + myrow * ncol] << std::endl;
+        col = rank_2_matrix_index(rank, wires); // select nth bit
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
         rank = myrank ^ (one << rev_wires[1]) ^
                (one << rev_wires[0]); // toggle nth bit
         mpi_irecv(rank, recv_req);
         mpi_wait(send_req);
         mpi_isend(rank, send_req);
-        barrier();
-        std::cout << "Process-" << get_mpi_rank()
-                  << " receiving/sending from/to " << rank << std::endl;
 
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        barrier();
-        std::cout << "Process-" << get_mpi_rank() << " adding with factor "
-                  << "matrix[" << myrow << "," << col
-                  << "] = " << matrix[col + myrow * ncol] << std::endl;
+        col = rank_2_matrix_index(rank, wires); // select nth bit
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
         mpi_wait(send_req);
-        barrier();
     }
 
     /**
