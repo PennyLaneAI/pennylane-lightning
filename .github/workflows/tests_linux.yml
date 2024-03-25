@@ -188,6 +188,7 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
+          python -m pip install scipy
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
