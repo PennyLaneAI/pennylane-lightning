@@ -86,6 +86,7 @@ class TestHelpers:
             decompose,
             stopping_condition=adjoint_ops,
             name=name,
+            skip_initial_state_prep=False,
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -248,6 +249,7 @@ class TestExecution:
                 decompose,
                 stopping_condition=adjoint_ops,
                 name=name,
+                skip_initial_state_prep=False,
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
@@ -553,6 +555,59 @@ class TestDerivatives:
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
+
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize(
+        "state_prep, params, wires",
+        [
+            (qml.BasisState, [1, 1], [0, 1]),
+            (qml.StatePrep, [0.0, 0.0, 0.0, 1.0], [0, 1]),
+            (qml.StatePrep, qml.numpy.array([0.0, 1.0]), [1]),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "trainable_params",
+        [(0, 1, 2), (1, 2)],
+    )
+    def test_state_prep_ops(
+        self, dev, state_prep, params, wires, execute_and_derivatives, batch_obs, trainable_params
+    ):
+        """Test that a circuit containing state prep operations is differentiated correctly."""
+        qs = QuantumScript(
+            [state_prep(params, wires), qml.RX(1.23, 0), qml.CNOT([0, 1]), qml.RX(4.56, 1)],
+            [qml.expval(qml.PauliZ(1))],
+        )
+
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
+        program, new_config = dev.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            res, jac = dev.execute_and_compute_derivatives(tapes, new_config)
+            res = fn(res)
+        else:
+            res, jac = (
+                fn(dev.execute(tapes, new_config)),
+                dev.compute_derivatives(tapes, new_config),
+            )
+
+        dev_ref = DefaultQubit(max_workers=1)
+        config = ExecutionConfig(gradient_method="adjoint")
+        program, new_config = dev_ref.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            expected, expected_jac = dev_ref.execute_and_compute_derivatives(tapes, new_config)
+            expected = fn(expected)
+        else:
+            expected, expected_jac = (
+                fn(dev_ref.execute(tapes, new_config)),
+                dev_ref.compute_derivatives(tapes, new_config),
+            )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
     def test_state_jacobian_not_supported(self, dev, batch_obs):
         """Test that an error is raised if derivatives are requested for state measurement"""
