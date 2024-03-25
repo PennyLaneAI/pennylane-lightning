@@ -117,10 +117,12 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
     PL_ABORT_IF(getPath()==nullptr, "Can't get path to lightning lib so.");
+    std::string currentPathStr(getPath());
     std::filesystem::path currentPath(getPath());
     std::filesystem::path scipyLibsPath =
         currentPath.parent_path().parent_path() / "scipy.libs";
     if (!std::filesystem::exists(scipyLibsPath)) {
+        PL_ABORT_IF_NOT(currentPathStr.find("pennylane_lightning")!=std::string::npos, "current path is not expected");
         PL_ABORT_IF(std::getenv("SCIPY_LIBS")==nullptr, "Can't get SCIPY_LIBS env.");
         const std::string scipyPathStr(std::getenv("SCIPY_LIBS"));
         PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
