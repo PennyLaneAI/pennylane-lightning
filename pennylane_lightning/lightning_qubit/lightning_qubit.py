@@ -263,7 +263,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+    except (qml.operation.DecompositionUndefinedError, qml.DeviceError, AttributeError):
         return False
     return True
 
@@ -282,7 +282,9 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.qubit"
     program.add_transform(no_sampling, name=name)
-    program.add_transform(decompose, stopping_condition=adjoint_ops, name=name)
+    program.add_transform(
+        decompose, stopping_condition=adjoint_ops, name=name, skip_initial_state_prep=False
+    )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
