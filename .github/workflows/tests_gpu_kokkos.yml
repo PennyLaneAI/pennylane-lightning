@@ -155,6 +155,7 @@ jobs:
       - name: Build and run unit tests
         run: |
           cd main
+          export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
           cmake . -BBuild -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \

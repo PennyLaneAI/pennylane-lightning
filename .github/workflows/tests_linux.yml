@@ -55,6 +55,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             set -x
+            export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -229,6 +230,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             set -x
+            export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
@@ -411,6 +413,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             set -x
+            export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -677,6 +680,7 @@ jobs:
       - name: Build and run unit tests
         run: |
             set -x
+            export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \

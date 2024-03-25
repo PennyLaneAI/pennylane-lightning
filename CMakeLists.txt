@@ -81,48 +81,13 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
-find_package(Python COMPONENTS Interpreter Development)
-
 if(ENABLE_PYTHON)
+    find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.11.1
     )
     FetchContent_MakeAvailable(pybind11)
-else()
-    #For direct cpp backend usage. 
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
-        execute_process(
-            COMMAND ${Python_EXECUTABLE} -c "import scipy; print(scipy.__file__)"
-            OUTPUT_VARIABLE SCIPY_INIT_FILE OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-
-        get_filename_component(SCIPY_PYTHON_DIR "${SCIPY_INIT_FILE}" DIRECTORY)  # Get the directory containing __init__.py
-        set(SCIPY_LIBS_DIR ${SCIPY_PYTHON_DIR}/../scipy.libs)
-        message(STATUS "${SCIPY_PYTHON_DIR}")
-
-        if(EXISTS ${SCIPY_LIBS_DIR})
-            message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
-        else()
-            set(SCIPY_LIBS_DIR ${Python_SITELIB}/scipy.libs)
-            if(EXISTS ${SCIPY_LIBS_DIR})
-                message(STATUS "Scipy.libs directory found: ${SCIPY_LIBS_DIR}")
-            else()
-                message(FATAL_ERROR "Scipy.libs directory (${SCIPY_LIBS_DIR}) not found.")
-            endif()
-        endif()
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
-    endif()
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    set(SCIPY_LIBS_DIR "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework")
-    if(EXISTS ${SCIPY_LIBS_DIR})
-        set(SCIPY_LIBS_DIR "${SCIPY_LIBS_DIR}/libLAPACK.dylib")
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
-    else()
-        message(FATAL_ERROR "Apple BLAS library not found.")
-    endif()
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

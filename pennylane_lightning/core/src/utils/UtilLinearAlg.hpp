@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -30,14 +31,7 @@
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
-#include <cstdlib>
 #include <windows.h>
-#endif
-
-#ifndef _ENABLE_PYTHON
-#include "config.h"
-#elif defined(__APPLE__)
-#include "config.h"
 #endif
 
 #include "SharedLibLoader.hpp"
@@ -114,24 +108,24 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
-    const std::string libName = SCIPY_LIBS_PATH;
+    const std::string libName =
+        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
+        "Frameworks/vecLib.framework/libLAPACK.dylib";
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else
-
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-#ifdef _ENABLE_PYTHON
     std::filesystem::path currentPath(getPath());
     std::filesystem::path scipyLibsPath =
         currentPath.parent_path().parent_path() / "scipy.libs";
-#else
-    const std::string scipyPathStr(SCIPY_LIBS_PATH);
-    PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
-                "scipy.libs is not available.");
-    std::filesystem::path scipyLibsPath = scipyPathStr;
-#endif
+    if (!std::filesystem::exists(scipyLibsPath)) {
+        const std::string scipyPathStr(std::getenv(SCIPY_LIBS));
+        PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
+                    "The SCIPY_LIBS env is not available.");
+        scipyLibsPath = scipyPathStr;
+    }
 
     std::vector<std::pair<std::string, std::size_t>> availableLibs;
 

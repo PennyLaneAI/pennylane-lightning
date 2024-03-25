@@ -124,6 +124,7 @@ jobs:
       - name: Build and run unit tests
         run: |
           cd main
+          export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
