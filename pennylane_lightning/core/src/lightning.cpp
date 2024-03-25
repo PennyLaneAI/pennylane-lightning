@@ -13,18 +13,23 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp"
 #include "Error.hpp"
+#include "MeasurementsKokkos.hpp"
+#include "MeasurementsKokkosMPI.hpp"
+#include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "StateVectorKokkosMPI.hpp"
 
 #include "output_utils.hpp"
 
 namespace {
+using namespace BMUtils;
 using namespace Pennylane;
-using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Gates;
 using namespace Pennylane::Gates::Constant;
+using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Measures;
+using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::Util;
-using namespace BMUtils;
 using t_scale = std::milli;
 
 void normalize(std::vector<std::complex<double>> &vec) {
@@ -106,6 +111,15 @@ template <class ComplexT>
     svmpi.barrier();
 }
 
+template <typename T> [[maybe_unused]] void allclose(T res, T ref) {
+    [[maybe_unused]] constexpr double tol = 1.0e-6;
+    auto err = std::abs(res - ref);
+    if (err > tol) {
+        std::cout << err << std::endl;
+    }
+    PL_ABORT_IF_NOT(err < tol, "Wrong result.");
+}
+
 } // namespace
 
 int main(int argc, char *argv[]) {
@@ -151,7 +165,7 @@ int main(int argc, char *argv[]) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < nq; target++) {
                 if (svmpi.get_mpi_rank() == 0) {
-                    std::cout << "Testing  with : " << gate
+                    std::cout << "Testing " << gate << " with : "
                               << "(inv, targets) = (" << inverse << ", "
                               << target << ")" << std::endl;
                 }
@@ -202,7 +216,7 @@ int main(int argc, char *argv[]) {
                         continue;
                     }
                     if (svmpi.get_mpi_rank() == 0) {
-                        std::cout << "Testing  with : " << gate
+                        std::cout << "Testing " << gate << " with : "
                                   << "(inv, targets) = (" << inverse << ", "
                                   << target0 << ", " << target1 << ")"
                                   << std::endl;
@@ -223,6 +237,44 @@ int main(int argc, char *argv[]) {
                                                           average_times(times));
                 std::cout << csv << std::endl;
             }
+        }
+    }
+    // Test named gates
+    std::vector<std::string> named_obs = {"Identity", "PauliX", "PauliY",
+                                          "PauliZ", "Hadamard"};
+    for (auto &gate : named_obs) {
+        for (std::size_t target = 0; target < nq; target++) {
+            if (svmpi.get_mpi_rank() == 0) {
+                std::cout << "Testing obs " << gate << " with : "
+                          << "(targets) = (" << target << ")" << std::endl;
+            }
+            auto ob = NamedObs<decltype(sv)>(gate, {target});
+            auto obmpi = NamedObs<decltype(svmpi)>(gate, {target});
+            Measurements measure{sv};
+            MeasurementsMPI measurempi{svmpi};
+            auto res = measure.expval(ob);
+            auto resmpi = measurempi.expval(obmpi);
+            allclose(resmpi, res);
+        }
+    }
+    {
+        const std::vector<Kokkos::complex<double>> matrix = {
+            {2.0, 0.0},
+            {0.09933467, -0.00996671},
+            {0.09933467, 0.00996671},
+            {-1.0, 0.0}};
+        for (std::size_t target = 0; target < nq; target++) {
+            if (svmpi.get_mpi_rank() == 0) {
+                std::cout << "Testing Hermitian obs with : "
+                          << "(targets) = (" << target << ")" << std::endl;
+            }
+            auto ob = HermitianObs<decltype(sv)>(matrix, {target});
+            auto obmpi = HermitianObs<decltype(svmpi)>(matrix, {target});
+            Measurements measure{sv};
+            MeasurementsMPI measurempi{svmpi};
+            auto res = measure.expval(ob);
+            auto resmpi = measurempi.expval(obmpi);
+            allclose(resmpi, res);
         }
     }
 

@@ -75,6 +75,12 @@ inline void errhandler(int errcode, const char *str) {
 template <class T> [[maybe_unused]] MPI_Datatype get_mpi_type() {
     PL_ABORT("No corresponding MPI type.");
 }
+template <> [[maybe_unused]] MPI_Datatype get_mpi_type<float>() {
+    return MPI_FLOAT;
+}
+template <> [[maybe_unused]] MPI_Datatype get_mpi_type<double>() {
+    return MPI_DOUBLE;
+}
 template <>
 [[maybe_unused]] MPI_Datatype get_mpi_type<Kokkos::complex<float>>() {
     return MPI_C_FLOAT_COMPLEX;
@@ -93,47 +99,28 @@ namespace Pennylane::LightningKokkos {
  *
  * @tparam PrecisionT Floating-point precision type.
  */
-template <class PrecisionT = double>
+template <class fp_t = double>
 class StateVectorKokkosMPI final
-    : public StateVectorBase<PrecisionT, StateVectorKokkosMPI<PrecisionT>> {
+    : public StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>> {
 
   private:
-    using BaseType =
-        StateVectorBase<PrecisionT, StateVectorKokkosMPI<PrecisionT>>;
+    using BaseType = StateVectorBase<fp_t, StateVectorKokkosMPI<fp_t>>;
 
   public:
+    using PrecisionT = fp_t;
     using SVK = StateVectorKokkos<PrecisionT>;
-    using ComplexT = SVK::ComplexT;
-    using KokkosVector = SVK::KokkosVector;
-    using UnmanagedComplexHostView = SVK::UnmanagedComplexHostView;
-    using UnmanagedConstComplexHostView = SVK::UnmanagedConstComplexHostView;
-    using KokkosSizeTVector = SVK::KokkosSizeTVector;
-    using UnmanagedSizeTHostView = SVK::UnmanagedSizeTHostView;
-    using UnmanagedConstSizeTHostView = SVK::UnmanagedConstSizeTHostView;
-    // using CFP_t = ComplexT;
-    // using DoubleLoopRank = Kokkos::Rank<2>;
-    // using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
-    // using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
-    // using KokkosVector = Kokkos::View<ComplexT *>;
-    // using UnmanagedSizeTHostView =
-    //     Kokkos::View<size_t *, Kokkos::HostSpace,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    //     Kokkos::View<const ComplexT *, Kokkos::HostSpace,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using UnmanagedConstSizeTHostView =
-    //     Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using UnmanagedPrecisionHostView =
-    //     Kokkos::View<PrecisionT *, Kokkos::HostSpace,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using ScratchViewComplex =
-    //     Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using ScratchViewSizeT =
-    //     Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
-    //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    // using TeamPolicy = Kokkos::TeamPolicy<>;
-    // using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
+    using ComplexT = typename SVK::ComplexT;
+    using KokkosVector = typename SVK::KokkosVector;
+    using UnmanagedComplexHostView = typename SVK::UnmanagedComplexHostView;
+    using UnmanagedConstComplexHostView =
+        typename SVK::UnmanagedConstComplexHostView;
+    using KokkosSizeTVector = typename SVK::KokkosSizeTVector;
+    using UnmanagedSizeTHostView = typename SVK::UnmanagedSizeTHostView;
+    using UnmanagedConstSizeTHostView =
+        typename SVK::UnmanagedConstSizeTHostView;
+    using UnmanagedPrecisionHostView = typename SVK::UnmanagedPrecisionHostView;
+    using KokkosExecSpace = typename SVK::KokkosExecSpace;
+    using HostExecSpace = typename SVK::HostExecSpace;
 
     StateVectorKokkosMPI() = delete;
     StateVectorKokkosMPI(std::size_t num_qubits,
@@ -247,6 +234,13 @@ class StateVectorKokkosMPI final
     void mpi_wait(MPI_Request &request) {
         MPI_Status status;
         PL_MPI_IS_SUCCESS(MPI_Wait(&request, &status));
+    }
+
+    template <typename T> T all_reduce_sum(const T &data) const {
+        T sum;
+        MPI_Allreduce(&data, &sum, 1, get_mpi_type<T>(), MPI_SUM,
+                      communicator_);
+        return sum;
     }
 
     /**
@@ -600,6 +594,23 @@ class StateVectorKokkosMPI final
         //     // finalize Kokkos first
         //     PL_MPI_IS_SUCCESS(MPI_Finalize());
         // }
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector.
+     *
+     * @param matrix Matrix data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyMatrix(const std::vector<ComplexT> &matrix,
+                            const std::vector<size_t> &wires,
+                            const bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        applyOperation("Matrix", wires, inverse, {}, matrix);
     }
 
     /**
