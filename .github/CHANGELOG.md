@@ -25,6 +25,9 @@
 
 ### Improvements
 
+* Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
+  [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
+
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
   [(#641)](https://github.com/PennyLaneAI/pennylane-lightning/pull/641)
 
