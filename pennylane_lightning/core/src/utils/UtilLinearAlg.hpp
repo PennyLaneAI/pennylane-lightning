@@ -60,9 +60,11 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
     return path;
 }*/
 
+void libA_boundary() {}
+
 const char *getPath() {
     Dl_info dl_info;
-    auto flag = dladdr((const void *)getPath, &dl_info);
+    auto flag = dladdr((const void *)libA_boundary, &dl_info);
     PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
     return dl_info.dli_fname;
 }
