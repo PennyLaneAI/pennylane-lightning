@@ -579,16 +579,14 @@ class StateVectorKokkosMPI final
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applySemiLocal2QOperation(
-        [[maybe_unused]] const std::string &opName,
-        [[maybe_unused]] const std::vector<size_t> &wires,
-        [[maybe_unused]] const bool inverse = false,
-        [[maybe_unused]] const std::vector<PrecisionT> &params = {},
-        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
-        [[maybe_unused]] constexpr std::size_t one{1U};
-        [[maybe_unused]] constexpr std::size_t two{2U};
+        const std::string &opName, const std::vector<size_t> &wires,
+        const bool inverse = false, const std::vector<PrecisionT> &params = {},
+        const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t one{1U};
+        constexpr std::size_t two{2U};
         PL_ABORT_IF_NOT(wires.size() == two,
                         "Wires must contain a single wire index.")
-        [[maybe_unused]] std::vector<ComplexT> matrix(exp2(wires.size() * 2));
+        std::vector<ComplexT> matrix(exp2(wires.size() * 2));
         if (array_contains(gate_names, std::string_view{opName})) {
             auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
             matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
@@ -600,77 +598,26 @@ class StateVectorKokkosMPI final
                     std::string(" and/or incorrect matrix provided."));
             matrix = (inverse) ? transpose(gate_matrix, true) : gate_matrix;
         }
-        [[maybe_unused]] auto ncol = exp2(wires.size());
-        [[maybe_unused]] auto myrank = static_cast<std::size_t>(get_mpi_rank());
-        [[maybe_unused]] auto local_wires = prune_global_wires(wires);
-        [[maybe_unused]] auto rev_wires = get_global_rev_wires(wires);
-        [[maybe_unused]] auto loc_wire_mask = get_local_wire_mask(wires);
-        [[maybe_unused]] auto myrows =
-            rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
+        const auto local_wires = prune_global_wires(wires);
+        const auto rev_wires = get_global_rev_wires(wires);
+        const auto loc_wire_mask = get_local_wire_mask(wires);
+        const auto num_qubits = get_num_local_qubits();
+        const auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        auto myrows = rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
         auto cols = myrows;
-        for (int rank = 0; rank < get_mpi_size(); rank++) {
-            if (rank == get_mpi_rank()) {
-                std::cout << "Process-" << rank << " owns rows ";
-                for (auto &e : myrows) {
-                    std::cout << e << ",";
-                }
-                std::cout << std::endl;
-            }
-            barrier();
-        }
-
-        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        auto rank = myrank ^ (one << ((is_wires_local({wires[1]}))
+                                          ? rev_wires[0]
+                                          : rev_wires[1])); // toggle nth bit
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
         auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
-        for (int rank = 0; rank < get_mpi_size(); rank++) {
-            if (rank == get_mpi_rank()) {
-                std::cout << "Process-" << rank << " owns submatrix ";
-                for (auto &e : sub_matrix) {
-                    std::cout << e << ",";
-                }
-                std::cout << " applied to wire " << local_wires;
-                std::cout << std::endl;
-            }
-            barrier();
-        }
         applyOperation("Matrix", local_wires, false, {}, sub_matrix);
-
-        // mpi_wait(recv_req);
-        // col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        // (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
-        // rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
-        // mpi_irecv(rank, recv_req);
-        // mpi_wait(send_req);
-        // mpi_isend(rank, send_req);
-
-        // mpi_wait(recv_req);
-        // col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        // (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
-        // rank = myrank ^ (one << rev_wires[1]) ^
-        //        (one << rev_wires[0]); // toggle nth bit
-        // mpi_irecv(rank, recv_req);
-        // mpi_wait(send_req);
-        // mpi_isend(rank, send_req);
 
         cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
         sub_matrix = select_sub_matrix(matrix, myrows, cols);
 
-        for (int rank = 0; rank < get_mpi_size(); rank++) {
-            if (rank == get_mpi_rank()) {
-                std::cout << "Process-" << rank << " owns submatrix ";
-                for (auto &e : sub_matrix) {
-                    std::cout << e << ",";
-                }
-                std::cout << " applied to wire " << local_wires;
-                std::cout << std::endl;
-            }
-            barrier();
-        }
-
-        auto num_qubits = get_num_local_qubits();
         KokkosVector sub_matrix_("sub_matrix_", sub_matrix.size());
         Kokkos::deep_copy(
             sub_matrix_,
