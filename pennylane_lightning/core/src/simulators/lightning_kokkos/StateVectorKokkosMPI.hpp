@@ -102,17 +102,19 @@ class StateVectorKokkosMPI final
         StateVectorBase<PrecisionT, StateVectorKokkosMPI<PrecisionT>>;
 
   public:
-    using ComplexT = Kokkos::complex<PrecisionT>;
     using SVK = StateVectorKokkos<PrecisionT>;
+    using ComplexT = SVK::ComplexT;
     using KokkosVector = SVK::KokkosVector;
+    using UnmanagedComplexHostView = SVK::UnmanagedComplexHostView;
+    using UnmanagedConstComplexHostView = SVK::UnmanagedConstComplexHostView;
+    using KokkosSizeTVector = SVK::KokkosSizeTVector;
+    using UnmanagedSizeTHostView = SVK::UnmanagedSizeTHostView;
+    using UnmanagedConstSizeTHostView = SVK::UnmanagedConstSizeTHostView;
     // using CFP_t = ComplexT;
     // using DoubleLoopRank = Kokkos::Rank<2>;
     // using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     // using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     // using KokkosVector = Kokkos::View<ComplexT *>;
-    // using KokkosSizeTVector = Kokkos::View<size_t *>;
-    using UnmanagedComplexHostView = SVK::UnmanagedComplexHostView;
-    using UnmanagedConstComplexHostView = SVK::UnmanagedConstComplexHostView;
     // using UnmanagedSizeTHostView =
     //     Kokkos::View<size_t *, Kokkos::HostSpace,
     //                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -480,10 +482,10 @@ class StateVectorKokkosMPI final
      * @param index Index of the target element.
      */
     void setBasisState(const std::size_t global_index) {
+        const auto index = global_2_local_index(global_index);
+        const auto rank = static_cast<std::size_t>(get_mpi_rank());
         KokkosVector sv_view = getView(); // circumvent error capturing this
                                           // with KOKKOS_LAMBDA
-        auto index = global_2_local_index(global_index);
-        auto rank = static_cast<std::size_t>(get_mpi_rank());
         Kokkos::parallel_for(
             sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(i) = (index.first == rank && index.second == i)
@@ -498,23 +500,24 @@ class StateVectorKokkosMPI final
      * @param values Values to be set for the target elements.
      * @param indices Indices of the target elements.
      */
-    // void setStateVector(const std::vector<std::size_t> &indices,
-    //                     const std::vector<ComplexT> &values) {
-    //     initZeros();
-    //     KokkosSizeTVector d_indices("d_indices", indices.size());
-    //     KokkosVector d_values("d_values", values.size());
-    //     Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
-    //                                      indices.data(), indices.size()));
-    //     Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
-    //                                     values.data(), values.size()));
-    //     KokkosVector sv_view =
-    //         getView(); // circumvent error capturing this with
-    //                              // KOKKOS_LAMBDA
-    //     Kokkos::parallel_for(
-    //         indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
-    //             sv_view(d_indices[i]) = d_values[i];
-    //         });
-    // }
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        initZeros();
+        KokkosSizeTVector d_indices("d_indices", blk);
+        KokkosVector d_values("d_values", blk);
+        Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
+                                         indices.data() + offset, blk));
+        Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
+                                        values.data() + offset, blk));
+        KokkosVector sv_view = getView(); // circumvent error capturing this
+                                          // with KOKKOS_LAMBDA
+        Kokkos::parallel_for(
+            blk, KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(d_indices[i]) = d_values[i];
+            });
+    }
 
     /**
      * @brief Reset the data back to the \f$\ket{0}\f$ state.
@@ -669,8 +672,8 @@ class StateVectorKokkosMPI final
         auto rank = myrank ^ (one << rev_wires[0]); // toggle global bit
 
         // Initiate data transfer
-        MPI_Request send_req;
-        MPI_Request recv_req;
+        MPI_Request send_req = MPI_REQUEST_NULL;
+        MPI_Request recv_req = MPI_REQUEST_NULL;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
         auto col = myrow;
@@ -748,8 +751,8 @@ class StateVectorKokkosMPI final
                                           ? rev_wires[0]
                                           : rev_wires[1])); // toggle global bit
         // Initiate data transfer
-        MPI_Request send_req;
-        MPI_Request recv_req;
+        MPI_Request send_req = MPI_REQUEST_NULL;
+        MPI_Request recv_req = MPI_REQUEST_NULL;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
         auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
@@ -804,8 +807,8 @@ class StateVectorKokkosMPI final
         auto rank = myrank ^ (one << rev_wires[0]); // toggle 1st global bit
 
         // Initiate data transfer
-        MPI_Request send_req;
-        MPI_Request recv_req;
+        MPI_Request send_req = MPI_REQUEST_NULL;
+        MPI_Request recv_req = MPI_REQUEST_NULL;
         mpi_isend(rank, send_req, true);
         mpi_irecv(rank, recv_req);
         auto col = myrow;
