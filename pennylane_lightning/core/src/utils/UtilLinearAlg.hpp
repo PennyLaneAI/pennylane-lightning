@@ -28,6 +28,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
@@ -60,8 +62,8 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 
 const char *getPath() {
     Dl_info dl_info;
-    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
-                "Can't get the path to the shared library.");
+    auto flag = dladdr((const void *)getPath, &dl_info);
+    PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
     return dl_info.dli_fname;
 }
 #elif defined(_MSC_VER)
@@ -121,6 +123,9 @@ void compute_diagonalizing_gates(int n, int lda,
     std::filesystem::path currentPath(getPath());
     std::filesystem::path scipyLibsPath =
         currentPath.parent_path().parent_path() / "scipy.libs";
+    
+    std::cout<< scipyLibsPath <<std::endl;
+    
     if (!std::filesystem::exists(std::filesystem::canonical(scipyLibsPath))) {
         // PL_ABORT_IF_NOT(currentPathStr.find("pennylane_lightning")!=std::string::npos,
         // "current path is not expected");
