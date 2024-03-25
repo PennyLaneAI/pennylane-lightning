@@ -29,14 +29,19 @@
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
 
+#if _ENABLE_MPI == 1
+#include "MeasurementsKokkosMPI.hpp"
+#include "StateVectorKokkosMPI.hpp"
+#endif
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Algorithms;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
-using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
@@ -44,10 +49,15 @@ using Pennylane::Util::exp2;
 namespace py = pybind11;
 
 namespace Pennylane::LightningKokkos {
+#if _ENABLE_MPI == 1
+using StateVectorBackends =
+    Pennylane::Util::TypeList<StateVectorKokkosMPI<float>,
+                              StateVectorKokkosMPI<double>, void>;
+#else
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
-
+#endif
 /**
  * @brief Get a gate kernel map for a statevector.
  */
@@ -64,78 +74,77 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     pyclass
         .def(py::init([](std::size_t num_qubits) {
-            return new StateVectorT(num_qubits);
+        return new StateVectorT(num_qubits);
         }))
         .def(py::init([](std::size_t num_qubits,
                          const InitializationSettings &kokkos_args) {
-            return new StateVectorT(num_qubits, kokkos_args);
+        return new StateVectorT(num_qubits, kokkos_args);
         }))
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
             [](StateVectorT &sv, const size_t index) {
-                sv.setBasisState(index);
+        sv.setBasisState(index);
             },
             "Create Basis State on Device.")
         .def(
             "setStateVector",
             [](StateVectorT &sv, const std::vector<std::size_t> &indices,
                const np_arr_c &state) {
-                const auto buffer = state.request();
-                std::vector<Kokkos::complex<ParamT>> state_kok;
-                if (buffer.size) {
-                    const auto ptr =
-                        static_cast<const Kokkos::complex<ParamT> *>(
-                            buffer.ptr);
-                    state_kok = std::vector<Kokkos::complex<ParamT>>{
-                        ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(indices, state_kok);
+        const auto buffer = state.request();
+        std::vector<Kokkos::complex<ParamT>> state_kok;
+        if (buffer.size) {
+            const auto ptr =
+                static_cast<const Kokkos::complex<ParamT> *>(buffer.ptr);
+            state_kok =
+                std::vector<Kokkos::complex<ParamT>>{ptr, ptr + buffer.size};
+        }
+        sv.setStateVector(indices, state_kok);
             },
             "Set State Vector on device with values and their corresponding "
             "indices for the state vector on device")
+#if _ENABLE_MPI != 1
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {
-                py::buffer_info numpyArrayInfo = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                if (host_sv.size()) {
-                    device_sv.DeviceToHost(data_ptr, host_sv.size());
-                }
+        py::buffer_info numpyArrayInfo = host_sv.request();
+        auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+        if (host_sv.size()) {
+            device_sv.DeviceToHost(data_ptr, host_sv.size());
+        }
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<ComplexT *, size_t>(&StateVectorT::HostToDevice),
-             "Synchronize data from the host device to GPU.")
+             py::overload_cast<ComplexT *,
+             size_t>(&StateVectorT::HostToDevice), "Synchronize data from the
+             host device to GPU.")
         .def(
             "HostToDevice",
             [](StateVectorT &device_sv, const np_arr_c &host_sv) {
-                const py::buffer_info numpyArrayInfo = host_sv.request();
-                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
-                if (length) {
-                    device_sv.HostToDevice(data_ptr, length);
-                }
+        const py::buffer_info numpyArrayInfo = host_sv.request();
+        auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+        const auto length = static_cast<size_t>(numpyArrayInfo.shape[0]);
+        if (length) {
+            device_sv.HostToDevice(data_ptr, length);
+        }
             },
             "Synchronize data from the host device to GPU.")
+#endif
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
                [[maybe_unused]] const np_arr_c &gate_matrix) {
-                const auto m_buffer = gate_matrix.request();
-                std::vector<Kokkos::complex<ParamT>> conv_matrix;
-                if (m_buffer.size) {
-                    const auto m_ptr =
-                        static_cast<const Kokkos::complex<ParamT> *>(
-                            m_buffer.ptr);
-                    conv_matrix = std::vector<Kokkos::complex<ParamT>>{
-                        m_ptr, m_ptr + m_buffer.size};
-                }
-                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
-                                  conv_matrix);
+        const auto m_buffer = gate_matrix.request();
+        std::vector<Kokkos::complex<ParamT>> conv_matrix;
+        if (m_buffer.size) {
+            const auto m_ptr =
+                static_cast<const Kokkos::complex<ParamT> *>(m_buffer.ptr);
+            conv_matrix = std::vector<Kokkos::complex<ParamT>>{
+                m_ptr, m_ptr + m_buffer.size};
+        }
+        sv.applyOperation(str, wires, inv, std::vector<ParamT>{}, conv_matrix);
             },
             "Apply operation via the gate matrix");
 }
@@ -149,6 +158,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurements(PyClass &pyclass) {
+#if _ENABLE_MPI == 1
+    using mclass = MeasurementsMPI<StateVectorT>;
+#else
+    using mclass = Measurements<StateVectorT>;
+#endif
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
@@ -164,13 +178,14 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     pyclass
         .def("expval",
-             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
-                 &Measurements<StateVectorT>::expval),
+             static_cast<PrecisionT (mclass::*)(const std::string &,
+                                                const std::vector<size_t> &)>(
+                 &mclass::expval),
              "Expected value of an operation by name.")
+#if _ENABLE_MPI != 1
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
+            [](mclass &M, const np_arr_c &matrix,
                const std::vector<size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
@@ -182,7 +197,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a Hermitian observable.")
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
+            [](mclass &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
@@ -193,18 +208,18 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             },
             "Expected value of a sparse Hamiltonian.")
         .def("var",
-             [](Measurements<StateVectorT> &M, const std::string &operation,
+             [](mclass &M, const std::string &operation,
                 const std::vector<size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
-             static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
-                 &Measurements<StateVectorT>::var),
+             static_cast<PrecisionT (mclass::*)(const std::string &,
+                                                const std::vector<size_t> &)>(
+                 &mclass::var),
              "Variance of an operation by name.")
         .def(
             "var",
-            [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
+            [](mclass &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
@@ -213,7 +228,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<ComplexT *>(values.request().ptr),
                     static_cast<sparse_index_type>(values.request().size));
             },
-            "Variance of a sparse Hamiltonian.");
+            "Variance of a sparse Hamiltonian.")
+#endif
+        ;
 }
 
 /**

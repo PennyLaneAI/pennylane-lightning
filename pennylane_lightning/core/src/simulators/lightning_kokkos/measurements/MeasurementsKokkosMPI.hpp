@@ -16,7 +16,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 
-#include "ExpValFunctors.hpp"
 #include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
 #include "MeasurementsBase.hpp"
 #include "MeasuresFunctors.hpp"

@@ -110,6 +110,7 @@ class StateVectorKokkosMPI final
     using PrecisionT = fp_t;
     using SVK = StateVectorKokkos<PrecisionT>;
     using ComplexT = typename SVK::ComplexT;
+    using CFP_t = typename SVK::CFP_t;
     using KokkosVector = typename SVK::KokkosVector;
     using UnmanagedComplexHostView = typename SVK::UnmanagedComplexHostView;
     using UnmanagedConstComplexHostView =
@@ -614,6 +615,23 @@ class StateVectorKokkosMPI final
     }
 
     /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void applyMatrix(const ComplexT *matrix,
+                            const std::vector<size_t> &wires,
+                            const bool inverse = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        const std::vector<ComplexT> matrix_(matrix, matrix + n * n);
+        applyOperation("Matrix", wires, inverse, {}, matrix_);
+    }
+
+    /**
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
@@ -866,6 +884,39 @@ class StateVectorKokkosMPI final
      * @return The pointer to the data of state vector
      */
     [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other Kokkos View
+     */
+    void updateData(const KokkosVector &other) { (*sv_).updateData(other); }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other State vector
+     */
+    void updateData(const StateVectorKokkosMPI<PrecisionT> &other) {
+        updateData(other.getView());
+    }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param other STL vector of type ComplexT
+     */
+    void updateData(std::vector<ComplexT> &other) { (*sv_).updateData(other); }
+
+    /**
+     * @brief Update data of the class
+     *
+     * @param new_data data pointer to new data.
+     * @param new_size size of underlying data storage.
+     */
+    void updateData(ComplexT *new_data, std::size_t new_size) {
+        (*sv_).updateData(new_data, new_size);
+    }
 
     /**
      * @brief Get underlying data vector
