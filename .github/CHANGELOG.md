@@ -53,6 +53,9 @@
 * Fix random `coverage xml` CI issues.
   [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)
 
+* `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
+  [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
