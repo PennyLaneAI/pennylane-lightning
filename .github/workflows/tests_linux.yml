@@ -115,6 +115,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+          
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
         with:
@@ -136,11 +141,6 @@ jobs:
           git checkout $(git tag | sort -V | tail -1)
           git log -1 --format='%H'
           git status
-
-      - uses: actions/setup-python@v4
-        name: Install Python
-        with:
-          python-version: '3.9'
 
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
@@ -181,6 +181,7 @@ jobs:
       - name: Install backend device
         run: |
           cd main
+          python -m pip install scipy
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
