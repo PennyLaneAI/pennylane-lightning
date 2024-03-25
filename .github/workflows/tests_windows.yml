@@ -213,7 +213,7 @@ jobs:
             set -x
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
-            python -c "import os; import site; os.environ['SCIPY_LIBS'] = f'{site.getsitepackages()[0]}/scipy.libs'"
+            python -c "import os; import site; os.environ['SCIPY_LIBS'] = f'{site.getsitepackages()[0]}/Lib/scipy.libs'"
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
