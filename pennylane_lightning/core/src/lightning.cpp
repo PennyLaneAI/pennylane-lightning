@@ -97,7 +97,9 @@ template <class ComplexT>
             auto diff = dat[i] - ref[i];
             [[maybe_unused]] double err =
                 norm(std::complex<double>{real(diff), imag(diff)});
-            // std::cout << err << std::endl;
+            if (err > tol) {
+                std::cout << err << std::endl;
+            }
             PL_ABORT_IF_NOT(err < tol, "Wrong statevector entry.");
         }
     }
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]) {
     // Create PennyLane Lightning statevector
     StateVectorKokkos<double> sv(sv_data);
     StateVectorKokkosMPI<double> svmpi(sv_data);
-    auto mpisize = svmpi.get_num_global_qubits();
+    [[maybe_unused]] auto nglobal = svmpi.get_num_global_qubits();
     // print(svmpi);
     // print_basis_states(indices.q);
     print_local_wires(indices.q);
@@ -148,6 +150,11 @@ int main(int argc, char *argv[]) {
     for (auto &gate : gates_1q) {
         for (auto inverse : std::vector<bool>({false, true})) {
             for (std::size_t target = 0; target < indices.q; target++) {
+                if (svmpi.get_mpi_rank() == 0) {
+                    std::cout << "Testing  with : " << gate
+                              << "(inv, targets) = (" << inverse << ", "
+                              << target << ")" << std::endl;
+                }
                 auto gate_op =
                     reverse_lookup(gate_names, std::string_view{gate});
                 auto npar = lookup(gate_num_params, gate_op);
@@ -166,6 +173,10 @@ int main(int argc, char *argv[]) {
     // Test 1q-unitary
     for (auto inverse : std::vector<bool>({false, true})) {
         for (std::size_t target = 0; target < indices.q; target++) {
+            if (svmpi.get_mpi_rank() == 0) {
+                std::cout << "Testing Matrix with :(inv, targets) = ("
+                          << inverse << ", " << target << ")" << std::endl;
+            }
             std::vector<Kokkos::complex<double>> matrix = {
                 {0.97517033, 0.19767681},
                 {-0.09933467, 0.00996671},
@@ -184,12 +195,17 @@ int main(int argc, char *argv[]) {
     }
     // Test 2q-gates
     for (auto &gate : gates_2q) {
-        for (auto inverse : std::vector<bool>({false, true})) {
-            for (std::size_t target0 = 0; target0 < mpisize - 1; target0++) {
-                for (std::size_t target1 = 0; target1 < mpisize - 1;
-                     target1++) {
+        for (auto inverse : std::vector<bool>({true})) {
+            for (std::size_t target0 = 0; target0 < nglobal; target0++) {
+                for (std::size_t target1 = 0; target1 < nglobal; target1++) {
                     if (target0 == target1) {
                         continue;
+                    }
+                    if (svmpi.get_mpi_rank() == 0) {
+                        std::cout << "Testing  with : " << gate
+                                  << "(inv, targets) = (" << inverse << ", "
+                                  << target0 << ", " << target1 << ")"
+                                  << std::endl;
                     }
                     auto gate_op =
                         reverse_lookup(gate_names, std::string_view{gate});

@@ -259,7 +259,7 @@ class StateVectorKokkosMPI final
         std::size_t index{0U};
         for (std::size_t i = 0; i < wires.size(); i++) {
             index = index | (((rank & (one << wires[i])) >> wires[i])
-                             << i); // select ith bit
+                             << (n - 1 - i)); // select ith bit
         }
         return index;
     }
@@ -477,7 +477,6 @@ class StateVectorKokkosMPI final
         col = rank_2_matrix_index(rank, rev_wires); // select nth bit
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
         mpi_wait(send_req);
-        barrier();
     }
 
     /**
@@ -494,6 +493,30 @@ class StateVectorKokkosMPI final
                           const bool inverse = false,
                           const std::vector<PrecisionT> &params = {},
                           const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t two{2U};
+        PL_ABORT_IF_NOT(wires.size() == two,
+                        "Wires must contain a single wire index.")
+        if (has_local_wires(wires)) {
+            applySemiLocal2QOperation(opName, wires, inverse, params,
+                                      gate_matrix);
+        } else {
+            applyGlobal2QOperation(opName, wires, inverse, params, gate_matrix);
+        }
+    }
+    /**
+     * @brief Apply a single 2-qubit gate with semi-local indices to the state
+     * vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applySemiLocal2QOperation(
+        const std::string &opName, const std::vector<size_t> &wires,
+        const bool inverse = false, const std::vector<PrecisionT> &params = {},
+        const std::vector<ComplexT> &gate_matrix = {}) {
         constexpr std::size_t one{1U};
         constexpr std::size_t two{2U};
         PL_ABORT_IF_NOT(wires.size() == two,
@@ -546,6 +569,77 @@ class StateVectorKokkosMPI final
 
         mpi_wait(recv_req);
         col = rank_2_matrix_index(rank, wires); // select nth bit
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        mpi_wait(send_req);
+    }
+
+    /**
+     * @brief Apply a single 2-qubit gate with global indices to the state
+     * vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyGlobal2QOperation(const std::string &opName,
+                                const std::vector<size_t> &wires,
+                                const bool inverse = false,
+                                const std::vector<PrecisionT> &params = {},
+                                const std::vector<ComplexT> &gate_matrix = {}) {
+        constexpr std::size_t one{1U};
+        constexpr std::size_t two{2U};
+        PL_ABORT_IF_NOT(wires.size() == two,
+                        "Wires must contain a single wire index.")
+        PL_ABORT_IF(has_local_wires(wires), "Target wires must be global.")
+        std::vector<ComplexT> matrix(exp2(wires.size() * 2));
+        if (array_contains(gate_names, std::string_view{opName})) {
+            auto gate_op = reverse_lookup(gate_names, std::string_view{opName});
+            matrix = Pennylane::Gates::getMatrix<Kokkos::complex, PrecisionT>(
+                gate_op, params, inverse);
+        } else {
+            PL_ABORT_IF_NOT(
+                gate_matrix.size() == matrix.size(),
+                std::string("Operation does not exist for ") + opName +
+                    std::string(" and/or incorrect matrix provided."));
+            if (inverse) {
+                matrix = transpose(gate_matrix, true);
+            } else {
+                matrix = gate_matrix;
+            }
+        }
+        auto ncol = exp2(wires.size());
+        auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        auto rev_wires = get_global_rev_wires(wires);
+        auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        MPI_Request send_req;
+        MPI_Request recv_req;
+        mpi_isend(rank, send_req, true);
+        mpi_irecv(rank, recv_req);
+        auto col = myrow;
+        (*sv_).rescale(matrix[col + myrow * ncol]);
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
+        mpi_irecv(rank, recv_req);
+        mpi_wait(send_req);
+        mpi_isend(rank, send_req);
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
+        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        rank = myrank ^ (one << rev_wires[1]) ^
+               (one << rev_wires[0]); // toggle nth bit
+        mpi_irecv(rank, recv_req);
+        mpi_wait(send_req);
+        mpi_isend(rank, send_req);
+
+        mpi_wait(recv_req);
+        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
         (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
         mpi_wait(send_req);
     }
