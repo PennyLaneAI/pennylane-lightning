@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -rdynamic")
+
 project(lightning_utils LANGUAGES CXX)
 
 set(LQUBIT_UTILS_FILES RuntimeInfo.cpp UtilLinearAlg.cpp CACHE INTERNAL "" FORCE)
@@ -7,14 +9,11 @@ set(LQUBIT_UTILS_FILES RuntimeInfo.cpp UtilLinearAlg.cpp CACHE INTERNAL "" FORCE
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
-if(ENABLE_PYTHON)
-    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PYTHON=1")
-endif()
-
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
-                                                lightning_external_libs
-                                                dl)
+                                                lightning_external_libs)
+
+
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if (BUILD_TESTS)
