@@ -154,37 +154,73 @@ class StateVectorKokkosMPI final
         // Init attrs
         num_qubits_ = num_qubits;
         if (num_qubits > 0) {
-            sv_ = std::make_unique<SVK>(get_num_local_qubits(), kokkos_args);
-            recvbuf_ = KokkosVector("recvbuf_", get_blk_size());
+            sv_ = std::make_unique<SVK>(get_num_local_wires(), kokkos_args);
+            recvbuf_ =
+                std::make_unique<SVK>(get_num_local_wires(), kokkos_args);
             sendbuf_ = KokkosVector("sendbuf_", get_blk_size());
             setBasisState(0U);
         }
     };
 
-    /*
+    /******************
     MPI-related methods
-    */
+    ******************/
+
+    /**
+     * @brief  Returns the MPI-process rank.
+     */
     int get_mpi_rank() {
         int rank;
         PL_MPI_IS_SUCCESS(MPI_Comm_rank(communicator_, &rank));
         return rank;
     }
+
+    /**
+     * @brief  Returns the number of MPI processes.
+     */
     int get_mpi_size() {
         int size;
         PL_MPI_IS_SUCCESS(MPI_Comm_size(communicator_, &size));
         return size;
     }
+
+    /**
+     * @brief  Calls all barriers.
+     */
     void barrier() {
         Kokkos::fence();
         mpi_barrier();
     }
+
+    /**
+     * @brief  Calls MPI_Barrier.
+     */
     void mpi_barrier() { PL_MPI_IS_SUCCESS(MPI_Barrier(communicator_)); }
-    void mpi_irecv(const std::size_t rank, MPI_Request &request) {
-        PL_MPI_IS_SUCCESS(MPI_Irecv(
-            recvbuf_.data(), recvbuf_.size(), get_mpi_type<ComplexT>(),
-            static_cast<int>(rank), 0, communicator_, &request));
+
+    /**
+     * @brief  Receives the local state vector of another MPI-process.
+     *
+     * @param  source Destination MPI rank.
+     * @param  request MPI request allowing to validate the transfer has been
+     * completed.
+     */
+    void mpi_irecv(const std::size_t source, MPI_Request &request) {
+        KokkosVector sv_view = (*recvbuf_).getView();
+        PL_MPI_IS_SUCCESS(
+            MPI_Irecv(sv_view.data(), sv_view.size(), get_mpi_type<ComplexT>(),
+                      static_cast<int>(source), 0, communicator_, &request));
     }
-    void mpi_isend(const std::size_t rank, MPI_Request &request,
+
+    /**
+     * @brief  Sends local state vector to another MPI-process.
+     *
+     * @param  dest Destination MPI rank.
+     * @param  request MPI request allowing to validate the transfer has been
+     * completed.
+     * @param  copy If true, copy the state vector data in sendbuf_ before
+     * sending.
+     */
+    void mpi_isend(const std::size_t dest, MPI_Request &request,
                    const bool copy = false) {
         if (copy) {
             KokkosVector sv_view =
@@ -197,76 +233,44 @@ class StateVectorKokkosMPI final
         }
         PL_MPI_IS_SUCCESS(MPI_Isend(
             sendbuf_.data(), sendbuf_.size(), get_mpi_type<ComplexT>(),
-            static_cast<int>(rank), 0, communicator_, &request));
+            static_cast<int>(dest), 0, communicator_, &request));
     }
+
+    /**
+     * @brief  Waits for an MPI transfer completion.
+     *
+     * @param  request MPI request allowing to validate the transfer has been
+     * completed.
+     */
     void mpi_wait(MPI_Request &request) {
         MPI_Status status;
         PL_MPI_IS_SUCCESS(MPI_Wait(&request, &status));
     }
-    std::size_t get_num_global_qubits() {
-        return log2(static_cast<std::size_t>(get_mpi_size()));
-    }
-    std::size_t get_num_local_qubits() {
-        return num_qubits_ - get_num_global_qubits();
-    }
-    std::size_t get_blk_size() { return exp2(get_num_local_qubits()); }
+
+    /**
+     * @brief  Returns the MPI-distribution block size, or the size of the local
+     * state vector data.
+     */
+    std::size_t get_blk_size() { return exp2(get_num_local_wires()); }
+
+    /**
+     * @brief  Converts a global state vector index to a local one.
+     *
+     * @param index Global index.
+     */
     std::pair<std::size_t, std::size_t>
     global_2_local_index(const std::size_t index) {
         auto blk = get_blk_size();
         return std::pair<std::size_t, std::size_t>{index / blk, index % blk};
     }
-    /*
-    Wires-related methods
-    */
-    std::size_t get_rev_wire(const std::size_t wire) {
-        return num_qubits_ - 1 - wire;
-    }
-    std::vector<std::size_t>
-    get_local_wires_indices(const std::vector<std::size_t> &wires) {
-        std::vector<std::size_t> local_wires(wires.size());
-        auto n_global{get_num_global_qubits()};
-        std::transform(wires.begin(), wires.end(), local_wires.begin(),
-                       [=](const std::size_t wire) { return wire - n_global; });
-        return local_wires;
-    }
-    std::vector<std::size_t>
-    get_local_wires(const std::vector<std::size_t> &wires) {
-        return get_local_wires_indices(prune_global_wires(wires));
-    }
-    std::vector<std::size_t>
-    prune_global_wires(const std::vector<std::size_t> &wires) {
-        std::vector<std::size_t> local_wires;
-        local_wires.reserve(wires.size());
-        auto n_global{get_num_global_qubits()};
-        for (auto e : wires) {
-            if (e >= n_global) {
-                local_wires.push_back(e);
-            }
-        }
-        return local_wires;
-    }
-    bool is_wires_local(const std::vector<std::size_t> &wires) {
-        auto n_local{get_num_local_qubits()};
-        return std::find_if(wires.begin(), wires.end(),
-                            [=, this](const std::size_t wire) {
-                                return get_rev_wire(wire) > (n_local - 1);
-                            }) == wires.end();
-    }
-    bool has_local_wires(const std::vector<std::size_t> &wires) {
-        auto n_local{get_num_local_qubits()};
-        return std::find_if(wires.begin(), wires.end(),
-                            [=, this](const std::size_t wire) {
-                                return get_rev_wire(wire) <= (n_local - 1);
-                            }) != wires.end();
-    }
-    std::vector<std::size_t>
-    get_global_rev_wires(const std::vector<std::size_t> &wires) {
-        std::vector<std::size_t> rev_wires(wires.size());
-        for (std::size_t i = 0; i < wires.size(); i++) {
-            rev_wires[i] = get_num_global_qubits() - 1 - wires[i];
-        }
-        return rev_wires;
-    }
+
+    /**
+     * @brief  Returns the matrix-column/row corresponding to a given
+     * MPI-process.
+     *
+     * @param rank MPI-process rank.
+     * @param wires Wire indices.
+     */
     std::size_t rank_2_matrix_index(const std::size_t rank,
                                     const std::vector<std::size_t> &wires) {
         constexpr std::size_t one{1U};
@@ -278,6 +282,15 @@ class StateVectorKokkosMPI final
         }
         return index;
     }
+
+    /**
+     * @brief  Returns the matrix-columns/rows corresponding to a given
+     * MPI-process.
+     *
+     * @param rank MPI-process rank.
+     * @param wires Wire indices.
+     * @param local_wires Mask indicating local wires.
+     */
     std::vector<std::size_t>
     rank_2_matrix_indices(const std::size_t rank,
                           const std::vector<std::size_t> &wires,
@@ -308,15 +321,138 @@ class StateVectorKokkosMPI final
         }
         return indices;
     }
+
+    /********************
+    Wires-related methods
+    ********************/
+
+    /**
+     * @brief  Returns the number of global wires.
+     */
+    std::size_t get_num_global_wires() {
+        return log2(static_cast<std::size_t>(get_mpi_size()));
+    }
+
+    /**
+     * @brief  Returns the number of local wires.
+     */
+    std::size_t get_num_local_wires() {
+        return num_qubits_ - get_num_global_wires();
+    }
+
+    /**
+     * @brief  Returns the number of local wires.
+     */
+    std::size_t get_rev_wire(const std::size_t wire) {
+        return num_qubits_ - 1 - wire;
+    }
+
+    /**
+     * @brief  Shifts wire indices by the number of global wires to yield local
+     * wire indices (global wires have a negative index).
+     *
+     * @param wires Wire indices.
+     */
+    std::vector<std::size_t>
+    get_local_wires_indices(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires(wires.size());
+        auto n_global{get_num_global_wires()};
+        std::transform(wires.begin(), wires.end(), local_wires.begin(),
+                       [=](const std::size_t wire) { return wire - n_global; });
+        return local_wires;
+    }
+
+    /**
+     * @brief  Returns an array containing solely valid local wire indices
+     * (global wires are pruned).
+     *
+     * @param wires Wire indices.
+     */
+    std::vector<std::size_t>
+    get_local_wires(const std::vector<std::size_t> &wires) {
+        return get_local_wires_indices(prune_global_wires(wires));
+    }
+
+    /**
+     * @brief  Prunes global wires from an array of global wire indices.
+     *
+     * @param wires Wire indices.
+     */
+    std::vector<std::size_t>
+    prune_global_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> local_wires;
+        local_wires.reserve(wires.size());
+        auto n_global{get_num_global_wires()};
+        for (auto e : wires) {
+            if (e >= n_global) {
+                local_wires.push_back(e);
+            }
+        }
+        return local_wires;
+    }
+
+    /**
+     * @brief  Returns true if all wires are local and false otherwise.
+     *
+     * @param wires Wire indices.
+     */
+    bool is_wires_local(const std::vector<std::size_t> &wires) {
+        auto n_local{get_num_local_wires()};
+        return std::find_if(wires.begin(), wires.end(),
+                            [=, this](const std::size_t wire) {
+                                return get_rev_wire(wire) > (n_local - 1);
+                            }) == wires.end();
+    }
+
+    /**
+     * @brief  Returns true if any wire is local and false otherwise.
+     *
+     * @param wires Wire indices.
+     */
+    bool has_local_wires(const std::vector<std::size_t> &wires) {
+        auto n_local{get_num_local_wires()};
+        return std::find_if(wires.begin(), wires.end(),
+                            [=, this](const std::size_t wire) {
+                                return get_rev_wire(wire) <= (n_local - 1);
+                            }) != wires.end();
+    }
+
+    /**
+     * @brief  Flip the endianness of global wires.
+     *
+     * @param wires Wire indices.
+     */
+    std::vector<std::size_t>
+    get_global_rev_wires(const std::vector<std::size_t> &wires) {
+        std::vector<std::size_t> rev_wires(wires.size());
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            rev_wires[i] = get_num_global_wires() - 1 - wires[i];
+        }
+        return rev_wires;
+    }
+
+    /**
+     * @brief  Returns a mask indicating local wires.
+     *
+     * @param wires Wire indices.
+     */
     std::vector<bool>
     get_local_wire_mask(const std::vector<std::size_t> &wires) {
         std::vector<bool> local_wire_mask(wires.size());
-        auto n_global{get_num_global_qubits()};
+        auto n_global{get_num_global_wires()};
         std::transform(
             wires.begin(), wires.end(), local_wire_mask.begin(),
             [=](const std::size_t wire) { return wire >= n_global; });
         return local_wire_mask;
     }
+
+    /**
+     * @brief  Returns the sub-matrix corresponding to given rows and columns.
+     *
+     * @param matrix The matrix.
+     * @param rows Row indices.
+     * @param cols Column indices.
+     */
     template <typename T>
     std::vector<T> select_sub_matrix(const std::vector<T> &matrix,
                                      const std::vector<std::size_t> &rows,
@@ -529,8 +665,10 @@ class StateVectorKokkosMPI final
         const auto ncol = exp2(wires.size());
         const auto myrank = static_cast<std::size_t>(get_mpi_rank());
         const auto rev_wires = get_global_rev_wires(wires);
-        auto myrow = rank_2_matrix_index(myrank, rev_wires);
-        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        const auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle global bit
+
+        // Initiate data transfer
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
@@ -538,9 +676,10 @@ class StateVectorKokkosMPI final
         auto col = myrow;
         (*sv_).rescale(matrix[col + myrow * ncol]);
 
+        // Data has arrived, accumulate dot product
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        col = rank_2_matrix_index(rank, rev_wires);
+        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
         mpi_wait(send_req);
     }
 
@@ -601,13 +740,14 @@ class StateVectorKokkosMPI final
         const auto local_wires = prune_global_wires(wires);
         const auto rev_wires = get_global_rev_wires(wires);
         const auto loc_wire_mask = get_local_wire_mask(wires);
-        const auto num_qubits = get_num_local_qubits();
         const auto myrank = static_cast<std::size_t>(get_mpi_rank());
-        auto myrows = rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
+        const auto myrows =
+            rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
         auto cols = myrows;
         auto rank = myrank ^ (one << ((is_wires_local({wires[1]}))
                                           ? rev_wires[0]
-                                          : rev_wires[1])); // toggle nth bit
+                                          : rev_wires[1])); // toggle global bit
+        // Initiate data transfer
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
@@ -615,20 +755,13 @@ class StateVectorKokkosMPI final
         auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
         applyOperation("Matrix", local_wires, false, {}, sub_matrix);
 
+        // Data has arrived, accumulate dot product
         cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
         sub_matrix = select_sub_matrix(matrix, myrows, cols);
-
-        KokkosVector sub_matrix_("sub_matrix_", sub_matrix.size());
-        Kokkos::deep_copy(
-            sub_matrix_,
-            UnmanagedComplexHostView(sub_matrix.data(), sub_matrix.size()));
         mpi_wait(recv_req);
-        Kokkos::parallel_for(
-            exp2(num_qubits - local_wires.size()),
-            apply1QubitOpFunctor<PrecisionT>(recvbuf_, num_qubits, sub_matrix_,
-                                             get_local_wires(wires)));
-        Kokkos::fence();
-        (*sv_).axpby(Kokkos::complex{1.0, 0.0}, recvbuf_);
+        (*recvbuf_).applyOperation("Matrix", get_local_wires(wires), false, {},
+                                   sub_matrix);
+        (*sv_).axpby(Kokkos::complex{1.0, 0.0}, (*recvbuf_).getView());
         mpi_wait(send_req);
     }
 
@@ -664,11 +797,13 @@ class StateVectorKokkosMPI final
                     std::string(" and/or incorrect matrix provided."));
             matrix = (inverse) ? transpose(gate_matrix, true) : gate_matrix;
         }
-        auto ncol = exp2(wires.size());
-        auto myrank = static_cast<std::size_t>(get_mpi_rank());
-        auto rev_wires = get_global_rev_wires(wires);
-        auto myrow = rank_2_matrix_index(myrank, rev_wires);
-        auto rank = myrank ^ (one << rev_wires[0]); // toggle nth bit
+        const auto ncol = exp2(wires.size());
+        const auto myrank = static_cast<std::size_t>(get_mpi_rank());
+        const auto rev_wires = get_global_rev_wires(wires);
+        const auto myrow = rank_2_matrix_index(myrank, rev_wires);
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle 1st global bit
+
+        // Initiate data transfer
         MPI_Request send_req;
         MPI_Request recv_req;
         mpi_isend(rank, send_req, true);
@@ -676,26 +811,29 @@ class StateVectorKokkosMPI final
         auto col = myrow;
         (*sv_).rescale(matrix[col + myrow * ncol]);
 
+        // Data has arrived, accumulate dot product
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
-        rank = myrank ^ (one << rev_wires[1]); // toggle nth bit
+        col = rank_2_matrix_index(rank, rev_wires);
+        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        rank = myrank ^ (one << rev_wires[1]); // toggle 2nd global bit
         mpi_irecv(rank, recv_req);
         mpi_wait(send_req);
         mpi_isend(rank, send_req);
 
+        // Data has arrived, accumulate dot product
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        col = rank_2_matrix_index(rank, rev_wires);
+        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
         rank = myrank ^ (one << rev_wires[1]) ^
-               (one << rev_wires[0]); // toggle nth bit
+               (one << rev_wires[0]); // toggle both global bit
         mpi_irecv(rank, recv_req);
         mpi_wait(send_req);
         mpi_isend(rank, send_req);
 
+        // Data has arrived, accumulate dot product
         mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires); // select nth bit
-        (*sv_).axpby(matrix[col + myrow * ncol], recvbuf_);
+        col = rank_2_matrix_index(rank, rev_wires);
+        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
         mpi_wait(send_req);
     }
 
@@ -734,7 +872,7 @@ class StateVectorKokkosMPI final
   private:
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
-    KokkosVector recvbuf_;
+    std::unique_ptr<SVK> recvbuf_;
     KokkosVector sendbuf_;
     MPI_Comm communicator_;
 };

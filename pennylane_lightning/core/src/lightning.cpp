@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     // Create PennyLane Lightning statevector
     StateVectorKokkos<double> sv(sv_data);
     StateVectorKokkosMPI<double> svmpi(sv_data);
-    [[maybe_unused]] auto nglobal = svmpi.get_num_global_qubits();
+    [[maybe_unused]] auto nglobal = svmpi.get_num_global_wires();
     // print(svmpi);
     // print_basis_states(indices.q);
     print_local_wires(indices.q);
