@@ -293,6 +293,12 @@ class LightningAdjointJacobian:
                 "Adjoint differentiation does not support State measurements."
             )
 
+        if any(m.return_type is not Expectation for m in tape.measurements):
+            raise QuantumFunctionError(
+                "Adjoint differentiation method does not support expectation return type "
+                "mixed with other return types"
+            )
+
         # Proceed, because tape_return_type is Expectation.
         if len(grad_vec) != len(measurements):
             raise ValueError(
