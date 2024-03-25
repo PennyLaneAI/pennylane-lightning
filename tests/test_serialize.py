@@ -152,6 +152,26 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_prod_return_with_overlapping_wires(self, use_csingle, wires_map):
+        """Test the expected serialization for a Prod return with operands with overlapping wires."""
+        obs = qml.prod(
+            qml.sum(qml.X(0), qml.s_prod(2, qml.Hadamard(0))),
+            qml.sum(qml.s_prod(3, qml.Z(1)), qml.Z(2), qml.Hermitian(np.eye(2), wires=0)),
+        )
+        tape = qml.tape.QuantumScript([], [qml.expval(obs)])
+
+        hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
+        c_dtype = np.complex64 if use_csingle else np.complex128
+        mat = obs.matrix().ravel().astype(c_dtype)
+
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        s_expected = hermitian_obs(mat, [0, 1, 2])
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_hermitian_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:

@@ -271,7 +271,9 @@ class QuantumScriptSerializer:
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
         if isinstance(observable, (Prod, Sum, SProd)) and observable.pauli_rep is not None:
             return self._pauli_sentence(observable.pauli_rep, wires_map)
-        if isinstance(observable, (Tensor, Prod)):
+        if isinstance(observable, Tensor) or (
+            isinstance(observable, Prod) and not observable.has_overlapping_wires
+        ):
             return self._tensor_ob(observable, wires_map)
         if observable.name in ("Hamiltonian", "LinearCombination"):
             return self._hamiltonian(observable, wires_map)
@@ -294,7 +296,8 @@ class QuantumScriptSerializer:
 
         Returns:
             list(ObsStructC128 or ObsStructC64): A list of observable objects compatible with
-                the C++ backend
+                the C++ backend. For unsupported observables, the observable matrix is used
+                to create a :class:`~pennylane.Hermitian` to be used for serialization.
         """
 
         serialized_obs = []
@@ -310,7 +313,9 @@ class QuantumScriptSerializer:
                 offset_indices.append(offset_indices[-1] + 1)
         return serialized_obs, offset_indices
 
-    def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
+    def serialize_ops(
+        self, tape: QuantumTape, wires_map: dict = None
+    ) -> Tuple[
         List[List[str]],
         List[np.ndarray],
         List[List[int]],
