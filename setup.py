@@ -203,9 +203,9 @@ info = {
     "long_description": open("README.rst").read(),
     "long_description_content_type": "text/x-rst",
     "install_requires": requirements,
-    "ext_modules": []
-    if os.environ.get("SKIP_COMPILATION", False)
-    else [CMakeExtension(f"{backend}_ops")],
+    "ext_modules": (
+        [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
+    ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
     "extras_require": {

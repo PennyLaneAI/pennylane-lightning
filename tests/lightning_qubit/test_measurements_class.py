@@ -19,20 +19,25 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
+from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-from pennylane_lightning.lightning_qubit import LightningQubit
+try:
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
+except ImportError:
+    pass
+
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningQubit._CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-if LightningDevice != LightningQubit:
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
@@ -72,7 +77,6 @@ def test_initialization(lightning_sv):
     m = LightningMeasurements(statevector)
 
     assert m.qubit_state is statevector
-    assert m.state is statevector.state_vector
     assert m.dtype == statevector.dtype
 
 
@@ -420,6 +424,7 @@ class TestMeasurements:
         (
             [0],
             [1, 2],
+            [1, 0],
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -470,6 +475,8 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         assert np.allclose(result, expected, max(tol, 1.0e-5))
 
+    @flaky(max_runs=5)
+    @pytest.mark.parametrize("shots", [None, 1000000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -505,21 +512,19 @@ class TestMeasurements:
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
-    def test_double_return_value(self, measurement, obs0_, obs1_, lightning_sv, tol):
-        if measurement is qml.probs and isinstance(
-            obs0_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
+    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+        skip_list = (
+            qml.ops.Sum,
+            qml.ops.SProd,
+            qml.ops.Prod,
+            qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        if measurement is qml.probs and (
+            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
         ):
             pytest.skip(
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
-            )
-
-        if measurement is qml.probs and isinstance(
-            obs1_,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
-        ):
-            pytest.skip(
-                f"Observable of type {type(obs1_).__name__} is not supported for rotating probabilities."
             )
 
         n_qubits = 4
@@ -529,21 +534,67 @@ class TestMeasurements:
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = [measurement(op=obs0_), measurement(op=obs1_)]
-        tape = qml.tape.QuantumScript(ops, measurements)
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+
+        statevector = lightning_sv(n_qubits)
+        statevector = statevector.get_final_state(tape)
+        m = LightningMeasurements(statevector)
+
+        skip_list = (
+            qml.ops.Sum,
+            qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        do_skip = measurement is qml.var and (
+            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
+        )
+        do_skip = do_skip or (
+            measurement is qml.expval
+            and (
+                isinstance(obs0_, qml.SparseHamiltonian) or isinstance(obs1_, qml.SparseHamiltonian)
+            )
+        )
+        do_skip = do_skip and shots is not None
+        if do_skip:
+            with pytest.raises(TypeError):
+                _ = m.measure_final_state(tape)
+            return
+        else:
+            result = m.measure_final_state(tape)
 
         expected = self.calculate_reference(tape, lightning_sv)
         if len(expected) == 1:
             expected = expected[0]
-        statevector = lightning_sv(n_qubits)
-        statevector = statevector.get_final_state(tape)
-        m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
+        dtol = tol if shots is None else max(tol, 1.0e-2)
         for r, e in zip(result, expected):
-            assert np.allclose(r, e, max(tol, 1.0e-5))
+            assert np.allclose(r, e, atol=dtol, rtol=dtol)
+
+    @pytest.mark.parametrize(
+        "cases",
+        [
+            [[0, 1], [1, 0]],
+            [[1, 0], [0, 1]],
+        ],
+    )
+    def test_probs_tape_unordered_wires(self, cases, tol):
+        """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
+
+        x, y, z = [0.5, 0.3, -0.7]
+        dev = qml.device(device_name, wires=cases[1])
+
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            return qml.probs(wires=cases[0])
+
+        expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
+        results = qml.QNode(circuit, dev)()
+        assert np.allclose(expected, results, tol)
 
 
 class TestControlledOps:

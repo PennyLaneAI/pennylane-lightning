@@ -19,7 +19,11 @@ import itertools
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, device_name
+from conftest import PHI, THETA, VARPHI
+from conftest import LightningDevice as ld
+
+if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -32,13 +36,16 @@ class TestExpval:
 
         O1 = qml.Identity(wires=[0])
         O2 = qml.Identity(wires=[1])
-
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
+        ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+            )
+            res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([1, 1]), tol)
 
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
@@ -47,13 +54,17 @@ class TestExpval:
 
         O1 = qml.PauliZ(wires=[0])
         O2 = qml.PauliZ(wires=[1])
+        ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+            )
 
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
+            res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
@@ -62,15 +73,22 @@ class TestExpval:
 
         O1 = qml.PauliX(wires=[0])
         O2 = qml.PauliX(wires=[1])
+        ops = [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+            res = dev.execute(tape)
 
-        dev.apply(
-            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
+        else:
+            dev.apply(
+                ops,
+                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+            )
 
-        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
+            res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
         assert np.allclose(
-            res, np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE), tol * 10
+            res,
+            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.dtype),
+            tol * 10,
         )
 
     def test_pauliy_expectation(self, theta, phi, qubit_device, tol):
@@ -79,13 +97,18 @@ class TestExpval:
 
         O1 = qml.PauliY(wires=[0])
         O2 = qml.PauliY(wires=[1])
+        ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+            res = dev.execute(tape)
 
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
+        else:
+            dev.apply(
+                ops,
+                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+            )
 
-        res = np.array([dev.expval(O1), dev.expval(O2)])
+            res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
@@ -94,13 +117,18 @@ class TestExpval:
 
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])
+        ops = [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+            res = dev.execute(tape)
 
-        dev.apply(
-            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
+        else:
+            dev.apply(
+                ops,
+                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
+            )
 
-        res = np.array([dev.expval(O1), dev.expval(O2)])
+            res = np.array([dev.expval(O1), dev.expval(O2)])
         expected = np.array(
             [np.sin(theta) * np.sin(phi) + np.cos(theta), np.cos(theta) * np.cos(phi) + np.sin(phi)]
         ) / np.sqrt(2)
@@ -257,18 +285,19 @@ class TestTensorExpval:
         correctly"""
         dev = qubit_device(wires=3)
         obs = qml.PauliX(0) @ qml.PauliY(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-        res = dev.expval(obs)
+        ops = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(ops, rotations=obs.diagonalizing_gates())
+            res = dev.expval(obs)
 
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
 
@@ -279,19 +308,23 @@ class TestTensorExpval:
         correctly"""
         dev = qubit_device(wires=3)
         obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
+        ops = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=obs.diagonalizing_gates(),
+            )
 
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.expval(obs)
+            res = dev.expval(obs)
 
         expected = np.cos(varphi) * np.cos(phi)
 
@@ -302,19 +335,22 @@ class TestTensorExpval:
         works correctly"""
         dev = qubit_device(wires=3)
         obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.expval(obs)
+        ops = [
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+        ]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+            res = dev.execute(tape)
+        else:
+            dev.apply(
+                ops,
+                rotations=obs.diagonalizing_gates(),
+            )
+            res = dev.expval(obs)
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
 
         assert np.allclose(res, expected, tol)

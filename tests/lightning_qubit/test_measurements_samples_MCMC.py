@@ -17,15 +17,14 @@ Unit tests for MCMC sampling in lightning.qubit.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice as ld
+from conftest import device_name
 
-from pennylane_lightning.lightning_qubit import LightningQubit
-
-if not LightningQubit._CPP_BINARY_AVAILABLE:
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-if LightningDevice != LightningQubit:
+if device_name != "lightning.qubit":
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+
+if not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 class TestMCMCSample:
@@ -33,7 +32,7 @@ class TestMCMCSample:
 
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
-        return qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, c_dtype=request.param)
+        return qml.device(device_name, wires=2, shots=1000, mcmc=True, c_dtype=request.param)
 
     test_data_no_parameters = [
         (100, [0], qml.PauliZ(wires=[0]), 100),
@@ -46,12 +45,16 @@ class TestMCMCSample:
         """Tests if the samples returned by sample have
         the correct dimensions
         """
-        dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
-
-        dev.shots = num_shots
-        dev._wires_measured = measured_wires
-        dev._samples = dev.generate_samples()
-        s1 = dev.sample(operation)
+        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
+            s1 = dev.execute(tape)
+        else:
+            dev.apply(ops)
+            dev.shots = num_shots
+            dev._wires_measured = measured_wires
+            dev._samples = dev.generate_samples()
+            s1 = dev.sample(operation)
 
         assert np.array_equal(s1.shape, (shape,))
 
@@ -61,13 +64,17 @@ class TestMCMCSample:
         the correct values
         """
         dev = qml.device(
-            "lightning.qubit", wires=2, shots=1000, mcmc=True, kernel_name=kernel, num_burnin=100
+            device_name, wires=2, shots=1000, mcmc=True, kernel_name=kernel, num_burnin=100
         )
-
-        dev.apply([qml.RX(1.5708, wires=[0])])
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_samples()
-        s1 = dev.sample(qml.PauliZ(0))
+        ops = [qml.RX(1.5708, wires=[0])]
+        if ld._new_API:
+            tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
+            s1 = dev.execute(tape)
+        else:
+            dev.apply([qml.RX(1.5708, wires=[0])])
+            dev._wires_measured = {0}
+            dev._samples = dev.generate_samples()
+            s1 = dev.sample(qml.PauliZ(0))
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
@@ -83,7 +90,7 @@ class TestMCMCSample:
             match=f"The {kernel} is not supported and currently only 'Local' and 'NonZeroRandom' kernels are supported.",
         ):
             dev = qml.device(
-                "lightning.qubit",
+                device_name,
                 wires=2,
                 shots=1000,
                 mcmc=True,
@@ -93,4 +100,4 @@ class TestMCMCSample:
 
     def test_wrong_num_burnin(self):
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
-            dev = qml.device("lightning.qubit", wires=2, shots=1000, mcmc=True, num_burnin=1000)
+            dev = qml.device(device_name, wires=2, shots=1000, mcmc=True, num_burnin=1000)

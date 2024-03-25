@@ -46,18 +46,9 @@ using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
-/**
- * @brief As clang does not support constexpr string_view::remove_prefix yet.
- */
-constexpr std::string_view remove_prefix(const std::string_view &str,
-                                         size_t len) {
-    return {str.data() + len, str.length() - len};
-}
-
 template <GeneratorOperation gntr_op>
 constexpr auto findGateOpForGenerator() -> GateOperation {
-    constexpr auto gntr_name =
-        remove_prefix(lookup(Constant::generator_names, gntr_op), 9);
+    constexpr auto gntr_name = lookup(Constant::generator_names, gntr_op);
 
     for (const auto &[gate_op, gate_name] : Constant::gate_names) {
         if (gate_name == gntr_name) {
