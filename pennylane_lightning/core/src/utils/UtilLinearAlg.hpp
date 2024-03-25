@@ -121,7 +121,7 @@ void compute_diagonalizing_gates(int n, int lda,
     std::filesystem::path scipyLibsPath =
         currentPath.parent_path().parent_path() / "scipy.libs";
     if (!std::filesystem::exists(scipyLibsPath)) {
-        const std::string scipyPathStr(std::getenv(SCIPY_LIBS));
+        const std::string scipyPathStr(std::getenv("SCIPY_LIBS"));
         PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
                     "The SCIPY_LIBS env is not available.");
         scipyLibsPath = scipyPathStr;
