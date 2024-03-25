@@ -22,14 +22,13 @@
 #include "MeasuresFunctors.hpp"
 #include "Observables.hpp"
 #include "ObservablesKokkos.hpp"
-#include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
-using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 using Pennylane::Util::exp2;

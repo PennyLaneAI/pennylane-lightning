@@ -22,7 +22,6 @@
 #include "Error.hpp"
 #include "LinearAlgebraKokkos.hpp"
 #include "Observables.hpp"
-#include "StateVectorKokkos.hpp"
 #include "Util.hpp"
 
 // using namespace Pennylane;
@@ -30,7 +29,6 @@
 namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::Observables;
-using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
 } // namespace
 /// @endcond

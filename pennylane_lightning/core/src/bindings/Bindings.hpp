@@ -61,6 +61,7 @@ using namespace Pennylane::LightningQubit::Measures;
 #include "LKokkosBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
 #include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
+#include "StateVectorKokkos.hpp"
 
 /// @cond DEV
 namespace {

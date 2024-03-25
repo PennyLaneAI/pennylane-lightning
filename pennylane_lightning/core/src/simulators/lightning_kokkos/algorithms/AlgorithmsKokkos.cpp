@@ -14,6 +14,7 @@
 
 #include "AdjointJacobianKokkos.hpp"
 #include "JacobianData.hpp"
+#include "StateVectorKokkos.hpp"
 
 // using namespace Pennylane;
 using namespace Pennylane::LightningKokkos;
