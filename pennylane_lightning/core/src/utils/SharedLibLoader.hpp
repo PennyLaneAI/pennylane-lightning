@@ -59,9 +59,10 @@ class SharedLibLoader final {
             PL_ABORT_IF(!handle_, dlerror());
         }
 #elif defined(_MSC_VER)
-        // codefactor[skip]
         handle_ = LoadLibrary(filename.c_str());
-        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+        if (filename != "lapack.so") {
+            PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+        }
 #endif
     }
 

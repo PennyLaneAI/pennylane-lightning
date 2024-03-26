@@ -110,6 +110,7 @@ void compute_diagonalizing_gates(int n, int lda,
 #else
     std::shared_ptr<SharedLibLoader> blasLib = std::make_shared<SharedLibLoader>("lapack.so");
     if (!blasLib->getHandle()) {
+        std::cout<<"++++++++++++test"<<std::endl;
         std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
         std::string scipyPathStr(SCIPY_LIBS_PATH);
@@ -195,5 +196,7 @@ void compute_diagonalizing_gates(int n, int lda,
                    [](std::complex<T> value) {
                        return std::complex<T>{value.real(), -value.imag()};
                    });
+
+    dlclose(handle);
 }
 } // namespace Pennylane::Util
