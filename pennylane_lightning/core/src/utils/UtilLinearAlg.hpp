@@ -109,7 +109,7 @@ void compute_diagonalizing_gates(int n, int lda,
         std::make_shared<SharedLibLoader>(libName);
 #else
     std::shared_ptr<SharedLibLoader> blasLib("lapack.so");
-    if(!blasLib->getHandle()){
+    if (!blasLib->getHandle()) {
         std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
         std::string scipyPathStr(SCIPY_LIBS_PATH);
@@ -117,11 +117,10 @@ void compute_diagonalizing_gates(int n, int lda,
         if (scipyPathStr.empty() || !std::filesystem::exists(scipyPathStr)) {
             std::string currentPathStr(getPath());
             scipyPathStr = currentPathStr + "/../../scipy.libs";
-            if(!std::filesystem::exists(scipyPathStr)){
-            
+            if (!std::filesystem::exists(scipyPathStr)) {
             }
             PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
-                    "The scipy.libs/ is not available.");
+                        "The scipy.libs/ is not available.");
         } else {
             std::exit(EXIT_FAILURE);
         }
@@ -132,7 +131,8 @@ void compute_diagonalizing_gates(int n, int lda,
 
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
-        for (const auto &lib : std::filesystem::directory_iterator(scipyLibsPath)) {
+        for (const auto &lib :
+             std::filesystem::directory_iterator(scipyLibsPath)) {
             if (lib.is_regular_file()) {
                 for (const auto &iter : priority_lib) {
                     std::string libname_str = lib.path().filename().string();
@@ -144,14 +144,15 @@ void compute_diagonalizing_gates(int n, int lda,
         }
 
         std::sort(availableLibs.begin(), availableLibs.end(),
-              [](const auto &lhs, const auto &rhs) {
-                  return lhs.second < rhs.second;
-              });
+                  [](const auto &lhs, const auto &rhs) {
+                      return lhs.second < rhs.second;
+                  });
 
         for (const auto &lib : availableLibs) {
             auto libPath = scipyLibsPath / lib.first.c_str();
             const std::string libPathStr = libPath.string();
-            blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
+            blasLibs.emplace_back(
+                std::make_shared<SharedLibLoader>(libPathStr));
         }
         blasLib = blasLibs.back();
     }
