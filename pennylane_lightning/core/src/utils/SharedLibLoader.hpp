@@ -16,12 +16,13 @@
  * @file
  * Dynamic shared library functions API wrapper.
  */
+#pragma once
 #include <string>
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include "Error.hpp"

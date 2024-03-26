@@ -28,12 +28,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include <iostream>
-
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
-#include <windows.h>
+#include <Windows.h>
 #endif
 
 #include "SharedLibLoader.hpp"
