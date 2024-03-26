@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner-false') && !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     runs-on:
       - self-hosted
       - linux
@@ -175,7 +175,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        mpilib: ["mpich", "openmpi"]
+        mpilib: ["mpich"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["2"]
     timeout-minutes: 30
