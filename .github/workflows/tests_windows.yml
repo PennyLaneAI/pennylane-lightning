@@ -210,7 +210,6 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            set -x
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
             python -c "import os; import site; os.environ['SCIPY_LIBS'] = f'{site.getsitepackages()[0]}/Lib/scipy.libs'"
@@ -235,7 +234,6 @@ jobs:
               Invoke-Expression $cov_call
             }
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-            set +x
 
       - name: Upload test results
         uses: actions/upload-artifact@v3

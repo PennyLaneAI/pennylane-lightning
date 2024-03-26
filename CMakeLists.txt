@@ -88,6 +88,13 @@ message("Python site-packages directory: ${Python_SITELIB}")
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
 
+    message("Python site-packages directory (Windows): ${SCIPYLIBS}")
+
+    if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+        string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
+        message("Python site-packages directory (Windows): ${SCIPYLIBS}")
+    endif()
+
     if(NOT EXISTS ${SCIPYLIBS})
         message(FATAL_ERROR, "scipy.libs is not found.")
     else()
