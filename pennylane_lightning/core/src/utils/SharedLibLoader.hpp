@@ -55,7 +55,9 @@ class SharedLibLoader final {
 #if defined(__APPLE__) || defined(__linux__)
         handle_ = dlopen(filename.c_str(), rtld_flags);
         // This allows users to use pre-installed LAPACK package
-        PL_ABORT_IF(!handle_, dlerror());
+        if(filename!="lapack.so"){
+          PL_ABORT_IF(!handle_, dlerror());
+        }
 #elif defined(_MSC_VER)
         // codefactor[skip]
         handle_ = LoadLibrary(filename.c_str());

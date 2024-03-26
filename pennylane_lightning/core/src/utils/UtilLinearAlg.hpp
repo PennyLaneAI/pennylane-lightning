@@ -37,13 +37,8 @@
 #endif
 
 #include "SharedLibLoader.hpp"
-#ifndef _ENABLE_PYTHON
-#include "config.h"
-#endif
 
-#ifdef __APPLE__
 #include "config.h"
-#endif
 
 /// @cond DEV
 namespace {
@@ -113,48 +108,53 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else
-    std::shared_ptr<SharedLibLoader> blasLib;
-    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
+    std::shared_ptr<SharedLibLoader> blasLib("lapack.so");
+    if(!blasLib->getHandle()){
+        std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-#ifndef _ENABLE_PYTHON
-    std::string scipyPathStr(SCIPY_LIBS_PATH);
-#else
-    std::string scipyPathStr;
-#endif
+        std::string scipyPathStr(SCIPY_LIBS_PATH);
 
-    if (scipyPathStr.empty()) {
-        std::string currentPathStr(getPath());
-        scipyPathStr = currentPathStr + "/../../scipy.libs";
-    }
+        if (scipyPathStr.empty() || !std::filesystem::exists(scipyPathStr)) {
+            std::string currentPathStr(getPath());
+            scipyPathStr = currentPathStr + "/../../scipy.libs";
+            if(!std::filesystem::exists(scipyPathStr)){
+            
+            }
+            PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
+                    "The scipy.libs/ is not available.");
+        } else {
+            std::exit(EXIT_FAILURE);
+        }
 
-    std::filesystem::path scipyLibsPath(scipyPathStr);
+        std::filesystem::path scipyLibsPath(scipyPathStr);
 
-    std::cout << scipyLibsPath << std::endl;
+        std::cout << scipyLibsPath << std::endl;
 
-    std::vector<std::pair<std::string, std::size_t>> availableLibs;
+        std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
-    for (const auto &lib : std::filesystem::directory_iterator(scipyLibsPath)) {
-        if (lib.is_regular_file()) {
-            for (const auto &iter : priority_lib) {
-                std::string libname_str = lib.path().filename().string();
-                if (libname_str.find(iter.first) != std::string ::npos) {
-                    availableLibs.emplace_back(libname_str, iter.second);
+        for (const auto &lib : std::filesystem::directory_iterator(scipyLibsPath)) {
+            if (lib.is_regular_file()) {
+                for (const auto &iter : priority_lib) {
+                    std::string libname_str = lib.path().filename().string();
+                    if (libname_str.find(iter.first) != std::string ::npos) {
+                        availableLibs.emplace_back(libname_str, iter.second);
+                    }
                 }
             }
         }
-    }
 
-    std::sort(availableLibs.begin(), availableLibs.end(),
+        std::sort(availableLibs.begin(), availableLibs.end(),
               [](const auto &lhs, const auto &rhs) {
                   return lhs.second < rhs.second;
               });
 
-    for (const auto &lib : availableLibs) {
-        auto libPath = scipyLibsPath / lib.first.c_str();
-        const std::string libPathStr = libPath.string();
-        blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
+        for (const auto &lib : availableLibs) {
+            auto libPath = scipyLibsPath / lib.first.c_str();
+            const std::string libPathStr = libPath.string();
+            blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
+        }
+        blasLib = blasLibs.back();
     }
-    blasLib = blasLibs.back();
 #endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation

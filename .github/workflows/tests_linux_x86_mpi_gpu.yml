@@ -95,6 +95,7 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
           python -m pip install cmake custatevec-cu12
+          sudo apt-get -y -q install liblapack-dev
 
       - name: Validate GPU version and installed compiler and modules
         run: |
