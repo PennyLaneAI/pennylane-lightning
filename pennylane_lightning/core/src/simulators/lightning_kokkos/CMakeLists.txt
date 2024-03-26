@@ -23,7 +23,6 @@ target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1
 
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
 if(ENABLE_MPI)
-    findCUDATK(lightning_external_libs)
     findMPI(lightning_external_libs)
     target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS_MPI=1")
 endif()

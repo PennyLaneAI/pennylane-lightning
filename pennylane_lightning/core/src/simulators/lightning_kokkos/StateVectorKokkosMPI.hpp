@@ -136,21 +136,14 @@ class StateVectorKokkosMPI final
         communicator_ = MPI_COMM_WORLD;
         Kokkos::InitializationSettings settings = kokkos_args;
         settings.set_device_id(get_mpi_rank());
-        // Init Kokkos
-        // {
-        //     const std::lock_guard<std::mutex> lock(init_mutex_);
-        //     if (!Kokkos::is_initialized()) {
-        //         Kokkos::initialize(kokkos_args);
-        //     }
-        // }
+        // std::cout << "Setting device ID to " << get_mpi_rank() << std::endl;
         // Init attrs
         num_qubits_ = num_qubits;
         if (num_qubits > 0) {
             sv_ = std::make_unique<SVK>(get_num_local_wires(), settings);
-            recvbuf_ =
-                std::make_unique<SVK>(get_num_local_wires(), settings);
-            sendbuf_ = KokkosVector("sendbuf_", get_blk_size());
             setBasisState(0U);
+            recvbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
+            sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
         }
     };
 
@@ -215,22 +208,20 @@ class StateVectorKokkosMPI final
      */
     void mpi_isend(const std::size_t dest, MPI_Request &request,
                    const bool copy = false) {
-        printf("line215\n");
+        KokkosVector sd_view = (*sendbuf_).getView();
         if (copy) {
-            printf("line216\n");
-            KokkosVector sv_view =
-                getView(); // circumvent error capturing this with KOKKOS_LAMBDA
-            printf("line217\n");
-            Kokkos::parallel_for("copy_to_sendbuf", 
-                sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                    sendbuf_(i) = sv_view(i);
+            KokkosVector sv_view = (*sv_).getView();
+            PL_ABORT_IF_NOT(sv_view.size() == sd_view.size(), "Unequal sizes.");
+            Kokkos::parallel_for(
+                "copy_to_sendbuf",
+                Kokkos::RangePolicy<KokkosExecSpace>(0, sv_view.size()),
+                KOKKOS_LAMBDA(const std::size_t i) {
+                    sd_view(i) = sv_view(i);
                 });
-            printf("line218\n");
             Kokkos::fence("copy_to_sendbuf");
         }
-        printf("line219\n");
-        PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sendbuf_.data()),
-                                    sendbuf_.size(), get_mpi_type<ComplexT>(),
+        PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
+                                    sd_view.size(), get_mpi_type<ComplexT>(),
                                     static_cast<int>(dest), 0, communicator_,
                                     &request));
     }
@@ -488,8 +479,7 @@ class StateVectorKokkosMPI final
     void setBasisState(const std::size_t global_index) {
         const auto index = global_2_local_index(global_index);
         const auto rank = static_cast<std::size_t>(get_mpi_rank());
-        KokkosVector sv_view = getView(); // circumvent error capturing this
-                                          // with KOKKOS_LAMBDA
+        KokkosVector sv_view = getView();
         Kokkos::parallel_for(
             sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(i) = (index.first == rank && index.second == i)
@@ -515,8 +505,7 @@ class StateVectorKokkosMPI final
                                          indices.data() + offset, blk));
         Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
                                         values.data() + offset, blk));
-        KokkosVector sv_view = getView(); // circumvent error capturing this
-                                          // with KOKKOS_LAMBDA
+        KokkosVector sv_view = getView();
         Kokkos::parallel_for(
             blk, KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(d_indices[i]) = d_values[i];
@@ -601,7 +590,6 @@ class StateVectorKokkosMPI final
         // PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
         // PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
         // if (initflag && !finflag) {
-        //     // finalize Kokkos first
         //     PL_MPI_IS_SUCCESS(MPI_Finalize());
         // }
     }
@@ -971,7 +959,7 @@ class StateVectorKokkosMPI final
     std::size_t num_qubits_;
     std::unique_ptr<SVK> sv_;
     std::unique_ptr<SVK> recvbuf_;
-    KokkosVector sendbuf_;
+    std::unique_ptr<SVK> sendbuf_;
     MPI_Comm communicator_;
 };
 
