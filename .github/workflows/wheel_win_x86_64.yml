@@ -124,13 +124,18 @@ jobs:
 
       - name: Build wheels
         env:
+          CIBW_BEFORE_ALL: |
+            python -m venv venv
+            source venv/bin/activate
+            python -m pip install scipy
+
           CIBW_ARCHS_WINDOWS: ${{matrix.arch}}
 
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake~=3.24.0 build scipy
+            python -m pip install pybind11 cmake~=3.24.0 build
 
           #Temporarily commenting while solving problems to find binaries in CIBW tests.
           # CIBW_BEFORE_TEST: |
