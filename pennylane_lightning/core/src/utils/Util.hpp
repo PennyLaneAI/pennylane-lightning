@@ -243,7 +243,7 @@ inline static constexpr auto INVSQRT2() -> ComplexT<T> {
 template <template <class> class ComplexT, class T>
 inline auto exp(const ComplexT<T> angle) -> ComplexT<T> {
 #if _ENABLE_PLKOKKOS == 1
-    if constexpr (std::is_same_v<ComplexT, Kokkos::complex>) {
+    if constexpr (std::is_same_v<ComplexT<T>, Kokkos::complex<T>>) {
         return Kokkos::exp(angle);
     } else {
 #endif
