@@ -148,7 +148,7 @@ jobs:
         run: |
           python -m venv venv
           venv\Scripts\activate
-          python -m pip install scipy
+          python -m pip install scipy cibuildwheel~=2.16.0 wheel
           python -m cibuildwheel --output-dir wheelhouse
 
       - name: Patch wheels
