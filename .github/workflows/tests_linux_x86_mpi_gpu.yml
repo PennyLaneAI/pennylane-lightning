@@ -273,7 +273,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           PL_DEVICE=lightning.gpu mpirun -np 2 \
-          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
+          coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest -s -x ./mpitests --tb=native
           coverage combine
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
