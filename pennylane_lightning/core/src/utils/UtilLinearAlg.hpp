@@ -57,6 +57,11 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 namespace Pennylane::Util {
 
 #ifdef __linux__
+/**
+ * @brief Get the path to the current shared library object.
+ *
+ * @return const char*
+ */
 inline const char *getPath() {
     Dl_info dl_info;
     PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,

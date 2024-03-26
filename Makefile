@@ -96,7 +96,6 @@ test-cpp:
 	rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
 		  -DCMAKE_BUILD_TYPE=Debug \
-		  -DENABLE_PYTHON=OFF \
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
