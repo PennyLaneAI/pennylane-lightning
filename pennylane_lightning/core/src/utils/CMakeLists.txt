@@ -7,7 +7,9 @@ set(LQUBIT_UTILS_FILES RuntimeInfo.cpp UtilLinearAlg.cpp CACHE INTERNAL "" FORCE
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
-
+if(ENABLE_PYTHON)
+    target_link_libraries(lightning_compile_options INTERFACE "-D_ENABLE_PYTHON=1")
+endif()
 
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options

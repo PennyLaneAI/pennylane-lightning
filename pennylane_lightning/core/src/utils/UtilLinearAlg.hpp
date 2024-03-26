@@ -37,7 +37,13 @@
 #endif
 
 #include "SharedLibLoader.hpp"
-//#include "config.h"
+#ifndef _ENABLE_PYTHON
+#include "config.h"
+#endif
+
+#ifdef __APPLE__
+#include "config.h"
+#endif
 
 /// @cond DEV
 namespace {
@@ -110,15 +116,20 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-    //std::filesystem::path scipyLibsPath(SCIPY_LIBS_PATH);
+#ifndef _ENABLE_PYTHON
+    std::string scipyPathStr(SCIPY_LIBS_PATH);
+#else
+    std::string scipyPathStr;
+#endif
 
-    std::string currentPathStr(getPath());
-    std::string scipyPath = currentPathStr + "/../../scipy.libs";
+    if (scipyPathStr.empty()) {
+        std::string currentPathStr(getPath());
+        scipyPathStr = currentPathStr + "/../../scipy.libs";
+    }
 
-    std::filesystem::path scipyLibsPath(scipyPath);
-    
-    std::cout<<scipyLibsPath<<std::endl;
+    std::filesystem::path scipyLibsPath(scipyPathStr);
 
+    std::cout << scipyLibsPath << std::endl;
 
     std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
