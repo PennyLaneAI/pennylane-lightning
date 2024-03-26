@@ -886,6 +886,30 @@ class StateVectorKokkosMPI final
     [[nodiscard]] auto getView() -> KokkosVector & { return (*sv_).getView(); }
 
     /**
+     * @brief Copy data from the host space to the device space.
+     *
+     */
+    inline void HostToDevice(ComplexT *sv, std::size_t length) {
+        (*sv_).HostToDevice(sv, length);
+    }
+
+    /**
+     * @brief Copy data from the device space to the host space.
+     *
+     */
+    inline void DeviceToHost(ComplexT *sv, std::size_t length) const {
+        (*sv_).HostToDevice(sv, length);
+    }
+
+    /**
+     * @brief Copy data from the device space to the device space.
+     *
+     */
+    inline void DeviceToDevice(KokkosVector vector_to_copy) {
+        (*sv_).DeviceToDevice(vector_to_copy);
+    }
+
+    /**
      * @brief Update data of the class
      *
      * @param other Kokkos View

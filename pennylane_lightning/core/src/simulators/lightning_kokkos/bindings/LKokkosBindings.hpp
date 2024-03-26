@@ -103,21 +103,19 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Set State Vector on device with values and their corresponding "
             "indices for the state vector on device")
-#if _ENABLE_MPI != 1
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {
-        py::buffer_info numpyArrayInfo = host_sv.request();
-        auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-        if (host_sv.size()) {
-            device_sv.DeviceToHost(data_ptr, host_sv.size());
-        }
-            },
-            "Synchronize data from the GPU device to host.")
+                py::buffer_info numpyArrayInfo = host_sv.request();
+                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+                if (host_sv.size()) {
+                    device_sv.DeviceToHost(data_ptr, host_sv.size());
+                }
+            }, "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
              py::overload_cast<ComplexT *,
-             size_t>(&StateVectorT::HostToDevice), "Synchronize data from the
-             host device to GPU.")
+             size_t>(&StateVectorT::HostToDevice), "Synchronize data from the "
+             "host device to GPU.")
         .def(
             "HostToDevice",
             [](StateVectorT &device_sv, const np_arr_c &host_sv) {
@@ -129,7 +127,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         }
             },
             "Synchronize data from the host device to GPU.")
-#endif
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
