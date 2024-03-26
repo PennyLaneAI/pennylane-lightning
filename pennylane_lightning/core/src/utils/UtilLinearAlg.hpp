@@ -57,14 +57,14 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 namespace Pennylane::Util {
 
 #ifdef __linux__
-const char *getPath() {
+inline const char *getPath() {
     Dl_info dl_info;
     PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
                 "Can't get the path to the shared library.");
     return dl_info.dli_fname;
 }
 #elif defined(_MSC_VER)
-std::string getPath() {
+inline std::string getPath() {
     char buffer[MAX_PATH];
     GetModuleFileName(nullptr, buffer, MAX_PATH);
     std::string fullPath(buffer);
