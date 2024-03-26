@@ -108,27 +108,19 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else
-    std::shared_ptr<SharedLibLoader> blasLib = std::make_shared<SharedLibLoader>("lapack.so");
-    if (!blasLib->getHandle()) {
-        std::cout<<"++++++++++++test"<<std::endl;
-        std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
+    std::shared_ptr<SharedLibLoader> blasLib;
+    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-        std::string scipyPathStr(SCIPY_LIBS_PATH);
+    std::string scipyPathStr(SCIPY_LIBS_PATH);
 
-        if (scipyPathStr.empty() || !std::filesystem::exists(scipyPathStr)) {
-            std::string currentPathStr(getPath());
-            scipyPathStr = currentPathStr + "/../../scipy.libs";
-            if (!std::filesystem::exists(scipyPathStr)) {
-            }
-            PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
-                        "The scipy.libs/ is not available.");
-        } else {
-            std::exit(EXIT_FAILURE);
-        }
-
+    if (!std::filesystem::exists(scipyPathStr)) {
+        std::string currentPathStr(getPath());
+        scipyPathStr = currentPathStr + "/../../scipy.libs";
+    }
+    if (!std::filesystem::exists(std::filesystem::canonical(scipyPathStr))) {
+        blasLib = std::make_shared<SharedLibLoader>("lapack.so");
+    } else {
         std::filesystem::path scipyLibsPath(scipyPathStr);
-
-        std::cout << scipyLibsPath << std::endl;
 
         std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
@@ -155,6 +147,7 @@ void compute_diagonalizing_gates(int n, int lda,
             blasLibs.emplace_back(
                 std::make_shared<SharedLibLoader>(libPathStr));
         }
+
         blasLib = blasLibs.back();
     }
 #endif
@@ -196,6 +189,5 @@ void compute_diagonalizing_gates(int n, int lda,
                    [](std::complex<T> value) {
                        return std::complex<T>{value.real(), -value.imag()};
                    });
-
 }
 } // namespace Pennylane::Util
