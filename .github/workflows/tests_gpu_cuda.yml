@@ -119,13 +119,12 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }}
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
           sudo apt-get -y -q install liblapack-dev
 
       - name: Build and run unit tests
         run: |
           cd main
-          export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \

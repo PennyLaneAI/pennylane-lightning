@@ -148,14 +148,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov liblapack-dev
-          python -m pip install scipy
-      
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov liblapack-dev      
 
       - name: Build and run unit tests
         run: |
           cd main
-          export SCIPY_LIBS=$(python -c "import site; print( f'{site.getsitepackages()[0]}/scipy.libs')")
           cmake . -BBuild -G Ninja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
