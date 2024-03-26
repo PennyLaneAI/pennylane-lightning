@@ -75,7 +75,7 @@ jobs:
       - name: Install dependencies
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          python -m pip install cmake build
+          python -m pip install "cmake!=3.29.0" build
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
