@@ -445,6 +445,12 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
+        .def(
+            "var",
+            [](mclass &M, const std::shared_ptr<Observable<StateVectorT>> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an observable object.")
 #if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
         .def("probs",
              [](mclass &M, const std::vector<size_t> &wires) {
@@ -452,18 +458,6 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
              })
         .def("probs",
              [](mclass &M) { return py::array_t<ParamT>(py::cast(M.probs())); })
-        .def(
-            "expval",
-            [](mclass &M, const std::shared_ptr<Observable<StateVectorT>> &ob) {
-                return M.expval(*ob);
-            },
-            "Expected value of an observable object.")
-        .def(
-            "var",
-            [](mclass &M, const std::shared_ptr<Observable<StateVectorT>> &ob) {
-                return M.var(*ob);
-            },
-            "Variance of an observable object.")
         .def("generate_samples",
              [](mclass &M, size_t num_wires, size_t num_shots) {
                  auto &&result = M.generate_samples(num_shots);
