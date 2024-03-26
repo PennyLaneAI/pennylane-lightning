@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_utils LANGUAGES CXX)
 
-set(LQUBIT_UTILS_FILES RuntimeInfo.cpp UtilLinearAlg.cpp CACHE INTERNAL "" FORCE)
+set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
-if(ENABLE_PYTHON)
-    target_link_libraries(lightning_compile_options INTERFACE "-D_ENABLE_PYTHON=1")
+if(NOT WIN32)
+    list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 endif()
 
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
