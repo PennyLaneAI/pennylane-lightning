@@ -127,7 +127,6 @@ jobs:
           CIBW_BEFORE_ALL: |
             python -m venv venv
             venv\Scripts\activate
-            python -m pip install scipy
 
           CIBW_ARCHS_WINDOWS: ${{matrix.arch}}
 
@@ -150,7 +149,10 @@ jobs:
 
           CIBW_BUILD_FRONTEND: build
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          venv\Scripts\activate
+          python -m pip install scipy
+          python -m cibuildwheel --output-dir wheelhouse
 
       - name: Patch wheels
         run: |
