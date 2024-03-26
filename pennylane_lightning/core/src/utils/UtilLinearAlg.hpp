@@ -28,8 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <iostream>
-
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
@@ -37,6 +35,7 @@
 #endif
 
 #include "SharedLibLoader.hpp"
+#include "config.h"
 
 /// @cond DEV
 namespace {
@@ -50,33 +49,6 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
 
 std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
-
-#ifdef __linux__
-/*std::string getPath() {
-    Dl_info dl_info;
-    auto flag = dladdr((const void *)getPath, &dl_info);
-    PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
-    std::string path(dl_info.dli_fname);
-    return path;
-}*/
-
-void libA_boundary() {}
-
-const char *getPath() {
-    Dl_info dl_info;
-    auto flag = dladdr((const void *)libA_boundary, &dl_info);
-    PL_ABORT_IF(!flag, "Can't get the path to the shared library.");
-    return dl_info.dli_fname;
-}
-#elif defined(_MSC_VER)
-std::string getPath() {
-    char buffer[MAX_PATH];
-    GetModuleFileName(nullptr, buffer, MAX_PATH);
-    std::string fullPath(buffer);
-    std::size_t pos = fullPath.find_last_of("\\/");
-    return fullPath.substr(0, pos);
-}
-#endif
 } // namespace
 /// @endcond
 
@@ -112,32 +84,14 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
-    const std::string libName =
-        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
-        "Frameworks/vecLib.framework/libLAPACK.dylib";
+    const std::string libName(SCIPY_LIBS_PATH);
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-    PL_ABORT_IF(getPath() == nullptr, "Can't get path to lightning lib so.");
-    std::string currentPathStr(getPath());
-    std::filesystem::path currentPath(getPath());
-    std::filesystem::path scipyLibsPath =
-        currentPath.parent_path().parent_path() / "scipy.libs";
-    
-    std::cout<< scipyLibsPath <<std::endl;
-    
-    if (!std::filesystem::exists(std::filesystem::canonical(scipyLibsPath))) {
-        // PL_ABORT_IF_NOT(currentPathStr.find("pennylane_lightning")!=std::string::npos,
-        // "current path is not expected");
-        PL_ABORT_IF(std::getenv("SCIPY_LIBS") == nullptr,
-                    "Can't get SCIPY_LIBS env.");
-        const std::string scipyPathStr(std::getenv("SCIPY_LIBS"));
-        PL_ABORT_IF(!std::filesystem::exists(scipyPathStr),
-                    "The SCIPY_LIBS env is not available.");
-        scipyLibsPath = scipyPathStr;
-    }
+
+    std::filesystem::path scipyLibsPath(SCIPY_LIBS_PATH);
 
     std::vector<std::pair<std::string, std::size_t>> availableLibs;
 

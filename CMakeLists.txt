@@ -81,8 +81,25 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
+find_package(Python COMPONENTS Interpreter Development)
+
+message("Python site-packages directory: ${Python_SITELIB}")
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
+    set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+
+    if(NOT EXISTS ${SCIPYLIBS})
+        message(FATAL_ERROR, "scipy.libs is not found.")
+    else()
+       configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    endif()
+else()
+    set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+endif()
+
+
 if(ENABLE_PYTHON)
-    find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.11.1
