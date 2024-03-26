@@ -108,8 +108,7 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
 #else
-    const std::string lapackName = "lapack.so";
-    std::shared_ptr<SharedLibLoader> blasLib(lapackName);
+    std::shared_ptr<SharedLibLoader> blasLib = std::make_shared<SharedLibLoader>("lapack.so");
     if (!blasLib->getHandle()) {
         std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
