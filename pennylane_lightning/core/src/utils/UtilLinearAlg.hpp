@@ -28,6 +28,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 #elif defined(_MSC_VER)
@@ -35,7 +37,7 @@
 #endif
 
 #include "SharedLibLoader.hpp"
-#include "config.h"
+//#include "config.h"
 
 /// @cond DEV
 namespace {
@@ -53,6 +55,23 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 /// @endcond
 
 namespace Pennylane::Util {
+
+#ifdef __linux__
+const char *getPath() {
+    Dl_info dl_info;
+    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
+                "Can't get the path to the shared library.");
+    return dl_info.dli_fname;
+}
+#elif defined(_MSC_VER)
+std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
+#endif
 
 /**
  * @brief Decompose Hermitian matrix into diagonal matrix and unitaries
@@ -91,7 +110,15 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-    std::filesystem::path scipyLibsPath(SCIPY_LIBS_PATH);
+    //std::filesystem::path scipyLibsPath(SCIPY_LIBS_PATH);
+
+    std::string currentPathStr(getPath());
+    std::string scipyPath = currentPathStr + "/../../scipy.libs";
+
+    std::filesystem::path scipyLibsPath(scipyPath);
+    
+    std::cout<<scipyLibsPath<<std::endl;
+
 
     std::vector<std::pair<std::string, std::size_t>> availableLibs;
 
