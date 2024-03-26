@@ -21,9 +21,9 @@
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
-//TODO add windows support
-//#elif defined(_MSC_VER)
-//#include <Windows.h>
+// TODO add windows support
+// #elif defined(_MSC_VER)
+// #include <Windows.h>
 #endif
 
 #include "Error.hpp"
@@ -41,9 +41,9 @@ class SharedLibLoader final {
   private:
 #if defined(__APPLE__) || defined(__linux__)
     void *handle_{nullptr};
-//TODO add windows support
-//#elif defined(_MSC_VER)
-//    HMODULE handle_{nullptr};
+// TODO add windows support
+// #elif defined(_MSC_VER)
+//     HMODULE handle_{nullptr};
 #endif
 
   public:
@@ -59,19 +59,19 @@ class SharedLibLoader final {
         handle_ = dlopen(filename.c_str(), rtld_flags);
         // This allows users to use pre-installed LAPACK package
         PL_ABORT_IF(!handle_, dlerror());
-//TODO add windows support
-//#elif defined(_MSC_VER)
-//        handle_ = LoadLibrary(filename.c_str());
-//        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+// TODO add windows support
+// #elif defined(_MSC_VER)
+//         handle_ = LoadLibrary(filename.c_str());
+//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
     }
 
     ~SharedLibLoader() {
 #if defined(__APPLE__) || defined(__linux__)
         dlclose(handle_);
-//TODO add windows support
-//#elif defined(_MSC_VER)
-//        FreeLibrary(handle_);
+// TODO add windows support
+// #elif defined(_MSC_VER)
+//         FreeLibrary(handle_);
 #endif
     }
 
@@ -81,10 +81,10 @@ class SharedLibLoader final {
 #if defined(__APPLE__) || defined(__linux__)
         void *sym = dlsym(handle_, symbol.c_str());
         PL_ABORT_IF(!sym, dlerror());
-//TODO add windows support
-//#elif defined(_MSC_VER)
-//        void *sym = GetProcAddress(handle_, symbol.c_str());
-//        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+// TODO add windows support
+// #elif defined(_MSC_VER)
+//         void *sym = GetProcAddress(handle_, symbol.c_str());
+//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
         return sym;
     }

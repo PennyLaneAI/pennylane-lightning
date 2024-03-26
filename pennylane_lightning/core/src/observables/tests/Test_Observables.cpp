@@ -245,7 +245,8 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
                 Catch::Matchers::Contains(
-                    "Hermitian observables do not support shot measurement for Windows."));
+                    "Hermitian observables do not support shot measurement for "
+                    "Windows."));
         }
 #endif
 
