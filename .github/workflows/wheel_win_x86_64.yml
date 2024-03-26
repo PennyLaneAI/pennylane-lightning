@@ -124,10 +124,6 @@ jobs:
 
       - name: Build wheels
         env:
-          CIBW_BEFORE_ALL: |
-            python -m venv venv
-            venv\Scripts\activate
-
           CIBW_ARCHS_WINDOWS: ${{matrix.arch}}
 
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -150,6 +146,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
 
         run: |
+          python -m venv venv
           venv\Scripts\activate
           python -m pip install scipy
           python -m cibuildwheel --output-dir wheelhouse
