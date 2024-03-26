@@ -117,7 +117,7 @@ void compute_diagonalizing_gates(int n, int lda,
         std::string currentPathStr(getPath());
         scipyPathStr = currentPathStr + "/../../scipy.libs";
     }
-    if (!std::filesystem::exists(std::filesystem::canonical(scipyPathStr))) {
+    if (!std::filesystem::exists(scipyPathStr)) {
         blasLib = std::make_shared<SharedLibLoader>("lapack.so");
     } else {
         std::filesystem::path scipyLibsPath(scipyPathStr);
