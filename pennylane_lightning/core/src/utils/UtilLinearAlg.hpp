@@ -197,6 +197,5 @@ void compute_diagonalizing_gates(int n, int lda,
                        return std::complex<T>{value.real(), -value.imag()};
                    });
 
-    dlclose(handle);
 }
 } // namespace Pennylane::Util
