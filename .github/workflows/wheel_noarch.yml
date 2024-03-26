@@ -44,8 +44,8 @@ jobs:
 
       - name: Install CMake and ninja
         run: |
-         # Omitting the installation of cmake v3.29.0 due to
-         # https://github.com/scikit-build/cmake-python-distributions/pull/474
+          # Omitting the installation of cmake v3.29.0 due to
+          # https://github.com/scikit-build/cmake-python-distributions/pull/474
           python -m pip install --upgrade "cmake!=3.29.0" ninja
 
       - name: Build wheels
