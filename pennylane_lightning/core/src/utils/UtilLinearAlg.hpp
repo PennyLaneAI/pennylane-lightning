@@ -43,7 +43,7 @@
 
 /// @cond DEV
 namespace {
-// LAPACK routine for complex Hermitian eigensystems
+// Declare heev function pointers to access corresponding functions in LAPACK/OpenBlas
 using zheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<double> *, const int *, double *,
                           std::complex<double> *, const int *, double *, int *);
@@ -51,6 +51,7 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<float> *, const int *, float *,
                           std::complex<float> *, const int *, float *, int *);
 
+//Priority table used to load openblas and its dependencies in a correct order
 std::unordered_map<std::string, std::size_t> priority_lib = {
     {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
 } // namespace
