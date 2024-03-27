@@ -632,6 +632,31 @@ class StateVectorKokkosMPI final
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(controlled_wires.empty(),
+                        "Controlled kernels not implemented.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        applyOperation(opName, wires, inverse, params, gate_matrix);
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
@@ -962,6 +987,12 @@ class StateVectorKokkosMPI final
      */
     void updateData(ComplexT *new_data, std::size_t new_size) {
         (*sv_).updateData(new_data, new_size);
+    }
+
+    [[nodiscard]] auto getData() -> ComplexT * { return getView().data(); }
+
+    [[nodiscard]] auto getData() const -> const ComplexT * {
+        return getView().data();
     }
 
     /**

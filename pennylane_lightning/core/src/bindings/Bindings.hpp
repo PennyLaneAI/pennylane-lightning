@@ -690,11 +690,8 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     /* Algorithms submodule */
     py::module_ alg_submodule = m.def_submodule(
         "algorithms", "Submodule for the algorithms functionality.");
-#if _ENABLE_MPI == 1 && _ENABLE_PLKOKKOS == 1
-#else
     registerBackendAgnosticAlgorithms<StateVectorT>(alg_submodule);
     registerBackendSpecificAlgorithms<StateVectorT>(alg_submodule);
-#endif
 }
 
 template <typename TypeList>

@@ -54,9 +54,14 @@ class AdjointJacobian final
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
                                PrecisionT scaling_coeff, size_t idx) {
-        jac[idx] = -2 * scaling_coeff *
-                   getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
-                                                            sv2.getView());
+        auto element = -2 * scaling_coeff *
+                       getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
+                                                                sv2.getView());
+#if _ENABLE_MPI == 1
+        auto sum = sv1.all_reduce_sum(element);
+        element = sum;
+#endif
+        jac[idx] = element;
     }
 
   public:
