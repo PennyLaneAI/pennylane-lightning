@@ -28,6 +28,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <iostream>
+
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 // TODO add windows support
@@ -119,13 +121,12 @@ void compute_diagonalizing_gates(int n, int lda,
     std::string scipyPathStr(SCIPY_LIBS_PATH);
 
     if (!std::filesystem::exists(scipyPathStr)) {
-        [[maybe_unused]] std::string currentPathStr(getPath());
-        [[maybe_unused]] scipyPathStr = currentPathStr + "/../../scipy.libs";
+        std::string currentPathStr(getPath());
+        scipyPathStr = currentPathStr + "/../../scipy.libs";
 
         try {
             // convert the relative path to absolute path
-            [[maybe_unused]] scipyPathStr =
-                std::filesystem::canonical(scipyPathStr).string();
+            scipyPathStr = std::filesystem::canonical(scipyPathStr).string();
         } catch (const std::exception &err) {
             std::cout << "Canonical path for scipy.libs"
                       << " threw exception:\n"
@@ -134,8 +135,7 @@ void compute_diagonalizing_gates(int n, int lda,
     }
     if (!std::filesystem::exists(scipyPathStr)) {
 #ifdef __linux__
-        [[maybe_unused]] blasLib =
-            std::make_shared<SharedLibLoader>("lapack.so");
+        blasLib = std::make_shared<SharedLibLoader>("lapack.so");
 #endif
     } else {
         std::filesystem::path scipyLibsPath(scipyPathStr);
