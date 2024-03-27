@@ -48,7 +48,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-            echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov liblapack-dev
+            echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
             python -m pip install scipy
 
       - name: Build and run unit tests
@@ -142,7 +142,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
           python -m pip install scipy
 
       - name: Get required Python packages
@@ -225,7 +225,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov liblapack-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov
           python -m pip install scipy
 
       - name: Build and run unit tests
@@ -406,7 +406,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov liblapack-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
           python -m pip install scipy
 
       - name: Build and run unit tests
@@ -503,7 +503,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
           python -m pip install scipy
 
       - name: Get required Python packages
@@ -675,7 +675,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov liblapack-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
           python -m pip install scipy
 
       - name: Build and run unit tests
