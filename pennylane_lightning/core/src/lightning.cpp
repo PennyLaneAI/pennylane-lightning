@@ -144,6 +144,21 @@ int main(int argc, char *argv[]) {
                                          "SingleExcitation",
                                          "SingleExcitationMinus",
                                          "SingleExcitationPlus"};
+    std::vector<std::string> gens = {"PhaseShift",
+                                     "RX",
+                                     "RY",
+                                     "RZ",
+                                     "IsingXX",
+                                     "IsingXY",
+                                     "IsingYY",
+                                     "IsingZZ",
+                                     "ControlledPhaseShift",
+                                     "CRX",
+                                     "CRY",
+                                     "CRZ",
+                                     "SingleExcitation",
+                                     "SingleExcitationMinus",
+                                     "SingleExcitationPlus"};
     std::size_t nq = indices.q;
     std::vector<std::complex<double>> sv_data = get_ascend_vector(nq);
 
@@ -205,6 +220,43 @@ int main(int argc, char *argv[]) {
             CSVOutput<decltype(indices), t_scale> csv(indices, "Matrix",
                                                       average_times(times));
             std::cout << csv << std::endl;
+        }
+    }
+    // Test 1q-gates
+    for (auto &gen : gens) {
+        for (auto inverse : std::vector<bool>({false, true})) {
+            for (std::size_t target0 = 0; target0 < nq; target0++) {
+                for (std::size_t target1 = 0; target1 < nq; target1++) {
+                    if (target0 == target1) {
+                        continue;
+                    }
+                    auto gen_op =
+                        reverse_lookup(generator_names, std::string_view{gen});
+                    auto nwires = lookup(generator_wires, gen_op);
+                    if (nwires == 1 && target1 != 0) {
+                        continue;
+                    }
+                    if (svmpi.get_mpi_rank() == 0) {
+                        std::cout << "Testing generator " << gen << " with : "
+                                  << "(inv, targets) = (" << inverse << ", "
+                                  << target0 << ", " << target1 << ")"
+                                  << std::endl;
+                    }
+                    std::vector<std::size_t> wires =
+                        (nwires == 1)
+                            ? std::vector<std::size_t>{target0}
+                            : std::vector<std::size_t>{target0, target1};
+                    std::vector<double> params(0, 0.1);
+                    TIMING(sv.applyGenerator(gen, wires, inverse, params));
+                    TIMING(svmpi.applyGenerator(gen, wires, inverse, params));
+                    allclose(svmpi, sv);
+                }
+                if (svmpi.get_mpi_rank() == 0) {
+                    CSVOutput<decltype(indices), t_scale> csv(
+                        indices, gen, average_times(times));
+                    std::cout << csv << std::endl;
+                }
+            }
         }
     }
     // Test 2q-gates

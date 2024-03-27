@@ -366,75 +366,126 @@ PrecisionT applyNamedGenerator(
     case GeneratorOperation::RX:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliX, arr_,
                                             num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::RY:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliY, arr_,
                                             num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::RZ:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliZ, arr_,
                                             num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::PhaseShift:
         applyGenPhaseShift<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                            params);
-        return static_cast<PrecisionT>(1.0);
+        break;
     case GeneratorOperation::ControlledPhaseShift:
         applyGenControlledPhaseShift<ExecutionSpace>(arr_, num_qubits, wires,
                                                      inverse, params);
-        return static_cast<PrecisionT>(1);
+        break;
     case GeneratorOperation::CRX:
         applyGenCRX<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::CRY:
         applyGenCRY<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::CRZ:
         applyGenCRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::IsingXX:
         applyGenIsingXX<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::IsingXY:
         applyGenIsingXY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
-        return static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::IsingYY:
         applyGenIsingYY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::IsingZZ:
         applyGenIsingZZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::SingleExcitation:
         applyGenSingleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
                                                  inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::SingleExcitationMinus:
         applyGenSingleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
                                                       inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::SingleExcitationPlus:
         applyGenSingleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
                                                      inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::DoubleExcitation:
         applyGenDoubleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
                                                  inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::DoubleExcitationMinus:
         applyGenDoubleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
                                                       inverse, params);
-        return -static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::DoubleExcitationPlus:
         applyGenDoubleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
                                                      inverse, params);
-        return static_cast<PrecisionT>(0.5);
+        break;
     case GeneratorOperation::MultiRZ:
         applyGenMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
+        break;
+    case GeneratorOperation::GlobalPhase:
+        break;
+    /// LCOV_EXCL_START
+    default:
+        PL_ABORT("Generator operation does not exist.");
+        /// LCOV_EXCL_STOP
+    }
+    return namedGeneratorFactor<PrecisionT>(generator_op);
+}
+
+template <class PrecisionT>
+PrecisionT namedGeneratorFactor(const GeneratorOperation generator_op) {
+    switch (generator_op) {
+    case GeneratorOperation::RX:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::RY:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::RZ:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::PhaseShift:
+        return static_cast<PrecisionT>(1.0);
+    case GeneratorOperation::ControlledPhaseShift:
+        return static_cast<PrecisionT>(1);
+    case GeneratorOperation::CRX:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::CRY:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::CRZ:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingXX:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingXY:
+        return static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingYY:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingZZ:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitation:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitationMinus:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitationPlus:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitation:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitationMinus:
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitationPlus:
+        return static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::MultiRZ:
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::GlobalPhase:
         return static_cast<PrecisionT>(-1.0);

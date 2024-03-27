@@ -1,19 +1,14 @@
 // Copyright 2018-2023 Xanadu Quantum Technologies Inc.
-
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-
 //     http://www.apache.org/licenses/LICENSE-2.0
-
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #pragma once
-
 #include <cmath>
 #include <complex>
 #include <vector>
@@ -29,6 +24,7 @@ using namespace Pennylane::Gates;
 /// @endcond
 
 namespace Pennylane::Gates {
+
 /**
  * @brief Create a matrix representation of the PauliX gate data in row-major
  * format.
@@ -378,7 +374,6 @@ static auto getRot(U phi, U theta, U omega) -> std::vector<ComplexT<T>> {
     const T s = std::sin(theta / 2);
     const U p{phi + omega};
     const U m{phi - omega};
-
     return {ComplexT<T>{std::cos(p / 2) * c, -std::sin(p / 2) * c},
             ComplexT<T>{-std::cos(m / 2) * s, -std::sin(m / 2) * s},
             ComplexT<T>{std::cos(m / 2) * s, -std::sin(m / 2) * s},
@@ -544,17 +539,14 @@ static auto getSingleExcitation(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             c,
             -s,
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             s,
             c,
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
@@ -574,17 +566,12 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitation()
     -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
     };
 }
 
@@ -637,17 +624,12 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitationMinus()
     -> std::vector<ComplexT<T>> {
     return {
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
+        ONE<ComplexT, T>(),   ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),
     };
 }
 
@@ -700,17 +682,12 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitationPlus()
     -> std::vector<ComplexT<T>> {
     return {
-        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),
+        -ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -ONE<ComplexT, T>(),
     };
 }
 
@@ -958,19 +935,55 @@ static auto getIsingXX(T angle) -> std::vector<ComplexT<T>> {
  * @return constexpr std::array<CFP_t>
  */
 template <template <typename...> class ComplexT, typename T>
+static constexpr auto getGeneratorPhaseShift() -> std::vector<ComplexT<T>> {
+    return {
+        ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),
+    };
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XX generator
+ * data in row-major format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @tparam T Required precision of parameter (`float` or `double`).
+ * @return constexpr std::array<CFP_t>
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getGeneratorControlledPhaseShift()
+    -> std::vector<ComplexT<T>> {
+    return {
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),
+    };
+}
+
+/**
+ * @brief Create a matrix representation of the Ising XX generator
+ * data in row-major format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @tparam T Required precision of parameter (`float` or `double`).
+ * @return constexpr std::array<CFP_t>
+ */
+template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingXX() -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
     };
 }
 
@@ -994,17 +1007,14 @@ static auto getIsingXY(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             c,
             neg_is,
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             neg_is,
             c,
             ZERO<ComplexT, T>(),
-
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
@@ -1023,17 +1033,12 @@ static auto getIsingXY(T angle) -> std::vector<ComplexT<T>> {
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingXY() -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
     };
 }
 
@@ -1084,17 +1089,12 @@ static auto getIsingYY(T angle) -> std::vector<ComplexT<T>> {
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingYY() -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(),
     };
 }
 
@@ -1144,17 +1144,12 @@ static auto getIsingZZ(T angle) -> std::vector<ComplexT<T>> {
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
     return {
-        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),
+        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        -ONE<ComplexT, T>(),
     };
 }
 
@@ -1189,12 +1184,12 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return (inverse)
                    ? getRot<ComplexT, T>(-params[2], -params[1], -params[0])
                    : getRot<ComplexT, T>(params[0], params[1], params[2]);
+    case GateOperation::CNOT:
+        return getCNOT<ComplexT, T>();
     case GateOperation::CY:
         return getCY<ComplexT, T>();
     case GateOperation::CZ:
         return getCZ<ComplexT, T>();
-    case GateOperation::CNOT:
-        return getCNOT<ComplexT, T>();
     case GateOperation::SWAP:
         return getSWAP<ComplexT, T>();
     case GateOperation::ControlledPhaseShift:
@@ -1240,6 +1235,51 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getCSWAP<ComplexT, T>();
     case GateOperation::Toffoli:
         return getToffoli<ComplexT, T>();
+    default:
+        PL_ABORT("This GateOperation does not have a corresponding matrix.");
+    }
+}
+
+template <template <typename...> class ComplexT, typename T>
+std::vector<ComplexT<T>>
+getGeneratorMatrix(const GeneratorOperation generator_op) {
+    switch (generator_op) {
+    case GeneratorOperation::RX:
+        return getPauliX<ComplexT, T>();
+    case GeneratorOperation::RY:
+        return getPauliY<ComplexT, T>();
+    case GeneratorOperation::RZ:
+        return getPauliZ<ComplexT, T>();
+    case GeneratorOperation::PhaseShift:
+        return getGeneratorPhaseShift<ComplexT, T>();
+    case GeneratorOperation::ControlledPhaseShift:
+        return getGeneratorControlledPhaseShift<ComplexT, T>();
+    case GeneratorOperation::CRX:
+        return getCNOT<ComplexT, T>();
+    case GeneratorOperation::CRY:
+        return getCY<ComplexT, T>();
+    case GeneratorOperation::CRZ:
+        return getCZ<ComplexT, T>();
+    case GeneratorOperation::IsingXX:
+        return getGeneratorIsingXX<ComplexT, T>();
+    case GeneratorOperation::IsingXY:
+        return getGeneratorIsingXY<ComplexT, T>();
+    case GeneratorOperation::IsingYY:
+        return getGeneratorIsingYY<ComplexT, T>();
+    case GeneratorOperation::IsingZZ:
+        return getGeneratorIsingZZ<ComplexT, T>();
+    case GeneratorOperation::SingleExcitation:
+        return getGeneratorSingleExcitation<ComplexT, T>();
+    case GeneratorOperation::SingleExcitationMinus:
+        return getGeneratorSingleExcitationMinus<ComplexT, T>();
+    case GeneratorOperation::SingleExcitationPlus:
+        return getGeneratorSingleExcitationPlus<ComplexT, T>();
+    case GeneratorOperation::DoubleExcitation:
+        return getGeneratorDoubleExcitation<ComplexT, T>();
+    case GeneratorOperation::DoubleExcitationMinus:
+        return getGeneratorDoubleExcitationMinus<ComplexT, T>();
+    case GeneratorOperation::DoubleExcitationPlus:
+        return getGeneratorDoubleExcitationPlus<ComplexT, T>();
     default:
         PL_ABORT("This GateOperation does not have a corresponding matrix.");
     }

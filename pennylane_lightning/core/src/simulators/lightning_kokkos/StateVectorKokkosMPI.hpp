@@ -867,6 +867,31 @@ class StateVectorKokkosMPI final
     }
 
     /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<fp_t> &params = {}) -> fp_t {
+        if (is_wires_local(wires)) {
+            return (*sv_).applyGenerator(opName, get_local_wires_indices(wires),
+                                         inverse, params);
+        }
+        const auto generator_op =
+            reverse_lookup(generator_names, std::string_view{opName});
+        auto matrix =
+            Pennylane::Gates::getGeneratorMatrix<Kokkos::complex, PrecisionT>(
+                generator_op);
+        applyOperation("Matrix", wires, false, {}, matrix);
+        return namedGeneratorFactor<PrecisionT>(generator_op);
+    }
+
+    /**
      * @brief Get the Kokkos data of the state vector.
      *
      * @return The pointer to the data of state vector
