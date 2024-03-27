@@ -58,6 +58,8 @@ std::unordered_map<std::string, std::size_t> priority_lib = {
 
 namespace Pennylane::Util {
 
+// Exclusively for python calls and tested in the python layer
+// LCOV_EXCL_START
 #ifdef __linux__
 /**
  * @brief Get the path to the current shared library object.
@@ -80,6 +82,7 @@ inline const char *getPath() {
 //     return fullPath.substr(0, pos);
 // }
 #endif
+// LCOV_EXCL_STOP
 
 /**
  * @brief Decompose Hermitian matrix into diagonal matrix and unitaries
@@ -117,9 +120,11 @@ void compute_diagonalizing_gates(int n, int lda,
 #else
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-
+    // For C++ usage
     std::string scipyPathStr(SCIPY_LIBS_PATH);
 
+    // Exclusively for python calls
+    // LCOV_EXCL_START
     if (!std::filesystem::exists(scipyPathStr)) {
         std::string currentPathStr(getPath());
         std::string site_packages_str("site-packages/");
@@ -140,41 +145,35 @@ void compute_diagonalizing_gates(int n, int lda,
                       << err.what() << '\n';
         }
     }
-    if (!std::filesystem::exists(scipyPathStr)) {
-#ifdef __linux__
-        blasLib = std::make_shared<SharedLibLoader>("lapack.so");
-#endif
-    } else {
-        std::filesystem::path scipyLibsPath(scipyPathStr);
+    // LCOV_EXCL_STOP
 
-        std::vector<std::pair<std::string, std::size_t>> availableLibs;
+    std::filesystem::path scipyLibsPath(scipyPathStr);
 
-        for (const auto &lib :
-             std::filesystem::directory_iterator(scipyLibsPath)) {
-            if (lib.is_regular_file()) {
-                for (const auto &iter : priority_lib) {
-                    std::string libname_str = lib.path().filename().string();
-                    if (libname_str.find(iter.first) != std::string ::npos) {
-                        availableLibs.emplace_back(libname_str, iter.second);
-                    }
+    std::vector<std::pair<std::string, std::size_t>> availableLibs;
+
+    for (const auto &lib : std::filesystem::directory_iterator(scipyLibsPath)) {
+        if (lib.is_regular_file()) {
+            for (const auto &iter : priority_lib) {
+                std::string libname_str = lib.path().filename().string();
+                if (libname_str.find(iter.first) != std::string ::npos) {
+                    availableLibs.emplace_back(libname_str, iter.second);
                 }
             }
         }
-
-        std::sort(availableLibs.begin(), availableLibs.end(),
-                  [](const auto &lhs, const auto &rhs) {
-                      return lhs.second < rhs.second;
-                  });
-
-        for (const auto &lib : availableLibs) {
-            auto libPath = scipyLibsPath / lib.first.c_str();
-            const std::string libPathStr = libPath.string();
-            blasLibs.emplace_back(
-                std::make_shared<SharedLibLoader>(libPathStr));
-        }
-
-        blasLib = blasLibs.back();
     }
+
+    std::sort(availableLibs.begin(), availableLibs.end(),
+              [](const auto &lhs, const auto &rhs) {
+                  return lhs.second < rhs.second;
+              });
+
+    for (const auto &lib : availableLibs) {
+        auto libPath = scipyLibsPath / lib.first.c_str();
+        const std::string libPathStr = libPath.string();
+        blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
+    }
+
+    blasLib = blasLibs.back();
 #endif
 
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
