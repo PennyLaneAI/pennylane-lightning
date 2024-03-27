@@ -105,12 +105,29 @@ template <typename T> struct AVX512Concept {
     }
 
     PL_FORCE_INLINE
+    static void stream_(PrecisionT *p, IntrinsicType value) {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
+            _mm512_stream_ps(p, value);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            _mm512_stream_pd(p, value);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    PL_FORCE_INLINE
     static void store(std::complex<PrecisionT> *p, IntrinsicType value) {
-        #ifdef PL_LQ_KERNEL_AVX_STREAMING
+        store(reinterpret_cast<PrecisionT *>(p), value);
+    }
+
+    PL_FORCE_INLINE
+    static void store(PrecisionT *p, IntrinsicType value) {
+#ifdef PL_LQ_KERNEL_AVX_STREAMING
         store_(p, value);
-        #else
+#else
         stream_(p, value);
-        #endif
+#endif
     }
 
     PL_FORCE_INLINE
