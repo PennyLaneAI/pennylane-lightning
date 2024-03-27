@@ -469,7 +469,7 @@ class StateVectorKokkosMPI final
     /**
      * @brief Init zeros for the state-vector on device.
      */
-    void initZeros() { Kokkos::deep_copy(getView(), ComplexT{0.0, 0.0}); }
+    void initZeros() { (*sv_).initZeros(); }
 
     /**
      * @brief Set value for a single element of the state-vector on device.
@@ -479,13 +479,11 @@ class StateVectorKokkosMPI final
     void setBasisState(const std::size_t global_index) {
         const auto index = global_2_local_index(global_index);
         const auto rank = static_cast<std::size_t>(get_mpi_rank());
-        KokkosVector sv_view = getView();
-        Kokkos::parallel_for(
-            sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(i) = (index.first == rank && index.second == i)
-                                 ? ComplexT{1.0, 0.0}
-                                 : ComplexT{0.0, 0.0};
-            });
+        if (index.first == rank) {
+            (*sv_).setBasisState(index.second);
+        } else {
+            (*sv_).initZeros();
+        }
     }
 
     /**
