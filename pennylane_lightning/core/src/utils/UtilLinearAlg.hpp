@@ -119,12 +119,23 @@ void compute_diagonalizing_gates(int n, int lda,
     std::string scipyPathStr(SCIPY_LIBS_PATH);
 
     if (!std::filesystem::exists(scipyPathStr)) {
-        std::string currentPathStr(getPath());
-        scipyPathStr = currentPathStr + "/../../scipy.libs";
+        [[maybe_unused]] std::string currentPathStr(getPath());
+        [[maybe_unused]] scipyPathStr = currentPathStr + "/../../scipy.libs";
+
+        try {
+            // convert the relative path to absolute path
+            [[maybe_unused]] scipyPathStr =
+                std::filesystem::canonical(scipyPathStr).string();
+        } catch (const std::exception &err) {
+            std::cout << "Canonical path for scipy.libs"
+                      << " threw exception:\n"
+                      << err.what() << '\n';
+        }
     }
     if (!std::filesystem::exists(scipyPathStr)) {
 #ifdef __linux__
-        blasLib = std::make_shared<SharedLibLoader>("lapack.so");
+        [[maybe_unused]] blasLib =
+            std::make_shared<SharedLibLoader>("lapack.so");
 #endif
     } else {
         std::filesystem::path scipyLibsPath(scipyPathStr);
