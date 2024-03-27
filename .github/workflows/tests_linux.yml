@@ -42,7 +42,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.9'
-      
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
 
@@ -53,7 +53,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
@@ -187,14 +186,12 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          set -x 
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
-          set +x
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
@@ -230,7 +227,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DENABLE_PYTHON=OFF \
@@ -261,7 +257,6 @@ jobs:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           if-no-files-found: error
-
 
   pythontestswithOpenBLAS:
     strategy:
@@ -411,7 +406,6 @@ jobs:
 
       - name: Build and run unit tests
         run: |
-            set -x
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
