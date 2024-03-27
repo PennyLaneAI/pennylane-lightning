@@ -32,8 +32,11 @@ set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_RuntimeInfo.cpp
                     Test_TypeTraits.cpp
                     Test_Util.cpp
-                    Test_UtilLinearAlg.cpp
                     )
+
+if(NOT WIN32)
+    list(APPEND TEST_SOURCES Test_UtilLinearAlg.cpp)
+endif()
 
 add_executable(utils_test_runner ${TEST_SOURCES})
 target_link_libraries(utils_test_runner PRIVATE utils_tests)
