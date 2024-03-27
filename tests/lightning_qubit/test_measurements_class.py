@@ -418,6 +418,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",

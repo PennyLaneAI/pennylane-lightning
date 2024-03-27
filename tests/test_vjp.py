@@ -186,6 +186,7 @@ class TestVectorJacobianProduct:
         ):
             dev.vjp(tape.measurements, dy)(tape)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
 
@@ -203,7 +204,7 @@ class TestVectorJacobianProduct:
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
+            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(1))
 
         with pytest.raises(
             qml.QuantumFunctionError,

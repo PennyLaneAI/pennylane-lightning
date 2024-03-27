@@ -25,6 +25,7 @@ if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.parametrize("diff_method", ("param_shift", "finite_diff"))
 class TestQChem:
     """Test tapes returning the expectation values of a Hamiltonian, with a qchem workflow."""
