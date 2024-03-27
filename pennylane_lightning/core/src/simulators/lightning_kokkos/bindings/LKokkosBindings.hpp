@@ -23,15 +23,16 @@
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "GateOperation.hpp"
-#include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
-#include "StateVectorKokkos.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp" // exp2
 
 #if _ENABLE_MPI == 1
 #include "MeasurementsKokkosMPI.hpp"
 #include "StateVectorKokkosMPI.hpp"
+#else
+#include "MeasurementsKokkos.hpp"
+#include "StateVectorKokkos.hpp"
 #endif
 
 /// @cond DEV
@@ -43,6 +44,11 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using Kokkos::InitializationSettings;
 using Pennylane::Util::exp2;
+#if _ENABLE_MPI == 1
+template <class T> using measure = MeasurementsMPI<T>;
+#else
+template <class T> using measure = Measurements<T>;
+#endif
 } // namespace
 /// @endcond
 
@@ -160,17 +166,12 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
  */
 template <class StateVectorT, class PyClass>
 void registerBackendSpecificMeasurements(PyClass &pyclass) {
-#if _ENABLE_MPI == 1
-    using mclass = MeasurementsMPI<StateVectorT>;
-#else
-    using mclass = Measurements<StateVectorT>;
-#endif
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision
     using ComplexT =
         typename StateVectorT::ComplexT; // Statevector's complex type
     using ParamT = PrecisionT;           // Parameter's data precision
-
+    using measureT = measure<StateVectorT>;
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
     using sparse_index_type = std::size_t;
@@ -180,13 +181,13 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     pyclass
         .def("expval",
-             static_cast<PrecisionT (mclass::*)(const std::string &,
-                                                const std::vector<size_t> &)>(
-                 &mclass::expval),
+             static_cast<PrecisionT (measureT::*)(const std::string &,
+                                                  const std::vector<size_t> &)>(
+                 &measureT::expval),
              "Expected value of an operation by name.")
         .def(
             "expval",
-            [](mclass &M, const np_arr_c &matrix,
+            [](measureT &M, const np_arr_c &matrix,
                const std::vector<size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
@@ -197,19 +198,19 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             },
             "Expected value of a Hermitian observable.")
         .def("var",
-             [](mclass &M, const std::string &operation,
+             [](measureT &M, const std::string &operation,
                 const std::vector<size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
-             static_cast<PrecisionT (mclass::*)(const std::string &,
-                                                const std::vector<size_t> &)>(
-                 &mclass::var),
+             static_cast<PrecisionT (measureT::*)(const std::string &,
+                                                  const std::vector<size_t> &)>(
+                 &measureT::var),
              "Variance of an operation by name.")
 #if _ENABLE_MPI != 1
         .def(
             "expval",
-            [](mclass &M, const np_arr_sparse_ind &row_map,
+            [](measureT &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
                     static_cast<sparse_index_type *>(row_map.request().ptr),
@@ -221,7 +222,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a sparse Hamiltonian.")
         .def(
             "var",
-            [](mclass &M, const np_arr_sparse_ind &row_map,
+            [](measureT &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
                     static_cast<sparse_index_type *>(row_map.request().ptr),

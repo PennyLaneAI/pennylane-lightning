@@ -14,31 +14,24 @@
 
 #include "AdjointJacobianKokkos.hpp"
 #include "JacobianData.hpp"
-#include "StateVectorKokkos.hpp"
+
 #if _ENABLE_MPI == 1
 #include "StateVectorKokkosMPI.hpp"
+template <typename T>
+using SVK = Pennylane::LightningKokkos::StateVectorKokkosMPI<T>;
+#else
+#include "StateVectorKokkos.hpp"
+template <typename T>
+using SVK = Pennylane::LightningKokkos::StateVectorKokkos<T>;
 #endif
-// using namespace Pennylane;
-using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Algorithms;
 
 // explicit instantiation
-#if _ENABLE_MPI == 1
-template class Pennylane::Algorithms::OpsData<StateVectorKokkosMPI<float>>;
-template class Pennylane::Algorithms::OpsData<StateVectorKokkosMPI<double>>;
+template class Pennylane::Algorithms::OpsData<SVK<float>>;
+template class Pennylane::Algorithms::OpsData<SVK<double>>;
 
-template class Pennylane::Algorithms::JacobianData<StateVectorKokkosMPI<float>>;
-template class Pennylane::Algorithms::JacobianData<
-    StateVectorKokkosMPI<double>>;
+template class Pennylane::Algorithms::JacobianData<SVK<float>>;
+template class Pennylane::Algorithms::JacobianData<SVK<double>>;
 
-template class Algorithms::AdjointJacobian<StateVectorKokkosMPI<float>>;
-template class Algorithms::AdjointJacobian<StateVectorKokkosMPI<double>>;
-#else
-template class Pennylane::Algorithms::OpsData<StateVectorKokkos<float>>;
-template class Pennylane::Algorithms::OpsData<StateVectorKokkos<double>>;
-
-template class Pennylane::Algorithms::JacobianData<StateVectorKokkos<float>>;
-template class Pennylane::Algorithms::JacobianData<StateVectorKokkos<double>>;
-
-template class Algorithms::AdjointJacobian<StateVectorKokkos<float>>;
-template class Algorithms::AdjointJacobian<StateVectorKokkos<double>>;
-#endif
+template class AdjointJacobian<SVK<float>>;
+template class AdjointJacobian<SVK<double>>;
