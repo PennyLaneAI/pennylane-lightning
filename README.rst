@@ -389,26 +389,6 @@ where ``${TARGET}`` is one of the following
 
 .. docker-end-inclusion-marker-do-not-remove
 
-LAPACK support
-**************
-
-LAPACK, a numerical linear algebra library, is required to enable stochastic measurement support in the C++ backend. We suggest first installing ``LAPACK`` following instructions in `LAPACK document <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
-
-On Debian-based Linux systems, LAPACK can be also installed via ``apt``:
-
-.. code-block:: console
-
-    $ sudo apt -y update &&
-    $ sudo apt install liblapack-dev
-
-where LAPACK is included in ``liblapack-dev``.
-
-On Windows systems, LAPACK is recommended to be built and installed using `vcpkg <https://github.com/Microsoft/vcpkg/>`_ following the instructions `here <https://github.com/Reference-LAPACK/lapack/blob/db501d91ba690192dfe946524251b02d416298d0/README.md?plain=1#L85-L92>`_.
-
-The CMake option ``-DENABLE_LAPACK=ON`` must also be specified when building C++ backends. For Windows systems, we suggest adding the CMake option ``-DCMAKE_TOOLCHAIN_FILE=<vcpkg-root>/scripts/buildsystems/vcpkg.cmake`` to ensure ``LAPACK`` can be found with CMake.
-
-On MacOS systems, the Accelerate framework already includes optimized implementations of the LAPACK library.
-
 Contributing
 ************
 
@@ -475,6 +455,5 @@ PennyLane Lightning makes use of the following libraries and tools, which are un
 - **pybind11:** https://github.com/pybind/pybind11
 - **Kokkos Core:** https://github.com/kokkos/kokkos
 - **NVIDIA cuQuantum:** https://developer.nvidia.com/cuquantum-sdk
-- **LAPACK:** https://github.com/Reference-LAPACK/lapack
 
 .. acknowledgements-end-inclusion-marker-do-not-remove

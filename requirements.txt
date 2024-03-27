@@ -5,3 +5,4 @@ pybind11
 pytest~=8.0.0
 pytest-cov
 pytest-mock
+scipy

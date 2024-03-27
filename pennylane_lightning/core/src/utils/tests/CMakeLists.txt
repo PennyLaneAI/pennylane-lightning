@@ -34,7 +34,7 @@ set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_Util.cpp
                     )
 
-if(ENABLE_LAPACK)
+if(NOT WIN32)
     list(APPEND TEST_SOURCES Test_UtilLinearAlg.cpp)
 endif()
 
