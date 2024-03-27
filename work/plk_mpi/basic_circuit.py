@@ -10,7 +10,8 @@ n_qubits = 5
 n_layers = 2
 
 if USE_MPI:
-    print("Using lightning.kokkos\n")
+    if comm.Get_rank() == 0:
+        print("Using lightning.kokkos\n")
     dev = qml.device("lightning.kokkos", wires=n_qubits)
 else:
     print("Using lightning.qubit\n")
