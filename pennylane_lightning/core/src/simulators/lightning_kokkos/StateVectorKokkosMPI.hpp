@@ -206,20 +206,9 @@ class StateVectorKokkosMPI final
      * @param  copy If true, copy the state vector data in sendbuf_ before
      * sending.
      */
-    void mpi_isend(const std::size_t dest, MPI_Request &request,
-                   const bool copy = false) {
+    void mpi_isend(const std::size_t dest, MPI_Request &request) {
         KokkosVector sd_view = (*sendbuf_).getView();
-        if (copy) {
-            KokkosVector sv_view = (*sv_).getView();
-            PL_ABORT_IF_NOT(sv_view.size() == sd_view.size(), "Unequal sizes.");
-            Kokkos::parallel_for(
-                "copy_to_sendbuf",
-                Kokkos::RangePolicy<KokkosExecSpace>(0, sv_view.size()),
-                KOKKOS_LAMBDA(const std::size_t i) {
-                    sd_view(i) = sv_view(i);
-                });
-            Kokkos::fence("copy_to_sendbuf");
-        }
+        mpi_wait(request);
         PL_MPI_IS_SUCCESS(MPI_Isend(reinterpret_cast<void *>(sd_view.data()),
                                     sd_view.size(), get_mpi_type<ComplexT>(),
                                     static_cast<int>(dest), 0, communicator_,
@@ -479,7 +468,7 @@ class StateVectorKokkosMPI final
     void setBasisState(const std::size_t global_index) {
         const auto index = global_2_local_index(global_index);
         const auto rank = static_cast<std::size_t>(get_mpi_rank());
-        if (index.first == rank) {
+        if (index.first == 0) {
             (*sv_).setBasisState(index.second);
         } else {
             (*sv_).initZeros();
@@ -723,15 +712,23 @@ class StateVectorKokkosMPI final
         // Initiate data transfer
         MPI_Request send_req = MPI_REQUEST_NULL;
         MPI_Request recv_req = MPI_REQUEST_NULL;
-        mpi_isend(rank, send_req, true);
-        mpi_irecv(rank, recv_req);
+        auto next_col = rank_2_matrix_index(rank, rev_wires);
+        bool do_comm1 = has_non_zeros(std::vector<ComplexT>{
+            matrix[next_col + myrow * ncol], matrix[myrow + next_col * ncol]});
+        if (do_comm1) {
+            (*sendbuf_).updateData(getView());
+            Kokkos::fence();
+            mpi_isend(rank, send_req);
+            mpi_irecv(rank, recv_req);
+        }
         auto col = myrow;
         (*sv_).rescale(matrix[col + myrow * ncol]);
 
-        // Data has arrived, accumulate dot product
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires);
-        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        if (do_comm1) { // Data has arrived, accumulate dot product
+            mpi_wait(recv_req);
+            col = rank_2_matrix_index(rank, rev_wires);
+            (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        }
         mpi_wait(send_req);
     }
 
@@ -795,25 +792,35 @@ class StateVectorKokkosMPI final
         const auto myrank = static_cast<std::size_t>(get_mpi_rank());
         const auto myrows =
             rank_2_matrix_indices(myrank, rev_wires, loc_wire_mask);
-        auto cols = myrows;
         auto rank = myrank ^ (one << ((is_wires_local({wires[1]}))
                                           ? rev_wires[0]
                                           : rev_wires[1])); // toggle global bit
         // Initiate data transfer
         MPI_Request send_req = MPI_REQUEST_NULL;
         MPI_Request recv_req = MPI_REQUEST_NULL;
-        mpi_isend(rank, send_req, true);
-        mpi_irecv(rank, recv_req);
+
+        auto next_cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
+        bool do_comm1 =
+            has_non_zeros(select_sub_matrix(matrix, myrows, next_cols)) ||
+            has_non_zeros(select_sub_matrix(matrix, next_cols, myrows));
+        if (do_comm1) {
+            (*sendbuf_).updateData(getView());
+            Kokkos::fence();
+            mpi_isend(rank, send_req);
+            mpi_irecv(rank, recv_req);
+        }
+        auto cols = myrows;
         auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
         applyOperation("Matrix", local_wires, false, {}, sub_matrix);
 
-        // Data has arrived, accumulate dot product
-        cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
-        sub_matrix = select_sub_matrix(matrix, myrows, cols);
-        mpi_wait(recv_req);
-        (*recvbuf_).applyOperation("Matrix", get_local_wires(wires), false, {},
-                                   sub_matrix);
-        (*sv_).axpby(Kokkos::complex{1.0, 0.0}, (*recvbuf_).getView());
+        if (do_comm1) { // Data has arrived, accumulate dot product
+            cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
+            sub_matrix = select_sub_matrix(matrix, myrows, cols);
+            mpi_wait(recv_req);
+            (*recvbuf_).applyOperation("Matrix", get_local_wires(wires), false,
+                                       {}, sub_matrix);
+            (*sv_).axpby(Kokkos::complex{1.0, 0.0}, (*recvbuf_).getView());
+        }
         mpi_wait(send_req);
     }
 
@@ -853,39 +860,56 @@ class StateVectorKokkosMPI final
         const auto myrank = static_cast<std::size_t>(get_mpi_rank());
         const auto rev_wires = get_global_rev_wires(wires);
         const auto myrow = rank_2_matrix_index(myrank, rev_wires);
-        auto rank = myrank ^ (one << rev_wires[0]); // toggle 1st global bit
 
         // Initiate data transfer
         MPI_Request send_req = MPI_REQUEST_NULL;
         MPI_Request recv_req = MPI_REQUEST_NULL;
-        mpi_isend(rank, send_req, true);
-        mpi_irecv(rank, recv_req);
+
+        (*sendbuf_).updateData(getView());
+        Kokkos::fence();
+        auto rank = myrank ^ (one << rev_wires[0]); // toggle 1st global bit
+        auto next_col = rank_2_matrix_index(rank, rev_wires);
+        bool do_comm1 = has_non_zeros(std::vector<ComplexT>{
+            matrix[next_col + myrow * ncol], matrix[myrow + next_col * ncol]});
+        if (do_comm1) {
+            mpi_irecv(rank, recv_req);
+            mpi_isend(rank, send_req);
+        }
         auto col = myrow;
         (*sv_).rescale(matrix[col + myrow * ncol]);
 
         // Data has arrived, accumulate dot product
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires);
-        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        if (do_comm1) {
+            mpi_wait(recv_req);
+            col = rank_2_matrix_index(rank, rev_wires);
+            (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        }
         rank = myrank ^ (one << rev_wires[1]); // toggle 2nd global bit
-        mpi_irecv(rank, recv_req);
-        mpi_wait(send_req);
-        mpi_isend(rank, send_req);
+        next_col = rank_2_matrix_index(rank, rev_wires);
+        bool do_comm2 = has_non_zeros(std::vector<ComplexT>{
+            matrix[next_col + myrow * ncol], matrix[myrow + next_col * ncol]});
+        if (do_comm2) {
+            mpi_irecv(rank, recv_req);
+            mpi_isend(rank, send_req);
+            // Data has arrived, accumulate dot product
+            mpi_wait(recv_req);
+            col = rank_2_matrix_index(rank, rev_wires);
+            (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        }
 
-        // Data has arrived, accumulate dot product
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires);
-        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
         rank = myrank ^ (one << rev_wires[1]) ^
                (one << rev_wires[0]); // toggle both global bit
-        mpi_irecv(rank, recv_req);
-        mpi_wait(send_req);
-        mpi_isend(rank, send_req);
-
-        // Data has arrived, accumulate dot product
-        mpi_wait(recv_req);
-        col = rank_2_matrix_index(rank, rev_wires);
-        (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        next_col = rank_2_matrix_index(rank, rev_wires);
+        bool do_comm3 = has_non_zeros(std::vector<ComplexT>{
+            matrix[next_col + myrow * ncol], matrix[myrow + next_col * ncol]});
+        if (do_comm3) {
+            mpi_irecv(rank, recv_req);
+            mpi_isend(rank, send_req);
+            // Data has arrived, accumulate dot product
+            mpi_wait(recv_req);
+            col = rank_2_matrix_index(rank, rev_wires);
+            (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+        }
         mpi_wait(send_req);
     }
 

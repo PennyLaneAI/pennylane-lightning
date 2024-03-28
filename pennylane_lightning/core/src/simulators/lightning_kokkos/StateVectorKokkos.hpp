@@ -43,13 +43,14 @@
 namespace {
 using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::Util;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
-using Pennylane::Util::array_contains;
-using Pennylane::Util::exp2;
-using Pennylane::Util::isPerfectPowerOf2;
-using Pennylane::Util::log2;
-using Pennylane::Util::reverse_lookup;
+// using Pennylane::Util::array_contains;
+// using Pennylane::Util::exp2;
+// using Pennylane::Util::isPerfectPowerOf2;
+// using Pennylane::Util::log2;
+// using Pennylane::Util::reverse_lookup;
 using std::size_t;
 } // namespace
 /// @endcond
@@ -472,6 +473,13 @@ class StateVectorKokkos final
     }
 
     template <typename T> void rescale(const T scale) {
+        if (scale == ONE<Kokkos::complex, PrecisionT>()) {
+            return;
+        }
+        if (scale == ZERO<Kokkos::complex, PrecisionT>()) {
+            initZeros();
+            return;
+        }
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(

@@ -43,6 +43,25 @@ extern void zheev_(const char *jobz, const char *uplo, const int *n,
 namespace Pennylane::Util {
 
 /**
+ * @brief Determines whether an array is uniformly zero.
+ *
+ * @tparam T Data type (complex).
+ *
+ * @param nonzero Whether the array is uniformly zero.
+ */
+template <typename T> bool has_non_zeros(const std::vector<T> &array) {
+    const T zero{0.0};
+    bool nonzero = false;
+    for (const auto &e : array) {
+        if (e != zero) {
+            nonzero = true;
+            break;
+        }
+    }
+    return nonzero;
+}
+
+/**
  * @brief Computes the transpose of a linear array.
  *
  * @tparam T Data type (complex).
