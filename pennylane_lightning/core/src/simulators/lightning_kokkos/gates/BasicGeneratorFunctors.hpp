@@ -496,6 +496,4 @@ PrecisionT applyNamedGenerator(
     return namedGeneratorFactor<PrecisionT>(generator_op);
 }
 
-
-
 } // namespace Pennylane::LightningKokkos::Functors

@@ -125,7 +125,8 @@ class StateVectorKokkosMPI final
 
     StateVectorKokkosMPI() = delete;
     StateVectorKokkosMPI(std::size_t num_qubits,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
         : BaseType{num_qubits} {
         // Init MPI
         int status = 0;
@@ -133,7 +134,7 @@ class StateVectorKokkosMPI final
         if (!status) {
             PL_MPI_IS_SUCCESS(MPI_Init(nullptr, nullptr));
         }
-        communicator_ = MPI_COMM_WORLD;
+        communicator_ = communicator;
         Kokkos::InitializationSettings settings = kokkos_args;
         settings.set_device_id(get_mpi_rank());
         // std::cout << "Setting device ID to " << get_mpi_rank() << std::endl;
@@ -146,6 +147,74 @@ class StateVectorKokkosMPI final
             sendbuf_ = std::make_unique<SVK>(get_num_local_wires(), settings);
         }
     };
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(complex *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
+                            blk);
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    StateVectorKokkosMPI(const ComplexT *hostdata_, const std::size_t length,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(log2(length), kokkos_args, communicator) {
+        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
+                        "The size of provided data must be a power of 2.");
+        const std::size_t blk{get_blk_size()};
+        const std::size_t offset{blk * get_mpi_rank()};
+        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
+                                            hostdata_ + offset + blk);
+        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
+    }
+
+    /**
+     * @brief Create a new state vector from data on the host.
+     *
+     * @param num_qubits Number of qubits
+     */
+    template <class complex>
+    StateVectorKokkosMPI(std::vector<complex> hostdata_,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(hostdata_.data(), hostdata_.size(),
+                               kokkos_args) {}
+
+    /**
+     * @brief Copy constructor
+     *
+     * @param other Another state vector
+     */
+    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
+                         const Kokkos::InitializationSettings &kokkos_args = {},
+                         const MPI_Comm &communicator = MPI_COMM_WORLD)
+        : StateVectorKokkosMPI(other.getNumQubits(), kokkos_args,
+                               communicator) {
+        (*sv_).DeviceToDevice(other.getView());
+    }
+
+    /**
+     * @brief Destructor for StateVectorKokkos class
+     *
+     * @param other Another state vector
+     */
+    ~StateVectorKokkosMPI() {}
 
     /******************
     MPI-related methods
@@ -492,11 +561,7 @@ class StateVectorKokkosMPI final
                                          indices.data() + offset, blk));
         Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
                                         values.data() + offset, blk));
-        KokkosVector sv_view = getView();
-        Kokkos::parallel_for(
-            blk, KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(d_indices[i]) = d_values[i];
-            });
+        (*sv_).setStateVector(d_indices, d_values);
     }
 
     /**
@@ -508,77 +573,6 @@ class StateVectorKokkosMPI final
         if (this->getLength() > 0) {
             setBasisState(0U);
         }
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    template <class complex>
-    StateVectorKokkosMPI(complex *hostdata_, const std::size_t length,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        const std::size_t blk{get_blk_size()};
-        const std::size_t offset{blk * get_mpi_rank()};
-        (*sv_).HostToDevice(reinterpret_cast<ComplexT *>(hostdata_ + offset),
-                            blk);
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    StateVectorKokkosMPI(const ComplexT *hostdata_, const std::size_t length,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(log2(length), kokkos_args) {
-        PL_ABORT_IF_NOT(isPerfectPowerOf2(length),
-                        "The size of provided data must be a power of 2.");
-        const std::size_t blk{get_blk_size()};
-        const std::size_t offset{blk * get_mpi_rank()};
-        std::vector<ComplexT> hostdata_copy(hostdata_ + offset,
-                                            hostdata_ + offset + blk);
-        (*sv_).HostToDevice(hostdata_copy.data(), hostdata_copy.size());
-    }
-
-    /**
-     * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
-     */
-    template <class complex>
-    StateVectorKokkosMPI(std::vector<complex> hostdata_,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(hostdata_.data(), hostdata_.size(),
-                               kokkos_args) {}
-
-    /**
-     * @brief Copy constructor
-     *
-     * @param other Another state vector
-     */
-    StateVectorKokkosMPI(const StateVectorKokkosMPI &other,
-                         const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkosMPI(other.getNumQubits(), kokkos_args) {
-        (*sv_).DeviceToDevice(other.getView());
-    }
-
-    /**
-     * @brief Destructor for StateVectorKokkos class
-     *
-     * @param other Another state vector
-     */
-    ~StateVectorKokkosMPI() {
-        // int initflag;
-        // int finflag;
-        // PL_MPI_IS_SUCCESS(MPI_Initialized(&initflag));
-        // PL_MPI_IS_SUCCESS(MPI_Finalized(&finflag));
-        // if (initflag && !finflag) {
-        //     PL_MPI_IS_SUCCESS(MPI_Finalize());
-        // }
     }
 
     /**
@@ -718,8 +712,8 @@ class StateVectorKokkosMPI final
         if (do_comm1) {
             (*sendbuf_).updateData(getView());
             Kokkos::fence();
-            mpi_isend(rank, send_req);
             mpi_irecv(rank, recv_req);
+            mpi_isend(rank, send_req);
         }
         auto col = myrow;
         (*sv_).rescale(matrix[col + myrow * ncol]);
@@ -728,8 +722,8 @@ class StateVectorKokkosMPI final
             mpi_wait(recv_req);
             col = rank_2_matrix_index(rank, rev_wires);
             (*sv_).axpby(matrix[col + myrow * ncol], (*recvbuf_).getView());
+            mpi_wait(send_req);
         }
-        mpi_wait(send_req);
     }
 
     /**
@@ -800,28 +794,29 @@ class StateVectorKokkosMPI final
         MPI_Request recv_req = MPI_REQUEST_NULL;
 
         auto next_cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
+        auto next_sub_matrix = select_sub_matrix(matrix, myrows, next_cols);
         bool do_comm1 =
-            has_non_zeros(select_sub_matrix(matrix, myrows, next_cols)) ||
+            has_non_zeros(next_sub_matrix) ||
             has_non_zeros(select_sub_matrix(matrix, next_cols, myrows));
         if (do_comm1) {
             (*sendbuf_).updateData(getView());
             Kokkos::fence();
-            mpi_isend(rank, send_req);
             mpi_irecv(rank, recv_req);
+            mpi_isend(rank, send_req);
         }
         auto cols = myrows;
         auto sub_matrix = select_sub_matrix(matrix, myrows, cols);
         applyOperation("Matrix", local_wires, false, {}, sub_matrix);
 
         if (do_comm1) { // Data has arrived, accumulate dot product
-            cols = rank_2_matrix_indices(rank, rev_wires, loc_wire_mask);
-            sub_matrix = select_sub_matrix(matrix, myrows, cols);
+            cols = next_cols;
+            sub_matrix = next_sub_matrix;
             mpi_wait(recv_req);
             (*recvbuf_).applyOperation("Matrix", get_local_wires(wires), false,
                                        {}, sub_matrix);
             (*sv_).axpby(Kokkos::complex{1.0, 0.0}, (*recvbuf_).getView());
+            mpi_wait(send_req);
         }
-        mpi_wait(send_req);
     }
 
     /**

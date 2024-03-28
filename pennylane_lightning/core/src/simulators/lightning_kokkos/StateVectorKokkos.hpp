@@ -145,18 +145,29 @@ class StateVectorKokkos final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
-        initZeros();
         KokkosSizeTVector d_indices("d_indices", indices.size());
         KokkosVector d_values("d_values", values.size());
         Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
                                          indices.data(), indices.size()));
         Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
                                         values.data(), values.size()));
+        setStateVector(d_indices, d_values);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const KokkosSizeTVector d_indices,
+                        const KokkosVector d_values) {
+        initZeros();
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(d_indices[i]) = d_values[i];
+            d_indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(d_indices(i)) = d_values(i);
             });
     }
 
