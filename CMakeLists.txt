@@ -86,9 +86,30 @@ find_package(Python COMPONENTS Interpreter Development)
 message("Python site-packages directory: ${Python_SITELIB}")
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+    #set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
 
-    #TODO add windows support
+    ##TODO add windows support
+    #if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    #    string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
+    #    message("Python site-packages directory (Windows): ${SCIPYLIBS}")
+    #endif()
+
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m pip install scipy
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE pip_output
+    )
+
+    if(result)
+        message(FATAL_ERROR "Failed to install cmake package via pip")
+    else()
+        message(STATUS "+++++++++${pip_output}")
+        string(REGEX MATCH "/.* " extracted_path ${pip_output})
+        string(REGEX REPLACE "packages.*" "packages" extracted_path ${extracted_path})
+        message(STATUS "${extracted_path}")
+        set(SCIPYLIBS ${extracted_path}/scipy.libs)
+    endif()
+
     if (CMAKE_SYSTEM_NAME MATCHES "Windows")
         string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
         message("Python site-packages directory (Windows): ${SCIPYLIBS}")
@@ -96,6 +117,8 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
 
     if(EXISTS ${SCIPYLIBS})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    elseif()
+        message(FATAL_ERROR "scipy.libs not found.")
     endif()
 else()
     set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
