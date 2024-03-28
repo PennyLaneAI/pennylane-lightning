@@ -93,8 +93,6 @@ matrix = [
         "QubitSum",
         "DiagonalQubitUnitary",
         "BlockEncode",
-        "MidMeasureMP",
-        "Conditional",
 ]
 
 [measurement_processes]
