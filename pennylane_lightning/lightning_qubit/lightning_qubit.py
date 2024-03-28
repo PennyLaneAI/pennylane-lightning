@@ -415,7 +415,7 @@ class LightningQubit(Device):
             self._num_burnin = num_burnin
         else:
             self._kernel_name = None
-            self._num_burnin = None
+            self._num_burnin = 0
 
     @property
     def name(self):
