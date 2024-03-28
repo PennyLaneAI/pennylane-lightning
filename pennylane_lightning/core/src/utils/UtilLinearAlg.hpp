@@ -33,8 +33,8 @@
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 // TODO add windows support
-// #elif defined(_MSC_VER)
-// #include <Windows.h>
+#elif defined(_MSC_VER)
+#include <Windows.h>
 #endif
 
 #include "SharedLibLoader.hpp"
@@ -75,14 +75,14 @@ inline const char *getPath() {
     return dl_info.dli_fname;
 }
 // TODO add windows support
-// #elif defined(_MSC_VER)
-// inline std::string getPath() {
-//     char buffer[MAX_PATH];
-//     GetModuleFileName(nullptr, buffer, MAX_PATH);
-//     std::string fullPath(buffer);
-//     std::size_t pos = fullPath.find_last_of("\\/");
-//     return fullPath.substr(0, pos);
-// }
+#elif defined(_MSC_VER)
+inline std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
 #endif
 // LCOV_EXCL_STOP
 

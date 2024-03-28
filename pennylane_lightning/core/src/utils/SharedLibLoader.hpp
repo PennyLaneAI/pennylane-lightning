@@ -22,8 +22,8 @@
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
 // TODO add windows support
-// #elif defined(_MSC_VER)
-// #include <Windows.h>
+#elif defined(_MSC_VER)
+#include <Windows.h>
 #endif
 
 #include "Error.hpp"
@@ -42,8 +42,8 @@ class SharedLibLoader final {
 #if defined(__APPLE__) || defined(__linux__)
     void *handle_{nullptr};
 // TODO add windows support
-// #elif defined(_MSC_VER)
-//     HMODULE handle_{nullptr};
+#elif defined(_MSC_VER)
+    HMODULE handle_{nullptr};
 #endif
 
   public:
@@ -60,9 +60,9 @@ class SharedLibLoader final {
         // This allows users to use pre-installed LAPACK package
         PL_ABORT_IF(!handle_, dlerror());
 // TODO add windows support
-// #elif defined(_MSC_VER)
-//         handle_ = LoadLibrary(filename.c_str());
-//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+#elif defined(_MSC_VER)
+        handle_ = LoadLibrary(filename.c_str());
+        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
     }
 
@@ -70,8 +70,8 @@ class SharedLibLoader final {
 #if defined(__APPLE__) || defined(__linux__)
         dlclose(handle_);
 // TODO add windows support
-// #elif defined(_MSC_VER)
-//         FreeLibrary(handle_);
+#elif defined(_MSC_VER)
+        FreeLibrary(handle_);
 #endif
     }
 
@@ -82,9 +82,9 @@ class SharedLibLoader final {
         void *sym = dlsym(handle_, symbol.c_str());
         PL_ABORT_IF(!sym, dlerror());
 // TODO add windows support
-// #elif defined(_MSC_VER)
-//         void *sym = GetProcAddress(handle_, symbol.c_str());
-//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
+#elif defined(_MSC_VER)
+        void *sym = GetProcAddress(handle_, symbol.c_str());
+        PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
         return sym;
     }

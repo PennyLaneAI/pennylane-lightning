@@ -89,10 +89,10 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
     set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
 
     #TODO add windows support
-    #if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    #    string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
-    #    message("Python site-packages directory (Windows): ${SCIPYLIBS}")
-    #endif()
+    if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+        string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
+        message("Python site-packages directory (Windows): ${SCIPYLIBS}")
+    endif()
 
     if(EXISTS ${SCIPYLIBS})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)

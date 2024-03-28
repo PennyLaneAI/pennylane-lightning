@@ -570,7 +570,7 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifndef _MSC_VER
+// #ifndef _MSC_VER
 template <typename TypeList> void testHermitianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -673,7 +673,7 @@ TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
         testHermitianObsExpvalShot<TestStateVectorBackends>();
     }
 }
-#endif
+// #endif
 
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -839,7 +839,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifndef _MSC_VER
+        // #ifndef _MSC_VER
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 80000;
@@ -860,7 +860,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
+        // #endif
 
         testTensorProdObsExpvalShot<typename TypeList::Next>();
     }
@@ -1011,7 +1011,7 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifndef _MSC_VER
+// #ifndef _MSC_VER
 template <typename TypeList> void testHermitianObsShotVar() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -1096,7 +1096,7 @@ TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
         testHermitianObsShotVar<TestStateVectorBackends>();
     }
 }
-#endif
+// #endif
 
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1147,7 +1147,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifndef _MSC_VER
+        // #ifndef _MSC_VER
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
@@ -1197,7 +1197,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
+        // #endif
 
         DYNAMIC_SECTION(" full wires with apply operations"
                         << StateVectorToName<StateVectorT>::name) {
@@ -1555,7 +1555,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#ifndef _MSC_VER
+        // #ifndef _MSC_VER
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliY", std::vector<size_t>{0});
@@ -1576,7 +1576,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
+        // #endif
 
         testHamiltonianObsExpvalShot<typename TypeList::Next>();
     }

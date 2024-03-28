@@ -23,9 +23,9 @@
 #include "Error.hpp"
 #include "Util.hpp"
 
-#ifndef _MSC_VER
+// #ifndef _MSC_VER
 #include "UtilLinearAlg.hpp"
-#endif
+// #endif
 
 namespace Pennylane::Observables {
 /**
@@ -220,10 +220,10 @@ class HermitianObsBase : public Observable<StateVectorT> {
     MatrixT matrix_;
     std::vector<size_t> wires_;
 
-#ifndef _MSC_VER
+    // #ifndef _MSC_VER
     std::vector<PrecisionT> eigenVals_;
     MatrixT unitary_;
-#endif
+    // #endif
 
   private:
     [[nodiscard]] auto isEqual(const Observable<StateVectorT> &other) const
@@ -245,7 +245,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 
-#ifndef _MSC_VER
+        // #ifndef _MSC_VER
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -263,7 +263,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         std::transform(
             unitary.begin(), unitary.end(), unitary_.begin(),
             [](ComplexT value) { return static_cast<ComplexT>(value); });
-#endif
+        // #endif
     }
 
     [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
@@ -284,7 +284,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
-#ifndef _MSC_VER
+        // #ifndef _MSC_VER
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -302,10 +302,11 @@ class HermitianObsBase : public Observable<StateVectorT> {
         ob_wires = wires_;
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);
-#else
-        PL_ABORT("Hermitian observables do not support shot measurement for "
-                 "Windows.");
-#endif
+        // #else
+        //         PL_ABORT("Hermitian observables do not support shot
+        //         measurement for "
+        //                  "Windows.");
+        // #endif
     }
 };
 
