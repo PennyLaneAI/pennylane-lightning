@@ -19,6 +19,7 @@ observables = [
         "SProd",
         "Prod",
         "Exp",
+        "LinearCombination",
 ]
 
 # The union of all gate types listed in this section must match what
@@ -92,6 +93,8 @@ matrix = [
         "QubitSum",
         "DiagonalQubitUnitary",
         "BlockEncode",
+        "MidMeasureMP",
+        "Conditional",
 ]
 
 [measurement_processes]

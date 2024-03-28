@@ -358,7 +358,9 @@ class LightningQubit(Device):
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
-    _config = Path(__file__).parent / "lightning_qubit.toml"
+
+    # This `config` is used in Catalyst-Frontend
+    config = Path(__file__).parent / "lightning_qubit.toml"
 
     # TODO: Move supported ops/obs to TOML file
     operations = _operations
@@ -465,7 +467,7 @@ class LightningQubit(Device):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        config = self._setup_execution_config(execution_config)
+        exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
@@ -475,9 +477,9 @@ class LightningQubit(Device):
         program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
         program.add_transform(qml.transforms.broadcast_expand)
 
-        if config.gradient_method == "adjoint":
+        if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
-        return program, config
+        return program, exec_config
 
     # pylint: disable=unused-argument
     def execute(
