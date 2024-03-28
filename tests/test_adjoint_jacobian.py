@@ -198,6 +198,7 @@ class TestAdjointJacobian:
             ):
                 dev.adjoint_jacobian(tape)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
@@ -215,7 +216,7 @@ class TestAdjointJacobian:
 
         with qml.tape.QuantumTape() as tape:
             qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))
+            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(1))
 
         with pytest.raises(
             qml.QuantumFunctionError, match="differentiation method does not support the Projector"
@@ -401,6 +402,7 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
@@ -579,6 +581,7 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
@@ -1130,10 +1133,8 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
-    reason="Lightning binary required",
-)
+@pytest.mark.usefixtures("use_legacy_and_new_opmath")
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1156,6 +1157,7 @@ def test_tape_qchem(tol):
     assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
 
 
+@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
@@ -1501,14 +1503,8 @@ def create_xyz_file(tmp_path_factory):
     yield file
 
 
-@pytest.mark.skipif(
-    not ld._CPP_BINARY_AVAILABLE,
-    reason="Tests only for lightning.gpu",
-)
-@pytest.mark.parametrize(
-    "batches",
-    [False, True, 1, 2, 3, 4],
-)
+@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
+@pytest.mark.parametrize("batches", [False, True, 1, 2, 3, 4])
 def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     _ = pytest.importorskip("openfermionpyscf")
     n_electrons = 2
@@ -1575,9 +1571,7 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1619,9 +1613,7 @@ def test_diff_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
-        2**n_targets, 2**n_targets
-    )
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.qubit` supports mid-circuit measurements.
+  [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
+
 * Add finite shots support in `lightning.qubit2`.
   [(#630)](https://github.com/PennyLaneAI/pennylane-lightning/pull/630)
 
@@ -20,6 +23,9 @@
 * Add `lightning.qubit2` device which uses the new device API.
   [(#607)](https://github.com/PennyLaneAI/pennylane-lightning/pull/607)
   [(#628)](https://github.com/PennyLaneAI/pennylane-lightning/pull/628)
+
+* Add support for using new operator arithmetic as the default.
+  [(#649)](https://github.com/PennyLaneAI/pennylane-lightning/pull/649)
 
 ### Breaking changes
 
@@ -49,6 +55,9 @@
 
 * Fix random `coverage xml` CI issues.
   [(#635)](https://github.com/PennyLaneAI/pennylane-lightning/pull/635)
+
+* `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
+  [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
 
 ### Contributors
 

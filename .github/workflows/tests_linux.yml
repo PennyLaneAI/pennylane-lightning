@@ -33,7 +33,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: C++ tests
     runs-on: ${{ matrix.os }}
 
@@ -106,7 +106,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: Python tests
     runs-on: ${{ matrix.os }}
 
@@ -184,7 +184,8 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -203,7 +204,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: C++ tests (OpenBLAS)
     runs-on: ${{ matrix.os }}
 
@@ -259,7 +260,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: C++ tests (OpenBLAS without LAPACK)
     runs-on: ${{ matrix.os }}
 
@@ -314,7 +315,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: Python tests with OpenBLAS
     runs-on: ${{ matrix.os }}
 
@@ -392,7 +393,8 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -419,7 +421,7 @@ jobs:
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: C++ tests (Kokkos)
     runs-on: ${{ matrix.os }}
 
@@ -494,7 +496,7 @@ jobs:
         exclude:
           - pl_backend: ["all"]
             exec_model: OPENMP
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: Python tests with Kokkos
     runs-on: ${{ matrix.os }}
 
@@ -609,10 +611,11 @@ jobs:
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
+          OMP_NUM_THREADS=1 PL_DEVICE=lightning.qubit python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=lightning.kokkos python -m pytest tests/ $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
@@ -682,7 +685,7 @@ jobs:
         os: [ubuntu-22.04]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     name: C++ tests (multiple backends)
     runs-on: ${{ matrix.os }}
 

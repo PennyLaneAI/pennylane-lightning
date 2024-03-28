@@ -45,8 +45,6 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-from ._state_vector import LightningStateVector
-
 
 class LightningMeasurements:
     """Lightning Measurements class
@@ -69,7 +67,7 @@ class LightningMeasurements:
 
     def __init__(
         self,
-        qubit_state: LightningStateVector,
+        qubit_state,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,

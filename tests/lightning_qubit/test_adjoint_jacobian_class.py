@@ -250,6 +250,7 @@ class TestAdjointJacobian:
 
         assert np.allclose(expected, result, atol=tol, rtol=0)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, lightning_sv):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -360,6 +361,7 @@ class TestVectorJacobianProduct:
 
         return LightningAdjointJacobian(statevector).calculate_vjp(tape, vector)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_measurements(self, tol, lightning_sv):
         """Tests provides correct answer when provided multiple measurements."""
         x, y, z = [0.5, 0.3, -0.7]

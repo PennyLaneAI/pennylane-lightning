@@ -25,12 +25,16 @@ from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
+    mid_circuit_measurements,
     no_sampling,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
+from pennylane.measurements import MidMeasureMP
+from pennylane.operation import Tensor
+from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
@@ -71,6 +75,16 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     if mcmc is None:
         mcmc = {}
     state.reset_state()
+    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    if circuit.shots and has_mcm:
+        mid_measurements = {}
+        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
+        if any(v == -1 for v in mid_measurements.values()):
+            return None, mid_measurements
+        return (
+            LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
+            mid_measurements,
+        )
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
@@ -200,6 +214,8 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "MidMeasureMP",
+        "Conditional",
     }
 )
 # The set of supported operations.
@@ -216,6 +232,7 @@ _observables = frozenset(
         "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
+        "LinearCombination",
         "Sum",
         "SProd",
         "Prod",
@@ -235,6 +252,26 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables
 
 
+def adjoint_observables(obs: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.qubit``
+    when using the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
+    return obs.name in _observables
+
+
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
     return isinstance(mp, qml.measurements.ExpectationMP)
@@ -249,7 +286,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (qml.operation.DecompositionUndefinedError, qml.DeviceError):
+    except (qml.operation.DecompositionUndefinedError, qml.DeviceError, AttributeError):
         return False
     return True
 
@@ -268,7 +305,9 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.qubit"
     program.add_transform(no_sampling, name=name)
-    program.add_transform(decompose, stopping_condition=adjoint_ops, name=name)
+    program.add_transform(
+        decompose, stopping_condition=adjoint_ops, name=name, skip_initial_state_prep=False
+    )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
         validate_measurements, analytic_measurements=adjoint_measurements, name=name
@@ -432,7 +471,7 @@ class LightningQubit(Device):
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
-        program.add_transform(qml.defer_measurements, device=self)
+        program.add_transform(mid_circuit_measurements, device=self)
         program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
         program.add_transform(qml.transforms.broadcast_expand)
 
