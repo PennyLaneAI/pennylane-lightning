@@ -1,39 +1,38 @@
 import pennylane as qml
 import pennylane.numpy as np
 
-USE_MPI = True
-if USE_MPI:
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
+from mpi4py import MPI
 
-n_qubits = 5
+comm = MPI.COMM_WORLD
+
+n_qubits = 30
 n_layers = 2
 
-if USE_MPI:
-    if comm.Get_rank() == 0:
-        print("Using lightning.kokkos\n")
-    dev = qml.device("lightning.kokkos", wires=n_qubits)
-else:
-    print("Using lightning.qubit\n")
-    dev = qml.device("lightning.qubit", wires=n_qubits)
+dev = qml.device("lightning.kokkos", wires=n_qubits)
+dq = qml.device("default.qubit", wires=n_qubits)
 
-@qml.qnode(dev, diff_method="adjoint")
+
 def circuit(params):
     for i in range(n_qubits):
         qml.Hadamard(i)
-    qml.StronglyEntanglingLayers(params, wires=range(n_qubits))
-    return np.array([qml.expval(qml.PauliZ(i)) for i in range(n_qubits)])
+    # qml.StronglyEntanglingLayers(params, wires=range(n_qubits))
+    return qml.expval(qml.PauliZ(0))
 
 
 np.random.seed(10)
 params = np.random.rand(n_layers, n_qubits, 3)
-if USE_MPI:
-    params = comm.bcast(params, root=0)
-results = circuit(params)
-grad = qml.jacobian(circuit)(params)
-if not USE_MPI or comm.Get_rank() == 0:
-    print(results)
-    print(grad)
+params = comm.bcast(params, root=0)
 
-if USE_MPI and not MPI.Is_finalized():
+cir_mpi = qml.QNode(circuit, dev, diff_method="adjoint")
+res_mpi = cir_mpi(params)
+print("done!")
+# jac_mpi = qml.jacobian(cir_mpi)(params)
+# cir_ref = qml.QNode(circuit, dq, diff_method="adjoint")
+# res_ref = cir_ref(params)
+# jac_ref = qml.jacobian(cir_ref)(params)
+# if comm.Get_rank() == 0:
+#     print(np.max(np.abs(res_mpi - res_ref)))
+#     print(np.max(np.abs(jac_mpi - jac_ref)))
+
+if not MPI.Is_finalized():
     MPI.Finalize()
