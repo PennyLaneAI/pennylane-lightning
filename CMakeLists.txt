@@ -111,7 +111,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
         message(STATUS "+++++++++++${SCIPYLIBS}")
     endif()
 
-    if(EXISTS ${SCIPYLIBS})
+    if(IS_DIRECTORY ${SCIPYLIBS})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
     elseif()
         message(FATAL_ERROR "scipy.libs not found.")
