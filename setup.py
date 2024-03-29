@@ -117,11 +117,7 @@ class CMakeBuild(build_ext):
             if platform.system() == "Linux"
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
-
-        configure_args += [f"-DPython_SITELIBS={site.getsitepackages()[0]}"]
     
-
-
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
             #  (https://github.com/ninja-build/ninja/pull/2056)
