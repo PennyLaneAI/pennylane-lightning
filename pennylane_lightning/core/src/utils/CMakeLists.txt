@@ -4,12 +4,9 @@ project(lightning_utils LANGUAGES CXX)
 
 set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
+list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
-
-if(NOT WIN32)
-    list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
-endif()
 
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
