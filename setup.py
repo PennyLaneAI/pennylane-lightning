@@ -16,6 +16,7 @@ import platform
 import subprocess
 import shutil
 import sys
+import pip
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
@@ -58,6 +59,12 @@ def get_backend():
         raise ValueError(f"Invalid backend {backend}.")
     return backend
 
+def install_scipy():
+    try:
+        pip.main(['install', 'scipy'])
+        print("scipy installed successfully.")
+    except Exception as e:
+        print("Error installing scipy:", str(e))
 
 backend = get_backend()
 device_name = backend.replace("_", ".")
@@ -75,6 +82,8 @@ class CMakeBuild(build_ext):
     """
 
     user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
+
+    install_scipy()
 
     def initialize_options(self):
         super().initialize_options()
@@ -108,6 +117,10 @@ class CMakeBuild(build_ext):
             if platform.system() == "Linux"
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
+
+        configure_args += [f"-DPython_SITELIBS={site.getsitepackages()[0]}"]
+    
+
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:

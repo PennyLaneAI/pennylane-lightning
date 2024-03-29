@@ -93,24 +93,6 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
         string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
     endif()
 
-    #if(NOT EXISTS ${SCIPYLIBS})
-    #    execute_process(
-    #        COMMAND ${Python_EXECUTABLE} -m pip install scipy
-    #        RESULT_VARIABLE result
-    #        OUTPUT_VARIABLE pip_output
-    #    )
-
-    #    if(result)
-    #        message(FATAL_ERROR "Failed to install cmake package via pip")
-    #    else()
-    #        set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
-    #        if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    #            string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
-    #        endif()
-    #    endif()
-    #    message(STATUS "+++++++++++${SCIPYLIBS}")
-    #endif()
-
     if(IS_DIRECTORY ${SCIPYLIBS})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
     elseif()
