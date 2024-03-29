@@ -86,7 +86,11 @@ find_package(Python COMPONENTS Interpreter Development)
 message("Python site-packages directory: ${Python_SITELIB}")
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+    if(IS_DIRECTORY ${SCIPY_LIBS_DIR})
+        set(SCIPYLIBS ${SCIPY_LIBS_DIR}/scipy.libs)
+    else()
+        set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+    endif()
 
     ##TODO add windows support
     if (CMAKE_SYSTEM_NAME MATCHES "Windows")
