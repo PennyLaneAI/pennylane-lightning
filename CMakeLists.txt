@@ -108,6 +108,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
                 string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
             endif()
         endif()
+        message(STATUS "+++++++++++${SCIPYLIBS}")
     endif()
 
     if(EXISTS ${SCIPYLIBS})
