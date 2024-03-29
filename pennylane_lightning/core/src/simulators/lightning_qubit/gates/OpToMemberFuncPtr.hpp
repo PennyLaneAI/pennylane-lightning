@@ -42,7 +42,7 @@ template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
     // raises compile error when this struct is instantiated.
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    PL_ABORT_IF_NOT(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
                   "have added the corresponding entry in "
@@ -269,7 +269,7 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
 struct ControlledGateOpToMemberFuncPtr {
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    PL_ABORT_IF_NOT(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "Unrecognized matrix operation");
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
@@ -437,7 +437,7 @@ template <class PrecisionT, class GateImplementation,
           GeneratorOperation gntr_op>
 struct GeneratorOpToMemberFuncPtr {
     // raises compile error when this struct is instantiated.
-    static_assert(
+    PL_ABORT_IF_NOT(
         sizeof(GateImplementation) == std::numeric_limits<size_t>::max(),
         "GeneratorOpToMemberFuncPtr is not defined for the given generator. "
         "When you define a new GeneratorOperation, check that you also "
@@ -575,7 +575,7 @@ struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
 template <class PrecisionT, class GateImplementation,
           ControlledGeneratorOperation mat_op>
 struct ControlledGeneratorOpToMemberFuncPtr {
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    PL_ABORT_IF_NOT(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "Unrecognized generator operation");
 };
 template <class PrecisionT, class GateImplementation>
@@ -692,7 +692,7 @@ struct ControlledGeneratorOpToMemberFuncPtr<
  */
 template <class PrecisionT, class GateImplementation, MatrixOperation mat_op>
 struct MatrixOpToMemberFuncPtr {
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    PL_ABORT_IF_NOT(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "Unrecognized matrix operation");
 };
 
@@ -718,7 +718,7 @@ struct MatrixOpToMemberFuncPtr<PrecisionT, GateImplementation,
 template <class PrecisionT, class GateImplementation,
           ControlledMatrixOperation mat_op>
 struct ControlledMatrixOpToMemberFuncPtr {
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    PL_ABORT_IF_NOT(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
                   "Unrecognized matrix operation");
 };
 template <class PrecisionT, class GateImplementation>
@@ -748,7 +748,7 @@ namespace Internal {
  * types.
  */
 template <class SVType, class ParamT, size_t num_params> struct GateMemFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    PL_ABORT_IF_NOT(num_params < 2 || num_params == 3,
                   "The given num_params is not supported.");
 };
 /**
@@ -783,7 +783,7 @@ using GateMemFuncPtrT =
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 struct GateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    PL_ABORT_IF_NOT(num_params < 2 || num_params == 3,
                   "The given num_params is not supported.");
 };
 
@@ -818,7 +818,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
  */
 template <class PrecisionT, class ParamT, size_t num_params>
 struct ControlledGateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    PL_ABORT_IF_NOT(num_params < 2 || num_params == 3,
                   "The given num_params is not supported.");
 };
 template <class PrecisionT, class ParamT>
