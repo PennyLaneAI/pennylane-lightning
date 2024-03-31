@@ -209,6 +209,9 @@ struct Undefined {};
 
 ///@cond DEV
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
+    constexpr static size_t required_alignment =
+        std::alignment_of_v<PrecisionT>;
+        
     constexpr static size_t value = std::max(
         TypeList::Type::template required_alignment<PrecisionT>,
         commonAlignmentHelper<PrecisionT, typename TypeList::Next>::value);
