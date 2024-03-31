@@ -43,9 +43,9 @@ template <typename IntegerType> class IntegerInterval {
         return (min_ <= test_val) && (test_val < max_);
     }
 
-    [[nodiscard]] IntegerType min() const { return min_; }
+    [[nodiscard]] IntegerType MIN() const { return min_; }
 
-    [[nodiscard]] IntegerType max() const { return max_; }
+    [[nodiscard]] IntegerType MAX() const { return max_; }
 };
 
 /**
@@ -109,7 +109,7 @@ constexpr auto full_domain() -> IntegerInterval<IntegerType> {
 template <typename IntegerType>
 bool is_disjoint(const IntegerInterval<IntegerType> &interval1,
                  const IntegerInterval<IntegerType> &interval2) {
-    return (interval1.max() <= interval2.min()) ||
-           (interval2.max() <= interval1.min());
+    return (interval1.MAX() <= interval2.MIN()) ||
+           (interval2.MAX() <= interval1.MIN());
 }
 } // namespace Pennylane::LightningQubit::Util

@@ -16,6 +16,7 @@ import platform
 import subprocess
 import shutil
 import sys
+import site
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
@@ -57,7 +58,6 @@ def get_backend():
     if backend not in supported_backends:
         raise ValueError(f"Invalid backend {backend}.")
     return backend
-
 
 backend = get_backend()
 device_name = backend.replace("_", ".")
@@ -109,6 +109,8 @@ class CMakeBuild(build_ext):
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
 
+        configure_args += [f"-DSCIPY_LIBS_DIR={site.getsitepackages()[0]}"]
+    
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
             #  (https://github.com/ninja-build/ninja/pull/2056)

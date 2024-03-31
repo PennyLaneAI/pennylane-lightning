@@ -46,7 +46,6 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-option(ENABLE_LAPACK "Enable compilation of LAPACK" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -82,8 +81,34 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
+find_package(Python COMPONENTS Interpreter Development)
+
+message("Python site-packages directory: ${Python_SITELIB}")
+
+if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
+    if(IS_DIRECTORY ${SCIPY_LIBS_DIR})
+        set(SCIPYLIBS ${SCIPY_LIBS_DIR}/scipy.libs)
+    else()
+        set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+    endif()
+
+    ##TODO add windows support
+    if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+        string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
+    endif()
+
+    if(IS_DIRECTORY ${SCIPYLIBS})
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    elseif()
+        message(FATAL_ERROR "scipy.libs not found.")
+    endif()
+else()
+    set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+endif()
+
+
 if(ENABLE_PYTHON)
-    find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
                         GIT_TAG        v2.11.1

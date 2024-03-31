@@ -85,7 +85,7 @@ jobs:
           cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
-    needs: [set_wheel_build_matrix, build_dependencies]
+    needs: [set_wheel_build_matrix]
     strategy:
       fail-fast: false
       matrix:
@@ -127,7 +127,8 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake~=3.24.0 build
+            python -m pip install pybind11 cmake~=3.24.0
+            python -m pip install -r requirements.txt
 
           #Temporarily commenting while solving problems to find binaries in CIBW tests.
           # CIBW_BEFORE_TEST: |
@@ -140,7 +141,7 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-          CIBW_BUILD_FRONTEND: build
+          #CIBW_BUILD_FRONTEND: build
 
         run: python -m cibuildwheel --output-dir wheelhouse
 

@@ -11,7 +11,7 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   release:
-  pull_request:
+  #pull_request:
   push:
     branches:
       - master
@@ -130,7 +130,6 @@ jobs:
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
-            -DENABLE_LAPACK=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
