@@ -83,7 +83,7 @@ class SharedLibLoader final {
         PL_ABORT_IF(!sym, dlerror());
 // TODO add windows support
 #elif defined(_MSC_VER)
-        void *sym = GetProcAddress(handle_, symbol.c_str());
+        void *sym = reinterpret_cast<void *>(GetProcAddress(handle_, symbol.c_str()));
         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
 #endif
         return sym;
