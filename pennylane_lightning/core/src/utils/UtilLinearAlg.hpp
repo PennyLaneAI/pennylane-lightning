@@ -116,11 +116,11 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 #ifdef __APPLE__
-// LCOV_EXCL_START
+    // LCOV_EXCL_START
     const std::string libName(SCIPY_LIBS_PATH);
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
-// LCOV_EXCL_STOP
+    // LCOV_EXCL_STOP
 #else
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
