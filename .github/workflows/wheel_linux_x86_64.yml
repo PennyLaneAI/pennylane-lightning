@@ -131,6 +131,8 @@ jobs:
 
       - name: Build wheels
         env:
+          CIBW_CONTAINER_ENGINE: "docker"
+
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
           CIBW_BUILD: ${{ matrix.cibw_build }}
