@@ -184,7 +184,7 @@ class TestExecution:
         "batch_obs": False,
         "mcmc": False,
         "kernel_name": None,
-        "num_burnin": None,
+        "num_burnin": 0,
     }
 
     @pytest.mark.parametrize(
@@ -222,7 +222,7 @@ class TestExecution:
                         "batch_obs": False,
                         "mcmc": True,
                         "kernel_name": None,
-                        "num_burnin": None,
+                        "num_burnin": 0,
                     },
                 ),
             ),
