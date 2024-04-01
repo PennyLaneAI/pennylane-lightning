@@ -6,7 +6,7 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 12
 
 on:
   pull_request:
@@ -35,7 +35,7 @@ jobs:
         os: [ubuntu-latest]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
@@ -53,10 +53,10 @@ jobs:
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
-          echo "COMPILER=g++-11" >> $GITHUB_ENV
+          echo "COMPILER=g++-12" >> $GITHUB_ENV
 
-      - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+      - name: Install dependencies (AlmaLinux)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           yum update -y && yum install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
@@ -96,7 +96,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -119,8 +119,8 @@ jobs:
           mkdir Kokkos
           cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
-      - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
+      - name: Install dependencies (AlmaLinux)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
           # Reduce wait time for repos not responding
           cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
@@ -142,12 +142,11 @@ jobs:
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             python -m pip install ninja cmake~=3.24.0
             yum clean all -y
-            yum install centos-release-scl-rh -y
-            yum install devtoolset-11-gcc-c++ -y
-            source /opt/rh/devtoolset-11/enable -y
+            yum install devtoolset-12-gcc-c++ -y
+            source /opt/rh/devtoolset-12/enable -y
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
+            PATH="/opt/rh/devtoolset-12/root/usr/bin:$PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
@@ -158,7 +157,7 @@ jobs:
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 
