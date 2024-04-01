@@ -122,15 +122,18 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
-          yum remove podman
-          yum update -y && yum install -y docker
+          yum update -y
+          yum install yum-utils
+          yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+          yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          systemctl enable --now docker
 
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
 
       - name: Build wheels
         env:
-          CIBW_CONTAINER_ENGINE: "docker"
+          # CIBW_CONTAINER_ENGINE: "docker"
 
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
