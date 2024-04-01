@@ -123,9 +123,9 @@ jobs:
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
           yum update -y
-          yum install yum-utils
+          yum install yum-utils -y
           yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-          yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          yum install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y
           systemctl enable --now docker
 
       - name: Install cibuildwheel
