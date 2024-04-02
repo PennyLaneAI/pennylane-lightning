@@ -537,7 +537,7 @@ class StateVectorKokkosMPI final
     void setBasisState(const std::size_t global_index) {
         const auto index = global_2_local_index(global_index);
         const auto rank = static_cast<std::size_t>(get_mpi_rank());
-        if (index.first == 0) {
+        if (index.first == rank) {
             (*sv_).setBasisState(index.second);
         } else {
             (*sv_).initZeros();
