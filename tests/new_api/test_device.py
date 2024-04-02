@@ -29,6 +29,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit import (
     _supports_adjoint,
     accepted_observables,
     adjoint_measurements,
+    adjoint_observables,
     decompose,
     no_sampling,
     stopping_condition,
@@ -76,6 +77,27 @@ class TestHelpers:
         assert accepted_observables(valid_obs) is True
         assert accepted_observables(invalid_obs) is False
 
+    @pytest.mark.parametrize(
+        "obs, expected",
+        [
+            (qml.operation.Tensor(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.s_prod(1.5, qml.Projector([0], 0)), False),
+            (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
+            (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
+            (qml.operation.Tensor(qml.Y(0), qml.Z(1)), True),
+            (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
+            (qml.s_prod(1.5, qml.Y(1)), True),
+            (qml.sum(qml.Y(1), qml.Hadamard(1)), True),
+            (qml.X(0), True),
+            (qml.Hermitian(np.eye(4), [0, 1]), True),
+        ],
+    )
+    def test_adjoint_observables(self, obs, expected):
+        """Test that adjoint_observables returns the expected boolean result for
+        a given observable"""
+        assert adjoint_observables(obs) == expected
+
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
@@ -86,6 +108,7 @@ class TestHelpers:
             decompose,
             stopping_condition=adjoint_ops,
             name=name,
+            skip_initial_state_prep=False,
         )
         expected_program.add_transform(validate_observables, accepted_observables, name=name)
         expected_program.add_transform(
@@ -248,6 +271,7 @@ class TestExecution:
                 decompose,
                 stopping_condition=adjoint_ops,
                 name=name,
+                skip_initial_state_prep=False,
             )
             expected_program.add_transform(validate_observables, accepted_observables, name=name)
             expected_program.add_transform(
@@ -263,6 +287,7 @@ class TestExecution:
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
@@ -271,11 +296,11 @@ class TestExecution:
             qml.probs(op=qml.Z(2)),
             qml.expval(qml.Z(2)),
             qml.var(qml.X(2)),
-            qml.expval(qml.sum(qml.X(0), qml.Z(0))),
+            qml.expval(qml.X(0) + qml.Z(0)),
             qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
-            qml.expval(qml.s_prod(2.5, qml.Z(0))),
-            qml.expval(qml.prod(qml.Z(0), qml.X(1))),
-            qml.expval(qml.sum(qml.Z(1), qml.X(1))),
+            qml.expval(2.5 * qml.Z(0)),
+            qml.expval(qml.Z(0) @ qml.X(1)),
+            qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
             qml.expval(
                 qml.SparseHamiltonian(
                     qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
@@ -289,6 +314,9 @@ class TestExecution:
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
+        if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
+
         qs = QuantumScript(
             [
                 qml.RX(phi, 0),
@@ -302,6 +330,7 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert np.allclose(res, expected)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
@@ -323,6 +352,9 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
+        if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
+
         qs = QuantumScript(
             [
                 qml.RX(phi, 0),
@@ -434,18 +466,19 @@ class TestDerivatives:
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
         [
             qml.Z(1),
-            qml.s_prod(2.5, qml.Z(0)),
-            qml.prod(qml.Z(0), qml.X(1)),
-            qml.sum(qml.Z(1), qml.X(1)),
+            2.5 * qml.Z(0),
+            qml.Z(0) @ qml.X(1),
+            qml.operation.Tensor(qml.Z(0), qml.X(1)),
+            qml.Z(1) + qml.X(1),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
             qml.Projector([1], 1),
-            qml.operation.Tensor(qml.Z(0), qml.X(1)),
         ],
     )
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
@@ -453,6 +486,9 @@ class TestDerivatives:
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
+        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs = qml.operation.convert_to_legacy_H(obs)
+
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
             [qml.expval(obs)],
@@ -506,6 +542,11 @@ class TestDerivatives:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
+        if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs1 = qml.operation.convert_to_legacy_H(obs1)
+        if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs2 = qml.operation.convert_to_legacy_H(obs2)
+
         qs = QuantumScript(
             [
                 qml.RX(theta, 0),
@@ -553,6 +594,59 @@ class TestDerivatives:
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert len(jac) == 1
         assert qml.math.shape(jac[0]) == (0,)
+
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize(
+        "state_prep, params, wires",
+        [
+            (qml.BasisState, [1, 1], [0, 1]),
+            (qml.StatePrep, [0.0, 0.0, 0.0, 1.0], [0, 1]),
+            (qml.StatePrep, qml.numpy.array([0.0, 1.0]), [1]),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "trainable_params",
+        [(0, 1, 2), (1, 2)],
+    )
+    def test_state_prep_ops(
+        self, dev, state_prep, params, wires, execute_and_derivatives, batch_obs, trainable_params
+    ):
+        """Test that a circuit containing state prep operations is differentiated correctly."""
+        qs = QuantumScript(
+            [state_prep(params, wires), qml.RX(1.23, 0), qml.CNOT([0, 1]), qml.RX(4.56, 1)],
+            [qml.expval(qml.PauliZ(1))],
+        )
+
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
+        program, new_config = dev.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            res, jac = dev.execute_and_compute_derivatives(tapes, new_config)
+            res = fn(res)
+        else:
+            res, jac = (
+                fn(dev.execute(tapes, new_config)),
+                dev.compute_derivatives(tapes, new_config),
+            )
+
+        dev_ref = DefaultQubit(max_workers=1)
+        config = ExecutionConfig(gradient_method="adjoint")
+        program, new_config = dev_ref.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            expected, expected_jac = dev_ref.execute_and_compute_derivatives(tapes, new_config)
+            expected = fn(expected)
+        else:
+            expected, expected_jac = (
+                fn(dev_ref.execute(tapes, new_config)),
+                dev_ref.compute_derivatives(tapes, new_config),
+            )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
     def test_state_jacobian_not_supported(self, dev, batch_obs):
         """Test that an error is raised if derivatives are requested for state measurement"""
