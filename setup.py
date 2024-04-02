@@ -186,6 +186,7 @@ if suffix == "gpu":
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
+pennylane_plugins.append("lightning.qubit.old = pennylane_lightning.lightning_qubit.lightning_qubit_old:LightningQubitOld")
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
