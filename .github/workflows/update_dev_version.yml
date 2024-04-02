@@ -9,7 +9,7 @@ jobs:
     steps:
 
       - name: Checkout PennyLane-Lightning master
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: master
           path: main
@@ -20,7 +20,7 @@ jobs:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning PR
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
