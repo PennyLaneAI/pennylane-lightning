@@ -116,7 +116,7 @@ jobs:
 
       - name: Install dependencies (AlmaLinux)
         run: |
-          dnf update -y && dnf install -y podman
+          yum update -y && yum install -y podman
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0
@@ -133,7 +133,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
+            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             python -m pip install ninja cmake~=3.24.0
 
           CIBW_ENVIRONMENT: |
