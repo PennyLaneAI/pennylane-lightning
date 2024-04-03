@@ -300,6 +300,9 @@ class LightningAdjointJacobian:
             )
 
         # Proceed, because tape_return_type is Expectation.
+        if qml.math.ndim(grad_vec) == 0:
+            grad_vec = (grad_vec,)
+
         if len(grad_vec) != len(measurements):
             raise ValueError(
                 "Number of observables in the tape must be the same as the "

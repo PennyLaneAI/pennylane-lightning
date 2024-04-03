@@ -23,8 +23,9 @@ import numpy as np
 import pennylane as qml
 from pennylane import BasisState, QubitDevice, StatePrep
 from pennylane.devices import DefaultQubitLegacy
-from pennylane.measurements import MeasurementProcess
-from pennylane.operation import Operation
+from pennylane.measurements import Expectation, MeasurementProcess, State
+from pennylane.operation import Operation, Tensor
+from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
 
 from ._serialize import QuantumScriptSerializer
@@ -306,18 +307,69 @@ class LightningBase(QubitDevice):
             "obs_idx_offsets": obs_idx_offsets,
         }
 
+    @staticmethod
+    def _assert_adjdiff_no_projectors(observable):
+        """Helper function to validate that an observable is not or does not contain
+        Projectors
+
+        Args:
+            observable (~pennylane.operation.Operator): Observable to check
+
+        Raises:
+            ~pennylane.QuantumFunctionError: if a ``Projector`` is found.
+        """
+        if isinstance(observable, Tensor):
+            if any(isinstance(o, Projector) for o in observable.non_identity_obs):
+                raise qml.QuantumFunctionError(
+                    "Adjoint differentiation method does not support the Projector observable"
+                )
+
+        elif isinstance(observable, Projector):
+            raise qml.QuantumFunctionError(
+                "Adjoint differentiation method does not support the Projector observable"
+            )
+
+        elif isinstance(observable, SProd):
+            LightningBase._assert_adjdiff_no_projectors(observable.base)
+
+        elif isinstance(observable, (Sum, Prod)):
+            for obs in observable:
+                LightningBase._assert_adjdiff_no_projectors(obs)
+
     # pylint: disable=unnecessary-pass
     @staticmethod
     def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
-        """Check whether given list of measurement is supported by adjoint_differentiation.
+        """Check whether given list of measurements is supported by adjoint_differentiation.
 
         Args:
             measurements (List[MeasurementProcess]): a list of measurement processes to check.
 
         Returns:
             Expectation or State: a common return type of measurements.
+
+        Raises:
+            ~pennylane.QuantumFunctionError: if a measurement is unsupported with adjoint
+            differentiation.
         """
-        pass
+        if not measurements:
+            return None
+
+        if len(measurements) == 1 and measurements[0].return_type is State:
+            # return State
+            raise qml.QuantumFunctionError(
+                "Adjoint differentiation does not support State measurements."
+            )
+
+        # The return_type of measurement processes must be expectation
+        if any(m.return_type is not Expectation for m in measurements):
+            raise qml.QuantumFunctionError(
+                "Adjoint differentiation method does not support expectation return type "
+                "mixed with other return types"
+            )
+
+        for measurement in measurements:
+            LightningBase._assert_adjdiff_no_projectors(measurement.obs)
+        return Expectation
 
     @staticmethod
     def _adjoint_jacobian_processing(jac):
