@@ -33,7 +33,7 @@ from pennylane import (
 )
 from pennylane.math import unwrap
 from pennylane.operation import Tensor
-from pennylane.ops import Prod, SProd, Sum, Hamiltonian, LinearCombination
+from pennylane.ops import Hamiltonian, LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape
 
 pauli_name_map = {
