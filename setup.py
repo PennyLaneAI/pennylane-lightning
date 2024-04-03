@@ -21,7 +21,7 @@ from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 
@@ -29,7 +29,7 @@ def get_backend():
     """Return backend.
 
     The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
+    Allowed values are: "lightning_kokkos", "lightning_qubit", "lightning_gpu" and "lightning_tensor".
     A dot can also be used instead of an underscore.
     If the environment variable ``PL_BACKEND`` is defined, its value is used.
     Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
@@ -211,6 +211,7 @@ info = {
     "extras_require": {
         "gpu": ["pennylane-lightning-gpu"],
         "kokkos": ["pennylane-lightning-kokkos"],
+        "tensor": ["pennylane-lightning-tensor"],
     },
 }
 
