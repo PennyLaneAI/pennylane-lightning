@@ -54,7 +54,7 @@ jobs:
         run: |
           git fetch tags --force
           git checkout $(git tag | sort -V | tail -1)
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -199,7 +199,7 @@ jobs:
           git checkout $(git tag | sort -V | tail -1)
 
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:

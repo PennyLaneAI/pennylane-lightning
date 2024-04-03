@@ -83,7 +83,7 @@ jobs:
         with:
           path: main
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -204,7 +204,7 @@ jobs:
           git fetch --tags --force
           git checkout $(git tag | sort -V | tail -1)
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
