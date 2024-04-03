@@ -47,7 +47,7 @@
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
 
 * Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
-  [(#)]()
+  [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
 
 ### Documentation
 
