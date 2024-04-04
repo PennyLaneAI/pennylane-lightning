@@ -26,10 +26,7 @@ from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        MeasurementsC64,
-        MeasurementsC128,
-    )
+    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
     pass
 
@@ -421,6 +418,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",

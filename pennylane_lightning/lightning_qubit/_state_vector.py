@@ -29,9 +29,13 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
+from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
+
+from ._measurements import LightningMeasurements
 
 
 class LightningStateVector:
@@ -220,10 +224,10 @@ class LightningStateVector:
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
-            operation (~pennylane.operation.Operation): operation to apply
+            operation (~pennylane.operation.Operation): controlled operation to apply
 
         Returns:
-            array[complex]: the output state tensor
+            None
         """
         state = self.state_vector
 
@@ -246,14 +250,36 @@ class LightningStateVector:
                 False,
             )
 
-    def _apply_lightning(self, operations):
+    def _apply_lightning_midmeasure(self, operation: MidMeasureMP, mid_measurements: dict):
+        """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+        Args:
+            operation (~pennylane.operation.Operation): mid-circuit measurement
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
+        Returns:
+            None
+        """
+        wires = self.wires.indices(operation.wires)
+        wire = list(wires)[0]
+        circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
+        sample = LightningMeasurements(self).measure_final_state(circuit)
+        sample = np.squeeze(sample)
+        if operation.postselect is not None and sample != operation.postselect:
+            mid_measurements[operation] = -1
+            return
+        mid_measurements[operation] = sample
+        getattr(self.state_vector, "collapse")(wire, bool(sample))
+        if operation.reset and bool(sample):
+            self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+
+    def _apply_lightning(self, operations, mid_measurements: dict = None):
         """Apply a list of operations to the state tensor.
 
         Args:
             operations (list[~pennylane.operation.Operation]): operations to apply
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
-            array[complex]: the output state tensor
+            None
         """
         state = self.state_vector
 
@@ -271,7 +297,12 @@ class LightningStateVector:
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
-            if method is not None:  # apply specialized gate
+            if isinstance(operation, Conditional):
+                if operation.meas_val.concretize(mid_measurements):
+                    self._apply_lightning([operation.then_op])
+            elif isinstance(operation, MidMeasureMP):
+                self._apply_lightning_midmeasure(operation, mid_measurements)
+            elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
@@ -286,7 +317,7 @@ class LightningStateVector:
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
 
-    def apply_operations(self, operations):
+    def apply_operations(self, operations, mid_measurements: dict = None):
         """Applies operations to the state vector."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
@@ -297,9 +328,9 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        self._apply_lightning(operations)
+        self._apply_lightning(operations, mid_measurements=mid_measurements)
 
-    def get_final_state(self, circuit: QuantumScript):
+    def get_final_state(self, circuit: QuantumScript, mid_measurements: dict = None):
         """
         Get the final state that results from executing the given quantum script.
 
@@ -307,11 +338,12 @@ class LightningStateVector:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             LightningStateVector: Lightning final state class.
 
         """
-        self.apply_operations(circuit.operations)
+        self.apply_operations(circuit.operations, mid_measurements=mid_measurements)
 
         return self

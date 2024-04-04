@@ -50,19 +50,14 @@ if LK_CPP_BINARY_AVAILABLE:
     from typing import List
 
     import pennylane as qml
-    from pennylane import (
-        BasisState,
-        DeviceError,
-        Projector,
-        QuantumFunctionError,
-        Rot,
-        StatePrep,
-        math,
-    )
-    from pennylane.measurements import Expectation, MeasurementProcess, State
-    from pennylane.operation import Tensor
+    from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StatePrep, math
+    from pennylane.measurements import Expectation, State
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
+
+    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
+    from pennylane_lightning.core._version import __version__
 
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
@@ -71,13 +66,6 @@ if LK_CPP_BINARY_AVAILABLE:
         create_ops_listC64,
         create_ops_listC128,
     )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.core._serialize import (
-        QuantumScriptSerializer,
-        global_phase_diagonal,
-    )
-    from pennylane_lightning.core._version import __version__
 
     def _kokkos_dtype(dtype):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
@@ -160,6 +148,7 @@ if LK_CPP_BINARY_AVAILABLE:
         "Projector",
         "SparseHamiltonian",
         "Hamiltonian",
+        "LinearCombination",
         "Sum",
         "SProd",
         "Prod",
@@ -626,47 +615,6 @@ if LK_CPP_BINARY_AVAILABLE:
             if diagonalizing_gates:
                 self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
             return results
-
-        @staticmethod
-        def _check_adjdiff_supported_measurements(
-            measurements: List[MeasurementProcess],
-        ):
-            """Check whether given list of measurement is supported by adjoint_differentiation.
-
-            Args:
-                measurements (List[MeasurementProcess]): a list of measurement processes to check.
-
-            Returns:
-                Expectation or State: a common return type of measurements.
-            """
-            if not measurements:
-                return None
-
-            if len(measurements) == 1 and measurements[0].return_type is State:
-                # return State
-                raise QuantumFunctionError(
-                    "Adjoint differentiation does not support State measurements."
-                )
-
-            # Now the return_type of measurement processes must be expectation
-            if any(m.return_type is not Expectation for m in measurements):
-                raise QuantumFunctionError(
-                    "Adjoint differentiation method does not support expectation return type "
-                    "mixed with other return types"
-                )
-
-            for measurement in measurements:
-                if isinstance(measurement.obs, Tensor):
-                    if any(isinstance(o, Projector) for o in measurement.obs.non_identity_obs):
-                        raise QuantumFunctionError(
-                            "Adjoint differentiation method does not support the "
-                            "Projector observable"
-                        )
-                elif isinstance(measurement.obs, Projector):
-                    raise QuantumFunctionError(
-                        "Adjoint differentiation method does not support the Projector observable"
-                    )
-            return Expectation
 
         @staticmethod
         def _check_adjdiff_supported_operations(operations):

@@ -152,6 +152,34 @@ def qubit_device(request):
     return _device
 
 
+#######################################################################
+# Fixtures for testing under new and old opmath
+
+
+@pytest.fixture(scope="function")
+def use_legacy_opmath():
+    with qml.operation.disable_new_opmath_cm() as cm:
+        yield cm
+
+
+@pytest.fixture(scope="function")
+def use_new_opmath():
+    with qml.operation.enable_new_opmath_cm() as cm:
+        yield cm
+
+
+@pytest.fixture(
+    params=[qml.operation.disable_new_opmath_cm, qml.operation.enable_new_opmath_cm],
+    scope="function",
+)
+def use_legacy_and_new_opmath(request):
+    with request.param() as cm:
+        yield cm
+
+
+#######################################################################
+
+
 def validate_counts(shots, results1, results2):
     """Compares two counts.
 
@@ -197,7 +225,7 @@ def validate_samples(shots, results1, results2):
         np.allclose(np.sum(results1), np.sum(results2), rtol=20, atol=0.2)
 
 
-def validate_expval(shots, results1, results2):
+def validate_others(shots, results1, results2):
     """Compares two expval, probs or var.
 
     If the results are ``Sequence``s, validate the average of items.
@@ -210,7 +238,7 @@ def validate_expval(shots, results1, results2):
         assert len(results1) == len(results2)
         results1 = reduce(lambda x, y: x + y, results1) / len(results1)
         results2 = reduce(lambda x, y: x + y, results2) / len(results2)
-        validate_expval(shots, results1, results2)
+        validate_others(shots, results1, results2)
         return
     if shots is None:
         assert np.allclose(results1, results2)
@@ -228,4 +256,4 @@ def validate_measurements(func, shots, results1, results2):
         validate_samples(shots, results1, results2)
         return
 
-    validate_expval(shots, results1, results2)
+    validate_others(shots, results1, results2)
