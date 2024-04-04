@@ -15,13 +15,12 @@
 This module contains the LightningTensor class that inherits from the new device interface.
 """
 
-from dataclasses import replace
-from pathlib import Path
-from typing import Callable, Optional, Sequence, Union
-
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import Device
+
+
+from ._state_tensor import LightningStateTensor
 
 
 class LightningTensor(Device):
@@ -29,3 +28,42 @@ class LightningTensor(Device):
 
     A device that interfaces with C++ to perform fast linear algebra calculations.
     """
+
+    _new_API = True
+
+    def __init__(
+        self,
+        wires,
+        *,
+        c_dtype=np.complex128,
+        shots=None,
+    ):
+
+        # TODO: should we accept cases in which shots=0, shots=1?
+        if shots is not None:
+            raise ValueError(
+                "LightningTensor does not support a finite number of shots."
+            )
+
+        super().__init__(wires=wires, shots=shots)
+
+        self._statetensor = LightningStateTensor(
+            num_wires=len(self.wires), dtype=c_dtype
+        )
+
+        self._c_dtype = c_dtype
+
+    @property
+    def name(self):
+        """The name of the device."""
+        return "lightning.tensor"
+
+    @property
+    def c_dtype(self):
+        """State vector complex data type."""
+        return self._c_dtype
+
+    dtype = c_dtype
+
+    def execute():
+        pass
