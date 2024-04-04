@@ -182,7 +182,7 @@ jobs:
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v3
         with:
           name: macOS-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist
