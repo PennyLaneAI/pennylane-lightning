@@ -37,6 +37,9 @@
 
 ### Improvements
 
+* Update GitHub actions versions.
+  [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
+
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
   [(#641)](https://github.com/PennyLaneAI/pennylane-lightning/pull/641)
 

@@ -139,7 +139,7 @@ jobs:
           for file in *runner_mpi ; do mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          mv coverage.info coverage-cpp-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -153,7 +153,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          path: ./Build/coverage-cpp-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
           if-no-files-found: error
 
       - name: Cleanup
@@ -275,13 +275,13 @@ jobs:
           PL_DEVICE=lightning.gpu mpirun -np 2 \
           coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
           coverage combine
-          coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
+          coverage xml -o coverage-python-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
-          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          path: coverage-python-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
           if-no-files-found: error
 
       - name: Cleanup
