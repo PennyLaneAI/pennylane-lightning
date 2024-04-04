@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,13 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""
-Class implementation for state-tensor manipulation.
-"""
+"""PennyLane lightning_tensor package."""
 
+from pennylane_lightning.core import __version__
 
-class LightningStateTensor:
-    """Lightning state-tensor class.
-
-    Interfaces with C++ python binding methods for state-tensor manipulation.
-    """
+from .lightning_tensor import LightningTensor

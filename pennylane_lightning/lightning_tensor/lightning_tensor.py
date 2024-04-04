@@ -15,11 +15,17 @@
 This module contains the LightningTensor class that inherits from the new device interface.
 """
 
+from dataclasses import replace
+from pathlib import Path
+from typing import Callable, Optional, Sequence, Union
+
+import numpy as np
+import pennylane as qml
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+
 
 class LightningTensor(Device):
-    """PennyLane Lightning Kokkos device.
+    """PennyLane Lightning Tensor device.
 
     A device that interfaces with C++ to perform fast linear algebra calculations.
     """
-
-    pass
