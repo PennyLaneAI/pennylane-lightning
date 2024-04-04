@@ -81,27 +81,27 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
+# TODO: Add a flag to toggle the Python requirement.
 find_package(Python COMPONENTS Interpreter Development)
-
 message("Python site-packages directory: ${Python_SITELIB}")
+set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
 
-if (CMAKE_SYSTEM_NAME MATCHES "Windows" OR CMAKE_SYSTEM_NAME MATCHES "Linux")
-    set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
-
-    #TODO add windows support
-    #if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    if(EXISTS ${SCIPYLIBS})
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
+            ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    endif()
+elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    # TODO: add windows support
     #    string(REPLACE "\\" "/" SCIPYLIBS "${SCIPYLIBS}")
     #    message("Python site-packages directory (Windows): ${SCIPYLIBS}")
-    #endif()
-
-    if(EXISTS ${SCIPYLIBS})
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
-    endif()
 else()
-    set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
-
 
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
