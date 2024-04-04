@@ -32,7 +32,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.measurements import MidMeasureMP
+from pennylane.measurements import MeasurementRegister, MidMeasureMP
 from pennylane.operation import Tensor
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
@@ -79,14 +79,10 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     if circuit.shots and has_mcm:
         mid_measurements = {}
         final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
-        if any(v == -1 for v in mid_measurements.values()):
-            return None, mid_measurements
-        return (
-            LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
-            mid_measurements,
-        )
-    final_state = state.get_final_state(circuit)
-    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+    else:
+        mid_measurements = None
+        final_state = state.get_final_state(circuit)
+    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit, mid_measurements=mid_measurements)
 
 
 def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):

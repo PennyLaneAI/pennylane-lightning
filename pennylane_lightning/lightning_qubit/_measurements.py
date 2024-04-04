@@ -31,6 +31,7 @@ from pennylane.measurements import (
     CountsMP,
     ExpectationMP,
     MeasurementProcess,
+    MeasurementRegisterMP,
     ProbabilityMP,
     SampleMeasurement,
     ShadowExpvalMP,
@@ -254,7 +255,7 @@ class LightningMeasurements:
         """
         return self.get_measurement_function(measurementprocess)(measurementprocess)
 
-    def measure_final_state(self, circuit: QuantumScript) -> Result:
+    def measure_final_state(self, circuit: QuantumScript, mid_measurements=None) -> Result:
         """
         Perform the measurements required by the circuit on the provided state.
 
@@ -262,6 +263,7 @@ class LightningMeasurements:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             Tuple[TensorLike]: The measurement results
@@ -278,6 +280,7 @@ class LightningMeasurements:
         results = self.measure_with_samples(
             circuit.measurements,
             shots=circuit.shots,
+            mid_measurements=mid_measurements
         )
 
         if len(circuit.measurements) == 1:
@@ -293,6 +296,7 @@ class LightningMeasurements:
         self,
         mps: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
         shots: Shots,
+        mid_measurements=None,
     ) -> List[TensorLike]:
         """
         Returns the samples of the measurement process performed on the given state.
@@ -303,6 +307,7 @@ class LightningMeasurements:
             mps (List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]]):
                 The sample measurements to perform
             shots (Shots): The number of samples to take
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             List[TensorLike[Any]]: Sample measurement results
@@ -312,6 +317,10 @@ class LightningMeasurements:
 
         all_res = []
         for group in groups:
+            if isinstance(group[0], MeasurementRegisterMP):
+                group[0].validate(mid_measurements)
+                all_res.append(mid_measurements)
+                continue
             if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
                 group[0].obs, SparseHamiltonian
             ):

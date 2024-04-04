@@ -345,5 +345,7 @@ class LightningStateVector:
 
         """
         self.apply_operations(circuit.operations, mid_measurements=mid_measurements)
-
+        if any(v == -1 for v in mid_measurements.values()):
+            # the state is likely non-orthonormal, let's orthonormalize it
+            self._apply_basis_state(np.zeros(self.num_wires), self.wires)
         return self
