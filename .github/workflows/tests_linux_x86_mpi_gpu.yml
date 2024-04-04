@@ -142,7 +142,7 @@ jobs:
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports
@@ -150,7 +150,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
@@ -278,7 +278,7 @@ jobs:
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
@@ -300,7 +300,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
 
@@ -327,7 +327,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-codecov-results-python
 
