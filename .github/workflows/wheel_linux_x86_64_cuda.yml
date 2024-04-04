@@ -76,7 +76,7 @@ jobs:
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source ls /opt/rh/gcc-toolset-13/enable -y
-            dnf-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
+            yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
             dnf -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
 
           # ensure nvcc is available
