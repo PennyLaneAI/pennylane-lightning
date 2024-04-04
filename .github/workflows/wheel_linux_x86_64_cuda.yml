@@ -74,9 +74,8 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }}
             dnf clean all -y
-            dnf install gcc-toolset-13 -y
+            dnf install gcc-toolset-13 dnf-utils -y
             source ls /opt/rh/gcc-toolset-13/enable -y
-            dnf install dnf-utils
             yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo -y
             dnf -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
 
