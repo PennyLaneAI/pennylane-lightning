@@ -114,17 +114,14 @@ jobs:
           mkdir Kokkos
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
-      - name: Install dependencies (AlmaLinux)
-        run: |
-          sudo apt update && sudo apt -y install podman
-
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0
 
+      - uses: docker/setup-qemu-action@v2
+        name: Set up QEMU
+
       - name: Build wheels
         env:
-          CIBW_CONTAINER_ENGINE: "podman"
-
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -139,7 +136,7 @@ jobs:
           CIBW_ENVIRONMENT: |
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 
