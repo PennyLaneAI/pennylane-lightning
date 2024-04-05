@@ -46,7 +46,7 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<float> *, const int *, float *, int *);
 
 // Priority table used to sort openblas and its dependencies
-std::array<std::string, 5> priority_lib{"stdc", "gcc", "quadmath", "gfortran",
+std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
                                         "openblas"};
 
 } // namespace

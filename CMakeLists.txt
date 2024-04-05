@@ -84,16 +84,16 @@ include(FetchContent)
 # TODO: Add a flag to toggle the Python requirement.
 find_package(Python COMPONENTS Interpreter Development)
 message("Python site-packages directory: ${Python_SITELIB}")
-set(SCIPYLIBS ${Python_SITELIB}/scipy.libs)
+set(SCIPYLIBS ${Python_SITELIB})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
     set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
-        ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-    if(EXISTS ${SCIPYLIBS})
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
-            ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    if(EXISTS ${SCIPYLIBS}/scipy.libs)
+        set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
+    else()
+        # Fallback to the lib path of Python for `clang` support
+        set(SCIPYLIBS ${SCIPYLIBS}/../..)
     endif()
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
     # TODO: add windows support
@@ -102,6 +102,9 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
 
 if(ENABLE_PYTHON)
     FetchContent_Declare(pybind11
