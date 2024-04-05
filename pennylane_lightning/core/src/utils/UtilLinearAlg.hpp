@@ -14,7 +14,7 @@
 // limitations under the License.
 
 /**
- * [@file](https://github.com/file)
+ * @file
  * LAPACK wrapper functions declarations.
  */
 #pragma once
@@ -29,13 +29,6 @@
 #include <vector>
 
 #include <iostream>
-
-#if defined(__APPLE__) || defined(__linux__)
-#include <dlfcn.h>
-// TODO add windows support
-// #elif defined(_MSC_VER)
-// #include <Windows.h>
-#endif
 
 #include "SharedLibLoader.hpp"
 

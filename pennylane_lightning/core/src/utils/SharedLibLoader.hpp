@@ -21,9 +21,10 @@
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
-// TODO add windows support
-// #elif defined(_MSC_VER)
-// #include <Windows.h>
+#define PL_DLOPEN(NAME, ARG) dlopen(NAME, ARG)
+#define PL_DLERROR() dlerror()
+#define PL_DLCLOSE(NAME) dlclose(NAME)
+#define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
 #endif
 
 #include "Error.hpp"
@@ -31,61 +32,32 @@
 namespace Pennylane::Util {
 /**
  * Dynamic shared library loading wrapper class
+ *
+ * This class is adapted from Catalyst
+ * https://github.com/PennyLaneAI/catalyst/blob/f016a31f69d1b8a84bc9612af1bc64f0575506e9/runtime/lib/capi/ExecutionContext.hpp#L75
+ *
  */
-// Adapted from Catalyst
-// (https://github.com/PennyLaneAI/catalyst/blob/f016a31f69d1b8a84bc9612af1bc64f0575506e9/runtime/lib/capi/ExecutionContext.hpp#L75)
 
 // Ignore invalid warnings for compile-time checks
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-#if defined(__APPLE__) || defined(__linux__)
     void *handle_{nullptr};
-// TODO add windows support
-// #elif defined(_MSC_VER)
-//     HMODULE handle_{nullptr};
-#endif
 
   public:
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
-#if defined(__APPLE__)
-        auto rtld_flags = RTLD_LAZY;
-#elif defined(__linux__)
-        auto rtld_flags = RTLD_LAZY | RTLD_NODELETE;
-#endif
-
-#if defined(__APPLE__) || defined(__linux__)
-        handle_ = dlopen(filename.c_str(), rtld_flags);
-        // This allows users to use pre-installed LAPACK package
-        PL_ABORT_IF(!handle_, dlerror());
-// TODO add windows support
-// #elif defined(_MSC_VER)
-//         handle_ = LoadLibrary(filename.c_str());
-//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
-#endif
+        handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
+        PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
-    ~SharedLibLoader() {
-#if defined(__APPLE__) || defined(__linux__)
-        dlclose(handle_);
-// TODO add windows support
-// #elif defined(_MSC_VER)
-//         FreeLibrary(handle_);
-#endif
-    }
+    ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
 
     void *getHandle() { return handle_; }
 
     void *getSymbol(const std::string &symbol) {
-#if defined(__APPLE__) || defined(__linux__)
-        void *sym = dlsym(handle_, symbol.c_str());
-        PL_ABORT_IF(!sym, dlerror());
-// TODO add windows support
-// #elif defined(_MSC_VER)
-//         void *sym = GetProcAddress(handle_, symbol.c_str());
-//         PL_ABORT_IF(!handle_, std::to_string(GetLastError()));
-#endif
+        void *sym = PL_DLSYS(handle_, symbol.c_str());
+        PL_ABORT_IF(!sym, PL_DLERROR());
         return sym;
     }
 };
