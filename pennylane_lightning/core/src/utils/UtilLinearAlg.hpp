@@ -20,12 +20,12 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <complex>
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <iostream>
@@ -46,8 +46,9 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<float> *, const int *, float *, int *);
 
 // Priority table used to sort openblas and its dependencies
-std::unordered_map<std::string, std::size_t> priority_lib = {
-    {"stdc", 0}, {"gcc", 1}, {"quadmath", 2}, {"gfortran", 3}, {"openblas", 4}};
+std::array<std::string, 5> priority_lib{"stdc", "gcc", "quadmath", "gfortran",
+                                        "openblas"};
+
 } // namespace
 /// @endcond
 
@@ -137,7 +138,7 @@ void compute_diagonalizing_gates(int n, int lda,
             // convert the relative path to absolute path
             scipyPathStr = std::filesystem::canonical(scipyPathStr).string();
         } catch (const std::exception &err) {
-            std::cout << "Canonical path for scipy.libs"
+            std::cerr << "Canonical path for scipy.libs"
                       << " threw exception:\n"
                       << err.what() << '\n';
         }
@@ -146,28 +147,25 @@ void compute_diagonalizing_gates(int n, int lda,
 
     std::filesystem::path scipyLibsPath(scipyPathStr);
 
-    std::vector<std::pair<std::string, std::size_t>> availableLibs;
+    std::vector<std::string> availableLibs;
+    availableLibs.reserve(priority_lib.size());
 
-    for (const auto &lib : std::filesystem::directory_iterator(scipyLibsPath)) {
-        if (lib.is_regular_file()) {
-            for (const auto &iter : priority_lib) {
+    for (const auto &iter : priority_lib) {
+        for (const auto &lib :
+             std::filesystem::directory_iterator(scipyLibsPath)) {
+            if (lib.is_regular_file()) {
                 std::string libname_str = lib.path().filename().string();
-                if (libname_str.find(iter.first) != std::string ::npos) {
-                    availableLibs.emplace_back(libname_str, iter.second);
+                if (libname_str.find(iter) != std::string::npos) {
+                    availableLibs.push_back(libname_str);
                 }
             }
         }
     }
 
-    std::sort(availableLibs.begin(), availableLibs.end(),
-              [](const auto &lhs, const auto &rhs) {
-                  return lhs.second < rhs.second;
-              });
-
     for (const auto &lib : availableLibs) {
-        auto libPath = scipyLibsPath / lib.first.c_str();
-        const std::string libPathStr = libPath.string();
-        blasLibs.emplace_back(std::make_shared<SharedLibLoader>(libPathStr));
+        auto libPath = scipyLibsPath / lib.c_str();
+        blasLibs.emplace_back(
+            std::make_shared<SharedLibLoader>(libPath.string()));
     }
 
     blasLib = blasLibs.back();
