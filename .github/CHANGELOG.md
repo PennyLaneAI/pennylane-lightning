@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.kokkos` supports mid-circuit measurements.
+  [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
+
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
 

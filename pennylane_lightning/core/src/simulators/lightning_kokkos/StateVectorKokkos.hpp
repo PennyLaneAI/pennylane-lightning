@@ -767,23 +767,14 @@ class StateVectorKokkos final
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
-        auto &&num_qubits = this->getNumQubits();
-
-        const size_t stride = pow(2, num_qubits_ - (1 + wire));
-        const size_t vec_size = pow(2, num_qubits_);
-        const auto section_size = vec_size / stride;
-        const auto half_section_size = section_size / 2;
-        const size_t negbranch = (branch) ? 0 : 1;
-
-        Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d(
-            {0, 0}, {half_section_size, stride});
-        auto sv_view = getView();
+        KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
-            policy_2d,
-            KOKKOS_LAMBDA(const std::size_t left, const std::size_t right) {
-                const size_t offset = stride * (negbranch + 2 * left);
-                sv_view(offset + right) = ComplexT{0., 0.};
+            matrix.size(), KOKKOS_LAMBDA(const std::size_t k) {
+                matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
+                                ? ComplexT{1.0, 0.0}
+                                : ComplexT{0.0, 0.0};
             });
+        applyMultiQubitOp(matrix, {wire}, false);
         normalize();
     }
 
@@ -807,7 +798,8 @@ class StateVectorKokkos final
                         std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "vector has norm close to zero and can't be normalized");
 
-        std::complex<PrecisionT> inv_norm = 1. / Kokkos::sqrt(squaredNorm);
+        const std::complex<PrecisionT> inv_norm =
+            1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
             sv_view.size(),
             KOKKOS_LAMBDA(const std::size_t i) { sv_view(i) *= inv_norm; });
