@@ -14,7 +14,7 @@
 """
 This module contains unit tests for new device API Lightning classes.
 """
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments, unused-argument
 
 import numpy as np
 import pennylane as qml
@@ -425,8 +425,6 @@ class TestDerivatives:
             jac = device.compute_derivatives(tapes, config)
         return transf_fn(results), jac
 
-    # Test supports derivative + xfail tests
-
     @pytest.mark.parametrize(
         "config, tape, expected",
         [
@@ -474,7 +472,6 @@ class TestDerivatives:
             qml.Z(1),
             2.5 * qml.Z(0),
             qml.Z(0) @ qml.X(1),
-            qml.operation.Tensor(qml.Z(0), qml.X(1)),
             qml.Z(1) + qml.X(1),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
@@ -518,16 +515,16 @@ class TestDerivatives:
         "obs1",
         [
             qml.Z(1),
-            qml.s_prod(2.5, qml.Y(2)),
+            2.5 * qml.Y(2),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
-            qml.operation.Tensor(qml.Z(0), qml.X(1)),
+            qml.Z(0) @ qml.X(1),
         ],
     )
     @pytest.mark.parametrize(
         "obs2",
         [
-            qml.prod(qml.Y(0), qml.X(2)),
-            qml.sum(qml.Z(1), qml.X(1)),
+            qml.Y(0) @ qml.X(2),
+            qml.Z(1) + qml.X(1),
             qml.SparseHamiltonian(
                 qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
                     wire_order=[0, 1, 2]
@@ -727,5 +724,339 @@ class TestDerivatives:
 
         assert len(jacs) == len(expected_jac)
         assert len(jacs[0]) == len(expected_jac[0])
+        assert np.allclose(jacs[0], expected_jac[0])
+        assert np.allclose(jacs[1], expected_jac[1])
+
+
+@pytest.mark.parametrize("batch_obs", [True, False])
+class TestVJP:
+    """Unit tests for VJP computation with the new device API."""
+
+    @staticmethod
+    def calculate_reference(tape, dy, execute_and_derivatives=False):
+        device = DefaultQubit(max_workers=1)
+        program, config = device.preprocess(ExecutionConfig(gradient_method="adjoint"))
+        tapes, transf_fn = program([tape])
+        dy = [dy]
+
+        if execute_and_derivatives:
+            results, jac = device.execute_and_compute_vjp(tapes, dy, config)
+        else:
+            results = device.execute(tapes, config)
+            jac = device.compute_vjp(tapes, dy, config)
+        return transf_fn(results), jac
+
+    @staticmethod
+    def process_and_execute(device, tape, dy, execute_and_derivatives=False, obs_batch=False):
+        program, config = device.preprocess(
+            ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
+        )
+        tapes, transf_fn = program([tape])
+        dy = [dy]
+
+        if execute_and_derivatives:
+            results, jac = device.execute_and_compute_vjp(tapes, dy, config)
+        else:
+            results = device.execute(tapes, config)
+            jac = device.compute_vjp(tapes, dy, config)
+        return transf_fn(results), jac
+
+    @pytest.mark.parametrize(
+        "config, tape, expected",
+        [
+            (None, None, True),
+            (DefaultExecutionConfig, None, False),
+            (ExecutionConfig(gradient_method="backprop"), None, False),
+            (
+                ExecutionConfig(gradient_method="backprop"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                False,
+            ),
+            (ExecutionConfig(gradient_method="best"), None, True),
+            (ExecutionConfig(gradient_method="adjoint"), None, True),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))]),
+                True,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.var(qml.Z(0))]),
+                False,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.state()]),
+                False,
+            ),
+            (
+                ExecutionConfig(gradient_method="adjoint"),
+                QuantumScript([qml.RX(0.123, 0)], [qml.expval(qml.Z(0))], shots=10),
+                False,
+            ),
+        ],
+    )
+    def test_supports_vjp(self, dev, config, tape, expected, batch_obs):
+        """Test that supports_vjp returns the correct boolean value."""
+        assert dev.supports_vjp(config, tape) == expected
+
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.Z(1),
+            2.5 * qml.Z(0),
+            qml.Z(0) @ qml.X(1),
+            qml.Z(1) + qml.X(1),
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
+            qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
+            qml.Projector([1], 1),
+        ],
+    )
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_vjp_single_expval(self, theta, phi, dev, obs, execute_and_derivatives, batch_obs):
+        """Test that the VJP is correct when a tape has a single expectation value"""
+        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs = qml.operation.convert_to_legacy_H(obs)
+
+        qs = QuantumScript(
+            [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
+            [qml.expval(obs)],
+            trainable_params=[0, 1],
+        )
+
+        dy = 1.0
+        res, jac = self.process_and_execute(
+            dev, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        if isinstance(obs, qml.Hamiltonian):
+            qs = QuantumScript(
+                qs.operations,
+                [qml.expval(qml.Hermitian(qml.matrix(obs), wires=obs.wires))],
+                trainable_params=qs.trainable_params,
+            )
+        expected, expected_jac = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("theta, phi, omega", list(zip(THETA, PHI, VARPHI)))
+    @pytest.mark.parametrize(
+        "obs1",
+        [
+            qml.Z(1),
+            2.5 * qml.Y(2),
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
+            qml.Z(0) @ qml.X(1),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "obs2",
+        [
+            qml.Y(0) @ qml.X(2),
+            qml.Z(1) + qml.X(1),
+            qml.SparseHamiltonian(
+                qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                    wire_order=[0, 1, 2]
+                ),
+                wires=[0, 1, 2],
+            ),
+            qml.Projector([1], wires=2),
+        ],
+    )
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_vjp_multi_expval(
+        self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
+    ):
+        """Test that the VJP is correct when a tape has multiple expectation values"""
+        if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs1 = qml.operation.convert_to_legacy_H(obs1)
+        if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
+            obs2 = qml.operation.convert_to_legacy_H(obs2)
+
+        qs = QuantumScript(
+            [
+                qml.RX(theta, 0),
+                qml.CNOT([0, 1]),
+                qml.RY(phi, 1),
+                qml.CNOT([1, 2]),
+                qml.RZ(omega, 2),
+            ],
+            [qml.expval(obs1), qml.expval(obs2)],
+            trainable_params=[0, 1, 2],
+        )
+        dy = (1.0, 2.0)
+
+        res, jac = self.process_and_execute(
+            dev, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        if isinstance(obs1, qml.Hamiltonian):
+            qs = QuantumScript(
+                qs.operations,
+                [qml.expval(qml.Hermitian(qml.matrix(obs1), wires=obs1.wires)), qml.expval(obs2)],
+                trainable_params=qs.trainable_params,
+            )
+        expected, expected_jac = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+        res = res[0]
+        jac = jac[0]
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == 2
+        assert len(jac) == 3
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_vjp_no_trainable_params(self, dev, execute_and_derivatives, batch_obs):
+        """Test that the VJP is empty with there are no trainable parameters."""
+        qs = QuantumScript(
+            [qml.Hadamard(0), qml.CNOT([0, 1]), qml.S(1), qml.T(1)], [qml.expval(qml.Z(1))]
+        )
+        dy = 1.0
+
+        res, jac = self.process_and_execute(
+            dev, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        expected, _ = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert len(jac) == 1
+        assert qml.math.shape(jac[0]) == (0,)
+
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize(
+        "state_prep, params, wires",
+        [
+            (qml.BasisState, [1, 1], [0, 1]),
+            (qml.StatePrep, [0.0, 0.0, 0.0, 1.0], [0, 1]),
+            (qml.StatePrep, qml.numpy.array([0.0, 1.0]), [1]),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "trainable_params",
+        [(0, 1, 2), (1, 2)],
+    )
+    def test_state_prep_ops(
+        self, dev, state_prep, params, wires, execute_and_derivatives, batch_obs, trainable_params
+    ):
+        """Test that a circuit containing state prep operations is differentiated correctly."""
+        qs = QuantumScript(
+            [state_prep(params, wires), qml.RX(1.23, 0), qml.CNOT([0, 1]), qml.RX(4.56, 1)],
+            [qml.expval(qml.PauliZ(1))],
+        )
+        dy = [1.0]
+
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
+        program, new_config = dev.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            res, jac = dev.execute_and_compute_vjp(tapes, dy, new_config)
+            res = fn(res)
+        else:
+            res, jac = (
+                fn(dev.execute(tapes, new_config)),
+                dev.compute_vjp(tapes, dy, new_config),
+            )
+
+        dev_ref = DefaultQubit(max_workers=1)
+        config = ExecutionConfig(gradient_method="adjoint")
+        program, new_config = dev_ref.preprocess(config)
+        tapes, fn = program([qs])
+        tapes[0].trainable_params = trainable_params
+        if execute_and_derivatives:
+            expected, expected_jac = dev_ref.execute_and_compute_vjp(tapes, dy, new_config)
+            expected = fn(expected)
+        else:
+            expected, expected_jac = (
+                fn(dev_ref.execute(tapes, new_config)),
+                dev_ref.compute_vjp(tapes, dy, new_config),
+            )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
+
+    def test_state_vjp_not_supported(self, dev, batch_obs):
+        """Test that an error is raised if VJP are requested for state measurement"""
+        qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
+        dy = 1.0
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation does not support State measurements",
+        ):
+            _ = dev.compute_vjp(qs, dy, config)
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation does not support State measurements",
+        ):
+            _ = dev.execute_and_compute_vjp(qs, dy, config)
+
+    @pytest.mark.parametrize("phi", PHI)
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    def test_vjp_tape_batch(self, phi, execute_and_derivatives, batch_obs):
+        """Test that results are correct when we execute and compute derivatives for a batch of
+        tapes."""
+        device = LightningDevice(wires=4, batch_obs=batch_obs)
+
+        ops = [
+            qml.X(0),
+            qml.X(1),
+            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+        ]
+
+        qs1 = QuantumScript(
+            ops,
+            [
+                qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
+                qml.expval(qml.s_prod(3, qml.Z(2))),
+            ],
+            trainable_params=[0],
+        )
+
+        ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
+        qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
+        dy = [(1.5, 2.5), 1.0]
+
+        if execute_and_derivatives:
+            results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
+        else:
+            results = device.execute((qs1, qs2))
+            jacs = device.compute_vjp((qs1, qs2), dy)
+
+        # Assert results
+        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
+        x1 = np.cos(phi / 2) ** 2 / 2
+        x2 = np.sin(phi / 2) ** 2 / 2
+        expected2 = sum([x1, -x2, -x1, x2])  # zero
+        expected = (expected1, expected2)
+
+        assert len(results) == len(expected)
+        assert len(results[0]) == len(expected[0])
+        assert np.allclose(results[0][0], expected[0][0])
+        assert np.allclose(results[0][1], expected[0][1])
+        assert np.allclose(results[1], expected[1])
+
+        # Assert derivatives
+        expected_jac1 = -1.5 * np.cos(phi) - 2.5 * 3 * np.sin(phi)
+        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
+        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
+        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
+        expected_jac = (expected_jac1, expected_jac2)
+
+        assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
