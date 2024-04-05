@@ -25,6 +25,9 @@ from pennylane import DeviceError
 from pennylane.wires import Wires
 
 
+# Let's just focus on `quimb` as backend and `MPS` as method so far
+
+
 class LightningStateTensor:
     """Lightning state-tensor class.
 
@@ -74,11 +77,11 @@ class LightningStateTensor:
         """Returns a handle to the state tensor."""
         return self._tensor_state
 
-    # TODO implement
+    # TODO understand better what's happening
     @property
     def state(self):
         """Copy the state tensor data to a numpy array."""
-        pass
+        return self._quimb_state.to_dense()
 
     # TODO implement
     def _state_dtype(self):

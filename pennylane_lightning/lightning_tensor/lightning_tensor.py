@@ -19,6 +19,8 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import Device
 
+from pennylane.wires import Wires
+
 
 from ._state_tensor import LightningStateTensor
 
@@ -31,32 +33,56 @@ class LightningTensor(Device):
 
     _new_API = True
 
+    # TODO: add `max_bond_dim` parameter
     def __init__(
         self,
-        wires,
         *,
+        wires=None,
+        backend="quimb",
+        method="mps",
         c_dtype=np.complex128,
         shots=None,
     ):
 
-        # TODO: should we accept cases in which shots=0, shots=1?
-        if shots is not None:
-            raise ValueError(
-                "LightningTensor does not support a finite number of shots."
+        if backend not in ["quimb", "cutensornet"]:
+            raise TypeError(f"Unsupported backend: {backend}")
+
+        if backend == "cutensornet":
+            raise NotImplementedError(
+                f"The cutensornet backend has not yet been implemented."
             )
+
+        if method not in ["mps", "tn"]:
+            raise TypeError(f"Unsupported method: {method}")
+
+        if method == "tn":
+            raise NotImplementedError(
+                f"The tensor network method has not yet been implemented."
+            )
+
+        # Should we accept cases in which shots=0, shots=1?
+        if shots is not None:
+            raise ValueError("LightningTensor does not support the `shots` parameter.")
 
         super().__init__(wires=wires, shots=shots)
 
-        self._statetensor = LightningStateTensor(
-            num_wires=len(self.wires), dtype=c_dtype
-        )
+        self._num_wires = len(self.wires) if self.wires else 0
 
         self._c_dtype = c_dtype
+
+        self._statetensor = LightningStateTensor(
+            num_wires=self.num_wires, dtype=self._c_dtype
+        )
 
     @property
     def name(self):
         """The name of the device."""
         return "lightning.tensor"
+
+    @property
+    def num_wires(self):
+        """Number of wires addressed on this device"""
+        return self._num_wires
 
     @property
     def c_dtype(self):
