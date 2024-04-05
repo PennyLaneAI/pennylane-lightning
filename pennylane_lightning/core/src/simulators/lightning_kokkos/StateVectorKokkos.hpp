@@ -773,15 +773,17 @@ class StateVectorKokkos final
         const size_t vec_size = pow(2, num_qubits_);
         const auto section_size = vec_size / stride;
         const auto half_section_size = section_size / 2;
-
-        const size_t negbranch = branch ? 0 : 1;
+        const size_t negbranch = (branch) ? 0 : 1;
 
         Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d(
             {0, 0}, {half_section_size, stride});
+        auto sv_view = getView();
         Kokkos::parallel_for(
             policy_2d,
-            collapseFunctor<fp_t>(*data_, num_qubits, stride, negbranch));
-
+            KOKKOS_LAMBDA(const std::size_t left, const std::size_t right) {
+                const size_t offset = stride * (negbranch + 2 * left);
+                sv_view(offset + right) = ComplexT{0., 0.};
+            });
         normalize();
     }
 
@@ -789,15 +791,15 @@ class StateVectorKokkos final
      * @brief Normalize vector (to have norm 1).
      */
     void normalize() {
-        KokkosVector sv_view =
-            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        auto sv_view = getView();
 
         // TODO: @tomlqc what about squaredNorm()
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
             sv_view.size(),
-            KOKKOS_LAMBDA(const size_t i, PrecisionT &sum) {
-                sum += std::norm<PrecisionT>(sv_view(i));
+            KOKKOS_LAMBDA(const std::size_t i, PrecisionT &sum) {
+                const PrecisionT norm = Kokkos::abs(sv_view(i));
+                sum += norm * norm;
             },
             squaredNorm);
 
@@ -805,10 +807,10 @@ class StateVectorKokkos final
                         std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "vector has norm close to zero and can't be normalized");
 
-        std::complex<PrecisionT> inv_norm = 1. / std::sqrt(squaredNorm);
+        std::complex<PrecisionT> inv_norm = 1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
             sv_view.size(),
-            KOKKOS_LAMBDA(const size_t i) { sv_view(i) *= inv_norm; });
+            KOKKOS_LAMBDA(const std::size_t i) { sv_view(i) *= inv_norm; });
     }
 
     /**

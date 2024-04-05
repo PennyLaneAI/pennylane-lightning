@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <chrono>
 #include <random>
 #include <string>
 #include <vector>
@@ -80,8 +81,10 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param seed Seed
      */
     void setRandomSeed() {
-        std::random_device rd;
-        setSeed(rd());
+        auto a = std::chrono::system_clock::now();
+        std::time_t b = std::chrono::system_clock::to_time_t(a);
+        // std::random_device rd;
+        setSeed(b);
     }
 
     /**
