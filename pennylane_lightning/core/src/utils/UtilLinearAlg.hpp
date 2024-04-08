@@ -134,13 +134,27 @@ void compute_diagonalizing_gates(int n, int lda,
             scipyPathStr += "scipy.libs";
         }
 
-        try {
-            // convert the relative path to absolute path
-            scipyPathStr = std::filesystem::canonical(scipyPathStr).string();
-        } catch (const std::exception &err) {
-            std::cerr << "Canonical path for scipy.libs"
-                      << " threw exception:\n"
-                      << err.what() << '\n';
+        if (std::filesystem::exists(scipyPathStr)) {
+            try {
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
+        } else {
+            try {
+                scipyPathStr = currentPathStr + "../../scipy.libs/";
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
         }
     }
     // LCOV_EXCL_STOP
