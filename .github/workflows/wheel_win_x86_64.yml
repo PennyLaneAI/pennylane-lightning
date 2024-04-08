@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
@@ -102,13 +102,13 @@ jobs:
     steps:
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-RelWithDebInfo
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy cached libraries #Update when merging to pennylane-lightning
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
