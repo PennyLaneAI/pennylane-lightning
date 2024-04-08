@@ -182,6 +182,8 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
@@ -391,6 +393,8 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
@@ -590,6 +594,8 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
@@ -610,6 +616,8 @@ jobs:
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           OMP_NUM_THREADS=1 PL_DEVICE=lightning.qubit python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
           PL_DEVICE=lightning.qubit python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
