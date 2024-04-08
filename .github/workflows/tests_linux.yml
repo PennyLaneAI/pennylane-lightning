@@ -38,13 +38,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -118,7 +118,7 @@ jobs:
           python-version: '3.9'
           
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -139,6 +139,11 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
@@ -152,7 +157,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -212,13 +217,13 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -269,7 +274,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -290,7 +295,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
@@ -308,7 +313,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -377,17 +382,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -454,7 +459,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -475,14 +480,14 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -508,7 +513,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -588,7 +593,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
           path: main
@@ -618,7 +623,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3
@@ -645,17 +650,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
