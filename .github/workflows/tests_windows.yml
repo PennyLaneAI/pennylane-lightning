@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Kokkos execution strategy
         id: exec_model
@@ -141,7 +141,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Restoring cached vcpkg
         id: vcpkg-cache
@@ -225,7 +225,7 @@ jobs:
           key: ${{ matrix.os }}-vcpkg
       
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy cached Kokkos libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -291,7 +291,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3
