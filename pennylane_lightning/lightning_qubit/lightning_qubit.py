@@ -58,7 +58,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
+def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None, debugger=None) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -79,14 +79,14 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
     if circuit.shots and has_mcm:
         mid_measurements = {}
-        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
+        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements, debugger=debugger)
         if any(v == -1 for v in mid_measurements.values()):
             return None, mid_measurements
         return (
             LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
             mid_measurements,
         )
-    final_state = state.get_final_state(circuit)
+    final_state = state.get_final_state(circuit, debugger=debugger)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
@@ -266,6 +266,7 @@ _operations = frozenset(
         "BlockEncode",
         "MidMeasureMP",
         "Conditional",
+        "Snapshot",
     }
 )
 # The set of supported operations.
@@ -446,6 +447,7 @@ class LightningQubit(Device):
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
+        self._debugger = None
         self._mcmc = mcmc
         if self._mcmc:
             if kernel_name not in [
@@ -552,7 +554,7 @@ class LightningQubit(Device):
         results = []
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
-            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
+            results.append(simulate(circuit, self._statevector, mcmc=mcmc, debugger=self._debugger))
 
         return tuple(results)
 

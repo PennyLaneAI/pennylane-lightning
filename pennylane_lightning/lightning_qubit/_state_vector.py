@@ -271,7 +271,20 @@ class LightningStateVector:
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    def _apply_lightning(self, operations, mid_measurements: dict = None):
+    def _apply_snapshot(self, operation, debugger=None):
+        if debugger is None or not debugger.active:
+            return
+        mp = operation.hyperparameters["measurement"] or qml.state()
+        dummy_tape = QuantumScript([],[mp])       
+        measurements_class = LightningMeasurements(self)
+        result = measurements_class.measure_final_state(dummy_tape)
+        if operation.tag:
+            debugger.snapshots[operation.tag] = result
+        else:
+            debugger.snapshots[len(debugger.snapshots)] = result
+        return
+
+    def _apply_lightning(self, operations, mid_measurements: dict = None, debugger=None):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -297,7 +310,9 @@ class LightningStateVector:
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, Conditional):
+            if isinstance(operation, qml.Snapshot):
+                self._apply_snapshot(operation, debugger)
+            elif isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.then_op])
             elif isinstance(operation, MidMeasureMP):
@@ -317,7 +332,7 @@ class LightningStateVector:
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
 
-    def apply_operations(self, operations, mid_measurements: dict = None):
+    def apply_operations(self, operations, mid_measurements: dict = None, debugger=None):
         """Applies operations to the state vector."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
@@ -328,9 +343,9 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        self._apply_lightning(operations, mid_measurements=mid_measurements)
+        self._apply_lightning(operations, mid_measurements=mid_measurements, debugger=debugger)
 
-    def get_final_state(self, circuit: QuantumScript, mid_measurements: dict = None):
+    def get_final_state(self, circuit: QuantumScript, mid_measurements: dict = None, debugger=None):
         """
         Get the final state that results from executing the given quantum script.
 
@@ -344,6 +359,6 @@ class LightningStateVector:
             LightningStateVector: Lightning final state class.
 
         """
-        self.apply_operations(circuit.operations, mid_measurements=mid_measurements)
+        self.apply_operations(circuit.operations, mid_measurements=mid_measurements, debugger=debugger)
 
         return self
