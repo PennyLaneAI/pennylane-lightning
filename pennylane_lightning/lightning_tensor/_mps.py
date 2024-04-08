@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-tensor manipulation.
+Class implementation for MPS manipulation based on `quimb`.
 """
 
 from typing import Iterable, Union
@@ -25,13 +25,10 @@ from pennylane import DeviceError
 from pennylane.wires import Wires
 
 
-# Let's just focus on `quimb` as backend and `MPS` as method so far
+class QuimbMPS:
+    """Quimb MPS class.
 
-
-class LightningStateTensor:
-    """Lightning state-tensor class.
-
-    Interfaces with C++ python binding methods for state-tensor manipulation.
+    Interfaces with `quimb` for MPS manipulation.
     """
 
     def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.tensor"):
@@ -46,11 +43,7 @@ class LightningStateTensor:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        # TODO: add binding to Lightning Managed state tensor C++ class.
-        # self._tensor_state = self._state_dtype()(self._num_wires)
-
-        # TODO: change name
-        self._quimb_state = self._create_initial_state(self._wires)
+        self._mps = self._initial_mps(self._wires)
 
     @property
     def dtype(self):
@@ -64,34 +57,22 @@ class LightningStateTensor:
 
     @property
     def wires(self):
-        """All wires that can be addressed on this device"""
+        """All wires that can be addressed on this device."""
         return self._wires
 
     @property
     def num_wires(self):
-        """Number of wires addressed on this device"""
+        """Number of wires addressed on this device."""
         return self._num_wires
-
-    @property
-    def state_tensor(self):
-        """Returns a handle to the state tensor."""
-        return self._tensor_state
 
     # TODO understand better what's happening
     @property
     def state(self):
         """Copy the state tensor data to a numpy array."""
-        return self._quimb_state.to_dense()
+        return self._mps.to_dense()
 
-    # TODO implement
-    def _state_dtype(self):
-        """Binding to Lightning Managed state tensor C++ class.
-
-        Returns: the state tensor class
-        """
-        pass
-
-    def _create_initial_state(self, wires: Union[qml.wires.Wires, Iterable]):
+    # TODO modify this later on
+    def _initial_mps(self, wires: Union[qml.wires.Wires, Iterable]):
         r"""
         Returns an initial state to :math:`\ket{0}`.
 

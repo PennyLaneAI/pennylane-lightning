@@ -19,12 +19,13 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import Device
 
-from pennylane.wires import Wires
+from ._mps import QuimbMPS
+
+supported_backends = ["quimb", "cutensornet"]
+supported_methods = ["mps", "tn"]
 
 
-from ._state_tensor import LightningStateTensor
-
-
+# TODO: add class docs
 class LightningTensor(Device):
     """PennyLane Lightning Tensor device.
 
@@ -44,35 +45,25 @@ class LightningTensor(Device):
         shots=None,
     ):
 
-        if backend not in ["quimb", "cutensornet"]:
-            raise TypeError(f"Unsupported backend: {backend}")
+        if backend not in supported_backends:
+            raise ValueError(f"Unsupported backend: {backend}")
 
-        if backend == "cutensornet":
-            raise NotImplementedError(
-                f"The cutensornet backend has not yet been implemented."
-            )
+        if method not in supported_methods:
+            raise ValueError(f"Unsupported method: {method}")
 
-        if method not in ["mps", "tn"]:
-            raise TypeError(f"Unsupported method: {method}")
-
-        if method == "tn":
-            raise NotImplementedError(
-                f"The tensor network method has not yet been implemented."
-            )
-
-        # Should we accept cases in which shots=0, shots=1?
         if shots is not None:
             raise ValueError("LightningTensor does not support the `shots` parameter.")
 
         super().__init__(wires=wires, shots=shots)
 
-        self._num_wires = len(self.wires) if self.wires else 0
-
+        self._backend = backend
+        self._method = method
         self._c_dtype = c_dtype
+        self._num_wires = len(self.wires) if self.wires else 0
+        self._statetensor = None
 
-        self._statetensor = LightningStateTensor(
-            num_wires=self.num_wires, dtype=self._c_dtype
-        )
+        if backend == "quimb" and method == "mps":
+            self._statetensor = QuimbMPS(num_wires=self.num_wires, dtype=self._c_dtype)
 
     @property
     def name(self):
@@ -80,14 +71,24 @@ class LightningTensor(Device):
         return "lightning.tensor"
 
     @property
-    def num_wires(self):
-        """Number of wires addressed on this device"""
-        return self._num_wires
+    def backend(self):
+        """Supported backend."""
+        return self._backend
+
+    @property
+    def method(self):
+        """Supported method."""
+        return self._method
 
     @property
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
+
+    @property
+    def num_wires(self):
+        """Number of wires addressed on this device."""
+        return self._num_wires
 
     dtype = c_dtype
 
