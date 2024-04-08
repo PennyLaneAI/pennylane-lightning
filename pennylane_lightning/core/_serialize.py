@@ -36,7 +36,9 @@ from pennylane.operation import Tensor
 from pennylane.ops import Hamiltonian, LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape
 
-pauli_name_map = {
+NAMED_OBS = (PauliX, PauliY, PauliZ, Identity, Hadamard)
+OP_MATH_OBS = (LinearCombination, Prod, SProd, Sum)
+PAULI_NAME_MAP = {
     "I": "Identity",
     "X": "PauliX",
     "Y": "PauliY",
@@ -242,11 +244,11 @@ class QuantumScriptSerializer:
 
         if len(observable) == 1:
             wire, pauli = list(observable.items())[0]
-            return self.named_obs(pauli_name_map[pauli], [map_wire(wire)])
+            return self.named_obs(PAULI_NAME_MAP[pauli], [map_wire(wire)])
 
         return self.tensor_obs(
             [
-                self.named_obs(pauli_name_map[pauli], [map_wire(wire)])
+                self.named_obs(PAULI_NAME_MAP[pauli], [map_wire(wire)])
                 for wire, pauli in observable.items()
             ]
         )
@@ -267,21 +269,19 @@ class QuantumScriptSerializer:
     # pylint: disable=protected-access, too-many-return-statements
     def _ob(self, observable, wires_map: dict = None):
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
-        if isinstance(observable, (PauliX, PauliY, PauliZ, Identity, Hadamard)):
+        if isinstance(observable, NAMED_OBS):
             return self._named_obs(observable, wires_map)
         if isinstance(observable, Hamiltonian):
             return self._hamiltonian(observable, wires_map)
         if observable.pauli_rep is not None:
             return self._pauli_sentence(observable.pauli_rep, wires_map)
-        if isinstance(observable, Tensor) or (
-            isinstance(observable, Prod) and not observable.has_overlapping_wires
-        ):
+        if isinstance(observable, (Tensor, Prod)):
+            if isinstance(observable, Prod) and observable.has_overlapping_wires:
+                return self._hermitian_ob(observable, wires_map)
             return self._tensor_ob(observable, wires_map)
-        if isinstance(observable, (LinearCombination, Prod, SProd, Sum)):
-            # if isinstance(observable, (Sum, Prod, SProd)):
-            #     observable = observable.simplify()
+        if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
-        if observable.name == "SparseHamiltonian":
+        if isinstance(observable, SparseHamiltonian):
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
 

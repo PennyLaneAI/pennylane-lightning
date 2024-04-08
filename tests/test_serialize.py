@@ -429,9 +429,45 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_pauli_rep_return(self, use_csingle, wires_map):
+        """Test that an observable with a valid pauli rep is serialized correctly."""
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(qml.PauliX(0) + qml.PauliZ(0))
+
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        s_expected = hamiltonian_obs(
+            np.array([1, 1], dtype=r_dtype), [named_obs("PauliX", [0]), named_obs("PauliZ", [0])]
+        )
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_pauli_rep_single_term(self, use_csingle, wires_map):
+        """Test that an observable with a single term in the pauli rep is serialized correctly"""
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
+
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        s_expected = tensor_prod_obs([named_obs("PauliZ", [1]), named_obs("PauliX", [0])])
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_sprod(self, use_csingle, wires_map):
         """Test that SProds are serialized correctly"""
-        tape = qml.tape.QuantumScript([], [qml.expval(qml.s_prod(0.1, qml.PauliX(0)))])
+        tape = qml.tape.QuantumScript([], [qml.expval(qml.s_prod(0.1, qml.Hadamard(0)))])
 
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
@@ -444,7 +480,7 @@ class TestSerializeObs:
         assert isinstance(res[0], hamiltonian_obs)
 
         coeffs = np.array([0.1]).astype(rtype)
-        s_expected = hamiltonian_obs(coeffs, [named_obs("PauliX", [0])])
+        s_expected = hamiltonian_obs(coeffs, [named_obs("Hadamard", [0])])
         assert res[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
