@@ -92,7 +92,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
     if(EXISTS ${SCIPYLIBS}/scipy.libs)
         set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
     else()
-        # Fallback to the lib path of Python for `clang` support
+        # Fallback to the lib path of Python for `conda` support
         set(SCIPYLIBS ${SCIPYLIBS}/../..)
     endif()
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
