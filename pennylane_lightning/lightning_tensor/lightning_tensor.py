@@ -26,10 +26,8 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
 
-from ._mps import QuimbMPS
+from .quimb._mps import QuimbMPS
 
-supported_backends = ["quimb", "cutensornet"]
-supported_methods = ["mps", "tn"]
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -37,13 +35,50 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-# TODO: add class docs
+# TODO: add all docs to class and functions
+
+# TODO: question: how do we expose methods for qml.expval?
+
+
+_backends = frozenset({"quimb", "cutensornet"})
+# The set of supported backends.
+
+_methods = frozenset({"mps", "tn"})
+# The set of supported methods.
+
+_operations = frozenset({})
+# The set of supported operations.
+
+_observables = frozenset({})
+# The set of supported observables.
+
+
+def accepted_backends(backend: str) -> bool:
+    """A function that determines whether or not a backend is supported by ``lightning.tensor``."""
+    return backend in _backends
+
+
+def accepted_methods(method: str) -> bool:
+    """A function that determines whether or not a method is supported by ``lightning.tensor``."""
+    return method in _methods
+
+
+def accepted_operations(op: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
+    return op.name in _operations
+
+
+def accepted_observables(obs: qml.operation.Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.tensor``."""
+    return obs.name in _observables
+
+
 @simulator_tracking
 @single_tape_support
 class LightningTensor(Device):
     """PennyLane Lightning Tensor device.
 
-    A device to perform fast linear algebra and tensor network calculations.
+    A device to perform tensor network operations on a quantum circuit.
     """
 
     _device_options = (
@@ -75,10 +110,10 @@ class LightningTensor(Device):
         **kwargs,
     ):
 
-        if backend not in supported_backends:
+        if not accepted_backends(backend):
             raise ValueError(f"Unsupported backend: {backend}")
 
-        if method not in supported_methods:
+        if not accepted_methods(method):
             raise ValueError(f"Unsupported method: {method}")
 
         if shots is not None:
@@ -104,11 +139,12 @@ class LightningTensor(Device):
         self._return_tn = kwargs.get("return_tn", None)
         self._rehearse = kwargs.get("rehearse", None)
 
-        self._statetensor = None
+        self._state = None
 
-        if backend == "quimb" and method == "mps":
-            # TODO: pass the options for MPS to the class
-            self._statetensor = QuimbMPS(num_wires=self.num_wires, dtype=self._c_dtype)
+        if self.backend == "quimb" and self.method == "mps":
+            self._state = QuimbMPS(
+                num_wires=self.num_wires, dtype=self._c_dtype, **kwargs
+            )
 
     @property
     def name(self):
@@ -129,6 +165,11 @@ class LightningTensor(Device):
     def method(self):
         """Supported method."""
         return self._method
+
+    @property
+    def state(self):
+        """The state on the device."""
+        return self._state
 
     @property
     def c_dtype(self):
