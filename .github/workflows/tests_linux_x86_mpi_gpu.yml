@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -54,7 +54,7 @@ jobs:
         run: |
           git fetch tags --force
           git checkout $(git tag | sort -V | tail -1)
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -182,7 +182,7 @@ jobs:
 
     steps:
       - name: Checkout pennyLane-lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-tags: true
 
@@ -199,7 +199,7 @@ jobs:
           git checkout $(git tag | sort -V | tail -1)
 
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
         with:
@@ -246,7 +246,7 @@ jobs:
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
@@ -297,7 +297,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3
@@ -324,7 +324,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3

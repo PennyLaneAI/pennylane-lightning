@@ -70,7 +70,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
         "DoubleExcitationMinus", "DoubleExcitationPlus");
     {
-
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
             str_to_gates_.at(gate_name), {param}, inverse);
 
