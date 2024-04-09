@@ -100,17 +100,13 @@ def test_wrong_device_name():
             ),
             TensorProdObsC128,
         ),
-        # The following case is disabled due to recursion errors. This needs to be investigated before the
-        # PR is merged. Simplifying this operator doesn't change anything. Maybe we raise an error in this
-        # case, or fall back to Hermitian, though I doubt the matrix will be hermitian.
-        pytest.param(
+        (
             (
                 qml.Hermitian(np.eye(2), wires=0)
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=1)
             ),
-            HamiltonianC128,
-            marks=pytest.mark.xfail(reason="prods with overlapping wires unsupported"),
+            HermitianObsC128,
         ),
         (
             qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
