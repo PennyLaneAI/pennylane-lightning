@@ -22,6 +22,8 @@
 
 #include <catch2/catch.hpp>
 
+#include "Error.hpp"
+#include "GateFunctors.hpp"
 #include "Gates.hpp"
 #include "LinearAlgebraKokkos.hpp" // getRealOfComplexInnerProduct
 #include "MeasurementsKokkos.hpp"
@@ -40,6 +42,7 @@
 namespace {
 using namespace Pennylane::Gates;
 using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::Util;
@@ -47,6 +50,21 @@ using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using std::size_t;
 } // namespace
 /// @endcond
+
+TEMPLATE_TEST_CASE("BasicGateFunctors::applyNamedOperation", "[Error]", float,
+                   double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using KokkosVector = StateVectorT::KokkosVector;
+    using ExecutionSpace = StateVectorT::KokkosExecSpace;
+    {
+        [[maybe_unused]] StateVectorT sv{1};
+        KokkosVector arr_("arr_", 2);
+        PL_REQUIRE_THROWS_MATCHES(applyNamedOperation<ExecutionSpace>(
+                                      GateOperation::END, arr_, 1, {0}),
+                                  LightningException,
+                                  "Gate operation does not exist.");
+    }
+}
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
                    "[StateVectorKokkos_Operation]", float, double) {

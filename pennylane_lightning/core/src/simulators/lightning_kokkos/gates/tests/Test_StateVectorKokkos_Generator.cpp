@@ -22,6 +22,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "BasicGeneratorFunctors.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup, array_has_elem, prepend_to_tuple, tuple_to_array
 #include "StateVectorKokkos.hpp"
@@ -37,6 +38,7 @@
 namespace {
 using namespace Pennylane::Gates;
 using namespace Pennylane::LightningKokkos;
+using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::Util;
 using std::size_t;
 } // namespace
@@ -44,12 +46,23 @@ using std::size_t;
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                    "[StateVectorKokkos_Generator]", float, double) {
-    {
+    SECTION("applyGenerator") {
         const size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
                                   "The given value does not exist.");
+    }
+    SECTION("namedGeneratorFactor") {
+        using StateVectorT = StateVectorKokkos<TestType>;
+        using KokkosVector = StateVectorT::KokkosVector;
+        using ExecutionSpace = StateVectorT::KokkosExecSpace;
+        [[maybe_unused]] StateVectorT sv{1};
+        KokkosVector arr_("arr_", 2);
+        PL_REQUIRE_THROWS_MATCHES(applyNamedGenerator<ExecutionSpace>(
+                                      GeneratorOperation::END, arr_, 1, {0}),
+                                  LightningException,
+                                  "Generator operation does not exist.");
     }
 }
 
