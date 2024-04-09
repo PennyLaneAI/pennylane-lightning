@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for MPS manipulation based on `quimb`.
+Class implementation for MPS manipulation based on the `quimb` Python package.
 """
 
 from typing import Iterable, Union
@@ -32,9 +32,6 @@ class QuimbMPS:
     """
 
     def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.tensor"):
-        self._num_wires = num_wires
-        self._wires = Wires(range(num_wires))
-        self._dtype = dtype
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -43,17 +40,22 @@ class QuimbMPS:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        self._mps = self._initial_mps(self._wires)
+        self._num_wires = num_wires
+        self._wires = Wires(range(num_wires))
+        self._dtype = dtype
 
-    @property
-    def dtype(self):
-        """Returns the state tensor data type."""
-        return self._dtype
+        # TODO: allows users to specify initial state
+        self._mps = qtn.CircuitMPS(psi0=self._set_initial_mps())
 
     @property
     def device_name(self):
-        """Returns the state tensor device name."""
+        """Returns the device name."""
         return self._device_name
+
+    @property
+    def num_wires(self):
+        """Number of wires addressed on this device."""
+        return self._num_wires
 
     @property
     def wires(self):
@@ -61,18 +63,21 @@ class QuimbMPS:
         return self._wires
 
     @property
-    def num_wires(self):
-        """Number of wires addressed on this device."""
-        return self._num_wires
+    def dtype(self):
+        """Returns the mps data type."""
+        return self._dtype
 
-    # TODO understand better what's happening
     @property
-    def state(self):
-        """Copy the state tensor data to a numpy array."""
-        return self._mps.to_dense()
+    def mps(self):
+        """MPS on this device."""
+        return self._mps.psi
 
-    # TODO modify this later on
-    def _initial_mps(self, wires: Union[qml.wires.Wires, Iterable]):
+    @property
+    def state(self, digits: int = 5):
+        """Contract the MPS into a dense array."""
+        return self._mps.psi.to_dense().round(digits)
+
+    def _set_initial_mps(self):
         r"""
         Returns an initial state to :math:`\ket{0}`.
 
@@ -84,7 +89,7 @@ class QuimbMPS:
         """
 
         return qtn.MPS_computational_state(
-            "0" * max(1, len(wires)),
+            "0" * max(1, self._num_wires),
             dtype=self._dtype.__name__,
-            tags=[str(l) for l in wires.labels],
+            tags=[str(l) for l in self._wires.labels],
         )
