@@ -14,23 +14,39 @@
 """
 This module contains the LightningTensor class that inherits from the new device interface.
 """
+from dataclasses import replace
+from numbers import Number
+from typing import Callable, Optional, Sequence, Tuple, Union
+
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import Device
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.typing import Result, ResultBatch
 
 from ._mps import QuimbMPS
 
 supported_backends = ["quimb", "cutensornet"]
 supported_methods = ["mps", "tn"]
 
+Result_or_ResultBatch = Union[Result, ResultBatch]
+QuantumTapeBatch = Sequence[QuantumTape]
+QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
+
 
 # TODO: add class docs
+@simulator_tracking
+@single_tape_support
 class LightningTensor(Device):
     """PennyLane Lightning Tensor device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A device to perform fast linear algebra and tensor network calculations.
     """
+
+    _device_options = ("backend", "c_dtype", "method", "max_bond_dim")
 
     _new_API = True
 
@@ -92,5 +108,60 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
-    def execute():
+    # should `backend` and `method` be inserted here?
+    def _setup_execution_config(self, config):
+        pass
+
+    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        pass
+
+    def execute(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Result_or_ResultBatch:
+        pass
+
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        pass
+
+    def compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
+        pass
+
+    def execute_and_compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
+        pass
+
+    def supports_vjp(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[QuantumTape] = None,
+    ) -> bool:
+        pass
+
+    def compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
+        pass
+
+    def execute_and_compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
         pass
