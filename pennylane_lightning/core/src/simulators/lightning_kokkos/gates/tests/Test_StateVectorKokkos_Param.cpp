@@ -28,6 +28,7 @@
 #include "ObservablesKokkos.hpp"
 #include "StateVectorKokkos.hpp"
 #include "TestHelpers.hpp"
+#include "TestHelpersWires.hpp"
 
 /**
  * @file
@@ -41,12 +42,56 @@ using namespace Pennylane::Gates;
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
+using namespace Pennylane::Util;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
-using Pennylane::Util::createNonTrivialState;
-using Pennylane::Util::exp2;
 using std::size_t;
 } // namespace
 /// @endcond
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
+                   "[StateVectorKokkos_Operation]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+
+    const size_t num_qubits = 4;
+    const TestType EP = 1e-4;
+    const TestType param = 0.12342;
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    std::unordered_map<std::string, GateOperation> str_to_gates_{};
+    for (const auto &[gate_op, gate_name] : Constant::gate_names) {
+        str_to_gates_.emplace(gate_name, gate_op);
+    }
+
+    const bool inverse = GENERATE(false, true);
+    const std::string gate_name = GENERATE(
+        "PhaseShift", "RX", "RY", "RZ", "ControlledPhaseShift", "CRX", "CRY",
+        "CRZ", "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
+        "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
+        "DoubleExcitationMinus", "DoubleExcitationPlus");
+    {
+
+        auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
+            str_to_gates_.at(gate_name), {param}, inverse);
+
+        StateVectorT kokkos_sv_ops{ini_st.data(), ini_st.size()};
+        StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+
+        const auto wires = createWires(str_to_gates_.at(gate_name), num_qubits);
+        kokkos_sv_ops.applyOperation(gate_name, wires, inverse, {param});
+        kokkos_sv_mat.applyOperation("Matrix", wires, false, {}, gate_matrix);
+
+        auto result_ops = kokkos_sv_ops.getDataVector();
+        auto result_mat = kokkos_sv_mat.getDataVector();
+
+        for (size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(real(result_ops[j]) ==
+                  Approx(real(result_mat[j])).margin(EP));
+            CHECK(imag(result_ops[j]) ==
+                  Approx(imag(result_mat[j])).margin(EP));
+        }
+    }
+}
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXY",
                    "[StateVectorKokkosManaged_Param]", float, double) {

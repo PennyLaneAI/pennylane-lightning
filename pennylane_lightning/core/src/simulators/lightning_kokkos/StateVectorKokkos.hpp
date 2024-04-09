@@ -274,7 +274,7 @@ class StateVectorKokkos final
             applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
                                                  wires, inverse, params);
         } else {
-            PL_ABORT_IF(gate_matrix.size() == 0,
+            PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
                             std::string(" and no matrix provided."));
             KokkosVector matrix("gate_matrix", gate_matrix.size());
@@ -518,14 +518,14 @@ class StateVectorKokkos final
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() const -> KokkosVector { return *data_; }
+    [[nodiscard]] auto getView() const -> KokkosVector & { return *data_; }
 
     /**
      * @brief Get the Kokkos data of the state vector
      *
      * @return The pointer to the data of state vector
      */
-    [[nodiscard]] auto getView() -> KokkosVector { return *data_; }
+    [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
      * @brief Get underlying data vector
