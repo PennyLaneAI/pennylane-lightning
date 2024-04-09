@@ -225,7 +225,6 @@ jobs:
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
 
-          python -m pip install scipy
 
       - name: Display Python-Path
         id: python_path
