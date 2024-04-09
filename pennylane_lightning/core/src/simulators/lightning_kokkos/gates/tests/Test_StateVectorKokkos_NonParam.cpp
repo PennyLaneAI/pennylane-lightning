@@ -690,7 +690,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
 
     SECTION("Three Qubit") {
         auto matrix = getToffoli<Kokkos::complex, TestType>();
-        std::vector<size_t> wires = {0, 1, 2};
+        std::vector<size_t> wires = GENERATE(
+            std::vector<size_t>{0, 1, 2}, std::vector<size_t>{2, 0, 1},
+            std::vector<size_t>{1, 2, 0}, std::vector<size_t>{0, 2, 1},
+            std::vector<size_t>{1, 0, 2}, std::vector<size_t>{2, 1, 0});
         sv_normal.applyOperation("Toffoli", wires, inverse);
         auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_normal.getView());
