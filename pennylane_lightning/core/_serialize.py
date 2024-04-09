@@ -36,8 +36,8 @@ from pennylane.operation import Tensor
 from pennylane.ops import Hamiltonian, LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape
 
-NAMED_OBS = (PauliX, PauliY, PauliZ, Identity, Hadamard)
-OP_MATH_OBS = (LinearCombination, Prod, SProd, Sum)
+NAMED_OBS = (Identity, PauliX, PauliY, PauliZ, Hadamard)
+OP_MATH_OBS = (Prod, SProd, Sum, LinearCombination)
 PAULI_NAME_MAP = {
     "I": "Identity",
     "X": "PauliX",
