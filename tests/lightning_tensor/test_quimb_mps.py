@@ -18,8 +18,8 @@ Unit tests for the ``quimb`` interface.
 
 import numpy as np
 import pytest
-from conftest import LightningDevice  # tested device
 import quimb.tensor as qtn
+from conftest import LightningDevice  # tested device
 from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
