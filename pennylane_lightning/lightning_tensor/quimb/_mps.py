@@ -31,7 +31,9 @@ class QuimbMPS:
     Interfaces with `quimb` for MPS manipulation.
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.tensor", **kwargs):
+    def __init__(
+        self, num_wires, dtype=np.complex128, device_name="lightning.tensor", **kwargs
+    ):
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -45,7 +47,7 @@ class QuimbMPS:
         self._dtype = dtype
 
         # TODO: allows users to specify initial state
-        self._mps = qtn.CircuitMPS(psi0=self._set_initial_mps())
+        self._circuit = qtn.CircuitMPS(psi0=self._set_initial_mps())
 
     @property
     def device_name(self):
@@ -68,14 +70,13 @@ class QuimbMPS:
         return self._dtype
 
     @property
-    def mps(self):
+    def state(self):
         """MPS on this device."""
-        return self._mps.psi
+        return self._circuit.psi
 
-    @property
-    def state(self, digits: int = 5):
+    def state_to_array(self, digits):
         """Contract the MPS into a dense array."""
-        return self._mps.psi.to_dense().round(digits)
+        return self._circuit.to_dense().round(digits)
 
     def _set_initial_mps(self):
         r"""

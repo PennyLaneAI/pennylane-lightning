@@ -126,23 +126,28 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
+        # TODO: decide whether to move some of the attributes in interfaces classes
+
         # options for Tensor Network Simulator
         self._contraction_optimizer = kwargs.get("contraction_optimizer", None)
         self._local_simplify = kwargs.get("local_simplify", None)
         self._sample_qubits = kwargs.get("sample_qubits", None)
+
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
         self._cutoff = kwargs.get("cutoff", 1e-16)
         self._measure_algorithm = kwargs.get("measure_algorithm", None)
+
         # common options
         self._apply_reverse_lightcone = kwargs.get("apply_reverse_lightcone", None)
         self._return_tn = kwargs.get("return_tn", None)
         self._rehearse = kwargs.get("rehearse", None)
 
-        self._state = None
+        self._interface = None
 
+        # TODO: implement the remaining combs of `backend` and `interface`
         if self.backend == "quimb" and self.method == "mps":
-            self._state = QuimbMPS(
+            self._interface = QuimbMPS(
                 num_wires=self.num_wires, dtype=self._c_dtype, **kwargs
             )
 
@@ -169,7 +174,7 @@ class LightningTensor(Device):
     @property
     def state(self):
         """The state on the device."""
-        return self._state
+        return self._interface.state
 
     @property
     def c_dtype(self):
@@ -177,6 +182,10 @@ class LightningTensor(Device):
         return self._c_dtype
 
     dtype = c_dtype
+
+    def state_to_array(self, digits: int = 5):
+        """Copy the state tensor data to a numpy array."""
+        return self._interface.state_to_array(digits)
 
     def _setup_execution_config(self, config):
         """
