@@ -17,3 +17,4 @@ click==8.0.4
 cmake==3.28.4
 custatevec-cu12
 pylint
+scipy

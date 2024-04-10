@@ -23,7 +23,7 @@
 #include "Error.hpp"
 #include "Util.hpp"
 
-#ifdef PL_USE_LAPACK
+#ifndef _MSC_VER
 #include "UtilLinearAlg.hpp"
 #endif
 
@@ -220,9 +220,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
     MatrixT matrix_;
     std::vector<size_t> wires_;
 
-#ifdef PL_USE_LAPACK
-
-  private:
+#ifndef _MSC_VER
     std::vector<PrecisionT> eigenVals_;
     MatrixT unitary_;
 #endif
@@ -247,7 +245,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 
-#ifdef PL_USE_LAPACK
+#ifndef _MSC_VER
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -286,7 +284,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
-#ifdef PL_USE_LAPACK
+#ifndef _MSC_VER
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -305,8 +303,8 @@ class HermitianObsBase : public Observable<StateVectorT> {
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);
 #else
-        PL_ABORT("Hermitian observables do not support shot measurement. "
-                 "Please link against Lapack.");
+        PL_ABORT("Hermitian observables do not support shot measurement for "
+                 "Windows.");
 #endif
     }
 };
