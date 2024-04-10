@@ -22,8 +22,8 @@ from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
 from pennylane._device import DeviceError
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
+if device_name not in ("lightning.qubit", "lightning.kokkos"):
+    pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -79,11 +79,18 @@ def test_unsupported_measurement():
         qml.cond(m0, qml.RY)(y, wires=1)
         return qml.classical_shadow(wires=0)
 
-    with pytest.raises(
-        DeviceError,
-        match=f"not accepted with finite shots on lightning.qubit",
-    ):
-        func(*params)
+    if device_name == "lightning.qubit":
+        with pytest.raises(
+            DeviceError,
+            match=f"not accepted with finite shots on lightning.qubit",
+        ):
+            func(*params)
+    else:
+        with pytest.raises(
+            TypeError,
+            match=f"Native mid-circuit measurement mode does not support ClassicalShadowMP measurements.",
+        ):
+            func(*params)
 
 
 @flaky(max_runs=5)
