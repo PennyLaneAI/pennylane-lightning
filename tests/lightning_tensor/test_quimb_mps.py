@@ -24,14 +24,27 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
-@pytest.mark.parametrize("num_wires", [None, 4])
-@pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+
 @pytest.mark.parametrize("backend", ["quimb"])
 @pytest.mark.parametrize("method", ["mps"])
-def test_device_init(num_wires, c_dtype, backend, method):
-    """Test the class initialization and returned properties."""
-    wires = Wires(range(num_wires)) if num_wires else None
-    dev = LightningTensor(wires=wires, backend=backend, method=method, c_dtype=c_dtype)
-    assert isinstance(dev.state, qtn.MatrixProductState)
-    assert isinstance(dev.state_to_array(), np.ndarray)
+class QuimbMPS:
+    """Tests for the MPS method."""
+
+    @pytest.mark.parametrize("num_wires", [None, 4])
+    @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+    def test_device_init(num_wires, c_dtype, backend, method):
+        """Test the class initialization and returned properties."""
+
+        wires = Wires(range(num_wires)) if num_wires else None
+        dev = LightningTensor(
+            wires=wires, backend=backend, method=method, c_dtype=c_dtype
+        )
+        assert isinstance(dev.state, qtn.MatrixProductState)
+        assert isinstance(dev.state_to_array(), np.ndarray)
+
+        config = dev.preprocess()
+        assert config.device_options["backend"] == backend
+        assert config.device_options["method"] == method

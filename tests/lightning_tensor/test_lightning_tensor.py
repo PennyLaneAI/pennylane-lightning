@@ -24,6 +24,9 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+
 
 @pytest.mark.parametrize("num_wires", [None, 4])
 @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
