@@ -59,7 +59,5 @@ def test_invalid_method(method):
 
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(
-        ValueError, match="LightningTensor does not support the `shots` parameter."
-    ):
+    with pytest.raises(ValueError, match="LightningTensor does not support the `shots` parameter."):
         LightningTensor(shots=5)
