@@ -23,7 +23,7 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.tape import QuantumTape
 from pennylane.typing import Result, ResultBatch
 
 from .quimb._mps import QuimbMPS
@@ -88,6 +88,8 @@ class LightningTensor(Device):
         **kwargs: keyword arguments.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     _device_options = (
         "backend",
         "method",
@@ -106,6 +108,7 @@ class LightningTensor(Device):
     _new_API = True
 
     # should `backend` and `method` be keyword args as well?
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         *,
@@ -245,7 +248,7 @@ class LightningTensor(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def supports_derivatives(
         self,
@@ -262,7 +265,7 @@ class LightningTensor(Device):
             Bool: Whether or not a derivative can be calculated provided the given information.
 
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def compute_derivatives(
         self,
@@ -278,7 +281,7 @@ class LightningTensor(Device):
         Returns:
             Tuple: The jacobian for each trainable parameter.
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def execute_and_compute_derivatives(
         self,
@@ -294,7 +297,7 @@ class LightningTensor(Device):
         Returns:
             tuple: A numeric result of the computation and the gradient.
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def supports_vjp(
         self,
@@ -310,7 +313,7 @@ class LightningTensor(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information.
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def compute_vjp(
         self,
@@ -330,7 +333,7 @@ class LightningTensor(Device):
         Returns:
             tensor-like: A numeric result of computing the vector jacobian product.
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface
 
     def execute_and_compute_vjp(
         self,
@@ -349,4 +352,4 @@ class LightningTensor(Device):
         Returns:
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
-        pass
+        # TODO: call the function implemented in the appropriate interface

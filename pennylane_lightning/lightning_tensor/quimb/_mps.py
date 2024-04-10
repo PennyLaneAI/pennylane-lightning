@@ -15,11 +15,12 @@
 Class implementation for MPS manipulation based on the `quimb` Python package.
 """
 
-from typing import Iterable, Union
+# from typing import Iterable, Union
 import quimb.tensor as qtn
 
 import numpy as np
-import pennylane as qml
+
+# import pennylane as qml
 from pennylane import DeviceError
 
 from pennylane.wires import Wires
@@ -32,7 +33,11 @@ class QuimbMPS:
     """
 
     def __init__(
-        self, num_wires, dtype=np.complex128, device_name="lightning.tensor", **kwargs
+        self,
+        num_wires,
+        dtype=np.complex128,
+        device_name="lightning.tensor",
+        **kwargs,  # pylint: disable=unused-argument
     ):
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
