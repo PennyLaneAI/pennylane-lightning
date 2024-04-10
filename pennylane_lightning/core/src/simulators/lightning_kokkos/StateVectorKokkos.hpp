@@ -269,7 +269,7 @@ class StateVectorKokkos final
             }
         } else if (array_contains(gate_names, std::string_view{opName})) {
             const std::size_t num_qubits = this->getNumQubits();
-            const auto gateop =
+            const GateOperation gateop =
                 reverse_lookup(gate_names, std::string_view{opName});
             applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
                                                  wires, inverse, params);
@@ -464,7 +464,7 @@ class StateVectorKokkos final
                         const std::vector<size_t> &wires, bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
         const std::size_t num_qubits = this->getNumQubits();
-        const auto generator_op =
+        const GeneratorOperation generator_op =
             reverse_lookup(generator_names, std::string_view{opName});
         return applyNamedGenerator<KokkosExecSpace>(
             generator_op, *data_, num_qubits, wires, inverse, params);
