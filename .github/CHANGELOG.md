@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
+  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
 
@@ -31,6 +34,9 @@
   [(#649)](https://github.com/PennyLaneAI/pennylane-lightning/pull/649)
 
 ### Breaking changes
+
+* Deprecate static LAPACK linking support.
+  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
@@ -66,7 +72,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
