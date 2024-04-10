@@ -93,44 +93,7 @@ jobs:
           cmake --build ./Build --config Debug --verbose
           cmake --install ./Build --config Debug --verbose
 
-  build_dependencies_vcpkg:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest]
-    timeout-minutes: 30
-    name: vcpkg dependencies
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Cache installation directories
-        id: vcpkg-cache
-        uses: actions/cache@v4
-        with:
-          path: D:\a\install_dir\vcpkg
-          key: ${{ matrix.os }}-vcpkg
-
-      - name: Clone vcpkg
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p D:\a\install_dir
-          cd D:\a\install_dir\
-          git clone --quiet --recursive https://github.com/microsoft/vcpkg.git
-
-      - name: Install dependencies
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        run: |
-          python -m pip install cmake build ninja
-
-      - name: Build Lapack library
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        run: |
-          cd D:\a\install_dir\vcpkg
-          .\bootstrap-vcpkg.bat
-          vcpkg install lapack
-
   cpptests:
-    needs: [build_dependencies_vcpkg]
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 30
     name: C++ tests (Windows)
@@ -140,15 +103,17 @@ jobs:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
     steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Restoring cached vcpkg
-        id: vcpkg-cache
-        uses: actions/cache@v4
+      - uses: actions/setup-python@v4
+        name: Install Python
         with:
-          path: D:\a\install_dir\vcpkg
-          key: ${{ matrix.os }}-vcpkg
+          python-version: '3.9'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v3
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install cmake build ninja scipy
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -163,8 +128,6 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
-              -DENABLE_LAPACK=ON `
-              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
             mkdir -p .\Build\tests\results
@@ -197,7 +160,7 @@ jobs:
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_dependencies_kokkos, build_dependencies_vcpkg, win-set-matrix-x86]
+    needs: [build_dependencies_kokkos, win-set-matrix-x86]
     strategy:
       matrix:
         os: [windows-latest]
@@ -210,6 +173,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Restoring cached Kokkos
         id: kokkos-cache
         uses: actions/cache@v4
@@ -217,13 +185,10 @@ jobs:
           path: D:\a\install_dir\${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-Debug
 
-      - name: Restoring cached vcpkg
-        id: vcpkg-cache
-        uses: actions/cache@v4
-        with:
-          path: D:\a\install_dir\vcpkg
-          key: ${{ matrix.os }}-vcpkg
-      
+      - name: Install dependencies
+        run: |
+          python -m pip install cmake build ninja scipy
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
@@ -251,10 +216,8 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DCMAKE_TOOLCHAIN_FILE=D:\a\install_dir\vcpkg\scripts\buildsystems\vcpkg.cmake `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
-              -DENABLE_LAPACK=ON `
               -DENABLE_WARNINGS=OFF -T clangcl
             cmake --build .\Build --config Debug -- /p:UseMultiToolTask=true /p:EnforceProcessCountAcrossBuilds=true /p:MultiProcMaxCount=2
             mkdir -p .\Build\tests\results

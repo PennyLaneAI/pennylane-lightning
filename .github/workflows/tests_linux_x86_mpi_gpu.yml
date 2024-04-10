@@ -96,8 +96,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
           # Omitting the installation of cmake v3.29.0 due to
           # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install "cmake!=3.29.0" custatevec-cu12
-          sudo apt-get -y -q install liblapack-dev
+          python -m pip install "cmake!=3.29.0" custatevec-cu12 scipy
 
       - name: Validate GPU version and installed compiler and modules
         run: |
@@ -122,11 +121,11 @@ jobs:
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
+            -DENABLE_PYTHON=OFF \
             -DENABLE_MPI=ON \
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
             -DBUILD_TESTS=ON \
-            -DENABLE_LAPACK=ON \
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
@@ -199,12 +198,6 @@ jobs:
           git checkout $(git tag | sort -V | tail -1)
 
 
-      - uses: actions/setup-python@v5
-        id: setup_python
-        name: Install Python
-        with:
-          python-version: '3.9'
-
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
       - name: Setup Python virtual environment
@@ -225,6 +218,7 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path

@@ -85,7 +85,7 @@ jobs:
           cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
-    needs: [set_wheel_build_matrix, build_dependencies]
+    needs: [set_wheel_build_matrix]
     strategy:
       fail-fast: false
       matrix:

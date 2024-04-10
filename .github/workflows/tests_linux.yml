@@ -47,14 +47,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
+        run: |
+            echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
+            python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
@@ -111,6 +112,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+          
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
@@ -139,7 +145,9 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install scipy
 
       - name: Get required Python packages
         run: |
@@ -182,6 +190,8 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
@@ -218,7 +228,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -228,65 +240,8 @@ jobs:
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
-            cmake --build ./Build
-            cd ./Build
-            mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-Lapack
-          path: ./Build/tests/results/
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-Lapack.info
-          if-no-files-found: error
-
-  cpptestswithOpenBLASNoLAPACK:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
-    name: C++ tests (OpenBLAS without LAPACK)
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev libopenblas-dev ninja-build gcovr lcov
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DENABLE_PYTHON=OFF \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=OFF \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON \
-              -DLQ_ENABLE_KERNEL_OMP=ON
             cmake --build ./Build
             cd ./Build
             mkdir -p ./tests/results
@@ -348,7 +303,9 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  libopenblas-dev
+          python -m pip install scipy
 
       - name: Get required Python packages
         run: |
@@ -386,11 +343,14 @@ jobs:
       - name: Install backend device
         run: |
           cd main
+          python -m pip install scipy
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_BLAS=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
@@ -449,14 +409,15 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
@@ -544,7 +505,9 @@ jobs:
           pwd
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install scipy
 
       - name: Get required Python packages
         run: |
@@ -583,6 +546,7 @@ jobs:
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
           cd main
+          python -m pip install scipy
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
@@ -590,6 +554,8 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
@@ -610,6 +576,8 @@ jobs:
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
         run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
           cd main/
           OMP_NUM_THREADS=1 PL_DEVICE=lightning.qubit python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
           PL_DEVICE=lightning.qubit python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
@@ -658,7 +626,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithOpenBLASNoLAPACK, cpptestswithKokkos]
+    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
     name: Upload cpp coverage data to codecov
     runs-on: ubuntu-latest
     steps:
@@ -713,7 +681,9 @@ jobs:
           cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION liblapack-dev ninja-build gcovr lcov
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -721,7 +691,6 @@ jobs:
             cmake . -BBuild -G Ninja \
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
-              -DENABLE_LAPACK=ON \
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
