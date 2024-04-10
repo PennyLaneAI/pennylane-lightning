@@ -154,9 +154,7 @@ class LightningTensor(Device):
 
         # TODO: implement the remaining combs of `backend` and `interface`
         if self.backend == "quimb" and self.method == "mps":
-            self._interface = QuimbMPS(
-                num_wires=self.num_wires, dtype=self._c_dtype, **kwargs
-            )
+            self._interface = QuimbMPS(num_wires=self.num_wires, dtype=self._c_dtype, **kwargs)
 
     @property
     def name(self):
