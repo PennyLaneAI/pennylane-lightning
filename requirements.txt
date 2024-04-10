@@ -6,4 +6,5 @@ pytest~=8.0.0
 pytest-cov
 pytest-mock
 scipy
+quimb==1.7.3
 pytest-xdist
