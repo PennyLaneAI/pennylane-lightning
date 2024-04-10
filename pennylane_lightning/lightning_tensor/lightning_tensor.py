@@ -18,7 +18,6 @@ from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
 
-
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
@@ -27,7 +26,6 @@ from pennylane.tape import QuantumTape
 from pennylane.typing import Result, ResultBatch
 
 from .quimb._mps import QuimbMPS
-
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -88,6 +86,7 @@ class LightningTensor(Device):
         **kwargs: keyword arguments.
     """
 
+    # TODO: decide whether to move some of the attributes in interfaces classes
     # pylint: disable=too-many-instance-attributes
 
     _device_options = (
@@ -107,7 +106,7 @@ class LightningTensor(Device):
 
     _new_API = True
 
-    # should `backend` and `method` be keyword args as well?
+    # TODO: decide if `backend` and `method` should be keyword args as well
     # pylint: disable=too-many-arguments
     def __init__(
         self,
@@ -135,8 +134,6 @@ class LightningTensor(Device):
         self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
-
-        # TODO: decide whether to move some of the attributes in interfaces classes
 
         # options for Tensor Network Simulator
         self._contraction_optimizer = kwargs.get("contraction_optimizer", None)
