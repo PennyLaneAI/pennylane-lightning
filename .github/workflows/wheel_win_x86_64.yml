@@ -64,9 +64,7 @@ jobs:
       - name: Install dependencies
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          # Omitting the installation of cmake v3.29.0 due to
-          # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install "cmake!=3.29.0" build
+          python -m pip install cmake build
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'

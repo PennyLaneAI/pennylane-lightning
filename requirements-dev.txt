@@ -14,7 +14,7 @@ clang-tidy~=16.0
 clang-format~=16.0
 isort==5.13.2
 click==8.0.4
-cmake==3.28.4
+cmake
 custatevec-cu12
 pylint
 scipy

@@ -94,9 +94,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          # Omitting the installation of cmake v3.29.0 due to
-          # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install "cmake!=3.29.0" custatevec-cu12 scipy
+          python -m pip install cmake custatevec-cu12 scipy
 
       - name: Validate GPU version and installed compiler and modules
         run: |

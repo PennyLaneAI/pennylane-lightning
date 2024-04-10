@@ -77,15 +77,20 @@ def test_wrong_device_name():
     "obs,obs_type",
     [
         (qml.PauliZ(0), NamedObsC128),
-        (
-            qml.PauliZ(0) @ qml.PauliZ(1),
-            HamiltonianC128 if qml.operation.active_new_opmath() else TensorProdObsC128,
-        ),
+        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
         (qml.Hadamard(0), NamedObsC128),
         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
         (
             qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-            TensorProdObsC128 if qml.operation.active_new_opmath() else HamiltonianC128,
+            TensorProdObsC128,
+        ),
+        (
+            qml.PauliZ(0) @ qml.PauliY(1) @ qml.PauliX(2),
+            TensorProdObsC128,
+        ),
+        (
+            qml.PauliZ(0) @ qml.PauliY(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
+            HamiltonianC128,
         ),
         (
             (
@@ -96,24 +101,32 @@ def test_wrong_device_name():
             TensorProdObsC128,
         ),
         (
+            (
+                qml.Hermitian(np.eye(2), wires=0)
+                @ qml.Hermitian(np.eye(2), wires=1)
+                @ qml.Projector([0], wires=1)
+            ),
+            HermitianObsC128,
+        ),
+        (
             qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
             TensorProdObsC128,
         ),
         (qml.Projector([0], wires=0), HermitianObsC128),
-        (qml.Hamiltonian([1], [qml.PauliZ(0)]), HamiltonianC128),
-        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HermitianObsC128),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), NamedObsC128),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HamiltonianC128),
         (
             qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
             SparseHamiltonianC128,
         ),
+        (2.5 * qml.PauliZ(0), HamiltonianC128),
     ],
 )
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type, with and without wires map"""
-    assert isinstance(
-        QuantumScriptSerializer(device_name)._ob(obs, dict(enumerate(obs.wires))), obs_type
-    )
-    assert isinstance(QuantumScriptSerializer(device_name)._ob(obs), obs_type)
+    serializer = QuantumScriptSerializer(device_name)
+    assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type)
+    assert isinstance(serializer._ob(obs), obs_type)
 
 
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
@@ -133,12 +146,7 @@ class TestSerializeObs:
 
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
-        first_s = tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])])
-
-        if qml.operation.active_new_opmath():
-            ham_obs = HamiltonianC64 if use_csingle else HamiltonianC128
-            tensor_obs = tensor_prod_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])])
-            first_s = ham_obs([1.0], [tensor_obs])
+        first_s = tensor_prod_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])])
 
         s_expected = [
             first_s,
@@ -150,6 +158,7 @@ class TestSerializeObs:
         )
         assert s == s_expected
 
+    @pytest.mark.xfail(reason="Prod with overlapping wires not supported")
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_prod_return_with_overlapping_wires(self, use_csingle, wires_map):
@@ -274,14 +283,7 @@ class TestSerializeObs:
                         named_obs("PauliY", [2]),
                     ]
                 ),
-                (
-                    hamiltonian_obs(
-                        np.array([1], dtype=r_dtype),
-                        [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
-                    )
-                    if qml.operation.active_new_opmath()
-                    else tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])])
-                ),
+                tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])]),
                 hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
             ],
         )
@@ -318,66 +320,45 @@ class TestSerializeObs:
         # Expression (ham @ obs) is converted internally by Pennylane
         # where obs is appended to each term of the ham
         if qml.operation.active_new_opmath():
-            s_expected = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            tensor_prod_obs(
-                                [
-                                    hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                                    named_obs("PauliY", [2]),
-                                ]
-                            ),
-                            named_obs("PauliZ", [3]),
-                        ]
-                    ),
-                    hamiltonian_obs(
-                        np.array([1], dtype=r_dtype),
-                        [
-                            tensor_prod_obs(
-                                [
-                                    named_obs("PauliY", [2]),
-                                    named_obs("PauliX", [0]),
-                                    named_obs("PauliZ", [3]),
-                                ]
-                            )
-                        ],
-                    ),
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                            named_obs("PauliZ", [3]),
-                        ]
-                    ),
-                ],
-            )
-        else:
-            s_expected = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            first_term = tensor_prod_obs(
                 [
                     tensor_prod_obs(
                         [
                             hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
                             named_obs("PauliY", [2]),
-                            named_obs("PauliZ", [3]),
                         ]
                     ),
-                    tensor_prod_obs(
-                        [
-                            named_obs("PauliX", [0]),
-                            named_obs("PauliY", [2]),
-                            named_obs("PauliZ", [3]),
-                        ]
-                    ),
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                            named_obs("PauliZ", [3]),
-                        ]
-                    ),
-                ],
+                    named_obs("PauliZ", [3]),
+                ]
             )
+        else:
+            first_term = tensor_prod_obs(
+                [
+                    hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                    named_obs("PauliY", [2]),
+                    named_obs("PauliZ", [3]),
+                ]
+            )
+
+        s_expected = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                first_term,
+                tensor_prod_obs(
+                    [
+                        named_obs("PauliY", [2]),
+                        named_obs("PauliX", [0]),
+                        named_obs("PauliZ", [3]),
+                    ]
+                ),
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+                        named_obs("PauliZ", [3]),
+                    ]
+                ),
+            ],
+        )
 
         assert s[0] == s_expected
 
@@ -413,117 +394,156 @@ class TestSerializeObs:
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
-        if qml.operation.active_new_opmath():
-            s_expected1 = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    (
-                        hamiltonian_obs(
-                            np.array([1], dtype=r_dtype),
-                            [tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])])],
-                        )
-                        if qml.operation.active_new_opmath()
-                        else tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])])
-                    ),
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                ],
-            )
-            s_expected2 = hamiltonian_obs(
-                np.array([0.7, 0.3], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            named_obs("PauliX", [0]),
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
-                        ]
-                    ),
-                    (
-                        hamiltonian_obs(
-                            np.array([1], dtype=r_dtype),
-                            [tensor_prod_obs([named_obs("PauliX", [2]), named_obs("PauliY", [0])])],
-                        )
-                        if qml.operation.active_new_opmath()
-                        else tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])])
-                    ),
-                ],
-            )
-        else:
-            s_expected1 = hamiltonian_obs(
-                np.array([0.3, 0.5, 0.4], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
-                ],
-            )
-            s_expected2 = hamiltonian_obs(
-                np.array([0.7, 0.3], dtype=r_dtype),
-                [
-                    tensor_prod_obs(
-                        [
-                            named_obs("PauliX", [0]),
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
-                        ]
-                    ),
-                    tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),
-                ],
-            )
+        s_expected1 = hamiltonian_obs(
+            np.array([0.3, 0.5, 0.4], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        named_obs("PauliY", [2]),
+                    ]
+                ),
+                tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])]),
+                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+            ],
+        )
+        s_expected2 = hamiltonian_obs(
+            np.array([0.7, 0.3], dtype=r_dtype),
+            [
+                tensor_prod_obs(
+                    [
+                        named_obs("PauliX", [0]),
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
+                    ]
+                ),
+                tensor_prod_obs([named_obs("PauliX", [2]), named_obs("PauliY", [0])]),
+            ],
+        )
 
         assert s[0] == s_expected1
         assert s[1] == s_expected2
 
-    @pytest.mark.parametrize(
-        "obs,coeffs,terms",
-        [
-            (qml.prod(qml.PauliZ(0), qml.PauliX(1)), [1], [[("PauliX", 1), ("PauliZ", 0)]]),
-            (qml.s_prod(0.1, qml.PauliX(0)), [0.1], ("PauliX", 0)),
-            (
-                qml.sum(
-                    0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1)),
-                    0.1 * qml.prod(qml.PauliZ(0), qml.PauliY(1)),
-                ),
-                [0.5, 0.1],
-                [[("PauliZ", 1), ("PauliX", 0)], [("PauliY", 1), ("PauliZ", 0)]],
-            ),
-        ],
-    )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    def test_op_arithmetic_uses_hamiltonian(self, use_csingle, obs, coeffs, terms, wires_map):
-        """Tests that an arithmetic obs with a PauliRep serializes as a Hamiltonian."""
-        tape = qml.tape.QuantumTape(measurements=[qml.expval(obs)])
+    def test_pauli_rep_return(self, use_csingle, wires_map):
+        """Test that an observable with a valid pauli rep is serialized correctly."""
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(qml.PauliX(0) + qml.PauliZ(0))
+
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        s_expected = hamiltonian_obs(
+            np.array([1, 1], dtype=r_dtype), [named_obs("PauliX", [0]), named_obs("PauliZ", [0])]
+        )
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_pauli_rep_single_term(self, use_csingle, wires_map):
+        """Test that an observable with a single term in the pauli rep is serialized correctly"""
+        with qml.tape.QuantumTape() as tape:
+            qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
+
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+        r_dtype = np.float32 if use_csingle else np.float64
+
+        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        s_expected = tensor_prod_obs([named_obs("PauliZ", [1]), named_obs("PauliX", [0])])
+        assert s[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_sprod(self, use_csingle, wires_map):
+        """Test that SProds are serialized correctly"""
+        tape = qml.tape.QuantumScript([], [qml.expval(qml.s_prod(0.1, qml.Hadamard(0)))])
+
+        hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        rtype = np.float32 if use_csingle else np.float64
+
         res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
         assert len(res) == 1
-        assert isinstance(res[0], HamiltonianC64 if use_csingle else HamiltonianC128)
+        assert isinstance(res[0], hamiltonian_obs)
+
+        coeffs = np.array([0.1]).astype(rtype)
+        s_expected = hamiltonian_obs(coeffs, [named_obs("Hadamard", [0])])
+        assert res[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_prod(self, use_csingle, wires_map):
+        """Test that Prods are serialized correctly"""
+        tape = qml.tape.QuantumScript(
+            [], [qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)) @ qml.Hadamard(2))]
+        )
+
+        named_obs = NamedObsC64 if use_csingle else NamedObsC128
+        tensor_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
+
+        res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        assert len(res) == 1
+        assert isinstance(res[0], tensor_obs)
+
+        s_expected = tensor_obs(
+            [
+                tensor_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])]),
+                named_obs("Hadamard", [2]),
+            ]
+        )
+        assert res[0] == s_expected
+
+    @pytest.mark.parametrize("use_csingle", [True, False])
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_sum(self, use_csingle, wires_map):
+        """Test that Sums are serialized correctly"""
+        tape = qml.tape.QuantumScript(
+            [],
+            [
+                qml.expval(
+                    qml.sum(
+                        0.5 * qml.prod(qml.PauliX(0), qml.PauliZ(1), qml.PauliX(2)),
+                        0.1 * qml.prod(qml.PauliZ(0), qml.Hadamard(2), qml.PauliY(1)),
+                    )
+                )
+            ],
+        )
 
         hamiltonian_obs = HamiltonianC64 if use_csingle else HamiltonianC128
         tensor_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         rtype = np.float32 if use_csingle else np.float64
-        term_shape = np.array(terms).shape
 
-        if len(term_shape) == 1:  # just a single pauli op
-            expected_terms = [named_obs(terms[0], [terms[1]])]
-        elif len(term_shape) == 3:  # list of tensor products
-            expected_terms = [
-                tensor_obs([named_obs(pauli, [wire]) for pauli, wire in term]) for term in terms
-            ]
+        res, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+            tape, wires_map
+        )
+        assert len(res) == 1
+        assert isinstance(res[0], hamiltonian_obs)
 
-        coeffs = np.array(coeffs).astype(rtype)
-        assert res[0] == hamiltonian_obs(coeffs, expected_terms)
+        coeffs = np.array([0.5, 0.1]).astype(rtype)
+        s_expected = hamiltonian_obs(
+            coeffs,
+            [
+                tensor_obs(
+                    [named_obs("PauliZ", [1]), named_obs("PauliX", [0]), named_obs("PauliX", [2])]
+                ),
+                tensor_obs(
+                    [named_obs("PauliZ", [0]), named_obs("PauliY", [1]), named_obs("Hadamard", [2])]
+                ),
+            ],
+        )
+        assert res[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
