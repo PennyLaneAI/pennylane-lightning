@@ -17,7 +17,7 @@ Unit tests for the ``quimb`` interface.
 
 try:
     import quimb.tensor as qtn
-except ImportError as e:
+except ModuleNotFoundError as e:
     pytest.skip("No quimb package.", allow_module_level=True)
 
 import numpy as np
