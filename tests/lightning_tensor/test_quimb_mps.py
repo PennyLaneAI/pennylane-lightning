@@ -15,13 +15,10 @@
 Unit tests for the ``quimb`` interface.
 """
 
-try:
-    import quimb.tensor as qtn
-except ModuleNotFoundError as e:
-    pytest.skip("No quimb package.", allow_module_level=True)
 
 import numpy as np
 import pytest
+import quimb.tensor as qtn
 from conftest import LightningDevice  # tested device
 from pennylane.wires import Wires
 
