@@ -298,6 +298,7 @@ class TestExpval:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize(
         "obs, coeffs, res",
         [
@@ -323,6 +324,11 @@ class TestExpval:
     )
     def test_expval_hamiltonian(self, obs, coeffs, res, tol, dev):
         """Test expval with Hamiltonian"""
+        if not qml.operation.active_new_opmath():
+            obs = [
+                qml.operation.convert_to_legacy_H(o).ops[0] if isinstance(o, qml.ops.Prod) else o
+                for o in obs
+            ]
         ham = qml.Hamiltonian(coeffs, obs)
 
         @qml.qnode(dev)

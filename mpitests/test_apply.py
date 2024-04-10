@@ -450,7 +450,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
-        dev_cpu.reset()
+        dev_cpu._statevector.reset_state()
 
         def circuit():
             qml.PauliX(wires=[0])
@@ -556,7 +556,7 @@ class TestExpval:
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
         expected_output_cpu = cpu_qnode()
-        comm.Bcast(expected_output_cpu, root=0)
+        comm.Bcast(np.array(expected_output_cpu), root=0)
 
         mpi_qnode = qml.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
