@@ -17,6 +17,7 @@ Unit tests for the generic lightning tensor class.
 
 
 import numpy as np
+import pennylane as qml
 import pytest
 from conftest import LightningDevice  # tested device
 from pennylane.wires import Wires
@@ -36,14 +37,29 @@ def test_device_name_and_init(num_wires, c_dtype, device_name):
     assert dev.wires == wires
 
 
-# def test_wrong_device_name():
-#    """Test an invalid device name"""
-#    with pytest.raises(qml.DeviceError, match="The device name"):
-#       LightningTensor(3, device_name="thunder.tensor")
+def test_wrong_device_name():
+    """Test an invalid device name"""
+    with pytest.raises(qml.DeviceError, match="The device name"):
+        LightningTensor(device_name="thunder.tensor")
 
 
-# @pytest.mark.parametrize("dtype", [np.double])
-# def test_wrong_dtype(dtype):
-#    """Test if the class returns a TypeError for a wrong dtype"""
-#    with pytest.raises(TypeError, match="Unsupported complex type:"):
-#        assert LightningTensor(wires=3, dtype=dtype)
+@pytest.mark.parametrize("backend", ["fake_backend"])
+def test_invalid_backend(backend):
+    """Test an invalid backend."""
+    with pytest.raises(ValueError, match=f"Unsupported backend: {backend}"):
+        LightningTensor(backend=backend)
+
+
+@pytest.mark.parametrize("method", ["fake_method"])
+def test_invalid_method(method):
+    """Test an invalid method."""
+    with pytest.raises(ValueError, match=f"Unsupported method: {method}"):
+        LightningTensor(method=method)
+
+
+def test_invalid_shots():
+    """Test that an error is raised if finite number of shots are requestd."""
+    with pytest.raises(
+        ValueError, match="LightningTensor does not support the `shots` parameter."
+    ):
+        LightningTensor(shots=5)

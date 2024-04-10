@@ -50,26 +50,6 @@ class QuimbMPS:
         self._circuit = qtn.CircuitMPS(psi0=self._set_initial_mps())
 
     @property
-    def device_name(self):
-        """Returns the device name."""
-        return self._device_name
-
-    @property
-    def num_wires(self):
-        """Number of wires addressed on this device."""
-        return self._num_wires
-
-    @property
-    def wires(self):
-        """All wires that can be addressed on this device."""
-        return self._wires
-
-    @property
-    def dtype(self):
-        """Returns the mps data type."""
-        return self._dtype
-
-    @property
     def state(self):
         """MPS on this device."""
         return self._circuit.psi

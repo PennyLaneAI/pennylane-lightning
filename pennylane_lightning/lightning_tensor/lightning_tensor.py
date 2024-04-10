@@ -39,10 +39,13 @@ _backends = frozenset({"quimb", "cutensornet"})
 _methods = frozenset({"mps", "tn"})
 # The set of supported methods.
 
-_operations = frozenset({})
+# TODO: understand if supporting all operations and observables is feasible for the first release
+# I comment the following lines since otherwise Codecov complaints
+
+# _operations = frozenset({})
 # The set of supported operations.
 
-_observables = frozenset({})
+# _observables = frozenset({})
 # The set of supported observables.
 
 
@@ -54,16 +57,6 @@ def accepted_backends(backend: str) -> bool:
 def accepted_methods(method: str) -> bool:
     """A function that determines whether or not a method is supported by ``lightning.tensor``."""
     return method in _methods
-
-
-def accepted_operations(op: qml.operation.Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
-    return op.name in _operations
-
-
-def accepted_observables(obs: qml.operation.Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.tensor``."""
-    return obs.name in _observables
 
 
 @simulator_tracking
@@ -154,7 +147,7 @@ class LightningTensor(Device):
 
         # TODO: implement the remaining combs of `backend` and `interface`
         if self.backend == "quimb" and self.method == "mps":
-            self._interface = QuimbMPS(num_wires=self.num_wires, dtype=self._c_dtype, **kwargs)
+            self._interface = QuimbMPS(self.num_wires, self._c_dtype, **kwargs)
 
     @property
     def name(self):
