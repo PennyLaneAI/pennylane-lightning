@@ -16,8 +16,10 @@ Class implementation for MPS manipulation based on the `quimb` Python package.
 """
 
 import numpy as np
+
 # from typing import Iterable, Union
 import quimb.tensor as qtn
+
 # import pennylane as qml
 from pennylane import DeviceError
 from pennylane.wires import Wires
