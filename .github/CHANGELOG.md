@@ -46,6 +46,9 @@
 
 ### Improvements
 
+* Refactor lightning_gpu_utils unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
+
 * Upgrade GitHub actions versions from v3 to v4.
   [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
 
