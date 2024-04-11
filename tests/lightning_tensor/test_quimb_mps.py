@@ -24,18 +24,18 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
-# if LightningDevice._CPP_BINARY_AVAILABLE:
-#    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
 @pytest.mark.parametrize("backend", ["quimb"])
 @pytest.mark.parametrize("method", ["mps"])
-class QuimbMPS:
+class TestQuimbMPS:
     """Tests for the MPS method."""
 
     @pytest.mark.parametrize("num_wires", [None, 4])
     @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
-    def test_device_init(num_wires, c_dtype, backend, method):
+    def test_device_init(self, num_wires, c_dtype, backend, method):
         """Test the class initialization and returned properties."""
 
         wires = Wires(range(num_wires)) if num_wires else None
