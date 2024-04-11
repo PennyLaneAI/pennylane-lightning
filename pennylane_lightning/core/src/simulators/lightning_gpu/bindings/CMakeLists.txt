@@ -11,6 +11,7 @@ target_link_libraries(${PL_BACKEND}_bindings INTERFACE  lightning_bindings
                                                         ${PL_BACKEND}
                                                         ${PL_BACKEND}_gates
                                                         ${PL_BACKEND}_measurements
+                                                        cuda_utils
                                                         ${PL_BACKEND}_utils
                                                         )
 

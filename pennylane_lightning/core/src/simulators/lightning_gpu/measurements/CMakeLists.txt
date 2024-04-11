@@ -13,6 +13,7 @@ target_link_libraries(${PL_BACKEND}_measurements INTERFACE  lightning_compile_op
                                                             lightning_utils
                                                             ${PL_BACKEND}
                                                             ${PL_BACKEND}_utils
+                                                            cuda_utils
                                                             ${PL_BACKEND}_observables
                                                             )
 
