@@ -14,7 +14,7 @@ endif()
 set(CUDA_UTILS_ADDED FALSE)
 
 foreach(BACKEND ${PL_BACKEND})
-    if(${PL_BACKEND} STREQUAL "lightning_gpu" AND NOT CUDA_UTILS_ADDED)
+    if(${BACKEND} STREQUAL "lightning_gpu" AND NOT CUDA_UTILS_ADDED)
         add_subdirectory(cuda_utils)
         set(CUDA_UTILS_ADDED TRUE)
     endif()
