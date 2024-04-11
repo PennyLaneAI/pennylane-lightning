@@ -34,7 +34,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
@@ -290,23 +290,23 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition(op: qml.operation.Operator) -> bool:
+def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     return op.name in _operations
 
 
-def stopping_condition_shots(op: qml.operation.Operator) -> bool:
+def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return op.name in _operations or isinstance(op, (MidMeasureMP, qml.Conditional))
+    return op.name in _operations or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
-def accepted_observables(obs: qml.operation.Operator) -> bool:
+def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
 
 
-def adjoint_observables(obs: qml.operation.Operator) -> bool:
+def adjoint_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
@@ -340,7 +340,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (qml.operation.DecompositionUndefinedError, qml.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
         return False
     return True
 
