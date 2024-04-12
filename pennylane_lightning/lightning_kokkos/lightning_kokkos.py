@@ -139,9 +139,6 @@ if LK_CPP_BINARY_AVAILABLE:
         "ECR",
         "BlockEncode",
     }
-    # device_allowed_operations required to preserve both PL and Catalyst support
-    device_allowed_operations = allowed_operations
-    device_allowed_operations.update({"Conditional", "MidMeasureMP"})
 
     allowed_observables = {
         "PauliX",
@@ -184,7 +181,7 @@ if LK_CPP_BINARY_AVAILABLE:
         name = "Lightning Kokkos PennyLane plugin"
         short_name = "lightning.kokkos"
         kokkos_config = {}
-        operations = device_allowed_operations
+        operations = allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
         config = Path(__file__).parent / "lightning_kokkos.toml"
@@ -214,6 +211,9 @@ if LK_CPP_BINARY_AVAILABLE:
 
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
+
+            # required to preserve both PL and Catalyst support
+            self.operations.update({"Conditional", "MidMeasureMP"})
 
         # pylint: disable=missing-function-docstring
         @classmethod
