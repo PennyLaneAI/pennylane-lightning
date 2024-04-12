@@ -25,8 +25,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cusparse_v2.h>
-#include <custatevec.h>
-#include <cutensornet.h>
 
 #include "Error.hpp"
 #include "Util.hpp"
@@ -51,39 +49,12 @@ using namespace Pennylane::Util;
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
     PL_ABORT_IF_NOT(err == CUSPARSE_STATUS_SUCCESS, GetCuSparseErrorString(err))
 
-/**
- * @brief Macro that throws Exception from cuQuantum cuStateVec failure error
- * codes.
- *
- * @param err cuQuantum cuStateVec function error-code.
- */
-#define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
-    PL_ABORT_IF_NOT(                                                           \
-        err == CUSTATEVEC_STATUS_SUCCESS,                                      \
-        Pennylane::LightningGPU::Util::GetCuStateVecErrorString(err).c_str())
-
-/**
- * @brief Macro that throws Exception from cuQuantum cuTensorNet failure error
- * codes.
- *
- * @param err cuQuantum cuTensorNet function error-code.
- */
-#define PL_CUTENSORNET_IS_SUCCESS(err)                                         \
-    PL_ABORT_IF_NOT(                                                           \
-        err == CUTENSORNET_STATUS_SUCCESS,                                     \
-        Pennylane::LightningGPU::Util::GetCuTensorNetworkErrorString(err)      \
-            .c_str())
-
 #else
 #define PL_CUDA_IS_SUCCESS(err)                                                \
     { static_cast<void>(err); }
 #define PL_CUBLAS_IS_SUCCESS(err)                                              \
     { static_cast<void>(err); }
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
-    { static_cast<void>(err); }
-#define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
-    { static_cast<void>(err); }
-#define PL_CUTENSORNET_IS_SUCCESS                                              \
     { static_cast<void>(err); }
 #endif
 
@@ -166,137 +137,5 @@ static const std::string GetCuSparseErrorString(const cusparseStatus_t &err) {
     return result;
 }
 
-static const std::string
-GetCuStateVecErrorString(const custatevecStatus_t &err) {
-    std::string result;
-    switch (err) {
-    case CUSTATEVEC_STATUS_SUCCESS:
-        result = "No errors";
-        break;
-    case CUSTATEVEC_STATUS_NOT_INITIALIZED:
-        result = "custatevec not initialized";
-        break;
-    case CUSTATEVEC_STATUS_ALLOC_FAILED:
-        result = "custatevec memory allocation failed";
-        break;
-    case CUSTATEVEC_STATUS_INVALID_VALUE:
-        result = "custatevec invalid value";
-        break;
-    case CUSTATEVEC_STATUS_ARCH_MISMATCH:
-        result = "custatevec CUDA device architecture mismatch";
-        break;
-    case CUSTATEVEC_STATUS_EXECUTION_FAILED:
-        result = "custatevec execution failed";
-        break;
-    case CUSTATEVEC_STATUS_INTERNAL_ERROR:
-        result = "custatevec internal error";
-        break;
-    case CUSTATEVEC_STATUS_NOT_SUPPORTED:
-        result = "custatevec unsupported operation/device";
-        break;
-    case CUSTATEVEC_STATUS_INSUFFICIENT_WORKSPACE:
-        result =
-            "custatevec insufficient memory for gate-application workspace";
-        break;
-    case CUSTATEVEC_STATUS_SAMPLER_NOT_PREPROCESSED:
-        result = "custatevec sampler not preprocessed";
-        break;
-    case CUSTATEVEC_STATUS_NO_DEVICE_ALLOCATOR:
-        result = "custatevec no device allocator";
-        break;
-    case CUSTATEVEC_STATUS_DEVICE_ALLOCATOR_ERROR:
-        result = "custatevec device allocator error";
-        break;
-    case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
-        result = "custatevec communicator failure";
-        break;
-    case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
-        result = "custatevec dynamic library load failure";
-        break;
-    default:
-        result =
-            "custatevec status not found. Error code=" + std::to_string(err);
-    }
-    return result;
-}
-
-static const std::string
-GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {
-    std::string result;
-    switch (err) {
-    case CUTENSORNET_STATUS_SUCCESS:
-        result = "No errors";
-        break;
-    case CUTENSORNET_STATUS_NOT_INITIALIZED:
-        result = "cutensornet not initialized";
-        break;
-    case CUTENSORNET_STATUS_ALLOC_FAILED:
-        result = "cutensornet memory allocation failed";
-        break;
-    case CUTENSORNET_STATUS_INVALID_VALUE:
-        result = "cutensornet invalid value";
-        break;
-    case CUTENSORNET_STATUS_ARCH_MISMATCH:
-        result = "cutensornet CUDA device architecture mismatch";
-        break;
-    case CUTENSORNET_STATUS_MAPPING_ERROR:
-        result = "cutensornet GPU memory space failed";
-        break;
-    case CUTENSORNET_STATUS_EXECUTION_FAILED:
-        result = "cutensornet execute error";
-        break;
-    case CUTENSORNET_STATUS_INTERNAL_ERROR:
-        result = "cutensornet internal error";
-        break;
-    case CUTENSORNET_STATUS_NOT_SUPPORTED:
-        result = "cutensornet unsupported operation/device";
-        break;
-    case CUTENSORNET_STATUS_LICENSE_ERROR:
-        result = "cutensornet license error";
-        break;
-    case CUTENSORNET_STATUS_CUBLAS_ERROR:
-        result = "cutensornet call to cublas failed";
-        break;
-    case CUTENSORNET_STATUS_CUDA_ERROR:
-        result = "cutensornet unknown CUDA error";
-        break;
-    case CUTENSORNET_STATUS_INSUFFICIENT_WORKSPACE:
-        result = "cutensornet provided workspace was insufficient";
-        break;
-    case CUTENSORNET_STATUS_INSUFFICIENT_DRIVER:
-        result = "cutensornet driver version is insufficient";
-        break;
-    case CUTENSORNET_STATUS_IO_ERROR:
-        result = "cutensornet IO error";
-        break;
-    case CUTENSORNET_STATUS_CUTENSOR_VERSION_MISMATCH:
-        result = "cutensornet incompatible cuTensor library";
-        break;
-    case CUTENSORNET_STATUS_NO_DEVICE_ALLOCATOR:
-        result = "cutensornet mempool is not set";
-        break;
-    case CUTENSORNET_STATUS_ALL_HYPER_SAMPLES_FAILED:
-        result = "cutensornet all hyper samples failed for one or more errors "
-                 "please enable LOGs via export CUTENSORNET_LOG_LEVEL= > 1 for "
-                 "details";
-        break;
-    case CUTENSORNET_STATUS_CUSOLVER_ERROR:
-        result = "cutensornet cusolver failed";
-        break;
-    case CUTENSORNET_STATUS_DEVICE_ALLOCATOR_ERROR:
-        result = "cutensornet operation with the device memory pool failed";
-        break;
-    case CUTENSORNET_STATUS_DISTRIBUTED_FAILURE:
-        result = "cutensornet distributed communication service failure";
-        break;
-    case CUTENSORNET_STATUS_INTERRUPTED:
-        result = "cutensornet operation interruption";
-        break;
-    default:
-        result =
-            "custatevec status not found. Error code=" + std::to_string(err);
-    }
-    return result;
-}
 } // namespace Pennylane::LightningGPU::Util
   // LCOV_EXCL_STOP
