@@ -758,7 +758,7 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Collapse the state vector as after having measured one of the
+     * @brief Collapse the state vector after having measured one of the
      * qubits.
      *
      * The branch parameter imposes the measurement result on the given wire.
