@@ -94,9 +94,9 @@ class LightningBase(QubitDevice):
         and observable) and returns ``True`` if supported by the device."""
 
         def accepts_obj(obj):
-            if obj.name == "QFT":
+            if isinstance(obj, qml.QFT):
                 return len(obj.wires) < 10
-            if obj.name == "GroverOperator":
+            if isinstance(obj, qml.GroverOperator):
                 return len(obj.wires) < 13
             is_not_tape = not isinstance(obj, qml.tape.QuantumTape)
             is_supported = getattr(self, "supports_operation", lambda name: False)(obj.name)
