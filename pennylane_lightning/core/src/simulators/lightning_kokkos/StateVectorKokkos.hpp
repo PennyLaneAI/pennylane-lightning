@@ -766,7 +766,7 @@ class StateVectorKokkos final
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.
      */
-    void collapse(const std::size_t wire, const bool branch) {
+    void collapse(std::size_t wire, bool branch) {
         KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
             matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
