@@ -166,7 +166,7 @@ class cuDeviceTensor : public TensorBase<cuDeviceTensor<PrecisionT>> {
 };
 
 // Sphinx: #2
-template <class PrecisionT> class MPSHelper {
+template <class PrecisionT> class MPS {
   private:
     int32_t numSites_;   ///< Number of sites in the MPS
     int64_t physExtent_; ///< Extent for the physical index
@@ -401,7 +401,7 @@ template <class PrecisionT> class MPSHelper {
      * all tensors and gates \param[in] typeCompute The compute type for all
      * gate splitting process
      */
-    MPSHelper(int32_t numSites, int64_t physExtent, int64_t maxVirtualExtent,
+    MPS(int32_t numSites, int64_t physExtent, int64_t maxVirtualExtent,
               const std::vector<int64_t> &initialVirtualExtents,
               double absCutoff = 1e-2, double relCutoff = 1e-2,
               cutensornetTensorSVDNormalization_t renorm =
@@ -621,7 +621,7 @@ template <class PrecisionT> class MPSHelper {
     /**
      * \brief Free all the tensor descriptors in mpsHelper.
      */
-    ~MPSHelper() {
+    ~MPS() {
         if (inited_) {
             for (auto &descTensor : descTensors_) {
                 cutensornetDestroyTensorDescriptor(descTensor);

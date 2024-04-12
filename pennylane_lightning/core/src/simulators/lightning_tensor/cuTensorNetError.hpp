@@ -121,7 +121,7 @@ GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {
         break;
     default:
         result =
-            "custatevec status not found. Error code=" + std::to_string(err);
+            "cutensornet status not found. Error code=" + std::to_string(err);
     }
     return result;
 }

@@ -21,7 +21,7 @@
 
 // Sphinx: #10
 int main() {
-    using ComplexT = MPSHelper<double>::ComplexT;
+    using ComplexT = MPS<double>::ComplexT;
 
     const size_t cuTensornetVersion = cutensornetGetVersion();
     printf("cuTensorNet-vers:%ld\n", cuTensornetVersion);
@@ -45,7 +45,7 @@ int main() {
         numSites - 1, 1); // starting MPS with shared extent of 1;
 
     // initialize an MPSHelper to dynamically update tensor metadats
-    MPSHelper<double> mpsHelper(numSites, physExtent, maxVirtualExtent,
+    MPS<double> mpsHelper(numSites, physExtent, maxVirtualExtent,
                                 initialVirtualExtents);
 
     mpsHelper.initTensorStates();
