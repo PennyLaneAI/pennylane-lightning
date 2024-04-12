@@ -138,9 +138,10 @@ if LK_CPP_BINARY_AVAILABLE:
         "QFT",
         "ECR",
         "BlockEncode",
-        "MidMeasureMP",
-        "Conditional",
     }
+    # device_allowed_operations required to preserve both PL and Catalyst support
+    device_allowed_operations = allowed_operations
+    device_allowed_operations.update({"Conditional", "MidMeasureMP"})
 
     allowed_observables = {
         "PauliX",
@@ -183,7 +184,7 @@ if LK_CPP_BINARY_AVAILABLE:
         name = "Lightning Kokkos PennyLane plugin"
         short_name = "lightning.kokkos"
         kokkos_config = {}
-        operations = allowed_operations
+        operations = device_allowed_operations
         observables = allowed_observables
         _backend_info = backend_info
         config = Path(__file__).parent / "lightning_kokkos.toml"
