@@ -567,9 +567,7 @@ if LK_CPP_BINARY_AVAILABLE:
             Returns:
                 Variance of the observable
             """
-            if observable.name in [
-                "Projector",
-            ]:
+            if isinstance(observable, qml.Projector):
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
                     self.apply(diagonalizing_gates)
