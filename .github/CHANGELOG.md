@@ -61,6 +61,9 @@
 * Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
   [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
 
+* Add `workflow_dispatch` to wheels recipes; allowing developers to build wheels manually on a branch instead of temporarily changing the headers.
+  [(#679)](https://github.com/PennyLaneAI/pennylane-lightning/pull/679)
+
 ### Documentation
 
 ### Bug fixes

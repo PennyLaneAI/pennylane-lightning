@@ -25,7 +25,10 @@ concurrency:
 
 jobs:
   mac-set-matrix-arm:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     name: Set builder matrix
     runs-on: ubuntu-latest
