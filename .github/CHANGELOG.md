@@ -3,7 +3,7 @@
 ### New features since last release
 
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
@@ -36,7 +36,7 @@
 ### Breaking changes
 
 * Deprecate static LAPACK linking support.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
@@ -46,6 +46,9 @@
 
 ### Improvements
 
+* Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
+
 * Upgrade GitHub actions versions from v3 to v4.
   [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
 
@@ -54,6 +57,9 @@
 
 * Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
+
+* Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
+  [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
 
 ### Documentation
 

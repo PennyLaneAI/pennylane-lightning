@@ -68,9 +68,7 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
-          # Omitting the installation of cmake v3.29.0 due to
-          # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install "cmake!=3.29.0" ninja
+          python -m pip install cmake ninja
 
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
