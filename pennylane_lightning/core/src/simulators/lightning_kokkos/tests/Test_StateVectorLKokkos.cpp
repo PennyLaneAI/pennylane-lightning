@@ -320,7 +320,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::collapse", "[StateVectorKokkos]", float,
 
     // TODO @tomlqc use same template for testing all Lightning flavours?
 
-    SECTION("Collapse the state vector as after having measured one of the "
+    SECTION("Collapse the state vector after having measured one of the "
             "qubits.") {
         TestVectorT init_state = createPlusState_<ComplexT>(num_qubits);
 
