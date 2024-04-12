@@ -304,8 +304,8 @@ class HermitianObsBase : public Observable<StateVectorT> {
         eigenValues.push_back(eigenVals_);
 #else
         PL_ABORT(
-            "Hermitian observables with shot measurement are not supported;"
-            " consider building the device with `ENABLE_LAPACK=ON` compilation "
+            "Hermitian observables with shot measurement are not supported; "
+            "consider building the device with `ENABLE_LAPACK=ON` compilation "
             "flag.");
 #endif
     }
