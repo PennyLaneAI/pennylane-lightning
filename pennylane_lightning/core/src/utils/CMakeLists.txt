@@ -11,7 +11,7 @@ if(NOT WIN32)
     list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 endif()
 
-set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files"))
+set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files")
 
 foreach(BACKEND ${PL_BACKEND})
     if(${BACKEND} STREQUAL "lightning_gpu" AND NOT CUDA_UTILS_ADDED)
