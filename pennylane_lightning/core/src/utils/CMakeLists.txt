@@ -7,7 +7,7 @@ set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
-if(NOT WIN32)
+if(ENABLE_LAPACK)
     list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 endif()
 
