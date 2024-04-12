@@ -6,7 +6,7 @@
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
@@ -39,7 +39,7 @@
 ### Breaking changes
 
 * Deprecate static LAPACK linking support.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
@@ -48,6 +48,9 @@
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
 ### Improvements
+
+* Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
 
 * Upgrade GitHub actions versions from v3 to v4.
   [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
