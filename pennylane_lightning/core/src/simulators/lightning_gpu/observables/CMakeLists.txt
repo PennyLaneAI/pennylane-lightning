@@ -19,7 +19,6 @@ target_link_libraries(${PL_BACKEND}_observables PUBLIC  lightning_utils
                                                         lightning_gates
                                                         lightning_observables
                                                         ${PL_BACKEND}_utils
-                                                        cuda_utils
                                                         ${PL_BACKEND}_gates
                                                         ${PL_BACKEND}
                                                         )
