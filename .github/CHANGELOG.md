@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* `lightning.kokkos` supports mid-circuit measurements.
+  [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
+
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
   [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
