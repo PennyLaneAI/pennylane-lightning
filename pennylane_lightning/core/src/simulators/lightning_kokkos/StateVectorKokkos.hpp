@@ -802,7 +802,7 @@ class StateVectorKokkos final
             1. / Kokkos::sqrt(squaredNorm);
         Kokkos::parallel_for(
             sv_view.size(),
-            KOKKOS_LAMBDA(const std::size_t i) { sv_view(i) *= inv_norm; });
+            KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
     }
 
     /**
