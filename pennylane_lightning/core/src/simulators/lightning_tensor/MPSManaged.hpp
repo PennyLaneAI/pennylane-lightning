@@ -55,27 +55,6 @@
  *                 |   |
  ******************************************************************/
 
-// Sphinx: #1
-#define HANDLE_ERROR(x)                                                        \
-    {                                                                          \
-        const auto err = x;                                                    \
-        if (err != CUTENSORNET_STATUS_SUCCESS) {                               \
-            std::cout << "Error: " << cutensornetGetErrorString(err)           \
-                      << " in line " << __LINE__ << std::endl;                 \
-            return err;                                                        \
-        }                                                                      \
-    };
-
-#define HANDLE_CUDA_ERROR(x)                                                   \
-    {                                                                          \
-        const auto err = x;                                                    \
-        if (err != cudaSuccess) {                                              \
-            std::cout << "Error: " << cudaGetErrorString(err) << " in line "   \
-                      << __LINE__ << std::endl;                                \
-            return err;                                                        \
-        }                                                                      \
-    };
-
 // Sphinx: #2
 class MPSHelper {
   public:
@@ -123,29 +102,30 @@ class MPSHelper {
     /**
      * \brief Initialize the MPS metadata and cutensornet library.
      */
-    cutensornetStatus_t initialize() {
+    void initialize() {
         // initialize workDesc, svdInfo and input tensor descriptors
         assert(!inited_);
-        HANDLE_ERROR(cutensornetCreate(&handle_));
-        HANDLE_ERROR(cutensornetCreateWorkspaceDescriptor(handle_, &workDesc_));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&handle_));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateWorkspaceDescriptor(handle_, &workDesc_));
         for (int32_t i = 0; i < numSites_; i++) {
             cutensornetTensorDescriptor_t descTensor;
             const int64_t extents[]{extentsPerSite_[i], physExtent_,
                                     extentsPerSite_[i + 1]};
             const int32_t modes[]{virtualModes_[i], physModes_[i],
                                   virtualModes_[i + 1]};
-            HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
                 handle_,
                 /*numModes=*/3, extents,
                 /*strides=*/nullptr, // fortran layout
                 modes, typeData_, &descTensor));
             descTensors_.push_back(descTensor);
         }
-        HANDLE_ERROR(cutensornetCreateTensorSVDConfig(handle_, &svdConfig_));
-        HANDLE_ERROR(cutensornetCreateTensorSVDInfo(handle_, &svdInfo_));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateTensorSVDConfig(handle_, &svdConfig_));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateTensorSVDInfo(handle_, &svdInfo_));
         inited_ = true;
-
-        return CUTENSORNET_STATUS_SUCCESS;
     }
 
     /**
@@ -179,15 +159,15 @@ class MPSHelper {
     setSVDConfig(double absCutoff, double relCutoff,
                  cutensornetTensorSVDNormalization_t renorm,
                  cutensornetTensorSVDPartition_t partition) {
-        HANDLE_ERROR(cutensornetTensorSVDConfigSetAttribute(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDConfigSetAttribute(
             handle_, svdConfig_, CUTENSORNET_TENSOR_SVD_CONFIG_ABS_CUTOFF,
             &absCutoff, sizeof(absCutoff)));
 
-        HANDLE_ERROR(cutensornetTensorSVDConfigSetAttribute(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDConfigSetAttribute(
             handle_, svdConfig_, CUTENSORNET_TENSOR_SVD_CONFIG_REL_CUTOFF,
             &relCutoff, sizeof(relCutoff)));
 
-        HANDLE_ERROR(cutensornetTensorSVDConfigSetAttribute(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDConfigSetAttribute(
             handle_, svdConfig_, CUTENSORNET_TENSOR_SVD_CONFIG_S_NORMALIZATION,
             &renorm, sizeof(renorm)));
 
@@ -198,7 +178,7 @@ class MPSHelper {
                 << std::endl;
             exit(-1);
         }
-        HANDLE_ERROR(cutensornetTensorSVDConfigSetAttribute(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDConfigSetAttribute(
             handle_, svdConfig_, CUTENSORNET_TENSOR_SVD_CONFIG_S_PARTITION,
             &partition, sizeof(partition)));
         return CUTENSORNET_STATUS_SUCCESS;
@@ -241,51 +221,56 @@ class MPSHelper {
         const int32_t modesOutB[] = {3, 7, 5};
 
         // create tensor descriptors for largest gate split process
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, maxExtentsAB,
             /*strides=*/nullptr, // fortran layout
             modesInA, typeData_, &descTensorInA));
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, maxExtentsAB,
             /*strides=*/nullptr, // fortran layout
             modesInB, typeData_, &descTensorInB));
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/4, extentsInG,
             /*strides=*/nullptr, // fortran layout
             modesInG, typeData_, &descTensorInG));
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, maxExtentsAB,
             /*strides=*/nullptr, // fortran layout
             modesOutA, typeData_, &descTensorOutA));
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, maxExtentsAB,
             /*strides=*/nullptr, // fortran layout
             modesOutB, typeData_, &descTensorOutB));
         // query workspace size
-        HANDLE_ERROR(cutensornetWorkspaceComputeGateSplitSizes(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceComputeGateSplitSizes(
             handle_, descTensorInA, descTensorInB, descTensorInG,
             descTensorOutA, descTensorOutB, gateAlgo_, svdConfig_, typeCompute_,
             workDesc_));
 
-        HANDLE_ERROR(cutensornetWorkspaceGetMemorySize(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
             handle_, workDesc_, CUTENSORNET_WORKSIZE_PREF_MIN,
             CUTENSORNET_MEMSPACE_DEVICE, CUTENSORNET_WORKSPACE_SCRATCH,
             workspaceSize));
         // free the tensor descriptors
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInA));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInB));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInG));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorOutA));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorOutB));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInA));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInB));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInG));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorOutA));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorOutB));
         return CUTENSORNET_STATUS_SUCCESS;
     }
 
@@ -295,7 +280,7 @@ class MPSHelper {
      * \param[in] workspaceSize The required workspace size on the device.
      */
     cutensornetStatus_t setWorkspace(void *work, int64_t workspaceSize) {
-        HANDLE_ERROR(cutensornetWorkspaceSetMemory(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             handle_, workDesc_, CUTENSORNET_MEMSPACE_DEVICE,
             CUTENSORNET_WORKSPACE_SCRATCH, work, workspaceSize));
         return CUTENSORNET_STATUS_SUCCESS;
@@ -342,7 +327,7 @@ class MPSHelper {
                                physModeOutB};
         const int64_t extentG[]{physExtent_, physExtent_, physExtent_,
                                 physExtent_};
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/4, extentG,
             /*strides=*/nullptr, // fortran layout
@@ -368,13 +353,13 @@ class MPSHelper {
         const int64_t extentOutA[]{leftExtentA, physExtent_, extentABOut};
         const int64_t extentOutB[]{extentABOut, physExtent_, rightExtentB};
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, extentOutA,
             /*strides=*/nullptr, // fortran layout
             modesOutA, typeData_, &descTensorOutA));
 
-        HANDLE_ERROR(cutensornetCreateTensorDescriptor(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateTensorDescriptor(
             handle_,
             /*numModes=*/3, extentOutB,
             /*strides=*/nullptr, // fortran layout
@@ -383,7 +368,7 @@ class MPSHelper {
         /**********
          * Execution
          ***********/
-        HANDLE_ERROR(cutensornetGateSplit(
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetGateSplit(
             handle_, descTensorInA, dataInA, descTensorInB, dataInB,
             descTensorInG, dataInG, descTensorOutA,
             dataInA,       // overwrite in place
@@ -399,13 +384,13 @@ class MPSHelper {
             int64_t fullExtent;
             int64_t reducedExtent;
             double discardedWeight;
-            HANDLE_ERROR(cutensornetTensorSVDInfoGetAttribute(
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDInfoGetAttribute(
                 handle_, svdInfo_, CUTENSORNET_TENSOR_SVD_INFO_FULL_EXTENT,
                 &fullExtent, sizeof(fullExtent)));
-            HANDLE_ERROR(cutensornetTensorSVDInfoGetAttribute(
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDInfoGetAttribute(
                 handle_, svdInfo_, CUTENSORNET_TENSOR_SVD_INFO_REDUCED_EXTENT,
                 &reducedExtent, sizeof(reducedExtent)));
-            HANDLE_ERROR(cutensornetTensorSVDInfoGetAttribute(
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetTensorSVDInfoGetAttribute(
                 handle_, svdInfo_, CUTENSORNET_TENSOR_SVD_INFO_DISCARDED_WEIGHT,
                 &discardedWeight, sizeof(discardedWeight)));
             std::cout << "virtual bond truncated from " << fullExtent << " to "
@@ -413,9 +398,12 @@ class MPSHelper {
                       << discardedWeight << std::endl;
         }
 
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInA));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInB));
-        HANDLE_ERROR(cutensornetDestroyTensorDescriptor(descTensorInG));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInA));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInB));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyTensorDescriptor(descTensorInG));
 
         // update pointer to the output tensor descriptor and the output shared
         // extent
@@ -426,9 +414,9 @@ class MPSHelper {
 
         int32_t numModes = 3;
         std::vector<int64_t> extentAOut(numModes);
-        HANDLE_ERROR(cutensornetGetTensorDetails(handle_, descTensorOutA,
-                                                 &numModes, nullptr, nullptr,
-                                                 extentAOut.data(), nullptr));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetGetTensorDetails(
+            handle_, descTensorOutA, &numModes, nullptr, nullptr,
+            extentAOut.data(), nullptr));
         // update the shared extent of output A and B which can potentially get
         // reduced if absCutoff and relCutoff is non-zero.
         extentsPerSite_[siteA + 1] =

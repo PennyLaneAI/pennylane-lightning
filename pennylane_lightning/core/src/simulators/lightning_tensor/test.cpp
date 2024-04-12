@@ -28,8 +28,8 @@ int main() {
 
     cudaDeviceProp prop;
     int deviceId{-1};
-    HANDLE_CUDA_ERROR(cudaGetDevice(&deviceId));
-    HANDLE_CUDA_ERROR(cudaGetDeviceProperties(&prop, deviceId));
+    PL_CUDA_IS_SUCCESS(cudaGetDevice(&deviceId));
+    PL_CUDA_IS_SUCCESS(cudaGetDeviceProperties(&prop, deviceId));
 
     // Sphinx: #11
     /***********************************
@@ -60,13 +60,13 @@ int main() {
 
     for (int i = 0; i < numRandomGates; i++) {
         gates_h[i] = (ComplexT *)malloc(gateSize);
-        HANDLE_CUDA_ERROR(cudaMalloc((void **)&gates_d[i], gateSize));
+        PL_CUDA_IS_SUCCESS(cudaMalloc((void **)&gates_d[i], gateSize));
         for (int j = 0; j < numGateElements; j++) {
             gates_h[i][j] = ComplexT(((float)rand()) / RAND_MAX,
                                      ((float)rand()) / RAND_MAX);
         }
-        HANDLE_CUDA_ERROR(cudaMemcpy(gates_d[i], gates_h[i], gateSize,
-                                     cudaMemcpyHostToDevice));
+        PL_CUDA_IS_SUCCESS(cudaMemcpy(gates_d[i], gates_h[i], gateSize,
+                                      cudaMemcpyHostToDevice));
     }
 
     // Sphinx: #15
@@ -93,7 +93,7 @@ int main() {
 
     for (int i = 0; i < numRandomGates; i++) {
         free(gates_h[i]);
-        HANDLE_CUDA_ERROR(cudaFree(gates_d[i]));
+        PL_CUDA_IS_SUCCESS(cudaFree(gates_d[i]));
     }
 
     return 0;
