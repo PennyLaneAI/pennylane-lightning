@@ -81,7 +81,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 

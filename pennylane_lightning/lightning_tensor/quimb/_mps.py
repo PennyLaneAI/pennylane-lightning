@@ -20,7 +20,6 @@ import quimb.tensor as qtn
 from pennylane import DeviceError
 from pennylane.wires import Wires
 
-
 # TODO: understand if supporting all operations and observables is feasible for the first release
 # I comment the following lines since otherwise Codecov complaints
 
