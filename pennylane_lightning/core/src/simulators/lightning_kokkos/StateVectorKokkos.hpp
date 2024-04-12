@@ -784,7 +784,6 @@ class StateVectorKokkos final
     void normalize() {
         auto sv_view = getView();
 
-        // TODO: @tomlqc what about squaredNorm()
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
             sv_view.size(),
