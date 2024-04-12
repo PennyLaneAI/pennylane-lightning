@@ -6,7 +6,7 @@
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
-  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
@@ -38,8 +38,11 @@
 
 ### Breaking changes
 
+* Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
 * Deprecate static LAPACK linking support.
-  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
@@ -48,6 +51,9 @@
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
 ### Improvements
+
+* Create `cuda_utils` for common usage of CUDA related backends.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
 * Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
   [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
