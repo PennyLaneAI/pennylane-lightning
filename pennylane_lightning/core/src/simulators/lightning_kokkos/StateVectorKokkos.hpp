@@ -769,7 +769,7 @@ class StateVectorKokkos final
     void collapse(const std::size_t wire, const bool branch) {
         KokkosVector matrix("gate_matrix", 4);
         Kokkos::parallel_for(
-            matrix.size(), KOKKOS_LAMBDA(const std::size_t k) {
+            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
                 matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
                                 ? ComplexT{1.0, 0.0}
                                 : ComplexT{0.0, 0.0};
