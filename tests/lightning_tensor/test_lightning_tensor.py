@@ -37,6 +37,10 @@ def test_device_name_and_init(num_wires, c_dtype):
     assert dev.name == "lightning.tensor"
     assert dev.c_dtype == c_dtype
     assert dev.wires == wires
+    if num_wires is None:
+        assert dev.num_wires == 0
+    else:
+        assert dev.num_wires == num_wires
 
 
 @pytest.mark.parametrize("backend", ["fake_backend"])
@@ -55,5 +59,7 @@ def test_invalid_method(method):
 
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(ValueError, match="LightningTensor does not support the `shots` parameter."):
+    with pytest.raises(
+        ValueError, match="LightningTensor does not support the `shots` parameter."
+    ):
         LightningTensor(shots=5)
