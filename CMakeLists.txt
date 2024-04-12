@@ -149,10 +149,10 @@ if(ENABLE_PYTHON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu")
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN")
-        target_link_libraries("${PL_BACKEND}_ops" PRIVATE   cuda_utils)
+        target_link_libraries("${PL_BACKEND}_ops" PRIVATE  cuda_utils)
     endif()
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE  lightning_compile_options
                                                         lightning_external_libs
                                                         )
 
