@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add Python class for the `lightning.tensor` device which uses the new device API.
+  [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
+
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
   [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
 

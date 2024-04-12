@@ -21,6 +21,16 @@ from pennylane import DeviceError
 from pennylane.wires import Wires
 
 
+# TODO: understand if supporting all operations and observables is feasible for the first release
+# I comment the following lines since otherwise Codecov complaints
+
+# _operations = frozenset({})
+# The set of supported operations.
+
+# _observables = frozenset({})
+# The set of supported observables.
+
+
 class QuimbMPS:
     """Quimb MPS class.
 
@@ -32,7 +42,7 @@ class QuimbMPS:
         num_wires,
         dtype=np.complex128,
         device_name="lightning.tensor",
-        **kwargs,  # pylint: disable=unused-argument
+        **kwargs,
     ):
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
@@ -46,15 +56,20 @@ class QuimbMPS:
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
 
+        # options for MPS
+        self._max_bond_dim = kwargs.get("max_bond_dim", None)
+        self._cutoff = kwargs.get("cutoff", 1e-16)
+        self._measure_algorithm = kwargs.get("measure_algorithm", None)
+
         # TODO: allows users to specify initial state
         self._circuit = qtn.CircuitMPS(psi0=self._set_initial_mps())
 
     @property
     def state(self):
-        """MPS on this device."""
+        """Current MPS handled by the device."""
         return self._circuit.psi
 
-    def state_to_array(self, digits):
+    def state_to_array(self, digits: int = 5):
         """Contract the MPS into a dense array."""
         return self._circuit.to_dense().round(digits)
 

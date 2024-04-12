@@ -33,20 +33,11 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-_backends = frozenset({"quimb", "cutensornet"})
+_backends = frozenset({"quimb"})
 # The set of supported backends.
 
-_methods = frozenset({"mps", "tn"})
+_methods = frozenset({"mps"})
 # The set of supported methods.
-
-# TODO: understand if supporting all operations and observables is feasible for the first release
-# I comment the following lines since otherwise Codecov complaints
-
-# _operations = frozenset({})
-# The set of supported operations.
-
-# _observables = frozenset({})
-# The set of supported observables.
 
 
 def accepted_backends(backend: str) -> bool:
@@ -82,17 +73,15 @@ class LightningTensor(Device):
     # TODO: decide whether to move some of the attributes in interfaces classes
     # pylint: disable=too-many-instance-attributes
 
+    # So far we just insert the options for MPS simulator
     _device_options = (
-        "backend",
-        "method",
-        "c_dtype",
-        "contraction_optimizer",
-        "local_simplify",
-        "sample_qubits",
-        "max_bond_dim",
-        "cutoff",
-        "measure_algorithm",
         "apply_reverse_lightcone",
+        "backend",
+        "c_dtype",
+        "cutoff",
+        "method",
+        "max_bond_dim",
+        "measure_algorithm",
         "return_tn",
         "rehearse",
     )
@@ -128,17 +117,12 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
-        # options for Tensor Network Simulator
-        self._contraction_optimizer = kwargs.get("contraction_optimizer", None)
-        self._local_simplify = kwargs.get("local_simplify", None)
-        self._sample_qubits = kwargs.get("sample_qubits", None)
-
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
         self._cutoff = kwargs.get("cutoff", 1e-16)
         self._measure_algorithm = kwargs.get("measure_algorithm", None)
 
-        # common options
+        # common options (MPS and TN)
         self._apply_reverse_lightcone = kwargs.get("apply_reverse_lightcone", None)
         self._return_tn = kwargs.get("return_tn", None)
         self._rehearse = kwargs.get("rehearse", None)
@@ -170,20 +154,11 @@ class LightningTensor(Device):
         return self._method
 
     @property
-    def state(self):
-        """The state on the device."""
-        return self._interface.state
-
-    @property
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
 
     dtype = c_dtype
-
-    def state_to_array(self, digits: int = 5):
-        """Copy the state tensor data to a numpy array."""
-        return self._interface.state_to_array(digits)
 
     def _setup_execution_config(self, config):
         """

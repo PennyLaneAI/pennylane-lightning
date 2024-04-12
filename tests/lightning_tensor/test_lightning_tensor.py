@@ -30,12 +30,11 @@ if LightningDevice._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.parametrize("num_wires", [None, 4])
 @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
-@pytest.mark.parametrize("device_name", ["lightning.tensor"])
-def test_device_name_and_init(num_wires, c_dtype, device_name):
+def test_device_name_and_init(num_wires, c_dtype):
     """Test the class initialization and returned properties."""
     wires = Wires(range(num_wires)) if num_wires else None
     dev = LightningTensor(wires=wires, c_dtype=c_dtype)
-    assert dev.name == device_name
+    assert dev.name == "lightning.tensor"
     assert dev.c_dtype == c_dtype
     assert dev.wires == wires
 
