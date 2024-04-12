@@ -36,15 +36,11 @@ class QuimbMPS:
     Interfaces with `quimb` for MPS manipulation.
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.tensor"):
+    def __init__(self, num_wires, dtype=np.complex128):
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
 
-        if device_name != "lightning.tensor":
-            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
-
-        self._device_name = device_name
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype

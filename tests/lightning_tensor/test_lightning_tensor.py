@@ -39,12 +39,6 @@ def test_device_name_and_init(num_wires, c_dtype):
     assert dev.wires == wires
 
 
-def test_wrong_device_name():
-    """Test an invalid device name"""
-    with pytest.raises(qml.DeviceError, match="The device name"):
-        LightningTensor(device_name="thunder.tensor")
-
-
 @pytest.mark.parametrize("backend", ["fake_backend"])
 def test_invalid_backend(backend):
     """Test an invalid backend."""
