@@ -37,6 +37,8 @@
 #include "CPUMemoryModel.hpp"
 
 #include "cuError.hpp"
+#include "cuStateVecError.hpp"
+#include "cuStateVec_helpers.hpp"
 
 #include "LinearAlg.hpp"
 

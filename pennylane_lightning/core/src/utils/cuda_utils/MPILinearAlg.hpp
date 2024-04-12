@@ -8,7 +8,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cusparse_v2.h>
-#include <custatevec.h>
 
 #include "DataBuffer.hpp"
 #include "cuError.hpp"
