@@ -212,8 +212,19 @@ if LK_CPP_BINARY_AVAILABLE:
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
 
-            # required to preserve both PL and Catalyst support
-            self.operations.update({"Conditional", "MidMeasureMP"})
+        @property
+        def stopping_condition(self):
+            """.BooleanFn: Returns the stopping condition for the device. The returned
+            function accepts a queueable object (including a PennyLane operation
+            and observable) and returns ``True`` if supported by the device."""
+            fun = super().stopping_condition
+
+            def accepts_obj(obj):
+                return fun(obj) or isinstance(
+                    obj, (qml.measurements.MidMeasureMP, qml.ops.Conditional)
+                )
+
+            return qml.BooleanFn(accepts_obj)
 
         # pylint: disable=missing-function-docstring
         @classmethod
