@@ -55,11 +55,6 @@ class QuimbMPS:
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
 
-        # options for MPS
-        self._max_bond_dim = kwargs.get("max_bond_dim", None)
-        self._cutoff = kwargs.get("cutoff", 1e-16)
-        self._measure_algorithm = kwargs.get("measure_algorithm", None)
-
         # TODO: allows users to specify initial state
         self._circuit = qtn.CircuitMPS(psi0=self._set_initial_mps())
 
