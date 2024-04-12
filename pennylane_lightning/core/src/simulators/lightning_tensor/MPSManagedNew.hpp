@@ -18,9 +18,14 @@
 
 #include "DataBuffer.hpp"
 #include "cuError.hpp"
+#include "cuTensorNetError.hpp"
 #include "cuda_helpers.hpp"
 // #include "cuGateCache.hpp"
 // #include "cuGates_host.hpp"
+
+namespace {
+using namespace Pennylane::LightningTensor::Util;
+}
 
 /****************************************************************
  *                   Basic Matrix Product State (MPS) Algorithm

@@ -11,6 +11,8 @@
 #include <cuda_runtime.h>
 #include <cutensornet.h>
 
+#include "cuTensorNetError.hpp"
+
 /****************************************************************
  *                   Basic Matrix Product State (MPS) Algorithm
  *

@@ -13,7 +13,6 @@ project(${PL_BACKEND}
 
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
 findCUDATK(lightning_external_libs)
-findCustatevec(lightning_external_libs)
 findCutensornet(lightning_external_libs)
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLTENSOR=1")
