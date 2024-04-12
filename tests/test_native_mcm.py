@@ -294,7 +294,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
 
 
 @flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [5000, [5000, 5001]])
+@pytest.mark.parametrize("shots", [10000, [10000, 10001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
