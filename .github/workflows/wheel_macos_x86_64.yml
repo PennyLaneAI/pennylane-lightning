@@ -12,6 +12,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 10.15

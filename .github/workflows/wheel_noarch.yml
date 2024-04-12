@@ -12,6 +12,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}

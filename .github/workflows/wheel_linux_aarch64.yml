@@ -11,6 +11,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: wheel_linux_aarch64-${{ github.ref }}
