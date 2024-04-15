@@ -1,10 +1,6 @@
 name: Tests::Linux::x86_64::LGPU::MPI
 on:
   workflow_call:
-    secrets:
-      codecov_token:
-        description: The codecov token to use when uploading coverage files
-        required: true
     inputs:
       lightning-version:
         type: string
@@ -305,7 +301,7 @@ jobs:
         with:
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.codecov_token }}
+          token: ${{ secrets.CODECOV_TOKEN }}
       
       - name: Cleanup
         if: always()
@@ -332,7 +328,7 @@ jobs:
         with:
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.codecov_token }}
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Cleanup
         if: always()

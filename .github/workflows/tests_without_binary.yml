@@ -1,10 +1,6 @@
 name: Testing without binary
 on:
   workflow_call:
-    secrets:
-      codecov_token:
-        description: The codecov token to use when uploading coverage files
-        required: true
     inputs:
       lightning-version:
         type: string
@@ -117,4 +113,5 @@ jobs:
         with:
           files: ./main/coverage.xml
           fail_ci_if_error: true
-          token: ${{ secrets.codecov_token }}
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
