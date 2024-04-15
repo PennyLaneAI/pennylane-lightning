@@ -43,6 +43,6 @@ class TestQuimbMPS:
         assert isinstance(dev._interface.state, qtn.MatrixProductState)
         assert isinstance(dev._interface.state_to_array(), np.ndarray)
 
-        config = dev.preprocess()
+        config = dev.preprocess(circuits=None)
         assert config.device_options["backend"] == backend
         assert config.device_options["method"] == method
