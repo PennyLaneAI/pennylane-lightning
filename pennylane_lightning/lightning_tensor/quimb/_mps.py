@@ -61,9 +61,6 @@ class QuimbMPS:
         r"""
         Returns an initial state to :math:`\ket{0}`.
 
-        Args:
-            wires (Union[Wires, Iterable]): The wires to be present in the initial state.
-
         Returns:
             array: The initial state of a circuit.
         """

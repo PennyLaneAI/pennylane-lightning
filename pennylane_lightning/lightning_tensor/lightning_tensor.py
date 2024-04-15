@@ -180,7 +180,11 @@ class LightningTensor(Device):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+    def preprocess(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
         """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
@@ -188,7 +192,7 @@ class LightningTensor(Device):
                 parameters needed to fully describe the execution.
 
         Returns:
-            ...
+            # TODO: decide
         """
 
         config = self._setup_execution_config(execution_config)
