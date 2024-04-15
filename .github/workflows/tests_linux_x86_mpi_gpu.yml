@@ -1,6 +1,10 @@
 name: Tests::Linux::x86_64::LGPU::MPI
 on:
   workflow_call:
+    secrets:
+      codecov_token:
+        description: The codecov token to use when uploading coverage files
+        required: true
     inputs:
       lightning-version:
         type: string
@@ -297,11 +301,11 @@ jobs:
           name: ubuntu-codecov-results-cpp
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
       
       - name: Cleanup
         if: always()
@@ -324,11 +328,11 @@ jobs:
           name: ubuntu-codecov-results-python
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
 
       - name: Cleanup
         if: always()

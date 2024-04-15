@@ -1,6 +1,10 @@
 name: Testing (Windows)
 on:
   workflow_call:
+    secrets:
+      codecov_token:
+        description: The codecov token to use when uploading coverage files
+        required: true
     inputs:
       lightning-version:
         type: string
@@ -262,7 +266,7 @@ jobs:
           name: windows-coverage-report
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}

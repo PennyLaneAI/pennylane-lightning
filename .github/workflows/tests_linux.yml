@@ -1,6 +1,10 @@
 name: Testing (Linux)
 on:
   workflow_call:
+    secrets:
+      codecov_token:
+        description: The codecov token to use when uploading coverage files
+        required: true
     inputs:
       lightning-version:
         type: string
@@ -622,10 +626,10 @@ jobs:
           python -m coverage xml -i -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
 
   upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
@@ -641,10 +645,10 @@ jobs:
           name: ubuntu-codecov-results-cpp
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ secrets.codecov_token }}
 
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
