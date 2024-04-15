@@ -182,7 +182,7 @@ class LightningTensor(Device):
 
     def preprocess(
         self,
-        circuits: QuantumTape_or_Batch,
+        circuits: QuantumTape_or_Batch,  # pylint: disable=unused-argument
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
         """This function defines the device transform program to be applied and an updated device configuration.

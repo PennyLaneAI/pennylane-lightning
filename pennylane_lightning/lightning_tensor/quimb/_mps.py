@@ -17,7 +17,6 @@ Class implementation for MPS manipulation based on the `quimb` Python package.
 
 import numpy as np
 import quimb.tensor as qtn
-from pennylane import DeviceError
 from pennylane.wires import Wires
 
 # TODO: understand if supporting all operations and observables is feasible for the first release
