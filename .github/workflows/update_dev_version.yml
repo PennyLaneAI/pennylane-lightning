@@ -24,8 +24,8 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
           path: pr
-          persist-credentials: false
 
       - name: Checkout PR branch
         env:
