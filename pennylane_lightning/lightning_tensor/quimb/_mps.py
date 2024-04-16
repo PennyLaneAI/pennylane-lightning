@@ -70,7 +70,7 @@ class QuimbMPS:
     @property
     def state(self):
         """Current MPS handled by the device."""
-        return self._circuit.psi
+        return self._circuitMPS.psi
 
     def _reset_state(self):
         """Reset the MPS."""
