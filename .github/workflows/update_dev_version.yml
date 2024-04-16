@@ -33,6 +33,7 @@ jobs:
 
       - name: Commit and push changes
         env:
+          PULL_REQUEST_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
           GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
         run: |
           cd ./pr
@@ -41,5 +42,5 @@ jobs:
             git config --global user.name "ringo-but-quantum"
             git add .
             git commit -m 'Auto update version'
-            git push
+            git push origin "$PULL_REQUEST_BRANCH_NAME"
           fi
