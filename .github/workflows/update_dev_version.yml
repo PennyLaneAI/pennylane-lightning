@@ -1,6 +1,8 @@
 name: Update dev version automatically
 on:
-  pull_request:
+  pull_request_target:
+    branches:
+      - master
 
 jobs:
   update-dev-version:
@@ -22,22 +24,21 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
           path: pr
 
       - name: Run version update script
         run: >
-          python3 pr/.github/workflows/dev_version_script.py
+          python3 main/.github/workflows/dev_version_script.py
           --pr-path "./pr" --master-path "./main"
 
       - name: Commit and push changes
-        if:
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
         run: |
           cd ./pr
           if [[ -n $(git status -s) ]]; then
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-            git config --global user.name "Dev version update bot"
+            git config --global user.email 'github-ringo-but-quantum@xanadu.ai'
+            git config --global user.name "ringo-but-quantum"
             git add .
             git commit -m 'Auto update version'
             git push
