@@ -21,8 +21,7 @@ import pennylane as qml
 import quimb.tensor as qtn
 from pennylane import numpy as np
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.measurements import (ExpectationMP, MeasurementProcess,
-                                    StateMeasurement)
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
 from pennylane.wires import Wires

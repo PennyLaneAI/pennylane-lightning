@@ -233,8 +233,8 @@ class LightningTensor(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        # TODO: remove comments in next PR
-        # return self._interface.execute(circuits, execution_config)
+
+        return self._interface.execute(circuits, execution_config)
 
     def supports_derivatives(
         self,
