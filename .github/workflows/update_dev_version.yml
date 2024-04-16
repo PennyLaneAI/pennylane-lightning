@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install Python Dependencies
+        run: pip install semver
+
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v4
         with:
