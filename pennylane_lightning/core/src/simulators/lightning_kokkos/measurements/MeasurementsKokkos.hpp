@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include <chrono>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -682,7 +683,10 @@ class Measurements final
             });
 
         // Sampling using Random_XorShift64_Pool
-        Kokkos::Random_XorShift64_Pool<> rand_pool(5374857);
+        Kokkos::Random_XorShift64_Pool<> rand_pool(
+            std::chrono::high_resolution_clock::now()
+                .time_since_epoch()
+                .count());
 
         Kokkos::parallel_for(
             Kokkos::RangePolicy<KokkosExecSpace>(0, num_samples),
