@@ -247,6 +247,65 @@ class TestExecution:
 
         assert new_config == expected_config
 
+    @pytest.mark.parametrize(
+        "op, is_trainable",
+        [
+            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
+            (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
+            (qml.StatePrep(np.array([1, 0]), wires=0), False),
+            (qml.BasisState([1, 1], wires=[0, 1]), False),
+            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
+        ],
+    )
+    def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
+        """Test that state prep ops in the beginning of a tape are decomposed with adjoint
+        but not otherwise."""
+        tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
+        device = LightningDevice(wires=3)
+
+        if is_trainable:
+            # Need to decompose twice as the state prep ops we use first decompose into a template
+            decomp = op.decomposition()[0].decomposition()
+        else:
+            decomp = [op]
+
+        config = ExecutionConfig(gradient_method="best" if is_trainable else None)
+        program, _ = device.preprocess(config)
+        tapes, _ = program([tape])
+        new_tape = tapes[0]
+        expected_tape = qml.tape.QuantumScript(decomp + [qml.RX(1.23, wires=0)], tape.measurements)
+        assert qml.equal(new_tape, expected_tape)
+
+    @pytest.mark.parametrize(
+        "op, decomp_depth",
+        [
+            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 1),
+            (qml.StatePrep(np.array([1, 0]), wires=0), 1),
+            (qml.BasisState([1, 1], wires=[0, 1]), 1),
+            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), 1),
+            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 2),
+            (qml.MottonenStatePreparation([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 0),
+        ],
+    )
+    def test_preprocess_state_prep_middle_op_decomposition(self, op, decomp_depth):
+        """Test that state prep ops in the middle of a tape are always decomposed."""
+        tape = qml.tape.QuantumScript(
+            [qml.RX(1.23, wires=0), op, qml.CNOT([0, 1])], [qml.expval(qml.PauliZ(0))]
+        )
+        device = LightningDevice(wires=3)
+
+        for _ in range(decomp_depth):
+            op = op.decomposition()[0]
+        decomp = op.decomposition()
+
+        program, _ = device.preprocess()
+        tapes, _ = program([tape])
+        new_tape = tapes[0]
+        expected_tape = qml.tape.QuantumScript(
+            [qml.RX(1.23, wires=0)] + decomp + [qml.CNOT([0, 1])], tape.measurements
+        )
+        assert qml.equal(new_tape, expected_tape)
+
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
         """Test that the transform program returned by preprocess is correct"""

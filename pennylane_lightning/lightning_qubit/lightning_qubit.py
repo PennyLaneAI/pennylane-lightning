@@ -182,9 +182,6 @@ def simulate_and_vjp(
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
-        "QubitStateVector",
-        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -522,7 +519,12 @@ class LightningQubit(Device):
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(mid_circuit_measurements, device=self)
-        program.add_transform(decompose, stopping_condition=stopping_condition, name=self.name)
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
         program.add_transform(qml.transforms.broadcast_expand)
 
         if config.gradient_method == "adjoint":
