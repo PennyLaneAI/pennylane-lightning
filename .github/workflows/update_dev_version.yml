@@ -1,6 +1,6 @@
 name: Update dev version automatically
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - master
 
@@ -37,7 +37,7 @@ jobs:
 
       - name: Run version update script
         run: >
-          python3 pr/.github/workflows/dev_version_script.py
+          python3 main/.github/workflows/dev_version_script.py
           --pr-path "./pr" --master-path "./main"
 
       - name: Commit and push changes
