@@ -31,8 +31,6 @@ jobs:
           path: pr
 
       - name: Checkout PR branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
         run: cd pr && gh pr checkout ${{ github.event.pull_request.number }}
 
       - name: Run version update script
@@ -41,8 +39,6 @@ jobs:
           --pr-path "./pr" --master-path "./main"
 
       - name: Commit and push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
         run: |
           cd ./pr
           if [[ -n $(git status -s) ]]; then
