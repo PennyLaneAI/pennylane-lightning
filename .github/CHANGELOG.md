@@ -83,6 +83,9 @@
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
 
+* Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
+  [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
