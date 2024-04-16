@@ -483,7 +483,8 @@ class TestSerializeObs:
 
         s_expected = tensor_obs(
             [
-                named_obs("PauliZ", [0]), named_obs("PauliX", [1]),
+                named_obs("PauliZ", [0]),
+                named_obs("PauliX", [1]),
                 named_obs("Hadamard", [2]),
             ]
         )
