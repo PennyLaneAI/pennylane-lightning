@@ -1,21 +1,17 @@
+#pragma once
 
-#include <algorithm>
-#include <bitset>
-#include <cassert>
 #include <complex>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
-#include <type_traits>
-
-#include <cuda_runtime.h>
+#include <cuda.h>
 #include <cutensornet.h>
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
+#include "TensorBase.hpp"
+#include "cuDeviceTensor.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuda_helpers.hpp"
 
@@ -33,180 +29,7 @@ std::string size_t_to_binary_string(const size_t &numQubits, size_t val) {
 }
 } // namespace
 
-// namespace Pennylane::LightningTensor {
-//  column-major by default for the tensor discriptor
-template <class PrecisionT, class Derived> class TensorBase {
-  private:
-    size_t rank_;   // A rank N tensor has N modes
-    size_t length_; // Number of elements in a
-    std::vector<size_t> modes_;
-    std::vector<size_t> extents_;
-
-  public:
-    TensorBase(size_t rank, std::vector<size_t> &modes,
-               std::vector<size_t> &extents)
-        : rank_(rank), modes_(modes), extents_(extents) {
-        PL_ABORT_IF(rank_ != extents_.size(),
-                    "Please check if rank or extents are set correctly.");
-        length_ = 1;
-        for (auto extent : extents) {
-            length_ *= extent;
-        }
-    };
-
-    virtual ~TensorBase() {}
-
-    auto getRank() -> size_t { return rank_; }
-
-    auto getExtents() -> std::vector<size_t> { return extents_; }
-
-    auto getModes() -> std::vector<size_t> { return modes_; };
-
-    size_t getLength() const { return length_; }
-
-    auto getData() { return static_cast<Derived *>(this)->getData(); }
-};
-
-template <class PrecisionT>
-class cuDeviceTensor
-    : public TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>> {
-  public:
-    // using BaseType = TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>>;
-    using BaseType = TensorBase<PrecisionT, cuDeviceTensor>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
-
-    cuDeviceTensor(size_t rank, std::vector<size_t> &modes,
-                   std::vector<size_t> &extents, int device_id = 0,
-                   cudaStream_t stream_id = 0, bool device_alloc = true)
-        : TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>>(rank, modes,
-                                                             extents),
-          data_buffer_{
-              std::make_shared<Pennylane::LightningGPU::DataBuffer<CFP_t>>(
-                  BaseType::getLength(), device_id, stream_id, device_alloc)} {}
-
-    cuDeviceTensor(size_t rank, std::vector<size_t> &modes,
-                   std::vector<size_t> &extents,
-                   Pennylane::LightningGPU::DevTag<int> dev_tag,
-                   bool device_alloc = true)
-        : TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>>(rank, modes,
-                                                             extents),
-          data_buffer_{
-              std::make_shared<Pennylane::LightningGPU::DataBuffer<CFP_t>>(
-                  BaseType::getLength(), dev_tag, device_alloc)} {}
-
-    // cuDeviceTensor() = delete;
-    // cuDeviceTensor(const cuDeviceTensor &other) = delete;
-    // cuDeviceTensor(cuDeviceTensor &&other) = delete;
-
-    ~cuDeviceTensor() {}
-
-    /**
-     * @brief Return a pointer to the GPU data.
-     *
-     * @return const CFP_t* Complex device pointer.
-     */
-    [[nodiscard]] auto getData() const -> const CFP_t * {
-        return data_buffer_->getData();
-    }
-    /**
-     * @brief Return a pointer to the GPU data.
-     *
-     * @return CFP_t* Complex device pointer.
-     */
-    [[nodiscard]] auto getData() -> CFP_t * { return data_buffer_->getData(); }
-
-    /**
-     * @brief Get the CUDA stream for the given object.
-     *
-     * @return cudaStream_t&
-     */
-    inline auto getStream() -> cudaStream_t {
-        return data_buffer_->getStream();
-    }
-    /**
-     * @brief Get the CUDA stream for the given object.
-     *
-     * @return const cudaStream_t&
-     */
-    inline auto getStream() const -> cudaStream_t {
-        return data_buffer_->getStream();
-    }
-
-    void setStream(const cudaStream_t &s) { data_buffer_->setStream(s); }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param sv StateVector host data class.
-     */
-    inline void
-    CopyHostDataToGpu(const std::vector<std::complex<PrecisionT>> &sv,
-                      bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == sv.size(),
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyHostDataToGpu(sv.data(), sv.size(), async);
-    }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param host_sv Complex data pointer to array.
-     * @param length Number of complex elements.
-     */
-    inline void CopyGpuDataToGpuIn(const CFP_t *gpu_sv, std::size_t length,
-                                   bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == length,
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyGpuDataToGpu(gpu_sv, length, async);
-    }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param host_sv Complex data pointer to array.
-     * @param length Number of complex elements.
-     */
-    inline void CopyHostDataToGpu(const std::complex<PrecisionT> *host_sv,
-                                  std::size_t length, bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == length,
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyHostDataToGpu(
-            reinterpret_cast<const CFP_t *>(host_sv), length, async);
-    }
-
-    /**
-     * @brief Explicitly copy data from GPU device to host memory.
-     *
-     * @param sv Complex data pointer to receive data from device.
-     */
-    inline void CopyGpuDataToHost(std::complex<PrecisionT> *host_sv,
-                                  size_t length, bool async = false) const {
-        PL_ABORT_IF_NOT(BaseType::getLength() == length,
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyGpuDataToHost(host_sv, length, async);
-    }
-
-    const Pennylane::LightningGPU::DataBuffer<CFP_t> &getDataBuffer() const {
-        return *data_buffer_;
-    }
-
-    Pennylane::LightningGPU::DataBuffer<CFP_t> &getDataBuffer() {
-        return *data_buffer_;
-    }
-
-    /**
-     * @brief Move and replace DataBuffer for statevector.
-     *
-     * @param other Source data to copy from.
-     */
-    void updateData(
-        std::unique_ptr<Pennylane::LightningGPU::DataBuffer<CFP_t>> &&other) {
-        data_buffer_ = std::move(other);
-    }
-
-  private:
-    std::shared_ptr<Pennylane::LightningGPU::DataBuffer<CFP_t>> data_buffer_;
-};
+namespace Pennylane::LightningTensor {
 
 template <class PrecisionT> class MPS_cuDevice {
   public:
@@ -417,24 +240,48 @@ template <class PrecisionT> class MPS_cuDevice {
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         return results;
     }
+
+    /*
+        private:
+
+        void applyGate_(std::string& opsName, std::vector<size_t> & wires, bool
+       adjoint, ){
+
+            int64_t id;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
+                /-* const cutensornetHandle_t *-/handle_,
+                /-* cutensornetState_t *-/quantumState_,
+                /-* int32_t numStateModes *-/ 1,
+                /-* const int32_t *stateModes *-/
+       std::vector<int32_t>{{0}}.data(),
+                /-* void * *-/ d_gateH,
+                /-* const int64_t *tensorModeStrides *-/ nullptr,
+                /-* const int32_t immutable*-/ 1,
+                /-* const int32_t adjoint *-/ 0,
+                /-* const int32_t unitary *-/ 1,
+                /-* int64_t * *-/&id));
+
+        }
+
+        void applyControlledGate_(){
+
+            int64_t id;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
+                /-* const cutensornetHandle_t *-/ handle_,
+                /-* cutensornetState_t *-/ quantumState_,
+                /-* int32_t numControlModes*-/ ,
+                /-* const int32_t *stateControlModes*-/ ,
+                /-* const int64_t *stateControlValues*-/ ,
+                /-* int32_t numTargetModes*-/ ,
+                /-* const int32_t *stateTargetModes*-/ ,
+                /-* void *tensorData *-/,
+                /-* const int64_t *tensorModeStrides *-/ ,
+                /-* const int32_t immutable *-/ ,
+                /-* const int32_t adjoint *-/ ,
+                /-* const int32_t unitary*-/ ,
+                /-* int64_t *tensorId*- &id));
+
+        }
+    */
 };
-
-int main() {
-    size_t numQubits = 3;
-    size_t maxExtent = 2;
-    std::vector<size_t> qubitDims(numQubits, 2);
-    std::cout << "Quantum circuit: " << numQubits << " qubits\n";
-    Pennylane::LightningGPU::DevTag<int> dev_tag(0, 0);
-
-    MPS_cuDevice<double> mps(numQubits, maxExtent, qubitDims, dev_tag);
-
-    size_t index = 7;
-    mps.setBasisState(index);
-    auto finalState = mps.getStateVector();
-
-    for (auto &element : finalState) {
-        std::cout << element << std::endl;
-    }
-
-    return 0;
-}
+} // namespace Pennylane::LightningTensor
