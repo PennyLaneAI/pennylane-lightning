@@ -21,6 +21,8 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
+from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Conditional
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
@@ -210,6 +212,29 @@ if LK_CPP_BINARY_AVAILABLE:
             if not LightningKokkos.kokkos_config:
                 LightningKokkos.kokkos_config = _kokkos_configuration()
 
+        @property
+        def stopping_condition(self):
+            """.BooleanFn: Returns the stopping condition for the device. The returned
+            function accepts a queueable object (including a PennyLane operation
+            and observable) and returns ``True`` if supported by the device."""
+            fun = super().stopping_condition
+
+            def accepts_obj(obj):
+                return fun(obj) or isinstance(
+                    obj, (qml.measurements.MidMeasureMP, qml.ops.Conditional)
+                )
+
+            return qml.BooleanFn(accepts_obj)
+
+        # pylint: disable=missing-function-docstring
+        @classmethod
+        def capabilities(cls):
+            capabilities = super().capabilities().copy()
+            capabilities.update(
+                supports_mid_measure=True,
+            )
+            return capabilities
+
         @staticmethod
         def _asarray(arr, dtype=None):
             arr = np.asarray(arr)  # arr is not copied
@@ -370,7 +395,25 @@ if LK_CPP_BINARY_AVAILABLE:
             num = self._get_basis_state_index(state, wires)
             self._create_basis_state(num)
 
-        def apply_lightning(self, operations):
+        def _apply_lightning_midmeasure(self, operation: MidMeasureMP, mid_measurements: dict):
+            """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+            Args:
+                operation (~pennylane.operation.Operation): mid-circuit measurement
+            Returns:
+                None
+            """
+            wires = self.wires.indices(operation.wires)
+            wire = list(wires)[0]
+            sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
+            if operation.postselect is not None and sample != operation.postselect:
+                mid_measurements[operation] = -1
+                return
+            mid_measurements[operation] = sample
+            getattr(self.state_vector, "collapse")(wire, bool(sample))
+            if operation.reset and bool(sample):
+                self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+
+        def apply_lightning(self, operations, mid_measurements=None):
             """Apply a list of operations to the state tensor.
 
             Args:
@@ -392,12 +435,17 @@ if LK_CPP_BINARY_AVAILABLE:
                 else:
                     name = ops.name
                     invert_param = False
-                if name == "Identity":
+                if isinstance(ops, qml.Identity):
                     continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(ops.wires)
 
-                if ops.name == "C(GlobalPhase)":
+                if isinstance(ops, Conditional):
+                    if ops.meas_val.concretize(mid_measurements):
+                        self.apply_lightning([ops.then_op])
+                elif isinstance(ops, MidMeasureMP):
+                    self._apply_lightning_midmeasure(ops, mid_measurements)
+                elif ops.name == "C(GlobalPhase)":
                     controls = ops.control_wires
                     control_values = ops.control_values
                     param = ops.base.parameters[0]
@@ -425,7 +473,7 @@ if LK_CPP_BINARY_AVAILABLE:
                     method(wires, invert_param, param)
 
         # pylint: disable=unused-argument
-        def apply(self, operations, rotations=None, **kwargs):
+        def apply(self, operations, rotations=None, mid_measurements=None, **kwargs):
             """Applies a list of operations to the state tensor."""
             # State preparation is currently done in Python
             if operations:  # make sure operations[0] exists
@@ -445,7 +493,9 @@ if LK_CPP_BINARY_AVAILABLE:
                         + f"Operations have already been applied on a {self.short_name} device."
                     )
 
-            self.apply_lightning(operations)
+            self.apply_lightning(operations, mid_measurements=mid_measurements)
+            if mid_measurements is not None and any(v == -1 for v in mid_measurements.values()):
+                self._apply_basis_state(np.zeros(self.num_wires), wires=self.wires)
 
         # pylint: disable=protected-access
         def expval(self, observable, shot_range=None, bin_size=None):
@@ -485,7 +535,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 if self.use_csingle
                 else MeasurementsC128(self.state_vector)
             )
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measure.expval(
                     csr_hamiltonian.indptr,
@@ -494,7 +544,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             # use specialized functors to compute expval(Hermitian)
-            if observable.name == "Hermitian":
+            if isinstance(observable, qml.Hermitian):
                 observable_wires = self.map_wires(observable.wires)
                 matrix = observable.matrix()
                 return measure.expval(matrix, observable_wires)
@@ -528,9 +578,7 @@ if LK_CPP_BINARY_AVAILABLE:
             Returns:
                 Variance of the observable
             """
-            if observable.name in [
-                "Projector",
-            ]:
+            if isinstance(observable, qml.Projector):
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
                     self.apply(diagonalizing_gates)
@@ -552,7 +600,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 else MeasurementsC128(self.state_vector)
             )
 
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return measure.var(
                     csr_hamiltonian.indptr,
@@ -561,7 +609,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -575,19 +623,20 @@ if LK_CPP_BINARY_AVAILABLE:
 
             return measure.var(observable.name, observable_wires)
 
-        def generate_samples(self):
+        def generate_samples(self, shots=None):
             """Generate samples
 
             Returns:
                 array[int]: array of samples in binary representation with shape
                 ``(dev.shots, dev.num_wires)``
             """
+            shots = self.shots if shots is None else shots
             measure = (
                 MeasurementsC64(self._kokkos_state)
                 if self.use_csingle
                 else MeasurementsC128(self._kokkos_state)
             )
-            return measure.generate_samples(len(self.wires), self.shots).astype(int, copy=False)
+            return measure.generate_samples(len(self.wires), shots).astype(int, copy=False)
 
         def probability_lightning(self, wires):
             """Return the probability of each computational basis state.
