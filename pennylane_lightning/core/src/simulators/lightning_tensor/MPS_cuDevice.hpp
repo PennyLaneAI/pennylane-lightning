@@ -116,8 +116,8 @@ template <class PrecisionT> class MPS_cuDevice {
                 siteExtents =
                     std::vector<size_t>({maxExtent_, qubitDims[i], maxExtent_});
             }
-            d_mpsTensors_.push_back(cuDeviceTensor<PrecisionT>(
-                modes.size(), modes, siteExtents, dev_tag_));
+            d_mpsTensors_.emplace_back(modes.size(), modes, siteExtents,
+                                       dev_tag_);
         }
     }
 
@@ -260,22 +260,22 @@ template <class PrecisionT> class MPS_cuDevice {
     }
 
     /*
-        private:
+    private:
 
         void applyGate_(std::string& opsName, std::vector<size_t> & wires, bool
-       adjoint, ){
+    adjoint, ){
 
             int64_t id;
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
                 /-* const cutensornetHandle_t *-/handle_,
                 /-* cutensornetState_t *-/quantumState_,
                 /-* int32_t numStateModes *-/ 1,
-                /-* const int32_t *stateModes *-/
-       std::vector<int32_t>{{0}}.data(),
+                /-* const int32_t * stateModes *-/
+    std::vector<int32_t>{{0}}.data(),
                 /-* void * *-/ d_gateH,
                 /-* const int64_t *tensorModeStrides *-/ nullptr,
                 /-* const int32_t immutable*-/ 1,
-                /-* const int32_t adjoint *-/ 0,
+                /-* const int32_t adjoint *-/ adjoint,
                 /-* const int32_t unitary *-/ 1,
                 /-* int64_t * *-/&id));
 
