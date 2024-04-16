@@ -273,7 +273,7 @@ class TestExecution:
         program, _ = device.preprocess(config)
         tapes, _ = program([tape])
         new_tape = tapes[0]
-        expected_tape = qml.tape.QuantumScript(decomp + [qml.RX(1.23, wires=0)], tape.measurements)
+        expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
     @pytest.mark.parametrize(
@@ -302,7 +302,7 @@ class TestExecution:
         tapes, _ = program([tape])
         new_tape = tapes[0]
         expected_tape = qml.tape.QuantumScript(
-            [qml.RX(1.23, wires=0)] + decomp + [qml.CNOT([0, 1])], tape.measurements
+            [qml.RX(1.23, wires=0), *decomp, qml.CNOT([0, 1])], tape.measurements
         )
         assert qml.equal(new_tape, expected_tape)
 
