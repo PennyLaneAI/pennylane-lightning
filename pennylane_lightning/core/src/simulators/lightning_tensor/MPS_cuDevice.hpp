@@ -262,40 +262,31 @@ template <class PrecisionT> class MPS_cuDevice {
         return results;
     }
 
-    /*
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false,
                         const std::vector<PrecisionT> &params = {0.0}) {
-        auto &&par =
-                (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        //applyGate_(gate_cache_.get_gate_device(opName, par[0]), wires,
-    adjoint);
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+        applyGate_(gate_cache_.get_gate_device_ptr(opName, par[0]), wires,
+                   adjoint);
     }
-    */
 
-    // private:
-    void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires,
-                        const std::vector<PrecisionT> &params = {0.0}) {
+  private:
+    void applyGate_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires,
+                    bool adjoint) {
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());
         std::transform(wires.begin(), wires.end(), stateModes.begin(),
                        [](size_t x) { return static_cast<int32_t>(x); });
-
-        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
             /* const cutensornetHandle_t */ handle_,
             /* cutensornetState_t */ quantumState_,
             /* int32_t numStateModes */ stateModes.size(),
             /* const int32_t * stateModes */ stateModes.data(),
-            /* void * */
-            static_cast<void *>(gate_cache_.get_gate_device(opName, par[0])
-                                    .getDataBuffer()
-                                    .getData()),
+            /* void * */ static_cast<void *>(gateTensorPtr),
             /* const int64_t *tensorModeStrides */ nullptr,
             /* const int32_t immutable */ 1,
-            /* const int32_t adjoint */ 0,
+            /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
     }

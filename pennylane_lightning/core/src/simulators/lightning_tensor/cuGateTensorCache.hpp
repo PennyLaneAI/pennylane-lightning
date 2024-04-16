@@ -267,19 +267,14 @@ template <class PrecisionT> class GateTensorCache {
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      * @return const CFP_t* Pointer to gate values on device.
      */
-    const CFP_t *get_gate_device_ptr(const std::string &gate_name,
-                                     PrecisionT gate_param) {
+    CFP_t *get_gate_device_ptr(const std::string &gate_name,
+                               PrecisionT gate_param) {
         return device_gates_.at(std::make_pair(gate_name, gate_param))
             .getData();
     }
 
-    cuDeviceTensor<PrecisionT> get_gate_device(const std::string &gate_name,
-                                               PrecisionT gate_param) {
-        return device_gates_.at(std::make_pair(gate_name, gate_param));
-    }
-
-    const CFP_t *get_gate_device_ptr(const gate_id &gate_key) {
-        return device_gates_.at(gate_key).getData();
+    CFP_t *get_gate_device_ptr(const gate_id &gate_key) {
+        return device_gates_.at(gate_key).getDataBuffer().getData();
     }
 
     auto get_gate_host(const std::string &gate_name, PrecisionT gate_param) {
