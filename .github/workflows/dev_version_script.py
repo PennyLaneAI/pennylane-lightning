@@ -79,8 +79,14 @@ if __name__ == "__main__":
     print("is prerelease?", pr_version.prerelease)
 
     if pr_version.prerelease and pr_version.prerelease.startswith("dev"):
-        # This is a prelease and the version needs to be bumped
-        new_version = master_version.next_version("prerelease")
+        # This PR is a dev prelease and the version needs to be bumped
+        if not master_version.prerelease:
+            next_prerelease_version = "dev"
+        elif master_version.prerelease == "dev":
+            next_prerelease_version = "dev1"
+        else:
+            next_prerelease_version = master_version.next_version("prerelease")
+        new_version = master_version.replace(prerelease=next_prerelease_version)
         if pr_version != new_version:
             print("Updating pr package version to ->", str(new_version))
             update_prerelease_version(args.pr, new_version)
