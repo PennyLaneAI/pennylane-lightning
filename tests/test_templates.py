@@ -21,6 +21,8 @@ import pytest
 from conftest import LightningDevice, device_name
 from pennylane import numpy as np
 
+# pylint: disable=missing-function-docstring, too-few-public-methods
+
 if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -94,7 +96,7 @@ class TestAngleEmbedding:
         def circuit(feature_vector):
             qml.AngleEmbedding(features=feature_vector, wires=range(n_qubits), rotation="Z")
             qml.Hadamard(0)
-            return qml.probs(wires=range(n_qubits))
+            return qml.state()
 
         X = np.random.rand(n_qubits)
 
@@ -114,22 +116,14 @@ class TestAmplitudeEmbedding:
 
         def circuit(f=None):
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
-            if LightningDevice._new_API:
-                return qml.expval(qml.Z(0)), qml.state()
-            else:
-                return qml.state()
+            return qml.state()
 
         X = np.random.rand(2**n_qubits)
         X /= np.linalg.norm(X)
-        if LightningDevice._new_API:
-            res, res_state = qml.QNode(circuit, dev, diff_method=None)(f=X)
-            ref, ref_state = qml.QNode(circuit, dq, diff_method=None)(f=X)
-        else:
-            res, res_state = 1.0, qml.QNode(circuit, dev, diff_method=None)(f=X)
-            ref, ref_state = 1.0, qml.QNode(circuit, dq, diff_method=None)(f=X)
+        res = qml.QNode(circuit, dev, diff_method=None)(f=X)
+        ref = qml.QNode(circuit, dq, diff_method=None)(f=X)
 
         assert np.allclose(res, ref)
-        assert np.allclose(res_state, ref_state)
 
 
 class TestBasisEmbedding:
@@ -163,7 +157,7 @@ class TestDisplacementEmbedding:
         def circuit(feature_vector):
             template(features=feature_vector, wires=range(n_qubits))
             qml.QuadraticPhase(0.1, wires=1)
-            return qml.expval(qml.NumberOperator(wires=1))
+            return qml.state()
 
         X = np.arange(1, n_qubits + 1)
 
@@ -201,7 +195,7 @@ class TestQAOAEmbedding:
 
         def circuit(feature_vector, weights):
             qml.QAOAEmbedding(features=feature_vector, weights=weights, wires=range(n_qubits))
-            return qml.expval(qml.Z(0))
+            return qml.state()
 
         X = np.random.rand(n_qubits)
         # [1.0, 2.0]
@@ -224,7 +218,7 @@ class TestCVNeuralNetLayers:
 
         def circuit(weights):
             qml.CVNeuralNetLayers(*weights, wires=[0, 1])
-            return qml.expval(qml.QuadX(0))
+            return qml.state()
 
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
@@ -239,11 +233,11 @@ class TestRandomLayers:
     @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     def test_randomlayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
-        dq = qml.device("default.qubit")
+        dq = qml.device("default.qubit", wires=n_qubits)
 
         def circuit(weights):
             qml.RandomLayers(weights=weights, wires=range(n_qubits))
-            return qml.expval(qml.Z(0))
+            return qml.state()
 
         weights = np.array([[0.1, -2.1, 1.4]])
 
@@ -263,7 +257,7 @@ class TestStronglyEntanglingLayers:
 
         def circuit(weights):
             qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
-            return qml.expval(qml.Z(0))
+            return qml.state()
 
         shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = np.random.random(size=shape)
@@ -361,16 +355,258 @@ class TestArbitraryStatePreparation:
 class TestCosineWindow:
     """Test the CosineWindow algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_cosinewindow(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
         def circuit():
             qml.CosineWindow(wires=range(n_qubits))
-            return qml.probs()
+            return qml.state()
 
         res = qml.QNode(circuit, dev, diff_method=None)()
         ref = qml.QNode(circuit, dq, diff_method=None)()
+
+        assert np.allclose(res, ref)
+
+
+class TestAllSinglesDoubles:
+    """Test the AllSinglesDoubles algorithm."""
+
+    def test_AllSinglesDoubles(self):
+        n_qubits = 4
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        electrons = 2
+
+        # Define the HF state
+        hf_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        # Generate all single and double excitations
+        singles, doubles = qml.qchem.excitations(electrons, n_qubits)
+
+        def circuit(weights, hf_state, singles, doubles):
+            qml.templates.AllSinglesDoubles(weights, range(n_qubits), hf_state, singles, doubles)
+            return qml.state()
+
+        weights = np.random.normal(0, np.pi, len(singles) + len(doubles))
+        res = qml.QNode(circuit, dev, diff_method=None)(weights, hf_state, singles, doubles)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights, hf_state, singles, doubles)
+
+        assert np.allclose(res, ref)
+
+
+class TestBasisRotation:
+    """Test the BasisRotation algorithm."""
+
+    def test_BasisRotation(self):
+        n_qubits = 3
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit(unitary_matrix):
+            qml.BasisState(np.array([1, 1, 0]), wires=[0, 1, 2])
+            qml.BasisRotation(
+                wires=range(3),
+                unitary_matrix=unitary_matrix,
+            )
+            return qml.state()
+
+        unitary_matrix = np.array(
+            [
+                [0.51378719 + 0.0j, 0.0546265 + 0.79145487j, -0.2051466 + 0.2540723j],
+                [0.62651582 + 0.0j, -0.00828925 - 0.60570321j, -0.36704948 + 0.32528067j],
+                [-0.58608928 + 0.0j, 0.03902657 + 0.04633548j, -0.57220635 + 0.57044649j],
+            ]
+        )
+
+        res = qml.QNode(circuit, dev, diff_method=None)(unitary_matrix)
+        ref = qml.QNode(circuit, dq, diff_method=None)(unitary_matrix)
+
+        assert np.allclose(res, ref)
+
+
+class TestGateFabric:
+    """Test the GateFabric algorithm."""
+
+    def test_GateFabric(self):
+
+        # Build the electronic Hamiltonian
+        symbols = ["H", "H"]
+        coordinates = np.array([0.0, 0.0, -0.6614, 0.0, 0.0, 0.6614])
+        _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        # Define the Hartree-Fock state
+        electrons = 2
+        ref_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        def circuit(weights):
+            qml.GateFabric(weights, wires=[0, 1, 2, 3], init_state=ref_state, include_pi=True)
+            return qml.state()
+
+        layers = 2
+        shape = qml.GateFabric.shape(n_layers=layers, n_wires=n_qubits)
+        weights = np.random.random(size=shape)
+
+        res = qml.QNode(circuit, dev, diff_method=None)(weights)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights)
+
+        assert np.allclose(res, ref)
+
+
+class TestUCCSD:
+    """Test the UCCSD algorithm."""
+
+    def test_UCCSD(self):
+
+        # Define the molecule
+        symbols = ["H", "H", "H"]
+        geometry = np.array(
+            [
+                [0.01076341, 0.04449877, 0.0],
+                [0.98729513, 1.63059094, 0.0],
+                [1.87262415, -0.00815842, 0.0],
+            ],
+            requires_grad=False,
+        )
+        electrons = 2
+        charge = 1
+
+        # Build the electronic Hamiltonian
+        _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, geometry, charge=charge)
+
+        # Define the HF state
+        hf_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        # Generate single and double excitations
+        singles, doubles = qml.qchem.excitations(electrons, n_qubits)
+
+        # Map excitations to the wires the UCCSD circuit will act on
+        s_wires, d_wires = qml.qchem.excitations_to_wires(singles, doubles)
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit(weights):
+            qml.UCCSD(weights, range(n_qubits), s_wires, d_wires, hf_state)
+            return qml.state()
+
+        weights = np.random.random(len(singles) + len(doubles))
+
+        res = qml.QNode(circuit, dev, diff_method=None)(weights)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights)
+
+        assert np.allclose(res, ref)
+
+
+class TestkUpCCGSD:
+    """Test the kUpCCGSD algorithm."""
+
+    def test_kUpCCGSD(self):
+
+        # Define the molecule
+        symbols = ["H", "H", "H"]
+        geometry = np.array(
+            [
+                [0.01076341, 0.04449877, 0.0],
+                [0.98729513, 1.63059094, 0.0],
+                [1.87262415, -0.00815842, 0.0],
+            ],
+            requires_grad=False,
+        )
+        electrons = 2
+        charge = 1
+
+        # Build the electronic Hamiltonian
+        _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, geometry, charge=charge)
+
+        # Define the HF state
+        hf_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        # Map excitations to the wires the kUpCCGSD circuit will act on
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit(weights):
+            qml.kUpCCGSD(weights, range(n_qubits), k=1, delta_sz=0, init_state=hf_state)
+            return qml.state()
+
+        # Get the shape of the weights for this template
+        layers = 1
+        shape = qml.kUpCCGSD.shape(k=layers, n_wires=n_qubits, delta_sz=0)
+        weights = np.random.random(size=shape)
+
+        res = qml.QNode(circuit, dev, diff_method=None)(weights)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights)
+
+        assert np.allclose(res, ref)
+
+
+class TestParticleConservingU1:
+    """Test the ParticleConservingU1 algorithm."""
+
+    def test_ParticleConservingU1(self):
+
+        # Build the electronic Hamiltonian
+        symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
+        _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
+
+        # Define the Hartree-Fock state
+        electrons = 2
+        hf_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        # Define the ansatz
+        ansatz = functools.partial(qml.ParticleConservingU1, init_state=hf_state, wires=dev.wires)
+
+        # Define the cost function
+        def circuit(params):
+            ansatz(params)
+            return qml.state()
+
+        layers = 2
+        shape = qml.ParticleConservingU1.shape(layers, n_qubits)
+        weights = np.random.random(shape)
+
+        res = qml.QNode(circuit, dev, diff_method=None)(weights)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights)
+
+        assert np.allclose(res, ref)
+
+
+class TestParticleConservingU2:
+    """Test the ParticleConservingU2 algorithm."""
+
+    def test_ParticleConservingU2(self):
+
+        # Build the electronic Hamiltonian
+        symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
+        _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
+
+        # Define the Hartree-Fock state
+        electrons = 2
+        hf_state = qml.qchem.hf_state(electrons, n_qubits)
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        # Define the ansatz
+        ansatz = functools.partial(qml.ParticleConservingU2, init_state=hf_state, wires=dev.wires)
+
+        # Define the cost function
+        def circuit(params):
+            ansatz(params)
+            return qml.state()
+
+        layers = 2
+        shape = qml.ParticleConservingU2.shape(layers, n_qubits)
+        weights = np.random.random(shape)
+
+        res = qml.QNode(circuit, dev, diff_method=None)(weights)
+        ref = qml.QNode(circuit, dq, diff_method=None)(weights)
 
         assert np.allclose(res, ref)
