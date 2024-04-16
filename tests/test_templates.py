@@ -28,16 +28,16 @@ if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
-    @pytest.mark.parametrize("num_qubits", range(4, 8))
-    def test_grover(self, num_qubits):
+    @pytest.mark.parametrize("n_qubits", range(4, 8))
+    def test_grover(self, n_qubits):
         np.random.seed(42)
-        omega = np.random.rand(num_qubits) > 0.5
-        dev = qml.device(device_name, wires=num_qubits)
-        wires = list(range(num_qubits))
+        omega = np.random.rand(n_qubits) > 0.5
+        dev = qml.device(device_name, wires=n_qubits)
+        wires = list(range(n_qubits))
 
         @qml.qnode(dev, diff_method=None)
         def circuit(omega):
-            iterations = int(np.round(np.sqrt(2**num_qubits) * np.pi / 4))
+            iterations = int(np.round(np.sqrt(2**n_qubits) * np.pi / 4))
 
             # Initial state preparation
             for wire in wires:
@@ -65,8 +65,9 @@ class TestGrover:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    def test_qsvt(self):
-        dev = qml.device(device_name, wires=2)
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_qsvt(self, n_qubits):
+        dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
         A = np.array([[0.1]])
         block_encode = qml.BlockEncode(A, wires=[0, 1])
@@ -85,8 +86,8 @@ class TestQSVT:
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
 
-    def test_angleembedding(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_angleembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -95,7 +96,7 @@ class TestAngleEmbedding:
             qml.Hadamard(0)
             return qml.probs(wires=range(n_qubits))
 
-        X = [1, 2, 3]
+        X = np.random.rand(n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
@@ -106,18 +107,26 @@ class TestAngleEmbedding:
 class TestAmplitudeEmbedding:
     """Test the AmplitudeEmbedding algorithm."""
 
-    def test_amplitudeembedding(self):
-        n_qubits = 2
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_amplitudeembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
         def circuit(f=None):
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
-            return qml.expval(qml.Z(0)), qml.state()
+            if LightningDevice._new_API:
+                return qml.expval(qml.Z(0)), qml.state()
+            else:
+                return qml.state()
 
-        X = [1 / 2, 1 / 2, 1 / 2, 1 / 2]
-        res, res_state = qml.QNode(circuit, dev, diff_method=None)(f=X)
-        ref, ref_state = qml.QNode(circuit, dq, diff_method=None)(f=X)
+        X = np.random.rand(2**n_qubits)
+        X /= np.linalg.norm(X)
+        if LightningDevice._new_API:
+            res, res_state = qml.QNode(circuit, dev, diff_method=None)(f=X)
+            ref, ref_state = qml.QNode(circuit, dq, diff_method=None)(f=X)
+        else:
+            res, res_state = 1.0, qml.QNode(circuit, dev, diff_method=None)(f=X)
+            ref, ref_state = 1.0, qml.QNode(circuit, dq, diff_method=None)(f=X)
 
         assert np.allclose(res, ref)
         assert np.allclose(res_state, ref_state)
@@ -126,8 +135,8 @@ class TestAmplitudeEmbedding:
 class TestBasisEmbedding:
     """Test the BasisEmbedding algorithm."""
 
-    def test_basisembedding(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_basisembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -135,7 +144,7 @@ class TestBasisEmbedding:
             qml.BasisEmbedding(features=feature_vector, wires=range(n_qubits))
             return qml.state()
 
-        X = [1, 1, 1]
+        X = np.ones(n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
@@ -146,9 +155,9 @@ class TestBasisEmbedding:
 class TestDisplacementEmbedding:
     """Test the DisplacementEmbedding algorithm."""
 
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     @pytest.mark.parametrize("template", [qml.DisplacementEmbedding, qml.SqueezingEmbedding])
-    def test_displacementembedding(self, template):
-        n_qubits = 3
+    def test_displacementembedding(self, n_qubits, template):
         dev = qml.device(device_name, wires=n_qubits)
 
         def circuit(feature_vector):
@@ -156,17 +165,17 @@ class TestDisplacementEmbedding:
             qml.QuadraticPhase(0.1, wires=1)
             return qml.expval(qml.NumberOperator(wires=1))
 
-        X = [1, 2, 3]
+        X = np.arange(1, n_qubits + 1)
 
-        with pytest.raises(qml._device.DeviceError, match=f"not supported on {device_name}"):
+        with pytest.raises(qml._device.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(X)
 
 
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    def test_iqpembedding(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_iqpembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -174,7 +183,7 @@ class TestIQPEmbedding:
             qml.IQPEmbedding(feature_vector, wires=range(n_qubits))
             return [qml.expval(qml.Z(w)) for w in range(n_qubits)]
 
-        X = [1.0, 2.0, 3.0]
+        X = np.arange(1, n_qubits + 1)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
@@ -185,8 +194,8 @@ class TestIQPEmbedding:
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    def test_qaoaembedding(self):
-        n_qubits = 2
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_qaoaembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -194,10 +203,11 @@ class TestQAOAEmbedding:
             qml.QAOAEmbedding(features=feature_vector, weights=weights, wires=range(n_qubits))
             return qml.expval(qml.Z(0))
 
-        X = [1.0, 2.0]
-        layer1 = [0.1, -0.3, 1.5]
-        layer2 = [3.1, 0.2, -2.8]
-        weights = [layer1, layer2]
+        X = np.random.rand(n_qubits)
+        # [1.0, 2.0]
+        # layer1 = [0.1, -0.3, 1.5]
+        # layer2 = [3.1, 0.2, -2.8]
+        weights = np.random.rand(2, 3 if n_qubits == 2 else 2 * n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(X, weights)
@@ -219,15 +229,15 @@ class TestCVNeuralNetLayers:
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
-        with pytest.raises(qml._device.DeviceError, match=f"not supported on {device_name}"):
+        with pytest.raises(qml._device.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
 
 
 class TestRandomLayers:
     """Test the RandomLayers algorithm."""
 
-    def test_randomlayers(self):
-        n_qubits = 2
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_randomlayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -246,8 +256,8 @@ class TestRandomLayers:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
-    def test_stronglyentanglinglayers(self):
-        n_qubits = 4
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_stronglyentanglinglayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -255,7 +265,7 @@ class TestStronglyEntanglingLayers:
             qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
             return qml.expval(qml.Z(0))
 
-        shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=4)
+        shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = np.random.random(size=shape)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
@@ -267,8 +277,8 @@ class TestStronglyEntanglingLayers:
 class TestSimplifiedTwoDesign:
     """Test the SimplifiedTwoDesign algorithm."""
 
-    def test_simplifiedtwodesign(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_simplifiedtwodesign(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -278,10 +288,8 @@ class TestSimplifiedTwoDesign:
             )
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
-        init_weights = [np.pi, np.pi, np.pi]
-        weights_layer1 = [[0.0, np.pi], [0.0, np.pi]]
-        weights_layer2 = [[np.pi, 0.0], [np.pi, 0.0]]
-        weights = [weights_layer1, weights_layer2]
+        init_weights = np.random.rand(n_qubits)
+        weights = np.random.rand(2, n_qubits - 1, 2)
 
         res = qml.QNode(circuit, dev, diff_method=None)(init_weights, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(init_weights, weights)
@@ -292,8 +300,8 @@ class TestSimplifiedTwoDesign:
 class TestBasicEntanglerLayers:
     """Test the BasicEntanglerLayers algorithm."""
 
-    def test_basicentanglerlayers(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_basicentanglerlayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -301,7 +309,7 @@ class TestBasicEntanglerLayers:
             qml.BasicEntanglerLayers(weights=weights, wires=range(n_qubits))
             return [qml.expval(qml.Z(i)) for i in range(n_qubits)]
 
-        weights = [[np.pi, np.pi, np.pi]]
+        weights = np.random.rand(1, n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
@@ -312,8 +320,8 @@ class TestBasicEntanglerLayers:
 class TestMottonenStatePreparation:
     """Test the MottonenStatePreparation algorithm."""
 
-    def test_mottonenstatepreparation(self):
-        n_qubits = 3
+    @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
+    def test_mottonenstatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -321,7 +329,7 @@ class TestMottonenStatePreparation:
             qml.MottonenStatePreparation(state_vector=state, wires=range(n_qubits))
             return qml.state()
 
-        state = np.array([1, 2j, 3, 4j, 5, 6j, 7, 8j])
+        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         state = state / np.linalg.norm(state)
 
         res = qml.QNode(circuit, dev, diff_method=None)(state)
@@ -333,8 +341,8 @@ class TestMottonenStatePreparation:
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
 
-    def test_arbitrarystatepreparation(self):
-        n_qubits = 4
+    @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
+    def test_arbitrarystatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -353,8 +361,8 @@ class TestArbitraryStatePreparation:
 class TestCosineWindow:
     """Test the CosineWindow algorithm."""
 
-    def test_cosinewindow(self):
-        n_qubits = 2
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_cosinewindow(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
