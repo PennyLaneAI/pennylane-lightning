@@ -35,19 +35,24 @@ def extract_version(repo_root_path: Path) -> semver.Version:
         for line in f:
             if line.startswith("__version__"):
                 if (m := rgx_ver.match(line.strip())) is not None:
-                    return semver.Version.parse(m.group(1))
+                    if not len(m.groups()):
+                        raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
+                    parsed_semver = m.group(1)
+                    if not semver.Version.is_valid(parsed_semver):
+                        raise ValueError(f"Invalid semver for __version__. Got: '{parsed_semver}' from line '{line}'")
+                    return semver.Version.parse(parsed_semver)
                 raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
     raise ValueError("Cannot parse version")
 
 
-def update_prerelease_version(repo_root_path: Path, new_version: semver.Version):
+def update_prerelease_version(repo_root_path: Path, version: semver.Version):
     version_file_path = repo_root_path / VERSION_FILE_PATH
     if not version_file_path.exists():
         raise FileNotFoundError(f"Unable to find version file at location {version_file_path}")
 
     with version_file_path.open() as f:
         lines = [
-            rgx_ver.sub(f"__version__ = \"{str(new_version)}\"", line)
+            rgx_ver.sub(f"__version__ = \"{str(version)}\"", line)
             for line in f
         ]
 
@@ -75,3 +80,5 @@ if __name__ == "__main__":
         new_version = master_version.next_version("prerelease")
         print("Updating pr package version to ->", str(new_version))
         update_prerelease_version(args.pr, new_version)
+    else:
+        print("pr is either not a prerelase, or on a newer prerelease than master ... Nothing to do!")
