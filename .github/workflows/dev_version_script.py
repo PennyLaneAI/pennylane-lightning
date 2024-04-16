@@ -75,9 +75,6 @@ if __name__ == "__main__":
     print("Got Package Version from 'master' ->", str(master_version))
     print("Got Package Version from 'pr' ->", str(pr_version))
 
-    print("is pr older?", pr_version <= master_version)
-    print("is prerelease?", pr_version.prerelease)
-
     if pr_version.prerelease and pr_version.prerelease.startswith("dev"):
         # This PR is a dev prelease and the version needs to be bumped
         if not master_version.prerelease:
@@ -85,7 +82,7 @@ if __name__ == "__main__":
         elif master_version.prerelease == "dev":
             next_prerelease_version = "dev1"
         else:
-            next_prerelease_version = master_version.next_version("prerelease")
+            next_prerelease_version = master_version.next_version("prerelease").prerelease
         new_version = master_version.replace(prerelease=next_prerelease_version)
         if pr_version != new_version:
             print("Updating pr package version to ->", str(new_version))
