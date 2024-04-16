@@ -22,6 +22,6 @@ target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLTENSOR=1
 ## Set Default Options ##
 #########################
 
-add_executable(test_tensor_explore test.cpp)
+add_executable(test_tensor_explore test6.cpp)
 
 target_link_libraries(test_tensor_explore PRIVATE lightning_utils lightning_compile_options lightning_external_libs)

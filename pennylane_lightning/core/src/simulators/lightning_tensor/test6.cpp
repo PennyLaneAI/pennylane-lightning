@@ -211,6 +211,7 @@ class cuDeviceTensor
 template <class PrecisionT> class MPS_cuDevice {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = std::complex<PrecisionT>;
 
   private:
     cutensornetHandle_t handle_{nullptr};
@@ -368,33 +369,47 @@ template <class PrecisionT> class MPS_cuDevice {
         DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            handle_, quantumState_, scratchSize, workDesc, 0x0));
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetState_t */ quantumState_,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused in v24.03*/ 0x0));
 
         int64_t worksize{0};
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            handle_, workDesc, CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            CUTENSORNET_MEMSPACE_DEVICE, CUTENSORNET_WORKSPACE_SCRATCH,
-            &worksize));
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetWorksizePref_t */
+            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /*  int64_t * */ &worksize));
 
-        if (static_cast<std::size_t>(worksize) <= scratchSize) {
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-                handle_, workDesc, CUTENSORNET_MEMSPACE_DEVICE,
-                CUTENSORNET_WORKSPACE_SCRATCH,
-                reinterpret_cast<void *>(d_scratch.getData()), worksize));
-        } else {
-            std::cout << "ERROR: Insufficient workspace size on Device!\n";
-            std::abort();
-        }
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /* void *const */ reinterpret_cast<void *>(d_scratch.getData()),
+            /* int64_t */ worksize));
 
         std::vector<int64_t *> extentsPtr;
         std::vector<int64_t> extent_int64(1, (1 << numQubits_));
         extentsPtr.emplace_back(extent_int64.data());
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            handle_, quantumState_, workDesc, extentsPtr.data(), nullptr,
-            d_mpsTensorsPtr.data(), 0));
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetState_t */ quantumState_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ extentsPtr.data(),
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ d_mpsTensorsPtr.data(),
+            /* cudaStream_t */ dev_tag_.getStreamID()));
 
-        std::vector<std::complex<double>> results(extent.front());
+        std::vector<ComplexT> results(extent.front());
 
         d_mpsTensor.CopyGpuDataToHost(results.data(), results.size());
 
