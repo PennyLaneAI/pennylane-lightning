@@ -43,20 +43,18 @@ class QuimbMPS:
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-
-        # TODO: allows users to specify initial state
-        self._circuit = qtn.CircuitMPS(psi0=self._set_initial_mps())
+        self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     @property
     def state(self):
         """Current MPS handled by the device."""
-        return self._circuit.psi
+        return self._circuitMPS.psi
 
     def state_to_array(self, digits: int = 5):
         """Contract the MPS into a dense array."""
-        return self._circuit.to_dense().round(digits)
+        return self._circuitMPS.to_dense().round(digits)
 
-    def _set_initial_mps(self):
+    def _initial_mps(self):
         r"""
         Returns an initial state to :math:`\ket{0}`.
 
