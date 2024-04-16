@@ -24,6 +24,7 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           path: pr
 
       - name: Run version update script
@@ -33,7 +34,6 @@ jobs:
 
       - name: Commit and push changes
         env:
-          PULL_REQUEST_BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
           GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
         run: |
           cd ./pr
@@ -42,5 +42,5 @@ jobs:
             git config --global user.name "ringo-but-quantum"
             git add .
             git commit -m 'Auto update version'
-            git push --set-upstream origin "$PULL_REQUEST_BRANCH_NAME"
+            git push
           fi
