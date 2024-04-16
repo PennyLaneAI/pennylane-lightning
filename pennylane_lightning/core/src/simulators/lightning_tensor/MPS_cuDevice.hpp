@@ -30,6 +30,7 @@
 #include "DevTag.hpp"
 #include "TensorBase.hpp"
 #include "cuDeviceTensor.hpp"
+#include "cuGateTensorCache.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuda_helpers.hpp"
 
@@ -71,12 +72,14 @@ template <class PrecisionT> class MPS_cuDevice {
 
     std::vector<cuDeviceTensor<PrecisionT>> d_mpsTensors_;
 
+    GateTensorCache<PrecisionT> gate_cache_;
+
   public:
     MPS_cuDevice(size_t &numQubits, size_t &maxExtent,
                  std::vector<size_t> &qubitDims,
                  Pennylane::LightningGPU::DevTag<int> &dev_tag)
         : numQubits_(numQubits), maxExtent_(maxExtent), qubitDims_(qubitDims),
-          dev_tag_(dev_tag) {
+          dev_tag_(dev_tag), gate_cache_(true, dev_tag) {
 
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
@@ -260,46 +263,64 @@ template <class PrecisionT> class MPS_cuDevice {
     }
 
     /*
-    private:
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires, bool adjoint = false,
+                        const std::vector<PrecisionT> &params = {0.0}) {
+        auto &&par =
+                (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+        //applyGate_(gate_cache_.get_gate_device(opName, par[0]), wires,
+    adjoint);
+    }
+    */
 
-        void applyGate_(std::string& opsName, std::vector<size_t> & wires, bool
-    adjoint, ){
+    // private:
+    void applyOperation(const std::string &opName,
+                        const std::vector<size_t> &wires,
+                        const std::vector<PrecisionT> &params = {0.0}) {
+        int64_t id;
+        std::vector<int32_t> stateModes(wires.size());
+        std::transform(wires.begin(), wires.end(), stateModes.begin(),
+                       [](size_t x) { return static_cast<int32_t>(x); });
 
-            int64_t id;
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
-                /-* const cutensornetHandle_t *-/handle_,
-                /-* cutensornetState_t *-/quantumState_,
-                /-* int32_t numStateModes *-/ 1,
-                /-* const int32_t * stateModes *-/
-    std::vector<int32_t>{{0}}.data(),
-                /-* void * *-/ d_gateH,
-                /-* const int64_t *tensorModeStrides *-/ nullptr,
-                /-* const int32_t immutable*-/ 1,
-                /-* const int32_t adjoint *-/ adjoint,
-                /-* const int32_t unitary *-/ 1,
-                /-* int64_t * *-/&id));
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
-        }
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetState_t */ quantumState_,
+            /* int32_t numStateModes */ stateModes.size(),
+            /* const int32_t * stateModes */ stateModes.data(),
+            /* void * */
+            static_cast<void *>(gate_cache_.get_gate_device(opName, par[0])
+                                    .getDataBuffer()
+                                    .getData()),
+            /* const int64_t *tensorModeStrides */ nullptr,
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ 0,
+            /* const int32_t unitary */ 1,
+            /* int64_t * */ &id));
+    }
 
-        void applyControlledGate_(){
+    /*
+    void applyControlledGate_(cuDeviceTensor<PrecisionT>& gateTensor,
+    std::vector<size_t> & wires, bool adjoint){
 
-            int64_t id;
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
-                /-* const cutensornetHandle_t *-/ handle_,
-                /-* cutensornetState_t *-/ quantumState_,
-                /-* int32_t numControlModes*-/ ,
-                /-* const int32_t *stateControlModes*-/ ,
-                /-* const int64_t *stateControlValues*-/ ,
-                /-* int32_t numTargetModes*-/ ,
-                /-* const int32_t *stateTargetModes*-/ ,
-                /-* void *tensorData *-/,
-                /-* const int64_t *tensorModeStrides *-/ ,
-                /-* const int32_t immutable *-/ ,
-                /-* const int32_t adjoint *-/ ,
-                /-* const int32_t unitary*-/ ,
-                /-* int64_t *tensorId*- &id));
+        int64_t id;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
+            /-* const cutensornetHandle_t *-/ handle_,
+            /-* cutensornetState_t *-/ quantumState_,
+            /-* int32_t numControlModes*-/ ,
+            /-* const int32_t *stateControlModes*-/ ,
+            /-* const int64_t *stateControlValues*-/ ,
+            /-* int32_t numTargetModes*-/ ,
+            /-* const int32_t *stateTargetModes*-/ ,
+            /-* void *tensorData *-/,
+            /-* const int64_t *tensorModeStrides *-/ ,
+            /-* const int32_t immutable *-/ ,
+            /-* const int32_t adjoint *-/ ,
+            /-* const int32_t unitary*-/ ,
+            /-* int64_t *tensorId*-/ &id));
 
-        }
+    }
     */
 };
 } // namespace Pennylane::LightningTensor

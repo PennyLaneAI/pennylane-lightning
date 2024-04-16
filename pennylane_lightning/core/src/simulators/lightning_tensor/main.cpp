@@ -16,6 +16,11 @@ int main() {
 
     size_t index = 7;
     mps.setBasisState(index);
+
+    std::string opName = "PauliX";
+    std::vector<size_t> wires = {2};
+    mps.applyOperation(opName, wires);
+
     auto finalState = mps.getStateVector();
 
     for (auto &element : finalState) {
