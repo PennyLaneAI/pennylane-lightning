@@ -52,6 +52,9 @@
 
 ### Improvements
 
+* Add `test_templates.py` module where Grover and QSVT are tested.
+  [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
+
 * Create `cuda_utils` for common usage of CUDA related backends.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
