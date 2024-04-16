@@ -34,7 +34,7 @@ jobs:
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKENa }}
         run: |
           cd ./pr
           if [[ -n $(git status -s) ]]; then
