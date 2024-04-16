@@ -24,8 +24,12 @@ jobs:
       - name: Checkout PennyLane-Lightning PR
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
           path: pr
+
+      - name: Checkout PR branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
+        run: cd pr && gh pr checkout ${{ github.event.pull_request.number }}
 
       - name: Run version update script
         run: >
