@@ -31,7 +31,7 @@ from pennylane.tape import QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from .quimb._mps import QuimbMPS, stopping_condition, accepted_observables
+from .quimb._mps import QuimbMPS, accepted_observables, stopping_condition
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]

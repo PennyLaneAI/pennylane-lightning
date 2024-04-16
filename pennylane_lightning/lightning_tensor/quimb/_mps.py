@@ -15,18 +15,17 @@
 Class implementation for MPS manipulation based on the `quimb` Python package.
 """
 
-import quimb.tensor as qtn
-from pennylane.wires import Wires
-
 from typing import Callable, Sequence, Union
 
 import pennylane as qml
+import quimb.tensor as qtn
 from pennylane import numpy as np
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.tape import QuantumTape, QuantumScript
+from pennylane.measurements import (ExpectationMP, MeasurementProcess,
+                                    StateMeasurement)
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch, TensorLike
-
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
+from pennylane.wires import Wires
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
