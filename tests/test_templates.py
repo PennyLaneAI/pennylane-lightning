@@ -64,27 +64,6 @@ class TestGrover:
         assert np.sum(prob) - prob[index] < 0.05
 
 
-class TestQSVT:
-    """Test the QSVT algorithm."""
-
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_qsvt(self, n_qubits):
-        dev = qml.device(device_name, wires=n_qubits)
-        dq = qml.device("default.qubit")
-        A = np.array([[0.1]])
-        block_encode = qml.BlockEncode(A, wires=[0, 1])
-        shifts = [qml.PCPhase(i + 0.1, dim=1, wires=[0, 1]) for i in range(3)]
-
-        def circuit():
-            qml.QSVT(block_encode, shifts)
-            return qml.expval(qml.Z(0))
-
-        res = qml.QNode(circuit, dev, diff_method=None)()
-        ref = qml.QNode(circuit, dq, diff_method=None)()
-
-        assert np.allclose(res, ref)
-
-
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
 
@@ -198,9 +177,6 @@ class TestQAOAEmbedding:
             return qml.state()
 
         X = np.random.rand(n_qubits)
-        # [1.0, 2.0]
-        # layer1 = [0.1, -0.3, 1.5]
-        # layer2 = [3.1, 0.2, -2.8]
         weights = np.random.rand(2, 3 if n_qubits == 2 else 2 * n_qubits)
 
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
@@ -608,5 +584,169 @@ class TestParticleConservingU2:
 
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
+
+        assert np.allclose(res, ref)
+
+
+class TestApproxTimeEvolution:
+    """Test the ApproxTimeEvolution algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_ApproxTimeEvolution(self, n_qubits):
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        coeffs = [1] * n_qubits
+        obs = [qml.X(i) for i in range(n_qubits)]
+        hamiltonian = qml.Hamiltonian(coeffs, obs)
+
+        def circuit(time):
+            qml.ApproxTimeEvolution(hamiltonian, time, 1)
+            return qml.state()
+
+        res = qml.QNode(circuit, dev, diff_method=None)(1.3)
+        ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
+
+        assert np.allclose(res, ref)
+
+
+class TestQDrift:
+    """Test the QDrift algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_QDrift(self, n_qubits):
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        coeffs = [1] * n_qubits
+        obs = [qml.X(i) for i in range(n_qubits)]
+        hamiltonian = qml.Hamiltonian(coeffs, obs)
+
+        def circuit(time):
+            qml.QDrift(hamiltonian, time=time, n=10, seed=10)
+            return qml.state()
+
+        res = qml.QNode(circuit, dev, diff_method=None)(1.3)
+        ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
+
+        assert np.allclose(res, ref)
+
+
+class TestTrotterProduct:
+    """Test the TrotterProduct algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_TrotterProduct(self, n_qubits):
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        coeffs = [1] * n_qubits
+        obs = [qml.X(i) for i in range(n_qubits)]
+        hamiltonian = qml.Hamiltonian(coeffs, obs)
+
+        def circuit(time):
+            qml.TrotterProduct(hamiltonian, time=time, order=2)
+            return qml.state()
+
+        res = qml.QNode(circuit, dev, diff_method=None)(1.3)
+        ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
+
+        assert np.allclose(res, ref)
+
+
+class TestQuantumPhaseEstimation:
+    """Test the QuantumPhaseEstimation algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_QuantumPhaseEstimation(self, n_qubits):
+
+        phase = 5
+        target_wires = [0]
+        unitary = qml.RX(phase, wires=0).matrix()
+        n_estimation_wires = n_qubits - 1
+        estimation_wires = range(1, n_estimation_wires + 1)
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit():
+            # Start in the |+> eigenstate of the unitary
+            qml.Hadamard(wires=target_wires)
+
+            qml.QuantumPhaseEstimation(
+                unitary,
+                target_wires=target_wires,
+                estimation_wires=estimation_wires,
+            )
+
+            return qml.probs(estimation_wires)
+
+        res = qml.QNode(circuit, dev, diff_method=None)()
+        ref = qml.QNode(circuit, dq, diff_method=None)()
+
+        assert np.allclose(res, ref)
+
+
+class TestQFT:
+    """Test the QFT algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_QFT(self, n_qubits):
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit(basis_state):
+            qml.BasisState(basis_state, wires=range(n_qubits))
+            qml.QFT(wires=range(n_qubits))
+            return qml.state()
+
+        basis_state = [0] * n_qubits
+        basis_state[0] = 1
+        res = qml.QNode(circuit, dev, diff_method=None)(basis_state)
+        ref = qml.QNode(circuit, dq, diff_method=None)(basis_state)
+
+        assert np.allclose(res, ref)
+
+
+class TestAQFT:
+    """Test the AQFT algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_AQFT(self, n_qubits):
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+
+        def circuit(basis_state):
+            qml.BasisState(basis_state, wires=range(n_qubits))
+            qml.AQFT(order=1, wires=range(n_qubits))
+            return qml.state()
+
+        basis_state = [0] * n_qubits
+        basis_state[0] = 1
+        res = qml.QNode(circuit, dev, diff_method=None)(basis_state)
+        ref = qml.QNode(circuit, dq, diff_method=None)(basis_state)
+
+        assert np.allclose(res, ref)
+
+
+class TestQSVT:
+    """Test the QSVT algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    def test_qsvt(self, n_qubits):
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit")
+        A = np.array([[0.1]])
+        block_encode = qml.BlockEncode(A, wires=[0, 1])
+        shifts = [qml.PCPhase(i + 0.1, dim=1, wires=[0, 1]) for i in range(3)]
+
+        def circuit():
+            qml.QSVT(block_encode, shifts)
+            return qml.expval(qml.Z(0))
+
+        res = qml.QNode(circuit, dev, diff_method=None)()
+        ref = qml.QNode(circuit, dq, diff_method=None)()
 
         assert np.allclose(res, ref)
