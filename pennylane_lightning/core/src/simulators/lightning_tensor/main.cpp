@@ -1,8 +1,8 @@
+#include "DevTag.hpp"
+#include "MPS_cuDevice.hpp"
 #include <complex>
 #include <iostream>
 #include <vector>
-#include "DevTag.hpp"
-#include "MPS_cuDevice.hpp"
 
 int main() {
     using namespace Pennylane::LightningTensor;
