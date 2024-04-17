@@ -23,7 +23,7 @@ from pennylane import numpy as np
 
 # pylint: disable=missing-function-docstring, too-few-public-methods
 
-if LightningDevice._new_API and not LightningDevice._CPP_BINARY_AVAILABLE:
+if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
