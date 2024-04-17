@@ -225,7 +225,7 @@ template <class PrecisionT> class MPS_cuDevice {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
-        int64_t worksize = this->getWorkSpaceMemorySize(workDesc);
+        int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -233,7 +233,7 @@ template <class PrecisionT> class MPS_cuDevice {
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
         DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
 
-        this->setWorkSpaceMemory(
+        this->setWorkSpaceMemory_(
             workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
 
         std::vector<int64_t *> extentsPtr;
@@ -273,7 +273,7 @@ template <class PrecisionT> class MPS_cuDevice {
     }
 
   private:
-    size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
+    size_t getWorkSpaceMemorySize_(cutensornetWorkspaceDescriptor_t &workDesc) {
         int64_t worksize{0};
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
@@ -288,8 +288,8 @@ template <class PrecisionT> class MPS_cuDevice {
         return worksize;
     }
 
-    void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                            void *scratchPtr, int64_t &worksize) {
+    void setWorkSpaceMemory_(cutensornetWorkspaceDescriptor_t &workDesc,
+                             void *scratchPtr, int64_t &worksize) {
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             /* const cutensornetHandle_t */ handle_,
@@ -407,16 +407,7 @@ template <class PrecisionT> class MPS_cuDevice {
 
         PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
 
-        int64_t worksize{0};
-        // Attach the workspace buffer
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ handle_,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetWorksizePref_t */
-            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            /* cutensornetMemspace_t */ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t*/ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* int64_t* */ &worksize));
+        int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device.\n");
@@ -424,14 +415,8 @@ template <class PrecisionT> class MPS_cuDevice {
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
         DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
 
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ handle_,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetMemspace_t */ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t*/ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* void *const memoryPtr */
-            reinterpret_cast<void *>(d_scratch.getData()),
-            /* int64_t */ worksize));
+        this->setWorkSpaceMemory_(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
             /* const cutensornetHandle_t */ handle_,
