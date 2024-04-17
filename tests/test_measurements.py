@@ -699,7 +699,14 @@ class TestWiresInVar:
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
     "obs",
-    [[0], [0, 1], qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1), qml.PauliZ(1) @ qml.PauliY(2)],
+    [
+        [0],
+        [0, 1],
+        qml.PauliZ(0),
+        qml.PauliY(1),
+        qml.PauliZ(0) @ qml.PauliY(1),
+        qml.PauliZ(1) @ qml.PauliY(2),
+    ],
 )
 @pytest.mark.parametrize("mcmc", [False, True])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
