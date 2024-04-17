@@ -1,7 +1,6 @@
 name: Update dev version automatically
 on:
-  # TODO: Change this to `pull_request_target` prior to merging
-  pull_request:
+  pull_request_target:
     branches:
       - master
 
@@ -40,11 +39,10 @@ jobs:
         id: old_version
         run: echo "version=$(grep -o '"[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | sed 's/"//g')" >> $GITHUB_OUTPUT
 
-      # TODO: Change this to run from main folder prior to merging
       - name: Run version update script
         run: |
           python3 \
-           pr/.github/workflows/dev_version_script.py \
+           main/.github/workflows/dev_version_script.py \
            --pr-path "${{ github.workspace }}/pr" \
            --master-path "${{ github.workspace }}/main"
 
