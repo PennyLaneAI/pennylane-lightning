@@ -59,7 +59,7 @@ std::size_t getScratchMemorySize() {
 
 namespace Pennylane::LightningTensor {
 
-template <class PrecisionT> class MPS_cuDevice {
+template <class PrecisionT> class cuMPS {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
@@ -90,7 +90,7 @@ template <class PrecisionT> class MPS_cuDevice {
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF,
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_S_NORMALIZATION
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO
-    MPS_cuDevice(size_t &numQubits, size_t &maxExtent,
+    cuMPS(size_t &numQubits, size_t &maxExtent,
                  std::vector<size_t> &qubitDims,
                  Pennylane::LightningGPU::DevTag<int> &dev_tag)
         : numQubits_(numQubits), maxExtent_(maxExtent), qubitDims_(qubitDims),
@@ -137,6 +137,12 @@ template <class PrecisionT> class MPS_cuDevice {
             d_mpsTensors_.emplace_back(modes.size(), modes, siteExtents,
                                        dev_tag_);
         }
+    }
+
+    ~cuMPS(){
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroy(handle_));
+
     }
 
     // Set a zero state for d_mpsTensors
