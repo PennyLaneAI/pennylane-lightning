@@ -17,7 +17,7 @@ CZ                     = { properties = [ "invertible",                 "differe
 DoubleExcitationMinus  = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitationPlus   = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitation       = { properties = [ "invertible",                 "differentiable" ] }
-GlobalPhase            = { properties = [ "invertible", "differentiable" ] }
+GlobalPhase            = { properties = [ "invertible",                 "differentiable" ] }
 Hadamard               = { properties = [ "invertible",                 "differentiable" ] }
 Identity               = { properties = [ "invertible",                 "differentiable" ] }
 IsingXX                = { properties = [ "invertible",                 "differentiable" ] }
