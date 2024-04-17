@@ -15,7 +15,7 @@
 Unit tests for the ``quimb`` interface.
 """
 
-
+import math
 import numpy as np
 import pennylane as qml
 import pytest
@@ -25,8 +25,8 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
-if LightningDevice._CPP_BINARY_AVAILABLE:
-    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+# if LightningDevice._CPP_BINARY_AVAILABLE:
+#    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
 THETA = np.linspace(0.11, 1, 3)
@@ -166,5 +166,49 @@ class TestExpval:
         )
         result = dev.execute(circuits=tape)
         expected = expected_fn(theta, phi)
+
+        assert np.allclose(result, expected, atol=1.0e-8)
+
+
+class TestExpvalHamiltonian:
+    """Tests expval for Hamiltonians"""
+
+    @pytest.mark.parametrize(
+        "obs, coeffs, expected",
+        [
+            ([qml.PauliX(0) @ qml.PauliZ(1)], [1.0], 0.0),
+            ([qml.PauliZ(0) @ qml.PauliZ(1)], [1.0], math.cos(0.4) * math.cos(-0.2)),
+            (
+                [
+                    qml.PauliX(0) @ qml.PauliZ(1),
+                    qml.Hermitian(
+                        [
+                            [1.0, 0.0, 0.0, 0.0],
+                            [0.0, 3.0, 0.0, 0.0],
+                            [0.0, 0.0, -1.0, 1.0],
+                            [0.0, 0.0, 1.0, -2.0],
+                        ],
+                        wires=[0, 1],
+                    ),
+                ],
+                [0.3, 1.0],
+                0.9319728930156066,
+            ),
+        ],
+    )
+    def test_expval_hamiltonian(self, obs, coeffs, expected):
+        """Test expval with Hamiltonian."""
+
+        tape = qml.tape.QuantumScript(
+            [qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])],
+            [qml.expval(qml.Hamiltonian(coeffs, obs))],
+        )
+
+        num_wires = 2
+        wires = Wires(range(num_wires))
+        dev = LightningTensor(
+            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
+        )
+        result = dev.execute(circuits=tape)
 
         assert np.allclose(result, expected, atol=1.0e-8)
