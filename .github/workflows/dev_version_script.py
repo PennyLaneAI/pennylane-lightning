@@ -18,8 +18,8 @@ from pathlib import Path
 
 try:
     import semver
-except ImportError:
-    raise ImportError("Unable to import semver. Install semver by running `pip install semver`")
+except ImportError as exc:
+    raise ImportError("Unable to import semver. Install semver by running `pip install semver`") from exc
 
 DEV_PRERELEASE_TAG_PREFIX = "dev"
 DEV_PRERELEASE_TAG_START = "dev1"
@@ -29,6 +29,13 @@ rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
 
 
 def extract_version(repo_root_path: Path) -> semver.Version:
+    """
+    Given the repository root for pennylane-lightning, this function extracts the semver version from
+    pennylane_lightning/core/_version.py.
+
+    :param repo_root_path: Path to the repository root.
+    :return: Extracted version a semver.Version object.
+    """
     version_file_path = repo_root_path / VERSION_FILE_PATH
     if not version_file_path.exists():
         raise FileNotFoundError(f"Unable to find version file at location {version_file_path}")
