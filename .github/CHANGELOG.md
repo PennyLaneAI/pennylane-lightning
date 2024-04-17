@@ -86,6 +86,9 @@
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
 
+* Fix the failed observable serialization unit tests.
+  [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
