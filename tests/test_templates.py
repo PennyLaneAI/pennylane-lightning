@@ -61,7 +61,6 @@ class TestGrover:
         )
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
-        assert np.sum(prob) - prob[index] < 0.05
 
 
 class TestAngleEmbedding:
