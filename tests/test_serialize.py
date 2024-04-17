@@ -146,10 +146,9 @@ class TestSerializeObs:
 
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
-        first_s = tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])])
 
         s_expected = [
-            first_s,
+            tensor_prod_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])]),
             named_obs("Hadamard", [1]),
         ]
 

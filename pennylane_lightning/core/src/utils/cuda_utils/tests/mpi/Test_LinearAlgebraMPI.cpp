@@ -11,35 +11,39 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <algorithm>
 #include <complex>
 #include <cstdio>
 #include <vector>
 
 #include <catch2/catch.hpp>
 
+#include "DataBuffer.hpp"
 #include "MPILinearAlg.hpp"
 #include "MPIManager.hpp"
-#include "StateVectorCudaMPI.hpp"
 #include "TestHelpers.hpp"
 #include "Util.hpp" // exp2
+#include "cuda_helpers.hpp"
 
 /**
  * @file
- *  Tests linear algebra functionality defined for the class StateVectorCudaMPI.
+ *  Tests distributed linear algebra functionality.
  */
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
 TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                    double) {
-    using StateVectorT = StateVectorCudaMPI<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-    using CFP_t = StateVectorT::CFP_t;
+    using ComplexT = std::complex<TestType>;
+    using CFP_t =
+        typename std::conditional<std::is_same<TestType, float>::value,
+                                  cuFloatComplex, cuDoubleComplex>::type;
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
                                            int32_t, int64_t>::type;
 
@@ -51,6 +55,11 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     std::vector<ComplexT> state = {{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                    {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                    {0.3, 0.4}, {0.4, 0.5}};
+
+    std::vector<CFP_t> state_cu;
+
+    std::transform(state.begin(), state.end(), std::back_inserter(state_cu),
+                   [](ComplexT x) { return complexToCu(x); });
 
     std::vector<ComplexT> result_refs = {{0.2, -0.1}, {-0.1, 0.2}, {0.2, 0.1},
                                          {0.1, 0.2},  {0.7, -0.2}, {-0.1, 0.6},
@@ -65,7 +74,6 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
         {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0}};
 
-    size_t mpi_buffersize = 1;
     size_t nGlobalIndexBits =
         std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
     size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
@@ -80,6 +88,12 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                         subSvLength, 0);
     mpi_manager.Barrier();
 
+    std::vector<CFP_t> local_state_cu;
+
+    std::transform(local_state.begin(), local_state.end(),
+                   std::back_inserter(local_state_cu),
+                   [](ComplexT x) { return complexToCu(x); });
+
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
     REQUIRE(nDevices >= 2);
@@ -89,29 +103,27 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     mpi_manager.Barrier();
 
     SECTION("Testing sparse matrix vector product:") {
-        std::vector<ComplexT> local_result(local_state.size());
+        std::vector<CFP_t> local_result(local_state.size());
+        auto cusparsehandle = make_shared_cusparse_handle();
 
-        StateVectorT sv_x(mpi_manager, dt_local, mpi_buffersize,
-                          nGlobalIndexBits, nLocalIndexBits);
-        StateVectorT sv_y(mpi_manager, dt_local, mpi_buffersize,
-                          nGlobalIndexBits, nLocalIndexBits);
-        sv_x.CopyHostDataToGpu(local_state, false);
+        DataBuffer<CFP_t> sv_x(local_state.size());
+        DataBuffer<CFP_t> sv_y(local_state.size());
 
-        cuUtil::SparseMV_cuSparseMPI<IdxT, TestType, CFP_t>(
+        sv_x.CopyHostDataToGpu(local_state_cu.data(), local_state_cu.size());
+
+        SparseMV_cuSparseMPI<IdxT, TestType, CFP_t>(
             mpi_manager, sv_x.getLength(), indptr.data(),
             static_cast<int64_t>(indptr.size()), indices.data(), values.data(),
-            sv_x.getData(), sv_y.getData(),
-            sv_x.getDataBuffer().getDevTag().getDeviceID(),
-            sv_x.getDataBuffer().getDevTag().getStreamID(),
-            sv_x.getCusparseHandle());
+            sv_x.getData(), sv_y.getData(), sv_x.getDevice(), sv_x.getStream(),
+            cusparsehandle.get());
 
         mpi_manager.Barrier();
 
         sv_y.CopyGpuDataToHost(local_result.data(), local_result.size());
 
         for (std::size_t j = 0; j < local_result.size(); j++) {
-            CHECK(imag(local_result[j]) == Approx(imag(local_result_refs[j])));
-            CHECK(real(local_result[j]) == Approx(real(local_result_refs[j])));
+            CHECK(local_result[j].y == Approx(imag(local_result_refs[j])));
+            CHECK(local_result[j].x == Approx(real(local_result_refs[j])));
         }
     }
 }

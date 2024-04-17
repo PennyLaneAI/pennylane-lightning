@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* `lightning.kokkos` supports mid-circuit measurements.
+  [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
+
+* Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
+
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
 
@@ -32,6 +38,12 @@
 
 ### Breaking changes
 
+* Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
+* Deprecate static LAPACK linking support.
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
+
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
 
@@ -39,6 +51,12 @@
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
 ### Improvements
+
+* Create `cuda_utils` for common usage of CUDA related backends.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
+* Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
 
 * Upgrade GitHub actions versions from v3 to v4.
   [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
@@ -65,11 +83,17 @@
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
 
+* Fix the failed observable serialization unit tests.
+  [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
+
+* Update the `LightningQubit` new device API to work with Catalyst.
+  [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
