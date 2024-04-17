@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Integration tests for the ``execute`` method of Lightning devices.
+Test the correctness of templates with Lightning devices.
 """
 import functools
 
