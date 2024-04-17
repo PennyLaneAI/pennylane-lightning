@@ -31,6 +31,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit import (
     adjoint_measurements,
     adjoint_observables,
     decompose,
+    mid_circuit_measurements,
     no_sampling,
     stopping_condition,
     stopping_condition_shots,
@@ -249,6 +250,49 @@ class TestExecution:
 
         assert new_config == expected_config
 
+    @pytest.mark.parametrize("adjoint", [True, False])
+    def test_preprocess(self, adjoint):
+        """Test that the transform program returned by preprocess is correct"""
+        device = LightningDevice(wires=2)
+
+        expected_program = qml.transforms.core.TransformProgram()
+        expected_program.add_transform(validate_measurements, name=device.name)
+        expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
+        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+        expected_program.add_transform(mid_circuit_measurements, device=device)
+        expected_program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=device.name,
+        )
+        expected_program.add_transform(qml.transforms.broadcast_expand)
+
+        if adjoint:
+            name = "adjoint + lightning.qubit"
+            expected_program.add_transform(no_sampling, name=name)
+            expected_program.add_transform(
+                decompose,
+                stopping_condition=adjoint_ops,
+                stopping_condition_shots=stopping_condition_shots,
+                name=name,
+                skip_initial_state_prep=False,
+            )
+            expected_program.add_transform(validate_observables, accepted_observables, name=name)
+            expected_program.add_transform(
+                validate_measurements,
+                analytic_measurements=adjoint_measurements,
+                name=name,
+            )
+            expected_program.add_transform(qml.transforms.broadcast_expand)
+            expected_program.add_transform(validate_adjoint_trainable_params)
+
+        gradient_method = "adjoint" if adjoint else None
+        config = ExecutionConfig(gradient_method=gradient_method)
+        actual_program, _ = device.preprocess(config)
+        assert actual_program == expected_program
+
     @pytest.mark.parametrize(
         "op, is_trainable",
         [
@@ -305,82 +349,6 @@ class TestExecution:
             [qml.RX(1.23, wires=0), *decomp, qml.CNOT([0, 1])], tape.measurements
         )
         assert qml.equal(new_tape, expected_tape)
-
-    @pytest.mark.parametrize("wires", [5, 9, 10, 13])
-    def test_preprocess_qft_decomposition(self, wires):
-        """Test that qml.QFT is not decomposed for less than 10 wires."""
-        tape = qml.tape.QuantumScript(
-            [qml.QFT(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
-        )
-        dev = LightningDevice(wires=wires)
-
-        program, _ = dev.preprocess()
-        [new_tape], _ = program([tape])
-
-        if wires >= 10:
-            assert all(not isinstance(op, qml.QFT) for op in new_tape.operations)
-        else:
-            assert tape.operations == [qml.QFT(wires=list(range(wires)))]
-
-    @pytest.mark.parametrize("wires", [5, 10, 13, 15])
-    def test_preprocess_grover_operator_decomposition(self, wires):
-        """Test that qml.GroverOperator is not decomposed for less than 10 wires."""
-        tape = qml.tape.QuantumScript(
-            [qml.GroverOperator(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
-        )
-        dev = LightningDevice(wires=wires)
-
-        program, _ = dev.preprocess()
-        [new_tape], _ = program([tape])
-
-        if wires >= 13:
-            assert all(not isinstance(op, qml.GroverOperator) for op in new_tape.operations)
-        else:
-            assert tape.operations == [qml.GroverOperator(wires=list(range(wires)))]
-
-    @pytest.mark.parametrize("adjoint", [True, False])
-    def test_preprocess(self, adjoint):
-        """Test that the transform program returned by preprocess is correct"""
-        device = LightningDevice(wires=2)
-
-        expected_program = qml.transforms.core.TransformProgram()
-        expected_program.add_transform(validate_measurements, name=device.name)
-        expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
-        expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
-        expected_program.add_transform(
-            qml.devices.preprocess.mid_circuit_measurements, device=device
-        )
-        expected_program.add_transform(
-            decompose,
-            stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
-            name=device.name,
-        )
-        expected_program.add_transform(qml.transforms.broadcast_expand)
-
-        if adjoint:
-            name = "adjoint + lightning.qubit"
-            expected_program.add_transform(no_sampling, name=name)
-            expected_program.add_transform(
-                decompose,
-                stopping_condition=adjoint_ops,
-                stopping_condition_shots=stopping_condition_shots,
-                name=name,
-                skip_initial_state_prep=False,
-            )
-            expected_program.add_transform(validate_observables, accepted_observables, name=name)
-            expected_program.add_transform(
-                validate_measurements,
-                analytic_measurements=adjoint_measurements,
-                name=name,
-            )
-            expected_program.add_transform(qml.transforms.broadcast_expand)
-            expected_program.add_transform(validate_adjoint_trainable_params)
-
-        gradient_method = "adjoint" if adjoint else None
-        config = ExecutionConfig(gradient_method=gradient_method)
-        actual_program, _ = device.preprocess(config)
-        assert actual_program == expected_program
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))

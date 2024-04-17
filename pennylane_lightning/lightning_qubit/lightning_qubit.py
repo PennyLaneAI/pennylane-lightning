@@ -293,14 +293,13 @@ def stopping_condition(op: Operator) -> bool:
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
-
     return op.name in _operations
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return op.name in _operations or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
