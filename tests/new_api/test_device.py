@@ -33,6 +33,7 @@ from pennylane_lightning.lightning_qubit.lightning_qubit import (
     decompose,
     no_sampling,
     stopping_condition,
+    stopping_condition_shots,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
@@ -107,6 +108,7 @@ class TestHelpers:
         expected_program.add_transform(
             decompose,
             stopping_condition=adjoint_ops,
+            stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
         )
@@ -184,7 +186,7 @@ class TestExecution:
         "batch_obs": False,
         "mcmc": False,
         "kernel_name": None,
-        "num_burnin": None,
+        "num_burnin": 0,
     }
 
     @pytest.mark.parametrize(
@@ -222,7 +224,7 @@ class TestExecution:
                         "batch_obs": False,
                         "mcmc": True,
                         "kernel_name": None,
-                        "num_burnin": None,
+                        "num_burnin": 0,
                     },
                 ),
             ),
@@ -260,7 +262,10 @@ class TestExecution:
             qml.devices.preprocess.mid_circuit_measurements, device=device
         )
         expected_program.add_transform(
-            decompose, stopping_condition=stopping_condition, name=device.name
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            name=device.name,
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
@@ -270,6 +275,7 @@ class TestExecution:
             expected_program.add_transform(
                 decompose,
                 stopping_condition=adjoint_ops,
+                stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
             )
