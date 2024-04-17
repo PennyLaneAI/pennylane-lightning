@@ -89,6 +89,9 @@
 * Fix the failed observable serialization unit tests.
   [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
 
+* Update the `LightningQubit` new device API to work with Catalyst.
+  [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
