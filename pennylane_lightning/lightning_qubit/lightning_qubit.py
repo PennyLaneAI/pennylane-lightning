@@ -291,6 +291,11 @@ _observables = frozenset(
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+
     return op.name in _operations
 
 

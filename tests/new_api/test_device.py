@@ -271,8 +271,7 @@ class TestExecution:
 
         config = ExecutionConfig(gradient_method="best" if is_trainable else None)
         program, _ = device.preprocess(config)
-        tapes, _ = program([tape])
-        new_tape = tapes[0]
+        [new_tape], _ = program([tape])
         expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
@@ -299,12 +298,43 @@ class TestExecution:
         decomp = op.decomposition()
 
         program, _ = device.preprocess()
-        tapes, _ = program([tape])
-        new_tape = tapes[0]
+        [new_tape], _ = program([tape])
         expected_tape = qml.tape.QuantumScript(
             [qml.RX(1.23, wires=0), *decomp, qml.CNOT([0, 1])], tape.measurements
         )
         assert qml.equal(new_tape, expected_tape)
+
+    @pytest.mark.parametrize("wires", [5, 9, 10, 13])
+    def test_preprocess_qft_decomposition(self, wires):
+        """Test that qml.QFT is not decomposed for less than 10 wires."""
+        tape = qml.tape.QuantumScript(
+            [qml.QFT(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
+        )
+        dev = LightningDevice(wires=wires)
+
+        program, _ = dev.preprocess()
+        [new_tape], _ = program([tape])
+
+        if wires >= 10:
+            assert all(not isinstance(op, qml.QFT) for op in new_tape.operations)
+        else:
+            assert tape.operations == [qml.QFT(wires=list(range(wires)))]
+
+    @pytest.mark.parametrize("wires", [5, 10, 13, 15])
+    def test_preprocess_grover_operator_decomposition(self, wires):
+        """Test that qml.GroverOperator is not decomposed for less than 10 wires."""
+        tape = qml.tape.QuantumScript(
+            [qml.GroverOperator(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
+        )
+        dev = LightningDevice(wires=wires)
+
+        program, _ = dev.preprocess()
+        [new_tape], _ = program([tape])
+
+        if wires >= 13:
+            assert all(not isinstance(op, qml.GroverOperator) for op in new_tape.operations)
+        else:
+            assert tape.operations == [qml.GroverOperator(wires=list(range(wires)))]
 
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):

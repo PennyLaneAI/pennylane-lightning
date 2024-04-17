@@ -75,7 +75,10 @@
 ### Bug fixes
 
 * `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
-  [(#)]()
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+
+* `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if wires are above a certain threshold.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
