@@ -44,7 +44,7 @@ def extract_version(repo_root_path: Path) -> semver.Version:
         for line in f:
             if line.startswith("__version__"):
                 if (m := rgx_ver.match(line.strip())) is not None:
-                    if not len(m.groups()):
+                    if not m.groups():
                         raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
                     parsed_semver = m.group(1)
                     if not semver.Version.is_valid(parsed_semver):
@@ -55,6 +55,13 @@ def extract_version(repo_root_path: Path) -> semver.Version:
 
 
 def update_prerelease_version(repo_root_path: Path, version: semver.Version):
+    """
+    Updates the version file within pennylane_lightning/core/_version.py.
+
+    :param repo_root_path: Path to the repository root.
+    :param version: The new version to use within the file.
+    :return:
+    """
     version_file_path = repo_root_path / VERSION_FILE_PATH
     if not version_file_path.exists():
         raise FileNotFoundError(f"Unable to find version file at location {version_file_path}")
