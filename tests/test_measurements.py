@@ -695,22 +695,35 @@ class TestWiresInVar:
 
 
 @flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [10000, [10000, 11111]])
+@pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
-    "obs", [[0], [0, 1], qml.PauliZ(0), qml.PauliY(1), qml.PauliZ(0) @ qml.PauliY(1)]
+    "obs",
+    [
+        [0],
+        [0, 1],
+        qml.PauliZ(0),
+        qml.PauliY(1),
+        qml.PauliZ(0) @ qml.PauliY(1),
+        qml.PauliZ(1) @ qml.PauliY(2),
+    ],
 )
 @pytest.mark.parametrize("mcmc", [False, True])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
 def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
-    n_qubits = 2
+    n_qubits = 3
 
-    if device_name in ("lightning.gpu", "lightning.kokkos") and (mcmc or kernel_name != "Local"):
+    if (shots is None or device_name in ("lightning.gpu", "lightning.kokkos")) and (
+        mcmc or kernel_name != "Local"
+    ):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
     if measure_f in (qml.expval, qml.var) and isinstance(obs, Sequence):
         pytest.skip("qml.expval, qml.var do not take wire arguments.")
+
+    if measure_f in (qml.counts, qml.sample) and shots is None:
+        pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
     if device_name in ("lightning.gpu", "lightning.kokkos"):
         dev = qml.device(device_name, wires=n_qubits, shots=shots)
@@ -725,6 +738,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
         qml.RX(x, 0)
         qml.RX(y, 0)
         qml.RX(y, 1)
+        qml.RX(x, 2)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
 
     func1 = qml.QNode(func, dev)

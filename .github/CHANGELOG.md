@@ -52,6 +52,9 @@
 
 ### Improvements
 
+* Add `test_templates.py` module where Grover and QSVT are tested.
+  [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
+
 * Create `cuda_utils` for common usage of CUDA related backends.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
@@ -88,6 +91,12 @@
 
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
+
+* Fix the failed observable serialization unit tests.
+  [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
+
+* Update the `LightningQubit` new device API to work with Catalyst.
+  [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
 
 ### Contributors
 

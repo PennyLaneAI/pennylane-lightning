@@ -34,7 +34,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
@@ -261,8 +261,6 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
-        "MidMeasureMP",
-        "Conditional",
     }
 )
 # The set of supported operations.
@@ -289,7 +287,7 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition(op: qml.operation.Operator) -> bool:
+def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     if isinstance(op, qml.QFT):
         return len(op.wires) < 10
@@ -299,12 +297,18 @@ def stopping_condition(op: qml.operation.Operator) -> bool:
     return op.name in _operations
 
 
-def accepted_observables(obs: qml.operation.Operator) -> bool:
+def stopping_condition_shots(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.qubit``
+    with finite shots."""
+    return op.name in _operations or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+
+
+def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
 
 
-def adjoint_observables(obs: qml.operation.Operator) -> bool:
+def adjoint_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
@@ -338,7 +342,7 @@ def _supports_adjoint(circuit):
 
     try:
         prog((circuit,))
-    except (qml.operation.DecompositionUndefinedError, qml.DeviceError, AttributeError):
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
         return False
     return True
 
@@ -358,7 +362,11 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     name = "adjoint + lightning.qubit"
     program.add_transform(no_sampling, name=name)
     program.add_transform(
-        decompose, stopping_condition=adjoint_ops, name=name, skip_initial_state_prep=False
+        decompose,
+        stopping_condition=adjoint_ops,
+        stopping_condition_shots=stopping_condition_shots,
+        name=name,
+        skip_initial_state_prep=False,
     )
     program.add_transform(validate_observables, accepted_observables, name=name)
     program.add_transform(
@@ -410,7 +418,9 @@ class LightningQubit(Device):
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
-    _config = Path(__file__).parent / "lightning_qubit.toml"
+
+    # This `config` is used in Catalyst-Frontend
+    config = Path(__file__).parent / "lightning_qubit.toml"
 
     # TODO: Move supported ops/obs to TOML file
     operations = _operations
@@ -465,7 +475,7 @@ class LightningQubit(Device):
             self._num_burnin = num_burnin
         else:
             self._kernel_name = None
-            self._num_burnin = None
+            self._num_burnin = 0
 
     @property
     def name(self):
@@ -517,7 +527,7 @@ class LightningQubit(Device):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        config = self._setup_execution_config(execution_config)
+        exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
@@ -527,14 +537,15 @@ class LightningQubit(Device):
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
-        if config.gradient_method == "adjoint":
+        if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
-        return program, config
+        return program, exec_config
 
     # pylint: disable=unused-argument
     def execute(
