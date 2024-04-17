@@ -66,14 +66,13 @@ class TestGrover:
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_angleembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
         def circuit(feature_vector):
             qml.AngleEmbedding(features=feature_vector, wires=range(n_qubits), rotation="Z")
-            qml.Hadamard(0)
             return qml.state()
 
         X = np.random.rand(n_qubits)
@@ -87,12 +86,22 @@ class TestAngleEmbedding:
 class TestAmplitudeEmbedding:
     """Test the AmplitudeEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_amplitudeembedding(self, n_qubits):
+    @pytest.mark.parametrize("first_op", [False, True])
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_amplitudeembedding(self, first_op, n_qubits):
+        if not first_op:
+            if device_name == "lightning.qubit":
+                pytest.xfail(f"{device_name} too slow.")
+            pytest.xfail(
+                f"Operation StatePrep cannot be used after other Operations have already been applied on a {device_name} device."
+            )
+
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
         def circuit(f=None):
+            if not first_op:
+                qml.Hadamard(0)
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
             return qml.state()
 
@@ -107,7 +116,7 @@ class TestAmplitudeEmbedding:
 class TestBasisEmbedding:
     """Test the BasisEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_basisembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -124,10 +133,10 @@ class TestBasisEmbedding:
         assert np.allclose(res, ref)
 
 
-class TestDisplacementEmbedding:
-    """Test the DisplacementEmbedding algorithm."""
+class TestDisplacementSqueezingEmbedding:
+    """Test the DisplacementEmbedding and SqueezingEmbedding algorithms."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     @pytest.mark.parametrize("template", [qml.DisplacementEmbedding, qml.SqueezingEmbedding])
     def test_displacementembedding(self, n_qubits, template):
         dev = qml.device(device_name, wires=n_qubits)
@@ -146,7 +155,7 @@ class TestDisplacementEmbedding:
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_iqpembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -166,12 +175,13 @@ class TestIQPEmbedding:
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_qaoaembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
         def circuit(feature_vector, weights):
+            qml.Hadamard(0)
             qml.QAOAEmbedding(features=feature_vector, weights=weights, wires=range(n_qubits))
             return qml.state()
 
@@ -205,7 +215,7 @@ class TestCVNeuralNetLayers:
 class TestRandomLayers:
     """Test the RandomLayers algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_randomlayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
@@ -225,7 +235,7 @@ class TestRandomLayers:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_stronglyentanglinglayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -246,7 +256,7 @@ class TestStronglyEntanglingLayers:
 class TestSimplifiedTwoDesign:
     """Test the SimplifiedTwoDesign algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_simplifiedtwodesign(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -269,7 +279,7 @@ class TestSimplifiedTwoDesign:
 class TestBasicEntanglerLayers:
     """Test the BasicEntanglerLayers algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_basicentanglerlayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -348,7 +358,7 @@ class TestCosineWindow:
 class TestAllSinglesDoubles:
     """Test the AllSinglesDoubles algorithm."""
 
-    def test_AllSinglesDoubles(self):
+    def test_allsinglesdoubles(self):
         n_qubits = 4
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -375,7 +385,7 @@ class TestAllSinglesDoubles:
 class TestBasisRotation:
     """Test the BasisRotation algorithm."""
 
-    def test_BasisRotation(self):
+    def test_basisrotation(self):
         n_qubits = 3
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -405,7 +415,7 @@ class TestBasisRotation:
 class TestGateFabric:
     """Test the GateFabric algorithm."""
 
-    def test_GateFabric(self):
+    def test_gatefabric(self):
 
         # Build the electronic Hamiltonian
         symbols = ["H", "H"]
@@ -435,7 +445,7 @@ class TestGateFabric:
 class TestUCCSD:
     """Test the UCCSD algorithm."""
 
-    def test_UCCSD(self):
+    def test_uccsd(self):
 
         # Define the molecule
         symbols = ["H", "H", "H"]
@@ -479,7 +489,7 @@ class TestUCCSD:
 class TestkUpCCGSD:
     """Test the kUpCCGSD algorithm."""
 
-    def test_kUpCCGSD(self):
+    def test_kupccgsd(self):
 
         # Define the molecule
         symbols = ["H", "H", "H"]
@@ -522,7 +532,7 @@ class TestkUpCCGSD:
 class TestParticleConservingU1:
     """Test the ParticleConservingU1 algorithm."""
 
-    def test_ParticleConservingU1(self):
+    def test_particleconservingu1(self):
 
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
@@ -556,7 +566,7 @@ class TestParticleConservingU1:
 class TestParticleConservingU2:
     """Test the ParticleConservingU2 algorithm."""
 
-    def test_ParticleConservingU2(self):
+    def test_particleconservingu2(self):
 
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
@@ -590,8 +600,8 @@ class TestParticleConservingU2:
 class TestApproxTimeEvolution:
     """Test the ApproxTimeEvolution algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_ApproxTimeEvolution(self, n_qubits):
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_approxtimeevolution(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -612,8 +622,8 @@ class TestApproxTimeEvolution:
 class TestQDrift:
     """Test the QDrift algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_QDrift(self, n_qubits):
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_qdrift(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
 
@@ -634,8 +644,8 @@ class TestQDrift:
 class TestTrotterProduct:
     """Test the TrotterProduct algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_TrotterProduct(self, n_qubits):
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_trotterproduct(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -656,8 +666,8 @@ class TestTrotterProduct:
 class TestQuantumPhaseEstimation:
     """Test the QuantumPhaseEstimation algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
-    def test_QuantumPhaseEstimation(self, n_qubits):
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
+    def test_quantumphaseestimation(self, n_qubits):
 
         phase = 5
         target_wires = [0]
@@ -690,7 +700,7 @@ class TestQFT:
     """Test the QFT algorithm."""
 
     @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
-    def test_QFT(self, n_qubits):
+    def test_qft(self, n_qubits):
 
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -711,8 +721,8 @@ class TestQFT:
 class TestAQFT:
     """Test the AQFT algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
-    def test_AQFT(self, n_qubits):
+    @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
+    def test_aqft(self, n_qubits):
 
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -733,7 +743,7 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_qsvt(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
