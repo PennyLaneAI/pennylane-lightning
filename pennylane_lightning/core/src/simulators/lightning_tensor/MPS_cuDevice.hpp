@@ -46,6 +46,14 @@ std::string size_t_to_binary_string(const size_t &numQubits, size_t val) {
     }
     return str;
 }
+
+// Get scratch memory size
+std::size_t getScratchMemorySize() {
+    std::size_t freeBytes{0}, totalBytes{0};
+    PL_CUDA_IS_SUCCESS(cudaMemGetInfo(&freeBytes, &totalBytes));
+    std::size_t scratchSize = (freeBytes - (totalBytes % 4096)) / 2;
+    return scratchSize;
+}
 } // namespace
 
 namespace Pennylane::LightningTensor {
@@ -75,6 +83,12 @@ template <class PrecisionT> class MPS_cuDevice {
     GateTensorCache<PrecisionT> gate_cache_;
 
   public:
+    // TODO add SVD options by the cutensornetStateConfigure() API
+    //  cutensornetStateAttributes_t,
+    //  CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF,
+    //  CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF,
+    //  CUTENSORNET_STATE_CONFIG_MPS_SVD_S_NORMALIZATION
+    //  CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO
     MPS_cuDevice(size_t &numQubits, size_t &maxExtent,
                  std::vector<size_t> &qubitDims,
                  Pennylane::LightningGPU::DevTag<int> &dev_tag)
@@ -94,7 +108,7 @@ template <class PrecisionT> class MPS_cuDevice {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
             /* const cutensornetHandle_t */ handle_,
             /* cutensornetStatePurity_t */ purity_,
-            /* int32_t numStateModes */ numQubits_,
+            /* int32_t numStateModes */ static_cast<int32_t>(numQubits_),
             /* const int64_t *stateModeExtents */
             reinterpret_cast<int64_t *>(qubitDims_.data()),
             /* cudaDataType_t */ typeData_,
@@ -189,9 +203,6 @@ template <class PrecisionT> class MPS_cuDevice {
     };
 
     auto getStateVector() -> std::vector<std::complex<PrecisionT>> {
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetCreateWorkspaceDescriptor(handle_, &workDesc));
         // 1D representation of mpsTensor
         std::vector<size_t> modes(1, 1);
         std::vector<size_t> extent(1, (1 << numQubits_));
@@ -201,16 +212,11 @@ template <class PrecisionT> class MPS_cuDevice {
         std::vector<void *> d_mpsTensorsPtr(
             1, static_cast<void *>(d_mpsTensor.getDataBuffer().getData()));
 
-        std::size_t freeBytes{0}, totalBytes{0};
-        PL_CUDA_IS_SUCCESS(cudaMemGetInfo(&freeBytes, &totalBytes));
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateWorkspaceDescriptor(handle_, &workDesc));
 
-        // Both 4096 and 1024 are magic numbers here
-        const std::size_t scratchSize =
-            (freeBytes - (totalBytes % 4096)) / 1024;
-
-        const std::size_t d_scratch_length = scratchSize / sizeof(size_t);
-
-        DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
+        const std::size_t scratchSize = getScratchMemorySize();
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
             /* const cutensornetHandle_t */ handle_,
@@ -219,26 +225,16 @@ template <class PrecisionT> class MPS_cuDevice {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
-        int64_t worksize{0};
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ handle_,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetWorksizePref_t */
-            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /*  int64_t * */ &worksize));
+        int64_t worksize = this->getWorkSpaceMemorySize(workDesc);
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");
 
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ handle_,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* void *const */ reinterpret_cast<void *>(d_scratch.getData()),
-            /* int64_t */ worksize));
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
+
+        this->setWorkSpaceMemory(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
 
         std::vector<int64_t *> extentsPtr;
         std::vector<int64_t> extent_int64(1, (1 << numQubits_));
@@ -270,7 +266,40 @@ template <class PrecisionT> class MPS_cuDevice {
                    adjoint);
     }
 
+    ComplexT expval(const std::string &opName, const std::vector<size_t> &wires,
+                    const std::vector<PrecisionT> &params = {0.0}) {
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+        return expval_(gate_cache_.get_gate_device_ptr(opName, par[0]), wires);
+    }
+
   private:
+    size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
+        int64_t worksize{0};
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetWorksizePref_t */
+            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /*  int64_t * */ &worksize));
+
+        return worksize;
+    }
+
+    void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
+                            void *scratchPtr, int64_t &worksize) {
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /* void *const */ scratchPtr,
+            /* int64_t */ worksize));
+    }
+
     void applyGate_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires,
                     bool adjoint) {
         int64_t id;
@@ -289,6 +318,138 @@ template <class PrecisionT> class MPS_cuDevice {
             /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
+    }
+
+    ComplexT expval_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires) {
+
+        // Compute the specified quantum circuit expectation value
+        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
+
+        // Create an empty tensor network operator
+        cutensornetNetworkOperator_t hamiltonian;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /* const cutensornetHandle_t */ handle_,
+            /* int32_t */ static_cast<int32_t>(numQubits_),
+            /* const int64_t stateModeExtents */
+            reinterpret_cast<int64_t *>(qubitDims_.data()),
+            /* cudaDataType_t */ typeData_,
+            /*  cutensornetNetworkOperator_t */ &hamiltonian));
+
+        int64_t id;
+
+        std::vector<int32_t> wires_int(wires.size());
+        std::transform(wires.begin(), wires.end(), wires_int.begin(),
+                       [](size_t x) { return static_cast<int32_t>(x); });
+
+        std::vector<int32_t> numStateModes(1, wires.size());
+        std::vector<const int32_t *> stateModes;
+        stateModes.emplace_back(wires_int.data());
+        std::vector<const void *> tensorData;
+        tensorData.emplace_back(static_cast<const void *>(gateTensorPtr));
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetNetworkOperator_t */ hamiltonian,
+            /* cuDoubleComplex coefficient*/ cuDoubleComplex{1, 0.0},
+            /* int32_t numTensors */ 1,
+            /* const int32_t numStateModes[] */ numStateModes.data(),
+            /* const int32_t *stateModes[] */ stateModes.data(),
+            /* const int64_t *tensorModeStrides[] */ nullptr,
+            /* const void *tensorData[] */ tensorData.data(),
+            /* int64_t* */ &id));
+
+        cutensornetStateExpectation_t expectation;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetState_t */ quantumState_,
+            /* cutensornetNetworkOperator_t */ hamiltonian,
+            /* cutensornetStateExpectation_t * */ &expectation));
+
+        // Configure the computation of the specified quantum circuit
+        // expectation value
+        const int32_t numHyperSamples =
+            8; // desired number of hyper samples used in the tensor network
+               // contraction path finder
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
+            /* const void * */ &numHyperSamples,
+            /* size_t */ sizeof(numHyperSamples)));
+
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
+
+        const std::size_t scratchSize = getScratchMemorySize();
+
+        // Prepare the specified quantum circuit expectation value for
+        // computation
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetStateExpectation_t */ expectation,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cudaStream_t [unused] */ 0x0));
+
+        PrecisionT flops = 0.0;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationGetInfo(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_INFO_FLOPS,
+            /* void * */ &flops,
+            /* size_t attributeSize */ sizeof(flops)));
+
+        PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
+
+        int64_t worksize{0};
+        // Attach the workspace buffer
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetWorksizePref_t */
+            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+            /* cutensornetMemspace_t */ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t*/ CUTENSORNET_WORKSPACE_SCRATCH,
+            /* int64_t* */ &worksize));
+
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device.\n");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetMemspace_t */ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t*/ CUTENSORNET_WORKSPACE_SCRATCH,
+            /* void *const memoryPtr */
+            reinterpret_cast<void *>(d_scratch.getData()),
+            /* int64_t */ worksize));
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* void* */ static_cast<void *>(&expectVal),
+            /* void* */ static_cast<void *>(&stateNorm2),
+            /*  cudaStream_t unused */ 0x0));
+
+        expectVal /= stateNorm2;
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyNetworkOperator(hamiltonian));
+
+        return expectVal;
     }
 
     /*
