@@ -289,6 +289,9 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+    # These thresholds are adapted from `lightning_base.py`
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
     if isinstance(op, qml.QFT):
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):
