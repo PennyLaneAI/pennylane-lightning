@@ -17,9 +17,12 @@ int main() {
     size_t index = 7;
     mps.setBasisState(index);
 
-    std::string opName = "PauliX";
-    std::vector<size_t> wires = {2};
-    mps.applyOperation(opName, wires);
+    std::string opName = "Identity";
+    std::vector<size_t> wires = {0};
+    // mps.applyOperation(opName, wires);
+    auto expval = mps.expval(opName, wires);
+
+    std::cout << expval.real() << " " << expval.imag() << std::endl;
 
     auto finalState = mps.getStateVector();
 
