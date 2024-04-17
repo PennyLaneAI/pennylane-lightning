@@ -22,7 +22,7 @@ except ImportError:
     raise ImportError("Unable to import semver. Install semver by running `pip install semver`")
 
 DEV_PRERELEASE_TAG_PREFIX = "dev"
-DEFAULT_PRERELEASE_TAG = "dev1"
+DEV_PRERELEASE_TAG_START = "dev1"
 VERSION_FILE_PATH = Path("pennylane_lightning/core/_version.py")
 
 rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
@@ -84,9 +84,9 @@ if __name__ == "__main__":
         # If master branch does not have a prerelease (for any reason) OR does not have an ending number
         # Then default to the starting tag
         if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
-            next_prerelease_version = DEFAULT_PRERELEASE_TAG
+            next_prerelease_version = DEV_PRERELEASE_TAG_START
         else:
-            # Generate the next prerelease version (eg: dev1 -> dev2)
+            # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
             next_prerelease_version = master_version.next_version("prerelease").prerelease
         new_version = master_version.replace(prerelease=next_prerelease_version)
         if pr_version != new_version:
