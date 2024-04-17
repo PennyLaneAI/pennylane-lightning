@@ -1,5 +1,5 @@
 #include "DevTag.hpp"
-#include "MPS_cuDevice.hpp"
+#include "cuMPS.hpp"
 #include <complex>
 #include <iostream>
 #include <vector>
@@ -14,15 +14,16 @@ int main() {
 
     MPS_cuDevice<double> mps(numQubits, maxExtent, qubitDims, dev_tag);
 
-    size_t index = 7;
+    size_t index = 1;
     mps.setBasisState(index);
 
-    std::string opName = "Identity";
-    std::vector<size_t> wires = {0};
-    // mps.applyOperation(opName, wires);
-    auto expval = mps.expval(opName, wires);
+    std::string opName = "CNOT";
+    std::vector<size_t> wires = {0, 1};
 
-    std::cout << expval.real() << " " << expval.imag() << std::endl;
+    mps.applyGeneralOperation(opName, wires);
+    // auto expval = mps.expval(opName, wires);
+
+    // std::cout << expval.real() << " " << expval.imag() << std::endl;
 
     auto finalState = mps.getStateVector();
 

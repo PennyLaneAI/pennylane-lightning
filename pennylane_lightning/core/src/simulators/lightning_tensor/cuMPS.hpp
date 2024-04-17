@@ -21,6 +21,7 @@
 #include <complex>
 #include <string>
 #include <type_traits>
+#include <unordered_set>
 #include <vector>
 
 #include <cuda.h>
@@ -261,9 +262,49 @@ template <class PrecisionT> class MPS_cuDevice {
     void applyOperation(const std::string &opName,
                         const std::vector<size_t> &wires, bool adjoint = false,
                         const std::vector<PrecisionT> &params = {0.0}) {
+        PL_ABORT_IF(wires.size() > 2,
+                    "Current version only supports 1/2 qubit gates.");
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
         applyGate_(gate_cache_.get_gate_device_ptr(opName, par[0]), wires,
                    adjoint);
+    }
+
+    /**
+     * @brief Return the mapping of named gates to amount of control wires they
+     * have.
+     *
+     * @return const std::unordered_map<std::string, std::size_t>&
+     */
+    auto getCtrlMap() -> const std::unordered_map<std::string, std::size_t> & {
+        return ctrl_map_;
+    }
+
+    void applyGeneralOperation(const std::string &opName,
+                               const std::vector<size_t> &wires,
+                               bool adjoint = false,
+                               const std::vector<PrecisionT> &params = {0.0}) {
+        PL_ABORT_IF(wires.size() > 2,
+                    "Current version only supports 1/2 qubit gates.");
+
+        const auto ctrl_offset =
+            (this->getCtrlMap().find(opName) != this->getCtrlMap().end())
+                ? this->getCtrlMap().at(opName)
+                : 0;
+        const std::vector<std::size_t> ctrls{wires.begin(),
+                                             wires.begin() + ctrl_offset};
+        const std::vector<std::size_t> tgts{wires.begin() + ctrl_offset,
+                                            wires.end()};
+
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+
+        if (ctrls.size() > 0) {
+            applyControlledGate_(
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,
+                adjoint);
+        } else {
+            applyGate_(gate_cache_.get_gate_device_ptr(opName, par[0]), wires,
+                       adjoint);
+        }
     }
 
     ComplexT expval(const std::string &opName, const std::vector<size_t> &wires,
@@ -318,6 +359,37 @@ template <class PrecisionT> class MPS_cuDevice {
             /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
+    }
+
+    void applyControlledGate_(CFP_t *gateTensorPtr,
+                              const std::vector<size_t> &ctrls,
+                              const std::vector<size_t> &tgts, bool adjoint) {
+
+        int64_t id;
+
+        std::vector<int32_t> stateControlModes(ctrls.size());
+        std::vector<int32_t> stateTargetModes(ctrls.size());
+
+        std::transform(ctrls.begin(), ctrls.end(), stateControlModes.begin(),
+                       [](size_t x) { return static_cast<int32_t>(x); });
+
+        std::transform(tgts.begin(), tgts.end(), stateTargetModes.begin(),
+                       [](size_t x) { return static_cast<int32_t>(x); });
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
+            /* const cutensornetHandle_t */ handle_,
+            /* cutensornetState_t */ quantumState_,
+            /* int32_t numControlModes*/ static_cast<int32_t>(ctrls.size()),
+            /* const int32_t *stateControlModes*/ stateControlModes.data(),
+            /* const int64_t *stateControlValues*/ nullptr,
+            /* int32_t numTargetModes*/ static_cast<int32_t>(tgts.size()),
+            /* const int32_t *stateTargetModes*/ stateTargetModes.data(),
+            /* void *tensorData */ static_cast<void *>(gateTensorPtr),
+            /* const int64_t *tensorModeStrides */ nullptr,
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ adjoint,
+            /* const int32_t unitary*/ 1,
+            /* int64_t *tensorId*/ &id));
     }
 
     ComplexT expval_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires) {
@@ -437,27 +509,34 @@ template <class PrecisionT> class MPS_cuDevice {
         return expectVal;
     }
 
-    /*
-    void applyControlledGate_(cuDeviceTensor<PrecisionT>& gateTensor,
-    std::vector<size_t> & wires, bool adjoint){
-
-        int64_t id;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
-            /-* const cutensornetHandle_t *-/ handle_,
-            /-* cutensornetState_t *-/ quantumState_,
-            /-* int32_t numControlModes*-/ ,
-            /-* const int32_t *stateControlModes*-/ ,
-            /-* const int64_t *stateControlValues*-/ ,
-            /-* int32_t numTargetModes*-/ ,
-            /-* const int32_t *stateTargetModes*-/ ,
-            /-* void *tensorData *-/,
-            /-* const int64_t *tensorModeStrides *-/ ,
-            /-* const int32_t immutable *-/ ,
-            /-* const int32_t adjoint *-/ ,
-            /-* const int32_t unitary*-/ ,
-            /-* int64_t *tensorId*-/ &id));
-
-    }
-    */
+  private:
+    const std::unordered_set<std::string> const_gates_{
+        "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "T",      "S",
+        "CNOT",     "SWAP",   "CY",     "CZ",     "CSWAP",    "Toffoli"};
+    const std::unordered_map<std::string, std::size_t> ctrl_map_{
+        // Add mapping from function name to required wires.
+        {"Identity", 0},
+        {"PauliX", 0},
+        {"PauliY", 0},
+        {"PauliZ", 0},
+        {"Hadamard", 0},
+        {"T", 0},
+        {"S", 0},
+        {"RX", 0},
+        {"RY", 0},
+        {"RZ", 0},
+        {"Rot", 0},
+        {"PhaseShift", 0},
+        {"ControlledPhaseShift", 1},
+        {"CNOT", 1},
+        {"SWAP", 0},
+        {"CY", 1},
+        {"CZ", 1},
+        {"CRX", 1},
+        {"CRY", 1},
+        {"CRZ", 1},
+        {"CRot", 1},
+        {"CSWAP", 1},
+        {"Toffoli", 2}};
 };
 } // namespace Pennylane::LightningTensor

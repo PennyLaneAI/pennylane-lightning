@@ -270,6 +270,7 @@ template <class PrecisionT> class GateTensorCache {
     CFP_t *get_gate_device_ptr(const std::string &gate_name,
                                PrecisionT gate_param) {
         return device_gates_.at(std::make_pair(gate_name, gate_param))
+            .getDataBuffer()
             .getData();
     }
 
