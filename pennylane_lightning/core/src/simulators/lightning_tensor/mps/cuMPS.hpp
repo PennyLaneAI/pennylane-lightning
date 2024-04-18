@@ -403,6 +403,10 @@ template <class PrecisionT> class cuMPS {
         // Compute the specified quantum circuit expectation value
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
 
+        // TODO add create-tensor-network-operator to observable_cuMPS classes.
+        // TODO cutensornetNetworkOperator_t tnOps as private data of observable_cuMPS classes.
+        // TODO tnOps can be created with obs->create-tensor-network-operator() method in the Measurement_cuMPS class.
+        // TODO move this method to the Measurement_cuMPS class
         // Create an empty tensor network operator
         cutensornetNetworkOperator_t hamiltonian;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
