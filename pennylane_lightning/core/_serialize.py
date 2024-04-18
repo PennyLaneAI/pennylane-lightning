@@ -255,6 +255,9 @@ class QuantumScriptSerializer:
 
     def _pauli_sentence(self, observable, wires_map: dict = None):
         """Serialize a :class:`pennylane.pauli.PauliSentence` into a Hamiltonian."""
+        # Trivial Pauli sentences' items is empty, cannot unpack
+        if not observable:
+            return self.hamiltonian_obs(np.array([0.0]).astype(self.rtype), [self._ob(Identity(0))])
         pwords, coeffs = zip(*observable.items())
         terms = [self._pauli_word(pw, wires_map) for pw in pwords]
         coeffs = np.array(coeffs).astype(self.rtype)

@@ -560,10 +560,13 @@ jobs:
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "test_native_mcm" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          # TODO: Remove this if-cond with release v0.36.0
+          if [ -f tests/test_native_mcm.py ]; then
+              OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "test_native_mcm" $COVERAGE_FLAGS --cov-append
+          fi
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -622,9 +625,10 @@ jobs:
           python -m coverage xml -i -o coverage-${{ github.job }}.xml
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
   upload-to-codecov-linux-cpp:
@@ -641,9 +645,10 @@ jobs:
           name: ubuntu-codecov-results-cpp
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
   cpptestsWithMultipleBackends:
