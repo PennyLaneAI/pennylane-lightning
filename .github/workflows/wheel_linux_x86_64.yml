@@ -9,12 +9,6 @@ env:
   GCC_VERSION: 11
 
 on:
-  pull_request:
-  push:
-    branches:
-      - master
-  release:
-    types: [published]
 
 concurrency:
   group: wheel_linux_x86_64-${{ github.ref }}

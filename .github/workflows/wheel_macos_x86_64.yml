@@ -6,12 +6,6 @@ name: Wheel::MacOS::Intel
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
-  push:
-    branches:
-      - master
-  release:
-    types: [published]
 
 env:
   MACOSX_DEPLOYMENT_TARGET: 10.15
