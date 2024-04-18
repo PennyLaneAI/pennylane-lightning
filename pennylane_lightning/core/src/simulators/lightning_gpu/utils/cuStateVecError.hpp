@@ -56,56 +56,40 @@ using namespace Pennylane::Util;
 namespace Pennylane::LightningGPU::Util {
 static const std::string
 GetCuStateVecErrorString(const custatevecStatus_t &err) {
-    std::string result;
+    using namespace std::string_literals;
+
     switch (err) {
     case CUSTATEVEC_STATUS_SUCCESS:
-        result = "No errors";
-        break;
+        return "No errors"s;
     case CUSTATEVEC_STATUS_NOT_INITIALIZED:
-        result = "custatevec not initialized";
-        break;
+        return "custatevec not initialized"s;
     case CUSTATEVEC_STATUS_ALLOC_FAILED:
-        result = "custatevec memory allocation failed";
-        break;
+        return "custatevec memory allocation failed"s;
     case CUSTATEVEC_STATUS_INVALID_VALUE:
-        result = "custatevec invalid value";
-        break;
+        return "custatevec invalid value"s;
     case CUSTATEVEC_STATUS_ARCH_MISMATCH:
-        result = "custatevec CUDA device architecture mismatch";
-        break;
+        return "custatevec CUDA device architecture mismatch"s;
     case CUSTATEVEC_STATUS_EXECUTION_FAILED:
-        result = "custatevec execution failed";
-        break;
+        return "custatevec execution failed"s;
     case CUSTATEVEC_STATUS_INTERNAL_ERROR:
-        result = "custatevec internal error";
-        break;
+        return "custatevec internal error"s;
     case CUSTATEVEC_STATUS_NOT_SUPPORTED:
-        result = "custatevec unsupported operation/device";
-        break;
+        return "custatevec unsupported operation/device"s;
     case CUSTATEVEC_STATUS_INSUFFICIENT_WORKSPACE:
-        result =
-            "custatevec insufficient memory for gate-application workspace";
-        break;
+        return "custatevec insufficient memory for gate-application workspace"s;
     case CUSTATEVEC_STATUS_SAMPLER_NOT_PREPROCESSED:
-        result = "custatevec sampler not preprocessed";
-        break;
+        return "custatevec sampler not preprocessed"s;
     case CUSTATEVEC_STATUS_NO_DEVICE_ALLOCATOR:
-        result = "custatevec no device allocator";
-        break;
+        return "custatevec no device allocator"s;
     case CUSTATEVEC_STATUS_DEVICE_ALLOCATOR_ERROR:
-        result = "custatevec device allocator error";
-        break;
+        return "custatevec device allocator error"s;
     case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
-        result = "custatevec communicator failure";
-        break;
+        return "custatevec communicator failure"s;
     case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
-        result = "custatevec dynamic library load failure";
-        break;
+        return "custatevec dynamic library load failure"s;
     default:
-        result =
-            "custatevec status not found. Error code=" + std::to_string(err);
-    }
-    return result;
+        return "custatevec status not found. Error code="s +
+               std::to_string(err);
 }
 } // namespace Pennylane::LightningGPU::Util
   // LCOV_EXCL_STOP
