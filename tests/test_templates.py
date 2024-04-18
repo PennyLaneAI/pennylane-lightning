@@ -62,6 +62,23 @@ class TestGrover:
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
 
+    @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required.")
+    @pytest.mark.parametrize("wires", [5, 10, 13, 15])
+    def test_preprocess_grover_operator_decomposition(self, wires):
+        """Test that qml.GroverOperator is not decomposed for less than 10 wires."""
+        tape = qml.tape.QuantumScript(
+            [qml.GroverOperator(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
+        )
+        dev = LightningDevice(wires=wires)
+
+        program, _ = dev.preprocess()
+        [new_tape], _ = program([tape])
+
+        if wires >= 13:
+            assert all(not isinstance(op, qml.GroverOperator) for op in new_tape.operations)
+        else:
+            assert tape.operations == [qml.GroverOperator(wires=list(range(wires)))]
+
 
 class TestAngleEmbedding:
     """Test the AngleEmbedding algorithm."""
@@ -416,7 +433,6 @@ class TestGateFabric:
     """Test the GateFabric algorithm."""
 
     def test_gatefabric(self):
-
         # Build the electronic Hamiltonian
         symbols = ["H", "H"]
         coordinates = np.array([0.0, 0.0, -0.6614, 0.0, 0.0, 0.6614])
@@ -446,7 +462,6 @@ class TestUCCSD:
     """Test the UCCSD algorithm."""
 
     def test_uccsd(self):
-
         # Define the molecule
         symbols = ["H", "H", "H"]
         geometry = np.array(
@@ -490,7 +505,6 @@ class TestkUpCCGSD:
     """Test the kUpCCGSD algorithm."""
 
     def test_kupccgsd(self):
-
         # Define the molecule
         symbols = ["H", "H", "H"]
         geometry = np.array(
@@ -533,7 +547,6 @@ class TestParticleConservingU1:
     """Test the ParticleConservingU1 algorithm."""
 
     def test_particleconservingu1(self):
-
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
         _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
@@ -567,7 +580,6 @@ class TestParticleConservingU2:
     """Test the ParticleConservingU2 algorithm."""
 
     def test_particleconservingu2(self):
-
         # Build the electronic Hamiltonian
         symbols, coordinates = (["H", "H"], np.array([0.0, 0.0, -0.66140414, 0.0, 0.0, 0.66140414]))
         _, n_qubits = qml.qchem.molecular_hamiltonian(symbols, coordinates)
@@ -668,7 +680,6 @@ class TestQuantumPhaseEstimation:
 
     @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_quantumphaseestimation(self, n_qubits):
-
         phase = 5
         target_wires = [0]
         unitary = qml.RX(phase, wires=0).matrix()
@@ -701,7 +712,6 @@ class TestQFT:
 
     @pytest.mark.parametrize("n_qubits", range(2, 14, 2))
     def test_qft(self, n_qubits):
-
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -717,13 +727,29 @@ class TestQFT:
 
         assert np.allclose(res, ref)
 
+    @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required")
+    @pytest.mark.parametrize("wires", [5, 9, 10, 13])
+    def test_preprocess_qft_decomposition(self, wires):
+        """Test that qml.QFT is not decomposed for less than 10 wires."""
+        tape = qml.tape.QuantumScript(
+            [qml.QFT(wires=list(range(wires)))], [qml.expval(qml.PauliZ(0))]
+        )
+        dev = LightningDevice(wires=wires)
+
+        program, _ = dev.preprocess()
+        [new_tape], _ = program([tape])
+
+        if wires >= 10:
+            assert all(not isinstance(op, qml.QFT) for op in new_tape.operations)
+        else:
+            assert tape.operations == [qml.QFT(wires=list(range(wires)))]
+
 
 class TestAQFT:
     """Test the AQFT algorithm."""
 
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     def test_aqft(self, n_qubits):
-
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
