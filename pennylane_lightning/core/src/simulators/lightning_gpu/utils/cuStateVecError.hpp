@@ -21,8 +21,8 @@
  */
 
 #pragma once
-#include <string_view>
 #include <string>
+#include <string_view>
 
 #include <custatevec.h>
 
@@ -90,6 +90,6 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
     default:
         return "custatevec status not found. Error code="s +
                std::to_string(err);
-}
+    }
 } // namespace Pennylane::LightningGPU::Util
   // LCOV_EXCL_STOP
