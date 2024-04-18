@@ -91,5 +91,6 @@ GetCuStateVecErrorString(const custatevecStatus_t &err) {
         return "custatevec status not found. Error code="s +
                std::to_string(err);
     }
+}
 } // namespace Pennylane::LightningGPU::Util
-  // LCOV_EXCL_STOP
+// LCOV_EXCL_STOP
