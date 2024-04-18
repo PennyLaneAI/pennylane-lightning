@@ -52,6 +52,9 @@
 
 ### Improvements
 
+* Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
+  [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
+
 * Add `test_templates.py` module where Grover and QSVT are tested.
   [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
 
