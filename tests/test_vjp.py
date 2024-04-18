@@ -23,8 +23,7 @@ from conftest import device_name
 from pennylane import numpy as np
 
 if ld._CPP_BINARY_AVAILABLE:
-    if ld._new_API:
-        from pennylane_lightning.lightning_qubit_ops import LightningException
+    from pennylane_lightning.lightning_qubit_ops import LightningException
 
 else:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

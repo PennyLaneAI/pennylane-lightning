@@ -71,6 +71,12 @@ class LightningBase(QubitDevice):
         shots=None,
         batch_obs=False,
     ):
+        if not self._CPP_BINARY_AVAILABLE:
+            raise ImportError(
+                "Pre-compiled binaries for lightning.qubit are not available. "
+                "To manually compile from source, follow the instructions at "
+                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+            )
         if c_dtype is np.complex64:
             r_dtype = np.float32
             self.use_csingle = True
@@ -446,31 +452,3 @@ class LightningBase(QubitDevice):
             return vjps
 
         return processing_fns
-
-
-class LightningBaseFallBack(DefaultQubitLegacy):  # pragma: no cover
-    # pylint: disable=missing-class-docstring, too-few-public-methods
-    pennylane_requires = ">=0.34"
-    version = __version__
-    author = "Xanadu Inc."
-    _CPP_BINARY_AVAILABLE = False
-    _new_API = False
-
-    def __init__(self, wires, *, c_dtype=np.complex128, **kwargs):
-        if c_dtype is np.complex64:
-            r_dtype = np.float32
-        elif c_dtype is np.complex128:
-            r_dtype = np.float64
-        else:
-            raise TypeError(f"Unsupported complex type: {c_dtype}")
-        super().__init__(wires, r_dtype=r_dtype, c_dtype=c_dtype, **kwargs)
-
-    @property
-    def state_vector(self):
-        """Returns a handle to the statevector."""
-        return self._state
-
-    @property
-    def dtype(self):
-        """State vector complex data type."""
-        return self.C_DTYPE

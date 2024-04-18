@@ -23,7 +23,6 @@ if LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("Binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.skipif(LightningDevice._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_no_binaries():
     """Test no binaries were found for the device"""
 

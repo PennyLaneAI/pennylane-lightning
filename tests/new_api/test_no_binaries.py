@@ -17,14 +17,10 @@ Unit tests for checking binaries.
 import pytest
 from conftest import LightningDevice
 
-if not LightningDevice._new_API:
-    pytest.skip("Tests are for new API. Skipping", allow_module_level=True)
-
 if LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("Binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.skipif(LightningDevice._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_no_binaries():
     """Test no binaries were found for the device"""
 

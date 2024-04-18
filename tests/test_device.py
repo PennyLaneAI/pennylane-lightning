@@ -42,7 +42,7 @@ def test_create_device_with_unsupported_dtype():
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.kokkos" or not ld._CPP_BINARY_AVAILABLE,
+    device_name != "lightning.kokkos",
     reason="Only lightning.kokkos has a kwarg kokkos_args.",
 )
 def test_create_device_with_unsupported_kokkos_args():
@@ -51,7 +51,7 @@ def test_create_device_with_unsupported_kokkos_args():
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    device_name != "lightning.gpu",
     reason="Only lightning.gpu has a kwarg mpi_buf_size.",
 )
 def test_create_device_with_unsupported_mpi_buf_size():
