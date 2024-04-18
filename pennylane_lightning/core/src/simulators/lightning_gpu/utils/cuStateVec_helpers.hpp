@@ -48,7 +48,7 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
     std::vector<custatevecPauli_t> output;
     output.reserve(pauli_word.size());
 
-    for (const auto ch : pauli_word) {
+    for (const auto &ch : pauli_word) {
         auto out = pauli_map.at(std::string(num_char, ch));
         output.push_back(out);
     }
