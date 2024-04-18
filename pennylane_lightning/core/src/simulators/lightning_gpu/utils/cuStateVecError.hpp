@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2022-2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,10 @@
 
 // Adapted from JET: https://github.com/XanaduAI/jet.git
 // and from Lightning: https://github.com/PennylaneAI/pennylane-lightning.git
+
 /**
  * @file cuStateVecError.hpp
+ * Defines macros that throws Exception from cuStateVec failure error codes.
  */
 
 #pragma once
@@ -25,10 +27,13 @@
 
 #include "Error.hpp"
 #include "Util.hpp"
+
 // LCOV_EXCL_START
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 }
+/// @endcond
 
 #ifndef CUDA_UNSAFE
 
