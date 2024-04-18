@@ -182,7 +182,7 @@ jobs:
     strategy:
       matrix:
         arch: [AMD64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
 
     if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
