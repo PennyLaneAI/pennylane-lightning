@@ -22,7 +22,6 @@ from typing import List
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, QubitDevice, StatePrep
-from pennylane.devices import DefaultQubitLegacy
 from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation, Tensor
 from pennylane.ops import Prod, Projector, SProd, Sum
