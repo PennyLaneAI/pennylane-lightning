@@ -182,9 +182,6 @@ def simulate_and_vjp(
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
-        "QubitStateVector",
-        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -292,13 +289,20 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+    # These thresholds are adapted from `lightning_base.py`
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
     return op.name in _operations
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return op.name in _operations or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -536,6 +540,7 @@ class LightningQubit(Device):
             decompose,
             stopping_condition=stopping_condition,
             stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
             name=self.name,
         )
         program.add_transform(qml.transforms.broadcast_expand)
