@@ -37,20 +37,21 @@ jobs:
 
       - name: Capture Current Version in Pull Request
         id: old_version
-        run: echo "version=$(grep -o '"[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | sed 's/"//g')" >> $GITHUB_OUTPUT
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Run version update script
         run: |
           python3 \
-           pr/.github/workflows/dev_version_script.py \
+           main/.github/workflows/dev_version_script.py \
            --pr-path "${{ github.workspace }}/pr" \
            --master-path "${{ github.workspace }}/main"
 
       - name: Capture Changed version
         id: new_version
-        run: echo "version=$(grep -o '"[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | sed 's/"//g')" >> $GITHUB_OUTPUT
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
+        if: steps.old_version.outputs.version != steps.new_version.outputs.version
         env:
           OLD_VERSION: ${{ steps.old_version.outputs.version }}
           NEW_VERSION: ${{ steps.new_version.outputs.version }}
