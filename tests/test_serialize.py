@@ -148,7 +148,7 @@ class TestSerializeObs:
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
 
         s_expected = [
-            tensor_prod_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])]),
+            tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
             named_obs("Hadamard", [1]),
         ]
 
@@ -157,7 +157,6 @@ class TestSerializeObs:
         )
         assert s == s_expected
 
-    @pytest.mark.xfail(reason="Prod with overlapping wires not supported")
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_prod_return_with_overlapping_wires(self, use_csingle, wires_map):
