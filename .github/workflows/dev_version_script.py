@@ -17,18 +17,18 @@ import argparse
 from pathlib import Path
 
 try:
-    import semver
+    from semver import Version
 except ImportError as exc:
     raise ImportError("Unable to import semver. Install semver by running `pip install semver`") from exc
 
 DEV_PRERELEASE_TAG_PREFIX = "dev"
-DEV_PRERELEASE_TAG_START = "dev1"
+DEV_PRERELEASE_TAG_START = "dev0"
 VERSION_FILE_PATH = Path("pennylane_lightning/core/_version.py")
 
 rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
 
 
-def extract_version(repo_root_path: Path) -> semver.Version:
+def extract_version(repo_root_path: Path) -> Version:
     """
     Given the repository root for pennylane-lightning, this function extracts the semver version from
     pennylane_lightning/core/_version.py.
@@ -47,14 +47,14 @@ def extract_version(repo_root_path: Path) -> semver.Version:
                     if not m.groups():
                         raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
                     parsed_semver = m.group(1)
-                    if not semver.Version.is_valid(parsed_semver):
+                    if not Version.is_valid(parsed_semver):
                         raise ValueError(f"Invalid semver for __version__. Got: '{parsed_semver}' from line '{line}'")
-                    return semver.Version.parse(parsed_semver)
+                    return Version.parse(parsed_semver)
                 raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
     raise ValueError("Cannot parse version")
 
 
-def update_prerelease_version(repo_root_path: Path, version: semver.Version):
+def update_prerelease_version(repo_root_path: Path, version: Version):
     """
     Updates the version file within pennylane_lightning/core/_version.py.
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     master_version = extract_version(args.master)
 
     print("Got Package Version from 'master' ->", str(master_version))
-    print("Got Package Version from 'pr' ->", str(pr_version))
+    print("Got Package Version from 'PR' ->", str(pr_version))
 
     # Only attempt to bump the version if the pull_request is:
     #  - A prerelease, has `X.Y.Z-prerelease` in _version.py
@@ -104,9 +104,9 @@ if __name__ == "__main__":
             next_prerelease_version = master_version.next_version("prerelease").prerelease
         new_version = master_version.replace(prerelease=next_prerelease_version)
         if pr_version != new_version:
-            print(f"Updating pr package version from -> '{pr_version}', to -> {new_version}")
+            print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
             update_prerelease_version(args.pr, new_version)
         else:
-            print(f"pr is on the expected version '{new_version}' ... Nothing to do!")
+            print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
     else:
-        print("pr is not a dev prerelease ... Nothing to do!")
+        print("PR is not a dev prerelease ... Nothing to do!")
