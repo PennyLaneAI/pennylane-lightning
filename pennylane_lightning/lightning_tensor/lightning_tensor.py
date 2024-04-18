@@ -171,6 +171,9 @@ class LightningTensor(Device):
         Update the execution config with choices for how the device should be used and the device options.
         """
         updated_values = {}
+        # TODO: remove comments when gradients can be computed
+        # if config.gradient_method == "best":
+        #    updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in (
                 "best",
