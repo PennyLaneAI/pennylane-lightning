@@ -449,9 +449,13 @@ class TestVectorJacobianProduct:
         expected.backward()
         assert qml.math.allclose(x.grad, x_ref.grad, atol=tol, rtol=0)
 
+        jac = torch.autograd.functional.jacobian(qnode, (x,))
+        jac_ref = torch.autograd.functional.jacobian(qnode_ref, (x_ref,))
+        assert qml.math.allclose(jac, jac_ref, atol=tol, rtol=0)
+
     # TODO: Update the following test after TensorFlow dtype issues are resolved.
 
-    @pytest.skipif(ld._new_API, reason="TensorFlow dtype issues with new API")
+    @pytest.mark.skipif(ld._new_API, reason="TensorFlow dtype issues with new API")
     def test_device_vjp_qnode_tf(self, dev, tol):
         """Test that requesting device_vjp=True with lightning device qnodes works as expected"""
         tf = pytest.importorskip("tensorflow")
