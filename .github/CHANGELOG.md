@@ -38,6 +38,9 @@
 
 ### Breaking changes
 
+* Update `lightning.gpu` and `lightning.kokkos` to raise an error instead of falling back to `default.qubit`.
+  [(#689)](https://github.com/PennyLaneAI/pennylane-lightning/pull/689)
+
 * Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
