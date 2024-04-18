@@ -43,7 +43,7 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
         std::pair<const std::string, custatevecPauli_t>{std::string("I"),
                                                         CUSTATEVEC_PAULI_I}};
 
-    static constexpr std::size_t num_char = 1;
+    constexpr std::size_t num_char = 1;
 
     std::vector<custatevecPauli_t> output;
     output.reserve(pauli_word.size());
