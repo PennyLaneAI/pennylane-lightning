@@ -1008,14 +1008,8 @@ class TestAdjointJacobianQNode:
             qml.RY(tf.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        if dev._new_API:
-            # tf expects float32 with new device API
-            tf_r_dtype = tf.float32
-            h = 2e-3
-            tol = 1e-3
-        else:
-            tf_r_dtype = tf.float32 if dev.dtype == np.complex64 else tf.float64
-            tol, h = get_tolerance_and_stepsize(dev, step_size=True)
+        tf_r_dtype = tf.float32 if dev.dtype == np.complex64 else tf.float64
+        tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         params1 = tf.Variable(0.3, dtype=tf_r_dtype)
         params2 = tf.Variable(0.4, dtype=tf_r_dtype)
@@ -1486,6 +1480,13 @@ def test_batching_H(returns):
 
     def convert_to_array_gpu_default(params):
         return np.hstack(qnode_gpu_default(params))
+
+    i_cpu = qnode_cpu(params)
+    i_gpu = qnode_gpu(params)
+    i_gpu_default = qnode_gpu_default(params)
+
+    assert np.allclose(i_cpu, i_gpu)
+    assert np.allclose(i_gpu, i_gpu_default)
 
     j_cpu = qml.jacobian(qnode_cpu)(params)
     j_gpu = qml.jacobian(qnode_gpu)(params)

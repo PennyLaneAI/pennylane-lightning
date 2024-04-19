@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* `lightning.kokkos` supports mid-circuit measurements.
+  [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
+
+* Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
+
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
 
@@ -32,6 +38,12 @@
 
 ### Breaking changes
 
+* Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
+* Deprecate static LAPACK linking support.
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
+
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
 
@@ -40,15 +52,39 @@
 
 ### Improvements
 
+* Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
+  [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
+
+* Add `test_templates.py` module where Grover and QSVT are tested.
+  [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
+
+* Create `cuda_utils` for common usage of CUDA related backends.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
+* Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
+
+* Upgrade GitHub actions versions from v3 to v4.
+  [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
+
 * Initialize the private attributes `gates_indices_` and `generators_indices_` of `StateVectorKokkos` using the definitions of the `Pennylane::Gates::Constant` namespace.
   [(#641)](https://github.com/PennyLaneAI/pennylane-lightning/pull/641)
 
 * Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
 
+* Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
+  [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
+
 ### Documentation
 
 ### Bug fixes
+
+* `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+
+* `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
@@ -59,11 +95,20 @@
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
 
+* Fix the failed observable serialization unit tests.
+  [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
+
+* Update the `LightningQubit` new device API to work with Catalyst.
+  [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
+
+* Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
+  [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 

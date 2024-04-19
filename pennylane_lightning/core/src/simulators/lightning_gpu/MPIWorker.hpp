@@ -21,6 +21,7 @@
 #include "MPIManager.hpp"
 #include "MPI_helpers.hpp"
 #include "cuError.hpp"
+#include "cuStateVecError.hpp"
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <custatevec.h>
