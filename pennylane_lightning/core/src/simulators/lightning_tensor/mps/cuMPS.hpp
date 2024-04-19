@@ -29,13 +29,13 @@
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
+#include "Observables_cuMPS.hpp"
 #include "TensorBase.hpp"
 #include "cuDeviceTensor.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuTensorNet_helpers.hpp"
 #include "cuda_helpers.hpp"
-#include "Observables_cuMPS.hpp"
 
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
@@ -294,10 +294,9 @@ template <class Precision> class cuMPS {
     }
 
     void applyOperation(const std::string &opName,
-                               const std::vector<size_t> &wires,
-                               bool adjoint = false,
-                               const std::vector<Precision> &params = {0.0},
-                               const std::vector<CFP_t> &gate_matrix = {}) {
+                        const std::vector<size_t> &wires, bool adjoint = false,
+                        const std::vector<Precision> &params = {0.0},
+                        const std::vector<CFP_t> &gate_matrix = {}) {
         PL_ABORT_IF(wires.size() > 2,
                     "Current version only supports 1/2 qubit gates.");
 
@@ -314,7 +313,7 @@ template <class Precision> class cuMPS {
 
         if (opName == "Identity") {
             return;
-        } else{
+        } else {
             if (!gate_cache_->gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName;
@@ -325,11 +324,11 @@ template <class Precision> class cuMPS {
 
             if (ctrls.size() > 0) {
                 applyControlledGate_(
-                    gate_cache_->get_gate_device_ptr(opName, par[0]), ctrls, tgts,
-                    adjoint);
+                    gate_cache_->get_gate_device_ptr(opName, par[0]), ctrls,
+                    tgts, adjoint);
             } else {
-                applyGate_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires,
-                           adjoint);
+                applyGate_(gate_cache_->get_gate_device_ptr(opName, par[0]),
+                           wires, adjoint);
             }
         }
     }
@@ -425,15 +424,21 @@ template <class Precision> class cuMPS {
         applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
-
     ComplexT expval(const std::string &opName, const std::vector<size_t> &wires,
                     const std::vector<Precision> &params = {0.0}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
         return expval_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires);
     }
 
-    ComplexT expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<Precision> &ob){
-        ob.createTNOperator(handle_.get(), typeData_, numQubits_, qubitDims_, getGateCache());
+    ComplexT
+    expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<Precision>
+               &ob) {
+
+        auto gateTensorPtr =
+            gate_cache_->get_gate_device_ptr(ob.getObsName(), {0.0});
+
+        ob.createTNOperator(handle_.get(), typeData_, numQubits_, qubitDims_,
+                            gateTensorPtr);
 
         // Compute the specified quantum circuit expectation value
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
@@ -476,16 +481,18 @@ template <class Precision> class cuMPS {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
 
+        /*
         Precision flops = 0.0;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationGetInfo(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* cutensornetStateExpectation_t */ expectation,
-            /* cutensornetExpectationAttributes_t */
+            /-* const cutensornetHandle_t *-/ handle_.get(),
+            /-* cutensornetStateExpectation_t *-/ expectation,
+            /-* cutensornetExpectationAttributes_t *-/
             CUTENSORNET_EXPECTATION_INFO_FLOPS,
-            /* void * */ &flops,
-            /* size_t attributeSize */ sizeof(flops)));
+            /-* void * *-/ static_cast<void*>(&flops),
+            /-* size_t attributeSize *-/ sizeof(flops)));
 
         PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
+        */
 
         int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 

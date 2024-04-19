@@ -22,5 +22,5 @@ set_property(TARGET ${PL_BACKEND}_observables PROPERTY POSITION_INDEPENDENT_CODE
 
 if (BUILD_TESTS)
     enable_testing()
-    #add_subdirectory("tests")
+    add_subdirectory("tests")
 endif()

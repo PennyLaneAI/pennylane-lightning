@@ -32,6 +32,7 @@ namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningTensor::Util;
+namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 
@@ -45,8 +46,10 @@ namespace Pennylane::LightningTensor::Observables {
  * @tparam T Floating point type
  */
 
-template <typename T>
-class ObservableCudaTN {
+template <typename T> class ObservableCudaTN {
+  public:
+    using CFP_t = decltype(cuUtil::getCudaType(T{}));
+
   private:
     /**
      * @brief Polymorphic function comparing this to another Observable
@@ -54,7 +57,8 @@ class ObservableCudaTN {
      *
      * @param Another instance of subclass of Observable<T> to compare
      */
-    [[nodiscard]] virtual bool isEqual(const ObservableCudaTN<T> &other) const = 0;
+    [[nodiscard]] virtual bool
+    isEqual(const ObservableCudaTN<T> &other) const = 0;
 
   protected:
     ObservableCudaTN() = default;
@@ -67,11 +71,11 @@ class ObservableCudaTN {
     virtual ~ObservableCudaTN() = default;
 
     virtual void createTNOperator(const cutensornetHandle_t handle,
-                          cudaDataType_t typeData, size_t &numQubits,
-                          std::vector<size_t> &qubitDims,
-                          GateTensorCache<T> *gate_cache) = 0;
+                                  cudaDataType_t typeData, size_t &numQubits,
+                                  std::vector<size_t> &qubitDims,
+                                  CFP_t *gate_cache) = 0;
 
-    virtual auto getTNOperator() -> cutensornetNetworkOperator_t = 0;
+    virtual cutensornetNetworkOperator_t getTNOperator() = 0;
 
     /**
      * @brief Get the name of the observable
@@ -103,21 +107,30 @@ class ObservableCudaTN {
  *
  * @tparam TensorNetT State tensor class.
  */
-template <typename T>
-class NamedObsCudaTN final : public ObservableCudaTN<T> {
+template <typename T> class NamedObsCudaTN final : public ObservableCudaTN<T> {
+  public:
+    using CFP_t = decltype(cuUtil::getCudaType(T{}));
+
   private:
-    cutensornetNetworkOperator_t namedObs_;
     std::string obs_name_;
     std::vector<size_t> wires_;
     std::vector<T> params_;
 
-    [[nodiscard]] bool isEqual(const ObservableCudaTN<T> &other) const override {
+    [[nodiscard]] bool
+    isEqual(const ObservableCudaTN<T> &other) const override {
         const auto &other_cast = static_cast<const NamedObsCudaTN<T> &>(other);
 
         return (obs_name_ == other_cast.obs_name_) &&
                (wires_ == other_cast.wires_) && (params_ == other_cast.params_);
     }
 
+  private:
+    cutensornetNetworkOperator_t obsOperator_{nullptr};
+    std::vector<int32_t> wires_int_;
+    std::vector<int32_t> numStateModes_;
+    std::vector<const int32_t *> stateModes_;
+    std::vector<const void *> tensorData_;
+    int64_t id_;
 
   public:
     /**
@@ -128,7 +141,7 @@ class NamedObsCudaTN final : public ObservableCudaTN<T> {
      * @param params Argument to construct parameters
      */
     NamedObsCudaTN(std::string obs_name, std::vector<size_t> wires,
-             std::vector<T> params = {})
+                   std::vector<T> params = {})
         : obs_name_{std::move(obs_name)}, wires_{std::move(wires)},
           params_{std::move(params)} {
         using Pennylane::Gates::Constant::gate_names;
@@ -139,17 +152,30 @@ class NamedObsCudaTN final : public ObservableCudaTN<T> {
                                     std::string_view{this->obs_name_});
         PL_ASSERT(lookup(gate_wires, gate_op) == this->wires_.size());
         PL_ASSERT(lookup(gate_num_params, gate_op) == this->params_.size());
+
+        wires_int_.resize(wires_.size());
+
+        std::transform(wires_.begin(), wires_.end(), wires_int_.begin(),
+                       [](size_t x) { return static_cast<int32_t>(x); });
+
+        numStateModes_.push_back(static_cast<int32_t>(wires_.size()));
+
+        stateModes_.push_back(wires_int_.data());
+
+        tensorData_.push_back(nullptr);
     }
 
     ~NamedObsCudaTN() {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyNetworkOperator(namedObs_));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyNetworkOperator(obsOperator_));
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        using Pennylane::Util::operator<<;
-        std::ostringstream obs_stream;
-        obs_stream << obs_name_ << wires_;
-        return obs_stream.str();
+        // using Pennylane::Util::operator<<;
+        // std::ostringstream obs_stream;
+        // obs_stream << obs_name_ << wires_;
+        // return obs_stream.str();
+        return obs_name_;
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
@@ -159,44 +185,31 @@ class NamedObsCudaTN final : public ObservableCudaTN<T> {
     void createTNOperator(const cutensornetHandle_t handle,
                           cudaDataType_t typeData, size_t &numQubits,
                           std::vector<size_t> &qubitDims,
-                          GateTensorCache<T> *gate_cache) {
+                          CFP_t *gateTensorPtr) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ handle,
             /* int32_t */ static_cast<int32_t>(numQubits),
             /* const int64_t stateModeExtents */
             reinterpret_cast<int64_t *>(qubitDims.data()),
             /* cudaDataType_t */ typeData,
-            /* cutensornetNetworkOperator_t */ &namedObs_));
+            /* cutensornetNetworkOperator_t */ &obsOperator_));
 
-        int64_t id;
-
-        std::vector<int32_t> wires_int(getWires().size());
-        std::transform(getWires().begin(), getWires().end(),
-                       wires_int.begin(),
-                       [](size_t x) { return static_cast<int32_t>(x); });
-
-        std::vector<int32_t> numStateModes(1, getWires().size());
-        std::vector<const int32_t *> stateModes;
-        stateModes.emplace_back(wires_int.data());
-        std::vector<const void *> tensorData;
-
-        auto &&par = std::vector<T>{0.0};
-        tensorData.emplace_back(static_cast<const void *>(
-            gate_cache->get_gate_device_ptr(this->obs_name_, par[0])));
+        std::cout << "++++++" << std::endl;
+        tensorData_[0] = static_cast<const void *>(gateTensorPtr);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
             /* const cutensornetHandle_t */ handle,
-            /* cutensornetNetworkOperator_t */ namedObs_,
+            /* cutensornetNetworkOperator_t */ obsOperator_,
             /* cuDoubleComplex coefficient*/ cuDoubleComplex{1, 0.0},
             /* int32_t numTensors */ 1,
-            /* const int32_t numStateModes[] */ numStateModes.data(),
-            /* const int32_t *stateModes[] */ stateModes.data(),
+            /* const int32_t numStateModes[] */ numStateModes_.data(),
+            /* const int32_t *stateModes[] */ stateModes_.data(),
             /* const int64_t *tensorModeStrides[] */ nullptr,
-            /* const void *tensorData[] */ tensorData.data(),
-            /* int64_t* */ &id));
+            /* const void *tensorData[] */ tensorData_.data(),
+            /* int64_t* */ &id_));
     }
 
-    cutensornetNetworkOperator_t getTNOperator() { return namedObs_; }
+    cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
 };
 
 } // namespace Pennylane::LightningTensor::Observables
