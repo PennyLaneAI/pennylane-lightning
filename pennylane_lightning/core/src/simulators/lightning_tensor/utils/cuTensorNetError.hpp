@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Adapted from JET: https://github.com/XanaduAI/jet.git
-// and from Lightning: https://github.com/PennylaneAI/pennylane-lightning.git
 /**
  * @file cuTensorNetError.hpp
+ * Defines macros that throws Exception from cuStateVec failure error codes.
  */
 
 #pragma once
@@ -23,10 +22,13 @@
 #include "Util.hpp"
 #include <cutensornet.h>
 #include <string>
+
 // LCOV_EXCL_START
+/// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 }
+/// @endcond
 
 #ifndef CUDA_UNSAFE
 
@@ -49,81 +51,58 @@ using namespace Pennylane::Util;
 namespace Pennylane::LightningTensor::Util {
 static const std::string
 GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {
-    std::string result;
+    using namespace std::string_literals;
     switch (err) {
     case CUTENSORNET_STATUS_SUCCESS:
-        result = "No errors";
-        break;
+        return "No errors"s;
     case CUTENSORNET_STATUS_NOT_INITIALIZED:
-        result = "cutensornet not initialized";
-        break;
+        return "cutensornet not initialized"s;
     case CUTENSORNET_STATUS_ALLOC_FAILED:
-        result = "cutensornet memory allocation failed";
-        break;
+        return "cutensornet memory allocation failed"s;
     case CUTENSORNET_STATUS_INVALID_VALUE:
-        result = "cutensornet invalid value";
-        break;
+        return "cutensornet invalid value"s;
     case CUTENSORNET_STATUS_ARCH_MISMATCH:
-        result = "cutensornet CUDA device architecture mismatch";
-        break;
+        return "cutensornet CUDA device architecture mismatch"s;
     case CUTENSORNET_STATUS_MAPPING_ERROR:
-        result = "cutensornet GPU memory space failed";
-        break;
+        return "cutensornet GPU memory space failed"s;
     case CUTENSORNET_STATUS_EXECUTION_FAILED:
-        result = "cutensornet execute error";
-        break;
+        return "cutensornet execute error"s;
     case CUTENSORNET_STATUS_INTERNAL_ERROR:
-        result = "cutensornet internal error";
-        break;
+        return "cutensornet internal error"s;
     case CUTENSORNET_STATUS_NOT_SUPPORTED:
-        result = "cutensornet unsupported operation/device";
-        break;
+        return "cutensornet unsupported operation/device"s;
     case CUTENSORNET_STATUS_LICENSE_ERROR:
-        result = "cutensornet license error";
-        break;
+        return "cutensornet license error"s;
     case CUTENSORNET_STATUS_CUBLAS_ERROR:
-        result = "cutensornet call to cublas failed";
-        break;
+        return "cutensornet call to cublas failed"s;
     case CUTENSORNET_STATUS_CUDA_ERROR:
-        result = "cutensornet unknown CUDA error";
-        break;
+        return "cutensornet unknown CUDA error"s;
     case CUTENSORNET_STATUS_INSUFFICIENT_WORKSPACE:
-        result = "cutensornet provided workspace was insufficient";
-        break;
+        return "cutensornet provided workspace was insufficient"s;
     case CUTENSORNET_STATUS_INSUFFICIENT_DRIVER:
-        result = "cutensornet driver version is insufficient";
-        break;
+        return "cutensornet driver version is insufficient"s;
     case CUTENSORNET_STATUS_IO_ERROR:
-        result = "cutensornet IO error";
-        break;
+        return "cutensornet IO error"s;
     case CUTENSORNET_STATUS_CUTENSOR_VERSION_MISMATCH:
-        result = "cutensornet incompatible cuTensor library";
-        break;
+        return "cutensornet incompatible cuTensor library"s;
     case CUTENSORNET_STATUS_NO_DEVICE_ALLOCATOR:
-        result = "cutensornet mempool is not set";
-        break;
+        return "cutensornet mempool is not set"s;
     case CUTENSORNET_STATUS_ALL_HYPER_SAMPLES_FAILED:
-        result = "cutensornet all hyper samples failed for one or more errors "
-                 "please enable LOGs via export CUTENSORNET_LOG_LEVEL= > 1 for "
-                 "details";
-        break;
+        return "cutensornet all hyper samples failed for one or more errors "
+               "please enable LOGs via export CUTENSORNET_LOG_LEVEL= > 1 for "
+               "details"s;
     case CUTENSORNET_STATUS_CUSOLVER_ERROR:
-        result = "cutensornet cusolver failed";
-        break;
+        return "cutensornet cusolver failed"s;
     case CUTENSORNET_STATUS_DEVICE_ALLOCATOR_ERROR:
-        result = "cutensornet operation with the device memory pool failed";
-        break;
+        return "cutensornet operation with the device memory pool failed"s;
     case CUTENSORNET_STATUS_DISTRIBUTED_FAILURE:
-        result = "cutensornet distributed communication service failure";
-        break;
+        return "cutensornet distributed communication service failure"s;
     case CUTENSORNET_STATUS_INTERRUPTED:
-        result = "cutensornet operation interruption";
-        break;
+        return "cutensornet operation interruption"s;
     default:
-        result =
-            "cutensornet status not found. Error code=" + std::to_string(err);
+        return "cutensornet status not found. Error code="s +
+               std::to_string(err);
     }
-    return result;
 }
 } // namespace Pennylane::LightningTensor::Util
   // LCOV_EXCL_STOP
