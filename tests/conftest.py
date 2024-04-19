@@ -128,16 +128,19 @@ if device_name == "lightning.kokkos":
 
     if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
         import pennylane_lightning.lightning_kokkos_ops as lightning_ops
+        from pennylane_lightning.lightning_kokkos_ops import LightningException
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
+        from pennylane_lightning.lightning_gpu_ops import LightningException
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
 
     if hasattr(pennylane_lightning, "lightning_qubit_ops"):
         import pennylane_lightning.lightning_qubit_ops as lightning_ops
+        from pennylane_lightning.lightning_qubit_ops import LightningException
 
 
 # General qubit_device fixture, for any number of wires.

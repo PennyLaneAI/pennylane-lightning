@@ -20,7 +20,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import LightningException, device_name
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
@@ -35,8 +35,6 @@ I, X, Y, Z = (
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-else:
-    from pennylane_lightning.lightning_qubit_ops import LightningException
 
 kokkos_args = [None]
 if device_name == "lightning.kokkos":
