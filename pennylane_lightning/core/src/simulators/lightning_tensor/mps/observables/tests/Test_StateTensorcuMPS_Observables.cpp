@@ -54,8 +54,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliX",
             cuMPS<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
             auto ob1 = NamedObsT("Identity", {0});
 
-            std::cout << "++++++" << std::endl;
-
             cp_t expval = sv.expval(ob1);
 
             CHECK(std::real(expval) == 1.0);

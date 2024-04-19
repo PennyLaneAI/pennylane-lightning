@@ -151,8 +151,8 @@ template <class Precision> class cuMPS {
         return dev_tag_;
     }
 
-    auto getGateCache() -> GateTensorCache<Precision> * {
-        return gate_cache_.get();
+    auto getGateCache() -> std::shared_ptr<GateTensorCache<Precision>> {
+        return gate_cache_;
     }
 
     /**
@@ -434,11 +434,8 @@ template <class Precision> class cuMPS {
     expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<Precision>
                &ob) {
 
-        auto gateTensorPtr =
-            gate_cache_->get_gate_device_ptr(ob.getObsName(), {0.0});
-
         ob.createTNOperator(handle_.get(), typeData_, numQubits_, qubitDims_,
-                            gateTensorPtr);
+                            gate_cache_);
 
         // Compute the specified quantum circuit expectation value
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
@@ -480,19 +477,6 @@ template <class Precision> class cuMPS {
             /* size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
-
-        /*
-        Precision flops = 0.0;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationGetInfo(
-            /-* const cutensornetHandle_t *-/ handle_.get(),
-            /-* cutensornetStateExpectation_t *-/ expectation,
-            /-* cutensornetExpectationAttributes_t *-/
-            CUTENSORNET_EXPECTATION_INFO_FLOPS,
-            /-* void * *-/ static_cast<void*>(&flops),
-            /-* size_t attributeSize *-/ sizeof(flops)));
-
-        PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
-        */
 
         int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 

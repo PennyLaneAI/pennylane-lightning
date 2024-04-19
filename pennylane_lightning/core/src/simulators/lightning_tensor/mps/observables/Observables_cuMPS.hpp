@@ -70,10 +70,10 @@ template <typename T> class ObservableCudaTN {
   public:
     virtual ~ObservableCudaTN() = default;
 
-    virtual void createTNOperator(const cutensornetHandle_t handle,
-                                  cudaDataType_t typeData, size_t &numQubits,
-                                  std::vector<size_t> &qubitDims,
-                                  CFP_t *gate_cache) = 0;
+    virtual void
+    createTNOperator(const cutensornetHandle_t handle, cudaDataType_t typeData,
+                     size_t &numQubits, std::vector<size_t> &qubitDims,
+                     std::shared_ptr<GateTensorCache<T>> gateTensorCache) = 0;
 
     virtual cutensornetNetworkOperator_t getTNOperator() = 0;
 
@@ -171,11 +171,10 @@ template <typename T> class NamedObsCudaTN final : public ObservableCudaTN<T> {
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        // using Pennylane::Util::operator<<;
-        // std::ostringstream obs_stream;
-        // obs_stream << obs_name_ << wires_;
-        // return obs_stream.str();
-        return obs_name_;
+        using Pennylane::Util::operator<<;
+        std::ostringstream obs_stream;
+        obs_stream << obs_name_ << wires_;
+        return obs_stream.str();
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
@@ -185,7 +184,7 @@ template <typename T> class NamedObsCudaTN final : public ObservableCudaTN<T> {
     void createTNOperator(const cutensornetHandle_t handle,
                           cudaDataType_t typeData, size_t &numQubits,
                           std::vector<size_t> &qubitDims,
-                          CFP_t *gateTensorPtr) {
+                          std::shared_ptr<GateTensorCache<T>> gateTensorCache) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ handle,
             /* int32_t */ static_cast<int32_t>(numQubits),
@@ -194,8 +193,10 @@ template <typename T> class NamedObsCudaTN final : public ObservableCudaTN<T> {
             /* cudaDataType_t */ typeData,
             /* cutensornetNetworkOperator_t */ &obsOperator_));
 
-        std::cout << "++++++" << std::endl;
-        tensorData_[0] = static_cast<const void *>(gateTensorPtr);
+        auto &&par = (params_.empty()) ? std::vector<T>{0.0} : params_;
+        // TODO check if obs exists.
+        tensorData_[0] = static_cast<const void *>(
+            gateTensorCache->get_gate_device_ptr(obs_name_, par[0]));
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
             /* const cutensornetHandle_t */ handle,
