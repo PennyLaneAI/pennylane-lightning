@@ -33,7 +33,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cusparse_v2.h>
-#include <custatevec.h>
 
 #include "DevTag.hpp"
 #include "cuError.hpp"
@@ -337,56 +336,6 @@ static std::pair<int, int> getGPUArch(int device_number = 0) {
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, device_number);
     return std::make_pair(deviceProp.major, deviceProp.minor);
-}
-
-inline static auto pauliStringToEnum(const std::string &pauli_word)
-    -> std::vector<custatevecPauli_t> {
-    // Map string rep to Pauli enums
-    const std::unordered_map<std::string, custatevecPauli_t> pauli_map{
-        std::pair<const std::string, custatevecPauli_t>{std::string("X"),
-                                                        CUSTATEVEC_PAULI_X},
-        std::pair<const std::string, custatevecPauli_t>{std::string("Y"),
-                                                        CUSTATEVEC_PAULI_Y},
-        std::pair<const std::string, custatevecPauli_t>{std::string("Z"),
-                                                        CUSTATEVEC_PAULI_Z},
-        std::pair<const std::string, custatevecPauli_t>{std::string("I"),
-                                                        CUSTATEVEC_PAULI_I}};
-
-    static constexpr std::size_t num_char = 1;
-
-    std::vector<custatevecPauli_t> output;
-    output.reserve(pauli_word.size());
-
-    for (const auto ch : pauli_word) {
-        auto out = pauli_map.at(std::string(num_char, ch));
-        output.push_back(out);
-    }
-    return output;
-}
-
-inline static auto pauliStringToOpNames(const std::string &pauli_word)
-    -> std::vector<std::string> {
-    // Map string rep to Pauli
-    const std::unordered_map<std::string, std::string> pauli_map{
-        std::pair<const std::string, std::string>{std::string("X"),
-                                                  std::string("PauliX")},
-        std::pair<const std::string, std::string>{std::string("Y"),
-                                                  std::string("PauliY")},
-        std::pair<const std::string, std::string>{std::string("Z"),
-                                                  std::string("PauliZ")},
-        std::pair<const std::string, std::string>{std::string("I"),
-                                                  std::string("Identity")}};
-
-    static constexpr std::size_t num_char = 1;
-
-    std::vector<std::string> output;
-    output.reserve(pauli_word.size());
-
-    for (const auto ch : pauli_word) {
-        auto out = pauli_map.at(std::string(num_char, ch));
-        output.push_back(out);
-    }
-    return output;
 }
 
 /**
