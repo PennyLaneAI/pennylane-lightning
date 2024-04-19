@@ -172,9 +172,7 @@ class LightningTensor(Device):
 
     dtype = c_dtype
 
-    def _setup_execution_config(
-        self, config: Optional[ExecutionConfig] = DefaultExecutionConfig
-    ):
+    def _setup_execution_config(self, config: Optional[ExecutionConfig] = DefaultExecutionConfig):
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
@@ -232,13 +230,13 @@ class LightningTensor(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        # more in the next PR
+        # comment is removed in the next PR
         # return self._interface.execute(circuits, execution_config)
 
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
-        circuit: Optional[qml.tape.QuantumTape] = None,
+        execution_config: Optional[ExecutionConfig] = None, # pylint: disable=unused-argument
+        circuit: Optional[qml.tape.QuantumTape] = None, # pylint: disable=unused-argument
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
@@ -269,7 +267,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        )
+        ) # pragma: no cover
 
     def execute_and_compute_derivatives(
         self,
@@ -291,8 +289,8 @@ class LightningTensor(Device):
 
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None,
-        circuit: Optional[QuantumTape] = None,
+        execution_config: Optional[ExecutionConfig] = None, # pylint: disable=unused-argument
+        circuit: Optional[QuantumTape] = None, # pylint: disable=unused-argument
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
 

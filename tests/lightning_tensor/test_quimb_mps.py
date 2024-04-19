@@ -42,9 +42,7 @@ class TestQuimbMPS:
         """Test the class initialization and returned properties."""
 
         wires = Wires(range(num_wires)) if num_wires else None
-        dev = LightningTensor(
-            wires=wires, backend=backend, method=method, c_dtype=c_dtype
-        )
+        dev = LightningTensor(wires=wires, backend=backend, method=method, c_dtype=c_dtype)
         assert isinstance(dev._interface.state, qtn.MatrixProductState)
         assert isinstance(dev._interface.state_to_array(), np.ndarray)
 
