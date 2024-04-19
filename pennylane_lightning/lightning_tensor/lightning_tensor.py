@@ -233,10 +233,11 @@ class LightningTensor(Device):
         # comment is removed in the next PR
         # return self._interface.execute(circuits, execution_config)
 
+    # pylint: disable=unused-argument
     def supports_derivatives(
         self,
-        execution_config: Optional[ExecutionConfig] = None, # pylint: disable=unused-argument
-        circuit: Optional[qml.tape.QuantumTape] = None, # pylint: disable=unused-argument
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
@@ -267,7 +268,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        ) # pragma: no cover
+        )  # pragma: no cover
 
     def execute_and_compute_derivatives(
         self,
@@ -287,10 +288,11 @@ class LightningTensor(Device):
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
         )  # pragma: no cover
 
+    # pylint: disable=unused-argument
     def supports_vjp(
         self,
-        execution_config: Optional[ExecutionConfig] = None, # pylint: disable=unused-argument
-        circuit: Optional[QuantumTape] = None, # pylint: disable=unused-argument
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
 
