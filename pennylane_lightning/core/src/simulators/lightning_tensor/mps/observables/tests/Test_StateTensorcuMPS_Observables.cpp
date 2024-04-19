@@ -39,8 +39,7 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliX",
-                   "[StateVectorCudaManaged_Nonparam]", float, double) {
+TEMPLATE_TEST_CASE("cuMPS::applyPauliX", "[cuMPS_Nonparam]", float, double) {
     using NamedObsT = NamedObsCudaTN<TestType>;
     // const bool inverse = GENERATE(true, false);
     {

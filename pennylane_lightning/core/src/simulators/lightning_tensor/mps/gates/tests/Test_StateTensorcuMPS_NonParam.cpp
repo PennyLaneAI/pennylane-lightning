@@ -37,8 +37,7 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyHadamard",
-                   "[StateVectorCudaManaged_Nonparam]", float, double) {
+TEMPLATE_TEST_CASE("cuMPS::applyHadamard", "[cuMPS_Nonparam]", float, double) {
     const bool inverse = GENERATE(true, false);
     {
         using cp_t = std::complex<TestType>;
