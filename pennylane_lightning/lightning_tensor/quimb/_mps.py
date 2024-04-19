@@ -111,11 +111,7 @@ class QuimbMPS:
             array: The initial state of a circuit.
         """
 
-        return qtn.MPS_computational_state(
-            "0" * max(1, self._num_wires),
-            dtype=self._dtype.__name__,
-            tags=[str(l) for l in self._wires.labels],
-        )
+        return qtn.MPS_computational_state(**self._init_state_ops)
 
     # pylint: disable=unused-argument
     def execute(
@@ -179,10 +175,7 @@ class QuimbMPS:
             op (Operator): The operation to apply.
         """
 
-        # TODO: investigate in `quimb` how to pass parameters required by PRD (cutoff, max_bond, etc.)
-        self._circuitMPS.apply_gate(
-            op.matrix(), *op.wires, contract="swap+split", parametrize=None
-        )
+        self._circuitMPS.apply_gate(op.matrix(), *op.wires, **self._gate_opts)
 
     def _measurement(self, measurementprocess: MeasurementProcess):
         """Measure the measurement required by the circuit over the MPS.
@@ -226,12 +219,5 @@ class QuimbMPS:
         obs = measurementprocess.obs
 
         return np.real(
-            self._circuitMPS.local_expectation(
-                G=obs.matrix(),
-                where=tuple(obs.wires),
-                dtype=self._dtype.__name__,
-                simplify_sequence="ADCRS",
-                simplify_atol=0.0,
-            )
+            self._circuitMPS.local_expectation(obs.matrix(), tuple(obs.wires), **self._expval_opts)
         )
-        return qtn.MPS_computational_state(**self._init_state_ops)

@@ -16,6 +16,7 @@ Unit tests for the ``quimb`` interface.
 """
 
 import math
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -28,12 +29,13 @@ from pennylane_lightning.lightning_tensor import LightningTensor
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-if LightningDevice._CPP_BINARY_AVAILABLE:
-    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+# if LightningDevice._CPP_BINARY_AVAILABLE:
+#    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
+
 
 @pytest.mark.parametrize("backend", ["quimb"])
 @pytest.mark.parametrize("method", ["mps"])
@@ -46,9 +48,7 @@ class TestQuimbMPS:
         """Test the class initialization and returned properties."""
 
         wires = Wires(range(num_wires)) if num_wires else None
-        dev = LightningTensor(
-            wires=wires, backend=backend, method=method, c_dtype=c_dtype
-        )
+        dev = LightningTensor(wires=wires, backend=backend, method=method, c_dtype=c_dtype)
         assert isinstance(dev._interface.state, qtn.MatrixProductState)
         assert isinstance(dev._interface.state_to_array(), np.ndarray)
 
@@ -76,9 +76,7 @@ class TestExpval:
 
         num_wires = 3
         wires = Wires(range(num_wires))
-        dev = LightningTensor(
-            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
-        )
+        dev = LightningTensor(wires=wires, backend="quimb", method="mps", c_dtype=np.complex64)
         result = dev.execute(circuits=tape)
         expected = np.cos(theta)
         assert np.allclose(result, expected, atol=1.0e-8)
@@ -95,9 +93,7 @@ class TestExpval:
 
         num_wires = 2
         wires = Wires(range(num_wires))
-        dev = LightningTensor(
-            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
-        )
+        dev = LightningTensor(wires=wires, backend="quimb", method="mps", c_dtype=np.complex64)
         result = dev.execute(circuits=tape)
         expected = 1.0
         assert np.allclose(result, expected, atol=1.0e-8)
@@ -111,9 +107,7 @@ class TestExpval:
 
         num_wires = 2
         wires = Wires(range(num_wires))
-        dev = LightningTensor(
-            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
-        )
+        dev = LightningTensor(wires=wires, backend="quimb", method="mps", c_dtype=np.complex64)
         result = dev.execute(circuits=tape)
         expected = 1.0
         assert np.allclose(result, expected, atol=1.0e-8)
@@ -134,9 +128,7 @@ class TestExpval:
             (
                 [qml.PauliZ(wires=[0]), qml.PauliZ(wires=[1])],
                 qml.RX,
-                lambda theta, phi: np.array(
-                    [np.cos(theta), np.cos(theta) * np.cos(phi)]
-                ),
+                lambda theta, phi: np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]),
             ),
             (
                 [qml.Hadamard(wires=[0]), qml.Hadamard(wires=[1])],
@@ -151,9 +143,7 @@ class TestExpval:
             ),
         ],
     )
-    def test_single_wire_observables_expectation(
-        self, Obs, Op, expected_fn, theta, phi
-    ):
+    def test_single_wire_observables_expectation(self, Obs, Op, expected_fn, theta, phi):
         """Test that expectation values for single wire observables are correct."""
 
         tape = qml.tape.QuantumScript(
@@ -163,9 +153,7 @@ class TestExpval:
 
         num_wires = 3
         wires = Wires(range(num_wires))
-        dev = LightningTensor(
-            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
-        )
+        dev = LightningTensor(wires=wires, backend="quimb", method="mps", c_dtype=np.complex64)
         result = dev.execute(circuits=tape)
         expected = expected_fn(theta, phi)
 
@@ -208,9 +196,7 @@ class TestExpvalHamiltonian:
 
         num_wires = 2
         wires = Wires(range(num_wires))
-        dev = LightningTensor(
-            wires=wires, backend="quimb", method="mps", c_dtype=np.complex64
-        )
+        dev = LightningTensor(wires=wires, backend="quimb", method="mps", c_dtype=np.complex64)
         result = dev.execute(circuits=tape)
 
         assert np.allclose(result, expected, atol=1.0e-8)

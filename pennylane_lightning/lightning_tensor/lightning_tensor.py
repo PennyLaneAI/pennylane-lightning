@@ -218,9 +218,7 @@ class LightningTensor(Device):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(
-            validate_observables, accepted_observables, name=self.name
-        )
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
 
         return program, config
