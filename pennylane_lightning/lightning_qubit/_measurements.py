@@ -141,7 +141,7 @@ class LightningMeasurements:
             )
 
         if (
-            isinstance(measurementprocess.obs, (qml.Hamiltonian, qml.Hermitian))
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
@@ -195,7 +195,7 @@ class LightningMeasurements:
             )
 
         if (
-            isinstance(measurementprocess.obs, (qml.Hamiltonian, qml.Hermitian))
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):

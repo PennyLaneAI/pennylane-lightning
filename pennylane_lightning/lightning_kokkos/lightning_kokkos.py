@@ -550,7 +550,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 return measure.expval(matrix, observable_wires)
 
             if (
-                isinstance(observable, qml.Hamiltonian)
+                isinstance(observable, qml.ops.Hamiltonian)
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -609,7 +609,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
+                isinstance(observable, (qml.ops.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
