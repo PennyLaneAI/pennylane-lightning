@@ -25,13 +25,15 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
-# if LightningDevice._CPP_BINARY_AVAILABLE:
-#    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
-
 
 @pytest.mark.parametrize("backend", ["quimb"])
 @pytest.mark.parametrize("method", ["mps"])

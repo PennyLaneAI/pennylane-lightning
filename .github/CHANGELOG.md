@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Python class for the `lightning.tensor` device which uses the new device API.
+* Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
 
 * `lightning.kokkos` supports mid-circuit measurements.
@@ -55,6 +55,12 @@
 
 ### Improvements
 
+* Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
+  [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
+
+* Add `test_templates.py` module where Grover and QSVT are tested.
+  [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
+
 * Create `cuda_utils` for common usage of CUDA related backends.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
@@ -76,6 +82,12 @@
 ### Documentation
 
 ### Bug fixes
+
+* `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+
+* `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
