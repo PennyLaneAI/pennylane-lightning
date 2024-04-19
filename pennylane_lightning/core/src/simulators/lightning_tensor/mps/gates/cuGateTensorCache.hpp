@@ -229,7 +229,7 @@ template <class PrecisionT> class GateTensorCache {
         device_gates_.emplace(
             std::piecewise_construct, std::forward_as_tuple(gate_key),
             std::forward_as_tuple(rank, modes, extents, device_tag_));
-        device_gates_.at(gate_key).CopyHostDataToGpu(gate.data(), gate.size());
+        device_gates_.at(gate_key).getDataBuffer().CopyHostDataToGpu(gate.data(), gate.size());
 
         this->total_alloc_bytes_ += (sizeof(CFP_t) * gate.size());
     }
@@ -254,7 +254,7 @@ template <class PrecisionT> class GateTensorCache {
         device_gates_.emplace(
             std::piecewise_construct, std::forward_as_tuple(gate_key),
             std::forward_as_tuple(rank, modes, extents, device_tag_));
-        device_gates_.at(gate_key).CopyHostDataToGpu(gate.data(), gate.size());
+        device_gates_.at(gate_key).getDataBuffer().CopyHostDataToGpu(gate.data(), gate.size());
 
         total_alloc_bytes_ += (sizeof(CFP_t) * gate.size());
     }

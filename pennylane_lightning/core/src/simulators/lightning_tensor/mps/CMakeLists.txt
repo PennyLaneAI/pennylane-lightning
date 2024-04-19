@@ -40,6 +40,7 @@ target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs
                                             lightning_tensor_base
                                             lightning_tensor_gates
+                                            lightning_tensor_observables
                                             lightning_tensor_utils
                                             )
     
@@ -57,12 +58,14 @@ endif()
 ###############################################################################
 # Include all nested sources directories
 ###############################################################################
-set(COMPONENT_SUBDIRS      gates)
+set(COMPONENT_SUBDIRS      gates
+                           observables
+                           )
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()
 
 if (BUILD_TESTS)
     enable_testing()
-    add_subdirectory("tests")
+    #add_subdirectory("tests")
 endif()

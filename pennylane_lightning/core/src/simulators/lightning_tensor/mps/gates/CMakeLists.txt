@@ -11,5 +11,5 @@ set_property(TARGET lightning_tensor_gates PROPERTY POSITION_INDEPENDENT_CODE ON
 
 if(BUILD_TESTS)
     enable_testing()
-    #add_subdirectory("tests")
+    add_subdirectory("tests")
 endif()

@@ -35,11 +35,13 @@
 #include "cuTensorNetError.hpp"
 #include "cuTensorNet_helpers.hpp"
 #include "cuda_helpers.hpp"
+#include "Observables_cuMPS.hpp"
 
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor::Util;
+using namespace Pennylane::LightningTensor::Observables;
 
 // Function to convert a size_t value to a binary string
 std::string size_t_to_binary_string(const size_t &numQubits, size_t val) {
@@ -97,7 +99,8 @@ template <class Precision> class cuMPS {
           Pennylane::LightningGPU::DevTag<int> &dev_tag)
         : handle_(make_shared_cutn_handle()), numQubits_(numQubits),
           maxExtent_(maxExtent), qubitDims_(qubitDims), dev_tag_(dev_tag),
-          gate_cache_(std::make_shared<GateTensorCache<Precision>>(true, dev_tag)) {
+          gate_cache_(
+              std::make_shared<GateTensorCache<Precision>>(true, dev_tag)) {
 
         if constexpr (std::is_same_v<Precision, double>) {
             typeData_ = CUDA_C_64F;
@@ -172,8 +175,9 @@ template <class Precision> class cuMPS {
 
         std::cout << str << std::endl;
 
-        CFP_t value_cu = Pennylane::LightningGPU::Util::complexToCu<
-            std::complex<Precision>>({1.0, 0.0});
+        CFP_t value_cu =
+            Pennylane::LightningGPU::Util::complexToCu<std::complex<Precision>>(
+                {1.0, 0.0});
 
         for (size_t i = 0; i < d_mpsTensors_.size(); i++) {
             d_mpsTensors_[i].getDataBuffer().zeroInit();
@@ -223,12 +227,12 @@ template <class Precision> class cuMPS {
             /*void **/ mpsTensorsDataPtr.data()));
     };
 
-    auto getStateVector() -> std::vector<std::complex<Precision>> {
+    auto getDataVector() -> std::vector<std::complex<Precision>> {
         // 1D representation of mpsTensor
         std::vector<size_t> modes(1, 1);
         std::vector<size_t> extent(1, (1 << numQubits_));
         cuDeviceTensor<Precision> d_mpsTensor(modes.size(), modes, extent,
-                                               dev_tag_);
+                                              dev_tag_);
 
         std::vector<void *> d_mpsTensorsPtr(
             1, static_cast<void *>(d_mpsTensor.getDataBuffer().getData()));
@@ -279,16 +283,6 @@ template <class Precision> class cuMPS {
         return results;
     }
 
-    void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint = false,
-                        const std::vector<Precision> &params = {0.0}) {
-        PL_ABORT_IF(wires.size() > 2,
-                    "Current version only supports 1/2 qubit gates.");
-        auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-        applyGate_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires,
-                   adjoint);
-    }
-
     /**
      * @brief Return the mapping of named gates to amount of control wires they
      * have.
@@ -299,10 +293,11 @@ template <class Precision> class cuMPS {
         return ctrl_map_;
     }
 
-    void applyGeneralOperation(const std::string &opName,
+    void applyOperation(const std::string &opName,
                                const std::vector<size_t> &wires,
                                bool adjoint = false,
-                               const std::vector<Precision> &params = {0.0}) {
+                               const std::vector<Precision> &params = {0.0},
+                               const std::vector<CFP_t> &gate_matrix = {}) {
         PL_ABORT_IF(wires.size() > 2,
                     "Current version only supports 1/2 qubit gates.");
 
@@ -317,20 +312,207 @@ template <class Precision> class cuMPS {
 
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
 
-        if (ctrls.size() > 0) {
-            applyControlledGate_(
-                gate_cache_->get_gate_device_ptr(opName, par[0]), ctrls, tgts,
-                adjoint);
-        } else {
-            applyGate_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires,
-                       adjoint);
+        if (opName == "Identity") {
+            return;
+        } else{
+            if (!gate_cache_->gateExists(opName, par[0]) &&
+                gate_matrix.empty()) {
+                std::string message = "Currently unsupported gate: " + opName;
+                throw LightningException(message);
+            } else if (!gate_cache_->gateExists(opName, par[0])) {
+                gate_cache_->add_gate(opName, par[0], gate_matrix);
+            }
+
+            if (ctrls.size() > 0) {
+                applyControlledGate_(
+                    gate_cache_->get_gate_device_ptr(opName, par[0]), ctrls, tgts,
+                    adjoint);
+            } else {
+                applyGate_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires,
+                           adjoint);
+            }
         }
     }
+
+    void
+    applyOperations(const std::vector<std::string> &ops,
+                    const std::vector<std::vector<size_t>> &ops_wires,
+                    const std::vector<bool> &ops_adjoint,
+                    const std::vector<std::vector<Precision>> &ops_params) {
+        const size_t numOperations = ops.size();
+        PL_ABORT_IF(
+            numOperations != ops_wires.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        PL_ABORT_IF(
+            numOperations != ops_params.size(),
+            "Invalid arguments: number of operations, wires, inverses, and "
+            "parameters must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
+                                 ops_params[i]);
+        }
+    }
+
+    /**
+     * @brief Apply multiple gates to the state-tensor.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_adjoint Indicates whether gate at matched index is to be
+     * inverted.
+     */
+    void applyOperations(const std::vector<std::string> &ops,
+                         const std::vector<std::vector<size_t>> &ops_wires,
+                         const std::vector<bool> &ops_adjoint) {
+        const size_t numOperations = ops.size();
+        PL_ABORT_IF_NOT(
+            numOperations == ops_wires.size(),
+            "Invalid arguments: number of operations, wires, and inverses "
+            "must all be equal");
+        PL_ABORT_IF_NOT(
+            numOperations == ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires and inverses"
+            "must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
+        }
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
+                     const std::vector<size_t> &wires, bool adjoint = false) {
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        const std::string opName = {};
+        size_t n = size_t{1} << wires.size();
+        const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
+                                                           gate_matrix + n * n);
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, wires, adjoint, {}, matrix_cu);
+    }
+
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * std vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicate whether inverse should be taken.
+     */
+    void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
+                     const std::vector<size_t> &wires, bool adjoint = false) {
+        PL_ABORT_IF(gate_matrix.size() !=
+                        Pennylane::Util::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        applyMatrix(gate_matrix.data(), wires, adjoint);
+    }
+
 
     ComplexT expval(const std::string &opName, const std::vector<size_t> &wires,
                     const std::vector<Precision> &params = {0.0}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
         return expval_(gate_cache_->get_gate_device_ptr(opName, par[0]), wires);
+    }
+
+    ComplexT expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<Precision> &ob){
+        ob.createTNOperator(handle_.get(), typeData_, numQubits_, qubitDims_, getGateCache());
+
+        // Compute the specified quantum circuit expectation value
+        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
+
+        cutensornetStateExpectation_t expectation;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetState_t */ quantumState_,
+            /* cutensornetNetworkOperator_t */ ob.getTNOperator(),
+            /* cutensornetStateExpectation_t * */ &expectation));
+
+        // Configure the computation of the specified quantum circuit
+        // expectation value
+        const int32_t numHyperSamples =
+            8; // desired number of hyper samples used in the tensor network
+               // contraction path finder
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
+            /* const void * */ &numHyperSamples,
+            /* size_t */ sizeof(numHyperSamples)));
+
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
+
+        const std::size_t scratchSize = getScratchMemorySize();
+
+        // Prepare the specified quantum circuit expectation value for
+        // computation
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cudaStream_t [unused] */ 0x0));
+
+        Precision flops = 0.0;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationGetInfo(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_INFO_FLOPS,
+            /* void * */ &flops,
+            /* size_t attributeSize */ sizeof(flops)));
+
+        PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
+
+        int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
+
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device.\n");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<size_t, int> d_scratch(d_scratch_length, dev_tag_, true);
+
+        this->setWorkSpaceMemory_(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* void* */ static_cast<void *>(&expectVal),
+            /* void* */ static_cast<void *>(&stateNorm2),
+            /*  cudaStream_t unused */ 0x0));
+
+        expectVal /= stateNorm2;
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
+
+        return expectVal;
     }
 
   private:
