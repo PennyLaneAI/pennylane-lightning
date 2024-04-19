@@ -29,7 +29,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "MeasurementsBase.hpp"
 #include "Observables.hpp"
 #include "Observables_cuMPS.hpp"
 #include "cuGateTensorCache.hpp"
@@ -61,21 +60,17 @@ namespace Pennylane::LightningTensor::Measures {
  * @tparam cuMPS type of the statevector to be measured.
  */
 template <class TensorNetT>
-class Measurements final
-    : public MeasurementsBase<TensorNetT, Measurements<TensorNetT>> {
+class Measurements {
   private:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
-    using BaseType = MeasurementsBase<TensorNetT, Measurements<TensorNetT>>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     cudaDataType_t data_type_;
-
-    GateTensorCache<PrecisionT> gate_tensor_cache_;
+    TensorNetT &_statetensor;
 
   public:
     explicit Measurements(TensorNetT &statetensor)
-        : BaseType{statevector},
-          gate_tensor_cache_(true, statetensor.getDevTag()) {
+        : _statetensor{statevector} {
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
             data_type_ = CUDA_C_64F;
@@ -104,7 +99,9 @@ class Measurements final
      * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(const Observable<TensorNetT> &ob) -> PrecisionT {}
+    auto expval(const ObservableCudaTN<PrecisionT> &ob) -> PrecisionT {
+      
+    }
 
 }; // class Measurements
 } // namespace Pennylane::LightningTensor::Measures

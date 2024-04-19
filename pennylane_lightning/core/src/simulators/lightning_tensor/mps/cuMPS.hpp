@@ -80,6 +80,11 @@ template <class Precision> class cuMPS {
         CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
                                        // states as v24.03
 
+    //TODO add 
+    // std::vector<std::vector<int64_t>> extents_;
+    // std::vector<int64_t *> extentsPtr(numQubits_);
+    // std::vector<void *> mpsTensorsDataPtr(numQubits_, nullptr);
+
     size_t numQubits_;
     size_t maxExtent_;
     std::vector<size_t> qubitDims_;
@@ -143,6 +148,9 @@ template <class Precision> class cuMPS {
                                        dev_tag_);
         }
     }
+    //TODO copy ctor for measurement class
+    cudaMPS(const cudaMPS &other){
+    }
 
     ~cuMPS() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
@@ -169,6 +177,8 @@ template <class Precision> class cuMPS {
         this->setBasisState(index);
     }
 
+    //TODO this implementation only support up to 64 qubits
+    //TODO SWITCH TO std::vector<char or size_t> index to accept basis state array (list) from Pennylane layer
     void setBasisState(size_t index) {
         // Assuming the site vector is [1,0] or [0,1] and bond vector is
         // [1,0,0...].
@@ -197,7 +207,8 @@ template <class Precision> class cuMPS {
                 cudaMemcpy(&d_mpsTensors_[i].getDataBuffer().getData()[target],
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
-
+        //TODO Move the following part to CTOR
+        //-------START
         std::vector<std::vector<int64_t>> extents;
         std::vector<int64_t *> extentsPtr(numQubits_);
         std::vector<void *> mpsTensorsDataPtr(numQubits_, nullptr);
@@ -217,7 +228,9 @@ template <class Precision> class cuMPS {
             mpsTensorsDataPtr[i] =
                 static_cast<void *>(d_mpsTensors_[i].getDataBuffer().getData());
         }
+        //-------END
 
+        //TODO Move the following API to a new method updateMPS()
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t*/ handle_.get(),
             /*cutensornetState_t*/ quantumState_,
@@ -228,6 +241,8 @@ template <class Precision> class cuMPS {
             /*void **/ mpsTensorsDataPtr.data()));
     };
 
+    //TODO add updateData() method to update d_mpsTensors_ attribute for copy ctor
+    //TODO we should follow the fllowing API
     auto getDataVector() -> std::vector<std::complex<Precision>> {
         // 1D representation of mpsTensor
         std::vector<size_t> modes(1, 1);
