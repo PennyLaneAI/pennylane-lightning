@@ -37,6 +37,7 @@
 #include "cuTensorNet_helpers.hpp"
 #include "cuda_helpers.hpp"
 
+/// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
@@ -60,6 +61,7 @@ std::size_t getScratchMemorySize() {
     return scratchSize;
 }
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningTensor {
 
@@ -120,7 +122,6 @@ template <class Precision> class cuMPS {
             /*  cutensornetState_t * */ &quantumState_));
 
         for (size_t i = 0; i < numQubits_; i++) {
-            // size_t siteRank;
             std::vector<size_t> modes;
             std::vector<size_t> siteExtents;
             if (i == 0) {
