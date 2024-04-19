@@ -1,4 +1,4 @@
-// Copyright 2022-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "cuStateVecError.hpp"
-#include "cuStateVec_helpers.hpp"
 
 namespace Pennylane::LightningGPU::Util {
 
@@ -35,21 +34,21 @@ inline static auto pauliStringToEnum(const std::string &pauli_word)
     -> std::vector<custatevecPauli_t> {
     // Map string rep to Pauli enums
     const std::unordered_map<std::string, custatevecPauli_t> pauli_map{
+        std::pair<const std::string, custatevecPauli_t>{std::string("I"),
+                                                        CUSTATEVEC_PAULI_I},
         std::pair<const std::string, custatevecPauli_t>{std::string("X"),
                                                         CUSTATEVEC_PAULI_X},
         std::pair<const std::string, custatevecPauli_t>{std::string("Y"),
                                                         CUSTATEVEC_PAULI_Y},
         std::pair<const std::string, custatevecPauli_t>{std::string("Z"),
-                                                        CUSTATEVEC_PAULI_Z},
-        std::pair<const std::string, custatevecPauli_t>{std::string("I"),
-                                                        CUSTATEVEC_PAULI_I}};
+                                                        CUSTATEVEC_PAULI_Z}};
 
-    static constexpr std::size_t num_char = 1;
+    constexpr std::size_t num_char = 1;
 
     std::vector<custatevecPauli_t> output;
     output.reserve(pauli_word.size());
 
-    for (const auto ch : pauli_word) {
+    for (const auto &ch : pauli_word) {
         auto out = pauli_map.at(std::string(num_char, ch));
         output.push_back(out);
     }
@@ -60,14 +59,14 @@ inline static auto pauliStringToOpNames(const std::string &pauli_word)
     -> std::vector<std::string> {
     // Map string rep to Pauli
     const std::unordered_map<std::string, std::string> pauli_map{
+        std::pair<const std::string, std::string>{std::string("I"),
+                                                  std::string("Identity")},
         std::pair<const std::string, std::string>{std::string("X"),
                                                   std::string("PauliX")},
         std::pair<const std::string, std::string>{std::string("Y"),
                                                   std::string("PauliY")},
         std::pair<const std::string, std::string>{std::string("Z"),
-                                                  std::string("PauliZ")},
-        std::pair<const std::string, std::string>{std::string("I"),
-                                                  std::string("Identity")}};
+                                                  std::string("PauliZ")}};
 
     static constexpr std::size_t num_char = 1;
 
