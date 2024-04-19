@@ -24,6 +24,9 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+
 if LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
@@ -39,7 +42,9 @@ class TestQuimbMPS:
         """Test the class initialization and returned properties."""
 
         wires = Wires(range(num_wires)) if num_wires else None
-        dev = LightningTensor(wires=wires, backend=backend, method=method, c_dtype=c_dtype)
+        dev = LightningTensor(
+            wires=wires, backend=backend, method=method, c_dtype=c_dtype
+        )
         assert isinstance(dev._interface.state, qtn.MatrixProductState)
         assert isinstance(dev._interface.state_to_array(), np.ndarray)
 

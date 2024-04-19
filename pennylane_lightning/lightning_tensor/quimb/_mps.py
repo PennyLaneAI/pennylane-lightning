@@ -35,19 +35,43 @@ class QuimbMPS:
     Interfaces with `quimb` for MPS manipulation.
     """
 
-    def __init__(self, num_wires, dtype=np.complex128):
+    # TODO: add more details in description during implementation phase (next PR)
+
+    def __init__(self, num_wires, interf_opts, dtype=np.complex128):
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
 
-        self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+
+        self._init_state_ops = {
+            "binary": "0" * max(1, len(self._wires)),
+            "dtype": self._dtype.__name__,
+            "tags": [str(l) for l in self._wires.labels],
+        }
+
+        self._gate_opts = {
+            "contract": "swap+split",
+            "parametrize": None,
+            "cutoff": interf_opts["cutoff"],
+            "max_bond": interf_opts["max_bond_dim"],
+        }
+
+        self._expval_opts = {
+            "dtype": self._dtype.__name__,
+            "simplify_sequence": "ADCRS",
+            "simplify_atol": 0.0,
+            "rehearse": interf_opts["rehearse"],
+        }
+
+        self._return_tn = interf_opts["return_tn"]
+
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     @property
     def state(self):
-        """Current MPS handled by the device."""
+        """Current MPS handled by the interface."""
         return self._circuitMPS.psi
 
     def state_to_array(self, digits: int = 5):
@@ -62,8 +86,4 @@ class QuimbMPS:
             array: The initial state of a circuit.
         """
 
-        return qtn.MPS_computational_state(
-            "0" * max(1, self._num_wires),
-            dtype=self._dtype.__name__,
-            tags=[str(l) for l in self._wires.labels],
-        )
+        return qtn.MPS_computational_state(**self._init_state_ops)

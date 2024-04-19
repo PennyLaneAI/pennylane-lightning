@@ -24,6 +24,9 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
+if not LightningDevice._new_API:
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+
 if LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
@@ -57,7 +60,18 @@ def test_invalid_method(method):
         LightningTensor(method=method)
 
 
+def test_invalid_keyword_arg():
+    """Test an invalid method."""
+    with pytest.raises(
+        TypeError,
+        match=f"Unexpected argument: fake_arg during initialization of lightning.tensor.",
+    ):
+        LightningTensor(fake_arg=None)
+
+
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(ValueError, match="LightningTensor does not support the `shots` parameter."):
+    with pytest.raises(
+        ValueError, match="LightningTensor does not support the `shots` parameter."
+    ):
         LightningTensor(shots=5)
