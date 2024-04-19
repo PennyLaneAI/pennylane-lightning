@@ -122,6 +122,7 @@ if device_name not in qml.plugin_devices:
 
 # Device specification
 import pennylane_lightning.lightning_qubit as lightning_ops  # Any definition of lightning_ops will do
+LightningException = None
 
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
