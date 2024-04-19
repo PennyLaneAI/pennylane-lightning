@@ -74,14 +74,14 @@ SX                     = {}
 # Observables supported by the device
 [operators.observables]
 
-Identity               = {}
-PauliX                 = {}
-PauliY                 = {}
-PauliZ                 = {}
-Hadamard               = {}
-Hermitian              = {}
-Hamiltonian            = {}
-SparseHamiltonian      = {}
+Identity               = { properties = [ "differentiable" ] }
+PauliX                 = { properties = [ "differentiable" ] }
+PauliY                 = { properties = [ "differentiable" ] }
+PauliZ                 = { properties = [ "differentiable" ] }
+Hadamard               = { properties = [ "differentiable" ] }
+Hermitian              = { properties = [ "differentiable" ] }
+Hamiltonian            = { properties = [ "differentiable" ] }
+SparseHamiltonian      = { properties = [ "differentiable" ] }
 
 [measurement_processes]
 
