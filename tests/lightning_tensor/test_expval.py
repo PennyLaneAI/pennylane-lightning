@@ -24,8 +24,8 @@ from pennylane.devices import DefaultQubit
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-# if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
-#    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
@@ -139,9 +139,7 @@ class TestExpval:
             (
                 [qml.PauliZ(wires=[0]), qml.PauliZ(wires=[1])],
                 qml.RX,
-                lambda theta, phi: np.array(
-                    [np.cos(theta), np.cos(theta) * np.cos(phi)]
-                ),
+                lambda theta, phi: np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]),
             ),
             (
                 [qml.Hadamard(wires=[0]), qml.Hadamard(wires=[1])],
@@ -156,9 +154,7 @@ class TestExpval:
             ),
         ],
     )
-    def test_single_wire_observables_expectation(
-        self, Obs, Op, expected_fn, theta, phi, tol, dev
-    ):
+    def test_single_wire_observables_expectation(self, Obs, Op, expected_fn, theta, phi, tol, dev):
         """Test that expectation values for single wire observables are correct"""
 
         tape = qml.tape.QuantumScript(
