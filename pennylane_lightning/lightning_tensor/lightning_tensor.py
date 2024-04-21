@@ -79,8 +79,6 @@ class LightningTensor(Device):
                 without performing the contraction. Default is `False`.
     """
 
-    # TODO: add kwargs description during implementation phase (next PR)
-
     # pylint: disable=too-many-instance-attributes
 
     # So far we just insert the options for MPS simulator
