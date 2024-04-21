@@ -13,6 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
+It is a device to perform tensor network operations on a quantum circuit. 
 """
 from dataclasses import replace
 from numbers import Number
@@ -61,14 +62,21 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
-        backend (str): Supported backend. Must be one of ``quimb`` or ``cutensornet``.
-        method (str): Supported method. Must be one of ``mps`` or ``tn``.
+        backend (str): Supported backend. Currently, only ``quimb`` is supported.
+        method (str): Supported method. Currently, only ``mps`` is supported.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Currently, it can only be ``None``, so that computation of
             statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments.
+        **kwargs: keyword arguments. The following options are currently supported:
+
+            ``max_bond_dim`` (int): Maximum bond dimension for the MPS simulator.
+                It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is `None`.
+            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is `1e-16`.
+            ``return_tn`` (bool): Whether to return the tensor network object along with the results of circuit execution. Default is `False`.
+            ``rehearse`` (bool): Whether to rehearse the circuit. If `True`, generate and cache the simplified tensor network and contraction path
+                without performing the contraction. Default is `False`.
     """
 
     # TODO: add kwargs description during implementation phase (next PR)
@@ -124,14 +132,13 @@ class LightningTensor(Device):
         self._measure_algorithm = kwargs.get("measure_algorithm", None)
 
         # common options (MPS and TN)
+        self._return_tn = kwargs.get("return_tn", False)
+        self._rehearse = kwargs.get("rehearse", False)
         self._apply_reverse_lightcone = kwargs.get("apply_reverse_lightcone", None)
-        self._return_tn = kwargs.get("return_tn", None)
-        self._rehearse = kwargs.get("rehearse", None)
 
         self._interface = None
         interface_opts = self._setup_execution_config().device_options
 
-        # TODO: implement the remaining interfaces when they will be available
         if self.backend == "quimb" and self.method == "mps":
             self._interface = QuimbMPS(
                 self._num_wires,
@@ -142,7 +149,7 @@ class LightningTensor(Device):
         for arg in kwargs:
             if arg not in self._device_options:
                 raise TypeError(
-                    f"Unexpected argument: {arg} during initialization of lightning.tensor."
+                    f"Unexpected argument: {arg} during initialization of the LightningTensor device."
                 )
 
     @property
@@ -167,12 +174,14 @@ class LightningTensor(Device):
 
     @property
     def c_dtype(self):
-        """State vector complex data type."""
+        """Tensor complex data type."""
         return self._c_dtype
 
     dtype = c_dtype
 
-    def _setup_execution_config(self, config: Optional[ExecutionConfig] = DefaultExecutionConfig):
+    def _setup_execution_config(
+        self, config: Optional[ExecutionConfig] = DefaultExecutionConfig
+    ) -> ExecutionConfig:
         """
         Update the execution config with choices for how the device should be used and the device options.
         """

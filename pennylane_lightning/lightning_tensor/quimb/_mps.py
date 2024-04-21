@@ -12,30 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for MPS manipulation based on the `quimb` Python package.
+Class implementation for the Quimb MPS interface for simulating quantum circuits while keeping the state always in MPS form.
 """
 
 import numpy as np
+import pennylane as qml
 import quimb.tensor as qtn
 from pennylane.wires import Wires
 
-# TODO: understand if supporting all operations and observables is feasible for the first release
-# I comment the following lines since otherwise Codecov complaints
-
-# _operations = frozenset({})
+_operations = frozenset({})  # pragma: no cover
 # The set of supported operations.
 
-# _observables = frozenset({})
+_observables = frozenset({})  # pragma: no cover
 # The set of supported observables.
+
+
+def stopping_condition(op: qml.operation.Operator) -> bool:
+    """A function that determines if an operation is supported by ``lightning.tensor`` for this interface."""
+    return op.name in _operations  # pragma: no cover
+
+
+def accepted_observables(obs: qml.operation.Operator) -> bool:
+    """A function that determines if an observable is supported by ``lightning.tensor`` for this interface."""
+    return obs.name in _observables  # pragma: no cover
 
 
 class QuimbMPS:
     """Quimb MPS class.
 
-    Interfaces with `quimb` for MPS manipulation.
-    """
+    Used internally by the `LightningTensor` device.
+    Interfaces with `quimb` for MPS manipulation, and provides methods to execute quantum circuits.
 
-    # TODO: add more details in description during implementation phase (next PR)
+    Args:
+        num_wires (int): the number of wires in the circuit.
+        interf_opts (dict): dictionary containing the interface options.
+        dtype (np.dtype): the complex type used for the MPS.
+    """
 
     def __init__(self, num_wires, interf_opts, dtype=np.complex128):
 
@@ -44,6 +56,7 @@ class QuimbMPS:
 
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+        self._return_tn = interf_opts["return_tn"]
 
         self._init_state_ops = {
             "binary": "0" * max(1, len(self._wires)),
@@ -65,8 +78,6 @@ class QuimbMPS:
             "rehearse": interf_opts["rehearse"],
         }
 
-        self._return_tn = interf_opts["return_tn"]
-
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     @property
@@ -74,16 +85,22 @@ class QuimbMPS:
         """Current MPS handled by the interface."""
         return self._circuitMPS.psi
 
+    def _reset_state(self) -> None:
+        """Reset the MPS."""
+        self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
+
     def state_to_array(self, digits: int = 5):
         """Contract the MPS into a dense array."""
         return self._circuitMPS.to_dense().round(digits)
 
-    def _initial_mps(self):
+    def _initial_mps(self) -> qtn.MatrixProductState:
         r"""
         Returns an initial state to :math:`\ket{0}`.
 
+        Internally, it uses `quimb`'s `MPS_computational_state` method.
+
         Returns:
-            array: The initial state of a circuit.
+            MatrixProductState: The initial MPS of a circuit.
         """
 
         return qtn.MPS_computational_state(**self._init_state_ops)

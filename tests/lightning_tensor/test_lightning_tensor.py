@@ -64,7 +64,7 @@ def test_invalid_keyword_arg():
     """Test an invalid keyword argument."""
     with pytest.raises(
         TypeError,
-        match=f"Unexpected argument: fake_arg during initialization of lightning.tensor.",
+        match=f"Unexpected argument: fake_arg during initialization of the LightningTensor device.",
     ):
         LightningTensor(fake_arg=None)
 
