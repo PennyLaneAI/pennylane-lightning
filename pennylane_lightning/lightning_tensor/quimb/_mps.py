@@ -100,10 +100,6 @@ class QuimbMPS:
         """Current MPS handled by the interface."""
         return self._circuitMPS.psi
 
-    def _reset_state(self) -> None:
-        """Reset the MPS."""
-        self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
-
     def state_to_array(self, digits: int = 5):
         """Contract the MPS into a dense array."""
         return self._circuitMPS.to_dense().round(digits)
