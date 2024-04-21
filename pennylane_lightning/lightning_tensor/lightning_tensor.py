@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """
 This module contains the LightningTensor class that inherits from the new device interface.
 It is a device to perform tensor network operations on a quantum circuit. 
 """
+
+
 from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -84,11 +87,9 @@ class LightningTensor(Device):
                 without performing the contraction. Default is `False`.
     """
 
-    # TODO: add kwargs description during implementation phase (next PR)
-
     # pylint: disable=too-many-instance-attributes
 
-    # So far we just insert the options for MPS simulator
+    # So far we just consider the options for MPS simulator
     _device_options = (
         "apply_reverse_lightcone",
         "backend",
@@ -220,6 +221,7 @@ class LightningTensor(Device):
 
         * Supports any qubit operations that provide a matrix.
         * Currently does not support finite shots.
+
         """
 
         config = self._setup_execution_config(execution_config)
