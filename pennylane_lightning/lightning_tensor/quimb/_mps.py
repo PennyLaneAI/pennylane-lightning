@@ -33,8 +33,6 @@ QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
-# TODO: understand if supporting all operations and observables is feasible for the first release
-
 _operations = frozenset({})  # pragma: no cover
 # The set of supported operations.
 
