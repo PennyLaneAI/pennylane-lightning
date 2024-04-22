@@ -48,9 +48,17 @@ jobs:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
-      - name: Install clang
+      - name: Install libomp-14
+        if: ${{ matrix.exec_model }} == "OPENMP"
         run: |
-          brew install libomp
+          mkdir -p ${{ github.workspace}}/libomp_install/${{ matrix.exec_model }}
+          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
+          cd ${{ github.workspace }}/libomp_install
+          tar xvf openmp-14.0.6.src.tar.xz
+          cmake -BBuild . \
+                -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
+                -G Ninja
+          cmake --install ./Build
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -78,7 +86,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=g++ \
-                          -DOpenMP_ROOT=$(brew --prefix libomp) \
+                          -DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -130,13 +138,14 @@ jobs:
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
-            brew install libomp
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
 
           PL_BACKEND: ${{ matrix.pl_backend }}
+
+          CMAKE_ARGS: "-DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
