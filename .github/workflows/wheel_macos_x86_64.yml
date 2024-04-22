@@ -53,9 +53,9 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace}}/libomp_install/${{ matrix.exec_model }}
           curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
-          cd ${{ github.workspace }}/libomp_install
+          cd ${{ github.workspace }}/libomp_install/
           tar xvf openmp-14.0.6.src.tar.xz
-          cmake -BBuild . \
+          cmake -BBuild ${{ github.workspace }}/libomp_install/openmp-14.0.6.src \
                 -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
                 -G Ninja
           cmake --install ./Build
