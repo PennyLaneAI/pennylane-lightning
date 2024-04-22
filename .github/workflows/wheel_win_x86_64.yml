@@ -171,7 +171,9 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
-          if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
+            SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
+          }
           cd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl
           foreach ($i in $wheels){
