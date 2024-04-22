@@ -102,6 +102,10 @@ class QuimbMPS:
         """Contract the MPS into a dense array."""
         return self._circuitMPS.to_dense().round(digits)
 
+    def _reset_state(self) -> None:
+        """Reset the MPS."""
+        self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
+
     def _initial_mps(self) -> qtn.MatrixProductState:
         r"""
         Returns an initial state to :math:`\ket{0}`.

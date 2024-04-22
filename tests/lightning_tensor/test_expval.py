@@ -24,8 +24,8 @@ from pennylane.devices import DefaultQubit
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
-    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
