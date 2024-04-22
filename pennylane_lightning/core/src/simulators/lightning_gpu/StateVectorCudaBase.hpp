@@ -27,6 +27,7 @@
 #include "DevTag.hpp"
 #include "Error.hpp"
 #include "StateVectorBase.hpp"
+#include "cuStateVecError.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
