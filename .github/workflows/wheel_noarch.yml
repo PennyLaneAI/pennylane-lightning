@@ -6,13 +6,12 @@ name: Wheel::Any::None
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  #pull_request:
+  pull_request:
   push:
     branches:
       - master
   release:
     types: [published]
-  workflow_dispatch:
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}
@@ -20,10 +19,7 @@ concurrency:
 
 jobs:
   build-pure-python-wheel:
-    if: |
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-      github.event_name == 'workflow_dispatch'
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -66,9 +62,7 @@ jobs:
           python -m twine check main/dist/*.whl
 
       - uses: actions/upload-artifact@v3
-        if: |
-          matrix.pl_backend == 'lightning_qubit' &&
-          (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
+        if: ${{ matrix.pl_backend == 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
@@ -97,9 +91,7 @@ jobs:
 
     steps:
       - uses: actions/download-artifact@v3
-        if: |
-          matrix.pl_backend == 'lightning_qubit' &&
-          github.event_name == 'release'
+        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
