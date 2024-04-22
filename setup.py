@@ -46,9 +46,7 @@ def get_backend():
         if not arg and backend is not None:
             cmake_backend = backend
         else:
-            cmake_backend = (
-                arg[0].split("=")[1].replace(".", "_") if arg else default_backend
-            )
+            cmake_backend = arg[0].split("=")[1].replace(".", "_") if arg else default_backend
         if backend is not None and backend != cmake_backend:
             raise ValueError(
                 f"Backends {backend} and {cmake_backend} specified by PL_BACKEND and CMAKE_ARGS respectively do not match."
@@ -76,9 +74,7 @@ class CMakeBuild(build_ext):
     This class is built upon https://github.com/diegoferigo/cmake-build-extension/blob/master/src/cmake_build_extension/build_extension.py and https://github.com/pybind/cmake_example/blob/master/setup.py
     """
 
-    user_options = build_ext.user_options + [
-        ("define=", "D", "Define variables for CMake")
-    ]
+    user_options = build_ext.user_options + [("define=", "D", "Define variables for CMake")]
 
     def initialize_options(self):
         super().initialize_options()
@@ -145,9 +141,7 @@ class CMakeBuild(build_ext):
                 if not Path(libomp_path).exists():
                     libomp_path = ""
                 configure_args += (
-                    [f"-DOpenMP_ROOT={libomp_path}/"]
-                    if libomp_path
-                    else ["-DENABLE_OPENMP=OFF"]
+                    [f"-DOpenMP_ROOT={libomp_path}/"] if libomp_path else ["-DENABLE_OPENMP=OFF"]
                 )
         elif platform.system() == "Windows":
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
@@ -172,9 +166,7 @@ class CMakeBuild(build_ext):
         )
 
 
-with open(
-    os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8"
-) as f:
+with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
@@ -193,9 +185,7 @@ if suffix == "gpu":
     suffix = suffix[0:].upper()
 suffix = suffix[0].upper() + suffix[1:]
 
-pennylane_plugins = [
-    device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix
-]
+pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
@@ -214,9 +204,7 @@ info = {
     "long_description_content_type": "text/x-rst",
     "install_requires": requirements,
     "ext_modules": (
-        []
-        if os.environ.get("SKIP_COMPILATION", False)
-        else [CMakeExtension(f"{backend}_ops")]
+        [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
     ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
