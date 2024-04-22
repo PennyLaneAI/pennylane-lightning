@@ -67,12 +67,12 @@ jobs:
           curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
           cd ${{ github.workspace }}/libomp_install/
           tar xvf openmp-14.0.6.src.tar.xz
-          cmake -BBuild ${{ github.workspace }}/libomp_install/openmp-14.0.6.src \
-                -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
+          cd ${{ github.workspace }}/libomp_install/openmp-14.0.6.src
+          cmake -BBuild . \
                 -DCMAKE_C_COMPILER=gcc \
                 -DCMAKE_CXX_COMPILER=g++ \
                 -G Ninja
-          cmake --install ./Build
+          cd Build && make DESTDIR=${{ github.workspace}}/libomp_install/ install
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
