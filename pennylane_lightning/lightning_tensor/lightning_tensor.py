@@ -67,7 +67,7 @@ class LightningTensor(Device):
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Currently, it can only be ``None``, so that computation of
             statistics like expectation values and variances is performed analytically.
-        c_dtype: Datatypes for statevector representation. Must be one of
+        c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         **kwargs: keyword arguments. The following options are currently supported:
 
@@ -81,7 +81,7 @@ class LightningTensor(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    # So far we just insert the options for MPS simulator
+    # So far we just consider the options for MPS simulator
     _device_options = (
         "apply_reverse_lightcone",
         "backend",
