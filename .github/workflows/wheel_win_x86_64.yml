@@ -165,7 +165,7 @@ jobs:
       - name: Test wheels
         run: |
           python -m ensurepip --upgrade
-          pip install setuptools
+          python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
           if ('${{ matrix.pl_backend }}' -eq 'lightning_kokkos'){
             $SKIP_COMPILATION=true
