@@ -70,10 +70,9 @@ jobs:
           cd ${{ github.workspace }}/libomp_install/openmp-14.0.6.src
           cmake -BBuild . \
                 -DCMAKE_C_COMPILER=gcc \
-                -DCMAKE_CXX_COMPILER=g++ \
-                -G Ninja
+                -DCMAKE_CXX_COMPILER=g++ 
           cmake --build ./Build
-          cd Build && make DESTDIR=${{ github.workspace}}/libomp_install/ install
+          cd Build && make DESTDIR=${{ github.workspace }}/libomp_install/ install
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -93,7 +92,8 @@ jobs:
                           -DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install \
                           -G Ninja
           cmake --build ./Build --verbose
-          cd Build && make DESTDIR=${{ matrix.exec_model }}/libomp_install install
+          cmake --install ./Build
+          cd -
 
   mac-wheels-x86:
     needs: [set_wheel_build_matrix, build_dependencies]
