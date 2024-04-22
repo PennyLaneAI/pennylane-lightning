@@ -52,6 +52,9 @@
 
 ### Improvements
 
+* Replace string comparisons by `isinstance` checks where possible.
+  [(#691)](https://github.com/PennyLaneAI/pennylane-lightning/pull/691)
+
 * Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
   [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
 
