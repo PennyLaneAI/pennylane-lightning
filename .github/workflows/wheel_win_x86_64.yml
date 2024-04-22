@@ -35,7 +35,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        exec_model: [\"SERIAL\"]
+        exec_model: ["SERIAL"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
@@ -55,12 +55,6 @@ jobs:
           cd D:\a
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
 
-      - name: Create installation directory
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force -ErrorAction Ignore
-          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
-
       - name: Install dependencies
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -69,6 +63,7 @@ jobs:
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
+          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
           cd D:\a\kokkos
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF `
@@ -83,7 +78,7 @@ jobs:
           cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
-    needs: [set_wheel_build_matrix]
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +86,7 @@ jobs:
         arch: [AMD64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: [\"SERIAL\"]
+        exec_model: ["SERIAL"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
@@ -108,11 +103,11 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
-      - name: Copy cached libraries #Update when merging to pennylane-lightning
+      - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
-                    -Destination "D:\a\Lightning-Unification\Lightning-Unification\Kokkos" -Recurse -Force
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0 wheel
