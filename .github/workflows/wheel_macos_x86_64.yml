@@ -45,9 +45,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: |
-            ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
-            ${{ github.workspace}}/ext_lib/libomp_install/
+          path: ${{ github.workspace}}/ext_lib/
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
@@ -91,7 +89,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=g++ \
-                          -DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install \
+                          -DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install/usr/local/ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -120,13 +118,15 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/ext_lib/
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
-          mkdir Kokkos
+          mkdir Kokkos OpenMP
           cp -rf ${{ github.workspace }}/ext_lib/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          #cp -rf ${{ github.workspace }}/ext_lib/libomp_install/* OpenMP/
 
       - uses: actions/setup-python@v5
         name: Install Python
@@ -150,7 +150,7 @@ jobs:
 
           PL_BACKEND: ${{ matrix.pl_backend }}
 
-          CMAKE_ARGS: "-DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install"
+          CMAKE_ARGS: "-DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install/usr/local/"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
