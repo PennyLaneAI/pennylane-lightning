@@ -433,7 +433,9 @@ class LightningKokkos(LightningBase):
                     self.apply_lightning([ops.then_op])
             elif isinstance(ops, MidMeasureMP):
                 self._apply_lightning_midmeasure(ops, mid_measurements)
-            elif ops.name == "C(GlobalPhase)":
+            elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
+                ops.base, qml.GlobalPhase
+            ):
                 controls = ops.control_wires
                 control_values = ops.control_values
                 param = ops.base.parameters[0]
@@ -498,9 +500,7 @@ class LightningKokkos(LightningBase):
         Returns:
             Expectation value of the observable
         """
-        if observable.name in [
-            "Projector",
-        ]:
+        if isinstance(observable, qml.Projector):
             diagonalizing_gates = observable.diagonalizing_gates()
             if self.shots is None and diagonalizing_gates:
                 self.apply(diagonalizing_gates)
@@ -536,7 +536,7 @@ class LightningKokkos(LightningBase):
             return measure.expval(matrix, observable_wires)
 
         if (
-            observable.name in ["Hamiltonian", "Hermitian"]
+            isinstance(observable, qml.ops.Hamiltonian)
             or (observable.arithmetic_depth > 0)
             or isinstance(observable.name, List)
         ):
