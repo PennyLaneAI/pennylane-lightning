@@ -93,8 +93,7 @@ jobs:
                           -DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install \
                           -G Ninja
           cmake --build ./Build --verbose
-          cmake --install ./Build
-          cd -
+          cd Build && make DESTDIR=${{ matrix.exec_model }}/libomp_install install
 
   mac-wheels-x86:
     needs: [set_wheel_build_matrix, build_dependencies]
