@@ -65,3 +65,29 @@ TEMPLATE_TEST_CASE("cuMPS::applyHadamard", "[cuMPS_Nonparam]", float, double) {
         }
     }
 }
+
+TEMPLATE_TEST_CASE("cuMPS::SetIthStates", "[cuMPS_Nonparam]", float, double) {
+    std::size_t num_qubits = 3;
+    std::size_t maxExtent = 2;
+    std::vector<size_t> qubitDims = {2, 2, 2};
+    Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+
+    SECTION(
+        "Set Ith element of the state state on device with data on the host") {
+
+        cuMPS<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+
+        size_t index = 3;
+        sv.setBasisState(index);
+
+        cuMPS<TestType> sv_copy(sv);
+
+        std::vector<std::complex<TestType>> expected_state(
+            1 << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        expected_state[index] = {1.0, 0.0};
+
+        CHECK(expected_state ==
+              Pennylane::Util::approx(sv_copy.getDataVector()));
+    }
+}

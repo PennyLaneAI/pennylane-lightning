@@ -70,7 +70,9 @@ template <class PrecisionT, class Derived> class TensorBase {
      *
      * @return std::vector<size_t> Modes of a tensor object.
      */
-    [[nodiscard]] auto getModes() -> std::vector<size_t> { return modes_; };
+    [[nodiscard]] auto getModes() const -> std::vector<size_t> {
+        return modes_;
+    };
 
     /**
      * @brief Return the number of elements of a tensor object.

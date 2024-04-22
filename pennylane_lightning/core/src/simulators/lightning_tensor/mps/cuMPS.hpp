@@ -80,10 +80,9 @@ template <class Precision> class cuMPS {
         CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
                                        // states as v24.03
 
-    //TODO add 
-    // std::vector<std::vector<int64_t>> extents_;
-    // std::vector<int64_t *> extentsPtr(numQubits_);
-    // std::vector<void *> mpsTensorsDataPtr(numQubits_, nullptr);
+    std::vector<std::vector<int64_t>> siteExtents_;
+    std::vector<int64_t *> siteExtentsPtr_;
+    std::vector<void *> mpsTensorsDataPtr_;
 
     size_t numQubits_;
     size_t maxExtent_;
@@ -109,6 +108,7 @@ template <class Precision> class cuMPS {
           gate_cache_(
               std::make_shared<GateTensorCache<Precision>>(true, dev_tag)) {
 
+        // TODO Move following part to CudaMPSBase?
         if constexpr (std::is_same_v<Precision, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -146,15 +146,84 @@ template <class Precision> class cuMPS {
             }
             d_mpsTensors_.emplace_back(modes.size(), modes, siteExtents,
                                        dev_tag_);
+
+            std::vector<int64_t> siteExtents_int64(siteExtents.size());
+
+            std::transform(siteExtents.begin(), siteExtents.end(),
+                           siteExtents_int64.begin(),
+                           [](size_t x) { return static_cast<int64_t>(x); });
+
+            siteExtents_.push_back(siteExtents_int64);
+
+            siteExtentsPtr_.emplace_back(siteExtents_.back().data());
+
+            mpsTensorsDataPtr_.emplace_back(static_cast<void *>(
+                d_mpsTensors_.back().getDataBuffer().getData()));
         }
     }
-    //TODO copy ctor for measurement class
-    cudaMPS(const cudaMPS &other){
+    // TODO copy ctor for measurement class
+    cuMPS(const cuMPS &other)
+        : handle_(other.handle_), numQubits_(other.getNumQubits()),
+          maxExtent_(other.getMaxExtent()), qubitDims_(other.getQubitDims()),
+          dev_tag_(other.getDevTag()),
+          gate_cache_(
+              std::make_shared<GateTensorCache<Precision>>(true, dev_tag_)) {
+
+        typeData_ = other.getDataType();
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStatePurity_t */ purity_,
+            /* int32_t numStateModes */ static_cast<int32_t>(numQubits_),
+            /* const int64_t *stateModeExtents */
+            reinterpret_cast<int64_t *>(qubitDims_.data()),
+            /* cudaDataType_t */ typeData_,
+            /*  cutensornetState_t * */ &quantumState_));
+
+        siteExtents_ = other.siteExtents_;
+
+        PL_ABORT_IF_NOT(siteExtents_.size() == other.siteExtents_.size(),
+                        "FAILED");
+
+        for (size_t i = 0; i < numQubits_; i++) {
+            auto modes = other.d_mpsTensors_[i].getModes();
+
+            std::vector<size_t> siteExtents_sizet(siteExtents_[i].size());
+
+            std::transform(siteExtents_[i].begin(), siteExtents_[i].end(),
+                           siteExtents_sizet.begin(),
+                           [](int64_t x) { return static_cast<size_t>(x); });
+
+            d_mpsTensors_.emplace_back(modes.size(), modes, siteExtents_sizet,
+                                       dev_tag_);
+
+            PL_ABORT_IF_NOT(d_mpsTensors_.back().getLength() ==
+                                other.d_mpsTensors_[i].getLength(),
+                            "fAILED");
+
+            d_mpsTensors_.back().CopyGpuDataToGpuIn(
+                other.d_mpsTensors_[i].getData(),
+                other.d_mpsTensors_[i].getLength());
+
+            siteExtentsPtr_.emplace_back(siteExtents_[i].data());
+
+            mpsTensorsDataPtr_.emplace_back(static_cast<void *>(
+                d_mpsTensors_.back().getDataBuffer().getData()));
+        }
+        updateMPSTensorData_(siteExtentsPtr_.data(), mpsTensorsDataPtr_.data());
     }
 
     ~cuMPS() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
+
+    auto getDataType() const -> cudaDataType_t { return typeData_; }
+
+    auto getQubitDims() const -> std::vector<size_t> { return qubitDims_; }
+
+    auto getNumQubits() const -> size_t { return numQubits_; }
+
+    auto getMaxExtent() const -> size_t { return maxExtent_; }
 
     auto getDevTag() const -> Pennylane::LightningGPU::DevTag<int> {
         return dev_tag_;
@@ -163,6 +232,10 @@ template <class Precision> class cuMPS {
     auto getGateCache() -> std::shared_ptr<GateTensorCache<Precision>> {
         return gate_cache_;
     }
+
+    auto getSiteExtentsPtr() { return siteExtentsPtr_; }
+
+    auto getMPSTensorDataPtr() { return mpsTensorsDataPtr_; }
 
     /**
      * @brief Get the cuTensorNet handle that the object is using.
@@ -177,8 +250,9 @@ template <class Precision> class cuMPS {
         this->setBasisState(index);
     }
 
-    //TODO this implementation only support up to 64 qubits
-    //TODO SWITCH TO std::vector<char or size_t> index to accept basis state array (list) from Pennylane layer
+    // TODO this implementation only support up to 64 qubits
+    // TODO SWITCH TO std::vector<char or size_t> index to accept basis state
+    // array (list) from Pennylane layer
     void setBasisState(size_t index) {
         // Assuming the site vector is [1,0] or [0,1] and bond vector is
         // [1,0,0...].
@@ -207,42 +281,13 @@ template <class Precision> class cuMPS {
                 cudaMemcpy(&d_mpsTensors_[i].getDataBuffer().getData()[target],
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
-        //TODO Move the following part to CTOR
-        //-------START
-        std::vector<std::vector<int64_t>> extents;
-        std::vector<int64_t *> extentsPtr(numQubits_);
-        std::vector<void *> mpsTensorsDataPtr(numQubits_, nullptr);
 
-        for (size_t i = 0; i < numQubits_; i++) {
-            std::vector<int64_t> localExtents(
-                d_mpsTensors_[i].getExtents().size());
-
-            for (size_t j = 0; j < d_mpsTensors_[i].getExtents().size(); j++) {
-                localExtents[j] =
-                    static_cast<int64_t>(d_mpsTensors_[i].getExtents()[j]);
-            }
-
-            extents.push_back(localExtents);
-
-            extentsPtr[i] = extents[i].data();
-            mpsTensorsDataPtr[i] =
-                static_cast<void *>(d_mpsTensors_[i].getDataBuffer().getData());
-        }
-        //-------END
-
-        //TODO Move the following API to a new method updateMPS()
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
-            /*const cutensornetHandle_t*/ handle_.get(),
-            /*cutensornetState_t*/ quantumState_,
-            /*cutensornetBoundaryCondition_t*/
-            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /*const int64_t *const*/ extentsPtr.data(),
-            /*const int64_t *const*/ nullptr,
-            /*void **/ mpsTensorsDataPtr.data()));
+        updateMPSTensorData_(siteExtentsPtr_.data(), mpsTensorsDataPtr_.data());
     };
 
-    //TODO add updateData() method to update d_mpsTensors_ attribute for copy ctor
-    //TODO we should follow the fllowing API
+    // TODO add updateData() method to update d_mpsTensors_ attribute for copy
+    // ctor
+    // TODO we should follow the fllowing API
     auto getDataVector() -> std::vector<std::complex<Precision>> {
         // 1D representation of mpsTensor
         std::vector<size_t> modes(1, 1);
@@ -548,6 +593,18 @@ template <class Precision> class cuMPS {
             /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
             /* void *const */ scratchPtr,
             /* int64_t */ worksize));
+    }
+
+    void updateMPSTensorData_(const int64_t *const *extentsIn,
+                              void **stateTensorsIn) {
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
+            /*const cutensornetHandle_t*/ handle_.get(),
+            /*cutensornetState_t*/ quantumState_,
+            /*cutensornetBoundaryCondition_t*/
+            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+            /*const int64_t *const*/ extentsIn,
+            /*const int64_t *const*/ nullptr,
+            /*void **/ stateTensorsIn));
     }
 
     void applyGate_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires,
