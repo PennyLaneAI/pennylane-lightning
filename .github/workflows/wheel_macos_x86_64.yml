@@ -69,7 +69,7 @@ jobs:
           tar xvf openmp-14.0.6.src.tar.xz
           cmake -BBuild ${{ github.workspace }}/libomp_install/openmp-14.0.6.src \
                 -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
-                -DCMAKE_C_COMPILER=g++ \
+                -DCMAKE_C_COMPILER=gcc \
                 -DCMAKE_CXX_COMPILER=g++ \
                 -G Ninja
           cmake --install ./Build
