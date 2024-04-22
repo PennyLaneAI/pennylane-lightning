@@ -91,7 +91,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=g++ \
-                          -DOpenMP_ROOT=${{ matrix.exec_model }}/ext_lib/libomp_install \
+                          -DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -150,7 +150,7 @@ jobs:
 
           PL_BACKEND: ${{ matrix.pl_backend }}
 
-          CMAKE_ARGS: "-DOpenMP_ROOT=${{ matrix.exec_model }}/ext_lib/libomp_install"
+          CMAKE_ARGS: "-DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
