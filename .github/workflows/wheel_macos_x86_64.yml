@@ -14,7 +14,7 @@ on:
     types: [published]
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: 10.15
+  MACOSX_DEPLOYMENT_TARGET: 11.0
 
 concurrency:
   group: wheel_macos_x86_64-${{ github.ref }}
@@ -45,12 +45,8 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/ext_lib/
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Install clang
-        run: |
-          brew install libomp
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -63,14 +59,29 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install libomp-14
+        if: ${{ matrix.exec_model }} == "OPENMP"
+        run: |
+          python -m pip install cmake ninja
+          mkdir -p ${{ github.workspace}}/ext_lib/libomp_install/${{ matrix.exec_model }}
+          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/ext_lib/libomp_install/openmp-14.0.6.src.tar.xz
+          cd ${{ github.workspace }}/ext_lib/libomp_install/
+          tar xvf openmp-14.0.6.src.tar.xz
+          cd ${{ github.workspace }}/ext_lib/libomp_install/openmp-14.0.6.src
+          cmake -BBuild . \
+                -DCMAKE_C_COMPILER=gcc \
+                -DCMAKE_CXX_COMPILER=g++ 
+          cmake --build ./Build
+          cd Build && make DESTDIR=${{ github.workspace }}/ext_lib/libomp_install/ install
+
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
           python -m pip install cmake ninja
 
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -78,7 +89,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=g++ \
-                          -DOpenMP_ROOT=$(brew --prefix libomp) \
+                          -DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install/usr/local/ \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -107,13 +118,15 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/ext_lib/
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
-          mkdir Kokkos
-          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          mkdir Kokkos OpenMP
+          cp -rf ${{ github.workspace }}/ext_lib/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          #cp -rf ${{ github.workspace }}/ext_lib/libomp_install/* OpenMP/
 
       - uses: actions/setup-python@v5
         name: Install Python
@@ -130,13 +143,14 @@ jobs:
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
-            brew install libomp
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
 
           PL_BACKEND: ${{ matrix.pl_backend }}
+
+          CMAKE_ARGS: "-DOpenMP_ROOT=${{ github.workspace}}/ext_lib/libomp_install/usr/local/"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
@@ -165,7 +179,7 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        #if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
