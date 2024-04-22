@@ -60,6 +60,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      gates
                            observables
+                           measurements
                            )
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})

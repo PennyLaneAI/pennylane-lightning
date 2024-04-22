@@ -29,7 +29,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Observables.hpp"
 #include "Observables_cuMPS.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuMPS.hpp"
@@ -39,8 +38,6 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane;
-using namespace Pennylane::Measures;
-using namespace Pennylane::Observables;
 using namespace Pennylane::LightningTensor::Observables;
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using Pennylane::LightningTensor::cuMPS;
@@ -59,8 +56,7 @@ namespace Pennylane::LightningTensor::Measures {
  *
  * @tparam cuMPS type of the statevector to be measured.
  */
-template <class TensorNetT>
-class Measurements {
+template <class TensorNetT> class Measurements {
   private:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
@@ -69,8 +65,7 @@ class Measurements {
     TensorNetT &_statetensor;
 
   public:
-    explicit Measurements(TensorNetT &statetensor)
-        : _statetensor{statevector} {
+    explicit Measurements(TensorNetT &statetensor) : _statetensor{statetensor} {
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
             data_type_ = CUDA_C_64F;
@@ -80,27 +75,15 @@ class Measurements {
     };
 
     /**
-     * @brief Expected value of an observable.
-     *
-     * @param operation String with the operator name.
-     * @param wires Wires where to apply the operator.
-     * @return Floating point expected value of the observable.
-     */
-    auto expval(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
-        std::vector<PrecisionT> params = {0.0};
-        std::vector<ComplexT> gate_matrix = {};
-        return this->expval_(operation, wires, params, gate_matrix);
-    }
-
-    /**
      * @brief Calculate expectation value for a general Observable.
      *
      * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(const ObservableCudaTN<PrecisionT> &ob) -> PrecisionT {
-      
+    auto
+    expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<PrecisionT>
+               &ob) -> ComplexT {
+        return _statetensor.expval(ob);
     }
 
 }; // class Measurements

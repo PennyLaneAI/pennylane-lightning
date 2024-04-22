@@ -6,7 +6,7 @@ project(lightning_tensor_components LANGUAGES CXX)
 # Include all nested sources directories
 ###############################################################################
 set(COMPONENT_SUBDIRS   base
-                        mps
+                        mps                
                         utils
 )
 
