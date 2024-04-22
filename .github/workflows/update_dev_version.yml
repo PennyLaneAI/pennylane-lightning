@@ -1,6 +1,8 @@
 name: Update dev version automatically
 on:
-  pull_request:
+  pull_request_target:
+    branches:
+      - master
 
 jobs:
   update-dev-version:
@@ -14,31 +16,51 @@ jobs:
           ref: master
           path: main
 
+      - name: Checkout PennyLane-Lightning PR
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
+          path: pr
+
+      - name: Checkout PR branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.AUTO_UPDATE_VERSION_RINGO_TOKEN }}
+        run: cd pr && gh pr checkout ${{ github.event.pull_request.number }}
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
-      - name: Checkout PennyLane-Lightning PR
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
-          path: pr
+      - name: Install Python Dependencies
+        run: pip install semver
+
+      - name: Capture Current Version in Pull Request
+        id: old_version
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Run version update script
-        run: >
-          python3 pr/.github/workflows/dev_version_script.py
-          --pr-path "./pr" --master-path "./main"
+        run: |
+          python3 \
+           main/.github/workflows/dev_version_script.py \
+           --pr-path "${{ github.workspace }}/pr" \
+           --master-path "${{ github.workspace }}/main"
+
+      - name: Capture Changed version
+        id: new_version
+        run: echo "version=$(grep -o '__version__ = "[^"]\+[0-9]\+"' pr/pennylane_lightning/core/_version.py | cut -d '"' -f 2)" >> $GITHUB_OUTPUT
 
       - name: Commit and push changes
-        if:
+        if: steps.old_version.outputs.version != steps.new_version.outputs.version
+        env:
+          OLD_VERSION: ${{ steps.old_version.outputs.version }}
+          NEW_VERSION: ${{ steps.new_version.outputs.version }}
         run: |
           cd ./pr
           if [[ -n $(git status -s) ]]; then
-            git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-            git config --global user.name "Dev version update bot"
+            git config --global user.email '${{ secrets.AUTO_UPDATE_VERSION_RINGO_EMAIL }}'
+            git config --global user.name "ringo-but-quantum"
             git add .
-            git commit -m 'Auto update version'
+            git commit -m "Auto update version from '$OLD_VERSION' to '$NEW_VERSION'"
             git push
           fi
