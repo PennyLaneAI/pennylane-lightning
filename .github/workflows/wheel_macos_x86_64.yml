@@ -45,7 +45,9 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: |
+            ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
+            ${{ github.workspace}}/ext_lib/libomp_install/
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Clone Kokkos libs
@@ -63,25 +65,25 @@ jobs:
         if: ${{ matrix.exec_model }} == "OPENMP"
         run: |
           python -m pip install cmake ninja
-          mkdir -p ${{ github.workspace}}/libomp_install/${{ matrix.exec_model }}
-          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
-          cd ${{ github.workspace }}/libomp_install/
+          mkdir -p ${{ github.workspace}}/ext_lib/libomp_install/${{ matrix.exec_model }}
+          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/ext_lib/libomp_install/openmp-14.0.6.src.tar.xz
+          cd ${{ github.workspace }}/ext_lib/libomp_install/
           tar xvf openmp-14.0.6.src.tar.xz
-          cd ${{ github.workspace }}/libomp_install/openmp-14.0.6.src
+          cd ${{ github.workspace }}/ext_lib/libomp_install/openmp-14.0.6.src
           cmake -BBuild . \
                 -DCMAKE_C_COMPILER=gcc \
                 -DCMAKE_CXX_COMPILER=g++ 
           cmake --build ./Build
-          cd Build && make DESTDIR=${{ github.workspace }}/libomp_install/ install
+          cd Build && make DESTDIR=${{ github.workspace }}/ext_lib/libomp_install/ install
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          mkdir -p ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
           cd kokkos
           python -m pip install cmake ninja
 
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }} \
+          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }} \
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                           -DKokkos_ENABLE_SERIAL=ON \
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
@@ -89,7 +91,7 @@ jobs:
                           -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -DCMAKE_CXX_COMPILER=g++ \
-                          -DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install \
+                          -DOpenMP_ROOT=${{ matrix.exec_model }}/ext_lib/libomp_install \
                           -G Ninja
           cmake --build ./Build --verbose
           cmake --install ./Build
@@ -118,13 +120,13 @@ jobs:
         id: kokkos-cache
         uses: actions/cache@v4
         with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          path: ${{ github.workspace}}/ext_lib/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
           mkdir Kokkos
-          cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          cp -rf ${{ github.workspace }}/ext_lib/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - uses: actions/setup-python@v5
         name: Install Python
@@ -148,7 +150,7 @@ jobs:
 
           PL_BACKEND: ${{ matrix.pl_backend }}
 
-          CMAKE_ARGS: "-DOpenMP_ROOT=${{ matrix.exec_model }}/libomp_install"
+          CMAKE_ARGS: "-DOpenMP_ROOT=${{ matrix.exec_model }}/ext_lib/libomp_install"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
