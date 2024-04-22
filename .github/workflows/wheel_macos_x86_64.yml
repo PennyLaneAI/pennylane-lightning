@@ -48,18 +48,6 @@ jobs:
           path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
-      - name: Install libomp-14
-        if: ${{ matrix.exec_model }} == "OPENMP"
-        run: |
-          mkdir -p ${{ github.workspace}}/libomp_install/${{ matrix.exec_model }}
-          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
-          cd ${{ github.workspace }}/libomp_install/
-          tar xvf openmp-14.0.6.src.tar.xz
-          cmake -BBuild ${{ github.workspace }}/libomp_install/openmp-14.0.6.src \
-                -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
-                -G Ninja
-          cmake --install ./Build
-
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -70,6 +58,21 @@ jobs:
         name: Install Python
         with:
           python-version: '3.9'
+
+      - name: Install libomp-14
+        if: ${{ matrix.exec_model }} == "OPENMP"
+        run: |
+          python -m pip install cmake ninja
+          mkdir -p ${{ github.workspace}}/libomp_install/${{ matrix.exec_model }}
+          curl -L https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.6/openmp-14.0.6.src.tar.xz --output ${{ github.workspace }}/libomp_install/openmp-14.0.6.src.tar.xz
+          cd ${{ github.workspace }}/libomp_install/
+          tar xvf openmp-14.0.6.src.tar.xz
+          cmake -BBuild ${{ github.workspace }}/libomp_install/openmp-14.0.6.src \
+                -DCMAKE_INSTALL_PREFIX=${{ github.workspace}}/libomp_install/  \
+                -DCMAKE_C_COMPILER=g++ \
+                -DCMAKE_CXX_COMPILER=g++ \
+                -G Ninja
+          cmake --install ./Build
 
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
