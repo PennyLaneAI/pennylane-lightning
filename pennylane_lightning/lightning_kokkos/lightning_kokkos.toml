@@ -17,7 +17,8 @@ CZ                     = { properties = [ "invertible",                 "differe
 DoubleExcitationMinus  = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitationPlus   = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitation       = { properties = [ "invertible",                 "differentiable" ] }
-GlobalPhase            = { properties = [ "invertible",                 "differentiable" ] }
+# FIXME: device reports it is controllable. Why is that?
+GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
 Hadamard               = { properties = [ "invertible",                 "differentiable" ] }
 Identity               = { properties = [ "invertible",                 "differentiable" ] }
 IsingXX                = { properties = [ "invertible",                 "differentiable" ] }
