@@ -22,7 +22,7 @@
 
 #include <catch2/catch.hpp>
 
-#include "Observables_cuMPS.hpp"
+#include "ObservablescuMPS.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuGates_host.hpp"
 #include "cuMPS.hpp"
@@ -40,7 +40,7 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
 TEMPLATE_TEST_CASE("cuMPS::applyPauliX", "[cuMPS_Nonparam]", float, double) {
-    using NamedObsT = NamedObsCudaTN<TestType>;
+    using NamedObsT = NamedObsCudaMPS<TestType>;
     // const bool inverse = GENERATE(true, false);
     {
         using cp_t = std::complex<TestType>;

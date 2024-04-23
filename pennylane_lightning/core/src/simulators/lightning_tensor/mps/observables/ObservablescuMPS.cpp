@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "Observables_cuMPS.hpp"
+#include "ObservablescuMPS.hpp"
 
 using namespace Pennylane::LightningTensor;
 
-template class Observables::NamedObsCudaTN<float>;
-template class Observables::NamedObsCudaTN<double>;
+template class Observables::NamedObsCudaMPS<float>;
+template class Observables::NamedObsCudaMPS<double>;

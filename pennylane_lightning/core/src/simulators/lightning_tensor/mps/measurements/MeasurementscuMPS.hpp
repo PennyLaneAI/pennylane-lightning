@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Observables_cuMPS.hpp"
+#include "ObservablescuMPS.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuMPS.hpp"
 #include "cuTensorNetError.hpp"
@@ -81,7 +81,7 @@ template <class TensorNetT> class Measurements {
      * @return Expectation value with respect to the given observable.
      */
     auto
-    expval(Pennylane::LightningTensor::Observables::ObservableCudaTN<PrecisionT>
+    expval(Pennylane::LightningTensor::Observables::ObservableCudaMPS<PrecisionT>
                &ob) -> ComplexT {
         return _statetensor.expval(ob);
     }
