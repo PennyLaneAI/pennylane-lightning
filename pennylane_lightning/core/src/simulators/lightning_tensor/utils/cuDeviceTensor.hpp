@@ -51,19 +51,16 @@ class cuDeviceTensor
                    cudaStream_t stream_id = 0, bool device_alloc = true)
         : TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>>(rank, modes,
                                                              extents),
-          data_buffer_{
-              std::make_shared<Pennylane::LightningGPU::DataBuffer<CFP_t>>(
-                  BaseType::getLength(), device_id, stream_id, device_alloc)} {}
+          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+              BaseType::getLength(), device_id, stream_id, device_alloc)} {}
 
     cuDeviceTensor(size_t rank, std::vector<size_t> &modes,
-                   std::vector<size_t> &extents,
-                   Pennylane::LightningGPU::DevTag<int> dev_tag,
+                   std::vector<size_t> &extents, DevTag<int> dev_tag,
                    bool device_alloc = true)
         : TensorBase<PrecisionT, cuDeviceTensor<PrecisionT>>(rank, modes,
                                                              extents),
-          data_buffer_{
-              std::make_shared<Pennylane::LightningGPU::DataBuffer<CFP_t>>(
-                  BaseType::getLength(), dev_tag, device_alloc)} {}
+          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+              BaseType::getLength(), dev_tag, device_alloc)} {}
 
     ~cuDeviceTensor() {}
 
@@ -153,25 +150,20 @@ class cuDeviceTensor
         data_buffer_->CopyGpuDataToHost(host_sv, length, async);
     }
 
-    const Pennylane::LightningGPU::DataBuffer<CFP_t> &getDataBuffer() const {
-        return *data_buffer_;
-    }
+    const DataBuffer<CFP_t> &getDataBuffer() const { return *data_buffer_; }
 
-    Pennylane::LightningGPU::DataBuffer<CFP_t> &getDataBuffer() {
-        return *data_buffer_;
-    }
+    DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
 
     /**
      * @brief Move and replace DataBuffer for statevector.
      *
      * @param other Source data to copy from.
      */
-    void updateData(
-        std::unique_ptr<Pennylane::LightningGPU::DataBuffer<CFP_t>> &&other) {
+    void updateData(std::unique_ptr<DataBuffer<CFP_t>> &&other) {
         data_buffer_ = std::move(other);
     }
 
   private:
-    std::shared_ptr<Pennylane::LightningGPU::DataBuffer<CFP_t>> data_buffer_;
+    std::shared_ptr<DataBuffer<CFP_t>> data_buffer_;
 };
 } // namespace Pennylane::LightningTensor

@@ -85,7 +85,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_S_NORMALIZATION
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO
     MPSCutn(size_t numQubits, size_t maxExtent, std::vector<size_t> qubitDims,
-            Pennylane::LightningGPU::DevTag<int> dev_tag)
+            DevTag<int> dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
 
     MPSCutn(const MPSCutn &other)
@@ -338,13 +338,14 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
-    ComplexT expval(const std::string &opName, const std::vector<size_t> &wires,
-                    const std::vector<Precision> &params = {0.0}) {
-        auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-        return expval_(
-            BaseType::getGateCache()->get_gate_device_ptr(opName, par[0]),
-            wires);
-    }
+    // ComplexT expval(const std::string &opName, const std::vector<size_t>
+    // &wires,
+    //                 const std::vector<Precision> &params = {0.0}) {
+    //     auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
+    //     return expval_(
+    //         BaseType::getGateCache()->get_gate_device_ptr(opName, par[0]),
+    //         wires);
+    // }
 
     ComplexT
     expval(Pennylane::LightningTensor::Observables::ObservableMPSCutn<Precision>
@@ -354,74 +355,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                             BaseType::getNumQubits(), BaseType::getQubitDims(),
                             BaseType::getGateCache());
 
-        // Compute the specified quantum circuit expectation value
-        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
-
-        cutensornetStateExpectation_t expectation;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetNetworkOperator_t */ ob.getTNOperator(),
-            /* cutensornetStateExpectation_t * */ &expectation));
-
-        // Configure the computation of the specified quantum circuit
-        // expectation value
-        const int32_t numHyperSamples =
-            8; // desired number of hyper samples used in the tensor network
-               // contraction path finder
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetStateExpectation_t */ expectation,
-            /* cutensornetExpectationAttributes_t */
-            CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
-            /* const void * */ &numHyperSamples,
-            /* size_t */ sizeof(numHyperSamples)));
-
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
-
-        const std::size_t scratchSize = getScratchMemorySize();
-
-        // Prepare the specified quantum circuit expectation value for
-        // computation
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetStateExpectation_t */ expectation,
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cudaStream_t [unused] */ 0x0));
-
-        int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
-
-        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
-                    "Insufficient workspace size on Device.\n");
-
-        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
-        DataBuffer<size_t, int> d_scratch(d_scratch_length,
-                                          BaseType::getDevTag(), true);
-
-        this->setWorkSpaceMemory_(
-            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetStateExpectation_t */ expectation,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* void* */ static_cast<void *>(&expectVal),
-            /* void* */ static_cast<void *>(&stateNorm2),
-            /*  cudaStream_t unused */ 0x0));
-
-        expectVal /= stateNorm2;
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
-
-        return expectVal;
+        return expval_(ob.getTNOperator());
     }
 
   private:
@@ -515,56 +449,17 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             /* int64_t *tensorId*/ &id));
     }
 
-    ComplexT expval_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires) {
-
-        // Compute the specified quantum circuit expectation value
+    // ComplexT expval_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires)
+    // {
+    ComplexT expval_(cutensornetNetworkOperator_t tnOps) {
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
-
-        // TODO add create-tensor-network-operator to ObservableMPSCutn classes.
-        // TODO cutensornetNetworkOperator_t tnOps as private data of
-        // ObservableMPSCutn classes.
-        // TODO tnOps can be created with obs->create-tensor-network-operator()
-        // method in the MeasurementMPSCutn class.
-        // TODO move this method to the MeasurementMPSCutn class
-        // Create an empty tensor network operator
-        cutensornetNetworkOperator_t hamiltonian;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* int32_t */ static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t stateModeExtents */
-            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
-            /* cudaDataType_t */ BaseType::getDataType(),
-            /*  cutensornetNetworkOperator_t */ &hamiltonian));
-
-        int64_t id;
-
-        std::vector<int32_t> wires_int(wires.size());
-        std::transform(wires.begin(), wires.end(), wires_int.begin(),
-                       [](size_t x) { return static_cast<int32_t>(x); });
-
-        std::vector<int32_t> numStateModes(1, wires.size());
-        std::vector<const int32_t *> stateModes;
-        stateModes.emplace_back(wires_int.data());
-        std::vector<const void *> tensorData;
-        tensorData.emplace_back(static_cast<const void *>(gateTensorPtr));
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetNetworkOperator_t */ hamiltonian,
-            /* cuDoubleComplex coefficient*/ cuDoubleComplex{1, 0.0},
-            /* int32_t numTensors */ 1,
-            /* const int32_t numStateModes[] */ numStateModes.data(),
-            /* const int32_t *stateModes[] */ stateModes.data(),
-            /* const int64_t *tensorModeStrides[] */ nullptr,
-            /* const void *tensorData[] */ tensorData.data(),
-            /* int64_t* */ &id));
 
         cutensornetStateExpectation_t expectation;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetNetworkOperator_t */ hamiltonian,
+            /* cutensornetNetworkOperator_t */ tnOps,
             /* cutensornetStateExpectation_t * */ &expectation));
 
         // Configure the computation of the specified quantum circuit
@@ -597,17 +492,6 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
 
-        Precision flops = 0.0;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationGetInfo(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetStateExpectation_t */ expectation,
-            /* cutensornetExpectationAttributes_t */
-            CUTENSORNET_EXPECTATION_INFO_FLOPS,
-            /* void * */ &flops,
-            /* size_t attributeSize */ sizeof(flops)));
-
-        PL_ABORT_IF(flops <= 0.0, "Invalid Flop count.\n");
-
         int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
@@ -633,8 +517,6 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyNetworkOperator(hamiltonian));
 
         return expectVal;
     }

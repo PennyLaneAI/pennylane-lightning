@@ -48,7 +48,7 @@ TEMPLATE_TEST_CASE("MPSCutn::applyPauliX", "[MPSCutn_Nonparam]", float,
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         std::vector<size_t> qubitDims(num_qubits, 2);
-        Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+        DevTag<int> dev_tag{0, 0};
 
         SECTION("Apply using dispatcher") {
             MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};

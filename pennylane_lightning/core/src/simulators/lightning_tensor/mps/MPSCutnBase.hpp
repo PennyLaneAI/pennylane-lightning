@@ -67,7 +67,7 @@ template <class Precision, class Derived> class MPSCutnBase {
     size_t maxExtent_;
     std::vector<size_t> qubitDims_;
 
-    Pennylane::LightningGPU::DevTag<int> dev_tag_;
+    DevTag<int> dev_tag_;
 
     std::vector<cuDeviceTensor<Precision>> d_mpsTensors_;
 
@@ -75,8 +75,7 @@ template <class Precision, class Derived> class MPSCutnBase {
 
   public:
     MPSCutnBase(size_t numQubits, size_t maxExtent,
-                std::vector<size_t> qubitDims,
-                Pennylane::LightningGPU::DevTag<int> dev_tag)
+                std::vector<size_t> qubitDims, DevTag<int> dev_tag)
         : handle_(make_shared_cutn_handle()), numQubits_(numQubits),
           maxExtent_(maxExtent), qubitDims_(qubitDims), dev_tag_(dev_tag),
           gate_cache_(
@@ -178,9 +177,7 @@ template <class Precision, class Derived> class MPSCutnBase {
         return d_mpsTensors_.data();
     }
 
-    auto getDevTag() const -> Pennylane::LightningGPU::DevTag<int> {
-        return dev_tag_;
-    }
+    auto getDevTag() const -> DevTag<int> { return dev_tag_; }
 
     auto getCtrlMap() -> const std::unordered_map<std::string, std::size_t> & {
         return ctrl_map_;

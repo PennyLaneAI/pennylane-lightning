@@ -37,6 +37,62 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
+/**
+ * @brief Tests the constructability of the MPSCutn class.
+ *
+ */
+/*
+TEMPLATE_TEST_CASE("MPSCutn::MPSCutn",
+                   "[MPSCutn_Nonparam]", float, double) {
+    SECTION("MPSCutn<TestType> {std::complex<TestType>, "
+            "std::size_t}") {
+        REQUIRE(std::is_constructible<MPSCutn<TestType>,
+                                      std::complex<TestType> *,
+                                      std::size_t>::value);
+    }
+    SECTION("MPSCutn<TestType> cross types") {
+        if constexpr (!std::is_same_v<TestType, double>) {
+            REQUIRE_FALSE(
+                std::is_constructible<MPSCutn<TestType>,
+                                      std::complex<double> *,
+                                      std::size_t>::value);
+            REQUIRE_FALSE(std::is_constructible<MPSCutn<double>,
+                                                std::complex<TestType> *,
+                                                std::size_t>::value);
+        } else if constexpr (!std::is_same_v<TestType, float>) {
+            REQUIRE_FALSE(
+                std::is_constructible<MPSCutn<TestType>,
+                                      std::complex<float> *,
+                                      std::size_t>::value);
+            REQUIRE_FALSE(std::is_constructible<MPSCutn<float>,
+                                                std::complex<TestType> *,
+                                                std::size_t>::value);
+        }
+    }
+    SECTION("MPSCutn<TestType> transfers") {
+        using cp_t = std::complex<TestType>;
+        const std::size_t num_qubits = 3;
+        const std::vector<cp_t> init_state{{1, 0}, {0, 0}, {0, 0}, {0, 0},
+                                           {0, 0}, {0, 0}, {0, 0}, {0, 0}};
+        SECTION("GPU <-> host data: std::complex") {
+            MPSCutn<TestType> sv{num_qubits};
+            sv.initSV();
+            std::vector<cp_t> out_data(Pennylane::Util::exp2(num_qubits),
+                                       {0.5, 0.5});
+            std::vector<cp_t> ref_data(Pennylane::Util::exp2(num_qubits),
+                                       {0.0, 0.0});
+            sv.CopyGpuDataToHost(out_data.data(), out_data.size());
+            CHECK(out_data == init_state);
+
+            sv.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                               {{0}, {1}, {2}}, {false, false, false});
+            sv.CopyHostDataToGpu(out_data);
+            sv.CopyGpuDataToHost(ref_data.data(), ref_data.size());
+            CHECK(out_data == Pennylane::Util::approx(ref_data));
+        }
+    }
+}*/
+
 TEMPLATE_TEST_CASE("MPSCutn::applyHadamard", "[MPSCutn_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(true, false);
@@ -45,7 +101,6 @@ TEMPLATE_TEST_CASE("MPSCutn::applyHadamard", "[MPSCutn_Nonparam]", float,
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         std::vector<size_t> qubitDims = {2, 2, 2};
-        //Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
         DevTag<int> dev_tag{0, 0};
 
         SECTION("Apply using dispatcher") {
@@ -74,7 +129,6 @@ TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn_Nonparam]", float,
     std::size_t maxExtent = 2;
     std::vector<size_t> qubitDims = {2, 2, 2};
     DevTag<int> dev_tag{0, 0};
-    //Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
 
     SECTION(
         "Set Ith element of the state state on device with data on the host") {
