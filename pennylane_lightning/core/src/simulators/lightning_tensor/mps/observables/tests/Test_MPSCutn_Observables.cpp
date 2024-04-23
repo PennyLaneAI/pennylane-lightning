@@ -22,39 +22,41 @@
 
 #include <catch2/catch.hpp>
 
-#include "MeasurementscuMPS.hpp"
+#include "MPSCutn.hpp"
+#include "ObservablesMPSCutn.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuGates_host.hpp"
-#include "cuMPS.hpp"
 #include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"
 
-using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningTensor;
+using namespace Pennylane::LightningTensor::Observables;
 using namespace Pennylane::Util;
 
-/// @cond DEV
 namespace {
-using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningTensor::Measures;
-using namespace Pennylane::LightningTensor::Observables;
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
-/// @endcond
 
-TEMPLATE_TEST_CASE("[Identity]", "[cuMPS_Expval]", float, double) {
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
-    std::vector<size_t> qubitDims(num_qubits, 2);
-    Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+TEMPLATE_TEST_CASE("MPSCutn::applyPauliX", "[MPSCutn_Nonparam]", float,
+                   double) {
+    using NamedObsT = NamedObsMPSCutn<TestType>;
+    // const bool inverse = GENERATE(true, false);
+    {
+        using cp_t = std::complex<TestType>;
+        std::size_t num_qubits = 3;
+        std::size_t maxExtent = 2;
+        std::vector<size_t> qubitDims(num_qubits, 2);
+        Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
 
-    SECTION("Using expval") {
-        cuMPS<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
-        auto m = Measurements(sv);
+        SECTION("Apply using dispatcher") {
+            MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+            auto ob1 = NamedObsT("Identity", {0});
 
-        auto ob = NamedObsCudaMPS<TestType>("Identity", {0});
-        auto res = m.expval(ob);
-        CHECK(std::real(res) == 1.0);
+            cp_t expval = sv.expval(ob1);
+
+            CHECK(std::real(expval) == 1.0);
+        }
     }
 }

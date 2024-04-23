@@ -13,7 +13,8 @@
 // limitations under the License.
 
 /**
- * @file MPS_cuDevice.hpp
+ * @file MPSCutn.hpp
+ * cuTensorNetwork backed MPS class.
  */
 
 #pragma once
@@ -29,11 +30,11 @@
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
-#include "ObservablescuMPS.hpp"
+#include "MPSCutnBase.hpp"
+#include "ObservablesMPSCutn.hpp"
 #include "TensorBase.hpp"
 #include "cuDeviceTensor.hpp"
 #include "cuGateTensorCache.hpp"
-#include "cuMPSBase.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuTensorNet_helpers.hpp"
 #include "cuda_helpers.hpp"
@@ -67,9 +68,9 @@ std::size_t getScratchMemorySize() {
 namespace Pennylane::LightningTensor {
 
 template <class Precision>
-class cuMPS : public cuMPSBase<Precision, cuMPS<Precision>> {
+class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
   private:
-    using BaseType = cuMPSBase<Precision, cuMPS<Precision>>;
+    using BaseType = MPSCutnBase<Precision, MPSCutn<Precision>>;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -83,11 +84,11 @@ class cuMPS : public cuMPSBase<Precision, cuMPS<Precision>> {
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF,
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_S_NORMALIZATION
     //  CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO
-    cuMPS(size_t numQubits, size_t maxExtent, std::vector<size_t> qubitDims,
-          Pennylane::LightningGPU::DevTag<int> dev_tag)
+    MPSCutn(size_t numQubits, size_t maxExtent, std::vector<size_t> qubitDims,
+            Pennylane::LightningGPU::DevTag<int> dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
 
-    cuMPS(const cuMPS &other)
+    MPSCutn(const MPSCutn &other)
         : BaseType(other.getNumQubits(), other.getMaxExtent(),
                    other.getQubitDims(), other.getDevTag()) {
 
@@ -97,7 +98,7 @@ class cuMPS : public cuMPSBase<Precision, cuMPS<Precision>> {
                              BaseType::getMPSTensorDataPtr().data());
     }
 
-    ~cuMPS() {}
+    ~MPSCutn() {}
 
     // Set a zero state for d_mpsTensors
     void reset() {
@@ -346,7 +347,7 @@ class cuMPS : public cuMPSBase<Precision, cuMPS<Precision>> {
     }
 
     ComplexT
-    expval(Pennylane::LightningTensor::Observables::ObservableCudaMPS<Precision>
+    expval(Pennylane::LightningTensor::Observables::ObservableMPSCutn<Precision>
                &ob) {
 
         ob.createTNOperator(BaseType::getCutnHandle(), BaseType::getDataType(),
@@ -519,12 +520,12 @@ class cuMPS : public cuMPSBase<Precision, cuMPS<Precision>> {
         // Compute the specified quantum circuit expectation value
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
 
-        // TODO add create-tensor-network-operator to observablecuMPS classes.
+        // TODO add create-tensor-network-operator to ObservableMPSCutn classes.
         // TODO cutensornetNetworkOperator_t tnOps as private data of
-        // observablecuMPS classes.
+        // ObservableMPSCutn classes.
         // TODO tnOps can be created with obs->create-tensor-network-operator()
-        // method in the MeasurementcuMPS class.
-        // TODO move this method to the MeasurementcuMPS class
+        // method in the MeasurementMPSCutn class.
+        // TODO move this method to the MeasurementMPSCutn class
         // Create an empty tensor network operator
         cutensornetNetworkOperator_t hamiltonian;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(

@@ -22,9 +22,9 @@
 
 #include <catch2/catch.hpp>
 
+#include "MPSCutn.hpp"
 #include "cuGateTensorCache.hpp"
 #include "cuGates_host.hpp"
-#include "cuMPS.hpp"
 #include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"
@@ -37,18 +37,20 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
-TEMPLATE_TEST_CASE("cuMPS::applyHadamard", "[cuMPS_Nonparam]", float, double) {
+TEMPLATE_TEST_CASE("MPSCutn::applyHadamard", "[MPSCutn_Nonparam]", float,
+                   double) {
     const bool inverse = GENERATE(true, false);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         std::vector<size_t> qubitDims = {2, 2, 2};
-        Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+        //Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+        DevTag<int> dev_tag{0, 0};
 
         SECTION("Apply using dispatcher") {
             for (std::size_t index = 0; index < num_qubits; index++) {
-                cuMPS<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+                MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
 
                 CHECK(sv.getDataVector()[0] == cp_t{1, 0});
                 sv.applyOperation("Hadamard", {index}, inverse);
@@ -66,21 +68,23 @@ TEMPLATE_TEST_CASE("cuMPS::applyHadamard", "[cuMPS_Nonparam]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("cuMPS::SetIthStates", "[cuMPS_Nonparam]", float, double) {
+TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn_Nonparam]", float,
+                   double) {
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
     std::vector<size_t> qubitDims = {2, 2, 2};
-    Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
+    DevTag<int> dev_tag{0, 0};
+    //Pennylane::LightningGPU::DevTag<int> dev_tag{0, 0};
 
     SECTION(
         "Set Ith element of the state state on device with data on the host") {
 
-        cuMPS<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+        MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
 
         size_t index = 3;
         sv.setBasisState(index);
 
-        cuMPS<TestType> sv_copy(sv);
+        MPSCutn<TestType> sv_copy(sv);
 
         std::vector<std::complex<TestType>> expected_state(
             1 << num_qubits, std::complex<TestType>({0.0, 0.0}));

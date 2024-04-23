@@ -46,7 +46,7 @@ namespace Pennylane::LightningTensor::Observables {
  * @tparam T Floating point type
  */
 
-template <typename T> class ObservableCudaMPS {
+template <typename T> class ObservableMPSCutn {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(T{}));
 
@@ -58,17 +58,17 @@ template <typename T> class ObservableCudaMPS {
      * @param Another instance of subclass of Observable<T> to compare
      */
     [[nodiscard]] virtual bool
-    isEqual(const ObservableCudaMPS<T> &other) const = 0;
+    isEqual(const ObservableMPSCutn<T> &other) const = 0;
 
   protected:
-    ObservableCudaMPS() = default;
-    ObservableCudaMPS(const ObservableCudaMPS &) = default;
-    ObservableCudaMPS(ObservableCudaMPS &&) noexcept = default;
-    ObservableCudaMPS &operator=(const ObservableCudaMPS &) = default;
-    ObservableCudaMPS &operator=(ObservableCudaMPS &&) noexcept = default;
+    ObservableMPSCutn() = default;
+    ObservableMPSCutn(const ObservableMPSCutn &) = default;
+    ObservableMPSCutn(ObservableMPSCutn &&) noexcept = default;
+    ObservableMPSCutn &operator=(const ObservableMPSCutn &) = default;
+    ObservableMPSCutn &operator=(ObservableMPSCutn &&) noexcept = default;
 
   public:
-    virtual ~ObservableCudaMPS() = default;
+    virtual ~ObservableMPSCutn() = default;
 
     virtual void
     createTNOperator(const cutensornetHandle_t handle, cudaDataType_t typeData,
@@ -90,14 +90,14 @@ template <typename T> class ObservableCudaMPS {
     /**
      * @brief Test whether this object is equal to another object
      */
-    [[nodiscard]] bool operator==(const ObservableCudaMPS<T> &other) const {
+    [[nodiscard]] bool operator==(const ObservableMPSCutn<T> &other) const {
         return typeid(*this) == typeid(other) && isEqual(other);
     }
 
     /**
      * @brief Test whether this object is different from another object.
      */
-    [[nodiscard]] bool operator!=(const ObservableCudaMPS<T> &other) const {
+    [[nodiscard]] bool operator!=(const ObservableMPSCutn<T> &other) const {
         return !(*this == other);
     }
 };
@@ -107,7 +107,8 @@ template <typename T> class ObservableCudaMPS {
  *
  * @tparam TensorNetT State tensor class.
  */
-template <typename T> class NamedObsCudaMPS final : public ObservableCudaMPS<T> {
+template <typename T>
+class NamedObsMPSCutn final : public ObservableMPSCutn<T> {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(T{}));
 
@@ -117,8 +118,8 @@ template <typename T> class NamedObsCudaMPS final : public ObservableCudaMPS<T> 
     std::vector<T> params_;
 
     [[nodiscard]] bool
-    isEqual(const ObservableCudaMPS<T> &other) const override {
-        const auto &other_cast = static_cast<const NamedObsCudaMPS<T> &>(other);
+    isEqual(const ObservableMPSCutn<T> &other) const override {
+        const auto &other_cast = static_cast<const NamedObsMPSCutn<T> &>(other);
 
         return (obs_name_ == other_cast.obs_name_) &&
                (wires_ == other_cast.wires_) && (params_ == other_cast.params_);
@@ -140,8 +141,8 @@ template <typename T> class NamedObsCudaMPS final : public ObservableCudaMPS<T> 
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObsCudaMPS(std::string obs_name, std::vector<size_t> wires,
-                   std::vector<T> params = {})
+    NamedObsMPSCutn(std::string obs_name, std::vector<size_t> wires,
+                    std::vector<T> params = {})
         : obs_name_{std::move(obs_name)}, wires_{std::move(wires)},
           params_{std::move(params)} {
         using Pennylane::Gates::Constant::gate_names;
@@ -165,7 +166,7 @@ template <typename T> class NamedObsCudaMPS final : public ObservableCudaMPS<T> 
         tensorData_.push_back(nullptr);
     }
 
-    ~NamedObsCudaMPS() {
+    ~NamedObsMPSCutn() {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyNetworkOperator(obsOperator_));
     }

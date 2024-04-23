@@ -28,7 +28,7 @@ target_sources(${PL_BACKEND}_obs_tests INTERFACE runner_${PL_BACKEND}_obs.cpp)
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_StateTensorcuMPS_Observables.cpp
+set(TEST_SOURCES    Test_MPSCutn_Observables.cpp
 
 )
 

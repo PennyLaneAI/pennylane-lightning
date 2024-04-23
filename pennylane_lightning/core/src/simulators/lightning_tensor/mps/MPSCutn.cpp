@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "cuMPS.hpp"
+#include "MPSCutn.hpp"
 
 // explicit instantiation
-template class Pennylane::LightningTensor::cuMPS<float>;
-template class Pennylane::LightningTensor::cuMPS<double>;
+template class Pennylane::LightningTensor::MPSCutn<float>;
+template class Pennylane::LightningTensor::MPSCutn<double>;

@@ -18,7 +18,7 @@ findCutensornet(lightning_external_libs)
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLTENSOR=1")
 
-set(LTENSOR_MPS_FILES  cuMPS.cpp CACHE INTERNAL "" FORCE)
+set(LTENSOR_MPS_FILES  MPSCutn.cpp CACHE INTERNAL "" FORCE)
 
 add_library(${PL_BACKEND} STATIC ${LTENSOR_MPS_FILES})
 

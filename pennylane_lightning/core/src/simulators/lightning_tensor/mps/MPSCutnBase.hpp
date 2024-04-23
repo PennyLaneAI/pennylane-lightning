@@ -13,7 +13,8 @@
 // limitations under the License.
 
 /**
- * @file MPS_cuDevice.hpp
+ * @file MPSCutnBase.hpp
+ * Base class for MPS cuTensorNetwork backend.
  */
 
 #pragma once
@@ -43,7 +44,7 @@ using namespace Pennylane::LightningTensor::Util;
 
 namespace Pennylane::LightningTensor {
 
-template <class Precision, class Derived> class cuMPSBase {
+template <class Precision, class Derived> class MPSCutnBase {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
@@ -73,8 +74,9 @@ template <class Precision, class Derived> class cuMPSBase {
     std::shared_ptr<GateTensorCache<Precision>> gate_cache_;
 
   public:
-    cuMPSBase(size_t numQubits, size_t maxExtent, std::vector<size_t> qubitDims,
-              Pennylane::LightningGPU::DevTag<int> dev_tag)
+    MPSCutnBase(size_t numQubits, size_t maxExtent,
+                std::vector<size_t> qubitDims,
+                Pennylane::LightningGPU::DevTag<int> dev_tag)
         : handle_(make_shared_cutn_handle()), numQubits_(numQubits),
           maxExtent_(maxExtent), qubitDims_(qubitDims), dev_tag_(dev_tag),
           gate_cache_(
@@ -135,7 +137,7 @@ template <class Precision, class Derived> class cuMPSBase {
         }
     }
 
-    virtual ~cuMPSBase() {
+    virtual ~MPSCutnBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
@@ -188,7 +190,7 @@ template <class Precision, class Derived> class cuMPSBase {
      * @brief Explicitly copy data from another GPU device memory block to this
      * GPU device.
      *
-     * @param sv LightningTensor MPSCuda object to send data.
+     * @param sv LightningTensor MPSCutn object to send data.
      */
     inline void CopyGpuDataToGpuIn(const Derived &sv) {
         PL_ABORT_IF_NOT(getNumQubits() == sv.getNumQubits(),

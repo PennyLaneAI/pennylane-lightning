@@ -29,9 +29,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "ObservablescuMPS.hpp"
+#include "MPSCutn.hpp"
+#include "ObservablesMPSCutn.hpp"
 #include "cuGateTensorCache.hpp"
-#include "cuMPS.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuda_helpers.hpp"
 
@@ -40,7 +40,7 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningTensor::Observables;
 namespace cuUtil = Pennylane::LightningGPU::Util;
-using Pennylane::LightningTensor::cuMPS;
+using Pennylane::LightningTensor::MPSCutn;
 using namespace Pennylane::LightningTensor::Util;
 using namespace Pennylane::Util;
 } // namespace
@@ -54,7 +54,7 @@ namespace Pennylane::LightningTensor::Measures {
  * Observables are defined by its operator(matrix), the observable class,
  * or through a string-based function dispatch.
  *
- * @tparam cuMPS type of the statevector to be measured.
+ * @tparam MPSCutn type of the statevector to be measured.
  */
 template <class TensorNetT> class Measurements {
   private:
@@ -80,9 +80,9 @@ template <class TensorNetT> class Measurements {
      * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
-    auto
-    expval(Pennylane::LightningTensor::Observables::ObservableCudaMPS<PrecisionT>
-               &ob) -> ComplexT {
+    auto expval(
+        Pennylane::LightningTensor::Observables::ObservableMPSCutn<PrecisionT>
+            &ob) -> ComplexT {
         return _statetensor.expval(ob);
     }
 
