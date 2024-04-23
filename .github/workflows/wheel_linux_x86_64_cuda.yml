@@ -75,7 +75,7 @@ jobs:
             python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} scipy
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
-            source ls /opt/rh/gcc-toolset-12/enable -y
+            source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo -y
             dnf -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
 
