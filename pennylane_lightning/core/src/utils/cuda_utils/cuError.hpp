@@ -25,7 +25,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cusparse_v2.h>
-#include <custatevec.h>
 
 #include "Error.hpp"
 #include "Util.hpp"
@@ -50,24 +49,12 @@ using namespace Pennylane::Util;
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
     PL_ABORT_IF_NOT(err == CUSPARSE_STATUS_SUCCESS, GetCuSparseErrorString(err))
 
-/**
- * @brief Macro that throws Exception from cuQuantum failure error codes.
- *
- * @param err cuQuantum function error-code.
- */
-#define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
-    PL_ABORT_IF_NOT(                                                           \
-        err == CUSTATEVEC_STATUS_SUCCESS,                                      \
-        Pennylane::LightningGPU::Util::GetCuStateVecErrorString(err).c_str())
-
 #else
 #define PL_CUDA_IS_SUCCESS(err)                                                \
     { static_cast<void>(err); }
 #define PL_CUBLAS_IS_SUCCESS(err)                                              \
     { static_cast<void>(err); }
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
-    { static_cast<void>(err); }
-#define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
     { static_cast<void>(err); }
 #endif
 
@@ -150,58 +137,5 @@ static const std::string GetCuSparseErrorString(const cusparseStatus_t &err) {
     return result;
 }
 
-static const std::string
-GetCuStateVecErrorString(const custatevecStatus_t &err) {
-    std::string result;
-    switch (err) {
-    case CUSTATEVEC_STATUS_SUCCESS:
-        result = "No errors";
-        break;
-    case CUSTATEVEC_STATUS_NOT_INITIALIZED:
-        result = "custatevec not initialized";
-        break;
-    case CUSTATEVEC_STATUS_ALLOC_FAILED:
-        result = "custatevec memory allocation failed";
-        break;
-    case CUSTATEVEC_STATUS_INVALID_VALUE:
-        result = "custatevec invalid value";
-        break;
-    case CUSTATEVEC_STATUS_ARCH_MISMATCH:
-        result = "custatevec CUDA device architecture mismatch";
-        break;
-    case CUSTATEVEC_STATUS_EXECUTION_FAILED:
-        result = "custatevec execution failed";
-        break;
-    case CUSTATEVEC_STATUS_INTERNAL_ERROR:
-        result = "custatevec internal error";
-        break;
-    case CUSTATEVEC_STATUS_NOT_SUPPORTED:
-        result = "custatevec unsupported operation/device";
-        break;
-    case CUSTATEVEC_STATUS_INSUFFICIENT_WORKSPACE:
-        result =
-            "custatevec insufficient memory for gate-application workspace";
-        break;
-    case CUSTATEVEC_STATUS_SAMPLER_NOT_PREPROCESSED:
-        result = "custatevec sampler not preprocessed";
-        break;
-    case CUSTATEVEC_STATUS_NO_DEVICE_ALLOCATOR:
-        result = "custatevec no device allocator";
-        break;
-    case CUSTATEVEC_STATUS_DEVICE_ALLOCATOR_ERROR:
-        result = "custatevec device allocator error";
-        break;
-    case CUSTATEVEC_STATUS_COMMUNICATOR_ERROR:
-        result = "custatevec communicator failure";
-        break;
-    case CUSTATEVEC_STATUS_LOADING_LIBRARY_FAILED:
-        result = "custatevec dynamic library load failure";
-        break;
-    default:
-        result =
-            "custatevec status not found. Error code=" + std::to_string(err);
-    }
-    return result;
-}
 } // namespace Pennylane::LightningGPU::Util
   // LCOV_EXCL_STOP

@@ -12,6 +12,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   ARCHS: 'arm64'
@@ -24,7 +25,10 @@ concurrency:
 
 jobs:
   mac-set-matrix-arm:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
     timeout-minutes: 30
     name: Set builder matrix
     runs-on: ubuntu-latest
@@ -111,7 +115,10 @@ jobs:
           python -m twine check ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
@@ -124,7 +131,9 @@ jobs:
         pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    if: |
+      github.event_name == 'release' ||
+      github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
         with:

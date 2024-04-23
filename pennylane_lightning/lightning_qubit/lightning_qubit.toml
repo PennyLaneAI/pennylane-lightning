@@ -80,6 +80,12 @@ Hadamard               = { properties = [ "differentiable" ] }
 Hermitian              = { properties = [ "differentiable" ] }
 Hamiltonian            = { properties = [ "differentiable" ] }
 SparseHamiltonian      = { properties = [ "differentiable" ] }
+Projector              = { properties = [ "differentiable" ] }
+Sum                    = { properties = [ "differentiable" ] }
+SProd                  = { properties = [ "differentiable" ] }
+Prod                   = { properties = [ "differentiable" ] }
+Exp                    = { properties = [ "differentiable" ] }
+LinearCombination      = { properties = [ "differentiable" ] }
 
 [measurement_processes]
 

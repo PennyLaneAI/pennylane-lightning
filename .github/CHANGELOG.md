@@ -52,6 +52,15 @@
 
 ### Improvements
 
+* Replace string comparisons by `isinstance` checks where possible.
+  [(#691)](https://github.com/PennyLaneAI/pennylane-lightning/pull/691)
+
+* Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
+  [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
+
+* Add `test_templates.py` module where Grover and QSVT are tested.
+  [(#684)](https://github.com/PennyLaneAI/pennylane-lightning/pull/684)
+
 * Create `cuda_utils` for common usage of CUDA related backends.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
 
@@ -70,9 +79,18 @@
 * Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
   [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
 
+* Add `workflow_dispatch` to wheels recipes; allowing developers to build wheels manually on a branch instead of temporarily changing the headers.
+  [(#679)](https://github.com/PennyLaneAI/pennylane-lightning/pull/679)
+
 ### Documentation
 
 ### Bug fixes
+
+* `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+
+* `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
+  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
@@ -82,6 +100,15 @@
 
 * `lightning.qubit` correctly decomposed state preparation operations with adjoint differentiation.
   [(#661)](https://github.com/PennyLaneAI/pennylane-lightning/pull/661)
+
+* Fix the failed observable serialization unit tests.
+  [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
+
+* Update the `LightningQubit` new device API to work with Catalyst.
+  [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
+
+* Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
+  [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
 
 ### Contributors
 
