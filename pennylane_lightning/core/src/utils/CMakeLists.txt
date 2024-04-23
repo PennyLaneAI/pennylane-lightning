@@ -11,6 +11,18 @@ if(NOT WIN32)
     list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 endif()
 
+set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files")
+
+foreach(BACKEND ${PL_BACKEND})
+    if(${BACKEND} STREQUAL "lightning_gpu" AND NOT CUDA_UTILS_ADDED)
+        add_subdirectory(cuda_utils)
+        target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cuda_utils)
+        target_link_libraries(lightning_utils INTERFACE cuda_utils)
+        set(CUDA_UTILS_ADDED TRUE)
+    endif()
+endforeach()
+
+
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs

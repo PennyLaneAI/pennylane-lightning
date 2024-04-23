@@ -2,8 +2,11 @@
 
 ### New features since last release
 
+* `lightning.kokkos` supports mid-circuit measurements.
+  [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
+
 * Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * `lightning.qubit` supports mid-circuit measurements.
   [(#650)](https://github.com/PennyLaneAI/pennylane-lightning/pull/650)
@@ -35,8 +38,11 @@
 
 ### Breaking changes
 
+* Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
 * Deprecate static LAPACK linking support.
-  [(#651)](https://github.com/PennyLaneAI/pennylane-lightning/pull/651)
+  [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * Migrate `lightning.qubit` to the new device API.
   [(#646)](https://github.com/PennyLaneAI/pennylane-lightning/pull/646)
@@ -46,6 +52,12 @@
 
 ### Improvements
 
+* Create `cuda_utils` for common usage of CUDA related backends.
+  [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)
+
+* Refactor `lightning_gpu_utils` unit tests to remove the dependency on statevector class.
+  [(#675)](https://github.com/PennyLaneAI/pennylane-lightning/pull/675)
+
 * Upgrade GitHub actions versions from v3 to v4.
   [(#669)](https://github.com/PennyLaneAI/pennylane-lightning/pull/669)
 
@@ -54,6 +66,9 @@
 
 * Add `isort` to `requirements-dev.txt` and run before `black` upon `make format` to sort Python imports.
   [(#623)](https://github.com/PennyLaneAI/pennylane-lightning/pull/623)
+
+* Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
+  [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
 
 ### Documentation
 

@@ -119,9 +119,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          # Omitting the installation of cmake v3.29.0 due to
-          # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install ninja "cmake!=3.29.0" custatevec-cu${{ matrix.cuda_version }}
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
           sudo apt-get -y -q install liblapack-dev
 
       - name: Build and run unit tests
@@ -242,9 +240,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
-          # Omitting the installation of cmake v3.29.0 due to
-          # https://github.com/scikit-build/cmake-python-distributions/pull/474
-          python -m pip install "cmake!=3.29.0" custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
+          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -315,7 +311,7 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS

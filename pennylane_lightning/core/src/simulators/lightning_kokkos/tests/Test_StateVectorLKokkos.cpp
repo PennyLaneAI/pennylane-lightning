@@ -309,3 +309,71 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
         // REQUIRE(sv.getDataVector() == approx(st_data));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::collapse", "[StateVectorKokkos]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using ComplexT = typename StateVectorKokkos<PrecisionT>::ComplexT;
+    using TestVectorT = TestVector<ComplexT>;
+
+    const std::size_t num_qubits = 3;
+
+    // TODO @tomlqc use same template for testing all Lightning flavours?
+
+    SECTION("Collapse the state vector after having measured one of the "
+            "qubits.") {
+        TestVectorT init_state = createPlusState_<ComplexT>(num_qubits);
+
+        const ComplexT coef{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<std::vector<std::vector<ComplexT>>> expected_state = {
+            {{coef, coef, coef, coef, zero, zero, zero, zero},
+             {coef, coef, zero, zero, coef, coef, zero, zero},
+             {coef, zero, coef, zero, coef, zero, coef, zero}},
+            {{zero, zero, zero, zero, coef, coef, coef, coef},
+             {zero, zero, coef, coef, zero, zero, coef, coef},
+             {zero, coef, zero, coef, zero, coef, zero, coef}},
+        };
+
+        std::size_t wire = GENERATE(0, 1, 2);
+        std::size_t branch = GENERATE(0, 1);
+        StateVectorKokkos<PrecisionT> sv(
+            reinterpret_cast<ComplexT *>(init_state.data()), init_state.size());
+        sv.collapse(wire, branch);
+
+        PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10e3;
+        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
+                              expected_state[branch][wire].data(),
+                              expected_state[branch][wire].size(), eps));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::normalize", "[StateVectorKokkos]", float,
+                   double) {
+    using PrecisionT = TestType;
+    using ComplexT = typename StateVectorKokkos<PrecisionT>::ComplexT;
+
+    // TODO @tomlqc use same template for testing all Lightning flavours?
+
+    SECTION("Normalize state vector.") {
+        const ComplexT init{1.0, PrecisionT{0.0}};
+        const ComplexT half{0.5, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<ComplexT> init_state = {init, zero, init, init,
+                                            zero, zero, init, zero};
+
+        std::vector<ComplexT> expected_state = {half, zero, half, half,
+                                                zero, zero, half, zero};
+
+        StateVectorKokkos<PrecisionT> sv(
+            reinterpret_cast<ComplexT *>(init_state.data()), init_state.size());
+        sv.normalize();
+
+        PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 1e3;
+        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
+                              expected_state.data(), expected_state.size(),
+                              eps));
+    }
+}

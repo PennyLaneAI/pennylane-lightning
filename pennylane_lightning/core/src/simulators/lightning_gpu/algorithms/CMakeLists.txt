@@ -17,6 +17,7 @@ target_link_libraries(${PL_BACKEND}_algorithms PRIVATE      lightning_compile_op
 
 target_link_libraries(${PL_BACKEND}_algorithms PUBLIC       ${PL_BACKEND}_utils
                                                             lightning_algorithms
+                                                            lightning_utils
                                                             ${PL_BACKEND}
                                                             ${PL_BACKEND}_observables
                                                             )

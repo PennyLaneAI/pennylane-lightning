@@ -11,16 +11,18 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <algorithm>
 #include <complex>
 #include <cstdio>
 #include <vector>
 
 #include <catch2/catch.hpp>
 
+#include "DataBuffer.hpp"
 #include "LinearAlg.hpp"
-#include "StateVectorCudaManaged.hpp"
 #include "TestHelpers.hpp"
 #include "Util.hpp" // exp2
+#include "cuda_helpers.hpp"
 
 /**
  * @file
@@ -31,17 +33,20 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
 TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                    double) {
-    using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-    using CFP_t = StateVectorT::CFP_t;
+    using ComplexT = std::complex<TestType>;
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
                                            int32_t, int64_t>::type;
+
+    using CFP_t =
+        typename std::conditional<std::is_same<TestType, float>::value,
+                                  cuFloatComplex, cuDoubleComplex>::type;
 
     std::size_t num_qubits = 3;
     std::size_t data_size = exp2(num_qubits);
@@ -49,6 +54,12 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     std::vector<ComplexT> vectors = {{0.0, 0.0}, {0.0, 0.1}, {0.1, 0.1},
                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                      {0.3, 0.4}, {0.4, 0.5}};
+
+    std::vector<CFP_t> vectors_cu;
+
+    std::transform(vectors.begin(), vectors.end(),
+                   std::back_inserter(vectors_cu),
+                   [](ComplexT x) { return complexToCu<ComplexT>(x); });
 
     const std::vector<ComplexT> result_refs = {
         {0.2, -0.1}, {-0.1, 0.2}, {0.2, 0.1}, {0.1, 0.2},
@@ -63,26 +74,26 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
         {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0}};
 
-    StateVectorT sv_x{num_qubits};
-    StateVectorT sv_y{num_qubits};
+    DataBuffer<CFP_t> sv_x(data_size);
+    DataBuffer<CFP_t> sv_y(data_size);
 
-    sv_x.CopyHostDataToGpu(vectors.data(), vectors.size());
+    sv_x.CopyHostDataToGpu(vectors_cu.data(), vectors_cu.size());
 
     SECTION("Testing sparse matrix vector product:") {
-        std::vector<ComplexT> result(data_size);
+        std::vector<CFP_t> result(data_size);
+        auto cusparsehandle = make_shared_cusparse_handle();
 
-        cuUtil::SparseMV_cuSparse<IdxT, TestType, CFP_t>(
+        SparseMV_cuSparse<IdxT, TestType, CFP_t>(
             indptr.data(), static_cast<int64_t>(indptr.size()), indices.data(),
             values.data(), static_cast<int64_t>(values.size()), sv_x.getData(),
-            sv_y.getData(), sv_x.getDataBuffer().getDevTag().getDeviceID(),
-            sv_x.getDataBuffer().getDevTag().getStreamID(),
-            sv_x.getCusparseHandle());
+            sv_y.getData(), sv_x.getDevice(), sv_x.getStream(),
+            cusparsehandle.get());
 
         sv_y.CopyGpuDataToHost(result.data(), result.size());
 
         for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-            CHECK(imag(result[j]) == Approx(imag(result_refs[j])));
-            CHECK(real(result[j]) == Approx(real(result_refs[j])));
+            CHECK(result[j].x == Approx(real(result_refs[j])));
+            CHECK(result[j].y == Approx(imag(result_refs[j])));
         }
     }
 }

@@ -758,6 +758,53 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Collapse the state vector after having measured one of the
+     * qubits.
+     *
+     * The branch parameter imposes the measurement result on the given wire.
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(std::size_t wire, bool branch) {
+        KokkosVector matrix("gate_matrix", 4);
+        Kokkos::parallel_for(
+            matrix.size(), KOKKOS_LAMBDA(std::size_t k) {
+                matrix(k) = ((k == 0 && branch == 0) || (k == 3 && branch == 1))
+                                ? ComplexT{1.0, 0.0}
+                                : ComplexT{0.0, 0.0};
+            });
+        applyMultiQubitOp(matrix, {wire}, false);
+        normalize();
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto sv_view = getView();
+
+        PrecisionT squaredNorm = 0.0;
+        Kokkos::parallel_reduce(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
+                const PrecisionT norm = Kokkos::abs(sv_view(i));
+                sum += norm * norm;
+            },
+            squaredNorm);
+
+        PL_ABORT_IF(squaredNorm <
+                        std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        const std::complex<PrecisionT> inv_norm =
+            1. / Kokkos::sqrt(squaredNorm);
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(std::size_t i) { sv_view(i) *= inv_norm; });
+    }
+
+    /**
      * @brief Update data of the class
      *
      * @param other Kokkos View

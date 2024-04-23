@@ -146,7 +146,7 @@ jobs:
             python -m pip install ninja cmake~=3.24.0 scipy
             dnf clean all -y
             dnf install gcc-toolset-13 -y
-            source ls /opt/rh/gcc-toolset-13/enable -y
+            source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |

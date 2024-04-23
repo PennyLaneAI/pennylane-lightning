@@ -972,4 +972,5 @@ template <class PrecisionT, bool adj = false> struct generatorMultiRZFunctor {
             1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
     }
 };
+
 } // namespace Pennylane::LightningKokkos::Functors
