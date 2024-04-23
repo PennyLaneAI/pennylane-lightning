@@ -429,14 +429,14 @@ if LK_CPP_BINARY_AVAILABLE:
             state = self.state_vector
 
             for ops in operations:
+                if isinstance(ops, qml.Identity):
+                    continue
                 if isinstance(ops, Adjoint):
                     name = ops.base.name
                     invert_param = True
                 else:
                     name = ops.name
                     invert_param = False
-                if isinstance(ops, qml.Identity):
-                    continue
                 method = getattr(state, name, None)
                 wires = self.wires.indices(ops.wires)
 
@@ -445,7 +445,9 @@ if LK_CPP_BINARY_AVAILABLE:
                         self.apply_lightning([ops.then_op])
                 elif isinstance(ops, MidMeasureMP):
                     self._apply_lightning_midmeasure(ops, mid_measurements)
-                elif ops.name == "C(GlobalPhase)":
+                elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
+                    ops.base, qml.GlobalPhase
+                ):
                     controls = ops.control_wires
                     control_values = ops.control_values
                     param = ops.base.parameters[0]
@@ -512,9 +514,7 @@ if LK_CPP_BINARY_AVAILABLE:
             Returns:
                 Expectation value of the observable
             """
-            if observable.name in [
-                "Projector",
-            ]:
+            if isinstance(observable, qml.Projector):
                 diagonalizing_gates = observable.diagonalizing_gates()
                 if self.shots is None and diagonalizing_gates:
                     self.apply(diagonalizing_gates)
@@ -550,7 +550,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 return measure.expval(matrix, observable_wires)
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                isinstance(observable, qml.ops.Hamiltonian)
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -609,7 +609,7 @@ if LK_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
+                isinstance(observable, (qml.ops.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):

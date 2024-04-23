@@ -11,74 +11,102 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import argparse
-from pathlib import Path
-import importlib
 
 import re
+import argparse
+from pathlib import Path
 
-VERSION_FILE_PATH = "pennylane_lightning/core/_version.py"
+try:
+    from semver import Version
+except ImportError as exc:
+    raise ImportError("Unable to import semver. Install semver by running `pip install semver`") from exc
 
-rgx_ver = re.compile('^__version__ = "(.*?)"$')
+DEV_PRERELEASE_TAG_PREFIX = "dev"
+DEV_PRERELEASE_TAG_START = "dev0"
+VERSION_FILE_PATH = Path("pennylane_lightning/core/_version.py")
 
-rgx_dev_ver = re.compile("^(\d*\.\d*\.\d*)-dev(\d*)$")
+rgx_ver = re.compile(pattern=r"^__version__ = \"(.*)\"$", flags=re.MULTILINE)
 
 
-def extract_version(package_path):
-    with package_path.joinpath(VERSION_FILE_PATH).open("r") as f:
-        for line in f.readlines():
+def extract_version(repo_root_path: Path) -> Version:
+    """
+    Given the repository root for pennylane-lightning, this function extracts the semver version from
+    pennylane_lightning/core/_version.py.
+
+    :param repo_root_path: Path to the repository root.
+    :return: Extracted version a semver.Version object.
+    """
+    version_file_path = repo_root_path / VERSION_FILE_PATH
+    if not version_file_path.exists():
+        raise FileNotFoundError(f"Unable to find version file at location {version_file_path}")
+
+    with version_file_path.open() as f:
+        for line in f:
             if line.startswith("__version__"):
-                line = line.strip()
-                m = rgx_ver.match(line)
-                return m.group(1)
+                if (m := rgx_ver.match(line.strip())) is not None:
+                    if not m.groups():
+                        raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
+                    parsed_semver = m.group(1)
+                    if not Version.is_valid(parsed_semver):
+                        raise ValueError(f"Invalid semver for __version__. Got: '{parsed_semver}' from line '{line}'")
+                    return Version.parse(parsed_semver)
+                raise ValueError(f"Unable to find valid semver for __version__. Got: '{line}'")
     raise ValueError("Cannot parse version")
 
 
-def is_dev(version_str):
-    m = rgx_dev_ver.fullmatch(version_str)
-    return m is not None
+def update_prerelease_version(repo_root_path: Path, version: Version):
+    """
+    Updates the version file within pennylane_lightning/core/_version.py.
 
+    :param repo_root_path: Path to the repository root.
+    :param version: The new version to use within the file.
+    :return:
+    """
+    version_file_path = repo_root_path / VERSION_FILE_PATH
+    if not version_file_path.exists():
+        raise FileNotFoundError(f"Unable to find version file at location {version_file_path}")
 
-def update_dev_version(package_path, version_str):
-    m = rgx_dev_ver.fullmatch(version_str)
-    if m.group(2) == "":
-        curr_dev_ver = 0
-    else:
-        curr_dev_ver = int(m.group(2))
+    with version_file_path.open() as f:
+        lines = [
+            rgx_ver.sub(f"__version__ = \"{str(version)}\"", line)
+            for line in f
+        ]
 
-    new_version_str = "{}-dev{}".format(m.group(1), str(curr_dev_ver + 1))
-
-    lines = []
-    with package_path.joinpath(VERSION_FILE_PATH).open("r") as f:
-        for line in f.readlines():
-            if not line.startswith("__version__"):
-                lines.append(line)
-            else:
-                lines.append(f'__version__ = "{new_version_str}"\n')
-
-    with package_path.joinpath(VERSION_FILE_PATH).open("w") as f:
+    with version_file_path.open("w") as f:
         f.write("".join(lines))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pr-path", dest="pr", type=str, required=True, help="Path to the PR dir")
+    parser.add_argument("--pr-path", dest="pr", type=Path, required=True, help="Path to the PR dir")
     parser.add_argument(
-        "--master-path", dest="master", type=str, required=True, help="Path to the master dir"
+        "--master-path", dest="master", type=Path, required=True, help="Path to the master dir"
     )
 
     args = parser.parse_args()
 
-    pr_version = extract_version(Path(args.pr))
-    master_version = extract_version(Path(args.master))
+    pr_version = extract_version(args.pr)
+    master_version = extract_version(args.master)
 
-    if pr_version == master_version:
-        if is_dev(pr_version):
-            print("Automatically update version string.")
-            update_dev_version(Path(args.pr), pr_version)
+    print("Got Package Version from 'master' ->", str(master_version))
+    print("Got Package Version from 'PR' ->", str(pr_version))
+
+    # Only attempt to bump the version if the pull_request is:
+    #  - A prerelease, has `X.Y.Z-prerelease` in _version.py
+    #  - The prerelease startswith `dev`. We do not want to auto bump for non-dev prerelease.
+    if pr_version.prerelease and pr_version.prerelease.startswith(DEV_PRERELEASE_TAG_PREFIX):
+        # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+        # Then default to the starting tag
+        if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
+            next_prerelease_version = DEV_PRERELEASE_TAG_START
         else:
-            print(
-                "Even though version of this PR is different from the master, as the PR is not dev, we do nothing."
-            )
+            # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
+            next_prerelease_version = master_version.next_version("prerelease").prerelease
+        new_version = master_version.replace(prerelease=next_prerelease_version)
+        if pr_version != new_version:
+            print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
+            update_prerelease_version(args.pr, new_version)
+        else:
+            print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
     else:
-        print("Version of this PR is already different from master. Do nothing.")
+        print("PR is not a dev prerelease ... Nothing to do!")

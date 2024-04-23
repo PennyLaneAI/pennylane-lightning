@@ -52,6 +52,9 @@
 
 ### Improvements
 
+* Replace string comparisons by `isinstance` checks where possible.
+  [(#691)](https://github.com/PennyLaneAI/pennylane-lightning/pull/691)
+
 * Refactor `cuda_utils` to remove its dependency on `custatevec.h`.
   [(#681)](https://github.com/PennyLaneAI/pennylane-lightning/pull/681)
 
@@ -75,6 +78,9 @@
 
 * Improve support for new operator arithmetic with `QuantumScriptSerializer.serialize_observables`.
   [(#670)](https://github.com/PennyLaneAI/pennylane-lightning/pull/670)
+
+* Add `workflow_dispatch` to wheels recipes; allowing developers to build wheels manually on a branch instead of temporarily changing the headers.
+  [(#679)](https://github.com/PennyLaneAI/pennylane-lightning/pull/679)
 
 ### Documentation
 
