@@ -1481,6 +1481,13 @@ def test_batching_H(returns):
     def convert_to_array_gpu_default(params):
         return np.hstack(qnode_gpu_default(params))
 
+    i_cpu = qnode_cpu(params)
+    i_gpu = qnode_gpu(params)
+    i_gpu_default = qnode_gpu_default(params)
+
+    assert np.allclose(i_cpu, i_gpu)
+    assert np.allclose(i_gpu, i_gpu_default)
+
     j_cpu = qml.jacobian(qnode_cpu)(params)
     j_gpu = qml.jacobian(qnode_gpu)(params)
     j_gpu_default = qml.jacobian(qnode_gpu_default)(params)

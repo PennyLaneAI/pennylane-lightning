@@ -22,7 +22,6 @@
 #include <cublas_v2.h>
 #include <cuda.h>
 #include <cusparse_v2.h>
-#include <custatevec.h>
 
 #include "DataBuffer.hpp"
 #include "cuError.hpp"
@@ -247,17 +246,12 @@ struct HandleDeleter {
     void operator()(cublasHandle_t handle) const {
         PL_CUBLAS_IS_SUCCESS(cublasDestroy(handle));
     }
-    void operator()(custatevecHandle_t handle) const {
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecDestroy(handle));
-    }
     void operator()(cusparseHandle_t handle) const {
         PL_CUSPARSE_IS_SUCCESS(cusparseDestroy(handle));
     }
 };
 
 using SharedCublasCaller = std::shared_ptr<CublasCaller>;
-using SharedCusvHandle =
-    std::shared_ptr<std::remove_pointer<custatevecHandle_t>::type>;
 using SharedCusparseHandle =
     std::shared_ptr<std::remove_pointer<cusparseHandle_t>::type>;
 
@@ -266,15 +260,6 @@ using SharedCusparseHandle =
  */
 inline SharedCublasCaller make_shared_cublas_caller() {
     return std::make_shared<CublasCaller>();
-}
-
-/**
- * @brief Creates a SharedCusvHandle (a shared pointer to a custatevecHandle)
- */
-inline SharedCusvHandle make_shared_cusv_handle() {
-    custatevecHandle_t h;
-    PL_CUSTATEVEC_IS_SUCCESS(custatevecCreate(&h));
-    return {h, HandleDeleter()};
 }
 
 /**

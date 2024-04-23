@@ -31,8 +31,10 @@ from pennylane_lightning.lightning_qubit.lightning_qubit import (
     adjoint_measurements,
     adjoint_observables,
     decompose,
+    mid_circuit_measurements,
     no_sampling,
     stopping_condition,
+    stopping_condition_shots,
     validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
@@ -107,6 +109,7 @@ class TestHelpers:
         expected_program.add_transform(
             decompose,
             stopping_condition=adjoint_ops,
+            stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
         )
@@ -184,7 +187,7 @@ class TestExecution:
         "batch_obs": False,
         "mcmc": False,
         "kernel_name": None,
-        "num_burnin": None,
+        "num_burnin": 0,
     }
 
     @pytest.mark.parametrize(
@@ -222,7 +225,7 @@ class TestExecution:
                         "batch_obs": False,
                         "mcmc": True,
                         "kernel_name": None,
-                        "num_burnin": None,
+                        "num_burnin": 0,
                     },
                 ),
             ),
@@ -256,11 +259,13 @@ class TestExecution:
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
+        expected_program.add_transform(mid_circuit_measurements, device=device)
         expected_program.add_transform(
-            qml.devices.preprocess.mid_circuit_measurements, device=device
-        )
-        expected_program.add_transform(
-            decompose, stopping_condition=stopping_condition, name=device.name
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=device.name,
         )
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
@@ -270,6 +275,7 @@ class TestExecution:
             expected_program.add_transform(
                 decompose,
                 stopping_condition=adjoint_ops,
+                stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
             )
@@ -286,6 +292,63 @@ class TestExecution:
         config = ExecutionConfig(gradient_method=gradient_method)
         actual_program, _ = device.preprocess(config)
         assert actual_program == expected_program
+
+    @pytest.mark.parametrize(
+        "op, is_trainable",
+        [
+            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
+            (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
+            (qml.StatePrep(np.array([1, 0]), wires=0), False),
+            (qml.BasisState([1, 1], wires=[0, 1]), False),
+            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
+        ],
+    )
+    def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
+        """Test that state prep ops in the beginning of a tape are decomposed with adjoint
+        but not otherwise."""
+        tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
+        device = LightningDevice(wires=3)
+
+        if is_trainable:
+            # Need to decompose twice as the state prep ops we use first decompose into a template
+            decomp = op.decomposition()[0].decomposition()
+        else:
+            decomp = [op]
+
+        config = ExecutionConfig(gradient_method="best" if is_trainable else None)
+        program, _ = device.preprocess(config)
+        [new_tape], _ = program([tape])
+        expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
+        assert qml.equal(new_tape, expected_tape)
+
+    @pytest.mark.parametrize(
+        "op, decomp_depth",
+        [
+            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 1),
+            (qml.StatePrep(np.array([1, 0]), wires=0), 1),
+            (qml.BasisState([1, 1], wires=[0, 1]), 1),
+            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), 1),
+            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 2),
+            (qml.MottonenStatePreparation([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 0),
+        ],
+    )
+    def test_preprocess_state_prep_middle_op_decomposition(self, op, decomp_depth):
+        """Test that state prep ops in the middle of a tape are always decomposed."""
+        tape = qml.tape.QuantumScript(
+            [qml.RX(1.23, wires=0), op, qml.CNOT([0, 1])], [qml.expval(qml.PauliZ(0))]
+        )
+        device = LightningDevice(wires=3)
+
+        for _ in range(decomp_depth):
+            op = op.decomposition()[0]
+        decomp = op.decomposition()
+
+        program, _ = device.preprocess()
+        [new_tape], _ = program([tape])
+        expected_tape = qml.tape.QuantumScript(
+            [qml.RX(1.23, wires=0), *decomp, qml.CNOT([0, 1])], tape.measurements
+        )
+        assert qml.equal(new_tape, expected_tape)
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))

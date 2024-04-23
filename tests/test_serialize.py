@@ -317,28 +317,13 @@ class TestSerializeObs:
             tape, wires_map
         )
 
-        # Expression (ham @ obs) is converted internally by Pennylane
-        # where obs is appended to each term of the ham
-        if qml.operation.active_new_opmath():
-            first_term = tensor_prod_obs(
-                [
-                    tensor_prod_obs(
-                        [
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                            named_obs("PauliY", [2]),
-                        ]
-                    ),
-                    named_obs("PauliZ", [3]),
-                ]
-            )
-        else:
-            first_term = tensor_prod_obs(
-                [
-                    hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                    named_obs("PauliY", [2]),
-                    named_obs("PauliZ", [3]),
-                ]
-            )
+        first_term = tensor_prod_obs(
+            [
+                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                named_obs("PauliY", [2]),
+                named_obs("PauliZ", [3]),
+            ]
+        )
 
         s_expected = hamiltonian_obs(
             np.array([0.3, 0.5, 0.4], dtype=r_dtype),
@@ -498,7 +483,8 @@ class TestSerializeObs:
 
         s_expected = tensor_obs(
             [
-                tensor_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])]),
+                named_obs("PauliZ", [0]),
+                named_obs("PauliX", [1]),
                 named_obs("Hadamard", [2]),
             ]
         )

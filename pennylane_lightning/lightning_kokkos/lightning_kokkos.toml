@@ -18,6 +18,7 @@ observables = [
         "SProd",
         "Prod",
         "Exp",
+        "LinearCombination",
 ]
 
 # The union of all gate types listed in this section must match what

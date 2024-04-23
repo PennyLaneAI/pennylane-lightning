@@ -195,15 +195,15 @@ if LGPU_CPP_BINARY_AVAILABLE:
         "SProd",
     }
 
-    gate_cache_needs_hash = {
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PSWAP",
-        "OrbitalRotation",
-        "BlockEncode",
-    }
+    gate_cache_needs_hash = (
+        qml.BlockEncode,
+        qml.ControlledQubitUnitary,
+        qml.DiagonalQubitUnitary,
+        qml.MultiControlledX,
+        qml.OrbitalRotation,
+        qml.PSWAP,
+        qml.QubitUnitary,
+    )
 
     class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
         """PennyLane Lightning GPU device.
@@ -512,18 +512,20 @@ if LGPU_CPP_BINARY_AVAILABLE:
             # Skip over identity operations instead of performing
             # matrix multiplication with the identity.
             for ops in operations:
+                if isinstance(ops, qml.Identity):
+                    continue
                 if isinstance(ops, Adjoint):
                     name = ops.base.name
                     invert_param = True
                 else:
                     name = ops.name
                     invert_param = False
-                if name == "Identity":
-                    continue
                 method = getattr(self._gpu_state, name, None)
                 wires = self.wires.indices(ops.wires)
 
-                if ops.name == "C(GlobalPhase)":
+                if isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
+                    ops.base, qml.GlobalPhase
+                ):
                     controls = ops.control_wires
                     control_values = ops.control_values
                     param = ops.base.parameters[0]
@@ -537,7 +539,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                         # To support older versions of PL
                         mat = ops.matrix
                     r_dtype = np.float32 if self.use_csingle else np.float64
-                    param = [[r_dtype(ops.hash)]] if ops.name in gate_cache_needs_hash else []
+                    param = [[r_dtype(ops.hash)]] if isinstance(ops, gate_cache_needs_hash) else []
                     if len(mat) == 0:
                         raise ValueError("Unsupported operation")
                     self._gpu_state.apply(
@@ -845,7 +847,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.mean(samples, axis=0))
 
-            if observable.name in ["SparseHamiltonian"]:
+            if isinstance(observable, qml.SparseHamiltonian):
                 if self._mpi:
                     # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                     # host(cpu) memory requirements
@@ -866,7 +868,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             # use specialized functors to compute expval(Hermitian)
-            if observable.name == "Hermitian":
+            if isinstance(observable, qml.Hermitian):
                 observable_wires = self.map_wires(observable.wires)
                 if self._mpi and len(observable_wires) > self._num_local_wires:
                     raise RuntimeError(
@@ -876,7 +878,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 return self.measurements.expval(matrix, observable_wires)
 
             if (
-                observable.name in ["Hermitian", "Hamiltonian"]
+                isinstance(observable, qml.ops.Hamiltonian)
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):
@@ -929,7 +931,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
                 return np.squeeze(np.var(samples, axis=0))
 
-            if observable.name == "SparseHamiltonian":
+            if isinstance(observable, qml.SparseHamiltonian):
                 csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
                 return self.measurements.var(
                     csr_hamiltonian.indptr,
@@ -938,7 +940,7 @@ if LGPU_CPP_BINARY_AVAILABLE:
                 )
 
             if (
-                observable.name in ["Hamiltonian", "Hermitian"]
+                isinstance(observable, (qml.ops.Hamiltonian, qml.Hermitian))
                 or (observable.arithmetic_depth > 0)
                 or isinstance(observable.name, List)
             ):

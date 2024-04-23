@@ -129,7 +129,7 @@ class LightningMeasurements:
             Expectation value of the observable
         """
 
-        if measurementprocess.obs.name == "SparseHamiltonian":
+        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
             # ensuring CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
@@ -141,7 +141,7 @@ class LightningMeasurements:
             )
 
         if (
-            measurementprocess.obs.name in ["Hamiltonian", "Hermitian"]
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
@@ -183,7 +183,7 @@ class LightningMeasurements:
             Variance of the observable
         """
 
-        if measurementprocess.obs.name == "SparseHamiltonian":
+        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
             # ensuring CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
@@ -195,7 +195,7 @@ class LightningMeasurements:
             )
 
         if (
-            measurementprocess.obs.name in ["Hamiltonian", "Hermitian"]
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
@@ -221,10 +221,7 @@ class LightningMeasurements:
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
-                if measurementprocess.obs.name in [
-                    "Identity",
-                    "Projector",
-                ]:
+                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
                     return self.state_diagonalizing_gates
                 return self.expval
 
@@ -232,10 +229,7 @@ class LightningMeasurements:
                 return self.probs
 
             if isinstance(measurementprocess, VarianceMP):
-                if measurementprocess.obs.name in [
-                    "Identity",
-                    "Projector",
-                ]:
+                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
                     return self.state_diagonalizing_gates
                 return self.var
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:

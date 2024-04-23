@@ -297,7 +297,7 @@ jobs:
           name: ubuntu-codecov-results-cpp
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           verbose: true
@@ -324,7 +324,7 @@ jobs:
           name: ubuntu-codecov-results-python
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           verbose: true

@@ -39,6 +39,7 @@
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
+#include "cuStateVecError.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV

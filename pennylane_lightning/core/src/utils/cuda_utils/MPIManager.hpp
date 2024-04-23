@@ -21,7 +21,6 @@
 #include <cuComplex.h>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <custatevec.h>
 #include <mpi.h>
 #include <stdexcept>
 #include <string>
@@ -29,6 +28,10 @@
 #include <typeinfo>
 #include <unordered_map>
 #include <vector>
+
+#ifdef _ENABLE_PLGPU
+#include <custatevec.h>
+#endif
 
 #include "DataBuffer.hpp"
 #include "Error.hpp"
@@ -155,7 +158,9 @@ class MPIManager final {
         {cppTypeToString<cuFloatComplex>(), MPI_C_FLOAT_COMPLEX},
         {cppTypeToString<double2>(), MPI_C_DOUBLE_COMPLEX},
         {cppTypeToString<cuDoubleComplex>(), MPI_C_DOUBLE_COMPLEX},
+#ifdef _ENABLE_PLGPU
         {cppTypeToString<custatevecIndex_t>(), MPI_INT64_T},
+#endif
         // cuda related types
         {cppTypeToString<cudaIpcMemHandle_t>(), MPI_UINT8_T},
         {cppTypeToString<cudaIpcEventHandle_t>(), MPI_UINT8_T}};

@@ -34,6 +34,8 @@
 #include "Observables.hpp"
 #include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
+#include "cuStateVecError.hpp"
+#include "cuStateVec_helpers.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV

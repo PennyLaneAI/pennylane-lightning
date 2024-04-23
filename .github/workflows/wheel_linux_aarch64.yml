@@ -12,6 +12,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: wheel_linux_aarch64-${{ github.ref }}
@@ -162,7 +163,10 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        # if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' }}
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
@@ -175,7 +179,9 @@ jobs:
         pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    if: |
+      github.event_name == 'release' ||
+      github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
         with:

@@ -36,6 +36,8 @@
 #include "StateVectorCudaBase.hpp"
 #include "cuGateCache.hpp"
 #include "cuGates_host.hpp"
+#include "cuStateVecError.hpp"
+#include "cuStateVec_helpers.hpp"
 #include "cuda_helpers.hpp"
 
 #include "CPUMemoryModel.hpp"

@@ -14,7 +14,7 @@
 
 /**
  * @file
- * Record the path to scipy.libs at compile time.
+ * Config file for the path to scipy.libs at compile time.
  */
 
 #ifndef CONFIG_H
