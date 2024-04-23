@@ -174,12 +174,12 @@ jobs:
           if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
             SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install -e . -vv
           }
-          cd wheelhouse
+          pushd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl
           foreach ($i in $wheels){
             python -m pip install $i.Name
           }
-          cd ..
+          popd
           $DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
           pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short --no-flaky-report
 
