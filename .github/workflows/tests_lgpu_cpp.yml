@@ -1,4 +1,4 @@
-name: Testing::LKokkos::GPU
+name: Testing::Linux::x86_64::LGPU
 on:
   workflow_call:
     inputs:
@@ -10,9 +10,10 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+  release:
   pull_request:
     paths:
-      - .github/workflows/tests_gpu_kokkos.yml
+      - .github/workflows/tests_linux_cpp.yml
       - pennylane_lightning/core/src/*
       - pennylane_lightning/core/src/algorithms/**
       - pennylane_lightning/core/src/bindings/**
@@ -20,10 +21,8 @@ on:
       - pennylane_lightning/core/src/measurements/**
       - pennylane_lightning/core/src/observables/**
       - pennylane_lightning/core/src/simulators/base/**
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/core/src/utils
-      - pennylane_lightning/lightning_kokkos/**
-      - tests/**
   push:
     branches:
       - master
@@ -36,7 +35,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_gpu-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_gpu-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -50,75 +49,30 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        exec_model: ["CUDA"]
-        kokkos_version: ["4.2.00"]
+        pl_backend: ["lightning_gpu"]
+        cuda_version: ["12"]
 
     steps:
       - name: Validate GPU version and installed compiler
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/${{ matrix.cuda_version }}
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-      - name: Clone Kokkos repository
-        run: |
-          rm -rf kokkos_${{ matrix.exec_model }}
-          git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git kokkos_${{ matrix.exec_model }}
-          pushd . &> /dev/null
-
-      - name: Build Kokkos core library (Ubuntu)
-        run: |
-          rm -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          mkdir -p ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          cd kokkos_${{ matrix.exec_model }}
-          cmake -BBuild . -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }} \
-                          -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
-                          -DKokkos_ENABLE_SERIAL=ON \
-                          -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
-                          -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                          -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
-                          -DCMAKE_CXX_STANDARD=20 \
-                          -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-                          -G Ninja
-          cmake --build ./Build --verbose
-          cmake --install ./Build
-          cd -
-
-      - name: Test Kokkos core library (Ubuntu)
-        env:
-          CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-        run: |
-          set -x
-          sudo apt-get update && sudo apt-get -y -q install gfortran-$GCC_VERSION
-          cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
-          which -a gfortran || which -a gfortran-$GCC_VERSION
-          cmake -B build -DCMAKE_Fortran_COMPILER=gfortran-$GCC_VERSION
-          cmake --build build
-          cmake --build build --target test
-          set +x
-
-      - name: Cache installation directories
-        id: kokkos-cache
-        uses: actions/cache/save@v3
-        with:
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-
-  cpptestswithKokkos:
-    if: ${{ github.sha == 'xxxxxxxx' }}
+  cpptestswithLGPU:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [builddeps]
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos"]
-        exec_model: ["CUDA"]
-        kokkos_version: ["4.2.00"]
+        pl_backend: ["lightning_gpu"]
+        cuda_version: ["12"]
 
-    name: C++ tests (Kokkos)
+    name: C++ tests (Lightning-GPU)
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
@@ -129,27 +83,13 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/${{ matrix.cuda_version }}
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache/restore@v3
-        with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
-
-      - name: Copy cached libraries
-        run: |
-          mkdir -p ${{ github.workspace }}/Kokkos
-          ls -ltrh
-          cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
-
-      - name: Checkout PennyLane-Lightning
+      - name: Checkout PennyLane-Lightning-GPU
         uses: actions/checkout@v4
         with:
           path: main
@@ -159,20 +99,51 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+          
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install required packages
+        run: |
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
+          sudo apt-get -y -q install liblapack-dev
 
       - name: Build and run unit tests
         run: |
           cd main
-          cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
+          cmake . -BBuild \
+            -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DENABLE_COVERAGE=ON
+            -DENABLE_COVERAGE=ON \
+            -G Ninja
           cmake --build ./Build
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
@@ -180,7 +151,6 @@ jobs:
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
@@ -196,16 +166,16 @@ jobs:
           path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
-  pythontestswithKokkos:
+  pythontestswithLGPU:
     needs: [builddeps]
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos", "all"]
-        exec_model: ["CUDA"]
-        kokkos_version: ["4.2.00"]
+        pl_backend: ["lightning_gpu"]
+        default_backend: ["lightning_qubit"]
+        cuda_version: ["12"]
 
-    name: Python tests with Kokkos
+    name: Python tests with LGPU
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
@@ -216,31 +186,17 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/${{ matrix.cuda_version }}
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
 
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache/restore@v3
-        with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
-
-      - name: Copy cached libraries
-        run: |
-          mkdir -p ${{ github.workspace }}/Kokkos
-          ls -ltrh
-          cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
-
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
-          path: main
           fetch-tags: true
+          path: main
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
@@ -255,22 +211,47 @@ jobs:
           cd main
           git fetch --tags --force
           git checkout $(git tag | sort -V | tail -1)
-          git log -1 --format='%H'
-          git status
 
       - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.9'
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
 
-      - name: Get required Python packages
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+          
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
+      - name: Install required packages
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
-          python -m pip install openfermionpyscf
+          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -293,47 +274,50 @@ jobs:
           cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
-      - name: Install ML libraries for interfaces
+      - name: Build and install package
+        env: 
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
-          python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
-          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
-
-      - name: Install backend device
-        if: ${{ matrix.pl_backend != 'all'}}
-        run: |
-          ls -l ${{ github.workspace }}/Kokkos
           cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          rm -rf build
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          python -m pip install -e . -vv
+          rm -rf build
+
+          rm -rf build
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install -e . -vv
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
-        env:
+        env: 
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS 2> /dev/null || echo Something went wrong with Pytest
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=None
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
+        env: 
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          rm -rf build
+          CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
-        env:
+        env: 
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
@@ -341,9 +325,9 @@ jobs:
           PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS
+          pl-device-test --device lightning.gpu --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.gpu --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
@@ -352,3 +336,53 @@ jobs:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
+
+  upload-to-codecov-linux-python:
+    needs: [pythontestswithLGPU]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptestswithLGPU]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+      
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf *
+          rm -rf .git
+          rm -rf .gitignore
+          rm -rf .github
+          pip cache purge
