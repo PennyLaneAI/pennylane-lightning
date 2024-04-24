@@ -72,7 +72,7 @@ class LightningBase(QubitDevice):
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
-                "Pre-compiled binaries for lightning.qubit are not available. "
+                f"Pre-compiled binaries for {self.short_name} are not available. "
                 "To manually compile from source, follow the instructions at "
                 "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
             )
