@@ -53,7 +53,13 @@
 * Introduce `ci:build_wheels` label, which controls wheel building on `pull_request` and other triggers.
   [(#648)](https://github.com/PennyLaneAI/pennylane-lightning/pull/648)
 
+* Remove building wheels for Lightning Kokkos on Windows.
+  [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
+
 ### Improvements
+
+* Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for LKokkos wheels.
+  [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
 
 * Replace string comparisons by `isinstance` checks where possible.
   [(#691)](https://github.com/PennyLaneAI/pennylane-lightning/pull/691)
