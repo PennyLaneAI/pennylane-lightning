@@ -157,6 +157,7 @@ jobs:
           CIBW_BEFORE_TEST: |
             python3.9 -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python3.9 -m pip install -e . -vv; fi
+            python3.9 -m pip install --force-reinstall ./wheelhouse/PennyLane_Lightning_Kokkos*.whl
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
