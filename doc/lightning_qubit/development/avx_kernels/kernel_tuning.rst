@@ -3,7 +3,7 @@ Kernel performance tuning
 
 Lightning-Qubit's kernel implementations are by default tuned for high throughput single-threaded performance with gradient workloads. To enable this, we add OpenMP threading within the adjoint differentiation method implementation and use SIMD-level intrinsics to ensure fast performance for each given circuit in such a workload.
 
-However, sometimes we may want to modify the above defaults to favour a given workload, such as by enabling multi-threaded execution of the gate-kernels instead. For this, we have several compile-time flags to change the operating behaviour of Lightning-Qubit kernels.
+However, sometimes we may want to modify the above defaults to favour a given workload, such as by enabling multi-threaded execution of the gate kernels instead. For this, we have several compile-time flags to change the operating behaviour of Lightning-Qubit kernels.
 
 OpenMP threaded kernels
 -----------------------
