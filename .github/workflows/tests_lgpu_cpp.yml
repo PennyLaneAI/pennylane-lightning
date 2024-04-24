@@ -35,7 +35,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_gpu-${{ github.ref }}
+  group: tests_lgpu_cpp-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

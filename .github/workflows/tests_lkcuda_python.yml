@@ -36,7 +36,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_gpu-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lkcuda_python-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:

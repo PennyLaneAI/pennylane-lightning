@@ -36,7 +36,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: gpu-test-mpi-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_python-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:

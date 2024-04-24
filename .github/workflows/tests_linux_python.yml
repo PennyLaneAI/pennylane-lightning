@@ -39,7 +39,7 @@ env:
   OMP_PROC_BIND: "false"
 
 concurrency:
-  group: tests_linux-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_linux_python-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
