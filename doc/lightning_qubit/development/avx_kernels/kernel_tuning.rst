@@ -8,6 +8,6 @@ However, sometimes we may want to modify the above defaults to favour a given wo
 OpenMP threaded kernels
 -----------------------
 
-To enable OpenMP acceleration of the gate kernels, Lightning-Qubit can be compiled with the `-DLQ_ENABLE_KERNEL_OMP=on` CMake flag. Not, that for gradient workloads with many observables, this may reduce performance in comparison with the default mode, so this behaviour is opt-in only.
+To enable OpenMP acceleration of the gate kernels, Lightning-Qubit can be compiled with the `-DLQ_ENABLE_KERNEL_OMP=ON` CMake flag. Not, that for gradient workloads with many observables, this may reduce performance in comparison with the default mode, so this behaviour is opt-in only.
 
 For workloads that show benefit from the use of threaded gate kernels, sometimes updating the CPU cache to accommodate recently modified data can become a bottleneck, and saturates the performance gained at high thread counts. This may be alleviated somewhat on systems supporting AVX2 and AVX-512 operations using the `-DLQ_ENABLE_KERNEL_AVX_STREAMING=on` CMake flag. This forces the data to avoid updating the CPU cache and can improve performance for larger workloads.
