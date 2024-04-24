@@ -35,6 +35,7 @@
 #include "TensorBase.hpp"
 #include "cuDeviceTensor.hpp"
 #include "cuGateTensorCache.hpp"
+#include "cuGates_host.hpp"
 #include "cuTensorNetError.hpp"
 #include "cuTensorNet_helpers.hpp"
 #include "cuda_helpers.hpp"
@@ -71,6 +72,7 @@ template <class Precision>
 class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
   private:
     using BaseType = MPSCutnBase<Precision, MPSCutn<Precision>>;
+    bool FinalMPSFactorization_flag = false;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -88,14 +90,14 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             DevTag<int> dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
 
-    MPSCutn(const MPSCutn &other)
+    MPSCutn(MPSCutn &other)
         : BaseType(other.getNumQubits(), other.getMaxExtent(),
                    other.getQubitDims(), other.getDevTag()) {
 
-        BaseType::CopyGpuDataToGpuIn(other);
+        other.quantumStateToMPSTensorData();
 
-        updateMPSTensorData_(BaseType::getSiteExtentsPtr().data(),
-                             BaseType::getMPSTensorDataPtr().data());
+        updateMPSTensorData_(other.getSiteExtentsPtr().data(),
+                             other.getMPSTensorDataPtr().data());
     }
 
     ~MPSCutn() {}
@@ -148,7 +150,72 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                              BaseType::getMPSTensorDataPtr().data());
     };
 
+    void quantumStateToMPSTensorData() {
+        if (!FinalMPSFactorization_flag) {
+            FinalMPSFactorization_flag = true;
+
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
+                /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetBoundaryCondition_t */
+                CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+                /* const int64_t *const extentsOut */
+                BaseType::getSiteExtentsPtr().data(),
+                /*strides=*/ nullptr));
+
+            cutensornetTensorSVDAlgo_t algo =
+                CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+                BaseType::getCutnHandle(), BaseType::getQuantumState(),
+                CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO, &algo, sizeof(algo)));
+
+            cutensornetWorkspaceDescriptor_t workDesc;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+                BaseType::getCutnHandle(), &workDesc));
+
+            const std::size_t scratchSize = getScratchMemorySize();
+
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+                /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* size_t maxWorkspaceSizeDevice */ scratchSize,
+                /* cutensornetWorkspaceDescriptor_t */ workDesc,
+                /*  cudaStream_t unused in v24.03*/ 0x0));
+
+            int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
+
+            PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                        "Insufficient workspace size on Device!");
+
+            // TODO 256 alignment
+            const std::size_t d_scratch_length =
+                worksize * 256; // / sizeof(size_t);
+            DataBuffer<size_t, int> d_scratch(d_scratch_length,
+                                              BaseType::getDevTag(), true);
+
+            this->setWorkSpaceMemory_(
+                workDesc, reinterpret_cast<void *>(d_scratch.getData()),
+                worksize);
+
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+                /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetWorkspaceDescriptor_t */ workDesc,
+                /* int64_t * */ BaseType::getSiteExtentsPtr().data(),
+                /* int64_t *stridesOut */ nullptr,
+                /* void * */ BaseType::getMPSTensorDataPtr().data(),
+                /* cudaStream_t */ BaseType::getDevTag().getStreamID()));
+
+            PL_CUTENSORNET_IS_SUCCESS(
+                cutensornetDestroyWorkspaceDescriptor(workDesc));
+        }
+    }
+
     auto getDataVector() -> std::vector<std::complex<Precision>> {
+        PL_ABORT_IF_NOT(FinalMPSFactorization_flag == false,
+                        "getDataVector() method to return the full state "
+                        "vector can't be called "
+                        "after cutensornetStateFinalizeMPS is called");
         // 1D representation of mpsTensor
         std::vector<size_t> modes(1, 1);
         std::vector<size_t> extent(1, (1 << BaseType::getNumQubits()));
@@ -209,8 +276,8 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                         const std::vector<size_t> &wires, bool adjoint = false,
                         const std::vector<Precision> &params = {0.0},
                         const std::vector<CFP_t> &gate_matrix = {}) {
-        PL_ABORT_IF(wires.size() > 2,
-                    "Current version only supports 1/2 qubit gates.");
+        // PL_ABORT_IF(wires.size() > 2,
+        //             "Current version only supports 1/2 qubit gates.");
 
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
                                   BaseType::getCtrlMap().end())
@@ -226,6 +293,13 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         if (opName == "Identity") {
             return;
         } else {
+            static const std::string name{"PhaseShift"};
+            const auto gate_key = std::make_pair(name, par[0]);
+            if (!BaseType::getGateCache()->gateExists(gate_key)) {
+                BaseType::getGateCache()->add_gate(
+                    gate_key, cuGates::getPhaseShift<CFP_t>(par[0]));
+            }
+
             if (!BaseType::getGateCache()->gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName;
@@ -402,8 +476,10 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                     bool adjoint) {
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());
-        std::transform(wires.begin(), wires.end(), stateModes.begin(),
-                       [](size_t x) { return static_cast<int32_t>(x); });
+        std::transform(
+            wires.begin(), wires.end(), stateModes.begin(), [&](size_t x) {
+                return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
+            });
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
@@ -425,13 +501,18 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         int64_t id;
 
         std::vector<int32_t> stateControlModes(ctrls.size());
-        std::vector<int32_t> stateTargetModes(ctrls.size());
+        std::vector<int32_t> stateTargetModes(tgts.size());
 
         std::transform(ctrls.begin(), ctrls.end(), stateControlModes.begin(),
-                       [](size_t x) { return static_cast<int32_t>(x); });
+                       [&](size_t x) {
+                           return static_cast<int32_t>(
+                               BaseType::getNumQubits() - 1 - x);
+                       });
 
-        std::transform(tgts.begin(), tgts.end(), stateTargetModes.begin(),
-                       [](size_t x) { return static_cast<int32_t>(x); });
+        std::transform(
+            tgts.begin(), tgts.end(), stateTargetModes.begin(), [&](size_t x) {
+                return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
+            });
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
@@ -449,8 +530,6 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             /* int64_t *tensorId*/ &id));
     }
 
-    // ComplexT expval_(CFP_t *gateTensorPtr, const std::vector<size_t> &wires)
-    // {
     ComplexT expval_(cutensornetNetworkOperator_t tnOps) {
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
 
@@ -464,9 +543,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
         // Configure the computation of the specified quantum circuit
         // expectation value
-        const int32_t numHyperSamples =
-            8; // desired number of hyper samples used in the tensor network
-               // contraction path finder
+        const int32_t numHyperSamples = 0;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),

@@ -28,7 +28,7 @@ target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_${PL_BACKEND}_gates.cp
 # Define targets
 ################################################################################
 set(TEST_SOURCES    Test_MPSCutn_NonParam.cpp
-
+                    Test_MPSCutn_Param.cpp
 )
 
 add_executable(${PL_BACKEND}_gates_test_runner ${TEST_SOURCES})

@@ -127,11 +127,11 @@ template <class Precision, class Derived> class MPSCutnBase {
 
             siteExtents_.push_back(siteExtents_int64);
 
-            siteExtentsPtr_.emplace_back(siteExtents_.back().data());
+            siteExtentsPtr_.push_back(siteExtents_.back().data());
         }
 
         for (size_t i = 0; i < numQubits_; i++) {
-            mpsTensorsDataPtr_.emplace_back(static_cast<void *>(
+            mpsTensorsDataPtr_.push_back(static_cast<void *>(
                 d_mpsTensors_[i].getDataBuffer().getData()));
         }
     }
@@ -169,6 +169,10 @@ template <class Precision, class Derived> class MPSCutnBase {
         return mpsTensorsDataPtr_;
     }
 
+    auto getMPSTensors() const -> std::vector<cuDeviceTensor<Precision>> {
+        return d_mpsTensors_;
+    }
+
     auto getMPSTensorData() const -> const cuDeviceTensor<Precision> * {
         return d_mpsTensors_.data();
     }
@@ -183,20 +187,16 @@ template <class Precision, class Derived> class MPSCutnBase {
         return ctrl_map_;
     }
 
-    /**
-     * @brief Explicitly copy data from another GPU device memory block to this
-     * GPU device.
-     *
-     * @param sv LightningTensor MPSCutn object to send data.
-     */
-    inline void CopyGpuDataToGpuIn(const Derived &sv) {
-        PL_ABORT_IF_NOT(getNumQubits() == sv.getNumQubits(),
-                        "Sizes do not match for Host and GPU data");
-        for (size_t i = 0; i < numQubits_; i++) {
-            d_mpsTensors_[i].CopyGpuDataToGpuIn(
-                sv.getMPSTensorData()[i].getData(),
-                sv.getMPSTensorData()[i].getLength());
+    auto getHostDataCopy() -> std::vector<std::vector<ComplexT>> {
+        std::vector<std::vector<ComplexT>> results;
+
+        for (size_t i = 0; i < getNumQubits(); i++) {
+            std::vector<ComplexT> results_local(d_mpsTensors_[i].getLength());
+            d_mpsTensors_[i].CopyGpuDataToHost(results_local.data(),
+                                               results_local.size());
+            results.push_back(results_local);
         }
+        return results;
     }
 
   private:
