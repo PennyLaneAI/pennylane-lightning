@@ -14,7 +14,21 @@ on:
     branches:
       - master
   pull_request:
-
+    paths:
+      - .github/workflows/tests_windows.yml
+      - pennylane_lightning/core/src/*
+      - pennylane_lightning/core/src/algorithms/**
+      - pennylane_lightning/core/src/bindings/**
+      - pennylane_lightning/core/src/gates/**
+      - pennylane_lightning/core/src/measurements/**
+      - pennylane_lightning/core/src/observables/**
+      - pennylane_lightning/core/src/simulators/base/**
+      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/src/utils
+      - pennylane_lightning/lightning_kokkos/**
+      - pennylane_lightning/lightning_qubit/**
+      - tests/**
 concurrency:
   group: tests_windows-${{ github.ref }}
   cancel-in-progress: true

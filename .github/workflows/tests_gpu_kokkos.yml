@@ -11,6 +11,19 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    paths:
+      - .github/workflows/tests_gpu_kokkos.yml
+      - pennylane_lightning/core/src/*
+      - pennylane_lightning/core/src/algorithms/**
+      - pennylane_lightning/core/src/bindings/**
+      - pennylane_lightning/core/src/gates/**
+      - pennylane_lightning/core/src/measurements/**
+      - pennylane_lightning/core/src/observables/**
+      - pennylane_lightning/core/src/simulators/base/**
+      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/src/utils
+      - pennylane_lightning/lightning_kokkos/**
+      - tests/**
   push:
     branches:
       - master

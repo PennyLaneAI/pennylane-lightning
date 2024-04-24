@@ -11,10 +11,16 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    paths:
+      - .github/workflows/tests_without_binary.yml
+      - pennylane_lightning/core/*
+      - pennylane_lightning/lightning_qubit/**
+      - pennylane_lightning/lightning_gpu/**
+      - pennylane_lightning/lightning_kokkos/**
+      - tests/**
   push:
     branches:
       - master
-
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
