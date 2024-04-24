@@ -80,11 +80,8 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     if circuit.shots and has_mcm:
         mid_measurements = {}
         final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
-        if any(v == -1 for v in mid_measurements.values()):
-            return None, mid_measurements
-        return (
-            LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
-            mid_measurements,
+        return LightningMeasurements(final_state, **mcmc).measure_final_state(
+            circuit, mid_measurements=mid_measurements
         )
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)

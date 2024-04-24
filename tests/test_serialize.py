@@ -146,10 +146,9 @@ class TestSerializeObs:
 
         named_obs = NamedObsC64 if use_csingle else NamedObsC128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
-        first_s = tensor_prod_obs([named_obs("PauliX", [1]), named_obs("PauliZ", [0])])
 
         s_expected = [
-            first_s,
+            tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
             named_obs("Hadamard", [1]),
         ]
 
@@ -158,7 +157,6 @@ class TestSerializeObs:
         )
         assert s == s_expected
 
-    @pytest.mark.xfail(reason="Prod with overlapping wires not supported")
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_prod_return_with_overlapping_wires(self, use_csingle, wires_map):
@@ -283,7 +281,7 @@ class TestSerializeObs:
                         named_obs("PauliY", [2]),
                     ]
                 ),
-                tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])]),
+                tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
                 hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
             ],
         )
@@ -317,22 +315,23 @@ class TestSerializeObs:
             tape, wires_map
         )
 
-        first_term = tensor_prod_obs(
-            [
-                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
-                named_obs("PauliY", [2]),
-                named_obs("PauliZ", [3]),
-            ]
-        )
+        # Expression (ham @ obs) is converted internally by Pennylane
+        # where obs is appended to each term of the ham
 
         s_expected = hamiltonian_obs(
             np.array([0.3, 0.5, 0.4], dtype=r_dtype),
             [
-                first_term,
                 tensor_prod_obs(
                     [
+                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
                         named_obs("PauliY", [2]),
+                        named_obs("PauliZ", [3]),
+                    ]
+                ),
+                tensor_prod_obs(
+                    [
                         named_obs("PauliX", [0]),
+                        named_obs("PauliY", [2]),
                         named_obs("PauliZ", [3]),
                     ]
                 ),
@@ -388,7 +387,7 @@ class TestSerializeObs:
                         named_obs("PauliY", [2]),
                     ]
                 ),
-                tensor_prod_obs([named_obs("PauliY", [2]), named_obs("PauliX", [0])]),
+                tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
                 hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
             ],
         )
@@ -401,7 +400,7 @@ class TestSerializeObs:
                         hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
                     ]
                 ),
-                tensor_prod_obs([named_obs("PauliX", [2]), named_obs("PauliY", [0])]),
+                tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),
             ],
         )
 
@@ -441,7 +440,7 @@ class TestSerializeObs:
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
-        s_expected = tensor_prod_obs([named_obs("PauliZ", [1]), named_obs("PauliX", [0])])
+        s_expected = tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliZ", [1])])
         assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
@@ -482,11 +481,7 @@ class TestSerializeObs:
         assert isinstance(res[0], tensor_obs)
 
         s_expected = tensor_obs(
-            [
-                named_obs("PauliZ", [0]),
-                named_obs("PauliX", [1]),
-                named_obs("Hadamard", [2]),
-            ]
+            [named_obs("PauliZ", [0]), named_obs("PauliX", [1]), named_obs("Hadamard", [2])]
         )
         assert res[0] == s_expected
 
@@ -522,7 +517,7 @@ class TestSerializeObs:
             coeffs,
             [
                 tensor_obs(
-                    [named_obs("PauliZ", [1]), named_obs("PauliX", [0]), named_obs("PauliX", [2])]
+                    [named_obs("PauliX", [0]), named_obs("PauliZ", [1]), named_obs("PauliX", [2])]
                 ),
                 tensor_obs(
                     [named_obs("PauliZ", [0]), named_obs("PauliY", [1]), named_obs("Hadamard", [2])]
