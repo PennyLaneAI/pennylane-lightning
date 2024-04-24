@@ -53,6 +53,9 @@ if(LQ_ENABLE_KERNEL_OMP)
 endif()
 
 if(LQ_ENABLE_KERNEL_AVX_STREAMING)
+    if(NOT LQ_ENABLE_KERNEL_OMP)
+        message(WARNING "AVX streaming operations require `LQ_ENABLE_KERNEL_OMP` to be enabled.")
+    endif()
     add_definitions("-DPL_LQ_KERNEL_AVX_STREAMING")
 endif()
 

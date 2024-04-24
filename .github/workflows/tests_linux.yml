@@ -94,7 +94,8 @@ jobs:
               lcov --remove coverage.info '/usr/*' --output-file coverage.info
               cd ..
             done
-            lcov --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info -o coverage.info
+            lcov  --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info \
+                  --add-tracefile ./BuildKernelAVXStream/coverage.info -o coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
