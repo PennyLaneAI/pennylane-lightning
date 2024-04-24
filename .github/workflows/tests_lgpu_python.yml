@@ -13,7 +13,7 @@ on:
   release:
   pull_request:
     paths:
-      - .github/workflows/tests_linux_python.yml
+      - .github/workflows/tests_lgpu_python.yml
       - pennylane_lightning/core/src/*
       - pennylane_lightning/core/src/algorithms/**
       - pennylane_lightning/core/src/bindings/**
