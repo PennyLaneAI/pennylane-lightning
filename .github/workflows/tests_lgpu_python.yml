@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64::LGPU::Python
+name: Testing::x86_64::LGPU::Python
 on:
   workflow_call:
     inputs:

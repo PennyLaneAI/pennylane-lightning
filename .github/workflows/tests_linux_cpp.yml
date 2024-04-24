@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64::C++
+name: Testing::x86_64::C++
 on:
   workflow_call:
     inputs:

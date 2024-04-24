@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64::LGPU::MPI::C++
+name: Testing::x86_64::LGPU-MPI::C++
 on:
   workflow_call:
     inputs:
