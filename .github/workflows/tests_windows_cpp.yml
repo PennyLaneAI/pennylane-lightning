@@ -140,6 +140,7 @@ jobs:
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
+              -DENABLE_LAPACK=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
@@ -201,7 +202,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy
+          python -m pip install cmake build ninja
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
