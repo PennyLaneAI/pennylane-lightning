@@ -205,7 +205,7 @@ if LK_CPP_BINARY_AVAILABLE:
             else:
                 type0 = type(InitializationSettings())
                 raise TypeError(
-                    f"Argument kokkos_args must be of type {type0} but it is of {type(kokkos_args)}."
+                    f"Argument kokkos_args has to be of type {type0} but it is of {type(kokkos_args)}."
                 )
             self._sync = sync
 
