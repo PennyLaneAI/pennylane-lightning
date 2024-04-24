@@ -1,4 +1,4 @@
-name: Testing (Windows)
+name: Testing::Windows
 on:
   workflow_call:
     inputs:

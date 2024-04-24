@@ -1,4 +1,4 @@
-name: Tests::Linux::x86_64::LGPU::MPI
+name: Testing::Linux::x86_64::LGPU::MPI::Python
 on:
   workflow_call:
     inputs:

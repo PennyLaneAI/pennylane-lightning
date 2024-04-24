@@ -1,4 +1,4 @@
-name: Testing (Linux)
+name: Testing::Linux::x86_64::Python
 on:
   workflow_call:
     inputs:
