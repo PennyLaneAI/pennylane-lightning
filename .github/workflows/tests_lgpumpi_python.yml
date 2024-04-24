@@ -163,33 +163,6 @@ jobs:
           rm -rf * .git .gitignore .github
           pip cache purge
 
-  upload-to-codecov-linux-cpp:
-    needs: ["cpp_tests"]
-    name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: true
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-      
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf * .git .gitignore .github
-          pip cache purge
-
   upload-to-codecov-linux-python:
     needs: ["python_tests"]
     name: Upload coverage data to codecov
