@@ -13,16 +13,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/tests_linux_cpp.yml
-      - pennylane_lightning/core/src/*
-      - pennylane_lightning/core/src/algorithms/**
-      - pennylane_lightning/core/src/bindings/**
-      - pennylane_lightning/core/src/gates/**
-      - pennylane_lightning/core/src/measurements/**
-      - pennylane_lightning/core/src/observables/**
-      - pennylane_lightning/core/src/simulators/base/**
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/utils
+      - pennylane_lightning/core/src/**
+      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+
   push:
     branches:
       - master
@@ -82,11 +75,22 @@ jobs:
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
               -DLQ_ENABLE_KERNEL_OMP=ON
+  
+            cmake . -BBuildKernelAVXStream -G Ninja \
+              -DCMAKE_BUILD_TYPE=Debug \
+              -DBUILD_TESTS=ON \
+              -DENABLE_PYTHON=OFF \
+              -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DENABLE_COVERAGE=ON \
+              -DLQ_ENABLE_KERNEL_AVX_STREAM=ON \
+              -DLQ_ENABLE_KERNEL_OMP=ON
 
             cmake --build ./Build
             cmake --build ./BuildKernelOMP
+            cmake --build ./BuildKernelAVXStream
 
-            for d in Build BuildKernelOMP; do
+            for d in Build BuildKernelOMP BuildKernelAVXStream; do
               cd ./$d
               mkdir -p ./tests/results
               for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
@@ -94,7 +98,8 @@ jobs:
               lcov --remove coverage.info '/usr/*' --output-file coverage.info
               cd ..
             done
-            lcov --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info -o coverage.info
+            lcov  --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info \
+                  --add-tracefile ./BuildKernelAVXStream/coverage.info -o coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
@@ -105,6 +110,7 @@ jobs:
           path: |
             ./Build/tests/results/
             ./BuildKernelOMP/tests/results/
+            ./BuildKernelAVXStream/tests/results/
 
           if-no-files-found: error
 
