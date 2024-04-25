@@ -76,7 +76,7 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning-GPU
+      - name: Checkout PennyLane-Lightning-Tensor-CuTNMPS
         uses: actions/checkout@v4
         with:
           path: main
@@ -117,11 +117,11 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
-          sudo apt-get -y -q install liblapack-dev
+          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
 
       - name: Build and run unit tests
         run: |
+          set -x
           cd main
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
@@ -138,6 +138,7 @@ jobs:
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          set +x
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
