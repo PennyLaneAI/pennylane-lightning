@@ -99,6 +99,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
+        group: [1, 2, 3, 4, 5]
     timeout-minutes: 60
     name: Python tests
     runs-on: ${{ matrix.os }}
@@ -163,18 +164,18 @@ jobs:
           python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" $COVERAGE_FLAGS --splits 5 --group ${{ matrix.group }} --durations-path='.github/workflows/python_lightning_qubit_test_durations'
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
           path: |
-            ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
+            ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
         
 
