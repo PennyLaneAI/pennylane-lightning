@@ -1,4 +1,4 @@
-name: Testing::LKokkos::CUDA::C++
+name: Testing::x86_64::LKokkos::CUDA::C++
 on:
   workflow_call:
     inputs:
