@@ -27,7 +27,12 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
+from pennylane.measurements import (
+    ExpectationMP,
+    MeasurementProcess,
+    StateMeasurement,
+    VarianceMP,
+)
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch, TensorLike
@@ -37,33 +42,6 @@ Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
-
-_operations = frozenset({})  # pragma: no cover
-# The set of supported operations.
-
-_observables = frozenset({})  # pragma: no cover
-# The set of supported observables.
-
-
-def decompose_recursive(op: qml.operation.Operator) -> list:
-    """Decompose a Pennylane operator into a list of operators with at most 2 wires.
-
-    Args:
-        op (Operator): the operator to decompose.
-
-    Returns:
-        list[Operator]: a list of operators with at most 2 wires.
-    """
-
-    if len(op.wires) <= 2:
-        return [op]
-
-    decomposed_ops = []
-    for sub_op in op.decomposition():
-        decomposed_ops.extend(decompose_recursive(sub_op))
-
-    return decomposed_ops
-
 
 _operations = frozenset(
     {
@@ -179,6 +157,26 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables  # pragma: no cover
 
 
+def decompose_recursive(op: qml.operation.Operator) -> list:
+    """Decompose a Pennylane operator into a list of operators with at most 2 wires.
+
+    Args:
+        op (Operator): the operator to decompose.
+
+    Returns:
+        list[Operator]: a list of operators with at most 2 wires.
+    """
+
+    if len(op.wires) <= 2:
+        return [op]
+
+    decomposed_ops = []
+    for sub_op in op.decomposition():
+        decomposed_ops.extend(decompose_recursive(sub_op))
+
+    return decomposed_ops
+
+
 class QuimbMPS:
     """Quimb MPS class.
 
@@ -257,7 +255,7 @@ class QuimbMPS:
         """
         return qtn.MPS_computational_state(**self._init_state_ops)
 
-    def preprocess(self):
+    def preprocess(self) -> TransformProgram:
         """This function defines the device transform program to be applied for this interface.
 
         Args:
@@ -278,7 +276,9 @@ class QuimbMPS:
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name_interf)
-        program.add_transform(validate_observables, accepted_observables, name=self.name_interf)
+        program.add_transform(
+            validate_observables, accepted_observables, name=self.name_interf
+        )
         program.add_transform(validate_device_wires, self._wires, name=self.name_interf)
         program.add_transform(
             decompose,
@@ -310,8 +310,6 @@ class QuimbMPS:
         for circuit in circuits:
             circuit = circuit.map_to_standard_wires()
             results.append(self.simulate(circuit))
-
-        # TODO: add option for self._return_tn
 
         return tuple(results)
 
@@ -423,7 +421,9 @@ class QuimbMPS:
         obs = measurementprocess.obs
 
         obs_mat = obs.matrix()
-        expect_squar_op = self._local_expectation(np.dot(obs_mat, obs_mat), tuple(obs.wires))
+        expect_squar_op = self._local_expectation(
+            np.dot(obs_mat, obs_mat), tuple(obs.wires)
+        )
         expect_op = self._local_expectation(obs_mat, tuple(obs.wires))
 
         return expect_squar_op - np.square(expect_op)
