@@ -14,7 +14,7 @@ endif()
 set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files")
 
 foreach(BACKEND ${PL_BACKEND})
-    if(${BACKEND} STREQUAL "lightning_gpu" AND NOT CUDA_UTILS_ADDED)
+    if(${BACKEND} STREQUAL "lightning_gpu" OR ${BACKEND} STREQUAL "lightning_tensor" AND NOT CUDA_UTILS_ADDED)
         add_subdirectory(cuda_utils)
         target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cuda_utils)
         target_link_libraries(lightning_utils INTERFACE cuda_utils)
