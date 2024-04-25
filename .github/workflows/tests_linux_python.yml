@@ -270,7 +270,7 @@ jobs:
           path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
-    needs: [build_and_cache_Kokkos]
+    needs: [build_lightning_kokkos_wheels]
     strategy:
       matrix:
         os: [ubuntu-22.04]
