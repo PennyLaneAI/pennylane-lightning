@@ -86,7 +86,7 @@ jobs:
       - name: Create device wheel
         run: |
           cd main
-          setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
 
       - name: Cache wheel directories
