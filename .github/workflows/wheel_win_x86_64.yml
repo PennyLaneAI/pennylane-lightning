@@ -12,6 +12,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   DISTUTILS_USE_SDK: 1
@@ -23,7 +24,10 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
@@ -35,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2022]
-        exec_model: [\"SERIAL\"]
+        exec_model: ["SERIAL"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
@@ -55,12 +59,6 @@ jobs:
           cd D:\a
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
 
-      - name: Create installation directory
-        if: steps.kokkos-cache.outputs.cache-hit != 'true'
-        run: |
-          Remove-Item -Path D:\a\install_dir\${{ matrix.exec_model }} -Recurse -Force -ErrorAction Ignore
-          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
-
       - name: Install dependencies
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
@@ -69,6 +67,7 @@ jobs:
       - name: Build Kokkos core library
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
         run: |
+          mkdir -p D:\a\install_dir\${{ matrix.exec_model }}
           cd D:\a\kokkos
           cmake -BBuild . -DCMAKE_INSTALL_PREFIX=D:\a\install_dir\${{ matrix.exec_model }} `
                           -DKokkos_ENABLE_COMPLEX_ALIGN=OFF `
@@ -83,15 +82,15 @@ jobs:
           cmake --install ./Build --config RelWithDebInfo --verbose
 
   win-wheels:
-    needs: [set_wheel_build_matrix]
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-2022]
         arch: [AMD64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-        exec_model: [\"SERIAL\"]
+        exec_model: ["SERIAL"]
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: ${{ matrix.os }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
@@ -108,11 +107,11 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
-      - name: Copy cached libraries #Update when merging to pennylane-lightning
+      - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
         run: |
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
-                    -Destination "D:\a\Lightning-Unification\Lightning-Unification\Kokkos" -Recurse -Force
+                    -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0 wheel
@@ -127,12 +126,9 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 cmake~=3.24.0 build
 
-          #Temporarily commenting while solving problems to find binaries in CIBW tests.
-          # CIBW_BEFORE_TEST: |
-          #   python -m pip install -r requirements-tests.txt
-
-          # CIBW_TEST_COMMAND: |
-          #   pl-device-test --device=lightning.qubit --skip-ops -x --tb=short --no-flaky-report
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DENABLE_LAPACK=OFF"
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
@@ -160,6 +156,34 @@ jobs:
           }
           cd ..
 
+      - name: Determine Python version
+        id: pyvs
+        shell: bash
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
+
+      - name: Test wheels
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install setuptools
+          python -m pip install -r requirements-tests.txt
+          if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
+            SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install -e . -vv
+          }
+          pushd wheelhouse
+          $wheels = Get-ChildItem "./" -Filter *.whl
+          foreach ($i in $wheels){
+            python -m pip install $i.Name
+          }
+          popd
+          $DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
+          pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short --no-flaky-report
+
       - name: Validate wheels
         run: |
           python -m pip install twine
@@ -172,7 +196,11 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master' ||
+          steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
@@ -185,7 +213,9 @@ jobs:
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
 
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    if: |
+      github.event_name == 'release' ||
+      github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
         with:

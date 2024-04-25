@@ -207,7 +207,7 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob2 != ob3);
         }
 
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -244,9 +244,8 @@ template <typename TypeList> void testHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains(
-                    "Hermitian observables do not support shot measurement for "
-                    "Windows."));
+                Catch::Matchers::Contains("Hermitian observables with shot "
+                                          "measurement are not supported"));
         }
 #endif
 
