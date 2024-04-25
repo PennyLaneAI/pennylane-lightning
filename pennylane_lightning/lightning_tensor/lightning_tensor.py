@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
-It is a device to perform tensor network operations on a quantum circuit. 
+It is a device to perform tensor network simulation of a quantum circuit. 
 """
 from dataclasses import replace
 from numbers import Number
@@ -72,11 +72,8 @@ class LightningTensor(Device):
         **kwargs: keyword arguments. The following options are currently supported:
 
             ``max_bond_dim`` (int): Maximum bond dimension for the MPS simulator.
-                It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is `None`.
-            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is `1e-16`.
-            ``return_tn`` (bool): Whether to return the tensor network object along with the results of circuit execution. Default is `False`.
-            ``rehearse`` (bool): Whether to rehearse the circuit. If `True`, generate and cache the simplified tensor network and contraction path
-                without performing the contraction. Default is `False`.
+                It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is ``None``.
+            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is ``1e-16``.
     """
 
     # pylint: disable=too-many-instance-attributes
