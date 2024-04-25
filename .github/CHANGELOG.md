@@ -91,6 +91,9 @@
 * Add `workflow_dispatch` to wheels recipes; allowing developers to build wheels manually on a branch instead of temporarily changing the headers.
   [(#679)](https://github.com/PennyLaneAI/pennylane-lightning/pull/679)
 
+* Add the `ENABLE_LAPACK` compilation flag to toggle dynamic linking to LAPACK library.
+  [(#678)](https://github.com/PennyLaneAI/pennylane-lightning/pull/678)
+
 ### Documentation
 
 ### Bug fixes
