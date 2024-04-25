@@ -88,13 +88,15 @@ jobs:
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
+          mkdir -p ${{ github.workspace }}/wheels
+          cp dist/*.whl ${{ github.workspace }}/wheels
 
       - name: Cache wheel directories
         id: wheel-lightning_qubit
         uses: actions/cache/save@v3
         with:
           key: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-${{ github.sha }}
-          path: ${{ github.workspace }}/dist
+          path: ${{ github.workspace }}/wheels
 
   pythontests:
     needs: ["buildwheels"]
@@ -122,7 +124,7 @@ jobs:
         id: wheel-lightning_qubit
         uses: actions/cache/restore@v3
         with:
-          path: ${{ github.workspace }}/dist
+          path: ${{ github.workspace }}/wheels
           key: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-
 
