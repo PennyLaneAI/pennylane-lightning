@@ -254,6 +254,7 @@ jobs:
       - name: Create device wheel
         run: |
           cd main
+          SKIP_COMPILATION=True pip install -e . -vv
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
           mkdir -p ${{ github.workspace }}/wheels
