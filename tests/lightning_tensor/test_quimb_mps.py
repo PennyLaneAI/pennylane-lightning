@@ -205,3 +205,18 @@ class TestQuimbMPS:
 
         with pytest.raises(NotImplementedError):
             dev.execute(tape)
+
+    def test_not_implemented_shots(self, backend, method):
+        """Tests that this interface does not support measurements with finite shots."""
+
+        ops = [qml.Identity(0)]
+        measurements = [qml.expval(qml.PauliZ(0))]
+        tape = qml.tape.QuantumScript(ops, measurements)
+        tape._shots = 5
+
+        dev = LightningTensor(
+            wires=tape.wires, backend=backend, method=method, c_dtype=np.complex64
+        )
+
+        with pytest.raises(NotImplementedError):
+            dev.execute(tape)

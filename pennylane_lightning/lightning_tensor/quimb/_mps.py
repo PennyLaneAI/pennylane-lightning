@@ -227,14 +227,6 @@ class QuimbMPS:
         """Contract the MPS into a dense array and round the values."""
         return self._circuitMPS.to_dense().round(digits)
 
-    def draw_state(self) -> None:
-        """Draw the MPS."""
-        self._circuitMPS.psi.draw(
-            color=[f"I{q}" for q in range(len(self._wires))],
-            show_tags=False,
-            show_inds=True,
-        )
-
     def _reset_state(self) -> None:
         """Reset the MPS."""
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
