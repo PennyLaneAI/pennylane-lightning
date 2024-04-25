@@ -31,8 +31,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-  pythontests:
+  buildwheels:
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -77,13 +76,67 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
-          python -m pip install scipy
+          python -m pip install scipy wheel
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install -r requirements-dev.txt
+
+      - name: Create device wheel
+        run: |
+          cd main
+          setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
+
+      - name: Cache wheel directories
+        id: wheel-lightning_qubit
+        uses: actions/cache/save@v3
+        with:
+          key: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-${{ github.sha }}
+          path: ${{ github.workspace }}/dist
+
+  pythontests:
+    needs: ["buildwheels"]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_qubit"]
+    timeout-minutes: 60
+    name: Python tests
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/setup-python@v4
+        name: Install Python
+        with:
+          python-version: '3.9'
+          
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - name: Restoring cached wheel
+        id: wheel-lightning_qubit
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ github.workspace }}/dist
+          key: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
 
       - name: Get required Python packages
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+          python -m pip install ${{ github.workspace }}/dist/PennyLane_Lightning*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -112,12 +165,6 @@ jobs:
           python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
-      - name: Install backend device
-        run: |
-          cd main
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
-
       - name: Run PennyLane-Lightning unit tests
         run: |
           # TODO: Remove installing pytest-xdist with release v0.36.0
@@ -137,7 +184,7 @@ jobs:
           path: |
             ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
-
+        
 
   pythontestswithOpenBLAS:
     strategy:
