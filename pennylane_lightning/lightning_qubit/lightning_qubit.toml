@@ -71,9 +71,6 @@ native = [
 # default, but can be useful to express a deviation from this device's regular
 # strategy in PennyLane.
 decomp = [
-        "BasisState",
-        "QubitStateVector",
-        "StatePrep",
         "QFT",
         "MultiControlledX",
 ]
