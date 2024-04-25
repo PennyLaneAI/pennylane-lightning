@@ -71,5 +71,45 @@ def test_invalid_keyword_arg():
 
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(ValueError, match="LightningTensor does not support the `shots` parameter."):
+    with pytest.raises(ValueError, match="LightningTensor does not support finite shots."):
         LightningTensor(shots=5)
+
+
+def test_support_derivatives():
+    """Test that the device does not support derivatives yet."""
+    dev = LightningTensor()
+    assert not dev.supports_derivatives()
+
+
+def test_compute_derivatives():
+    """Test that an error is raised if the `compute_derivatives` method is called."""
+    dev = LightningTensor()
+    with pytest.raises(NotImplementedError):
+        dev.compute_derivatives(circuits=None)
+
+
+def test_execute_and_compute_derivatives():
+    """Test that an error is raised if `execute_and_compute_derivative` method is called."""
+    dev = LightningTensor()
+    with pytest.raises(NotImplementedError):
+        dev.execute_and_compute_derivatives(circuits=None)
+
+
+def test_supports_vjp():
+    """Test that the device does not support VJP yet."""
+    dev = LightningTensor()
+    assert not dev.supports_vjp()
+
+
+def test_compute_vjp():
+    """Test that an error is raised if `compute_vjp` method is called."""
+    dev = LightningTensor()
+    with pytest.raises(NotImplementedError):
+        dev.compute_vjp(circuits=None, cotangents=None)
+
+
+def test_execute_and_compute_vjp():
+    """Test that an error is raised if `execute_and_compute_vjp` method is called."""
+    dev = LightningTensor()
+    with pytest.raises(NotImplementedError):
+        dev.execute_and_compute_vjp(circuits=None, cotangents=None)

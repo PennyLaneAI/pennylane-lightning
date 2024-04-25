@@ -88,15 +88,11 @@ class LightningTensor(Device):
 
     # So far we just consider the options for MPS simulator
     _device_options = (
-        "apply_reverse_lightcone",
         "backend",
         "c_dtype",
         "cutoff",
         "method",
         "max_bond_dim",
-        "measure_algorithm",
-        "return_tn",
-        "rehearse",
     )
 
     _new_API = True
@@ -120,7 +116,7 @@ class LightningTensor(Device):
             raise ValueError(f"Unsupported method: {method}")
 
         if shots is not None:
-            raise ValueError("LightningTensor does not support the `shots` parameter.")
+            raise ValueError("LightningTensor does not support finite shots.")
 
         super().__init__(wires=wires, shots=shots)
 
@@ -132,12 +128,6 @@ class LightningTensor(Device):
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
         self._cutoff = kwargs.get("cutoff", 1e-16)
-        self._measure_algorithm = kwargs.get("measure_algorithm", None)
-
-        # common options (MPS and TN)
-        self._return_tn = kwargs.get("return_tn", False)
-        self._rehearse = kwargs.get("rehearse", False)
-        self._apply_reverse_lightcone = kwargs.get("apply_reverse_lightcone", None)
 
         self._interface = None
         interface_opts = self._setup_execution_config().device_options
@@ -264,8 +254,7 @@ class LightningTensor(Device):
             Bool: Whether or not a derivative can be calculated provided the given information.
 
         """
-        # TODO: implement during next quarter
-        return False  # pragma: no cover
+        return False
 
     def compute_derivatives(
         self,
@@ -283,7 +272,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     def execute_and_compute_derivatives(
         self,
@@ -301,7 +290,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     # pylint: disable=unused-argument
     def supports_vjp(
@@ -319,7 +308,7 @@ class LightningTensor(Device):
             Bool: Whether or not a derivative can be calculated provided the given information.
         """
         # TODO: implement during next quarter
-        return False  # pragma: no cover
+        return False
 
     def compute_vjp(
         self,
@@ -341,7 +330,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of vector jacobian product has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     def execute_and_compute_vjp(
         self,
@@ -362,4 +351,4 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of vector jacobian product has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
