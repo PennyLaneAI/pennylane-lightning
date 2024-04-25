@@ -263,7 +263,7 @@ jobs:
           cp dist/*.whl ${{ github.workspace }}/wheels
 
       - name: Cache wheel directories
-        id: wheel-lightning_qubit
+        id: wheel-lightning_kokkos
         uses: actions/cache/save@v3
         with:
           key: wheel_${{ matrix.pl_backend }}-${{ github.ref }}-${{ github.sha }}
@@ -293,7 +293,7 @@ jobs:
           path: main
 
       - name: Restoring cached wheel
-        id: wheel-lightning_qubit
+        id: wheel-lightning_kokkos
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/wheels
@@ -306,6 +306,7 @@ jobs:
           python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl --no-deps
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+          SKIP_COMPILATION=True python -m pip install -e . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
