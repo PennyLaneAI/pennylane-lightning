@@ -107,6 +107,7 @@ jobs:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
 
   cpptestswithKokkos:
+    # TODO: The issue related to Kokkos with CUDA-12 running out of memory needs to be fixed.
     if: ${{ github.sha == 'xxxxxxxx' }}
     needs: [builddeps]
     strategy:
