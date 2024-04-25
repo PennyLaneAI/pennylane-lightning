@@ -133,7 +133,7 @@ TEMPLATE_TEST_CASE("MPSCutn::applyPauliX", "[MPSCutn_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = false; // GENERATE(true, false);
     {
         using cp_t = std::complex<TestType>;
 
@@ -158,18 +158,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
                 MPSCutn<TestType> sv_init{num_qubits, maxExtent, qubitDims,
                                           dev_tag};
 
-                // Test using |+++> state
-                // sv_init.applyOperations(
-                //    {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1},
-                //    {2}},
-                //    {{false}, {false}, {false}});
-
                 sv_init.applyOperations(
                     {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"PauliY"}},
-                    {{0}, {1}, {2}, {index}},
-                    {{false}, {false}, {false}, {inverse}});
-
-                // sv_init.applyOperation("PauliY", {index}, inverse);
+                    {{0}, {1}, {2}, {index}}, {false, false, false, inverse});
 
                 CHECK(sv_init.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));

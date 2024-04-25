@@ -485,6 +485,9 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
 
+        // Note adjoint indicates whether or not all tensor elements of the
+        // tensor operator will be complex conjugated adjoint in the following
+        // API is not equivalent to inverse in the lightning context
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
@@ -517,7 +520,11 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             tgts.begin(), tgts.end(), stateTargetModes.begin(), [&](size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
-
+        /*Only immutable controlled tensor operators are supported as of
+         * v24.03*/
+        // Note adjoint indicates whether or not all tensor elements of the
+        // tensor operator will be complex conjugated adjoint in the following
+        // API is not equivalent to inverse in the lightning context
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
