@@ -5,6 +5,9 @@
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
 
+* Add compile-time support for AVX2/512 streaming operations in `lightning.qubit`.
+  [(#664)](https://github.com/PennyLaneAI/pennylane-lightning/pull/664)
+
 * `lightning.kokkos` supports mid-circuit measurements.
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
@@ -40,6 +43,9 @@
   [(#649)](https://github.com/PennyLaneAI/pennylane-lightning/pull/649)
 
 ### Breaking changes
+
+* Add `paths` directives to test workflows to avoid running tests that cannot be impacted by changes.
+  [(#695)](https://github.com/PennyLaneAI/pennylane-lightning/pull/695)
 
 * Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
   [(#676)](https://github.com/PennyLaneAI/pennylane-lightning/pull/676)

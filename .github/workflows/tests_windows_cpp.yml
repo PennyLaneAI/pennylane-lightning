@@ -1,4 +1,4 @@
-name: Testing (Windows)
+name: Testing::x86_64::Windows:C++
 on:
   workflow_call:
     inputs:
@@ -14,9 +14,13 @@ on:
     branches:
       - master
   pull_request:
+    paths:
+      - .github/workflows/tests_windows_cpp.yml
+      - pennylane_lightning/core/src/**
+      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
 
 concurrency:
-  group: tests_windows-${{ github.ref }}
+  group: tests_windows_cpp-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

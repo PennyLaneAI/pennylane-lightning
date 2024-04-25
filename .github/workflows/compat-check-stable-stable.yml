@@ -6,38 +6,74 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests_linux:
-    name: Lightning Compatibility test (tests_linux) - stable/stable
-    uses: ./.github/workflows/tests_linux.yml
+  tests_lgpu_cpp:
+    name: Lightning Compatibility test (tests_lgpu_cpp) - stable/stable
+    uses: ./.github/workflows/lgpu_cpp.yml
     with:
       lightning-version: stable
       pennylane-version: stable
-    secrets: inherit # pass all secrets
-  tests_lkokkos_gpu:
-    name: Lightning Compatibility test (tests_lkokkos_gpu) - stable/stable
-    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    secrets: inherit
+  tests_lgpumpi_cpp:
+    name: Lightning Compatibility test (tests_lgpumpi_cpp) - stable/stable
+    uses: ./.github/workflows/lgpumpi_cpp.yml
     with:
       lightning-version: stable
       pennylane-version: stable
-    secrets: inherit # pass all secrets
-  tests_lgpu_gpu:
-    name: Lightning Compatibility test (tests_lgpu_gpu) - stable/stable
-    uses: ./.github/workflows/tests_gpu_cuda.yml
+    secrets: inherit
+  tests_linux_cpp:
+    name: Lightning Compatibility test (tests_linux_cpp) - stable/stable
+    uses: ./.github/workflows/linux_cpp.yml
     with:
       lightning-version: stable
       pennylane-version: stable
-    secrets: inherit # pass all secrets
-  tests_lgpu_gpu_mpi:
-    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - stable/stable
-    uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
+    secrets: inherit
+  tests_lkcuda_cpp:
+    name: Lightning Compatibility test (tests_lkcuda_cpp) - stable/stable
+    uses: ./.github/workflows/lkcuda_cpp.yml
     with:
       lightning-version: stable
       pennylane-version: stable
-    secrets: inherit # pass all secrets
+    secrets: inherit
+  tests_windows_cpp:
+    name: Lightning Compatibility test (tests_windows_cpp) - stable/stable
+    uses: ./.github/workflows/windows_cpp.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+    secrets: inherit
+  tests_lgpu_python:
+    name: Lightning Compatibility test (tests_lgpu_python) - stable/stable
+    uses: ./.github/workflows/lgpu_python.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+    secrets: inherit
+  tests_lgpumpi_python:
+    name: Lightning Compatibility test (tests_lgpumpi_python) - stable/stable
+    uses: ./.github/workflows/lgpumpi_python.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+    secrets: inherit
+  tests_linux_python:
+    name: Lightning Compatibility test (tests_linux_python) - stable/stable
+    uses: ./.github/workflows/linux_python.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+    secrets: inherit
+  tests_lkcuda_python:
+    name: Lightning Compatibility test (tests_lkcuda_python) - stable/stable
+    uses: ./.github/workflows/lkcuda_python.yml
+    with:
+      lightning-version: stable
+      pennylane-version: stable
+    secrets: inherit
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - stable/stable
-    uses: ./.github/workflows/tests_without_binary.yml
+    uses: ./.github/workflows/without_binary.yml
     with:
       lightning-version: stable
       pennylane-version: stable
-    secrets: inherit # pass all secrets
+    secrets: inherit
+  
