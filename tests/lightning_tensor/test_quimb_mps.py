@@ -29,8 +29,8 @@ from scipy.sparse import csr_matrix
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
-# if LightningDevice._CPP_BINARY_AVAILABLE:
-#    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
+if LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
