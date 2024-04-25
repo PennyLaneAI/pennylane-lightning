@@ -86,8 +86,8 @@ jobs:
       - name: Create device wheel
         run: |
           cd main
-          SKIP_COMPILATION=True python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          SKIP_COMPILATION=True PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
+          python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
           mkdir -p ${{ github.workspace }}/wheels
           cp dist/*.whl ${{ github.workspace }}/wheels
 
@@ -136,9 +136,9 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl --no-deps
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
