@@ -56,7 +56,6 @@ class QuimbMPS:
 
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-        self._return_tn = interf_opts["return_tn"]
 
         self._init_state_ops = {
             "binary": "0" * max(1, len(self._wires)),
@@ -75,7 +74,6 @@ class QuimbMPS:
             "dtype": self._dtype.__name__,
             "simplify_sequence": "ADCRS",
             "simplify_atol": 0.0,
-            "rehearse": interf_opts["rehearse"],
         }
 
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
