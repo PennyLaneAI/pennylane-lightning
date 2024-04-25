@@ -16,8 +16,6 @@ Tests for process and execute (variance calculation).
 """
 import numpy as np
 import pennylane as qml
-
-# pylint: disable=too-many-arguments, redefined-outer-name
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane.tape import QuantumScript

@@ -14,7 +14,7 @@
 """
 Tests for process and execute (expval calculation).
 """
-# pylint: disable=too-many-arguments, redefined-outer-name
+
 import numpy as np
 import pennylane as qml
 import pytest

@@ -198,9 +198,11 @@ class LightningTensor(Device):
             device can natively execute as well as a postprocessing function to be called after execution, and a configuration
             with unset specifications filled in.
 
-        This device:
+        This device currently:
 
-        * Currently does not support finite shots.
+        * Does not support finite shots.
+        * Does not support derivatives.
+        * Does not support vector jacobian products.
         """
 
         config = self._setup_execution_config(execution_config)
@@ -293,7 +295,6 @@ class LightningTensor(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information.
         """
-        # TODO: implement during next quarter
         return False
 
     def compute_vjp(
