@@ -14,19 +14,24 @@
 """
 Class implementation for the Quimb MPS interface for simulating quantum circuits while keeping the state always in MPS form.
 """
-
+import copy
 from typing import Callable, Sequence, Union
 
 import pennylane as qml
 import quimb.tensor as qtn
 from pennylane import numpy as np
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.preprocess import (
+    decompose,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch, TensorLike
 from pennylane.wires import Wires
-
-from ._utils import from_op_to_mpo
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -37,6 +42,130 @@ _operations = frozenset({})  # pragma: no cover
 # The set of supported operations.
 
 _observables = frozenset({})  # pragma: no cover
+# The set of supported observables.
+
+
+def decompose_recursive(op: qml.operation.Operator) -> list:
+    """Decompose a Pennylane operator into a list of operators with at most 2 wires.
+
+    Args:
+        op (Operator): the operator to decompose.
+
+    Returns:
+        list[Operator]: a list of operators with at most 2 wires.
+    """
+
+    if len(op.wires) <= 2:
+        return [op]
+
+    decomposed_ops = []
+    for sub_op in op.decomposition():
+        decomposed_ops.extend(decompose_recursive(sub_op))
+
+    return decomposed_ops
+
+
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "CPhase",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "QFT",
+        "ECR",
+        "BlockEncode",
+    }
+)
+# The set of supported operations.
+
+
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "SparseHamiltonian",
+        "Hamiltonian",
+        "LinearCombination",
+        "Sum",
+        "SProd",
+        "Prod",
+        "Exp",
+    }
+)
 # The set of supported observables.
 
 
@@ -92,29 +221,74 @@ class QuimbMPS:
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     @property
-    def state(self):
-        """Current MPS handled by the interface."""
+    def name_interf(self) -> str:
+        """The name of this interface."""
+        return "QuimbMPS interface"
+
+    @property
+    def state(self) -> qtn.MatrixProductState:
+        """Return the current MPS handled by the interface."""
         return self._circuitMPS.psi
 
-    def state_to_array(self, digits: int = 5):
-        """Contract the MPS into a dense array."""
+    def state_to_array(self, digits: int = 5) -> np.ndarray:
+        """Contract the MPS into a dense array and round the values."""
         return self._circuitMPS.to_dense().round(digits)
+
+    def draw_state(self) -> None:
+        """Draw the MPS."""
+        self._circuitMPS.psi.draw(
+            color=[f"I{q}" for q in range(len(self._wires))],
+            show_tags=False,
+            show_inds=True,
+        )
 
     def _reset_state(self) -> None:
         """Reset the MPS."""
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     def _initial_mps(self) -> qtn.MatrixProductState:
-        r"""
-        Returns an initial state to :math:`\ket{0}`.
+        """
+        Return an initial state |0⟩.
 
         Internally, it uses `quimb`'s `MPS_computational_state` method.
 
         Returns:
             MatrixProductState: The initial MPS of a circuit.
         """
-
         return qtn.MPS_computational_state(**self._init_state_ops)
+
+    def preprocess(self):
+        """This function defines the device transform program to be applied for this interface.
+
+        Args:
+            config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
+
+        Returns:
+            TransformProgram: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution.
+
+        This interface:
+
+        * Supports any one or two-qubit operations that provide a matrix.
+        * Supports any three or four-qubit operations that provide a decomposition method.
+        * Currently does not support finite shots.
+        """
+
+        program = TransformProgram()
+
+        program.add_transform(validate_measurements, name=self.name_interf)
+        program.add_transform(validate_observables, accepted_observables, name=self.name_interf)
+        program.add_transform(validate_device_wires, self._wires, name=self.name_interf)
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            skip_initial_state_prep=True,
+            name=self.name_interf,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
+
+        return program
 
     # pylint: disable=unused-argument
     def execute(
@@ -174,28 +348,19 @@ class QuimbMPS:
     def _apply_operation(self, op: qml.operation.Operator) -> None:
         """Apply a single operator to the circuit, keeping the state always in a MPS form.
 
-        Internally it uses `quimb`'s `apply_gate` method for one and two-qubit gates.
-        For operations that act on more than two wires, it converts the operation to a MPO and applies it to the MPS.
+        Internally it uses `quimb`'s `apply_gate` method. For operations that act on more than two wires,
+        it decomposes them first into operations that act on at most two wires.
 
         Args:
             op (Operator): The operation to apply.
         """
 
         if len(op.wires) <= 2:
-
             self._circuitMPS.apply_gate(op.matrix(), *op.wires, **self._gate_opts)
-
         else:
-
-            # If the operation is not a one or two-qubit gate, we need to explicitly convert it to a MPO
-            # and apply it to the MPS of the circuit.
-
-            mat_prod_op = from_op_to_mpo(op, self._circuitMPS.psi)
-            new_state = mat_prod_op.apply(self._circuitMPS.psi, compress=True)
-            self._circuitMPS._psi.__dict__.update(new_state.__dict__)
-
-            gate = qtn.circuit.parse_to_gate(op.matrix(), tuple(op.wires))
-            self._circuitMPS.gates.append(gate)
+            decom_ops = decompose_recursive(op)
+            for o in decom_ops:
+                self._circuitMPS.apply_gate(o.matrix(), *o.wires, **self._gate_opts)
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Measure the measurement required by the circuit over the MPS.
@@ -241,7 +406,9 @@ class QuimbMPS:
 
         obs = measurementprocess.obs
 
-        return self._local_expectation(obs.matrix(), tuple(obs.wires))
+        result = self._local_expectation(obs.matrix(), tuple(obs.wires))
+
+        return result
 
     def var(self, measurementprocess: MeasurementProcess) -> float:
         """Variance of the supplied observable contained in the MeasurementProcess.
@@ -274,10 +441,13 @@ class QuimbMPS:
             Local expectation value of the matrix on the MPS.
         """
 
-        return np.real(
-            self._circuitMPS.local_expectation(
-                matrix,
-                wires,
-                **self._expval_opts,
-            )
+        # We need to copy the MPS to avoid modifying the original state
+        qc = copy.deepcopy(self._circuitMPS)
+
+        exp_val = qc.local_expectation(
+            matrix,
+            wires,
+            **self._expval_opts,
         )
+
+        return float(np.real(exp_val))
