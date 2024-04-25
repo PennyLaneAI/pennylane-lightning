@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Tests for process and execute (expval calculation).
+Tests for the expectation value calculations on the LightningTensor device.
 """
 
 import numpy as np

@@ -310,16 +310,8 @@ class QuimbMPS:
 
         self._reset_state()
 
-        ##############################################################
-        ### PART 1: Applying operations
-        ##############################################################
-
         for op in circuit.operations:
             self._apply_operation(op)
-
-        ##############################################################
-        ### PART 2: Measurements
-        ##############################################################
 
         if not circuit.shots:
             if len(circuit.measurements) == 1:
