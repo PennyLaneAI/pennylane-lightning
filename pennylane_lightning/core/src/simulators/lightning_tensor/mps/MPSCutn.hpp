@@ -161,7 +161,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                 CUTENSORNET_BOUNDARY_CONDITION_OPEN,
                 /* const int64_t *const extentsOut */
                 BaseType::getSiteExtentsPtr().data(),
-                /*strides=*/ nullptr));
+                /*strides=*/nullptr));
 
             cutensornetTensorSVDAlgo_t algo =
                 CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ;
@@ -184,12 +184,14 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
             int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
+            // 256 alignment
+            worksize += 256 - worksize % 256;
+
             PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                         "Insufficient workspace size on Device!");
 
-            // TODO 256 alignment
             const std::size_t d_scratch_length =
-                worksize * 256; // / sizeof(size_t);
+                worksize / sizeof(size_t); // / sizeof(size_t);
             DataBuffer<size_t, int> d_scratch(d_scratch_length,
                                               BaseType::getDevTag(), true);
 
@@ -240,10 +242,12 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
         int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
+        worksize += 256 - worksize % 256;
+
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");
 
-        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        const std::size_t d_scratch_length = worksize / sizeof(size_t);
         DataBuffer<size_t, int> d_scratch(d_scratch_length,
                                           BaseType::getDevTag(), true);
 
