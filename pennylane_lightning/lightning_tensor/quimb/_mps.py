@@ -27,12 +27,7 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.measurements import (
-    ExpectationMP,
-    MeasurementProcess,
-    StateMeasurement,
-    VarianceMP,
-)
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch, TensorLike
@@ -246,7 +241,7 @@ class QuimbMPS:
 
     def _initial_mps(self) -> qtn.MatrixProductState:
         """
-        Return an initial state |0⟩.
+        Return an initial state to :math:`\ket{0}`.
 
         Internally, it uses `quimb`'s `MPS_computational_state` method.
 
@@ -276,9 +271,7 @@ class QuimbMPS:
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name_interf)
-        program.add_transform(
-            validate_observables, accepted_observables, name=self.name_interf
-        )
+        program.add_transform(validate_observables, accepted_observables, name=self.name_interf)
         program.add_transform(validate_device_wires, self._wires, name=self.name_interf)
         program.add_transform(
             decompose,
@@ -421,9 +414,7 @@ class QuimbMPS:
         obs = measurementprocess.obs
 
         obs_mat = obs.matrix()
-        expect_squar_op = self._local_expectation(
-            np.dot(obs_mat, obs_mat), tuple(obs.wires)
-        )
+        expect_squar_op = self._local_expectation(np.dot(obs_mat, obs_mat), tuple(obs.wires))
         expect_op = self._local_expectation(obs_mat, tuple(obs.wires))
 
         return expect_squar_op - np.square(expect_op)

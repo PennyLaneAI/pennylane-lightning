@@ -191,3 +191,17 @@ class TestQuimbMPS:
             )
             result = dev.execute(circuits=tape)
             assert isinstance(result, (float, np.ndarray))
+
+    def test_not_implemented_meas(self, backend, method):
+        """Tests that support only exists for `qml.expval` and `qml.var` so far."""
+
+        ops = [qml.Identity(0)]
+        measurements = [qml.probs(qml.PauliZ(0))]
+        tape = qml.tape.QuantumScript(ops, measurements)
+
+        dev = LightningTensor(
+            wires=tape.wires, backend=backend, method=method, c_dtype=np.complex64
+        )
+
+        with pytest.raises(NotImplementedError):
+            dev.execute(tape)
