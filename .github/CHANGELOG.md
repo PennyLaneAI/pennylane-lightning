@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add compile-time support for AVX2/512 streaming operations in `lightning.qubit`.
+  [(#664)](https://github.com/PennyLaneAI/pennylane-lightning/pull/664)
+
 * `lightning.kokkos` supports mid-circuit measurements.
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
@@ -126,7 +129,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
