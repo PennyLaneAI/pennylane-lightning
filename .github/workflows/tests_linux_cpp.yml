@@ -189,7 +189,7 @@ jobs:
     needs: [determine_runner]
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+      runs_on: ${{ needs.determine_runner.outputs.runner_group }}
       os: ubuntu-22.04
 
   cpptestswithKokkos:
