@@ -124,6 +124,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/wheels
           key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+          fail-on-cache-miss: true
 
       - name: Get required Python packages
         run: |
@@ -299,6 +300,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/wheels
           key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+          fail-on-cache-miss: true
 
       - name: Get required Python packages
         run: |
