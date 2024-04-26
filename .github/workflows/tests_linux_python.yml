@@ -255,7 +255,6 @@ jobs:
       - name: Create device wheel
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
-          SKIP_COMPILATION: True
         run: |
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
