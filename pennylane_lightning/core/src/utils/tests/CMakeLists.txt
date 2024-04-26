@@ -34,9 +34,7 @@ set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_Util.cpp
                     )
 
-if(ENABLE_LAPACK)
-    list(APPEND TEST_SOURCES Test_UtilLinearAlg.cpp)
-endif()
+list(APPEND TEST_SOURCES Test_UtilLinearAlg.cpp)
 
 add_executable(utils_test_runner ${TEST_SOURCES})
 target_link_libraries(utils_test_runner PRIVATE utils_tests)
