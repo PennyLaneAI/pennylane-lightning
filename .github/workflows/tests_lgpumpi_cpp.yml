@@ -28,7 +28,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: tests_lgpumpi_cpp-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
