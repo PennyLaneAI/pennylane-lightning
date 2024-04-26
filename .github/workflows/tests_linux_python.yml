@@ -301,7 +301,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          ls -l
+          ls -l ${{ github.workspace }}/wheels
           python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*39*.whl --no-deps
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
