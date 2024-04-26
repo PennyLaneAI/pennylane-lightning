@@ -255,6 +255,7 @@ jobs:
       - name: Create device wheel
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
+          SKIP_COMPILATION: True
         run: |
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
@@ -270,7 +271,7 @@ jobs:
           path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
-    needs: [build_lightning_kokkos_wheels]
+    needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
     strategy:
       matrix:
         os: [ubuntu-22.04]
