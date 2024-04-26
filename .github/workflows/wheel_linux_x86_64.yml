@@ -169,6 +169,26 @@ jobs:
 
         run: python3.9 -m cibuildwheel --output-dir wheelhouse
 
+      - name: Determine Python version
+        id: pyvs
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
+
+      - name: Test wheels
+        run: |
+          python -m pip install -r requirements-tests.txt
+          if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          pushd wheelhouse
+          python -m pip install *.whl
+          popd
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+
       - name: Validate wheels
         run: |
           python3.9 -m pip install twine
