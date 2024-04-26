@@ -9,6 +9,14 @@ on:
       os:
         required: true
         type: string
+      runs_on:
+        description: |
+          The runner that should run the jobs. If left blank, the value from inputs.os is used.
+          This is useful if you want the jobs to run in a specific runner group, while not using that group name as part 
+          of the cache key.
+        required: false
+        type: string
+        default: ''
     outputs:
       exec_model:
         description: "The execution model for Kokkos."
@@ -43,7 +51,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
-    runs-on: ${{ inputs.os }}
+    runs-on: ${{ inputs.runs-on || inputs.os }}
 
     steps:
       - name: Cache installation directories
