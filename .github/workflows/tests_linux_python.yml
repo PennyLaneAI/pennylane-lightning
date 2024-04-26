@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   build_lightning_qubit_wheels:
+    if: ${{ github.sha == 'xxxxxxxx' }}
     strategy:
       matrix:
         os: [ubuntu-22.04]

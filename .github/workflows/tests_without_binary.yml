@@ -10,9 +10,9 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  pull_request:
-    paths-ignore:
-      - pennylane_lightning/core/src/**
+  # pull_request:
+  #   paths-ignore:
+  #     - pennylane_lightning/core/src/**
   push:
     branches:
       - master
