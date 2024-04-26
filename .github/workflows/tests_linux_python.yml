@@ -92,7 +92,7 @@ jobs:
         id: wheel-lightning_qubit
         uses: actions/cache/save@v3
         with:
-          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
           path: ${{ github.workspace }}/wheels
 
   test_lightning_qubit_wheels:
@@ -124,15 +124,16 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/wheels
-          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
+          restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
 
       - name: Get required Python packages
         run: |
           cd main
-          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl --no-deps
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+          SKIP_COMPILATION=True python -m pip install -e . -vv
+          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -266,7 +267,7 @@ jobs:
         id: wheel-lightning_kokkos
         uses: actions/cache/save@v3
         with:
-          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
           path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
@@ -294,8 +295,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/wheels
-          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
+          restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
 
       - name: Get required Python packages
         run: |
