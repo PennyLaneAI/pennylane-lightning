@@ -25,6 +25,13 @@
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
+
+#else
+#include <windows.h>
+#define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
+#define PL_DLERROR() "Library loading errors"
+#define PL_DLCLOSE(NAME) (NAME)
+#define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
 
 #include "Error.hpp"
@@ -42,7 +49,11 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
+#if defined(__APPLE__) || defined(__linux__)
     void *handle_{nullptr};
+#else
+    HMODULE handle_ = nullptr;
+#endif
 
   public:
     SharedLibLoader();

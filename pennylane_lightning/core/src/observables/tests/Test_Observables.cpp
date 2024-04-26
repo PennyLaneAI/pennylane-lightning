@@ -226,28 +226,30 @@ template <typename TypeList> void testHermitianObsBase() {
                 Catch::Matchers::Contains("The matrix passed to HermitianObs "
                                           "is not a Hermitian matrix."));
         }
-/*#else
-        DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
-                        << StateVectorToName<StateVectorT>::name) {
-            std::mt19937_64 re{1337};
-            constexpr size_t num_qubits = 3;
-            auto init_state =
-                createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        /*#else
+                DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots -
+        "
+                                << StateVectorToName<StateVectorT>::name) {
+                    std::mt19937_64 re{1337};
+                    constexpr size_t num_qubits = 3;
+                    auto init_state =
+                        createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
-            StateVectorT state_vector(init_state.data(), init_state.size());
-            auto obs =
-                HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+                    StateVectorT state_vector(init_state.data(),
+        init_state.size()); auto obs = HermitianObsT{std::vector<ComplexT>{1.0,
+        0.0, -1.0, 0.0}, {0}};
 
-            std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
+                    std::vector<std::vector<PrecisionT>> eigenValues;
+                    std::vector<size_t> ob_wires;
 
-            REQUIRE_THROWS_WITH(
-                obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains("Hermitian observables with shot "
-                                          "measurement are not supported"));
-        }
-#endif
-*/
+                    REQUIRE_THROWS_WITH(
+                        obs.applyInPlaceShots(state_vector, eigenValues,
+        ob_wires), Catch::Matchers::Contains("Hermitian observables with shot "
+                                                  "measurement are not
+        supported"));
+                }
+        #endif
+        */
 
         testHermitianObsBase<typename TypeList::Next>();
     }

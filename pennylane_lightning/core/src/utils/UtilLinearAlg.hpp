@@ -77,32 +77,6 @@ std::string get_scipylibs_path() {
 
 namespace Pennylane::Util {
 
-// Exclusively for python calls and tested in the python layer
-// LCOV_EXCL_START
-#ifdef __linux__
-/**
- * @brief Get the path to the current shared library object.
- *
- * @return const char*
- */
-inline const char *getPath() {
-    Dl_info dl_info;
-    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
-                "Can't get the path to the shared library.");
-    return dl_info.dli_fname;
-}
-// TODO add windows support
-// #elif defined(_MSC_VER)
-// inline std::string getPath() {
-//     char buffer[MAX_PATH];
-//     GetModuleFileName(nullptr, buffer, MAX_PATH);
-//     std::string fullPath(buffer);
-//     std::size_t pos = fullPath.find_last_of("\\/");
-//     return fullPath.substr(0, pos);
-// }
-#endif
-// LCOV_EXCL_STOP
-
 /**
  * @brief Decompose Hermitian matrix into diagonal matrix and unitaries
  *
@@ -143,7 +117,6 @@ void compute_diagonalizing_gates(int n, int lda,
 #else
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-    // For C++ usage
     std::string scipyPathStr = get_scipylibs_path();
 
     std::filesystem::path scipyLibsPath(scipyPathStr);
