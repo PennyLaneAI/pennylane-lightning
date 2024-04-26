@@ -164,11 +164,11 @@ jobs:
           echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
           cd main
           ls -l ${{ github.workspace }}
-          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/${{ env.WHEEL_NAME }}
+          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/${{ env.WHEEL_NAME }} --no-deps
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
