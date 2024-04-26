@@ -80,6 +80,8 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       - name: Create device wheel
+        env:
+          SKIP_COMPILATION: True
         id: create_lq_wheel
         run: |
           cd main
@@ -87,18 +89,25 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
           cd dist
           WHEEL_NAME=$(ls *.whl)
-          cp $WHEEL_NAME ${{ github.workspace }}/$WHEEL_NAME-${{ matrix.blas }}
+          cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
+          echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
-          echo "WHEEL_NAME=$WHEEL_NAME" >> "$GITHUB_OUTPUT"
+          # echo "WHEEL_NAME=$WHEEL_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Send wheel name
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
+          path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       - name: Cache wheel directories
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.create_lq_wheel.outputs.WHEEL_NAME }}-${{ matrix.blas }}
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/${{ steps.create_lq_wheel.outputs.WHEEL_NAME }}-${{ matrix.blas }}
+            ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
       # - name: Cache wheel directories
       #   id: wheel-lightning_qubit
@@ -133,7 +142,12 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.create_lq_wheel.outputs.WHEEL_NAME }}-${{ matrix.blas }}
+          name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
+          path: ${{ github.workspace }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
@@ -146,13 +160,15 @@ jobs:
 
       - name: Get required Python packages
         run: |
+          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
+          echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
           cd main
           ls -l ${{ github.workspace }}
-          mv ${{ github.workspace }}/${{ steps.create_lq_wheel.outputs.WHEEL_NAME }}-${{ matrix.blas }} ${{ github.workspace }}/${{ steps.create_lq_wheel.outputs.WHEEL_NAME }}
+          mv ${{ github.workspace }}/${{ env.WHEEL_NAME }}-${{ matrix.blas }} ${{ github.workspace }}/${{ env.WHEEL_NAME }}
           ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/${{ steps.create_lq_wheel.outputs.WHEEL_NAME }} --no-deps
+          python -m pip install ${{ github.workspace }}/${{ env.WHEEL_NAME }} --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -274,6 +290,7 @@ jobs:
 
       - name: Create device wheel
         env:
+          SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
           cd main
