@@ -45,6 +45,7 @@
   [(#689)](https://github.com/PennyLaneAI/pennylane-lightning/pull/689)
 
 * Add `paths` directives to test workflows to avoid running tests that cannot be impacted by changes.
+  [(#699)](https://github.com/PennyLaneAI/pennylane-lightning/pull/699)
   [(#695)](https://github.com/PennyLaneAI/pennylane-lightning/pull/695)
 
 * Move common components of `/src/simulator/lightning_gpu/utils/` to `/src/utils/cuda_utils/`.
