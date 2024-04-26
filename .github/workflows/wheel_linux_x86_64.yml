@@ -173,21 +173,17 @@ jobs:
         id: pyvs
         run: |
           echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - name: Test wheels
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
+        run: |
           yum install centos-release-scl-rh -y
           yum install devtoolset-11-gcc-c++ -y
           source /opt/rh/devtoolset-11/enable -y
-
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: ${{ steps.pyvs.outputs.version }}
-
-      - name: Test wheels
-        run: |
-          python -m pip install -r requirements-tests.txt
-          if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          python${{ steps.pyvs.outputs.version }} -m pip install -r requirements-tests.txt
+          if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python${{ steps.pyvs.outputs.version }} -m pip install -e . -vv; fi
           pushd wheelhouse
-          python -m pip install *.whl
+          python${{ steps.pyvs.outputs.version }} -m pip install *.whl
           popd
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
