@@ -124,8 +124,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
-          sudo apt-get -y -q install liblapack-dev
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
 
       - name: Build and run unit tests
         run: |
