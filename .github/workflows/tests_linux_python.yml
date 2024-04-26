@@ -132,7 +132,6 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install -e . -vv
           python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl
 
       - name: Checkout PennyLane for release build
@@ -302,10 +301,10 @@ jobs:
         run: |
           cd main
           ls -l ${{ github.workspace }}/wheels
-          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
+          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
