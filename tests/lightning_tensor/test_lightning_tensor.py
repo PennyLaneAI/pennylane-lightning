@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the generic lightning tensor class.
+Unit tests for the LightningTensor class.
 """
 
 
