@@ -130,6 +130,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}.whl
+          path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
       #   id: wheel-lightning_qubit
@@ -142,7 +143,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          # ls -l ${{ github.workspace }}/wheels
+          ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           python -m pip install ${{ github.workspace }}/PennyLane_Lightning*.whl --no-deps
@@ -319,6 +320,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}.whl
+          path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
       #   id: wheel-lightning_kokkos
@@ -331,7 +333,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          # ls -l ${{ github.workspace }}/wheels
+          ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
