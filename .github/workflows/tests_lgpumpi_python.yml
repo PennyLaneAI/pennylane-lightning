@@ -14,7 +14,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  #pull_request:
     paths-ignore:
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**

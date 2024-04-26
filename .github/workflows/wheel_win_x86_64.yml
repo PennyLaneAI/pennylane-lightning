@@ -6,7 +6,7 @@ name: Wheel::Windows::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
+  #pull_request:
   push:
     branches:
       - master
