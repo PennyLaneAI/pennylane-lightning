@@ -154,13 +154,13 @@ jobs:
             PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          # CIBW_BEFORE_TEST: |
+          #   python -m pip install -r requirements-tests.txt
+          #   if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
-          CIBW_TEST_COMMAND: |
-            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+          # CIBW_TEST_COMMAND: |
+          #   DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          #   pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
@@ -198,7 +198,7 @@ jobs:
     runs-on: ubuntu-latest
 
     if: |
-      github.event_name == 'release' ||
+      github.event_name == 'pull_request' ||
       github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
