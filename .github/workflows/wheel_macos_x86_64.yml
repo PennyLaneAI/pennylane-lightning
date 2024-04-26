@@ -54,7 +54,7 @@ jobs:
 
       - name: Install clang
         run: |
-          brew install libomp@16
+          brew install libomp
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -134,7 +134,7 @@ jobs:
           # MacOS specific build settings
           CIBW_BEFORE_ALL_MACOS: |
             brew uninstall --force oclint
-            brew install libomp@16
+            brew install libomp
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
