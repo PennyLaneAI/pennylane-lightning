@@ -92,7 +92,7 @@ jobs:
         id: wheel-lightning_qubit
         uses: actions/cache/save@v3
         with:
-          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
+          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
           path: ${{ github.workspace }}/wheels
 
   test_lightning_qubit_wheels:
@@ -124,8 +124,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/wheels
-          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.ref }}
+          key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+          restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
@@ -267,7 +267,7 @@ jobs:
         id: wheel-lightning_kokkos
         uses: actions/cache/save@v3
         with:
-          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
+          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
           path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
@@ -295,8 +295,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/wheels
-          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.ref }}
+          key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+          restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
