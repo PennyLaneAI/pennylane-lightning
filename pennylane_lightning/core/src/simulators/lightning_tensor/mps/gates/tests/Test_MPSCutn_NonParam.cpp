@@ -582,7 +582,6 @@ TEMPLATE_TEST_CASE("MPSCutn::applyToffoli", "[MPSCutn_Nonparam]", float,
 }
 
 // NOLINTNEXTLINE: Avoiding complexity errors
-/*
 TEMPLATE_TEST_CASE("MPSCutn::applyCSWAP", "[MPSCutn_Nonparam]", float, double) {
     const bool inverse = GENERATE(true, false);
     {
@@ -616,7 +615,6 @@ TEMPLATE_TEST_CASE("MPSCutn::applyCSWAP", "[MPSCutn_Nonparam]", float, double) {
         }
     }
 }
-*/
 
 TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn_Nonparam]", float,
                    double) {

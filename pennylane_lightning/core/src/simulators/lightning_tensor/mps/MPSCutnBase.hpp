@@ -226,7 +226,7 @@ template <class Precision, class Derived> class MPSCutnBase {
         {"CRY", 1},
         {"CRZ", 1},
         {"CRot", 1},
-        {"CSWAP", 1},
+        {"CSWAP", 0},
         {"Toffoli", 2}};
 };
 } // namespace Pennylane::LightningTensor

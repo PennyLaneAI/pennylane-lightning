@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "cuGates_host.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "cuDeviceTensor.hpp"
@@ -30,6 +31,7 @@
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
+using namespace Pennylane::LightningGPU;
 using namespace cuUtil;
 
 } // namespace
@@ -162,8 +164,7 @@ template <class PrecisionT> class GateTensorCache {
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"CSWAP"}, 0.0)),
-            std::forward_as_tuple(
-                host_gates_.at(std::make_pair(std::string{"SWAP"}, 0.0))));
+            std::forward_as_tuple(cuGates::getCSWAP<CFP_t>()));
 
         for (const auto &[h_gate_k, h_gate_v] : host_gates_) {
             size_t rank = Pennylane::Util::log2(h_gate_v.size());
