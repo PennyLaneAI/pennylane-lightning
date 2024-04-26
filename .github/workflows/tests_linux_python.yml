@@ -250,6 +250,7 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+          python -m pip install wheel
 
       - name: Create device wheel
         env:
