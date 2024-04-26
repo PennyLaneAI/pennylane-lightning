@@ -84,15 +84,15 @@ jobs:
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};ENABLE_BLAS=${{ matrix.blas }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
-          mkdir -p main/wheels
-          cp dist/*.whl main/wheels
+          mkdir -p ${{ github.workspace }}/wheels
+          cp dist/*.whl ${{ github.workspace }}/wheels
 
       - name: Cache wheel directories
         id: wheel-lightning_qubit
         uses: actions/cache/save@v3
         with:
           key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
-          path: main/wheels
+          path: ${{ github.workspace }}/wheels
 
   test_lightning_qubit_wheels:
     needs: ["build_lightning_qubit_wheels"]
@@ -122,9 +122,8 @@ jobs:
         id: wheel-lightning_qubit
         uses: actions/cache/restore@v3
         with:
-          path: main/wheels
+          path: ${{ github.workspace }}/wheels
           key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
@@ -132,7 +131,7 @@ jobs:
           ls -l wheels
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install main/wheels/PennyLane_Lightning*.whl --no-deps
+          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -259,15 +258,15 @@ jobs:
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           python setup.py bdist_wheel
-          mkdir -p main/wheels
-          cp dist/*.whl main/wheels
+          mkdir -p ${{ github.workspace }}/wheels
+          cp dist/*.whl ${{ github.workspace }}/wheels
 
       - name: Cache wheel directories
         id: wheel-lightning_kokkos
         uses: actions/cache/save@v3
         with:
           key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
-          path: main/wheels
+          path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
@@ -298,9 +297,8 @@ jobs:
         id: wheel-lightning_kokkos
         uses: actions/cache/restore@v3
         with:
-          path: main/wheels
+          path: ${{ github.workspace }}/wheels
           key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
-          restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
@@ -309,7 +307,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
-          python -m pip install main/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
+          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
