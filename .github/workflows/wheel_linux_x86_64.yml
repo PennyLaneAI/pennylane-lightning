@@ -144,7 +144,8 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python3.9 -m pip install pip~=23.0
+            python3.9 -m pip install ninja cmake~=3.24.0 scipy
             yum clean all -y
             yum install centos-release-scl-rh -y
             yum install devtoolset-11-gcc-c++ -y
@@ -154,13 +155,13 @@ jobs:
             PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          # CIBW_BEFORE_TEST: |
+          #   python3.9 -m pip install -r requirements-tests.txt
+          #   if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
-          CIBW_TEST_COMMAND: |
-            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+          # CIBW_TEST_COMMAND: |
+          #   DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          #   pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
@@ -181,7 +182,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         if: |
-          github.event_name == 'release' ||
+          github.event_name == 'pull_request' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''

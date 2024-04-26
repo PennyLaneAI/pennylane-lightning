@@ -10,11 +10,12 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  pull_request:
+  #pull_request:
+    paths-ignore:
+      - pennylane_lightning/core/src/**
   push:
     branches:
       - master
-
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"

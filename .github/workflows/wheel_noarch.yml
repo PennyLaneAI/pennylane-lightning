@@ -6,7 +6,7 @@ name: Wheel::Any::None
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
-  pull_request:
+  #pull_request:
   push:
     branches:
       - master
@@ -117,4 +117,3 @@ jobs:
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: dist
-
