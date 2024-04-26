@@ -87,16 +87,16 @@ jobs:
           cd dist
           WHEEL_NAME=$(ls *.whl)
           echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
-          cp $WHEEL_NAME ${{ github.workspace }}/$WHEEL_NAME
+          cp $WHEEL_NAME ${{ github.workspace }}/$WHEEL_NAME-${{ matrix.blas }}
 
       - name: Cache wheel directories
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.WHEEL_NAME }}
+          name: ${{ env.WHEEL_NAME }}-${{ matrix.blas }}
           retention-days: 1
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/${{ env.WHEEL_NAME }}
+            ${{ github.workspace }}/${{ env.WHEEL_NAME }}-${{ matrix.blas }}
 
       # - name: Cache wheel directories
       #   id: wheel-lightning_qubit
@@ -131,7 +131,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ env.WHEEL_NAME }}
+          name: ${{ env.WHEEL_NAME }}-${{ matrix.blas }}
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
@@ -145,6 +145,8 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
+          ls -l ${{ github.workspace }}
+          mv ${{ github.workspace }}/${{ env.WHEEL_NAME }}-${{ matrix.blas }} ${{ github.workspace }}/${{ env.WHEEL_NAME }}
           ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
