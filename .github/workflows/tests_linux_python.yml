@@ -244,13 +244,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
-          python -m pip install scipy
+          python -m pip install scipy wheel
 
       - name: Get required Python packages
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
-          python -m pip install wheel
 
       - name: Create device wheel
         env:
