@@ -122,16 +122,17 @@ jobs:
         id: wheel-lightning_qubit
         uses: actions/cache/restore@v3
         with:
-          path: ${{ github.workspace }}/wheels
+          path: main/wheels
           key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
           restore-keys: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
           cd main
+          ls -l wheels
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning*.whl
+          python -m pip install main/wheels/PennyLane_Lightning*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -297,18 +298,18 @@ jobs:
         id: wheel-lightning_kokkos
         uses: actions/cache/restore@v3
         with:
-          path: ${{ github.workspace }}/wheels
+          path: main/wheels
           key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
           restore-keys: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
 
       - name: Get required Python packages
         run: |
           cd main
-          ls -l ${{ github.workspace }}/wheels
+          ls -l wheels
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
-          python -m pip install ${{ github.workspace }}/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
+          python -m pip install main/wheels/PennyLane_Lightning_Kokkos*.whl --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
