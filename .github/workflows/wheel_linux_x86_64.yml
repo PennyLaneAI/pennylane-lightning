@@ -173,6 +173,9 @@ jobs:
         id: pyvs
         run: |
           echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+          yum install centos-release-scl-rh -y
+          yum install devtoolset-11-gcc-c++ -y
+          source /opt/rh/devtoolset-11/enable -y
 
       - uses: actions/setup-python@v5
         name: Install Python
@@ -181,10 +184,6 @@ jobs:
 
       - name: Test wheels
         run: |
-          yum install centos-release-scl-rh -y
-          yum install devtoolset-11-gcc-c++ -y
-          source /opt/rh/devtoolset-11/enable -y
-
           python -m pip install -r requirements-tests.txt
           if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
           pushd wheelhouse
