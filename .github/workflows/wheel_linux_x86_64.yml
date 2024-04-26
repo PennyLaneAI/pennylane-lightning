@@ -144,8 +144,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python3.9 -m pip install pip~=23.0
-            python3.9 -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.24.0 scipy
             yum clean all -y
             yum install centos-release-scl-rh -y
             yum install devtoolset-11-gcc-c++ -y
@@ -155,38 +154,19 @@ jobs:
             PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
-          # CIBW_BEFORE_TEST: |
-          #   python3.9 -m pip install -r requirements-tests.txt
-          #   if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+          CIBW_BEFORE_TEST: |
+            python -m pip install -r requirements-tests.txt
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
 
-          # CIBW_TEST_COMMAND: |
-          #   DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          #   pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+          CIBW_TEST_COMMAND: |
+            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
           CIBW_BUILD_VERBOSITY: 3
 
         run: python3.9 -m cibuildwheel --output-dir wheelhouse
-
-      - name: Determine Python version
-        id: pyvs
-        run: |
-          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
-
-      - name: Test wheels
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
-        run: |
-          yum install centos-release-scl-rh -y
-          yum install devtoolset-11-gcc-c++ -y
-          source /opt/rh/devtoolset-11/enable -y
-          python${{ steps.pyvs.outputs.version }} -m pip install -r requirements-tests.txt
-          if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python${{ steps.pyvs.outputs.version }} -m pip install -e . -vv; fi
-          pushd wheelhouse
-          python${{ steps.pyvs.outputs.version }} -m pip install *.whl
-          popd
-          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
       - name: Validate wheels
         run: |
@@ -201,7 +181,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         if: |
-          github.event_name == 'pull_request' ||
+          github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''

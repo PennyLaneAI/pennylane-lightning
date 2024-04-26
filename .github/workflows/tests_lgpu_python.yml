@@ -11,7 +11,7 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   release:
-  #pull_request:
+  pull_request:
     paths-ignore:
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
