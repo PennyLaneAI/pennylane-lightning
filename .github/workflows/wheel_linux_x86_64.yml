@@ -152,8 +152,7 @@ jobs:
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
-            PL_BACKEND="${{ matrix.pl_backend }}" \
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)"
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
