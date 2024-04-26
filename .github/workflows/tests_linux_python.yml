@@ -282,6 +282,11 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
