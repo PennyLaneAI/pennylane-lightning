@@ -6,41 +6,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests_lgpu_cpp:
-    name: Lightning Compatibility test (tests_lgpu_cpp) - latest/latest
-    uses: ./.github/workflows/tests_lgpu_cpp.yml
-    with:
-      lightning-version: latest
-      pennylane-version: latest
-    secrets: inherit
-  tests_lgpumpi_cpp:
-    name: Lightning Compatibility test (tests_lgpumpi_cpp) - latest/latest
-    uses: ./.github/workflows/tests_lgpumpi_cpp.yml
-    with:
-      lightning-version: latest
-      pennylane-version: latest
-    secrets: inherit
-  tests_linux_cpp:
-    name: Lightning Compatibility test (tests_linux_cpp) - latest/latest
-    uses: ./.github/workflows/tests_linux_cpp.yml
-    with:
-      lightning-version: latest
-      pennylane-version: latest
-    secrets: inherit
-  tests_lkcuda_cpp:
-    name: Lightning Compatibility test (tests_lkcuda_cpp) - latest/latest
-    uses: ./.github/workflows/tests_lkcuda_cpp.yml
-    with:
-      lightning-version: latest
-      pennylane-version: latest
-    secrets: inherit
-  tests_windows_cpp:
-    name: Lightning Compatibility test (tests_windows_cpp) - latest/latest
-    uses: ./.github/workflows/tests_windows_cpp.yml
-    with:
-      lightning-version: latest
-      pennylane-version: latest
-    secrets: inherit
   tests_lgpu_python:
     name: Lightning Compatibility test (tests_lgpu_python) - latest/latest
     uses: ./.github/workflows/tests_lgpu_python.yml
