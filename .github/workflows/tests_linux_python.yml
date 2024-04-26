@@ -84,23 +84,25 @@ jobs:
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};ENABLE_BLAS=${{ matrix.blas }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
-          mkdir -p ${{ github.workspace }}/wheels
-          cp dist/*.whl ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}.whl
+          cd dist
+          WHEEL_NAME=$(ls *.whl)
+          echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
+          cp $WHEEL_NAME ${{ github.workspace }}/$WHEEL_NAME
 
       - name: Cache wheel directories
         uses: actions/upload-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}.whl
+          name: ${{ env.WHEEL_NAME }}
           retention-days: 1
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}.whl
+            ${{ github.workspace }}/${{ env.WHEEL_NAME }}
 
       # - name: Cache wheel directories
       #   id: wheel-lightning_qubit
       #   uses: actions/cache/save@v3
       #   with:
-      #     key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+      #     key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.run_id }}
       #     path: ${{ github.workspace }}/wheels
 
   test_lightning_qubit_wheels:
@@ -129,7 +131,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}.whl
+          name: ${{ env.WHEEL_NAME }}
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
@@ -137,7 +139,7 @@ jobs:
       #   uses: actions/cache/restore@v3
       #   with:
       #     path: ${{ github.workspace }}/wheels
-      #     key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.sha }}
+      #     key: wheel_${{ matrix.pl_backend }}-BLAS${{ matrix.blas }}-${{ github.run_id }}
       #     fail-on-cache-miss: true
 
       - name: Get required Python packages
@@ -146,7 +148,7 @@ jobs:
           ls -l ${{ github.workspace }}
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}*.whl --no-deps
+          python -m pip install ${{ github.workspace }}/${{ env.WHEEL_NAME }} --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -274,22 +276,22 @@ jobs:
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           python setup.py bdist_wheel
           mkdir -p ${{ github.workspace }}/wheels
-          cp dist/*.whl ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}.whl
+          cp dist/*.whl ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
 
       - name: Cache wheel directories
         uses: actions/upload-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}.whl
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
           retention-days: 1
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}.whl
+            ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
 
       # - name: Cache wheel directories
       #   id: wheel-lightning_kokkos
       #   uses: actions/cache/save@v3
       #   with:
-      #     key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+      #     key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}
       #     path: ${{ github.workspace }}/wheels
 
   test_lightning_kokkos_wheels:
@@ -319,7 +321,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}.whl
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
@@ -327,7 +329,7 @@ jobs:
       #   uses: actions/cache/restore@v3
       #   with:
       #     path: ${{ github.workspace }}/wheels
-      #     key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.sha }}
+      #     key: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}
       #     fail-on-cache-miss: true
 
       - name: Get required Python packages
@@ -419,3 +421,8 @@ jobs:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
+      # Delete artifacts
+      # - uses: geekyeggo/delete-artifact@v5
+      #   with:
+      #     name: |
+      #       wheel_*-${{ github.run_id }}.whl
