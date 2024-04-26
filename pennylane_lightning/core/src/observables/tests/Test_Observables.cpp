@@ -207,7 +207,6 @@ template <typename TypeList> void testHermitianObsBase() {
             REQUIRE(ob2 != ob3);
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -227,7 +226,7 @@ template <typename TypeList> void testHermitianObsBase() {
                 Catch::Matchers::Contains("The matrix passed to HermitianObs "
                                           "is not a Hermitian matrix."));
         }
-#else
+/*#else
         DYNAMIC_SECTION("Failed for HermitianObs for applyInPlaceShots - "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
@@ -248,6 +247,7 @@ template <typename TypeList> void testHermitianObsBase() {
                                           "measurement are not supported"));
         }
 #endif
+*/
 
         testHermitianObsBase<typename TypeList::Next>();
     }
