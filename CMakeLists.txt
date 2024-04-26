@@ -83,41 +83,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
-if(ENABLE_LAPACK)
-    find_package(Python COMPONENTS Interpreter Development)
-    set(SCIPYLIBS ${Python_SITELIB})
-
-    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        if(EXISTS ${SCIPYLIBS}/scipy.libs)
-            set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
-        else()
-            # Fallback to the lib path of Python for `conda` support
-            set(SCIPYLIBS ${SCIPYLIBS}/../..)
-        endif()
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    else()
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
-
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
-        ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
-
-    message(STATUS "Python scipy-lib path: ${SCIPYLIBS}")
-endif()
-
-if(ENABLE_PYTHON)
-    find_package(Python COMPONENTS Interpreter Development)
-    FetchContent_Declare(pybind11
-                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.11.1
-    )
-    FetchContent_MakeAvailable(pybind11)
-endif()
-
-# Print Python site-packages directory for reference
-message("Python site-packages directory: ${Python_SITELIB}")
+find_package(Python COMPONENTS Interpreter Development)
+FetchContent_Declare(pybind11
+                    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+                    GIT_TAG        v2.11.1
+)
+FetchContent_MakeAvailable(pybind11)
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
