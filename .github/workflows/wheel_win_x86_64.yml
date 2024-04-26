@@ -29,7 +29,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
       github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
-    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    uses: ./.github/workflows/tests_set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 

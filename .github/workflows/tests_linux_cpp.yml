@@ -180,7 +180,7 @@ jobs:
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
-    uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
+    uses: ./.github/workflows/tests_build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
 

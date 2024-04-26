@@ -8,70 +8,70 @@ on:
 jobs:
   tests_lgpu_cpp:
     name: Lightning Compatibility test (tests_lgpu_cpp) - release/release
-    uses: ./.github/workflows/lgpu_cpp.yml
+    uses: ./.github/workflows/tests_lgpu_cpp.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_lgpumpi_cpp:
     name: Lightning Compatibility test (tests_lgpumpi_cpp) - release/release
-    uses: ./.github/workflows/lgpumpi_cpp.yml
+    uses: ./.github/workflows/tests_lgpumpi_cpp.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_linux_cpp:
     name: Lightning Compatibility test (tests_linux_cpp) - release/release
-    uses: ./.github/workflows/linux_cpp.yml
+    uses: ./.github/workflows/tests_linux_cpp.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_lkcuda_cpp:
     name: Lightning Compatibility test (tests_lkcuda_cpp) - release/release
-    uses: ./.github/workflows/lkcuda_cpp.yml
+    uses: ./.github/workflows/tests_lkcuda_cpp.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_windows_cpp:
     name: Lightning Compatibility test (tests_windows_cpp) - release/release
-    uses: ./.github/workflows/windows_cpp.yml
+    uses: ./.github/workflows/tests_windows_cpp.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_lgpu_python:
     name: Lightning Compatibility test (tests_lgpu_python) - release/release
-    uses: ./.github/workflows/lgpu_python.yml
+    uses: ./.github/workflows/tests_lgpu_python.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_lgpumpi_python:
     name: Lightning Compatibility test (tests_lgpumpi_python) - release/release
-    uses: ./.github/workflows/lgpumpi_python.yml
+    uses: ./.github/workflows/tests_lgpumpi_python.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_linux_python:
     name: Lightning Compatibility test (tests_linux_python) - release/release
-    uses: ./.github/workflows/linux_python.yml
+    uses: ./.github/workflows/tests_linux_python.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_lkcuda_python:
     name: Lightning Compatibility test (tests_lkcuda_python) - release/release
-    uses: ./.github/workflows/lkcuda_python.yml
+    uses: ./.github/workflows/tests_lkcuda_python.yml
     with:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - release/release
-    uses: ./.github/workflows/without_binary.yml
+    uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: release
       pennylane-version: release

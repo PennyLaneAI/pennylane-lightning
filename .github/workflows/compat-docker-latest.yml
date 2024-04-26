@@ -12,7 +12,7 @@ concurrency:
 jobs:
   docker_linux_x86_64_latest:
     name: Docker latest - Linux::x86_64
-    uses: ./.github/workflows/docker_linux_x86_64.yml
+    uses: ./.github/workflows/tests_docker_linux_x86_64.yml
     with:
       lightning-version: v0.34.0
       push-to-dockerhub: false

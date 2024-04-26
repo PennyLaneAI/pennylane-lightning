@@ -20,7 +20,7 @@ concurrency:
 jobs:
   set_wheel_build_matrix:
     name: "Set wheel build matrix"
-    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    uses: ./.github/workflows/tests_set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 
