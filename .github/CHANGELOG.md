@@ -41,6 +41,9 @@
 
 ### Breaking changes
 
+* Split Lightning-Qubit and Lightning-Kokkos CPU Python tests with `pytest-split`.
+  [(#696)](https://github.com/PennyLaneAI/pennylane-lightning/pull/696)
+
 * Add `paths` directives to test workflows to avoid running tests that cannot be impacted by changes.
   [(#699)](https://github.com/PennyLaneAI/pennylane-lightning/pull/699)
   [(#695)](https://github.com/PennyLaneAI/pennylane-lightning/pull/695)
