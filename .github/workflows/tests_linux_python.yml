@@ -147,7 +147,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
