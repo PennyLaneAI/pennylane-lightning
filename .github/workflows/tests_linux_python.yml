@@ -142,7 +142,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          ls -l ${{ github.workspace }}/wheels
+          # ls -l ${{ github.workspace }}/wheels
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           python -m pip install ${{ github.workspace }}/PennyLane_Lightning*.whl --no-deps
@@ -331,7 +331,7 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          ls -l ${{ github.workspace }}/wheels
+          # ls -l ${{ github.workspace }}/wheels
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
