@@ -92,7 +92,6 @@ jobs:
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
-          # echo "WHEEL_NAME=$WHEEL_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Send wheel name
         uses: actions/upload-artifact@v4
@@ -296,17 +295,26 @@ jobs:
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
           python setup.py bdist_wheel
-          mkdir -p ${{ github.workspace }}/wheels
-          cp dist/*.whl ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
+          cd dist
+          WHEEL_NAME=$(ls *.whl)
+          cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+          echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+          echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
+
+      - name: Send wheel name
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+          path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
 
       - name: Cache wheel directories
         uses: actions/upload-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
           retention-days: 1
           if-no-files-found: error
           path: |
-            ${{ github.workspace }}/wheels/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
+            ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
 
       # - name: Cache wheel directories
       #   id: wheel-lightning_kokkos
@@ -342,7 +350,12 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}-${{ github.run_id }}.whl
+          name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+          path: ${{ github.workspace }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
           path: ${{ github.workspace }}
 
       # - name: Restoring cached wheel
@@ -355,8 +368,12 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          cd main
+          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
+          echo "WHEEL_NAME=$WHEEL_NAME" >> $GITHUB_ENV
           ls -l ${{ github.workspace }}
+          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
+          ls -l ${{ github.workspace }}
+          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
