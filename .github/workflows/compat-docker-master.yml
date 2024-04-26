@@ -12,7 +12,7 @@ concurrency:
 jobs:
   docker_linux_x86_64_develop:
     name: Docker develop - Linux::x86_64
-    uses: ./.github/workflows/tests_docker_linux_x86_64.yml
+    uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
       lightning-version: master
       push-to-dockerhub: false
