@@ -80,8 +80,6 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       - name: Create device wheel
-        env:
-          SKIP_COMPILATION: True
         id: create_lq_wheel
         run: |
           cd main
@@ -289,7 +287,6 @@ jobs:
 
       - name: Create device wheel
         env:
-          SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
           cd main
