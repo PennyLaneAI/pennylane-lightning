@@ -364,7 +364,7 @@ jobs:
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}
           # TODO: Remove this if-cond with release v0.36.0
           if [ -f tests/test_native_mcm.py ]; then
-              OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "test_native_mcm" $COVERAGE_FLAGS --cov-append
+              OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/test_native_mcm.py $COVERAGE_FLAGS --cov-append
           fi
 
       - name: Install all backend devices
