@@ -1,4 +1,4 @@
-name: Testing::x86_64::Python
+name: Testing::x86_64::LQubit::Python
 on:
   workflow_call:
     inputs:

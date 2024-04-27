@@ -1,4 +1,4 @@
-name: Testing::x86_64::Python
+name: Testing::x86_64::LKokkos::Python
 on:
   workflow_call:
     inputs:
@@ -212,13 +212,13 @@ jobs:
           python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --splits 5 --group ${{ matrix.group }} --durations-path='.github/workflows/python_lightning_qubit_test_durations'
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --splits 5 --group ${{ matrix.group }} --durations-path='.github/workflows/python_lightning_kokkos_test_durations'
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           # TODO: Remove this if-cond with release v0.36.0
           if [ -f tests/test_native_mcm.py ]; then
-              OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "test_native_mcm" $COVERAGE_FLAGS --cov-append --splits 5 --group ${{ matrix.group }} --durations-path='.github/workflows/python_lightning_qubit_test_durations'
+              OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "test_native_mcm" $COVERAGE_FLAGS --cov-append --splits 5 --group ${{ matrix.group }} --durations-path='.github/workflows/python_lightning_kokkos_test_durations'
           fi
 
       - name: Upload code coverage results
@@ -229,7 +229,7 @@ jobs:
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
-    needs: [test_lightning_qubit_wheels, test_lightning_kokkos_wheels]
+    needs: [test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
