@@ -377,7 +377,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           SKIP_COMPILATION=True python -m pip install -e . -vv
-          python -m pip install ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}*.whl --no-deps
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
