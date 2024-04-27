@@ -176,7 +176,7 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install -e . -vv
+          SKIP_COMPILATION=True python -m pip install . -vv
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build
