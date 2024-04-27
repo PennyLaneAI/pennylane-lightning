@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <Python.h>
 #include <algorithm>
 #include <array>
 #include <complex>
@@ -49,11 +50,7 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
 std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
                                         "openblas"};
 
-std::string get_scipylibs_path() {
-#ifndef _ENABLE_PYTHON
-    pybind11::scoped_interpreter scope_guard{};
-#endif
-
+std::string get_scipylibs_path_worker() {
     pybind11::object avail_site_packages =
         pybind11::module::import("site").attr("getsitepackages")();
 
@@ -70,6 +67,15 @@ std::string get_scipylibs_path() {
     PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
 
     return scipy_lib_path;
+}
+
+std::string get_scipylibs_path() {
+    if (Py_IsInitialized()) {
+        return get_scipylibs_path_worker();
+    }
+
+    pybind11::scoped_interpreter scope_guard{};
+    return get_scipylibs_path_worker();
 }
 
 } // namespace
@@ -117,9 +123,8 @@ void compute_diagonalizing_gates(int n, int lda,
 #else
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-    std::string scipyPathStr = get_scipylibs_path();
 
-    std::filesystem::path scipyLibsPath(scipyPathStr);
+    std::filesystem::path scipyLibsPath(get_scipylibs_path());
 
     std::vector<std::string> availableLibs;
     availableLibs.reserve(priority_lib.size());
