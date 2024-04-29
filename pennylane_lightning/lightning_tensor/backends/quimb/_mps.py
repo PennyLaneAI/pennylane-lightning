@@ -83,9 +83,9 @@ class QuimbMPS:
         """Current MPS handled by the interface."""
         return self._circuitMPS.psi
 
-    def state_to_array(self, digits: int = 5):
+    def state_to_array(self) -> np.ndarray:
         """Contract the MPS into a dense array."""
-        return self._circuitMPS.to_dense().round(digits)
+        return self._circuitMPS.to_dense()
 
     def _initial_mps(self) -> qtn.MatrixProductState:
         r"""

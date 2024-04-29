@@ -27,7 +27,7 @@ from pennylane.tape import QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from .quimb._mps import QuimbMPS
+from .backends.quimb._mps import QuimbMPS
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -119,7 +119,7 @@ class LightningTensor(Device):
 
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
-        self._cutoff = kwargs.get("cutoff", 1e-16)
+        self._cutoff = kwargs.get("cutoff", np.finfo(self._c_dtype).eps)
 
         self._interface = None
         interface_opts = self._setup_execution_config().device_options
@@ -130,6 +130,11 @@ class LightningTensor(Device):
                 interface_opts,
                 self._c_dtype,
             )
+
+        else:
+            raise ValueError(
+                f"Unsupported backend: {self.backend} or method: {self.method}"
+            )  # pragma: no cover
 
         for arg in kwargs:
             if arg not in self._device_options:
