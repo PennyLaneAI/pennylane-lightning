@@ -135,6 +135,9 @@
 * Remove gates unsupported by catalyst from toml file.
   [(#698)](https://github.com/PennyLaneAI/pennylane-lightning/pull/698)
 
+* Increase tolerance for a flaky test.
+  [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
