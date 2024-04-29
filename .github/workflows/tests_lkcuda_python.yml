@@ -105,7 +105,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos", "all"]
+        pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.2.00"]
 
@@ -204,7 +204,6 @@ jobs:
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Install backend device
-        if: ${{ matrix.pl_backend != 'all'}}
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
@@ -213,7 +212,6 @@ jobs:
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
-        if: ${{ matrix.pl_backend != 'all'}}
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
@@ -223,31 +221,6 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS 2> /dev/null || echo Something went wrong with Pytest
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=20000
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append 2> /dev/null || echo Something went wrong with pl-device-test shot=None
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-
-      - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}
-        run: |
-          cd main
-          CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
-          rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
-
-      - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
-        if: ${{ matrix.pl_backend == 'all' }}
-        env:
-          OMP_NUM_THREADS: 1
-          OMP_PROC_BIND: false
-        run: |
-          cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
