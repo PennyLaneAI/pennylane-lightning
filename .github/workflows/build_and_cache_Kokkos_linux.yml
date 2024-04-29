@@ -51,7 +51,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.linux-set-builder-matrix.outputs.kokkos_version) }}
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
-    runs-on: ${{ inputs.runs-on || inputs.os }}
+    runs-on: ${{ inputs.runs_on || inputs.os }}
 
     steps:
       - name: Cache installation directories
