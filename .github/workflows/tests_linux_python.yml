@@ -43,7 +43,7 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
@@ -150,7 +150,7 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests with OpenBLAS
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
@@ -265,7 +265,7 @@ jobs:
         exclude:
           - pl_backend: ["all"]
             exec_model: OPENMP
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests with Kokkos
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
