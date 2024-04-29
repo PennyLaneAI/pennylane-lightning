@@ -238,7 +238,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/.coverage-${{ github.job }}-${{ matrix.exec_model }}-${{ matrix.group }}
+          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
