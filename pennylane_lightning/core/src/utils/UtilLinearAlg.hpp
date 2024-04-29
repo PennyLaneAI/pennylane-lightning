@@ -97,7 +97,7 @@ std::string get_scipylibs_path_worker() {
             std::filesystem::path path2scipy =  path_str;
             std::filesystem::path path2scipylibs = path2scipy/ ".."/"scipy.libs";
             std::filesystem::path absolute_scipylibs = std::filesystem::canonical(path2scipylibs);
-            if (fs::exists(absolute_scipylibs)) {
+            if (std::filesystem::exists(absolute_scipylibs)) {
                 Py_DECREF(scipy_path);
                 Py_DECREF(scipy_module);
                 return absolute_scipylibs.string();
@@ -110,7 +110,7 @@ std::string get_scipylibs_path_worker() {
         std::filesystem::path path2scipylibs = path2scipy/ ".."/"scipy.libs";
         std::filesystem::path absolute_scipylibs = std::filesystem::canonical(path2scipylibs);
 
-        if (fs::exists(absolute_scipylibs)) {
+        if (std::filesystem::exists(absolute_scipylibs)) {
             Py_DECREF(scipy_path);
             Py_DECREF(scipy_module);
             return absolute_scipylibs.string();
