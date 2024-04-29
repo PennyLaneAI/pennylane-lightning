@@ -50,6 +50,7 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
 std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
                                         "openblas"};
 
+/*
 std::string get_scipylibs_path_worker() {
     pybind11::object avail_site_packages =
         pybind11::module::import("site").attr("getsitepackages")();
@@ -76,6 +77,64 @@ std::string get_scipylibs_path() {
 
     pybind11::scoped_interpreter scope_guard{};
     return get_scipylibs_path_worker();
+}
+*/
+
+std::string get_scipylibs_path_worker() {
+    PyObject* scipy_module = PyImport_ImportModule("scipy");
+
+    PL_ABORT_IF(!scipy_module, "Can't find the scipy module");
+
+    PyObject* scipy_path = PyObject_GetAttrString(scipy_module, "__path__");
+    
+    std::string scipy_lib_path;
+
+    if (PyList_Check(scipy_path)) {
+        // Iterate over the elements in the list
+        for (Py_ssize_t i = 0; i < PyList_Size(scipy_path); i++) {
+            PyObject* path_item = PyList_GetItem(scipy_path, i);
+            std::string path_str(PyUnicode_AsUTF8(path_item));
+            std::filesystem::path path2scipy =  path_str;
+            std::filesystem::path path2scipylibs = path2scipy/ ".."/"scipy.libs";
+            std::filesystem::path absolute_scipylibs = std::filesystem::canonical(path2scipylibs);
+            if (fs::exists(absolute_scipylibs)) {
+                Py_DECREF(scipy_path);
+                Py_DECREF(scipy_module);
+                return absolute_scipylibs.string();
+            }
+        }
+    } else {
+        PyObject* path_item = PySequence_GetItem(scipy_path, 0);
+        std::string path_str(PyUnicode_AsUTF8(path_item));
+        std::filesystem::path path2scipy =  path_str;
+        std::filesystem::path path2scipylibs = path2scipy/ ".."/"scipy.libs";
+        std::filesystem::path absolute_scipylibs = std::filesystem::canonical(path2scipylibs);
+
+        if (fs::exists(absolute_scipylibs)) {
+            Py_DECREF(scipy_path);
+            Py_DECREF(scipy_module);
+            return absolute_scipylibs.string();
+        }
+            
+    }
+
+    // Cleanup
+    Py_DECREF(scipy_path);
+    Py_DECREF(scipy_module);
+
+
+    return scipy_lib_path;
+}
+
+std::string get_scipylibs_path() {
+    if (Py_IsInitialized()) {
+        return get_scipylibs_path_worker();
+    } else {
+        Py_Initialize();
+        auto pathStr = get_scipylibs_path_worker();
+        Py_Finalize();
+        return pathStr;
+    }
 }
 
 } // namespace
