@@ -704,7 +704,7 @@ class LightningKokkos(LightningBase):
 
         if tape_return_type is State:  # pragma: no cover
             raise QuantumFunctionError(
-                "This method does not support statevector return type. "
+                "Adjoint differentiation method does not support measurement StateMP."
                 "Use vjp method instead for this purpose."
             )
 

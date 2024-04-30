@@ -115,7 +115,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         if device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
         else:
-            message = "This method does not support statevector return type."
+            message = "Adjoint differentiation method does not support measurement StateMP."
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
@@ -630,7 +630,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         with pytest.raises(
             qml.QuantumFunctionError,
-            match="This method does not support statevector return type.",
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             dev.adjoint_jacobian(tape)
 

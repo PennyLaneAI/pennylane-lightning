@@ -127,7 +127,7 @@ class TestAdjointJacobian:
         elif device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
         else:
-            message = "This method does not support statevector return type."
+            message = "Adjoint differentiation method does not support measurement StateMP."
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
@@ -683,7 +683,8 @@ class TestAdjointJacobian:
         method = self.get_derivatives_method(dev)
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type."
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
 
