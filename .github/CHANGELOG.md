@@ -2,9 +2,6 @@
 
 ### New features since last release
 
-* Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
-  [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
-
 * Add compile-time support for AVX2/512 streaming operations in `lightning.qubit`.
   [(#664)](https://github.com/PennyLaneAI/pennylane-lightning/pull/664)
 
