@@ -79,7 +79,6 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
                 std::vector<size_t> qubitDims, DevTag<int> dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims),
           handle_(make_shared_cutn_handle()), dev_tag_(dev_tag) {
-
         if constexpr (std::is_same_v<Precision, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;

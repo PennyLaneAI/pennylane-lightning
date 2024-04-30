@@ -205,7 +205,6 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
      */
     void setWorkSpaceMemory_(cutensornetWorkspaceDescriptor_t &workDesc,
                              void *scratchPtr, int64_t &worksize) {
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,

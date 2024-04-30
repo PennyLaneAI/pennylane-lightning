@@ -106,5 +106,5 @@ GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {
     }
 }
 } // namespace Pennylane::LightningTensor::Cutn::Util
-  // LCOV_EXCL_STOP
+// LCOV_EXCL_STOP
   
