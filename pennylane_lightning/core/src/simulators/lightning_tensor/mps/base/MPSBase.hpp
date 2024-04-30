@@ -120,17 +120,17 @@ template <class Precision, class Derived> class MPSBase {
             std::vector<size_t> localSiteModes;
             std::vector<size_t> localSiteExtents;
             if (i == 0) {
-                // Leftmost site
+                // Leftmost site (state mode, shared mode)
                 localSiteModes = std::vector<size_t>({i, i + numQubits_});
                 localSiteExtents =
                     std::vector<size_t>({qubitDims_[i], maxExtent_});
             } else if (i == numQubits_ - 1) {
-                // Rightmost site
-                localSiteModes = std::vector<size_t>({i + numQubits_, i});
+                // Rightmost site (shared mode, state mode)
+                localSiteModes = std::vector<size_t>({i + numQubits_ - 1, i});
                 localSiteExtents =
-                    std::vector<size_t>({qubitDims_[i], maxExtent_});
+                    std::vector<size_t>({maxExtent_, qubitDims_[i]});
             } else {
-                // Interior sites
+                // Interior sites (state mode, state mode, shared mode)
                 localSiteModes = std::vector<size_t>(
                     {i + numQubits_ - 1, i, i + numQubits_});
                 localSiteExtents = std::vector<size_t>(

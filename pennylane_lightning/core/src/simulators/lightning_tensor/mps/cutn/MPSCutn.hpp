@@ -69,7 +69,7 @@ namespace Pennylane::LightningTensor::MPS::Cutn {
  */
 
 template <class Precision>
-class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
+class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
   private:
     using BaseType = MPSCutnBase<Precision, MPSCutn>;
     bool FinalMPSFactorization_flag = false;
@@ -85,7 +85,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                      const std::vector<size_t> &qubitDims, DevTag<int> &dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
 
-    ~MPSCutn() = default;
+    ~MPSCutn() final = default;
 
     /**
      * @brief Set a zero state
