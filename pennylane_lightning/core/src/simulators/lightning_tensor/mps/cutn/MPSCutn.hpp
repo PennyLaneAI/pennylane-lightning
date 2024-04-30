@@ -77,7 +77,6 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
-    using PrecisionT = Precision;
 
   public:
     MPSCutn() = delete;
@@ -107,8 +106,7 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                     "of qubits.");
 
         CFP_t value_cu =
-            Pennylane::LightningGPU::Util::complexToCu<std::complex<Precision>>(
-                {1.0, 0.0});
+            Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
 
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
             BaseType::getIthSiteTensor(i).getDataBuffer().zeroInit();

@@ -46,15 +46,29 @@ TEMPLATE_TEST_CASE("MPSCutn::Constructibility", "[Default Constructibility]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn]", float, double) {
+TEMPLATE_PRODUCT_TEST_CASE("MPSCutn::Constructibility",
+                           "[General Constructibility]", (MPSCutn),
+                           (float, double)) {
+    using MPST = TestType;
+
+    SECTION("MPST<TestType>") { REQUIRE(!std::is_constructible_v<MPST>); }
+    SECTION("MPST<TestType> {const size_t, const size_t, const "
+            "std::vector<size_t>&, DevTag<int> &}") {
+        REQUIRE(std::is_constructible_v<MPST, const size_t, const size_t,
+                                        const std::vector<size_t> &,
+                                        DevTag<int> &>);
+    }
+}
+
+TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
     std::vector<size_t> qubitDims = {2, 2, 2};
     DevTag<int> dev_tag{0, 0};
 
-    SECTION("Set basis state on device with data on the host") {
-        MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+    MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
 
+    SECTION("Set [011] on device with data on the host") {
         std::vector<size_t> basisState = {0, 1, 1};
         sv.setBasisState(basisState);
 
@@ -71,4 +85,41 @@ TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn]", float, double) {
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
+
+    SECTION("Set [101] on device with data on the host") {
+        std::vector<size_t> basisState = {1, 0, 1};
+        sv.setBasisState(basisState);
+
+        std::vector<std::complex<TestType>> expected_state(
+            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        std::size_t index = 0;
+
+        for (size_t i = 0; i < basisState.size(); i++) {
+            index += (size_t{1} << (num_qubits - i - 1)) * basisState[i];
+        }
+
+        expected_state[index] = {1.0, 0.0};
+
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
 }
+
+TEMPLATE_TEST_CASE("MPSCutn::getDataVector()", "[MPSCutn]", float, double) {
+    std::size_t num_qubits = 3;
+    std::size_t maxExtent = 2;
+    std::vector<size_t> qubitDims = {2, 2, 2};
+    DevTag<int> dev_tag{0, 0};
+
+    MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+
+    SECTION("Get zero state") {
+        std::vector<std::complex<TestType>> expected_state(
+            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+        
+        expected_state[0] = {1.0, 0.0};
+
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+}
+
