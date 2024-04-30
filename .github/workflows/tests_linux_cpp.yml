@@ -10,11 +10,11 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  pull_request:
-    paths:
-      - .github/workflows/tests_linux_cpp.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+  #pull_request:
+  #  paths:
+  #    - .github/workflows/tests_linux_cpp.yml
+  #    - pennylane_lightning/core/src/**
+  #    - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
 
   push:
     branches:
