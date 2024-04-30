@@ -1,0 +1,189 @@
+name: Testing::Linux::x86_64::MPSCutn::C++
+on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+  release:
+  pull_request:
+    paths:
+      - .github/workflows/tests_lmps_cutn_cpp.yml
+      - pennylane_lightning/core/src/**
+      - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+  push:
+    branches:
+      - master
+
+env:
+  CI_CUDA_ARCH: 86
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
+  GCC_VERSION: 11
+
+concurrency:
+  group: tests_lmps_cutn_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  cancel-in-progress: true
+
+jobs:
+  builddeps:
+    runs-on:
+      - self-hosted
+      - ubuntu-22.04
+      - gpu
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_tensor"]
+        cuda_version: ["12"]
+
+    steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/${{ matrix.cuda_version }}
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+  
+  cpptestswithMPSCutn:
+    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    needs: [builddeps]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_tensor"]
+        pl_tensor_method: ["mps"]
+        pl_tensor_backend: ["cutensornet"]
+        cuda_version: ["12"]
+
+    name: C++ tests (Lightning-Tensor-MPS-Cutn)
+    runs-on:
+      - ${{ matrix.os }}
+      - self-hosted
+      - gpu
+
+    steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/${{ matrix.cuda_version }}
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+      - name: Checkout PennyLane-Lightning-Tensor-MPS-Cutn
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+          # Adding venv name as an output for subsequent steps to reference if needed
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+      - name: Display Python-Path
+        id: python_path
+        run: |
+          py_path=$(which python)
+          echo "Python Interpreter Path => $py_path"
+          echo "python=$py_path" >> $GITHUB_OUTPUT
+          
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+      - name: Install required packages
+        run: |
+          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
+      - name: Build and run unit tests
+        run: |
+          set -x
+          cd main
+          cmake . -BBuild \
+            -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
+            -DBUILD_TESTS=ON \
+            -DENABLE_PYTHON=OFF \
+            -DPL_BACKEND=${{ matrix.pl_backend }} \
+            -DPL_TENSOR_METHOD = ${{ matrix.pl_tensor_method }}\
+            -DPL_TENSOR_BACKEND = ${{ matrix.pl_tensor_backend }}\
+            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DENABLE_COVERAGE=ON \
+            -G Ninja
+          cmake --build ./Build
+          cd ./Build
+          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
+          lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          set +x
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
+          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          if-no-files-found: error
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          if-no-files-found: error
+
+
+  upload-to-codecov-linux-cpp:
+    needs: [cpptestswithMPSCutn]
+    name: Upload coverage data to codecov
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-cpp
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf *
+          rm -rf .git
+          rm -rf .gitignore
+          rm -rf .github
+          pip cache purge
