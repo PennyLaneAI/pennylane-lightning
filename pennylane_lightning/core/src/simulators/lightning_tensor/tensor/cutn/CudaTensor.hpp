@@ -41,7 +41,7 @@ namespace Pennylane::LightningTensor::Cutn {
  */
 
 template <class PrecisionT>
-class CudaTensor final: public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
+class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
   public:
     using BaseType = TensorBase<PrecisionT, CudaTensor>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
@@ -52,7 +52,7 @@ class CudaTensor final: public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
-    
+
     CudaTensor() = delete;
 
     ~CudaTensor() final = default;

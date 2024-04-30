@@ -15,8 +15,8 @@
 #include <catch2/catch.hpp>
 #include <cmath>
 
-#include "DevTag.hpp"
 #include "CudaTensor.hpp"
+#include "DevTag.hpp"
 
 #include "TestHelpers.hpp"
 
@@ -42,11 +42,12 @@ TEMPLATE_PRODUCT_TEST_CASE("CudaTensor::Constructibility",
     using TensorT = TestType;
 
     SECTION("TensorT<TestType>") { REQUIRE(!std::is_constructible_v<TensorT>); }
-    SECTION("TensorT<TestType> {const size_t, const std::vector<size_t> &, const "
-            "std::vector<size_t>&, DevTag<int> &}") {
-        REQUIRE(std::is_constructible_v<TensorT, const size_t, const std::vector<size_t> &,
-                                        const std::vector<size_t> &,
-                                        DevTag<int> &>);
+    SECTION(
+        "TensorT<TestType> {const size_t, const std::vector<size_t> &, const "
+        "std::vector<size_t>&, DevTag<int> &}") {
+        REQUIRE(std::is_constructible_v<
+                TensorT, const size_t, const std::vector<size_t> &,
+                const std::vector<size_t> &, DevTag<int> &>);
     }
 }
 
@@ -59,9 +60,7 @@ TEMPLATE_TEST_CASE("CudaTensor::baseMethods", "[CudaTensor]", float, double) {
 
     CudaTensor<TestType> tensor{rank, modes, extents, dev_tag};
 
-    SECTION("getRank()") {
-        CHECK(tensor.getRank() == rank);
-    }
+    SECTION("getRank()") { CHECK(tensor.getRank() == rank); }
 
     SECTION("getModes()") {
         CHECK(tensor.getModes() == Pennylane::Util::approx(modes));
@@ -71,8 +70,5 @@ TEMPLATE_TEST_CASE("CudaTensor::baseMethods", "[CudaTensor]", float, double) {
         CHECK(tensor.getExtents() == Pennylane::Util::approx(extents));
     }
 
-    SECTION("getLength()") {
-        CHECK(tensor.getLength() == length);
-    }
-    
+    SECTION("getLength()") { CHECK(tensor.getLength() == length); }
 }
