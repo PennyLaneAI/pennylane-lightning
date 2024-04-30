@@ -25,9 +25,6 @@
 #include <unordered_set>
 #include <vector>
 
-// TODO to remove iostream
-#include <iostream>
-
 #include <cuda.h>
 #include <cutensornet.h>
 
@@ -51,11 +48,6 @@ namespace Pennylane::LightningTensor::MPS::Cutn {
 
 template <class Precision, class Derived>
 class MPSCutnBase : public MPSBase<Precision, Derived> {
-  public:
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
-    using ComplexT = std::complex<Precision>;
-    using PrecisionT = Precision;
-
   private:
     using BaseType = MPSBase<Precision, Derived>;
 
@@ -107,20 +99,13 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
     };
 
     /**
-     * @brief Get Cuda data type.
-     *
-     * @return Cuda data type
-     */
-    [[nodiscard]] auto getDataType() -> cudaDataType_t { return typeData_; };
-
-    /**
      * @brief Get device and Cuda stream information (device ID and the
      * associated Cuda stream ID).
      *
      * @return dev_tag_ DevTag object that contains both device and Cuda steam
      * ID.
      */
-    [[nodiscard]] auto getDevTag() -> DevTag<int> { return dev_tag_; }
+    [[nodiscard]] auto getDevTag() -> DevTag<int> & { return dev_tag_; }
 
     /**
      * @brief Get a vector of pointers to extents of each site
@@ -128,7 +113,7 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
      * @return sitesExtentsPtr_int64_ std::vector<int64_t *> Note int64_t is
      * required by cutensornet backend.
      */
-    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> {
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> & {
         return sitesExtentsPtr_int64_;
     }
 
@@ -150,7 +135,7 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
      * @return tensorsDataPtr_ std::vector<void *> Note void is required by
      * cutensornet backend.
      */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> & {
         return tensorsDataPtr_;
     }
 

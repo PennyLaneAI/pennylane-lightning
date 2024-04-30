@@ -39,6 +39,13 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
+TEMPLATE_TEST_CASE("MPSCutn::Constructibility", "[Default Constructibility]",
+                   float, double) {
+    SECTION("MPSCutn<>") {
+        REQUIRE(!std::is_constructible_v<MPSCutn<TestType>()>);
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSCutn::SetIthStates", "[MPSCutn]", float, double) {
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;

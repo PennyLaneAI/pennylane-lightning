@@ -39,8 +39,8 @@ template <class PrecisionT, class Derived> class TensorBase {
     std::vector<size_t> extents_; // Number of elements in each mode
 
   public:
-    TensorBase(size_t rank, std::vector<size_t> &modes,
-               std::vector<size_t> &extents)
+    TensorBase(size_t rank, const std::vector<size_t> &modes,
+               const std::vector<size_t> &extents)
         : rank_(rank), modes_(modes), extents_(extents) {
         PL_ABORT_IF(rank_ != extents_.size(),
                     "Please check if rank or extents are set correctly.");
@@ -57,14 +57,16 @@ template <class PrecisionT, class Derived> class TensorBase {
      *
      * @return size_t Rank of a tensor object.
      */
-    [[nodiscard]] auto getRank() -> size_t { return rank_; }
+    [[nodiscard]] auto getRank() const -> size_t { return rank_; }
 
     /**
      * @brief Return the extents of a tensor object.
      *
      * @return std::vector<size_t> Extents of a tensor object.
      */
-    [[nodiscard]] auto getExtents() -> std::vector<size_t> { return extents_; }
+    [[nodiscard]] auto getExtents() const -> std::vector<size_t> {
+        return extents_;
+    }
 
     /**
      * @brief Return the modes of a tensor object.
@@ -81,14 +83,5 @@ template <class PrecisionT, class Derived> class TensorBase {
      * @return std::vector<size_t> Number of elements of a tensor object.
      */
     [[nodiscard]] size_t getLength() const { return length_; }
-
-    /**
-     * @brief Return a pointer to the tensor data.
-     *
-     * @return Complex pointer to the tensor data.
-     */
-    [[nodiscard]] auto getData() {
-        return static_cast<Derived *>(this)->getData();
-    }
 };
 } // namespace Pennylane::LightningTensor

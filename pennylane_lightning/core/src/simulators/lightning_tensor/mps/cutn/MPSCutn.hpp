@@ -23,9 +23,6 @@
 #include <type_traits>
 #include <vector>
 
-// TODO remove istream
-#include <iostream>
-
 #include <cuda.h>
 #include <cutensornet.h>
 

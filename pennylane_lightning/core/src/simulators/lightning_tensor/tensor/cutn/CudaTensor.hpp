@@ -46,95 +46,21 @@ class CudaTensor : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
     using BaseType = TensorBase<PrecisionT, CudaTensor>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
-    CudaTensor(size_t rank, std::vector<size_t> modes,
-               std::vector<size_t> extents, int device_id = 0,
+    CudaTensor(const size_t rank, const std::vector<size_t> &modes,
+               const std::vector<size_t> &extents, int device_id = 0,
                cudaStream_t stream_id = 0, bool device_alloc = true)
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), device_id, stream_id, device_alloc)} {}
 
-    CudaTensor(size_t rank, std::vector<size_t> modes,
-               std::vector<size_t> extents, DevTag<int> dev_tag,
+    CudaTensor(const size_t rank, const std::vector<size_t> &modes,
+               const std::vector<size_t> &extents, DevTag<int> &dev_tag,
                bool device_alloc = true)
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
     ~CudaTensor() {}
-
-    /**
-     * @brief Return a pointer to the GPU data.
-     *
-     * @return const CFP_t* Complex device pointer.
-     */
-    [[nodiscard]] auto getData() const -> const CFP_t * {
-        return data_buffer_->getData();
-    }
-    /**
-     * @brief Return a pointer to the GPU data.
-     *
-     * @return CFP_t* Complex device pointer.
-     */
-    [[nodiscard]] auto getData() -> CFP_t * { return data_buffer_->getData(); }
-
-    /**
-     * @brief Get the CUDA stream for the given object.
-     *
-     * @return cudaStream_t&
-     */
-    inline auto getStream() -> cudaStream_t {
-        return data_buffer_->getStream();
-    }
-    /**
-     * @brief Get the CUDA stream for the given object.
-     *
-     * @return const cudaStream_t&
-     */
-    inline auto getStream() const -> cudaStream_t {
-        return data_buffer_->getStream();
-    }
-
-    void setStream(const cudaStream_t &s) { data_buffer_->setStream(s); }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param sv StateVector host data class.
-     */
-    inline void
-    CopyHostDataToGpu(const std::vector<std::complex<PrecisionT>> &sv,
-                      bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == sv.size(),
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyHostDataToGpu(sv.data(), sv.size(), async);
-    }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param host_sv Complex data pointer to array.
-     * @param length Number of complex elements.
-     */
-    inline void CopyGpuDataToGpuIn(const CFP_t *gpu_sv, std::size_t length,
-                                   bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == length,
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyGpuDataToGpu(gpu_sv, length, async);
-    }
-
-    /**
-     * @brief Explicitly copy data from host memory to GPU device.
-     *
-     * @param host_sv Complex data pointer to array.
-     * @param length Number of complex elements.
-     */
-    inline void CopyHostDataToGpu(const std::complex<PrecisionT> *host_sv,
-                                  std::size_t length, bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == length,
-                        "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyHostDataToGpu(
-            reinterpret_cast<const CFP_t *>(host_sv), length, async);
-    }
 
     /**
      * @brief Explicitly copy data from GPU device to host memory.
@@ -151,15 +77,6 @@ class CudaTensor : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
     const DataBuffer<CFP_t> &getDataBuffer() const { return *data_buffer_; }
 
     DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
-
-    /**
-     * @brief Move and replace DataBuffer for statevector.
-     *
-     * @param other Source data to copy from.
-     */
-    void updateData(std::unique_ptr<DataBuffer<CFP_t>> &&other) {
-        data_buffer_ = std::move(other);
-    }
 
   private:
     std::shared_ptr<DataBuffer<CFP_t>> data_buffer_;
