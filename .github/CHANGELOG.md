@@ -1,4 +1,4 @@
-# Release 0.36.0-dev
+# Release 0.36.0
 
 ### New features since last release
 
@@ -135,6 +135,12 @@
 * Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
   [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
 
+* Refactor of dev prerelease auto-update-version workflow.
+  [(#685)](https://github.com/PennyLaneAI/pennylane-lightning/pull/685)
+
+* Remove gates unsupported by catalyst from toml file.
+  [(#698)](https://github.com/PennyLaneAI/pennylane-lightning/pull/698)
+
 * Increase tolerance for a flaky test.
   [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
 
@@ -142,7 +148,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 

@@ -1,5 +1,5 @@
 pip~=22.0
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@v0.36.0-rc0
 ninja
 flaky
 pybind11
