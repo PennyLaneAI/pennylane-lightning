@@ -173,7 +173,7 @@ jobs:
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
           if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
-            SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install -e . -vv
+            SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
           }
           pushd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl
