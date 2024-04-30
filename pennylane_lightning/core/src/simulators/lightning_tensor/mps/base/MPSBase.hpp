@@ -19,18 +19,12 @@
 
 #pragma once
 
-#include <complex>
 #include <vector>
 
 #include "Error.hpp"
 
 namespace Pennylane::LightningTensor::MPS {
 template <class Precision, class Derived> class MPSBase {
-  public:
-    using ComplexT = std::complex<Precision>;
-    using PrecisionT = Precision;
-    using BaseType = MPSBase<Precision, Derived>;
-
   private:
     size_t numQubits_;
     size_t maxExtent_;

@@ -116,10 +116,9 @@ TEMPLATE_TEST_CASE("MPSCutn::getDataVector()", "[MPSCutn]", float, double) {
     SECTION("Get zero state") {
         std::vector<std::complex<TestType>> expected_state(
             size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
-        
+
         expected_state[0] = {1.0, 0.0};
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
-

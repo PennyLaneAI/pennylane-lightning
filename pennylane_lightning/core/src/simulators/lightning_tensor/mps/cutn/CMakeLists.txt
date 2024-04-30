@@ -19,8 +19,6 @@ findCutensornet(lightning_external_libs)
 
 set(LTENSOR_MPS_FILES  MPSCutn.cpp CACHE INTERNAL "" FORCE)
 
-set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_METHOD}_${PL_TENSOR_BACKEND}")
-
 add_library(${PL_TENSOR} STATIC ${LTENSOR_MPS_FILES})
 
 ##########################

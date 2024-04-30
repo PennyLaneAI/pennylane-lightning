@@ -16,8 +16,7 @@ FetchAndIncludeCatch()
 
 add_library(${PL_TENSOR}_tests INTERFACE)
 target_link_libraries(${PL_TENSOR}_tests INTERFACE     Catch2::Catch2
-                                                                ${PL_TENSOR}
-                                                                )
+                                                       ${PL_TENSOR})
 
 ProcessTestOptions(${PL_TENSOR}_tests)
 

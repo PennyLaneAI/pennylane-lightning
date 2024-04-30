@@ -13,5 +13,5 @@ set_property(TARGET lightning_tensor_mps_base PROPERTY POSITION_INDEPENDENT_CODE
 
 if (BUILD_TESTS)
     enable_testing()
-    #add_subdirectory("tests")
+    add_subdirectory("tests")
 endif()
