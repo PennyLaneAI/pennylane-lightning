@@ -132,10 +132,9 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.24.0
 
-          CIBW_ENVIRONMENT: |
-            PL_BACKEND="${{ matrix.pl_backend }}"
+          CIBW_ENVIRONMENT: PL_BACKEND="${{ matrix.pl_backend }}" CMAKE_ARGS="-DENABLE_LAPACK=OFF"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
