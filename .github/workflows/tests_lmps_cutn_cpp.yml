@@ -129,8 +129,8 @@ jobs:
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DPL_TENSOR_METHOD = ${{ matrix.pl_tensor_method }}\
-            -DPL_TENSOR_BACKEND = ${{ matrix.pl_tensor_backend }}\
+            -DPL_TENSOR_METHOD=${{ matrix.pl_tensor_method }} \
+            -DPL_TENSOR_BACKEND=${{ matrix.pl_tensor_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja

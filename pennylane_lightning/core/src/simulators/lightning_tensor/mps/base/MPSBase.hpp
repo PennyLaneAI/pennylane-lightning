@@ -39,33 +39,12 @@ template <class Precision, class Derived> class MPSBase {
     std::vector<std::vector<size_t>> sitesExtents_;
 
   public:
-    explicit MPSBase(size_t numQubits, size_t maxExtent,
-                     std::vector<size_t> qubitDims)
+    MPSBase() = delete;
+
+    explicit MPSBase(const size_t numQubits, const size_t maxExtent,
+                     const std::vector<size_t> &qubitDims)
         : numQubits_(numQubits), maxExtent_(maxExtent), qubitDims_(qubitDims) {
-        // Configure extents for each sites
-        for (size_t i = 0; i < numQubits_; i++) {
-            std::vector<size_t> localSiteModes;
-            std::vector<size_t> localSiteExtents;
-            if (i == 0) {
-                // Leftmost site
-                localSiteModes = std::vector<size_t>({i, i + numQubits_});
-                localSiteExtents =
-                    std::vector<size_t>({qubitDims_[i], maxExtent_});
-            } else if (i == numQubits_ - 1) {
-                // Rightmost site
-                localSiteModes = std::vector<size_t>({i + numQubits_, i});
-                localSiteExtents =
-                    std::vector<size_t>({qubitDims_[i], maxExtent_});
-            } else {
-                // Interior sites
-                localSiteModes = std::vector<size_t>(
-                    {i + numQubits_ - 1, i, i + numQubits_});
-                localSiteExtents = std::vector<size_t>(
-                    {maxExtent_, qubitDims_[i], maxExtent_});
-            }
-            sitesExtents_.push_back(localSiteExtents);
-            sitesModes_.push_back(localSiteModes);
-        }
+        initHelper_();
     }
 
     virtual ~MPSBase() = default;
@@ -139,5 +118,33 @@ template <class Precision, class Derived> class MPSBase {
                     "The site index value should be less than qubit number.")
         return sitesExtents_[index];
     };
+
+  private:
+    void initHelper_() {
+        // Configure extents for each sites
+        for (size_t i = 0; i < numQubits_; i++) {
+            std::vector<size_t> localSiteModes;
+            std::vector<size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site
+                localSiteModes = std::vector<size_t>({i, i + numQubits_});
+                localSiteExtents =
+                    std::vector<size_t>({qubitDims_[i], maxExtent_});
+            } else if (i == numQubits_ - 1) {
+                // Rightmost site
+                localSiteModes = std::vector<size_t>({i + numQubits_, i});
+                localSiteExtents =
+                    std::vector<size_t>({qubitDims_[i], maxExtent_});
+            } else {
+                // Interior sites
+                localSiteModes = std::vector<size_t>(
+                    {i + numQubits_ - 1, i, i + numQubits_});
+                localSiteExtents = std::vector<size_t>(
+                    {maxExtent_, qubitDims_[i], maxExtent_});
+            }
+            sitesExtents_.push_back(localSiteExtents);
+            sitesModes_.push_back(localSiteModes);
+        }
+    }
 };
 } // namespace Pennylane::LightningTensor::MPS

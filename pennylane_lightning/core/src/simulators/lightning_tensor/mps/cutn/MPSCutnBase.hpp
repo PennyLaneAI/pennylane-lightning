@@ -75,49 +75,13 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
     std::vector<CudaTensor<Precision>> tensors_;
 
   public:
-    MPSCutnBase(size_t numQubits, size_t maxExtent,
-                std::vector<size_t> qubitDims, DevTag<int> dev_tag)
+    MPSCutnBase() = delete;
+
+    MPSCutnBase(const size_t numQubits, const size_t maxExtent,
+                const std::vector<size_t> &qubitDims, DevTag<int> &dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims),
           handle_(make_shared_cutn_handle()), dev_tag_(dev_tag) {
-        if constexpr (std::is_same_v<Precision, double>) {
-            typeData_ = CUDA_C_64F;
-            typeCompute_ = CUTENSORNET_COMPUTE_64F;
-        } else {
-            typeData_ = CUDA_C_32F;
-            typeCompute_ = CUTENSORNET_COMPUTE_32F;
-        }
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* cutensornetStatePurity_t */ purity_,
-            /* int32_t numStateModes */
-            static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t *stateModeExtents */
-            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
-            /* cudaDataType_t */ typeData_,
-            /*  cutensornetState_t * */ &quantumState_));
-
-        for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            // Convert datatype of sitesExtents to int64 as required by
-            // cutensornet backend
-            std::vector<int64_t> siteExtents_int64(
-                BaseType::getSitesExtents()[i].size());
-            std::transform(BaseType::getSitesExtents()[i].begin(),
-                           BaseType::getSitesExtents()[i].end(),
-                           siteExtents_int64.begin(),
-                           [](size_t x) { return static_cast<int64_t>(x); });
-
-            sitesExtents_int64_.push_back(siteExtents_int64);
-            sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
-
-            // construct mps tensors reprensentation
-            tensors_.emplace_back(BaseType::getIthSiteModes(i).size(),
-                                  BaseType::getIthSiteModes(i),
-                                  BaseType::getIthSiteExtents(i), dev_tag_);
-
-            tensorsDataPtr_.push_back(
-                static_cast<void *>(tensors_[i].getDataBuffer().getData()));
-        }
+        initHelper_();
     }
 
     virtual ~MPSCutnBase() {
@@ -188,6 +152,49 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
      */
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
         return tensorsDataPtr_;
+    }
+
+  private:
+    void initHelper_() {
+        if constexpr (std::is_same_v<Precision, double>) {
+            typeData_ = CUDA_C_64F;
+            typeCompute_ = CUTENSORNET_COMPUTE_64F;
+        } else {
+            typeData_ = CUDA_C_32F;
+            typeCompute_ = CUTENSORNET_COMPUTE_32F;
+        }
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStatePurity_t */ purity_,
+            /* int32_t numStateModes */
+            static_cast<int32_t>(BaseType::getNumQubits()),
+            /* const int64_t *stateModeExtents */
+            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
+            /* cudaDataType_t */ typeData_,
+            /*  cutensornetState_t * */ &quantumState_));
+
+        for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            // Convert datatype of sitesExtents to int64 as required by
+            // cutensornet backend
+            std::vector<int64_t> siteExtents_int64(
+                BaseType::getSitesExtents()[i].size());
+            std::transform(BaseType::getSitesExtents()[i].begin(),
+                           BaseType::getSitesExtents()[i].end(),
+                           siteExtents_int64.begin(),
+                           [](size_t x) { return static_cast<int64_t>(x); });
+
+            sitesExtents_int64_.push_back(siteExtents_int64);
+            sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
+
+            // construct mps tensors reprensentation
+            tensors_.emplace_back(BaseType::getIthSiteModes(i).size(),
+                                  BaseType::getIthSiteModes(i),
+                                  BaseType::getIthSiteExtents(i), dev_tag_);
+
+            tensorsDataPtr_.push_back(
+                static_cast<void *>(tensors_[i].getDataBuffer().getData()));
+        }
     }
 };
 } // namespace Pennylane::LightningTensor::MPS::Cutn

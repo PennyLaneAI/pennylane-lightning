@@ -83,11 +83,13 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
     using PrecisionT = Precision;
 
   public:
-    explicit MPSCutn(size_t numQubits, size_t maxExtent,
-                     std::vector<size_t> qubitDims, DevTag<int> dev_tag)
+    MPSCutn() = delete;
+
+    explicit MPSCutn(const size_t numQubits, const size_t maxExtent,
+                     const std::vector<size_t> &qubitDims, DevTag<int> &dev_tag)
         : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
 
-    ~MPSCutn() {}
+    ~MPSCutn() = default;
 
     /**
      * @brief Set a zero state
@@ -99,11 +101,9 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
     /**
      * @brief Set basis state
-     *
+     * NOTE: This API assumes the bond vector is [1,0,0,......]
      * @param basisState Vector representation of a basis state.
      */
-
-    // Given Bond vector is set as [1,0,0....]
     void setBasisState(std::vector<size_t> &basisState) {
         PL_ABORT_IF(BaseType::getNumQubits() != basisState.size(),
                     "The size of a basis state should be equal to the number "
