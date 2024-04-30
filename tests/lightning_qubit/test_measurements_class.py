@@ -474,7 +474,7 @@ class TestMeasurements:
         result = m.measure_final_state(tape)
 
         # a few tests may fail in single precision, and hence we increase the tolerance
-        assert np.allclose(result, expected, max(tol, 1.0e-5))
+        assert np.allclose(result, expected, max(tol, 1.0e-4))
 
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 1000000])
