@@ -232,7 +232,7 @@ class QuimbMPS:
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     def _initial_mps(self) -> qtn.MatrixProductState:
-        """
+        r"""
         Return an initial state to :math:`\ket{0}`.
 
         Internally, it uses `quimb`'s `MPS_computational_state` method.
