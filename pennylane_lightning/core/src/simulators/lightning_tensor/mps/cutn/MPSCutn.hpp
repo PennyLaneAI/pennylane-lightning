@@ -111,7 +111,7 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
             BaseType::getIthSiteTensor(i).getDataBuffer().zeroInit();
             size_t target = 0;
-            size_t idx = BaseType::getNumQubits() - 1 - i;
+            size_t idx = BaseType::getNumQubits() - size_t{1} - i;
 
             // Rightmost site
             if (i == 0) {
@@ -147,19 +147,21 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                         "vector can't be called "
                         "after cutensornetStateFinalizeMPS is called");
         // 1D representation
-        std::vector<size_t> output_modes(1, size_t{1});
-        std::vector<size_t> output_extent(1, size_t{1}
-                                                 << BaseType::getNumQubits());
+        std::vector<size_t> output_modes(size_t{1}, size_t{1});
+        std::vector<size_t> output_extent(
+            size_t{1}, size_t{1} << BaseType::getNumQubits());
         CudaTensor<Precision> output_tensor(output_modes.size(), output_modes,
                                             output_extent,
                                             BaseType::getDevTag());
 
         std::vector<void *> output_tensorPtr(
-            1, static_cast<void *>(output_tensor.getDataBuffer().getData()));
+            size_t{1},
+            static_cast<void *>(output_tensor.getDataBuffer().getData()));
 
         std::vector<int64_t *> output_extentsPtr;
-        std::vector<int64_t> extent_int64(1, size_t{1}
-                                                 << BaseType::getNumQubits());
+        std::vector<int64_t> extent_int64(
+            size_t{1},
+            static_cast<int64_t>(size_t{1} << BaseType::getNumQubits()));
         output_extentsPtr.emplace_back(extent_int64.data());
 
         computeState_(output_extentsPtr, output_tensorPtr);
@@ -252,7 +254,7 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
 
         // Ensure data is aligned by 256 bytes
-        worksize += 256 - worksize % 256;
+        worksize += int64_t{256} - worksize % int64_t{256};
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");

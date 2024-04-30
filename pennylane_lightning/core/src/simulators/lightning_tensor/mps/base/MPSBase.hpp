@@ -77,19 +77,6 @@ template <class Precision, class Derived> class MPSBase {
     };
 
     /**
-     * @brief Get modes of ith site
-     *
-     * @param index i-th site
-     *
-     * @return std::vector<size_t> &
-     */
-    [[nodiscard]] auto getIthSiteModes(size_t index) -> std::vector<size_t> & {
-        PL_ABORT_IF(index >= numQubits_,
-                    "The site index value should be less than qubit number.")
-        return sitesModes_[index];
-    };
-
-    /**
      * @brief Get extents of each sites
      *
      * @return const std::vector<std::vector<size_t>> &
@@ -97,20 +84,6 @@ template <class Precision, class Derived> class MPSBase {
     [[nodiscard]] auto getSitesExtents() const
         -> const std::vector<std::vector<size_t>> & {
         return sitesExtents_;
-    };
-
-    /**
-     * @brief Get extents of ith site
-     *
-     * @param index i-th site
-     *
-     * @return std::vector<size_t> &
-     */
-    [[nodiscard]] auto getIthSiteExtents(size_t index)
-        -> std::vector<size_t> & {
-        PL_ABORT_IF(index >= numQubits_,
-                    "The site index value should be less than qubit number.")
-        return sitesExtents_[index];
     };
 
   private:

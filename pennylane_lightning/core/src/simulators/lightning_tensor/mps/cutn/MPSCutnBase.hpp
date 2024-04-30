@@ -173,9 +173,9 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
             sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
 
             // construct mps tensors reprensentation
-            tensors_.emplace_back(BaseType::getIthSiteModes(i).size(),
-                                  BaseType::getIthSiteModes(i),
-                                  BaseType::getIthSiteExtents(i), dev_tag_);
+            tensors_.emplace_back(BaseType::getSitesModes()[i].size(),
+                                  BaseType::getSitesModes()[i],
+                                  BaseType::getSitesExtents()[i], dev_tag_);
 
             tensorsDataPtr_.push_back(
                 static_cast<void *>(tensors_[i].getDataBuffer().getData()));
