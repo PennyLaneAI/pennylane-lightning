@@ -11,13 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """
 This module contains the LightningTensor class that inherits from the new device interface.
 It is a device to perform tensor network simulation of a quantum circuit. 
 """
-
-
 from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -27,9 +24,10 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumTape
+from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from .quimb._mps import QuimbMPS
+from .backends.quimb._mps import QuimbMPS
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -121,7 +119,7 @@ class LightningTensor(Device):
 
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
-        self._cutoff = kwargs.get("cutoff", 1e-16)
+        self._cutoff = kwargs.get("cutoff", np.finfo(self._c_dtype).eps)
 
         self._interface = None
         interface_opts = self._setup_execution_config().device_options
@@ -132,6 +130,11 @@ class LightningTensor(Device):
                 interface_opts,
                 self._c_dtype,
             )
+
+        else:
+            raise ValueError(
+                f"Unsupported backend: {self.backend} or method: {self.method}"
+            )  # pragma: no cover
 
         for arg in kwargs:
             if arg not in self._device_options:
