@@ -245,10 +245,6 @@ class QuimbMPS:
     def preprocess(self) -> TransformProgram:
         """This function defines the device transform program to be applied for this interface.
 
-        Args:
-            config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
-                parameters needed to fully describe the execution.
-
         Returns:
             TransformProgram: A transform program that when called returns :class:`~.QuantumTape`'s that the
             device can natively execute as well as a postprocessing function to be called after execution.
