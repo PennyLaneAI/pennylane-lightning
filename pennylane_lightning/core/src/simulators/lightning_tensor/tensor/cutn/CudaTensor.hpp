@@ -41,17 +41,10 @@ namespace Pennylane::LightningTensor::Cutn {
  */
 
 template <class PrecisionT>
-class CudaTensor : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
+class CudaTensor final: public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
   public:
     using BaseType = TensorBase<PrecisionT, CudaTensor>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
-
-    CudaTensor(const size_t rank, const std::vector<size_t> &modes,
-               const std::vector<size_t> &extents, int device_id = 0,
-               cudaStream_t stream_id = 0, bool device_alloc = true)
-        : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
-          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
-              BaseType::getLength(), device_id, stream_id, device_alloc)} {}
 
     CudaTensor(const size_t rank, const std::vector<size_t> &modes,
                const std::vector<size_t> &extents, DevTag<int> &dev_tag,
@@ -59,8 +52,10 @@ class CudaTensor : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
+    
+    CudaTensor() = delete;
 
-    ~CudaTensor() {}
+    ~CudaTensor() final = default;
 
     /**
      * @brief Explicitly copy data from GPU device to host memory.
@@ -73,8 +68,6 @@ class CudaTensor : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
                         "Sizes do not match for Host and GPU data");
         data_buffer_->CopyGpuDataToHost(host_sv, length, async);
     }
-
-    const DataBuffer<CFP_t> &getDataBuffer() const { return *data_buffer_; }
 
     DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
 
