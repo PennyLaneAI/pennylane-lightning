@@ -398,7 +398,7 @@ class QuimbMPS:
         obs = measurementprocess.obs
 
         obs_mat = obs.matrix()
-        expect_squar_op = self._local_expectation(np.dot(obs_mat, obs_mat), tuple(obs.wires))
+        expect_squar_op = self._local_expectation(obs_mat @ obs_mat.conj().T, tuple(obs.wires))
         expect_op = self._local_expectation(obs_mat, tuple(obs.wires))
 
         return expect_squar_op - np.square(expect_op)

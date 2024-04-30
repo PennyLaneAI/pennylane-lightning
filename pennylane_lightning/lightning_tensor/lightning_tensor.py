@@ -72,7 +72,7 @@ class LightningTensor(Device):
 
             ``max_bond_dim`` (int): Maximum bond dimension for the MPS simulator.
                 It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is ``None``.
-            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is ``1e-16``.
+            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is ``np.finfo(c_dtype).eps``.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -204,7 +204,7 @@ class LightningTensor(Device):
 
         * Does not support finite shots.
         * Does not support derivatives.
-        * Does not support vector jacobian products.
+        * Does not support vector-Jacobian products.
         """
 
         config = self._setup_execution_config(execution_config)
@@ -220,7 +220,7 @@ class LightningTensor(Device):
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed.
-            execution_config (ExecutionConfig): a datastructure with additional information required for execution.
+            execution_config (ExecutionConfig): a data structure with additional information required for execution.
 
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
@@ -251,14 +251,14 @@ class LightningTensor(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        """Calculate the jacobian of either a single or a batch of circuits on the device.
+        """Calculate the Jacobian of either a single or a batch of circuits on the device.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution.
 
         Returns:
-            Tuple: The jacobian for each trainable parameter.
+            Tuple: The Jacobian for each trainable parameter.
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
@@ -269,11 +269,11 @@ class LightningTensor(Device):
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        """Compute the results and jacobians of circuits at the same time.
+        """Compute the results and Jacobians of circuits at the same time.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution.
 
         Returns:
             tuple: A numeric result of the computation and the gradient.
@@ -288,7 +288,7 @@ class LightningTensor(Device):
         execution_config: Optional[ExecutionConfig] = None,
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
-        """Whether or not this device defines a custom vector jacobian product.
+        """Whether or not this device defines a custom vector-Jacobian product.
 
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation.
@@ -305,20 +305,20 @@ class LightningTensor(Device):
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        r"""The vector jacobian product used in reverse-mode differentiation.
+        r"""The vector-Jacobian product used in reverse-mode differentiation.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits.
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
                 of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution.
 
         Returns:
-            tensor-like: A numeric result of computing the vector jacobian product.
+            tensor-like: A numeric result of computing the vector-Jacobian product.
         """
         raise NotImplementedError(
-            "The computation of vector jacobian product has yet to be implemented for the lightning.tensor device."
+            "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
         )
 
     def execute_and_compute_vjp(
@@ -327,17 +327,17 @@ class LightningTensor(Device):
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
+        """Calculate both the results and the vector-Jacobian product used in reverse-mode differentiation.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed.
             cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
                 corresponding circuit.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution.
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution.
 
         Returns:
-            Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
+            Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector-Jacobian product
         """
         raise NotImplementedError(
-            "The computation of vector jacobian product has yet to be implemented for the lightning.tensor device."
+            "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
         )
