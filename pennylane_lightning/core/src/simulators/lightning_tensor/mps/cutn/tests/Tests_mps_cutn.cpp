@@ -52,10 +52,8 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSCutn::Constructibility",
     using MPST = TestType;
 
     SECTION("MPST<TestType>") { REQUIRE(!std::is_constructible_v<MPST>); }
-    SECTION("MPST<TestType> {const size_t, const size_t, const "
-            "std::vector<size_t>&, DevTag<int> &}") {
+    SECTION("MPST<TestType> {const size_t, const size_t, DevTag<int> &}") {
         REQUIRE(std::is_constructible_v<MPST, const size_t, const size_t,
-                                        const std::vector<size_t> &,
                                         DevTag<int> &>);
     }
 }
@@ -64,10 +62,9 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
     SECTION("Set [011] on device with data on the host") {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
-        std::vector<size_t> qubitDims = {2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
-        MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+        MPSCutn<TestType> sv{num_qubits, maxExtent, dev_tag};
 
         std::vector<size_t> basisState = {0, 1, 1};
         sv.setBasisState(basisState);
@@ -89,10 +86,9 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
     SECTION("Set [101] on device with data on the host") {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
-        std::vector<size_t> qubitDims = {2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
-        MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+        MPSCutn<TestType> sv{num_qubits, maxExtent, dev_tag};
 
         std::vector<size_t> basisState = {1, 0, 1};
         sv.setBasisState(basisState);
@@ -115,10 +111,8 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
         for (size_t bondDim = 2; bondDim < 10; bondDim++) {
             std::size_t num_qubits = 3;
             std::size_t maxExtent = bondDim;
-            std::vector<size_t> qubitDims = {2, 2, 2};
-            DevTag<int> dev_tag{0, 0};
 
-            MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+            MPSCutn<TestType> sv{num_qubits, maxExtent};
 
             std::vector<size_t> basisState = {1, 0, 1};
             sv.setBasisState(basisState);
@@ -143,10 +137,9 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
 TEMPLATE_TEST_CASE("MPSCutn::getDataVector()", "[MPSCutn]", float, double) {
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    std::vector<size_t> qubitDims = {2, 2, 2};
     DevTag<int> dev_tag{0, 0};
 
-    MPSCutn<TestType> sv{num_qubits, maxExtent, qubitDims, dev_tag};
+    MPSCutn<TestType> sv{num_qubits, maxExtent, dev_tag};
 
     SECTION("Get zero state") {
         std::vector<std::complex<TestType>> expected_state(

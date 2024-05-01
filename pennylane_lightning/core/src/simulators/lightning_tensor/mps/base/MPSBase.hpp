@@ -35,9 +35,10 @@ template <class Precision, class Derived> class MPSBase {
   public:
     MPSBase() = delete;
 
-    explicit MPSBase(const size_t numQubits, const size_t maxExtent,
-                     const std::vector<size_t> &qubitDims)
-        : numQubits_(numQubits), maxExtent_(maxExtent), qubitDims_(qubitDims) {
+    explicit MPSBase(const size_t numQubits, const size_t maxExtent)
+        : numQubits_(numQubits), maxExtent_(maxExtent) {
+        qubitDims_.resize(numQubits);
+        std::fill(qubitDims_.begin(), qubitDims_.end(), size_t{2});
         initHelper_();
     }
 

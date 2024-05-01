@@ -70,9 +70,16 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
     MPSCutnBase() = delete;
 
     MPSCutnBase(const size_t numQubits, const size_t maxExtent,
-                const std::vector<size_t> &qubitDims, DevTag<int> &dev_tag)
-        : BaseType(numQubits, maxExtent, qubitDims),
-          handle_(make_shared_cutn_handle()), dev_tag_(dev_tag) {
+                DevTag<int> &dev_tag)
+        : BaseType(numQubits, maxExtent), handle_(make_shared_cutn_handle()),
+          dev_tag_(dev_tag) {
+        initHelper_();
+    }
+
+    MPSCutnBase(const size_t numQubits, const size_t maxExtent,
+                 int device_id = 0, cudaStream_t stream_id = 0)
+        : BaseType(numQubits, maxExtent), handle_(make_shared_cutn_handle()),
+          dev_tag_({device_id, stream_id}) {
         initHelper_();
     }
 
@@ -120,13 +127,11 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
     /**
      * @brief Get reference to the tensor of ith site
      *
-     * @return tensors_[index] CudaTensor<Precision> &.
+     * @return std::vector<CudaTensor<Precision>> &.
      */
-    [[nodiscard]] auto getIthSiteTensor(size_t index)
-        -> CudaTensor<Precision> & {
-        PL_ABORT_IF(index >= BaseType::getNumQubits(),
-                    "The site index value should be less than qubit number.")
-        return tensors_[index];
+    [[nodiscard]] auto getSitesTensors()
+        -> std::vector<CudaTensor<Precision>> & {
+        return tensors_;
     }
 
     /**

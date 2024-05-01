@@ -33,10 +33,10 @@ template <typename TypeList> void testMPSBase() {
 
         const size_t num_qubits = 4;
         const std::size_t maxExtent = 2;
-        const std::vector<size_t> qubitDims = {2, 2, 2, 2};
+        std::vector<size_t> qubitDims = {2,2,2,2};
         DevTag<int> dev_tag{0, 0};
 
-        MPST sv{num_qubits, maxExtent, qubitDims, dev_tag};
+        MPST sv{num_qubits, maxExtent, dev_tag};
 
         DYNAMIC_SECTION("Methods implemented in the base class - "
                         << MPSToName<MPST>::name) {

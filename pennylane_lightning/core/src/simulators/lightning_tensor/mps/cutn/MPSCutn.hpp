@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <type_traits>
 #include <vector>
@@ -81,9 +82,12 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
   public:
     MPSCutn() = delete;
 
+    explicit MPSCutn(const size_t numQubits, const size_t maxExtent)
+        : BaseType(numQubits, maxExtent) {}
+
     explicit MPSCutn(const size_t numQubits, const size_t maxExtent,
-                     const std::vector<size_t> &qubitDims, DevTag<int> &dev_tag)
-        : BaseType(numQubits, maxExtent, qubitDims, dev_tag) {}
+                     DevTag<int> &dev_tag)
+        : BaseType(numQubits, maxExtent, dev_tag) {}
 
     ~MPSCutn() final = default;
 
@@ -97,7 +101,8 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
     /**
      * @brief Set basis state
-     * NOTE: This API assumes the bond vector is [1,0,0,......]
+     * NOTE: This API assumes the bond vector is [1,0,0,......] and current
+     * implementation only works for qubits.
      * @param basisState Vector representation of a basis state.
      */
     void setBasisState(const std::vector<size_t> &basisState) {
@@ -105,11 +110,19 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                     "The size of a basis state should be equal to the number "
                     "of qubits.");
 
+        bool allZeroOrOne = std::all_of(
+            basisState.begin(), basisState.end(),
+            [](size_t bitVal) { return bitVal == 0 || bitVal == 1; });
+
+        PL_ABORT_IF(allZeroOrOne == false,
+                    "Please ensure all elements of a basis state should be "
+                    "either 0 or 1.");
+
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
 
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            BaseType::getIthSiteTensor(i).getDataBuffer().zeroInit();
+            BaseType::getSitesTensors()[i].getDataBuffer().zeroInit();
             size_t target = 0;
             size_t idx = BaseType::getNumQubits() - size_t{1} - i;
 
@@ -120,14 +133,14 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                 target = basisState[idx] == 0 ? 0 : BaseType::getMaxExtent();
             }
 
-            PL_CUDA_IS_SUCCESS(cudaMemcpy(&BaseType::getIthSiteTensor(i)
+            PL_CUDA_IS_SUCCESS(cudaMemcpy(&BaseType::getSitesTensors()[i]
                                                .getDataBuffer()
                                                .getData()[target],
                                           &value_cu, sizeof(CFP_t),
                                           cudaMemcpyHostToDevice));
         }
 
-        updateQuantumState_(BaseType::getSitesExtentsPtr().data(),
+        updateQuantumStateMPS_(BaseType::getSitesExtentsPtr().data(),
                             BaseType::getTensorsDataPtr().data());
     };
 
@@ -218,7 +231,7 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
      * @param extentsIn Extents of each sites
      * @param tensorsIn Pointer to tensors provided by a user
      */
-    void updateQuantumState_(const int64_t *const *extentsIn,
+    void updateQuantumStateMPS_(const int64_t *const *extentsIn,
                              void **tensorsIn) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t*/ BaseType::getCutnHandle(),
