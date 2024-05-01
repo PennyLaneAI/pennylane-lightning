@@ -26,7 +26,7 @@ from pennylane import DeviceError
 from pennylane.operation import Operation
 from pennylane.wires import Wires
 
-if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
@@ -76,7 +76,6 @@ class TestApply:
         device_name == "lightning.kokkos" or device_name == "lightning.gpu",
         reason="Only meaningful for lightning_qubit",
     )
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_single_wire_no_parameters(
@@ -128,7 +127,6 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_two_wires_no_parameters(
@@ -167,7 +165,6 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
     @pytest.mark.parametrize("C", [np.complex64, np.complex128])
     def test_apply_operation_preserve_pointer_three_wires_no_parameters(
@@ -312,7 +309,6 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_single_wire_with_parameters
     )
@@ -463,7 +459,6 @@ class TestApply:
         assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize(
         "operation,input,expected_output,par", test_data_two_wires_with_parameters
     )
@@ -512,10 +507,6 @@ class TestApply:
             dev.reset()
             dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
 
-    @pytest.mark.skipif(
-        not ld._CPP_BINARY_AVAILABLE,
-        reason="Lightning binary required",
-    )
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
         reason="Only meaningful for LightningQubit.",
@@ -744,7 +735,6 @@ class TestLightningDeviceIntegration:
             assert dev.short_name == device_name
 
     @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_no_backprop(self):
         """Test that lightning device does not support the backprop
         differentiation method."""
@@ -759,7 +749,6 @@ class TestLightningDeviceIntegration:
             qml.QNode(circuit, dev, diff_method="backprop")
 
     @pytest.mark.xfail(ld._new_API, reason="New device API currently has the wrong module path.")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_best_gets_lightning(self):
         """Test that the best differentiation method returns lightning
         qubit."""
@@ -1290,10 +1279,7 @@ class TestApplyLightningMethod:
         assert np.allclose(dev.state, starting_state, atol=tol, rtol=0)
         assert dev.state.dtype == dev.C_DTYPE
 
-    @pytest.mark.skipif(
-        not ld._CPP_BINARY_AVAILABLE or device_name != "lightning.gpu",
-        reason="Only meaningful when binary is available.",
-    )
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_unsupported_operation(self, mocker, tol):
         """Test unsupported operations."""
 
@@ -1351,16 +1337,6 @@ class TestApplyLightningMethod:
         results = qml.QNode(circuit, dev)()
         expected = qml.QNode(circuit, dq)()
         assert np.allclose(results, expected)
-
-
-@pytest.mark.skipif(ld._new_API, reason="Old API required.")
-@pytest.mark.skipif(
-    ld._CPP_BINARY_AVAILABLE, reason="Test only applies when binaries are unavailable"
-)
-def test_warning():
-    """Tests if a warning is raised when lightning device binaries are not available"""
-    with pytest.warns(UserWarning, match="Pre-compiled binaries for " + device_name):
-        qml.device(device_name, wires=1)
 
 
 @pytest.mark.parametrize(

@@ -43,6 +43,9 @@
 
 * Split Lightning-Qubit and Lightning-Kokkos CPU Python tests with `pytest-split`. Remove `SERIAL` from Kokkos' `exec_model` matrix. Remove `all` from Lightning-Kokkos' `pl_backend` matrix. Move `clang-tidy` checks to `tidy.yml`. Avoid editable `pip` installations.
   [(#696)](https://github.com/PennyLaneAI/pennylane-lightning/pull/696)
+  
+* Update `lightning.gpu` and `lightning.kokkos` to raise an error instead of falling back to `default.qubit`.
+  [(#689)](https://github.com/PennyLaneAI/pennylane-lightning/pull/689)
 
 * Add `paths` directives to test workflows to avoid running tests that cannot be impacted by changes.
   [(#699)](https://github.com/PennyLaneAI/pennylane-lightning/pull/699)
