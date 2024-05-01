@@ -20,7 +20,7 @@ import math
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name
+from conftest import LightningException, device_name
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qchem, qnode
@@ -33,14 +33,11 @@ I, X, Y, Z = (
     qml.Z.compute_matrix(),
 )
 
-if ld._new_API:
-    if not ld._CPP_BINARY_AVAILABLE:
-        pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-    else:
-        from pennylane_lightning.lightning_qubit_ops import LightningException
+if not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 kokkos_args = [None]
-if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
@@ -102,7 +99,7 @@ class TestAdjointJacobian:
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
         params = request.param
-        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+        if device_name == "lightning.kokkos":
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
         return qml.device(device_name, wires=3, c_dtype=params[0])
 
@@ -125,14 +122,12 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name == "lightning.kokkos" and ld._CPP_BINARY_AVAILABLE:
+        if device_name == "lightning.kokkos":
             message = "Adjoint differentiation does not support State measurements."
-        elif device_name == "lightning.gpu" and ld._CPP_BINARY_AVAILABLE:
+        elif device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
-        elif ld._CPP_BINARY_AVAILABLE:
-            message = "This method does not support statevector return type."
         else:
-            message = "Adjoint differentiation method does not support measurement StateMP"
+            message = "Adjoint differentiation method does not support measurement StateMP."
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
@@ -177,7 +172,6 @@ class TestAdjointJacobian:
         jac = method(tape)
         assert len(jac) == 0
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
@@ -200,7 +194,6 @@ class TestAdjointJacobian:
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
         with qml.tape.QuantumTape() as tape:
@@ -273,7 +266,7 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit",
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
@@ -403,7 +396,6 @@ class TestAdjointJacobian:
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -582,7 +574,6 @@ class TestAdjointJacobian:
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -660,7 +651,6 @@ class TestAdjointJacobian:
             assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_provide_wrong_starting_state(self, dev):
         """Tests raise an exception when provided starting state mismatches."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -683,7 +673,6 @@ class TestAdjointJacobian:
         device_name == "lightning.kokkos" or device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
     )
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_state_return_type(self, dev):
         """Tests raise an exception when the return type is State"""
         with qml.tape.QuantumTape() as tape:
@@ -694,7 +683,8 @@ class TestAdjointJacobian:
         method = self.get_derivatives_method(dev)
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type."
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
 
@@ -726,7 +716,6 @@ class TestAdjointJacobianQNode:
         ):
             qml.grad(circ)(0.1)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
         args = np.array([0.54, 0.1, 0.5], requires_grad=True)
@@ -829,7 +818,7 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit" or not ld._CPP_BINARY_AVAILABLE,
+        device_name != "lightning.qubit",
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize(
@@ -962,7 +951,6 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_D[0], expected, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_repeated_gate_parameters(self, mocker, dev):
         """Tests that repeated use of a free parameter in a multi-parameter gate yields correct
         gradients."""
@@ -1128,7 +1116,6 @@ def circuit_ansatz(params, wires):
 
 
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1152,7 +1139,6 @@ def test_tape_qchem(tol):
 
 
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1184,7 +1170,6 @@ def test_tape_qchem_sparse(tol):
 custom_wires = ["alice", 3.14, -1, 0]
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize(
     "returns",
     [
@@ -1280,7 +1265,6 @@ def test_integration(returns):
     assert np.allclose(j_def, j_lightning)
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 def test_integration_chunk_observables():
     """Integration tests that compare to default.qubit for a large circuit with multiple expectation values. Expvals are generated in parallelized chunks."""
     dev_def = qml.device("default.qubit", wires=range(4))
@@ -1365,7 +1349,7 @@ def test_integration_custom_wires(returns):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    device_name != "lightning.gpu",
     reason="Tests only for lightning.gpu",
 )
 @pytest.mark.parametrize(
@@ -1418,7 +1402,7 @@ def test_integration_custom_wires_batching(returns):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu" or not ld._CPP_BINARY_AVAILABLE,
+    device_name != "lightning.gpu",
     reason="Tests only for lightning.gpu",
 )
 @pytest.mark.parametrize(
@@ -1504,7 +1488,6 @@ def create_xyz_file(tmp_path_factory):
     yield file
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize("batches", [False, True, 1, 2, 3, 4])
 def test_integration_H2_Hamiltonian(create_xyz_file, batches):
     _ = pytest.importorskip("openfermionpyscf")
