@@ -14,7 +14,7 @@
 
 /**
  * @file CutnBase.hpp
- * Base class for cuTensorNetwork backend.
+ * Base class for cutensornet backend.
  */
 
 #pragma once
@@ -84,7 +84,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Get the cutensornet handle that the object is using.
      *
-     * @return cutensornetHandle_t returns the cutensornet handle.
+     * @return cutensornetHandle_t
      */
     [[nodiscard]] auto getCutnHandle() const -> cutensornetHandle_t {
         return handle_.get();
@@ -93,7 +93,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Get the quantum state pointer.
      *
-     * @return cutensornetState_t returns pointer to quantum state.
+     * @return cutensornetState_t
      */
     [[nodiscard]] auto getQuantumState() -> cutensornetState_t {
         return quantumState_;
@@ -103,15 +103,14 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      * @brief Get device and Cuda stream information (device ID and the
      * associated Cuda stream ID).
      *
-     * @return dev_tag_ DevTag object that contains both device and Cuda steam
-     * ID.
+     * @return DevTag
      */
     [[nodiscard]] auto getDevTag() -> DevTag<int> & { return dev_tag_; }
 
     /**
      * @brief Get the memory size used for a work space
      *
-     * @return size_t Memory size
+     * @return size_t
      */
     size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
         int64_t worksize{0};
@@ -197,6 +196,9 @@ class CutnBase : public TensornetBase<Precision, Derived> {
     }
 
   private:
+    /**
+     * @brief helper function for constuctor.
+     */
     void initHelper_() {
         if constexpr (std::is_same_v<Precision, double>) {
             typeData_ = CUDA_C_64F;

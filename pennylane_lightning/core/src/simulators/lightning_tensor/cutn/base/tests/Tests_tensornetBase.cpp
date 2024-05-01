@@ -27,7 +27,7 @@ using namespace Pennylane::LightningTensor::Cutn::Util;
  *  Tests for functionality defined in the MPSBase class.
  */
 
-template <typename TypeList> void testMPSBase() {
+template <typename TypeList> void testTensornetBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using MPST = typename TypeList::Type;
 
@@ -36,16 +36,17 @@ template <typename TypeList> void testMPSBase() {
         std::vector<size_t> qubitDims = {2, 2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
-        MPST sv{num_qubits, maxBondDim, dev_tag};
+        MPST mps_state{num_qubits, maxBondDim, dev_tag};
 
         DYNAMIC_SECTION("Methods implemented in the base class - "
                         << MPSToName<MPST>::name) {
-            REQUIRE(sv.getNumQubits() == 4);
-            REQUIRE(sv.getMaxBondDim() == 2);
-            REQUIRE(sv.getQubitDims() == qubitDims);
+            REQUIRE(mps_state.getNumQubits() == 4);
+            REQUIRE(mps_state.getQubitDims() == qubitDims);
         }
-        testMPSBase<typename TypeList::Next>();
+        testTensornetBase<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("testMPSBase", "[MPSBase]") { testMPSBase<TestMPSBackends>(); }
+TEST_CASE("testTensornetBase", "[TensornetBase]") {
+    testTensornetBase<TestMPSBackends>();
+}

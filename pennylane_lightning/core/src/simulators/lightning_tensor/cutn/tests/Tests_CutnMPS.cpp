@@ -106,6 +106,8 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
 
             expected_state[index] = {1.0, 0.0};
 
+            CHECK(mps_state.getMaxBondDim() == maxBondDim);
+
             CHECK(expected_state ==
                   Pennylane::Util::approx(mps_state.getDataVector()));
         }

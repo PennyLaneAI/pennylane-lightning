@@ -21,13 +21,10 @@
 
 #include <algorithm>
 #include <complex>
-#include <type_traits>
 #include <vector>
 
 #include <cuda.h>
 #include <cutensornet.h>
-
-#include <iostream>
 
 #include "CudaTensor.hpp"
 #include "CutnBase.hpp"
@@ -99,26 +96,6 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     [[nodiscard]] auto getMaxBondDim() const -> size_t { return maxBondDim_; };
 
     /**
-     * @brief Get modes of each sites
-     *
-     * @return const std::vector<std::vector<size_t>> &
-     */
-    [[nodiscard]] auto getSitesModes() const
-        -> const std::vector<std::vector<size_t>> & {
-        return sitesModes_;
-    };
-
-    /**
-     * @brief Get extents of each sites
-     *
-     * @return const std::vector<std::vector<size_t>> &
-     */
-    [[nodiscard]] auto getSitesExtents() const
-        -> const std::vector<std::vector<size_t>> & {
-        return sitesExtents_;
-    };
-
-    /**
      * @brief Get a vector of pointers to extents of each site
      *
      * @return sitesExtentsPtr_int64_ std::vector<int64_t *> Note int64_t is
@@ -126,16 +103,6 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      */
     [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> & {
         return sitesExtentsPtr_int64_;
-    }
-
-    /**
-     * @brief Get reference to the tensor of ith site
-     *
-     * @return std::vector<CudaTensor<Precision>> &.
-     */
-    [[nodiscard]] auto getSitesTensors()
-        -> std::vector<CudaTensor<Precision>> & {
-        return tensors_;
     }
 
     /**
@@ -249,6 +216,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     }
 
   private:
+    /**
+     * @brief The helper function for constuctor.
+     */
     void initHelper_() {
         // Configure extents for each sites
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
