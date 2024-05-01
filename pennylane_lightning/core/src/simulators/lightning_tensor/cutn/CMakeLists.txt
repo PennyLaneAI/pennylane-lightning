@@ -39,7 +39,7 @@ target_link_libraries(${PL_TENSOR} PUBLIC  lightning_compile_options
                                             lightning_external_libs
                                             lightning_tensor_utils
                                             lightning_tensor_tensor
-                                            lightning_tensor_mps_base
+                                            lightning_tensor_tensornetBase
                                             )
     
 target_include_directories(${PL_TENSOR} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -53,6 +53,15 @@ if(PL_DISABLE_CUDA_SAFETY)
     target_compile_options(${PL_TENSOR} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
 endif()
 
+###############################################################################
+# Include all nested sources directories
+###############################################################################
+set(COMPONENT_SUBDIRS      base
+                           utils
+)
+foreach(COMP ${COMPONENT_SUBDIRS})
+    add_subdirectory(${COMP})
+endforeach()
 
 if (BUILD_TESTS)
     enable_testing()

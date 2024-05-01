@@ -13,24 +13,22 @@
 // limitations under the License.
 
 /**
- * @file MPSCutnBase.hpp
- * Base class for MPS cuTensorNetwork backend.
+ * @file CutnBase.hpp
+ * Base class for cuTensorNetwork backend.
  */
 
 #pragma once
 
 #include <complex>
-#include <string>
 #include <type_traits>
-#include <unordered_set>
 #include <vector>
 
 #include <cuda.h>
 #include <cutensornet.h>
 
 #include "CudaTensor.hpp"
-#include "MPSBase.hpp"
 #include "TensorBase.hpp"
+#include "TensornetBase.hpp"
 #include "cutnError.hpp"
 #include "cutn_helpers.hpp"
 
@@ -38,18 +36,17 @@
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningTensor::MPS;
 using namespace Pennylane::LightningTensor::Cutn;
 using namespace Pennylane::LightningTensor::Cutn::Util;
 } // namespace
 ///@endcond
 
-namespace Pennylane::LightningTensor::MPS::Cutn {
+namespace Pennylane::LightningTensor::Cutn {
 
 template <class Precision, class Derived>
-class MPSCutnBase : public MPSBase<Precision, Derived> {
+class CutnBase : public TensornetBase<Precision, Derived> {
   private:
-    using BaseType = MPSBase<Precision, Derived>;
+    using BaseType = TensornetBase<Precision, Derived>;
 
   private:
     SharedCutnHandle handle_;
@@ -61,29 +58,22 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
         CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
                                        // states as v24.03
 
-    std::vector<std::vector<int64_t>> sitesExtents_int64_;
-    std::vector<int64_t *> sitesExtentsPtr_int64_;
-    std::vector<void *> tensorsDataPtr_;
-    std::vector<CudaTensor<Precision>> tensors_;
-
   public:
-    MPSCutnBase() = delete;
+    CutnBase() = delete;
 
-    MPSCutnBase(const size_t numQubits, const size_t maxExtent,
-                DevTag<int> &dev_tag)
-        : BaseType(numQubits, maxExtent), handle_(make_shared_cutn_handle()),
+    CutnBase(const size_t numQubits, DevTag<int> &dev_tag)
+        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_(dev_tag) {
         initHelper_();
     }
 
-    MPSCutnBase(const size_t numQubits, const size_t maxExtent,
-                 int device_id = 0, cudaStream_t stream_id = 0)
-        : BaseType(numQubits, maxExtent), handle_(make_shared_cutn_handle()),
+    CutnBase(const size_t numQubits, int device_id = 0, cudaStream_t stream_id = 0)
+        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_({device_id, stream_id}) {
         initHelper_();
     }
 
-    virtual ~MPSCutnBase() {
+    virtual ~CutnBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
@@ -114,34 +104,43 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
      */
     [[nodiscard]] auto getDevTag() -> DevTag<int> & { return dev_tag_; }
 
+
     /**
-     * @brief Get a vector of pointers to extents of each site
+     * @brief Get the memory size used for a work space
      *
-     * @return sitesExtentsPtr_int64_ std::vector<int64_t *> Note int64_t is
-     * required by cutensornet backend.
+     * @return size_t Memory size
      */
-    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> & {
-        return sitesExtentsPtr_int64_;
+    size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
+        int64_t worksize{0};
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
+            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetWorksizePref_t */
+            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /*  int64_t * */ &worksize));
+
+        return worksize;
     }
 
     /**
-     * @brief Get reference to the tensor of ith site
+     * @brief Set the memory for a work space
      *
-     * @return std::vector<CudaTensor<Precision>> &.
+     * @param workDesc cutensornet work space descriptor
+     * @param scratchPtr Pointer to scratch memory
+     * @param worksize Memory size of a work space
      */
-    [[nodiscard]] auto getSitesTensors()
-        -> std::vector<CudaTensor<Precision>> & {
-        return tensors_;
-    }
-
-    /**
-     * @brief Get a vector of pointers to tensor data of each site
-     *
-     * @return tensorsDataPtr_ std::vector<void *> Note void is required by
-     * cutensornet backend.
-     */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> & {
-        return tensorsDataPtr_;
+    void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
+                             void *scratchPtr, int64_t &worksize) {
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
+            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+            /* void *const */ scratchPtr,
+            /* int64_t */ worksize));
     }
 
   private:
@@ -163,28 +162,6 @@ class MPSCutnBase : public MPSBase<Precision, Derived> {
             reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
             /* cudaDataType_t */ typeData_,
             /*  cutensornetState_t * */ &quantumState_));
-
-        for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            // Convert datatype of sitesExtents to int64 as required by
-            // cutensornet backend
-            std::vector<int64_t> siteExtents_int64(
-                BaseType::getSitesExtents()[i].size());
-            std::transform(BaseType::getSitesExtents()[i].begin(),
-                           BaseType::getSitesExtents()[i].end(),
-                           siteExtents_int64.begin(),
-                           [](size_t x) { return static_cast<int64_t>(x); });
-
-            sitesExtents_int64_.push_back(siteExtents_int64);
-            sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
-
-            // construct mps tensors reprensentation
-            tensors_.emplace_back(BaseType::getSitesModes()[i].size(),
-                                  BaseType::getSitesModes()[i],
-                                  BaseType::getSitesExtents()[i], dev_tag_);
-
-            tensorsDataPtr_.push_back(
-                static_cast<void *>(tensors_[i].getDataBuffer().getData()));
-        }
     }
 };
-} // namespace Pennylane::LightningTensor::MPS::Cutn
+} // namespace Pennylane::LightningTensor::Cutn

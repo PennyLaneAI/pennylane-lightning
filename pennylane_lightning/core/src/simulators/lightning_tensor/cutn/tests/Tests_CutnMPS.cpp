@@ -33,7 +33,7 @@
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::Util;
-using namespace Pennylane::LightningTensor::MPS::Cutn;
+using namespace Pennylane::LightningTensor::Cutn;
 
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
@@ -68,7 +68,6 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates()", "[MPSCutn]", float, double) {
 
         std::vector<size_t> basisState = {0, 1, 1};
         sv.setBasisState(basisState);
-
         std::vector<std::complex<TestType>> expected_state(
             size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 

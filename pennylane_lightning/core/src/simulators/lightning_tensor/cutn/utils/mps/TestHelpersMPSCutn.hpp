@@ -22,11 +22,11 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningTensor::MPS::Cutn;
+using namespace Pennylane::LightningTensor::Cutn;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor::MPS::Cutn::Util {
+namespace Pennylane::LightningTensor::Cutn::Util {
 template <class MPS> struct MPSToName;
 
 template <> struct MPSToName<MPSCutn<float>> {

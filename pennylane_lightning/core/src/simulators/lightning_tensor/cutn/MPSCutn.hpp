@@ -27,11 +27,13 @@
 #include <cuda.h>
 #include <cutensornet.h>
 
+#include <iostream>
+
 #include "CudaTensor.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
-#include "MPSCutnBase.hpp"
-#include "TensorBase.hpp"
+#include "CutnBase.hpp"
+#include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
 #include "cutnError.hpp"
 #include "cutn_helpers.hpp"
@@ -40,7 +42,6 @@
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningTensor::MPS;
 using namespace Pennylane::LightningTensor::Cutn;
 using namespace Pennylane::LightningTensor::Cutn::Util;
 
@@ -60,7 +61,7 @@ std::size_t getScratchMemorySize() {
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor::MPS::Cutn {
+namespace Pennylane::LightningTensor::Cutn {
 
 /**
  * @brief Managed memory CUDA MPS class using cutensornet high-level APIs
@@ -70,10 +71,20 @@ namespace Pennylane::LightningTensor::MPS::Cutn {
  */
 
 template <class Precision>
-class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
+class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
-    using BaseType = MPSCutnBase<Precision, MPSCutn>;
+    using BaseType = CutnBase<Precision, MPSCutn>;
     bool FinalMPSFactorization_flag = false;
+
+    size_t maxExtent_;
+
+    std::vector<std::vector<size_t>> sitesModes_;
+    std::vector<std::vector<size_t>> sitesExtents_;
+
+    std::vector<std::vector<int64_t>> sitesExtents_int64_;
+    std::vector<int64_t *> sitesExtentsPtr_int64_;
+    std::vector<void *> tensorsDataPtr_;
+    std::vector<CudaTensor<Precision>> tensors_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -83,13 +94,76 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
     MPSCutn() = delete;
 
     explicit MPSCutn(const size_t numQubits, const size_t maxExtent)
-        : BaseType(numQubits, maxExtent) {}
+        : BaseType(numQubits), maxExtent_(maxExtent) {
+            initHelper_();
+        }
 
     explicit MPSCutn(const size_t numQubits, const size_t maxExtent,
                      DevTag<int> &dev_tag)
-        : BaseType(numQubits, maxExtent, dev_tag) {}
+        : BaseType(numQubits, dev_tag), maxExtent_(maxExtent) {
+            initHelper_();
+        }
 
     ~MPSCutn() final = default;
+
+
+    /**
+     * @brief Get the max bond dimension.
+     *
+     * @return std::size_t
+     */
+    [[nodiscard]] auto getMaxExtent() const -> size_t { return maxExtent_; };
+
+    /**
+     * @brief Get modes of each sites
+     *
+     * @return const std::vector<std::vector<size_t>> &
+     */
+    [[nodiscard]] auto getSitesModes() const
+        -> const std::vector<std::vector<size_t>> & {
+        return sitesModes_;
+    };
+
+    /**
+     * @brief Get extents of each sites
+     *
+     * @return const std::vector<std::vector<size_t>> &
+     */
+    [[nodiscard]] auto getSitesExtents() const
+        -> const std::vector<std::vector<size_t>> & {
+        return sitesExtents_;
+    };
+
+    /**
+     * @brief Get a vector of pointers to extents of each site
+     *
+     * @return sitesExtentsPtr_int64_ std::vector<int64_t *> Note int64_t is
+     * required by cutensornet backend.
+     */
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> & {
+        return sitesExtentsPtr_int64_;
+    }
+
+    /**
+     * @brief Get reference to the tensor of ith site
+     *
+     * @return std::vector<CudaTensor<Precision>> &.
+     */
+    [[nodiscard]] auto getSitesTensors()
+        -> std::vector<CudaTensor<Precision>> & {
+        return tensors_;
+    }
+
+    /**
+     * @brief Get a vector of pointers to tensor data of each site
+     *
+     * @return tensorsDataPtr_ std::vector<void *> Note void is required by
+     * cutensornet backend.
+     */
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> & {
+        return tensorsDataPtr_;
+    }
+
 
     /**
      * @brief Set a zero state
@@ -120,9 +194,9 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
 
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
-
+        
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            BaseType::getSitesTensors()[i].getDataBuffer().zeroInit();
+            tensors_[i].getDataBuffer().zeroInit();
             size_t target = 0;
             size_t idx = BaseType::getNumQubits() - size_t{1} - i;
 
@@ -130,18 +204,17 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             if (i == 0) {
                 target = basisState[idx];
             } else {
-                target = basisState[idx] == 0 ? 0 : BaseType::getMaxExtent();
+                target = basisState[idx] == 0 ? 0 : maxExtent_;
             }
 
-            PL_CUDA_IS_SUCCESS(cudaMemcpy(&BaseType::getSitesTensors()[i]
+            PL_CUDA_IS_SUCCESS(cudaMemcpy(&tensors_[i]
                                                .getDataBuffer()
                                                .getData()[target],
                                           &value_cu, sizeof(CFP_t),
                                           cudaMemcpyHostToDevice));
         }
 
-        updateQuantumStateMPS_(BaseType::getSitesExtentsPtr().data(),
-                            BaseType::getTensorsDataPtr().data());
+        updateQuantumStateMPS_(getSitesExtentsPtr().data(), getTensorsDataPtr().data());
     };
 
     /**
@@ -186,42 +259,53 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
     }
 
   private:
-    /**
-     * @brief Get the memory size used for a work space
-     *
-     * @return size_t Memory size
-     */
-    size_t getWorkSpaceMemorySize_(cutensornetWorkspaceDescriptor_t &workDesc) {
-        int64_t worksize{0};
+    void initHelper_() {
+        // Configure extents for each sites
+        for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<size_t> localSiteModes;
+            std::vector<size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteModes = std::vector<size_t>({i, i + BaseType::getNumQubits()});
+                localSiteExtents =
+                    std::vector<size_t>({BaseType::getQubitDims()[i], maxExtent_});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteModes = std::vector<size_t>({i + BaseType::getNumQubits() - 1, i});
+                localSiteExtents =
+                    std::vector<size_t>({maxExtent_, BaseType::getQubitDims()[i]});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteModes = std::vector<size_t>(
+                    {i + BaseType::getNumQubits() - 1, i, i + BaseType::getNumQubits()});
+                localSiteExtents = std::vector<size_t>(
+                    {maxExtent_, BaseType::getQubitDims()[i], maxExtent_});
+            }
+            sitesExtents_.push_back(localSiteExtents);
+            sitesModes_.push_back(localSiteModes);
+        }
 
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetWorksizePref_t */
-            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /*  int64_t * */ &worksize));
+        for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            // Convert datatype of sitesExtents to int64 as required by
+            // cutensornet backend
+            std::vector<int64_t> siteExtents_int64(
+                sitesExtents_[i].size());
+            std::transform(sitesExtents_[i].begin(),
+                           sitesExtents_[i].end(),
+                           siteExtents_int64.begin(),
+                           [](size_t x) { return static_cast<int64_t>(x); });
 
-        return worksize;
-    }
+            sitesExtents_int64_.push_back(siteExtents_int64);
+            sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
 
-    /**
-     * @brief Set the memory for a work space
-     *
-     * @param workDesc cutensornet work space descriptor
-     * @param scratchPtr Pointer to scratch memory
-     * @param worksize Memory size of a work space
-     */
-    void setWorkSpaceMemory_(cutensornetWorkspaceDescriptor_t &workDesc,
-                             void *scratchPtr, int64_t &worksize) {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* void *const */ scratchPtr,
-            /* int64_t */ worksize));
+            // construct mps tensors reprensentation
+            tensors_.emplace_back(sitesModes_[i].size(),
+                                  sitesModes_[i],
+                                  sitesExtents_[i], BaseType::getDevTag());
+
+            tensorsDataPtr_.push_back(
+                static_cast<void *>(tensors_[i].getDataBuffer().getData()));
+        }
     }
 
     /**
@@ -264,7 +348,7 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
-        int64_t worksize = this->getWorkSpaceMemorySize_(workDesc);
+        int64_t worksize = BaseType::getWorkSpaceMemorySize(workDesc);
 
         // Ensure data is aligned by 256 bytes
         worksize += int64_t{256} - worksize % int64_t{256};
@@ -276,7 +360,7 @@ class MPSCutn final : public MPSCutnBase<Precision, MPSCutn<Precision>> {
         DataBuffer<size_t, int> d_scratch(d_scratch_length,
                                           BaseType::getDevTag(), true);
 
-        this->setWorkSpaceMemory_(
+        BaseType::setWorkSpaceMemory(
             workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
