@@ -343,7 +343,7 @@ static std::pair<int, int> getGPUArch(int device_number = 0) {
  *
  * @return size_t
  */
-std::size_t getFreeMemorySize() {
+inline std::size_t getFreeMemorySize() {
     std::size_t freeBytes{0}, totalBytes{0};
     PL_CUDA_IS_SUCCESS(cudaMemGetInfo(&freeBytes, &totalBytes));
     return freeBytes;
