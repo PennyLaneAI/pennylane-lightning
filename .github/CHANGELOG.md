@@ -31,6 +31,9 @@ Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux
 
 ### New features since last release
 
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
+
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
 
