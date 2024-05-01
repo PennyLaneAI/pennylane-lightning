@@ -13,11 +13,11 @@ on:
   push:
     branches:
       - master
-  #pull_request:
-  #  paths:
-  #    - .github/workflows/tests_windows_cpp.yml
-  #    - pennylane_lightning/core/src/**
-  #    - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+  pull_request:
+    paths:
+      - .github/workflows/tests_windows_cpp.yml
+      - pennylane_lightning/core/src/**
+      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
 
 concurrency:
   group: tests_windows_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
