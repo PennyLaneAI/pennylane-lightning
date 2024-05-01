@@ -38,4 +38,4 @@ template <> struct MPSToName<MPSCutn<double>> {
 
 using TestMPSBackends =
     Pennylane::Util::TypeList<MPSCutn<float>, MPSCutn<double>, void>;
-} // namespace Pennylane::LightningTensor::MPS::Cutn::Util
+} // namespace Pennylane::LightningTensor::Cutn::Util

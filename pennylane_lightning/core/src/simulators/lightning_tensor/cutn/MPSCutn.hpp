@@ -30,9 +30,9 @@
 #include <iostream>
 
 #include "CudaTensor.hpp"
+#include "CutnBase.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
-#include "CutnBase.hpp"
 #include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
 #include "cutnError.hpp"
@@ -44,27 +44,13 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor::Cutn;
 using namespace Pennylane::LightningTensor::Cutn::Util;
-
-/**
- * @brief Get scratch memory size
- *
- * @return  Scratch memory size size_t
- */
-std::size_t getScratchMemorySize() {
-    std::size_t freeBytes{0}, totalBytes{0};
-    PL_CUDA_IS_SUCCESS(cudaMemGetInfo(&freeBytes, &totalBytes));
-    // Set scratchSize as half of freeBytes
-    // TODO this magic number here should be optimized in the future
-    std::size_t scratchSize = freeBytes / 2;
-    return scratchSize;
-}
 } // namespace
 /// @endcond
 
 namespace Pennylane::LightningTensor::Cutn {
 
 /**
- * @brief Managed memory CUDA MPS class using cutensornet high-level APIs
+ * @brief Managed memory MPS class using cutensornet high-level APIs
  * backed.
  *
  * @tparam Precision Floating-point precision type.
@@ -74,9 +60,8 @@ template <class Precision>
 class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
     using BaseType = CutnBase<Precision, MPSCutn>;
-    bool FinalMPSFactorization_flag = false;
 
-    size_t maxExtent_;
+    size_t maxBondDim_;
 
     std::vector<std::vector<size_t>> sitesModes_;
     std::vector<std::vector<size_t>> sitesExtents_;
@@ -93,26 +78,25 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   public:
     MPSCutn() = delete;
 
-    explicit MPSCutn(const size_t numQubits, const size_t maxExtent)
-        : BaseType(numQubits), maxExtent_(maxExtent) {
-            initHelper_();
-        }
+    explicit MPSCutn(const size_t numQubits, const size_t maxBondDim)
+        : BaseType(numQubits), maxBondDim_(maxBondDim) {
+        initHelper_();
+    }
 
-    explicit MPSCutn(const size_t numQubits, const size_t maxExtent,
+    explicit MPSCutn(const size_t numQubits, const size_t maxBondDim,
                      DevTag<int> &dev_tag)
-        : BaseType(numQubits, dev_tag), maxExtent_(maxExtent) {
-            initHelper_();
-        }
+        : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim) {
+        initHelper_();
+    }
 
     ~MPSCutn() final = default;
-
 
     /**
      * @brief Get the max bond dimension.
      *
      * @return std::size_t
      */
-    [[nodiscard]] auto getMaxExtent() const -> size_t { return maxExtent_; };
+    [[nodiscard]] auto getMaxBondDim() const -> size_t { return maxBondDim_; };
 
     /**
      * @brief Get modes of each sites
@@ -164,13 +148,12 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
         return tensorsDataPtr_;
     }
 
-
     /**
      * @brief Set a zero state
      */
     void reset() {
         const std::vector<size_t> zeroState(BaseType::getNumQubits(), 0);
-        this->setBasisState(zeroState);
+        setBasisState(zeroState);
     }
 
     /**
@@ -192,9 +175,14 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
                     "Please ensure all elements of a basis state should be "
                     "either 0 or 1.");
 
+        PL_ABORT_IF(this->MPSInitialized_ == true,
+                    "setBasisState() can be called only once.");
+
+        this->MPSInitialized_ = true;
+
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
-        
+
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
             size_t target = 0;
@@ -204,17 +192,16 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             if (i == 0) {
                 target = basisState[idx];
             } else {
-                target = basisState[idx] == 0 ? 0 : maxExtent_;
+                target = basisState[idx] == 0 ? 0 : maxBondDim_;
             }
 
-            PL_CUDA_IS_SUCCESS(cudaMemcpy(&tensors_[i]
-                                               .getDataBuffer()
-                                               .getData()[target],
-                                          &value_cu, sizeof(CFP_t),
-                                          cudaMemcpyHostToDevice));
+            PL_CUDA_IS_SUCCESS(
+                cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
+                           &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
 
-        updateQuantumStateMPS_(getSitesExtentsPtr().data(), getTensorsDataPtr().data());
+        updateQuantumStateMPS_(getSitesExtentsPtr().data(),
+                               getTensorsDataPtr().data());
     };
 
     /**
@@ -228,10 +215,13 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * std::vector<ComplexT>
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        PL_ABORT_IF_NOT(FinalMPSFactorization_flag == false,
+        PL_ABORT_IF_NOT(this->MPSFinalized_ == false,
                         "getDataVector() method to return the full state "
                         "vector can't be called "
                         "after cutensornetStateFinalizeMPS is called");
+
+        this->MPSFinalized_ = true;
+
         // 1D representation
         std::vector<size_t> output_modes(size_t{1}, size_t{1});
         std::vector<size_t> output_extent(
@@ -250,7 +240,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             static_cast<int64_t>(size_t{1} << BaseType::getNumQubits()));
         output_extentsPtr.emplace_back(extent_int64.data());
 
-        computeState_(output_extentsPtr, output_tensorPtr);
+        BaseType::computeState(output_extentsPtr, output_tensorPtr);
 
         std::vector<ComplexT> results(output_extent.front());
         output_tensor.CopyGpuDataToHost(results.data(), results.size());
@@ -266,20 +256,23 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             std::vector<size_t> localSiteExtents;
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
-                localSiteModes = std::vector<size_t>({i, i + BaseType::getNumQubits()});
-                localSiteExtents =
-                    std::vector<size_t>({BaseType::getQubitDims()[i], maxExtent_});
+                localSiteModes =
+                    std::vector<size_t>({i, i + BaseType::getNumQubits()});
+                localSiteExtents = std::vector<size_t>(
+                    {BaseType::getQubitDims()[i], maxBondDim_});
             } else if (i == BaseType::getNumQubits() - 1) {
                 // Rightmost site (shared mode, state mode)
-                localSiteModes = std::vector<size_t>({i + BaseType::getNumQubits() - 1, i});
-                localSiteExtents =
-                    std::vector<size_t>({maxExtent_, BaseType::getQubitDims()[i]});
+                localSiteModes =
+                    std::vector<size_t>({i + BaseType::getNumQubits() - 1, i});
+                localSiteExtents = std::vector<size_t>(
+                    {maxBondDim_, BaseType::getQubitDims()[i]});
             } else {
                 // Interior sites (state mode, state mode, shared mode)
-                localSiteModes = std::vector<size_t>(
-                    {i + BaseType::getNumQubits() - 1, i, i + BaseType::getNumQubits()});
+                localSiteModes =
+                    std::vector<size_t>({i + BaseType::getNumQubits() - 1, i,
+                                         i + BaseType::getNumQubits()});
                 localSiteExtents = std::vector<size_t>(
-                    {maxExtent_, BaseType::getQubitDims()[i], maxExtent_});
+                    {maxBondDim_, BaseType::getQubitDims()[i], maxBondDim_});
             }
             sitesExtents_.push_back(localSiteExtents);
             sitesModes_.push_back(localSiteModes);
@@ -288,10 +281,8 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
         for (size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // Convert datatype of sitesExtents to int64 as required by
             // cutensornet backend
-            std::vector<int64_t> siteExtents_int64(
-                sitesExtents_[i].size());
-            std::transform(sitesExtents_[i].begin(),
-                           sitesExtents_[i].end(),
+            std::vector<int64_t> siteExtents_int64(sitesExtents_[i].size());
+            std::transform(sitesExtents_[i].begin(), sitesExtents_[i].end(),
                            siteExtents_int64.begin(),
                            [](size_t x) { return static_cast<int64_t>(x); });
 
@@ -299,8 +290,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
 
             // construct mps tensors reprensentation
-            tensors_.emplace_back(sitesModes_[i].size(),
-                                  sitesModes_[i],
+            tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                   sitesExtents_[i], BaseType::getDevTag());
 
             tensorsDataPtr_.push_back(
@@ -316,7 +306,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * @param tensorsIn Pointer to tensors provided by a user
      */
     void updateQuantumStateMPS_(const int64_t *const *extentsIn,
-                             void **tensorsIn) {
+                                void **tensorsIn) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t*/ BaseType::getCutnHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
@@ -326,54 +316,5 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             /*const int64_t *const*/ nullptr,
             /*void **/ tensorsIn));
     }
-
-    /**
-     * @brief Save quantumState information to data provided by a user
-     *
-     * @param extentsPtr Extents of each sites
-     * @param tensorPtr Pointer to tensors provided by a user
-     */
-    void computeState_(std::vector<int64_t *> &extentsPtr,
-                       std::vector<void *> &tensorPtr) {
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
-            BaseType::getCutnHandle(), &workDesc));
-
-        const std::size_t scratchSize = getScratchMemorySize();
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /*  cudaStream_t unused in v24.03*/ 0x0));
-
-        int64_t worksize = BaseType::getWorkSpaceMemorySize(workDesc);
-
-        // Ensure data is aligned by 256 bytes
-        worksize += int64_t{256} - worksize % int64_t{256};
-
-        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
-                    "Insufficient workspace size on Device!");
-
-        const std::size_t d_scratch_length = worksize / sizeof(size_t);
-        DataBuffer<size_t, int> d_scratch(d_scratch_length,
-                                          BaseType::getDevTag(), true);
-
-        BaseType::setWorkSpaceMemory(
-            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            /* const cutensornetHandle_t */ BaseType::getCutnHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ extentsPtr.data(),
-            /* int64_t *stridesOut */ nullptr,
-            /* void * */ tensorPtr.data(),
-            /* cudaStream_t */ BaseType::getDevTag().getStreamID()));
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
-    }
 };
-} // namespace Pennylane::LightningTensor::MPS::Cutn
+} // namespace Pennylane::LightningTensor::Cutn

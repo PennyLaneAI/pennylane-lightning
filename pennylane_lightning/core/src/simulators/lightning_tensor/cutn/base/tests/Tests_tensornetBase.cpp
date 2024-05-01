@@ -32,16 +32,16 @@ template <typename TypeList> void testMPSBase() {
         using MPST = typename TypeList::Type;
 
         const size_t num_qubits = 4;
-        const std::size_t maxExtent = 2;
-        std::vector<size_t> qubitDims = {2,2,2,2};
+        const std::size_t maxBondDim = 2;
+        std::vector<size_t> qubitDims = {2, 2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
-        MPST sv{num_qubits, maxExtent, dev_tag};
+        MPST sv{num_qubits, maxBondDim, dev_tag};
 
         DYNAMIC_SECTION("Methods implemented in the base class - "
                         << MPSToName<MPST>::name) {
             REQUIRE(sv.getNumQubits() == 4);
-            REQUIRE(sv.getMaxExtent() == 2);
+            REQUIRE(sv.getMaxBondDim() == 2);
             REQUIRE(sv.getQubitDims() == qubitDims);
         }
         testMPSBase<typename TypeList::Next>();

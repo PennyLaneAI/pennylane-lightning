@@ -29,6 +29,7 @@
 #include "CudaTensor.hpp"
 #include "TensorBase.hpp"
 #include "TensornetBase.hpp"
+#include "cuda_helpers.hpp"
 #include "cutnError.hpp"
 #include "cutn_helpers.hpp"
 
@@ -45,10 +46,12 @@ namespace Pennylane::LightningTensor::Cutn {
 
 template <class Precision, class Derived>
 class CutnBase : public TensornetBase<Precision, Derived> {
-  private:
-    using BaseType = TensornetBase<Precision, Derived>;
+  protected:
+    bool MPSInitialized_ = false;
+    bool MPSFinalized_ = false;
 
   private:
+    using BaseType = TensornetBase<Precision, Derived>;
     SharedCutnHandle handle_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
@@ -67,7 +70,8 @@ class CutnBase : public TensornetBase<Precision, Derived> {
         initHelper_();
     }
 
-    CutnBase(const size_t numQubits, int device_id = 0, cudaStream_t stream_id = 0)
+    CutnBase(const size_t numQubits, int device_id = 0,
+             cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_({device_id, stream_id}) {
         initHelper_();
@@ -104,7 +108,6 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      */
     [[nodiscard]] auto getDevTag() -> DevTag<int> & { return dev_tag_; }
 
-
     /**
      * @brief Get the memory size used for a work space
      *
@@ -133,7 +136,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      * @param worksize Memory size of a work space
      */
     void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                             void *scratchPtr, int64_t &worksize) {
+                            void *scratchPtr, int64_t &worksize) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             /* const cutensornetHandle_t */ getCutnHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
@@ -141,6 +144,56 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
             /* void *const */ scratchPtr,
             /* int64_t */ worksize));
+    }
+
+    /**
+     * @brief Save quantumState information to data provided by a user
+     *
+     * @param extentsPtr Extents of each sites
+     * @param tensorPtr Pointer to tensors provided by a user
+     */
+    void computeState(std::vector<int64_t *> &extentsPtr,
+                      std::vector<void *> &tensorPtr) {
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateWorkspaceDescriptor(getCutnHandle(), &workDesc));
+
+        // TODO we assign half (magic number is) of free memory size to the
+        // maximum memory usage.
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused in v24.03*/ 0x0));
+
+        int64_t worksize = getWorkSpaceMemorySize(workDesc);
+
+        // Ensure data is aligned by 256 bytes
+        worksize += int64_t{256} - worksize % int64_t{256};
+
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t);
+        DataBuffer<size_t, int> d_scratch(d_scratch_length, getDevTag(), true);
+
+        setWorkSpaceMemory(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ extentsPtr.data(),
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ tensorPtr.data(),
+            /* cudaStream_t */ getDevTag().getStreamID()));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 
   private:
