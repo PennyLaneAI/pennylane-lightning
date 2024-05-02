@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Added support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
+* Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
   [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)
 
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
