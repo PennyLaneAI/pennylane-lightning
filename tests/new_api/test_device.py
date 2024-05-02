@@ -456,6 +456,26 @@ class TestExecution:
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
+    @pytest.mark.parametrize("wires, wire_order", [(3, (0,1,2)), (("a", "b", "c"), ("a", "b", "c"))])
+    def test_probs_different_wire_orders(self, wires, wire_order):
+        """Test that measuring probabilities works with custom wires."""
+
+        dev = LightningDevice(wires=wires)
+
+        op = qml.Hadamard(wire_order[1])
+
+        tape = QuantumScript([op], [qml.probs(wires=(wire_order[0], wire_order[1]))])
+
+        res = dev.execute(tape)
+        assert qml.math.allclose(res, np.array([0.5, 0.5, 0.0, 0.0]))
+
+        tape2 = QuantumScript([op], [qml.probs(wires=(wire_order[1], wire_order[2]))])
+        res2 = dev.execute(tape2)
+        assert qml.math.allclose(res2, np.array([0.5, 0.0, 0.5, 0.0]))
+
+        tape3 = QuantumScript([op], [qml.probs(wires=(wire_order[1], wire_order[0]))])
+        res3 = dev.execute(tape3)
+        assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
 
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
