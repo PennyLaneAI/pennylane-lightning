@@ -8,7 +8,7 @@
 * `lightning.kokkos` supports mid-circuit measurements.
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
-* Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
+* Add dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` for both C++ and Python layer.
   [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * `lightning.qubit` supports mid-circuit measurements.
@@ -26,7 +26,7 @@
 * Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
   [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
 
-* Add LightningAdjointJacobian to support `lightning.qubit2`.
+* Add `LightningAdjointJacobian` to support `lightning.qubit2`.
   [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
 
 * Add `lightning.qubit2` device which uses the new device API.
@@ -65,7 +65,7 @@
 
 ### Improvements
 
-* Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for LKokkos wheels.
+* Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for `lightning.kokkos` wheels.
   [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
 
 * Replace string comparisons by `isinstance` checks where possible.
@@ -106,13 +106,13 @@
 ### Bug fixes
 
 * `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit`'s `simulate` is modified accordingly.
-  [(#694)](https://github.com/PennyLaneAI/pennylane/pull/694)
+  [(#694)](https://github.com/PennyLaneAI/pennylane-lightning/pull/694)
 
 * `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
-  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+  [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
 * `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
-  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+  [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
