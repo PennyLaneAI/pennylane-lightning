@@ -307,17 +307,10 @@ class LightningMeasurements:
         """
         # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
         mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
-        skip_measure = (
-            any(v == -1 for v in mid_measurements.values()) if mid_measurements else False
-        )
-
         groups, indices = _group_measurements(mps)
 
         all_res = []
         for group in groups:
-            if skip_measure:
-                all_res.extend([None] * len(group))
-                continue
             if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
                 group[0].obs, SparseHamiltonian
             ):
@@ -399,7 +392,6 @@ class LightningMeasurements:
                 res = mp.process_samples(samples, wires)
                 if not isinstance(mp, CountsMP):
                     res = qml.math.squeeze(res)
-
                 processed.append(res)
 
             return tuple(processed)

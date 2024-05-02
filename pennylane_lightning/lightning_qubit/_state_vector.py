@@ -263,9 +263,7 @@ class LightningStateVector:
         circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
         sample = LightningMeasurements(self).measure_final_state(circuit)
         sample = np.squeeze(sample)
-        if operation.postselect is not None and sample != operation.postselect:
-            mid_measurements[operation] = -1
-            return
+        print(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
         if operation.reset and bool(sample):

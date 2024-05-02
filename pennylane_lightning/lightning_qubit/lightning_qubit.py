@@ -78,11 +78,23 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     state.reset_state()
     has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
     if circuit.shots and has_mcm:
-        mid_measurements = {}
-        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
-        return LightningMeasurements(final_state, **mcmc).measure_final_state(
-            circuit, mid_measurements=mid_measurements
+        results = []
+        aux_circ = qml.tape.QuantumScript(
+            circuit.operations,
+            circuit.measurements,
+            shots=[1],
+            trainable_params=circuit.trainable_params,
         )
+        for _ in circuit.shots:
+            mid_measurements = {}
+            state.reset_state()
+            final_state = state.get_final_state(aux_circ, mid_measurements=mid_measurements)
+            results.append(
+                LightningMeasurements(final_state, **mcmc).measure_final_state(
+                    aux_circ, mid_measurements=mid_measurements
+                )
+            )
+        return tuple(results)
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
