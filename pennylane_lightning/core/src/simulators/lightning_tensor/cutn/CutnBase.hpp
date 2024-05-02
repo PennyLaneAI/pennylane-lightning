@@ -64,13 +64,13 @@ class CutnBase : public TensornetBase<Precision, Derived> {
   public:
     CutnBase() = delete;
 
-    CutnBase(const size_t numQubits, DevTag<int> &dev_tag)
+    CutnBase(const std::size_t numQubits, DevTag<int> &dev_tag)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_(dev_tag) {
         initHelper_();
     }
 
-    CutnBase(const size_t numQubits, int device_id = 0,
+    CutnBase(const std::size_t numQubits, int device_id = 0,
              cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_({device_id, stream_id}) {
@@ -112,9 +112,9 @@ class CutnBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Get the memory size used for a work space
      *
-     * @return size_t
+     * @return std::size_t
      */
-    size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
+    std::size_t getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
         int64_t worksize{0};
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
@@ -178,8 +178,8 @@ class CutnBase : public TensornetBase<Precision, Derived> {
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");
 
-        const std::size_t d_scratch_length = worksize / sizeof(size_t);
-        DataBuffer<size_t, int> d_scratch(d_scratch_length, getDevTag(), true);
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(), true);
 
         setWorkSpaceMemory(
             workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);

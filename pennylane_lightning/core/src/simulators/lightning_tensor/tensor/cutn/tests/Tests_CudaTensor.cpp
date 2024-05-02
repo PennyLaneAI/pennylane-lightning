@@ -43,18 +43,18 @@ TEMPLATE_PRODUCT_TEST_CASE("CudaTensor::Constructibility",
 
     SECTION("TensorT<TestType>") { REQUIRE(!std::is_constructible_v<TensorT>); }
     SECTION(
-        "TensorT<TestType> {const size_t, const std::vector<size_t> &, const "
-        "std::vector<size_t>&, DevTag<int> &}") {
+        "TensorT<TestType> {const std::size_t, const std::vector<std::size_t> &, const "
+        "std::vector<std::size_t>&, DevTag<int> &}") {
         REQUIRE(std::is_constructible_v<
-                TensorT, const size_t, const std::vector<size_t> &,
-                const std::vector<size_t> &, DevTag<int> &>);
+                TensorT, const std::size_t, const std::vector<std::size_t> &,
+                const std::vector<std::size_t> &, DevTag<int> &>);
     }
 }
 
 TEMPLATE_TEST_CASE("CudaTensor::baseMethods", "[CudaTensor]", float, double) {
     const std::size_t rank = 3;
     const std::vector<std::size_t> modes = {0, 1, 2};
-    const std::vector<size_t> extents = {2, 2, 2};
+    const std::vector<std::size_t> extents = {2, 2, 2};
     const size_t length = 8;
     DevTag<int> dev_tag{0, 0};
 

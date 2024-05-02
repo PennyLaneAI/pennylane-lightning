@@ -33,14 +33,14 @@ namespace Pennylane::LightningTensor {
  */
 template <class PrecisionT, class Derived> class TensorBase {
   private:
-    size_t rank_;                 // A rank N tensor has N modes
-    size_t length_;               // Number of elements
-    std::vector<size_t> modes_;   // modes for contraction identify
-    std::vector<size_t> extents_; // Number of elements in each mode
+    std::size_t rank_;                 // A rank N tensor has N modes
+    std::size_t length_;               // Number of elements
+    std::vector<std::size_t> modes_;   // modes for contraction identify
+    std::vector<std::size_t> extents_; // Number of elements in each mode
 
   public:
-    TensorBase(size_t rank, const std::vector<size_t> &modes,
-               const std::vector<size_t> &extents)
+    TensorBase(std::size_t rank, const std::vector<std::size_t> &modes,
+               const std::vector<std::size_t> &extents)
         : rank_(rank), modes_(modes), extents_(extents) {
         PL_ABORT_IF(rank_ != extents_.size(),
                     "Please check if rank or extents are set correctly.");
@@ -55,33 +55,33 @@ template <class PrecisionT, class Derived> class TensorBase {
     /**
      * @brief Return the rank of a tensor object.
      *
-     * @return size_t Rank of a tensor object.
+     * @return std::size_t Rank of a tensor object.
      */
-    [[nodiscard]] auto getRank() const -> size_t { return rank_; }
+    [[nodiscard]] auto getRank() const -> std::size_t { return rank_; }
 
     /**
      * @brief Return the extents of a tensor object.
      *
-     * @return std::vector<size_t> Extents of a tensor object.
+     * @return std::vector<std::size_t> Extents of a tensor object.
      */
-    [[nodiscard]] auto getExtents() const -> const std::vector<size_t> & {
+    [[nodiscard]] auto getExtents() const -> const std::vector<std::size_t> & {
         return extents_;
     }
 
     /**
      * @brief Return the modes of a tensor object.
      *
-     * @return std::vector<size_t> Modes of a tensor object.
+     * @return std::vector<std::size_t> Modes of a tensor object.
      */
-    [[nodiscard]] auto getModes() const -> const std::vector<size_t> & {
+    [[nodiscard]] auto getModes() const -> const std::vector<std::size_t> & {
         return modes_;
     };
 
     /**
      * @brief Return the number of elements of a tensor object.
      *
-     * @return std::vector<size_t> Number of elements of a tensor object.
+     * @return std::vector<std::size_t> Number of elements of a tensor object.
      */
-    [[nodiscard]] size_t getLength() const { return length_; }
+    [[nodiscard]] std::size_t getLength() const { return length_; }
 };
 } // namespace Pennylane::LightningTensor

@@ -26,15 +26,15 @@
 namespace Pennylane::LightningTensor::Cutn {
 template <class Precision, class Derived> class TensornetBase {
   private:
-    size_t numQubits_;
-    std::vector<size_t> qubitDims_;
+    std::size_t numQubits_;
+    std::vector<std::size_t> qubitDims_;
 
   public:
     TensornetBase() = delete;
 
-    explicit TensornetBase(const size_t numQubits) : numQubits_(numQubits) {
+    explicit TensornetBase(const std::size_t numQubits) : numQubits_(numQubits) {
         qubitDims_.resize(numQubits);
-        std::fill(qubitDims_.begin(), qubitDims_.end(), size_t{2});
+        std::fill(qubitDims_.begin(), qubitDims_.end(), std::size_t{2});
     }
 
     ~TensornetBase() = default;
@@ -42,18 +42,18 @@ template <class Precision, class Derived> class TensornetBase {
     /**
      * @brief Get dimension of each qubit
      *
-     * @return const std::vector<size_t> &
+     * @return const std::vector<std::size_t> &
      */
-    [[nodiscard]] auto getQubitDims() const -> const std::vector<size_t> & {
+    [[nodiscard]] auto getQubitDims() const -> const std::vector<std::size_t> & {
         return qubitDims_;
     };
 
     /**
      * @brief Get dimension of each qubit
      *
-     * @return std::vector<size_t> &
+     * @return std::vector<std::size_t> &
      */
-    [[nodiscard]] auto getQubitDims() -> std::vector<size_t> & {
+    [[nodiscard]] auto getQubitDims() -> std::vector<std::size_t> & {
         return qubitDims_;
     };
 
@@ -62,6 +62,6 @@ template <class Precision, class Derived> class TensornetBase {
      *
      * @return std::size_t
      */
-    [[nodiscard]] auto getNumQubits() const -> size_t { return numQubits_; };
+    [[nodiscard]] auto getNumQubits() const -> std::size_t { return numQubits_; };
 };
 } // namespace Pennylane::LightningTensor::Cutn
