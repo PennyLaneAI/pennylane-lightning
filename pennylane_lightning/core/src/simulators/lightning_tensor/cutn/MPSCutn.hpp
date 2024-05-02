@@ -58,7 +58,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
     using BaseType = CutnBase<Precision, MPSCutn>;
 
-    std::size_t maxBondDim_;
+    const std::size_t maxBondDim_;
 
     const std::vector<std::vector<std::size_t>> sitesModes_;
     const std::vector<std::vector<std::size_t>> sitesExtents_;
@@ -120,11 +120,11 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * @return std::vector<void *> Note void is required by
      * cutensornet backend.
      */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
-        std::vector<void *> tensorsDataPtr(BaseType::getNumQubits());
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
+        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensorsDataPtr[i] =
-                reinterpret_cast<void *>(tensors_[i].getDataBuffer().getData());
+                reinterpret_cast<uint64_t *>(tensors_[i].getDataBuffer().getData());
         }
         return tensorsDataPtr;
     }
@@ -327,7 +327,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * @param tensorsIn Pointer to tensors provided by a user
      */
     void updateQuantumStateMPS_(const int64_t *const *extentsIn,
-                                void **tensorsIn) {
+                                uint64_t **tensorsIn) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t*/ BaseType::getCutnHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
@@ -335,7 +335,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
             /*const int64_t *const*/ extentsIn,
             /*const int64_t *const*/ nullptr,
-            /*void **/ tensorsIn));
+            /*void **/ reinterpret_cast<void**>(tensorsIn)));
     }
 };
 } // namespace Pennylane::LightningTensor::Cutn
