@@ -17,7 +17,6 @@ This module contains the LightningQubit class that inherits from the new device 
 from dataclasses import replace
 from numbers import Number
 from pathlib import Path
-from this import d
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
