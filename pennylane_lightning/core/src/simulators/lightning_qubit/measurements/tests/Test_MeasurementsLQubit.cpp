@@ -83,17 +83,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {PauliX, PauliX, PauliX};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -105,17 +105,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 }
 
@@ -162,17 +162,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
         operations_list = {PauliX, PauliX, PauliX};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliY, PauliY, PauliY};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {PauliZ, PauliZ, PauliZ};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing list of operators defined by its name:") {
@@ -184,17 +184,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
         operations_list = {"PauliX", "PauliX", "PauliX"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.7572222, 0.8229816, 0.9202947};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliY", "PauliY", "PauliY"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.5849835, 0.7701511, 0.9126678};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
 
         operations_list = {"PauliZ", "PauliZ", "PauliZ"};
         variances = Measurer.var(operations_list, wires_list);
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
-        REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
+        CHECK_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
 }
 
@@ -216,10 +216,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
             statevector.applyOperation("Hadamard", {0}, false);
             auto p1 = Measurer.probs();
 
-            REQUIRE_THAT(
+            CHECK_THAT(
                 p0,
                 Catch::Approx(std::vector<PrecisionT>{1.0, 0.0}).margin(1e-7));
-            REQUIRE_THAT(
+            CHECK_THAT(
                 p1,
                 Catch::Approx(std::vector<PrecisionT>{0.5, 0.5}).margin(1e-7));
         }
@@ -293,19 +293,19 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p0_1 = Measurer.probs({1}, wires);
                 auto p0_perm0 = Measurer.probs({1, 0}, wires);
 
-                REQUIRE_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
-                                                        1.0, 0.0, 0.0, 0.0})
-                                          .margin(1e-7));
-                REQUIRE_THAT(p0_0,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p0_1,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
+                CHECK_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                CHECK_THAT(p0_0,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
+                CHECK_THAT(p0_1,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
 
-                REQUIRE_THAT(p0_perm0, Catch::Approx(std::vector<PrecisionT>{
-                                                         1.0, 0.0, 0.0, 0.0})
-                                           .margin(1e-7));
+                CHECK_THAT(p0_perm0, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0})
+                                         .margin(1e-7));
 
                 statevector.applyOperation("Hadamard", {0}, false);
                 auto p1_full = Measurer.probs();
@@ -313,18 +313,18 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p1_1 = Measurer.probs({1}, wires);
                 auto p1_perm0 = Measurer.probs({1, 0}, wires);
 
-                REQUIRE_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
-                                                        0.5, 0.0, 0.5, 0.0})
-                                          .margin(1e-7));
-                REQUIRE_THAT(p1_0,
-                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p1_1,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p1_perm0, Catch::Approx(std::vector<PrecisionT>{
-                                                         0.5, 0.5, 0.0, 0.0})
-                                           .margin(1e-7));
+                CHECK_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.0, 0.5, 0.0})
+                                        .margin(1e-7));
+                CHECK_THAT(p1_0,
+                           Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                               .margin(1e-7));
+                CHECK_THAT(p1_1,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
+                CHECK_THAT(p1_perm0, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.5, 0.0, 0.0})
+                                         .margin(1e-7));
 
                 statevector.applyOperation("Hadamard", {1}, false);
                 auto p2_full = Measurer.probs();
@@ -332,19 +332,18 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p2_1 = Measurer.probs({1}, wires);
                 auto p2_perm0 = Measurer.probs({1, 0}, wires);
 
-                REQUIRE_THAT(p2_full, Catch::Approx(std::vector<PrecisionT>{
-                                                        0.25, 0.25, 0.25, 0.25})
-                                          .margin(1e-7));
-                REQUIRE_THAT(p2_0,
-                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p2_1,
-                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p2_perm0,
-                             Catch::Approx(std::vector<PrecisionT>{0.25, 0.25,
-                                                                   0.25, 0.25})
-                                 .margin(1e-7));
+                CHECK_THAT(p2_full, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.25, 0.25, 0.25, 0.25})
+                                        .margin(1e-7));
+                CHECK_THAT(p2_0,
+                           Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                               .margin(1e-7));
+                CHECK_THAT(p2_1,
+                           Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                               .margin(1e-7));
+                CHECK_THAT(p2_perm0, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.25, 0.25, 0.25, 0.25})
+                                         .margin(1e-7));
             }
         }
         SECTION("3 qubits") {
@@ -379,65 +378,65 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p0_201 = Measurer.probs({2, 0, 1}, wires);
                 auto p0_210 = Measurer.probs({2, 1, 0}, wires);
 
-                REQUIRE_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
-                                                        1.0, 0.0, 0.0, 0.0, 0.0,
-                                                        0.0, 0.0, 0.0})
-                                          .margin(1e-7));
-                REQUIRE_THAT(p0_0,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p0_1,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p0_2,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
+                CHECK_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0, 0.0,
+                                                      0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                CHECK_THAT(p0_0,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
+                CHECK_THAT(p0_1,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
+                CHECK_THAT(p0_2,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
 
-                REQUIRE_THAT(p0_01, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p0_02, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p0_12, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
+                CHECK_THAT(p0_01, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p0_02, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p0_12, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
 
-                REQUIRE_THAT(p0_10, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p0_20, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p0_21, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
+                CHECK_THAT(p0_10, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p0_20, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p0_21, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
 
-                REQUIRE_THAT(p0_012, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p0_021, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p0_102, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
+                CHECK_THAT(p0_012, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p0_021, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p0_102, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
 
-                REQUIRE_THAT(p0_120, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p0_201, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p0_210, Catch::Approx(std::vector<PrecisionT>{
-                                                       1.0, 0.0, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
+                CHECK_THAT(p0_120, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p0_201, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p0_210, Catch::Approx(std::vector<PrecisionT>{
+                                                     1.0, 0.0, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
 
                 statevector.applyOperation("Hadamard", {0}, false);
 
@@ -461,65 +460,65 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p1_201 = Measurer.probs({2, 0, 1}, wires);
                 auto p1_210 = Measurer.probs({2, 1, 0}, wires);
 
-                REQUIRE_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
-                                                        0.5, 0.0, 0.0, 0.0, 0.5,
-                                                        0.0, 0.0, 0.0})
-                                          .margin(1e-7));
-                REQUIRE_THAT(p1_0,
-                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p1_1,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
-                REQUIRE_THAT(p1_2,
-                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
-                                 .margin(1e-7));
+                CHECK_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.0, 0.0, 0.0, 0.5,
+                                                      0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                CHECK_THAT(p1_0,
+                           Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                               .margin(1e-7));
+                CHECK_THAT(p1_1,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
+                CHECK_THAT(p1_2,
+                           Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                               .margin(1e-7));
 
-                REQUIRE_THAT(p1_01, Catch::Approx(std::vector<PrecisionT>{
-                                                      0.5, 0.0, 0.5, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p1_02, Catch::Approx(std::vector<PrecisionT>{
-                                                      0.5, 0.0, 0.5, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p1_12, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
+                CHECK_THAT(p1_01, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.0, 0.5, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p1_02, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.0, 0.5, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p1_12, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
 
-                REQUIRE_THAT(p1_10, Catch::Approx(std::vector<PrecisionT>{
-                                                      0.5, 0.5, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p1_20, Catch::Approx(std::vector<PrecisionT>{
-                                                      0.5, 0.5, 0.0, 0.0})
-                                        .margin(1e-7));
-                REQUIRE_THAT(p1_21, Catch::Approx(std::vector<PrecisionT>{
-                                                      1.0, 0.0, 0.0, 0.0})
-                                        .margin(1e-7));
+                CHECK_THAT(p1_10, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.5, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p1_20, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.5, 0.0, 0.0})
+                                      .margin(1e-7));
+                CHECK_THAT(p1_21, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
 
-                REQUIRE_THAT(p1_012, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.0, 0.0, 0.0, 0.5,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p1_021, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.0, 0.0, 0.0, 0.5,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p1_102, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.0, 0.5, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
+                CHECK_THAT(p1_012, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.0, 0.0, 0.0, 0.5,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p1_021, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.0, 0.0, 0.0, 0.5,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p1_102, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.0, 0.5, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
 
-                REQUIRE_THAT(p1_120, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.5, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p1_201, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.0, 0.5, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
-                REQUIRE_THAT(p1_210, Catch::Approx(std::vector<PrecisionT>{
-                                                       0.5, 0.5, 0.0, 0.0, 0.0,
-                                                       0.0, 0.0, 0.0})
-                                         .margin(1e-7));
+                CHECK_THAT(p1_120, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.5, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p1_201, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.0, 0.5, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
+                CHECK_THAT(p1_210, Catch::Approx(std::vector<PrecisionT>{
+                                                     0.5, 0.5, 0.0, 0.0, 0.0,
+                                                     0.0, 0.0, 0.0})
+                                       .margin(1e-7));
             }
         }
     }
@@ -582,8 +581,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
 
     // compare estimated probabilities to real probabilities
     SECTION("No wires provided:") {
-        REQUIRE_THAT(probabilities,
-                     Catch::Approx(expected_probabilities).margin(.05));
+        CHECK_THAT(probabilities,
+                   Catch::Approx(expected_probabilities).margin(.05));
     }
 }
 
@@ -644,7 +643,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
 
     // compare estimated probabilities to real probabilities
     SECTION("No wires provided:") {
-        REQUIRE_THAT(probabilities,
-                     Catch::Approx(expected_probabilities).margin(.05));
+        CHECK_THAT(probabilities,
+                   Catch::Approx(expected_probabilities).margin(.05));
     }
 }
