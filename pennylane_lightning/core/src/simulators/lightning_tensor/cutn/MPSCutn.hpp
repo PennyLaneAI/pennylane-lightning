@@ -246,8 +246,8 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
                 localSiteExtents = std::vector<std::size_t>(
                     {maxBondDim_, BaseType::getQubitDims()[i], maxBondDim_});
             }
-            sitesExtents_.push_back(localSiteExtents);
-            sitesModes_.push_back(localSiteModes);
+            sitesExtents_.push_back(std::move(localSiteExtents));
+            sitesModes_.push_back(std::move(localSiteModes));
         }
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
@@ -259,7 +259,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
                                return static_cast<int64_t>(x);
                            });
 
-            sitesExtents_int64_.push_back(siteExtents_int64);
+            sitesExtents_int64_.push_back(std::move(siteExtents_int64));
             sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
 
             // construct mps tensors reprensentation
