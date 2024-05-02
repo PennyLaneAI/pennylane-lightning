@@ -123,8 +123,8 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
         std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsDataPtr[i] =
-                reinterpret_cast<uint64_t *>(tensors_[i].getDataBuffer().getData());
+            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
+                tensors_[i].getDataBuffer().getData());
         }
         return tensorsDataPtr;
     }
@@ -335,7 +335,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
             /*const int64_t *const*/ extentsIn,
             /*const int64_t *const*/ nullptr,
-            /*void **/ reinterpret_cast<void**>(tensorsIn)));
+            /*void **/ reinterpret_cast<void **>(tensorsIn)));
     }
 };
 } // namespace Pennylane::LightningTensor::Cutn
