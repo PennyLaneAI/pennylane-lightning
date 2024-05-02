@@ -17,23 +17,20 @@ Array tests for Lightning devices.
 import numpy as np
 import pytest
 from conftest import LightningDevice as ld
+from conftest import device_name, lightning_ops
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import allocate_aligned_array
-except (ImportError, ModuleNotFoundError):
+if device_name == "lightning_gpu" or not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize("dt", [np.dtype(np.complex64), np.dtype(np.complex128)])
 def test_allocate_aligned_array_unset(dt):
-    arr = allocate_aligned_array(1024, dt, False)
+    arr = lightning_ops.allocate_aligned_array(1024, dt, False)
     assert arr.dtype == dt
 
 
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize("dt", [np.dtype(np.complex64), np.dtype(np.complex128)])
 def test_allocate_aligned_array_set(dt):
-    arr = allocate_aligned_array(1024, dt, True)
+    arr = lightning_ops.allocate_aligned_array(1024, dt, True)
     assert arr.dtype == dt
     assert np.all(arr == 0)
