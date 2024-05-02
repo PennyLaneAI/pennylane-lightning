@@ -145,7 +145,7 @@ class QuimbMPS:
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
 
-        self._init_state_ops = {
+        self._init_state_opts = {
             "binary": "0" * max(1, len(self._wires)),
             "dtype": self._dtype.__name__,
             "tags": [str(l) for l in self._wires.labels],
@@ -167,7 +167,7 @@ class QuimbMPS:
         self._circuitMPS = qtn.CircuitMPS(psi0=self._initial_mps())
 
     @property
-    def name_interf(self) -> str:
+    def interface_name(self) -> str:
         """The name of this interface."""
         return "QuimbMPS interface"
 
@@ -193,7 +193,7 @@ class QuimbMPS:
         Returns:
             MatrixProductState: The initial MPS of a circuit.
         """
-        return qtn.MPS_computational_state(**self._init_state_ops)
+        return qtn.MPS_computational_state(**self._init_state_opts)
 
     def preprocess(self) -> TransformProgram:
         """This function defines the device transform program to be applied for this interface.
@@ -211,14 +211,14 @@ class QuimbMPS:
 
         program = TransformProgram()
 
-        program.add_transform(validate_measurements, name=self.name_interf)
-        program.add_transform(validate_observables, accepted_observables, name=self.name_interf)
-        program.add_transform(validate_device_wires, self._wires, name=self.name_interf)
+        program.add_transform(validate_measurements, name=self.interface_name)
+        program.add_transform(validate_observables, accepted_observables, name=self.interface_name)
+        program.add_transform(validate_device_wires, self._wires, name=self.interface_name)
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
             skip_initial_state_prep=True,
-            name=self.name_interf,
+            name=self.interface_name,
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
