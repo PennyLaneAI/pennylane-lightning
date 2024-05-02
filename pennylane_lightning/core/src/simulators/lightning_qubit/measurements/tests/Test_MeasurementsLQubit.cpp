@@ -205,15 +205,10 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     SECTION("1 qubit") {
-        // Defining the State Vector that will be measured.
-        auto statevector_data = std::vector<ComplexT>{
-            {1.0, 0.0}, {0.0, 0.0}}; // createNonTrivialState<StateVectorT>();
+        auto statevector_data = std::vector<ComplexT>{{1.0, 0.0}, {0.0, 0.0}};
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        // Initializing the measurements class.
-        // This object attaches to the statevector allowing several
-        // measurements.
         Measurements<StateVectorT> Measurer(statevector);
 
         SECTION("Testing probs()") {
@@ -280,7 +275,254 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                                     .margin(1e-7));
         }
     }
-    SECTION("n-qubit") {}
+    SECTION("n-qubit") {
+        SECTION("2 qubits") {
+            SECTION("|00> state") {
+                constexpr std::size_t num_qubits = 2;
+                auto statevector_data =
+                    std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+                const std::vector<std::size_t> wires{0, 1};
+                statevector_data[0] = {1.0, 0.0};
+
+                StateVectorT statevector(statevector_data.data(),
+                                         statevector_data.size());
+                Measurements<StateVectorT> Measurer(statevector);
+
+                auto p0_full = Measurer.probs();
+                auto p0_0 = Measurer.probs({0}, wires);
+                auto p0_1 = Measurer.probs({1}, wires);
+                auto p0_perm0 = Measurer.probs({1, 0}, wires);
+
+                REQUIRE_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
+                                                        1.0, 0.0, 0.0, 0.0})
+                                          .margin(1e-7));
+                REQUIRE_THAT(p0_0,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p0_1,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+
+                REQUIRE_THAT(p0_perm0, Catch::Approx(std::vector<PrecisionT>{
+                                                         1.0, 0.0, 0.0, 0.0})
+                                           .margin(1e-7));
+
+                statevector.applyOperation("Hadamard", {0}, false);
+                auto p1_full = Measurer.probs();
+                auto p1_0 = Measurer.probs({0}, wires);
+                auto p1_1 = Measurer.probs({1}, wires);
+                auto p1_perm0 = Measurer.probs({1, 0}, wires);
+
+                REQUIRE_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.5, 0.0})
+                                          .margin(1e-7));
+                REQUIRE_THAT(p1_0,
+                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p1_1,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p1_perm0, Catch::Approx(std::vector<PrecisionT>{
+                                                         0.5, 0.5, 0.0, 0.0})
+                                           .margin(1e-7));
+
+                statevector.applyOperation("Hadamard", {1}, false);
+                auto p2_full = Measurer.probs();
+                auto p2_0 = Measurer.probs({0}, wires);
+                auto p2_1 = Measurer.probs({1}, wires);
+                auto p2_perm0 = Measurer.probs({1, 0}, wires);
+
+                REQUIRE_THAT(p2_full, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.25, 0.25, 0.25, 0.25})
+                                          .margin(1e-7));
+                REQUIRE_THAT(p2_0,
+                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p2_1,
+                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p2_perm0,
+                             Catch::Approx(std::vector<PrecisionT>{0.25, 0.25,
+                                                                   0.25, 0.25})
+                                 .margin(1e-7));
+            }
+        }
+        SECTION("3 qubits") {
+            SECTION("|000> state") {
+                constexpr std::size_t num_qubits = 3;
+                auto statevector_data =
+                    std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+                const std::vector<std::size_t> wires{0, 1, 2};
+                statevector_data[0] = {1.0, 0.0};
+
+                StateVectorT statevector(statevector_data.data(),
+                                         statevector_data.size());
+                Measurements<StateVectorT> Measurer(statevector);
+
+                auto p0_full = Measurer.probs();
+                auto p0_0 = Measurer.probs({0}, wires);
+                auto p0_1 = Measurer.probs({1}, wires);
+                auto p0_2 = Measurer.probs({2}, wires);
+
+                auto p0_01 = Measurer.probs({0, 1}, wires);
+                auto p0_02 = Measurer.probs({0, 2}, wires);
+                auto p0_12 = Measurer.probs({1, 2}, wires);
+
+                auto p0_10 = Measurer.probs({1, 0}, wires);
+                auto p0_20 = Measurer.probs({2, 0}, wires);
+                auto p0_21 = Measurer.probs({2, 1}, wires);
+
+                auto p0_012 = Measurer.probs({0, 1, 2}, wires);
+                auto p0_021 = Measurer.probs({0, 2, 1}, wires);
+                auto p0_102 = Measurer.probs({1, 0, 2}, wires);
+                auto p0_120 = Measurer.probs({1, 2, 0}, wires);
+                auto p0_201 = Measurer.probs({2, 0, 1}, wires);
+                auto p0_210 = Measurer.probs({2, 1, 0}, wires);
+
+                REQUIRE_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
+                                                        1.0, 0.0, 0.0, 0.0, 0.0,
+                                                        0.0, 0.0, 0.0})
+                                          .margin(1e-7));
+                REQUIRE_THAT(p0_0,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p0_1,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p0_2,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+
+                REQUIRE_THAT(p0_01, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p0_02, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p0_12, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+
+                REQUIRE_THAT(p0_10, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p0_20, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p0_21, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+
+                REQUIRE_THAT(p0_012, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p0_021, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p0_102, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+
+                REQUIRE_THAT(p0_120, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p0_201, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p0_210, Catch::Approx(std::vector<PrecisionT>{
+                                                       1.0, 0.0, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+
+                statevector.applyOperation("Hadamard", {0}, false);
+
+                auto p1_full = Measurer.probs();
+                auto p1_0 = Measurer.probs({0}, wires);
+                auto p1_1 = Measurer.probs({1}, wires);
+                auto p1_2 = Measurer.probs({2}, wires);
+
+                auto p1_01 = Measurer.probs({0, 1}, wires);
+                auto p1_02 = Measurer.probs({0, 2}, wires);
+                auto p1_12 = Measurer.probs({1, 2}, wires);
+
+                auto p1_10 = Measurer.probs({1, 0}, wires);
+                auto p1_20 = Measurer.probs({2, 0}, wires);
+                auto p1_21 = Measurer.probs({2, 1}, wires);
+
+                auto p1_012 = Measurer.probs({0, 1, 2}, wires);
+                auto p1_021 = Measurer.probs({0, 2, 1}, wires);
+                auto p1_102 = Measurer.probs({1, 0, 2}, wires);
+                auto p1_120 = Measurer.probs({1, 2, 0}, wires);
+                auto p1_201 = Measurer.probs({2, 0, 1}, wires);
+                auto p1_210 = Measurer.probs({2, 1, 0}, wires);
+
+                REQUIRE_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.0, 0.0, 0.5,
+                                                        0.0, 0.0, 0.0})
+                                          .margin(1e-7));
+                REQUIRE_THAT(p1_0,
+                             Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p1_1,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+                REQUIRE_THAT(p1_2,
+                             Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
+                                 .margin(1e-7));
+
+                REQUIRE_THAT(p1_01, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.0, 0.5, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p1_02, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.0, 0.5, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p1_12, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+
+                REQUIRE_THAT(p1_10, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.5, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p1_20, Catch::Approx(std::vector<PrecisionT>{
+                                                      0.5, 0.5, 0.0, 0.0})
+                                        .margin(1e-7));
+                REQUIRE_THAT(p1_21, Catch::Approx(std::vector<PrecisionT>{
+                                                      1.0, 0.0, 0.0, 0.0})
+                                        .margin(1e-7));
+
+                REQUIRE_THAT(p1_012, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.0, 0.0, 0.0, 0.5,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p1_021, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.0, 0.0, 0.0, 0.5,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p1_102, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.0, 0.5, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+
+                REQUIRE_THAT(p1_120, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.5, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p1_201, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.0, 0.5, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+                REQUIRE_THAT(p1_210, Catch::Approx(std::vector<PrecisionT>{
+                                                       0.5, 0.5, 0.0, 0.0, 0.0,
+                                                       0.0, 0.0, 0.0})
+                                         .margin(1e-7));
+            }
+        }
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
