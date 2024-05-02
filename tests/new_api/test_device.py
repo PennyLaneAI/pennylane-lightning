@@ -456,7 +456,9 @@ class TestExecution:
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
-    @pytest.mark.parametrize("wires, wire_order", [(3, (0,1,2)), (("a", "b", "c"), ("a", "b", "c"))])
+    @pytest.mark.parametrize(
+        "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
+    )
     def test_probs_different_wire_orders(self, wires, wire_order):
         """Test that measuring probabilities works with custom wires."""
 
@@ -476,6 +478,7 @@ class TestExecution:
         tape3 = QuantumScript([op], [qml.probs(wires=(wire_order[1], wire_order[0]))])
         res3 = dev.execute(tape3)
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
+
 
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
