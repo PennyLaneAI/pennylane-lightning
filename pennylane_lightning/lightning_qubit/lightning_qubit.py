@@ -108,7 +108,9 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False,
     return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
-def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
+def simulate_and_jacobian(
+    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+):
     """Simulate a single quantum script and compute its Jacobian.
 
     Args:
@@ -132,7 +134,11 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
 
 
 def vjp(
-    circuit: QuantumTape, cotangents: Tuple[Number], state: LightningStateVector, batch_obs=False, wire_map=None,
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
 ):
     """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
     Args:
@@ -160,7 +166,11 @@ def vjp(
 
 
 def simulate_and_vjp(
-    circuit: QuantumTape, cotangents: Tuple[Number], state: LightningStateVector, batch_obs=False, wire_map=None
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
 ):
     """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
     Args:
@@ -460,7 +470,7 @@ class LightningQubit(Device):
         super().__init__(wires=wires, shots=shots)
 
         if isinstance(wires, int):
-            self._wire_map = None # should just use wires as is
+            self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
@@ -631,7 +641,8 @@ class LightningQubit(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
         return tuple(
-            jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map) for circuit in circuits
+            jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            for circuit in circuits
         )
 
     def execute_and_compute_derivatives(
@@ -650,7 +661,10 @@ class LightningQubit(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_jacobian(c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map) for c in circuits
+            simulate_and_jacobian(
+                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for c in circuits
         )
         return tuple(zip(*results))
 
@@ -725,7 +739,9 @@ class LightningQubit(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            simulate_and_vjp(
+                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))
