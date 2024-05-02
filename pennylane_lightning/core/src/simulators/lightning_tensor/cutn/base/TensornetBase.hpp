@@ -32,7 +32,8 @@ template <class Precision, class Derived> class TensornetBase {
   public:
     TensornetBase() = delete;
 
-    explicit TensornetBase(const std::size_t numQubits) : numQubits_(numQubits) {
+    explicit TensornetBase(const std::size_t numQubits)
+        : numQubits_(numQubits) {
         qubitDims_.resize(numQubits);
         std::fill(qubitDims_.begin(), qubitDims_.end(), std::size_t{2});
     }
@@ -44,7 +45,8 @@ template <class Precision, class Derived> class TensornetBase {
      *
      * @return const std::vector<std::size_t> &
      */
-    [[nodiscard]] auto getQubitDims() const -> const std::vector<std::size_t> & {
+    [[nodiscard]] auto getQubitDims() const
+        -> const std::vector<std::size_t> & {
         return qubitDims_;
     };
 
@@ -62,6 +64,8 @@ template <class Precision, class Derived> class TensornetBase {
      *
      * @return std::size_t
      */
-    [[nodiscard]] auto getNumQubits() const -> std::size_t { return numQubits_; };
+    [[nodiscard]] auto getNumQubits() const -> std::size_t {
+        return numQubits_;
+    };
 };
 } // namespace Pennylane::LightningTensor::Cutn

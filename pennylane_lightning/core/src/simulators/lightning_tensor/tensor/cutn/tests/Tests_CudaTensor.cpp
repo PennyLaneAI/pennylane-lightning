@@ -42,9 +42,9 @@ TEMPLATE_PRODUCT_TEST_CASE("CudaTensor::Constructibility",
     using TensorT = TestType;
 
     SECTION("TensorT<TestType>") { REQUIRE(!std::is_constructible_v<TensorT>); }
-    SECTION(
-        "TensorT<TestType> {const std::size_t, const std::vector<std::size_t> &, const "
-        "std::vector<std::size_t>&, DevTag<int> &}") {
+    SECTION("TensorT<TestType> {const std::size_t, const "
+            "std::vector<std::size_t> &, const "
+            "std::vector<std::size_t>&, DevTag<int> &}") {
         REQUIRE(std::is_constructible_v<
                 TensorT, const std::size_t, const std::vector<std::size_t> &,
                 const std::vector<std::size_t> &, DevTag<int> &>);

@@ -47,8 +47,8 @@ class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     CudaTensor(const std::size_t rank, const std::vector<std::size_t> &modes,
-               const std::vector<std::size_t> &extents, const DevTag<int> &dev_tag,
-               bool device_alloc = true)
+               const std::vector<std::size_t> &extents,
+               const DevTag<int> &dev_tag, bool device_alloc = true)
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
@@ -63,7 +63,8 @@ class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
      * @param sv Complex data pointer to receive data from device.
      */
     inline void CopyGpuDataToHost(std::complex<PrecisionT> *host_sv,
-                                  std::size_t length, bool async = false) const {
+                                  std::size_t length,
+                                  bool async = false) const {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
         data_buffer_->CopyGpuDataToHost(host_sv, length, async);
