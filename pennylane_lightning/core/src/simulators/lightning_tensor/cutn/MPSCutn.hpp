@@ -60,12 +60,10 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
 
     std::size_t maxBondDim_;
 
-    std::vector<std::vector<std::size_t>> sitesModes_;
-    std::vector<std::vector<std::size_t>> sitesExtents_;
+    const std::vector<std::vector<std::size_t>> sitesModes_;
+    const std::vector<std::vector<std::size_t>> sitesExtents_;
+    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
 
-    std::vector<std::vector<int64_t>> sitesExtents_int64_;
-    std::vector<int64_t *> sitesExtentsPtr_int64_;
-    std::vector<void *> tensorsDataPtr_;
     std::vector<CudaTensor<Precision>> tensors_;
 
   public:
@@ -76,14 +74,18 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     MPSCutn() = delete;
 
     explicit MPSCutn(const std::size_t numQubits, const std::size_t maxBondDim)
-        : BaseType(numQubits), maxBondDim_(maxBondDim) {
-        initHelper_();
+        : BaseType(numQubits), maxBondDim_(maxBondDim),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()) {
+        initTensors_();
     }
 
     explicit MPSCutn(const std::size_t numQubits, const std::size_t maxBondDim,
                      DevTag<int> &dev_tag)
-        : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim) {
-        initHelper_();
+        : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()) {
+        initTensors_();
     }
 
     ~MPSCutn() = default;
@@ -100,21 +102,31 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Get a vector of pointers to extents of each site
      *
-     * @return sitesExtentsPtr_int64_ std::vector<int64_t *> Note int64_t is
+     * @return std::vector<int64_t const *> Note int64_t is
      * required by cutensornet backend.
      */
-    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t *> & {
-        return sitesExtentsPtr_int64_;
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
+        std::vector<int64_t const *> sitesExtentsPtr_int64(
+            BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
+        }
+        return sitesExtentsPtr_int64;
     }
 
     /**
      * @brief Get a vector of pointers to tensor data of each site
      *
-     * @return tensorsDataPtr_ std::vector<void *> Note void is required by
+     * @return std::vector<void *> Note void is required by
      * cutensornet backend.
      */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> & {
-        return tensorsDataPtr_;
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
+        std::vector<void *> tensorsDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsDataPtr[i] =
+                reinterpret_cast<void *>(tensors_[i].getDataBuffer().getData());
+        }
+        return tensorsDataPtr;
     }
 
     /**
@@ -219,36 +231,68 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
 
   private:
     /**
-     * @brief The helper function for constuctor.
+     * @brief Return siteModes to the member initializer
+     *
+     * @return const std::vector<std::vector<std::size_t>>
      */
-    void initHelper_() {
-        // Configure extents for each sites
+    const std::vector<std::vector<std::size_t>> setSitesModes_() {
+        std::vector<std::vector<std::size_t>> localSitesModes;
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             std::vector<std::size_t> localSiteModes;
-            std::vector<std::size_t> localSiteExtents;
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
                 localSiteModes =
                     std::vector<std::size_t>({i, i + BaseType::getNumQubits()});
-                localSiteExtents = std::vector<std::size_t>(
-                    {BaseType::getQubitDims()[i], maxBondDim_});
             } else if (i == BaseType::getNumQubits() - 1) {
                 // Rightmost site (shared mode, state mode)
                 localSiteModes = std::vector<std::size_t>(
                     {i + BaseType::getNumQubits() - 1, i});
-                localSiteExtents = std::vector<std::size_t>(
-                    {maxBondDim_, BaseType::getQubitDims()[i]});
             } else {
                 // Interior sites (state mode, state mode, shared mode)
                 localSiteModes =
                     std::vector<std::size_t>({i + BaseType::getNumQubits() - 1,
                                               i, i + BaseType::getNumQubits()});
+            }
+            localSitesModes.push_back(std::move(localSiteModes));
+        }
+        return localSitesModes;
+    }
+
+    /**
+     * @brief Return sitesExtents to the member initializer
+     *
+     * @return const std::vector<std::vector<std::size_t>>
+     */
+    const std::vector<std::vector<std::size_t>> setSitesExtents_() {
+        std::vector<std::vector<std::size_t>> localSitesExtents;
+
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<std::size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {BaseType::getQubitDims()[i], maxBondDim_});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {maxBondDim_, BaseType::getQubitDims()[i]});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
                     {maxBondDim_, BaseType::getQubitDims()[i], maxBondDim_});
             }
-            sitesExtents_.push_back(std::move(localSiteExtents));
-            sitesModes_.push_back(std::move(localSiteModes));
+            localSitesExtents.push_back(std::move(localSiteExtents));
         }
+        return localSitesExtents;
+    }
+
+    /**
+     * @brief Return siteExtents_int64 to the member initializer
+     *
+     * @return const std::vector<std::vector<int64_t>>
+     */
+    const std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
+        std::vector<std::vector<int64_t>> localSitesExtents_int64;
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // Convert datatype of sitesExtents to int64 as required by
@@ -259,15 +303,19 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
                                return static_cast<int64_t>(x);
                            });
 
-            sitesExtents_int64_.push_back(std::move(siteExtents_int64));
-            sitesExtentsPtr_int64_.push_back(sitesExtents_int64_.back().data());
+            localSitesExtents_int64.push_back(std::move(siteExtents_int64));
+        }
+        return localSitesExtents_int64;
+    }
 
+    /**
+     * @brief The tensors init helper function for ctor.
+     */
+    void initTensors_() {
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // construct mps tensors reprensentation
             tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                   sitesExtents_[i], BaseType::getDevTag());
-
-            tensorsDataPtr_.push_back(
-                static_cast<void *>(tensors_[i].getDataBuffer().getData()));
         }
     }
 
