@@ -125,26 +125,6 @@ def accepted_observables(obs: qml.operation.Operator) -> bool:
     return obs.name in _observables  # pragma: no cover
 
 
-def decompose_recursive(op: qml.operation.Operator) -> list:
-    """Decompose a Pennylane operator into a list of operators with at most 2 wires.
-
-    Args:
-        op (Operator): the operator to decompose.
-
-    Returns:
-        list[Operator]: a list of operators with at most 2 wires.
-    """
-
-    if len(op.wires) <= 2:
-        return [op]
-
-    decomposed_ops = []
-    for sub_op in op.decomposition():
-        decomposed_ops.extend(decompose_recursive(sub_op))
-
-    return decomposed_ops
-
-
 class QuimbMPS:
     """Quimb MPS class.
 
