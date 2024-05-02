@@ -20,6 +20,7 @@
 #include <catch2/catch.hpp>
 
 #include "MeasurementsLQubit.hpp"
+#include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
 #include "Util.hpp"
@@ -33,6 +34,7 @@ namespace {
 using namespace Pennylane::Util;
 
 using namespace Pennylane::LightningQubit;
+using namespace Pennylane::LightningQubit::Observables;
 using namespace Pennylane::LightningQubit::Measures;
 
 }; // namespace
@@ -194,6 +196,91 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
         variances_ref = {0.6577942, 0.4068672, 0.1670374};
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    SECTION("1 qubit") {
+        // Defining the State Vector that will be measured.
+        auto statevector_data = std::vector<ComplexT>{
+            {1.0, 0.0}, {0.0, 0.0}}; // createNonTrivialState<StateVectorT>();
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+
+        // Initializing the measurements class.
+        // This object attaches to the statevector allowing several
+        // measurements.
+        Measurements<StateVectorT> Measurer(statevector);
+
+        SECTION("Testing probs()") {
+            auto p0 = Measurer.probs();
+            statevector.applyOperation("Hadamard", {0}, false);
+            auto p1 = Measurer.probs();
+
+            REQUIRE_THAT(
+                p0,
+                Catch::Approx(std::vector<PrecisionT>{1.0, 0.0}).margin(1e-7));
+            REQUIRE_THAT(
+                p1,
+                Catch::Approx(std::vector<PrecisionT>{0.5, 0.5}).margin(1e-7));
+        }
+        SECTION("Testing probs(NamedObs)") {
+            const auto obs1 = Observables::NamedObs<StateVectorT>(
+                {"PauliX"}, std::vector<size_t>{0});
+            const auto obs2 = Observables::NamedObs<StateVectorT>(
+                {"PauliZ"}, std::vector<size_t>{0});
+            const auto obs3 = Observables::NamedObs<StateVectorT>(
+                {"Hadamard"}, std::vector<size_t>{0});
+            auto p0_obs1 = Measurer.probs(obs1);
+            auto p0_obs2 = Measurer.probs(obs2);
+            auto p0_obs3 = Measurer.probs(obs3);
+
+            CHECK_THAT(
+                p0_obs1,
+                Catch::Approx(std::vector<PrecisionT>{0.5, 0.5}).margin(1e-7));
+            CHECK_THAT(
+                p0_obs2,
+                Catch::Approx(std::vector<PrecisionT>{1.0, 0.0}).margin(1e-7));
+            CHECK_THAT(p0_obs3, Catch::Approx(std::vector<PrecisionT>{
+                                                  0.85355339, 0.14644661})
+                                    .margin(1e-7));
+
+            statevector.applyOperation("Hadamard", {0}, false);
+            auto p1_obs1 = Measurer.probs(obs1);
+            auto p1_obs2 = Measurer.probs(obs2);
+            auto p1_obs3 = Measurer.probs(obs3);
+
+            CHECK_THAT(
+                p1_obs1,
+                Catch::Approx(std::vector<PrecisionT>{1.0, 0.0}).margin(1e-7));
+            CHECK_THAT(
+                p1_obs2,
+                Catch::Approx(std::vector<PrecisionT>{0.5, 0.5}).margin(1e-7));
+            CHECK_THAT(p1_obs3, Catch::Approx(std::vector<PrecisionT>{
+                                                  0.85355339, 0.14644661})
+                                    .margin(1e-7));
+
+            statevector.applyOperation("Hadamard", {0}, false);
+            auto p2_obs1 = Measurer.probs(obs1);
+            auto p2_obs2 = Measurer.probs(obs2);
+            auto p2_obs3 = Measurer.probs(obs3);
+
+            CHECK_THAT(
+                p0_obs1,
+                Catch::Approx(std::vector<PrecisionT>{0.5, 0.5}).margin(1e-7));
+            CHECK_THAT(
+                p0_obs2,
+                Catch::Approx(std::vector<PrecisionT>{1.0, 0.0}).margin(1e-7));
+            CHECK_THAT(p0_obs3, Catch::Approx(std::vector<PrecisionT>{
+                                                  0.85355339, 0.14644661})
+                                    .margin(1e-7));
+        }
+    }
+    SECTION("n-qubit") {}
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
