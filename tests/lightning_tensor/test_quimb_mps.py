@@ -142,17 +142,28 @@ class TestQuimbMPS:
 
     @pytest.mark.parametrize("num_wires", [None, 4])
     @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
-    def test_device_init(self, num_wires, c_dtype, backend, method):
-        """Test the class initialization and returned properties."""
+    @pytest.mark.parametrize("max_bond_dim", [None, 10])
+    @pytest.mark.parametrize("cutoff", [1e-16, 1e-12])
+    @pytest.mark.parametrize("contract", ["auto-mps", "nonlocal"])
+    def test_device_init(self, num_wires, c_dtype, backend, method, max_bond_dim, cutoff, contract):
+        """Test the class initialization with different arguments and returned properties."""
+
+        kwargs = {"max_bond_dim": max_bond_dim, "cutoff": cutoff, "contract": contract}
 
         wires = Wires(range(num_wires)) if num_wires else None
-        dev = LightningTensor(wires=wires, backend=backend, method=method, c_dtype=c_dtype)
+        dev = LightningTensor(
+            wires=wires, backend=backend, method=method, c_dtype=c_dtype, **kwargs
+        )
         assert isinstance(dev._interface.state, qtn.MatrixProductState)
         assert isinstance(dev._interface.state_to_array(), np.ndarray)
 
         _, config = dev.preprocess()
+        assert config.device_options["c_dtype"] == c_dtype
         assert config.device_options["backend"] == backend
         assert config.device_options["method"] == method
+        assert config.device_options["max_bond_dim"] == max_bond_dim
+        assert config.device_options["cutoff"] == cutoff
+        assert config.device_options["contract"] == contract
 
     @pytest.mark.parametrize("operation", all_ops)
     def test_supported_gates_can_be_implemented(self, operation, backend, method):

@@ -73,6 +73,9 @@ class LightningTensor(Device):
             ``max_bond_dim`` (int): Maximum bond dimension for the MPS simulator.
                 It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is ``None``.
             ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is ``np.finfo(c_dtype).eps``.
+            ``contract`` (str): The contraction method for applying gates. It can be either ``auto-mps`` or ``nonlocal``.
+                ``nonlocal`` turns each gate into a MPO and applies it directly to the MPS, while ``auto-mps`` swaps nonlocal qubits in 2-qubit gates to be next
+                    to each other before applying the gate, then swaps them back. Default is ``auto-mps``.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -81,6 +84,7 @@ class LightningTensor(Device):
     _device_options = (
         "backend",
         "c_dtype",
+        "contract",
         "cutoff",
         "method",
         "max_bond_dim",
@@ -119,6 +123,7 @@ class LightningTensor(Device):
         # options for MPS
         self._max_bond_dim = kwargs.get("max_bond_dim", None)
         self._cutoff = kwargs.get("cutoff", np.finfo(self._c_dtype).eps)
+        self._contract = kwargs.get("contract", "auto-mps")
 
         self._interface = None
         interface_opts = self._setup_execution_config().device_options

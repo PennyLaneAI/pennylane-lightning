@@ -172,8 +172,8 @@ class QuimbMPS:
         }
 
         self._gate_opts = {
-            "contract": "swap+split",
             "parametrize": None,
+            "contract": interf_opts["contract"],
             "cutoff": interf_opts["cutoff"],
             "max_bond": interf_opts["max_bond_dim"],
         }
@@ -292,19 +292,13 @@ class QuimbMPS:
     def _apply_operation(self, op: qml.operation.Operator) -> None:
         """Apply a single operator to the circuit, keeping the state always in a MPS form.
 
-        Internally it uses `quimb`'s `apply_gate` method. For operations that act on more than two wires,
-        it decomposes them first into operations that act on at most two wires.
+        Internally it uses `quimb`'s `apply_gate` method.
 
         Args:
             op (Operator): The operation to apply.
         """
 
-        if len(op.wires) <= 2:
-            self._circuitMPS.apply_gate(op.matrix(), *op.wires, **self._gate_opts)
-        else:
-            decom_ops = decompose_recursive(op)
-            for o in decom_ops:
-                self._circuitMPS.apply_gate(o.matrix(), *o.wires, **self._gate_opts)
+        self._circuitMPS.apply_gate(op.matrix().astype(self._dtype), *op.wires, **self._gate_opts)
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Measure the measurement required by the circuit over the MPS.
@@ -367,8 +361,8 @@ class QuimbMPS:
         obs = measurementprocess.obs
 
         obs_mat = obs.matrix()
-        expect_squar_op = self._local_expectation(obs_mat @ obs_mat.conj().T, tuple(obs.wires))
         expect_op = self.expval(measurementprocess)
+        expect_squar_op = self._local_expectation(obs_mat @ obs_mat.conj().T, tuple(obs.wires))
 
         return expect_squar_op - np.square(expect_op)
 
