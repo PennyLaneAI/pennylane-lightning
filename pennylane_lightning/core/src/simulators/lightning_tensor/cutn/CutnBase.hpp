@@ -77,7 +77,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
         initHelper_();
     }
 
-    virtual ~CutnBase() {
+    ~CutnBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
@@ -95,7 +95,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      *
      * @return cutensornetState_t
      */
-    [[nodiscard]] auto getQuantumState() -> cutensornetState_t {
+    [[nodiscard]] auto getQuantumState() const -> cutensornetState_t {
         return quantumState_;
     };
 
@@ -105,7 +105,9 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      *
      * @return DevTag
      */
-    [[nodiscard]] auto getDevTag() -> DevTag<int> & { return dev_tag_; }
+    [[nodiscard]] auto getDevTag() const -> const DevTag<int> & {
+        return dev_tag_;
+    }
 
     /**
      * @brief Get the memory size used for a work space

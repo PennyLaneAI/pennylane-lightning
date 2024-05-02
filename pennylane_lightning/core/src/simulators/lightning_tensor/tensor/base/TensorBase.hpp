@@ -48,9 +48,9 @@ template <class PrecisionT, class Derived> class TensorBase {
         for (auto extent : extents) {
             length_ *= extent;
         }
-    };
+    }
 
-    virtual ~TensorBase() {}
+    ~TensorBase() {}
 
     /**
      * @brief Return the rank of a tensor object.
@@ -64,7 +64,7 @@ template <class PrecisionT, class Derived> class TensorBase {
      *
      * @return std::vector<size_t> Extents of a tensor object.
      */
-    [[nodiscard]] auto getExtents() const -> std::vector<size_t> {
+    [[nodiscard]] auto getExtents() const -> const std::vector<size_t> & {
         return extents_;
     }
 
@@ -73,7 +73,7 @@ template <class PrecisionT, class Derived> class TensorBase {
      *
      * @return std::vector<size_t> Modes of a tensor object.
      */
-    [[nodiscard]] auto getModes() const -> std::vector<size_t> {
+    [[nodiscard]] auto getModes() const -> const std::vector<size_t> & {
         return modes_;
     };
 

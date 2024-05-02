@@ -29,7 +29,7 @@ namespace Pennylane::LightningTensor::Cutn::Util {
  * Utility function object to tell std::shared_ptr how to
  * release/destroy cutensornet objects.
  */
-struct handleDeleter {
+struct CuTNHandleDeleter {
     void operator()(cutensornetHandle_t handle) const {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroy(handle));
     }
@@ -39,11 +39,11 @@ using SharedCutnHandle =
     std::shared_ptr<std::remove_pointer<cutensornetHandle_t>::type>;
 
 /**
- * @brief Creates a SharedCusvHandle (a shared pointer to a cutensornetHandle)
+ * @brief Creates a SharedCutnHandle (a shared pointer to a cutensornetHandle)
  */
 inline SharedCutnHandle make_shared_cutn_handle() {
     cutensornetHandle_t h;
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
-    return {h, handleDeleter()};
+    return {h, CuTNHandleDeleter()};
 }
 } // namespace Pennylane::LightningTensor::Cutn::Util

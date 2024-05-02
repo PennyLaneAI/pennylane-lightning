@@ -86,7 +86,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
         initHelper_();
     }
 
-    ~MPSCutn() final = default;
+    ~MPSCutn() = default;
 
     /**
      * @brief Get the max bond dimension.

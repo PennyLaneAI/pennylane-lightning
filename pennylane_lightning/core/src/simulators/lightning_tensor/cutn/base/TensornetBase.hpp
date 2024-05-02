@@ -37,7 +37,16 @@ template <class Precision, class Derived> class TensornetBase {
         std::fill(qubitDims_.begin(), qubitDims_.end(), size_t{2});
     }
 
-    virtual ~TensornetBase() = default;
+    ~TensornetBase() = default;
+
+    /**
+     * @brief Get dimension of each qubit
+     *
+     * @return const std::vector<size_t> &
+     */
+    [[nodiscard]] auto getQubitDims() const -> const std::vector<size_t> & {
+        return qubitDims_;
+    };
 
     /**
      * @brief Get dimension of each qubit

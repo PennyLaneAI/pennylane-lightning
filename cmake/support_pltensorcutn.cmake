@@ -8,7 +8,7 @@ include_guard()
 # Macro to aid in finding cuTensorNet lib
 macro(findCutensornet external_libs)
     find_library(CUTENSORNET_LIB
-        NAMES   libcutensornet.so.2
+        NAMES   libcutensornet.so.2 libcutensornet.so
         HINTS   /usr/lib
             /usr/local/cuda
             /usr/local/lib

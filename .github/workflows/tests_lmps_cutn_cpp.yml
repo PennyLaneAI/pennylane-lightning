@@ -1,4 +1,5 @@
 name: Testing::Linux::x86_64::MPSCutn::C++
+# TODO remove MPS from the workflow name and the workflow filename once exact is in.
 on:
   workflow_call:
     inputs:
@@ -63,6 +64,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_tensor"]
+        #TODO remove the `pl_tensor_method` once exact TN is added.
         pl_tensor_method: ["mps"]
         pl_tensor_backend: ["cutensornet"]
         cuda_version: ["12"]
@@ -129,6 +131,7 @@ jobs:
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
+            #TODO remove the `PL_TENSOR_METHOD` option once exact TN is added.
             -DPL_TENSOR_METHOD=${{ matrix.pl_tensor_method }} \
             -DPL_TENSOR_BACKEND=${{ matrix.pl_tensor_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \

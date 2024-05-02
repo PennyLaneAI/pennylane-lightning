@@ -47,7 +47,7 @@ class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     CudaTensor(const size_t rank, const std::vector<size_t> &modes,
-               const std::vector<size_t> &extents, DevTag<int> &dev_tag,
+               const std::vector<size_t> &extents, const DevTag<int> &dev_tag,
                bool device_alloc = true)
         : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
@@ -55,7 +55,7 @@ class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
 
     CudaTensor() = delete;
 
-    ~CudaTensor() final = default;
+    ~CudaTensor() = default;
 
     /**
      * @brief Explicitly copy data from GPU device to host memory.
