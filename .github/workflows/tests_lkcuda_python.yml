@@ -208,9 +208,9 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
@@ -230,10 +230,10 @@ jobs:
         run: |
           cd main
           CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
@@ -242,10 +242,12 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           cd main/
-          for device in lightning.qubit lightning.kokkos; do
-            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          done
+          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
+          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=lightning.kokkos python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.kokkos --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results

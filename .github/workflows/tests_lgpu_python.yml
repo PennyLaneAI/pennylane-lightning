@@ -172,12 +172,12 @@ jobs:
           cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
           rm -rf build
 
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
@@ -200,11 +200,11 @@ jobs:
           cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
           rm -rf build
           
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          python -m pip install -e . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
