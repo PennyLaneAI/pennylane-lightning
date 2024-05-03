@@ -44,31 +44,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Remove GH Action tooling
-        run: |
-          # Following instructions from Apache Flink
-          # https://github.com/apache/flink/blob/release-1.15/tools/azure-pipelines/free_disk_space.sh
-          echo "=============================================================================="
-          echo "Freeing up disk space on CI system"
-          echo "=============================================================================="
-          echo "Listing 100 largest packages"
-          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
-          df -h
-          echo "Removing large packages"
-          sudo apt-get remove -y '^dotnet.*'
-          sudo apt-get autoremove -y
-          sudo apt-get clean
-          df -h
-          echo "Removing large directories"
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
-          sudo rm -rf /opt/hostedtoolcache/Ruby
-          sudo rm -rf /opt/hostedtoolcache/PyPy
-          sudo rm -rf /opt/hostedtoolcache/go
-          rm -rf /usr/share/dotnet/
-          sudo apt --fix-broken install -y
-          df -h
-
       - uses: actions/setup-python@v5
         name: Install Python
         with:
@@ -147,31 +122,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Remove GH Action tooling
-        run: |
-          # Following instructions from Apache Flink
-          # https://github.com/apache/flink/blob/release-1.15/tools/azure-pipelines/free_disk_space.sh
-          echo "=============================================================================="
-          echo "Freeing up disk space on CI system"
-          echo "=============================================================================="
-          echo "Listing 100 largest packages"
-          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
-          df -h
-          echo "Removing large packages"
-          sudo apt-get remove -y '^dotnet.*'
-          sudo apt-get autoremove -y
-          sudo apt-get clean
-          df -h
-          echo "Removing large directories"
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
-          sudo rm -rf /opt/hostedtoolcache/Ruby
-          sudo rm -rf /opt/hostedtoolcache/PyPy
-          sudo rm -rf /opt/hostedtoolcache/go
-          rm -rf /usr/share/dotnet/
-          sudo apt --fix-broken install -y
-          df -h
-
       - uses: actions/setup-python@v5
         name: Install Python
         with:
