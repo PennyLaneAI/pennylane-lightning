@@ -50,9 +50,6 @@ T                      = { properties = [ "invertible", "controllable", "differe
 # strategy in PennyLane.
 MultiControlledX       = {}
 QFT                    = {}
-# BasisState             = {}  # FIXME: does not present in the device Python API
-# QubitStateVector       = {}  # FIXME: does not present in the device Python API
-# StatePrep              = {}  # FIXME: does not present in the device Python API
 
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
