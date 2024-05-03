@@ -105,6 +105,9 @@
 
 ### Bug fixes
 
+* Fix wire order permutations when using `qml.probs` with out-of-order wires.
+  [(#707)](https://github.com/PennyLaneAI/pennylane-lightning/pull/707)
+
 * `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit`'s `simulate` is modified accordingly.
   [(#694)](https://github.com/PennyLaneAI/pennylane/pull/694)
 
