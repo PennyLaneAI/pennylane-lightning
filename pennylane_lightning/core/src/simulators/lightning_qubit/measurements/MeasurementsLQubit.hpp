@@ -132,7 +132,7 @@ class Measurements final
         // Permute the data according to the required wire ordering
         if (wires != sorted_wires) {
             static constexpr std::size_t CACHE_SIZE = 8;
-            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p;
+            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
             std::vector<std::size_t> shape(wires.size(), 2);
             std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
             std::vector<std::string> wire_labels_new(wires.size(), "");
