@@ -6,6 +6,7 @@ schema = 2
 
 CNOT                   = { properties = [ "invertible",                 "differentiable" ] }
 ControlledPhaseShift   = { properties = [ "invertible",                 "differentiable" ] }
+CPhase                 = { properties = [ "invertible",                 "differentiable" ] }
 ControlledQubitUnitary = { properties = [ "invertible",                                  ] }
 CRot                   = { properties = [ "invertible"                                   ] }
 CRX                    = { properties = [ "invertible",                 "differentiable" ] }
@@ -60,7 +61,6 @@ StatePrep              = {}
 [operators.gates.matrix]
 
 BlockEncode            = {}
-CPhase                 = {}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
