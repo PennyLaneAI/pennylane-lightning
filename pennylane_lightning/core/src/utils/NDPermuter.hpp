@@ -183,7 +183,8 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         std::vector<std::size_t> small_map_old_to_new_position(blocksize_);
 
         // Position old and new.
-        std::size_t po = 0, pn;
+        std::size_t po = 0;
+        std::size_t pn = 0;
         // Counter of the values of each indices in the iteration (old
         // ordering).
         std::vector<size_t> old_counter(num_indices, 0);

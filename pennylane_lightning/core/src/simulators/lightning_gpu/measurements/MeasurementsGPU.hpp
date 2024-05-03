@@ -92,7 +92,8 @@ class Measurements final
      * @return std::vector<PrecisionT>
      */
     auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
-        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()),
+        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()) ||
+                            std::is_sorted(wires.rbegin(), wires.rend()),
                         "LightningGPU does not currently support out-of-order "
                         "wire indices with probability calculations");
 
