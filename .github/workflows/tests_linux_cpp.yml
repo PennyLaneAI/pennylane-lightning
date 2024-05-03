@@ -106,7 +106,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
-              -DLQ_ENABLE_KERNEL_AVX_STREAM=ON \
+              -DLQ_ENABLE_KERNEL_AVX_STREAMING=ON \
               -DLQ_ENABLE_KERNEL_OMP=ON
 
             cmake --build ./Build
