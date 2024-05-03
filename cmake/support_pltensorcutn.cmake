@@ -47,7 +47,7 @@ macro(findCutensornet external_libs)
 
         get_filename_component(CUTENSORNET_INC_DIR ${CUTENSORNET_INC} DIRECTORY)
         target_include_directories(cutensornet INTERFACE ${CUTENSORNET_INC_DIR})
-        set_target_properties( cutensornet PROPERTIES IMPORTED_LOCATION ${CUTENSORNET_LIB})
+        set_target_properties(cutensornet PROPERTIES IMPORTED_LOCATION ${CUTENSORNET_LIB})
 
         target_link_libraries(${external_libs} INTERFACE cutensornet)
     endif()

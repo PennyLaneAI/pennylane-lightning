@@ -14,7 +14,7 @@
 
 /**
  * @file CutnBase.hpp
- * Base class for classes backed by the cuTensorNet library.
+ * Base class for cuTensorNet-backed tensor networks.
  */
 
 #pragma once
@@ -111,7 +111,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
 
   protected:
     /**
-     * @brief Get the memory size used for a work space
+     * @brief Returns the workspace size.
      *
      * @return std::size_t
      */
@@ -127,12 +127,15 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
             /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
             /*  int64_t * */ &worksize));
+        
+        // Ensure data is aligned by 256 bytes
+        worksize += int64_t{256} - worksize % int64_t{256};
 
         return static_cast<std::size_t>(worksize);
     }
 
     /**
-     * @brief Set the memory for a work space
+     * @brief Set memory for a workspace.
      *
      * @param workDesc cutensornet work space descriptor
      * @param scratchPtr Pointer to scratch memory
@@ -173,9 +176,6 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
         std::size_t worksize = getWorkSpaceMemorySize(workDesc);
-
-        // Ensure data is aligned by 256 bytes
-        worksize += std::size_t{256} - worksize % std::size_t{256};
 
         PL_ABORT_IF(std::size_t(worksize) > scratchSize,
                     "Insufficient workspace size on Device!");
