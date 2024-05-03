@@ -68,6 +68,7 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/PyPy
           sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
+          sudo apt --fix-broken install -y
           df -h
 
       - name: Cache installation directories
@@ -153,6 +154,7 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/PyPy
           sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
+          sudo apt --fix-broken install -y
           df -h
 
       - name: Restoring cached dependencies
