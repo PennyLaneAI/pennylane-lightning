@@ -108,6 +108,9 @@
 
 ### Bug fixes
 
+* Fix wire order permutations when using `qml.probs` with out-of-order wires.
+  [(#707)](https://github.com/PennyLaneAI/pennylane-lightning/pull/707)
+
 * Lightning Qubit once again respects the wire order specified on device instantiation.
   [(#705)](https://github.com/PennyLaneAI/pennylane-lightning/pull/705)
 

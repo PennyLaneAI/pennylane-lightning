@@ -142,7 +142,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-base libopenblas-dev ninja-build gcovr lcov
           python -m pip install scipy
 
       - name: Build and run unit tests
