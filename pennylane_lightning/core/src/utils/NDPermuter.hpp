@@ -54,8 +54,8 @@ template <class PermuterBackend> class Permuter {
         const std::set<std::string> idx_old(current_order.begin(),
                                             current_order.end());
         const std::set<std::string> idx_new(new_order.begin(), new_order.end());
-        const auto data_size = std::accumulate(shape.begin(), shape.end(), 1,
-                                               std::multiplies<std::size_t>());
+        const std::size_t data_size = std::accumulate(
+            shape.begin(), shape.end(), 1, std::multiplies<std::size_t>());
         PL_ABORT_IF_NOT(idx_old.size() == current_order.size(),
                         "Duplicate existing indices found. Please ensure "
                         "indices are unique.");
