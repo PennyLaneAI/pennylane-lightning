@@ -60,6 +60,7 @@ jobs:
           sudo apt-get clean
           df -h
           echo "Removing large directories"
+          ls -ltrah /opt/hostedtoolcache
           # deleting 15GB
           rm -rf /usr/share/dotnet/
           df -h
@@ -166,6 +167,7 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
+          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
           # deleting 15GB
           rm -rf /usr/share/dotnet/
@@ -252,6 +254,7 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
+          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
           # deleting 15GB
           rm -rf /usr/share/dotnet/
@@ -365,6 +368,7 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
+          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
           # deleting 15GB
           rm -rf /usr/share/dotnet/
