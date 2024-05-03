@@ -267,7 +267,7 @@ class QuimbMPS:
                 return self.measurement(circuit.measurements[0])
             return tuple(self.measurement(mp) for mp in circuit.measurements)
 
-        raise NotImplementedError
+        raise NotImplementedError # pragma: no cover
 
     def _apply_operation(self, op: qml.operation.Operator) -> None:
         """Apply a single operator to the circuit, keeping the state always in a MPS form.
@@ -310,7 +310,7 @@ class QuimbMPS:
             if isinstance(measurementprocess, VarianceMP):
                 return self.var
 
-        raise NotImplementedError
+        raise NotImplementedError # pragma: no cover
 
     def expval(self, measurementprocess: MeasurementProcess) -> float:
         """Expectation value of the supplied observable contained in the MeasurementProcess.
