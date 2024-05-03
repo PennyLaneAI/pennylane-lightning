@@ -1,4 +1,4 @@
-name: Testing (Linux)
+name: Testing::x86_64::Python
 on:
   workflow_call:
     inputs:
@@ -11,6 +11,9 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    paths-ignore:
+      - pennylane_lightning/core/src/simulators/lightning_gpu/**
+      - pennylane_lightning/lightning_gpu/**
   push:
     branches:
       - master
@@ -24,91 +27,17 @@ env:
   OMP_PROC_BIND: "false"
 
 concurrency:
-  group: tests_linux-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_linux_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
-  cpptests:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
-    name: C++ tests
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-            echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-            python -m pip install scipy
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON
-
-            cmake . -BBuildKernelOMP -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON \
-              -DLQ_ENABLE_KERNEL_OMP=ON
-
-            cmake --build ./Build
-            cmake --build ./BuildKernelOMP
-
-            for d in Build BuildKernelOMP; do
-              cd ./$d
-              mkdir -p ./tests/results
-              for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-              lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-              lcov --remove coverage.info '/usr/*' --output-file coverage.info
-              cd ..
-            done
-            lcov --add-tracefile ./Build/coverage.info -a ./BuildKernelOMP/coverage.info -o coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
-          path: |
-            ./Build/tests/results/
-            ./BuildKernelOMP/tests/results/
-
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-          if-no-files-found: error
 
   pythontests:
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests
     runs-on: ${{ matrix.os }}
 
@@ -209,69 +138,13 @@ jobs:
             ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}
           if-no-files-found: error
 
-  cpptestswithOpenBLAS:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
-    name: C++ tests (OpenBLAS)
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov
-          python -m pip install scipy
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DENABLE_PYTHON=OFF \
-              -DENABLE_BLAS=ON \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DBUILD_TESTS=ON \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON
-            cmake --build ./Build
-            cd ./Build
-            mkdir -p ./tests/results
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
-          path: ./Build/tests/results/
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-          if-no-files-found: error
 
   pythontestswithOpenBLAS:
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests with OpenBLAS
     runs-on: ${{ matrix.os }}
 
@@ -373,80 +246,6 @@ jobs:
     with:
       os: ubuntu-22.04
 
-  cpptestswithKokkos:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos]
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-    timeout-minutes: 60
-    name: C++ tests (Kokkos)
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        if: steps.kokkos-cache.outputs.cache-hit == 'true'
-        run: |
-          rm -rf Kokkos
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy
-
-      - name: Build and run unit tests
-        run: |
-            cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
-              -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DENABLE_COVERAGE=ON
-            cmake --build ./Build
-            cd ./Build
-            mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-            lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
-          path: ./Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-          if-no-files-found: error
-
   pythontestswithKokkos:
     needs: [build_and_cache_Kokkos]
     strategy:
@@ -458,7 +257,7 @@ jobs:
         exclude:
           - pl_backend: ["all"]
             exec_model: OPENMP
-    timeout-minutes: 60
+    timeout-minutes: 75
     name: Python tests with Kokkos
     runs-on: ${{ matrix.os }}
 
@@ -631,87 +430,3 @@ jobs:
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  upload-to-codecov-linux-cpp:
-    needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
-    name: Upload cpp coverage data to codecov
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: true
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  cpptestsWithMultipleBackends:
-  # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos]
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
-        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
-    timeout-minutes: 60
-    name: C++ tests (multiple backends)
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
-
-      - name: Copy cached libraries
-        if: steps.kokkos-cache.outputs.cache-hit == 'true'
-        run: |
-          rm -rf Kokkos
-          mkdir Kokkos/
-          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy
-
-      - name: Build and run unit tests
-        run: |
-            set -x
-            cmake . -BBuild -G Ninja \
-              -DCMAKE_BUILD_TYPE=Debug \
-              -DBUILD_TESTS=ON \
-              -DENABLE_PYTHON=OFF \
-              -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
-              -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
-              -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
-            cmake --build ./Build
-            cd ./Build
-            mkdir -p ./tests/results_multiple_backends
-            for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
-            set +x
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
-          path: ./Build/tests/results_multiple_backends/
-          if-no-files-found: error

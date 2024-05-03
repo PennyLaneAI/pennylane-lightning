@@ -130,6 +130,7 @@ class CMakeBuild(build_ext):
             configure_args += [
                 f"-DCMAKE_CXX_COMPILER={clang_path}/bin/clang++",
                 f"-DCMAKE_LINKER={clang_path}/bin/lld",
+                f"-DENABLE_GATE_DISPATCHER=OFF",
             ]
             if shutil.which("brew"):
                 libomp_path = subprocess.run(

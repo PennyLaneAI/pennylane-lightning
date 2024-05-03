@@ -17,10 +17,6 @@ on:
         description: "Kokkos version"
         value: ${{ jobs.linux-set-builder-matrix.outputs.kokkos_version }}
 
-concurrency:
-  group: build_and_cache_Kokkos_linux-${{ github.ref }}-${{ github.workflow }}
-  cancel-in-progress: true
-
 jobs:
   linux-set-builder-matrix:
     name: Set Kokkos builder matrix
