@@ -33,7 +33,7 @@ template <typename TypeList> void testTensornetBase() {
 
         const size_t num_qubits = 4;
         const std::size_t maxBondDim = 2;
-        std::vector<size_t> qubitDims = {2, 2, 2, 2};
+        std::vector<std::size_t> qubitDims = {2, 2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
         MPST mps_state{num_qubits, maxBondDim, dev_tag};

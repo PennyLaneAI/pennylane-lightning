@@ -142,7 +142,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      * @param worksize Memory size of a work space
      */
     void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                            void *scratchPtr, size_t worksize) {
+                            void *scratchPtr, std::size_t worksize) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             /* const cutensornetHandle_t */ getCutnHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,

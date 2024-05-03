@@ -91,54 +91,50 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
     }
 
     SECTION("Set reset on device with data on the host") {
-        for (size_t bondDim = 2; bondDim < 10; bondDim++) {
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        MPSCutn<TestType> mps_state{num_qubits, bondDim};
+
+        mps_state.reset();
+
+        std::vector<std::complex<TestType>> expected_state(
+            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        std::size_t index = 0;
+
+        expected_state[index] = {1.0, 0.0};
+
+        CHECK(mps_state.getMaxBondDim() == maxBondDim);
+
+        CHECK(expected_state ==
+              Pennylane::Util::approx(mps_state.getDataVector()));
+    }
+
+    SECTION("Test different bondDim and different basisstate") {
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        for (auto &basisState : basisStates) {
             std::size_t num_qubits = 3;
             std::size_t maxBondDim = bondDim;
 
             MPSCutn<TestType> mps_state{num_qubits, maxBondDim};
 
-            mps_state.reset();
+            mps_state.setBasisState(basisState);
 
             std::vector<std::complex<TestType>> expected_state(
                 size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
             std::size_t index = 0;
 
-            expected_state[index] = {1.0, 0.0};
+            for (size_t i = 0; i < basisState.size(); i++) {
+                index += (size_t{1} << (num_qubits - i - 1)) * basisState[i];
+            }
 
-            CHECK(mps_state.getMaxBondDim() == maxBondDim);
+            expected_state[index] = {1.0, 0.0};
 
             CHECK(expected_state ==
                   Pennylane::Util::approx(mps_state.getDataVector()));
-        }
-    }
-
-    SECTION("Test different bondDim and different basisstate") {
-        for (size_t bondDim = 2; bondDim < 10; bondDim++) {
-            for (auto &basisState : basisStates) {
-                std::size_t num_qubits = 3;
-                std::size_t maxBondDim = bondDim;
-
-                MPSCutn<TestType> mps_state{num_qubits, maxBondDim};
-
-                mps_state.setBasisState(basisState);
-
-                std::vector<std::complex<TestType>> expected_state(
-                    size_t{1} << num_qubits,
-                    std::complex<TestType>({0.0, 0.0}));
-
-                std::size_t index = 0;
-
-                for (size_t i = 0; i < basisState.size(); i++) {
-                    index +=
-                        (size_t{1} << (num_qubits - i - 1)) * basisState[i];
-                }
-
-                expected_state[index] = {1.0, 0.0};
-
-                CHECK(expected_state ==
-                      Pennylane::Util::approx(mps_state.getDataVector()));
-            }
         }
     }
 }
