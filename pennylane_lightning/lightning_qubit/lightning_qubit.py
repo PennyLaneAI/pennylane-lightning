@@ -397,6 +397,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
 @simulator_tracking
 @single_tape_support
+# pylint: too-many-instance-attributes
 class LightningQubit(Device):
     """PennyLane Lightning Qubit device.
 
