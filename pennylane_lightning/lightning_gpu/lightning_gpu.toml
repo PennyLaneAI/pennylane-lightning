@@ -1,3 +1,4 @@
+# TODO: verify the contents of this file against what the device reports.
 schema = 2
 
 # The union of all gate types listed in this section must match what
