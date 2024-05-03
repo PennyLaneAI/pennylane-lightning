@@ -14,7 +14,7 @@
 
 /**
  * @file CudaTensor.hpp
- * CUDA-capable tensor class for cutensornet backends.
+ * CUDA-capable tensor class for cuTensorNet backends.
  */
 
 #pragma once

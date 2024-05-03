@@ -43,7 +43,7 @@ macro(findCutensornet external_libs)
     if(NOT CUTENSORNET_LIB OR NOT CUTENSORNET_INC)
         message(FATAL_ERROR "\nUnable to find cuQuantum SDK installation. Please ensure it is correctly installed and available on path.")
     else()
-        add_library( cutensornet SHARED IMPORTED GLOBAL)
+        add_library(cutensornet SHARED IMPORTED GLOBAL)
 
         get_filename_component(CUTENSORNET_INC_DIR ${CUTENSORNET_INC} DIRECTORY)
         target_include_directories(cutensornet INTERFACE ${CUTENSORNET_INC_DIR})

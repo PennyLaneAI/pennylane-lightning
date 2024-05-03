@@ -14,7 +14,7 @@
 
 /**
  * @file CutnBase.hpp
- * Base class for cutensornet backend.
+ * Base class for classes backed by the cuTensorNet library.
  */
 
 #pragma once

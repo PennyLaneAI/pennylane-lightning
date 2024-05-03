@@ -14,7 +14,7 @@
 
 /**
  * @file TensornetBase.hpp
- * Base class for all cutensornet backend.
+ * Base class for all cuTensorNet backends.
  */
 
 #pragma once

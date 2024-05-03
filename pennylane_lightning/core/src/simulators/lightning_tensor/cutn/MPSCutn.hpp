@@ -14,7 +14,7 @@
 
 /**
  * @file MPSCutn.hpp
- * MPS class with cutensornet backend.
+ * MPS class with cuTensorNet backend.
  */
 
 #pragma once
