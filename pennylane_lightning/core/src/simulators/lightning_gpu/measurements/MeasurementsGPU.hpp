@@ -92,6 +92,10 @@ class Measurements final
      * @return std::vector<PrecisionT>
      */
     auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()),
+                        "LightningGPU does not currently support out-of-order "
+                        "wire indices with probability calculations");
+
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
@@ -193,6 +197,10 @@ class Measurements final
 
     std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
                                   size_t num_shots) {
+        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()),
+                        "LightningGPU does not currently support out-of-order "
+                        "wire indices with probability calculations");
+
         return BaseType::probs(wires, num_shots);
     }
 
