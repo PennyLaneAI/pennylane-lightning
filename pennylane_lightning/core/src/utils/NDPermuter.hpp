@@ -27,6 +27,7 @@
 
 #include "Error.hpp"
 
+// LCOV_EXCL_START
 namespace Pennylane::Util {
 
 /**
@@ -272,7 +273,6 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         }
     }
 
-    // LCOV_EXCL_START
     /**
      * @brief Return-based transpose operation. See `Permuter` class for more
      * details.
@@ -286,10 +286,10 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         Transpose(data_, shape, data_out, old_indices, new_indices);
         return data_out;
     }
-    // LCOV_EXCL_END
 
   private:
     static constexpr std::size_t blocksize_ = BLOCKSIZE;
 };
 
 } // namespace Pennylane::Util
+// LCOV_EXCL_END
