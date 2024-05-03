@@ -42,8 +42,6 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
 
     steps:
@@ -62,13 +60,12 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
 
     name: C++ tests (Lightning-GPU)
     runs-on:
-      - ${{ matrix.os }}
+      - ubuntu-22.04
       - self-hosted
       - gpu
 
