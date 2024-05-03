@@ -60,7 +60,11 @@ jobs:
           sudo apt-get clean
           df -h
           echo "Removing large directories"
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
 
@@ -153,12 +157,16 @@ jobs:
           dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
           df -h
           echo "Removing large packages"
-          sudo apt-get remove -y '^dotnet-.*'
+          sudo apt-get remove -y '^dotnet.*'
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
           echo "Removing large directories"
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
 

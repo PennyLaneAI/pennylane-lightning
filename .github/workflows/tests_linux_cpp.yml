@@ -60,8 +60,11 @@ jobs:
           sudo apt-get clean
           df -h
           echo "Removing large directories"
-          ls -ltrah /opt/hostedtoolcache
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
       - uses: actions/setup-python@v5
@@ -167,12 +170,14 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
-          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
-
       - uses: actions/setup-python@v5
         name: Install Python
         with:
@@ -254,11 +259,15 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
-          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
@@ -368,11 +377,15 @@ jobs:
           sudo apt-get autoremove -y
           sudo apt-get clean
           df -h
-          ls -ltrah /opt/hostedtoolcache
           echo "Removing large directories"
-          # deleting 15GB
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk
+          sudo rm -rf /opt/hostedtoolcache/Ruby
+          sudo rm -rf /opt/hostedtoolcache/PyPy
+          sudo rm -rf /opt/hostedtoolcache/go
           rm -rf /usr/share/dotnet/
           df -h
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
