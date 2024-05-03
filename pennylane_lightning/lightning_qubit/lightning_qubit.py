@@ -397,7 +397,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
 @simulator_tracking
 @single_tape_support
-# pylint: too-many-instance-attributes
 class LightningQubit(Device):
     """PennyLane Lightning Qubit device.
 
@@ -449,7 +448,7 @@ class LightningQubit(Device):
     observables = _observables
     # The names of the supported observables.
 
-    def __init__(  # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments, too-many-instance-attributes
         self,
         wires,
         *,
