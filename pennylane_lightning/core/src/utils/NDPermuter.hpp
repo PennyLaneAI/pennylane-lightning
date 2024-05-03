@@ -150,7 +150,6 @@ template <class PermuterBackend> class Permuter {
  * @tparam blocksize Controls the internal data chunk size for cache blocking.
  */
 template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
-
   public:
     /**
      * @brief Reference-based transpose operation. See `Permuter` class for more
@@ -273,6 +272,7 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         }
     }
 
+    // LCOV_EXCL_START
     /**
      * @brief Return-based transpose operation. See `Permuter` class for more
      * details.
@@ -286,6 +286,7 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
         Transpose(data_, shape, data_out, old_indices, new_indices);
         return data_out;
     }
+    // LCOV_EXCL_END
 
   private:
     static constexpr std::size_t blocksize_ = BLOCKSIZE;

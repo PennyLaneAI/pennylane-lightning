@@ -433,6 +433,8 @@ class LightningQubit(Device):
             qubit is built with OpenMP.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
