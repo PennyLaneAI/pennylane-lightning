@@ -97,7 +97,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}
-          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}.info
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}.info
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
