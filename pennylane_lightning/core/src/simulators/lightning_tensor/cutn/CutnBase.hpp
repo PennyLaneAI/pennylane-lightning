@@ -127,7 +127,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
             /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
             /*  int64_t * */ &worksize));
-        
+
         // Ensure data is aligned by 256 bytes
         worksize += int64_t{256} - worksize % int64_t{256};
 
