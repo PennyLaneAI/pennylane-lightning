@@ -21,10 +21,10 @@
 #include <utility>
 #include <vector>
 
-#include "cuGates_host.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "cuDeviceTensor.hpp"
+#include "cuGates_host.hpp"
 #include "cuda.h"
 #include "cuda_helpers.hpp"
 
@@ -48,6 +48,9 @@ template <class PrecisionT> class GateTensorCache {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using gate_id = std::pair<std::string, PrecisionT>;
+    using graph_id =
+        std::pair<std::size_t,
+                  bool>; // gate id from applyGateTensor and immutable
 
     GateTensorCache() = delete;
     GateTensorCache(const GateTensorCache &other) = delete;
@@ -262,6 +265,10 @@ template <class PrecisionT> class GateTensorCache {
         total_alloc_bytes_ += (sizeof(CFP_t) * gate.size());
     }
 
+    void add_gate_id(const graph_id &graph_key, const gate_id &gate_key) {
+        graph_gate_map_[graph_key] = gate_key;
+    }
+
     /**
      * @brief Returns a pointer to the GPU device memory where the gate is
      * stored.
@@ -298,6 +305,8 @@ template <class PrecisionT> class GateTensorCache {
             return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
         }
     };
+
+    std::unordered_map<graph_id, gate_id, gate_id_hash> graph_gate_map_;
 
     std::unordered_map<gate_id, cuDeviceTensor<PrecisionT>, gate_id_hash>
         device_gates_;

@@ -310,6 +310,13 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                 throw LightningException(message);
             } else if (!BaseType::getGateCache()->gateExists(opName, par[0])) {
                 BaseType::getGateCache()->add_gate(opName, par[0], gate_matrix);
+
+                // TODO TO BE UPDATED
+                BaseType::getGateCache()->add_gate_id(
+                    std::pair<std::size_t, bool>{
+                        0, false}, // .first id, .second immutable
+                    std::pair<std::string, Precision>{
+                        opName, par[0]}); //.first gate name, .second parameter
             }
 
             if (ctrls.size() > 0) {
