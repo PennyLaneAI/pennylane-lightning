@@ -267,7 +267,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     def execute_and_compute_derivatives(
         self,
@@ -285,7 +285,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of derivatives has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     # pylint: disable=unused-argument
     def supports_vjp(
@@ -324,7 +324,7 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
 
     def execute_and_compute_vjp(
         self,
@@ -345,4 +345,4 @@ class LightningTensor(Device):
         """
         raise NotImplementedError(
             "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
-        )  # pragma: no cover
+        )
