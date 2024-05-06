@@ -19,18 +19,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-latest
+
+
   build-pure-python-wheel:
     if: |
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
       github.event_name == 'workflow_dispatch'
+    needs: [determine_runner]
     strategy:
       matrix:
-        os: [ubuntu-latest]
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     timeout-minutes: 30
-    name: ${{ matrix.os }} - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
-    runs-on: ${{ matrix.os }}
+    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
       - name: Checkout PennyLane-Lightning
