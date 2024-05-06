@@ -105,6 +105,9 @@
 
 ### Bug fixes
 
+* Lightning Qubit once again respects the wire order specified on device instantiation.
+  [(#705)](https://github.com/PennyLaneAI/pennylane-lightning/pull/705)
+
 * `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit`'s `simulate` is modified accordingly.
   [(#694)](https://github.com/PennyLaneAI/pennylane/pull/694)
 
