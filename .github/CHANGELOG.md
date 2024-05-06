@@ -68,6 +68,9 @@
 
 ### Improvements
 
+* The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
+  [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
+
 * Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for `lightning.kokkos` wheels.
   [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
 
