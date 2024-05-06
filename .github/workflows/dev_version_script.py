@@ -94,10 +94,18 @@ if __name__ == "__main__":
     # Only attempt to bump the version if the pull_request is:
     #  - A prerelease, has `X.Y.Z-prerelease` in _version.py
     #  - The prerelease startswith `dev`. We do not want to auto bump for non-dev prerelease.
-    if pr_version.prerelease and pr_version.prerelease.startswith(DEV_PRERELEASE_TAG_PREFIX):
-        # If this is the first prerelease PR, do nothing!
-        if pr_version.prerelease == DEV_PRERELEASE_TAG_START:
-            print("PR is dev0 prerelease ... Nothing to do!")
+    # However,
+    #  If a PR is of a higher version AND the prerelease tag is reset, then do nothing
+    #  This captures the case during release where we might bump the release version
+    #  within a PR and reset tag back to dev0
+    if pr_version > master_version and pr_version.prerelease and pr_version.prerelease == DEV_PRERELEASE_TAG_START:
+        print("This Pull Request is upgrading the package version to next release ... skipping bumping!")
+        print("If this is happening in error, please report it to the PennyLane team!")
+    elif pr_version.prerelease and pr_version.prerelease.startswith(DEV_PRERELEASE_TAG_PREFIX):
+        # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+        # Then default to the starting tag
+        if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
+            next_prerelease_version = DEV_PRERELEASE_TAG_START
         else:
             # If master branch does not have a prerelease (for any reason) OR does not have an ending number
             # Then default to the starting tag
