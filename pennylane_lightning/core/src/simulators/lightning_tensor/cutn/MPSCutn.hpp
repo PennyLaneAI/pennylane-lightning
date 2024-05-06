@@ -14,7 +14,8 @@
 
 /**
  * @file MPSCutn.hpp
- * MPS class with cuTensorNet backend.
+ * MPS class with cuTensorNet backend. Note that current implementation only
+ * support the open boundary condition.
  */
 
 #pragma once
@@ -191,9 +192,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Get the full state vector representation of MPS quantum state.
      *
-     * NOTE: This API is only for MPS unit tests purpose only, given that the
-     * full statevector system is small. Attempt to apply this method to largr
-     * systems will lead to memory issue.
+     * NOTE: This method is for MPS unit tests purpose only, given that full
+     * state vector requires too much memory (`exp2(numQubits)`) in large
+     * systems.
      *
      * @return Full state vector representation of MPS quantum state on host
      * std::vector<ComplexT>
@@ -235,7 +236,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
     /**
      * @brief Return siteModes to the member initializer
-     *
+     * NOTE: This method only works for the open boundary condition
      * @return std::vector<std::vector<std::size_t>>
      */
     std::vector<std::vector<std::size_t>> setSitesModes_() {
@@ -263,7 +264,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
 
     /**
      * @brief Return sitesExtents to the member initializer
-     *
+     * NOTE: This method only works for the open boundary condition
      * @return std::vector<std::vector<std::size_t>>
      */
     std::vector<std::vector<std::size_t>> setSitesExtents_() {
@@ -291,7 +292,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
 
     /**
      * @brief Return siteExtents_int64 to the member initializer
-     *
+     * NOTE: This method only works for the open boundary condition
      * @return std::vector<std::vector<int64_t>>
      */
     std::vector<std::vector<int64_t>> setSitesExtents_int64_() {

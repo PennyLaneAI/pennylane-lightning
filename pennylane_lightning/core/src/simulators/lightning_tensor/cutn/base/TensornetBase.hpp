@@ -34,8 +34,7 @@ template <class Precision, class Derived> class TensornetBase {
 
     explicit TensornetBase(const std::size_t numQubits)
         : numQubits_(numQubits) {
-        qubitDims_.resize(numQubits);
-        std::fill(qubitDims_.begin(), qubitDims_.end(), std::size_t{2});
+        qubitDims_ = std::vector<size_t>(numQubits, size_t{2});
     }
 
     ~TensornetBase() = default;
