@@ -25,6 +25,13 @@
 
 namespace Pennylane::LightningTensor::Cutn::Util {
 
+enum MPSStatus {
+    MPSInitNotSet,
+    MPSInitSet,
+    MPSFinalizedNotSet,
+    MPSFinalizedSet
+};
+
 /**
  * Utility function object to tell std::shared_ptr how to
  * release/destroy cutensornet objects.

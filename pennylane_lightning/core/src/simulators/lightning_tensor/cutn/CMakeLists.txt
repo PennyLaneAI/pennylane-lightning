@@ -37,9 +37,9 @@ option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
 target_link_libraries(${PL_TENSOR} PUBLIC  lightning_compile_options
                                             lightning_external_libs
-                                            lightning_tensor_utils
-                                            lightning_tensor_tensor
-                                            lightning_tensor_tensornetBase
+                                            ${PL_BACKEND}_utils
+                                            ${PL_BACKEND}_tensor
+                                            ${PL_BACKEND}_tensornetBase
                                             )
     
 target_include_directories(${PL_TENSOR} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

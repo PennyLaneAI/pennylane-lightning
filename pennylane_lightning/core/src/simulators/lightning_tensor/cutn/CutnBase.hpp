@@ -47,8 +47,8 @@ namespace Pennylane::LightningTensor::Cutn {
 template <class Precision, class Derived>
 class CutnBase : public TensornetBase<Precision, Derived> {
   protected:
-    bool MPSInitialized_ = false;
-    bool MPSFinalized_ = false;
+    MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
+    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
   private:
     using BaseType = TensornetBase<Precision, Derived>;
@@ -64,17 +64,53 @@ class CutnBase : public TensornetBase<Precision, Derived> {
   public:
     CutnBase() = delete;
 
-    explicit CutnBase(const std::size_t numQubits, DevTag<int> &dev_tag)
-        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
-          dev_tag_(dev_tag) {
-        initHelper_();
-    }
-
     explicit CutnBase(const std::size_t numQubits, int device_id = 0,
                       cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_({device_id, stream_id}) {
-        initHelper_();
+        // TODO this code block could be moved to base class and need to revisit
+        // when working on copy ctor
+        if constexpr (std::is_same_v<Precision, double>) {
+            typeData_ = CUDA_C_64F;
+            typeCompute_ = CUTENSORNET_COMPUTE_64F;
+        } else {
+            typeData_ = CUDA_C_32F;
+            typeCompute_ = CUTENSORNET_COMPUTE_32F;
+        }
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStatePurity_t */ purity_,
+            /* int32_t numStateModes */
+            static_cast<int32_t>(BaseType::getNumQubits()),
+            /* const int64_t *stateModeExtents */
+            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
+            /* cudaDataType_t */ typeData_,
+            /*  cutensornetState_t * */ &quantumState_));
+    }
+
+    explicit CutnBase(const std::size_t numQubits, DevTag<int> dev_tag)
+        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
+          dev_tag_(dev_tag) {
+        // TODO this code block could be moved to base class and need to revisit
+        // when working on copy ctor
+        if constexpr (std::is_same_v<Precision, double>) {
+            typeData_ = CUDA_C_64F;
+            typeCompute_ = CUTENSORNET_COMPUTE_64F;
+        } else {
+            typeData_ = CUDA_C_32F;
+            typeCompute_ = CUTENSORNET_COMPUTE_32F;
+        }
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStatePurity_t */ purity_,
+            /* int32_t numStateModes */
+            static_cast<int32_t>(BaseType::getNumQubits()),
+            /* const int64_t *stateModeExtents */
+            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
+            /* cudaDataType_t */ typeData_,
+            /*  cutensornetState_t * */ &quantumState_));
     }
 
     ~CutnBase() {
@@ -198,30 +234,6 @@ class CutnBase : public TensornetBase<Precision, Derived> {
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
-    }
-
-  private:
-    /**
-     * @brief helper function for constuctor.
-     */
-    void initHelper_() {
-        if constexpr (std::is_same_v<Precision, double>) {
-            typeData_ = CUDA_C_64F;
-            typeCompute_ = CUTENSORNET_COMPUTE_64F;
-        } else {
-            typeData_ = CUDA_C_32F;
-            typeCompute_ = CUTENSORNET_COMPUTE_32F;
-        }
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* cutensornetStatePurity_t */ purity_,
-            /* int32_t numStateModes */
-            static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t *stateModeExtents */
-            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
-            /* cudaDataType_t */ typeData_,
-            /*  cutensornetState_t * */ &quantumState_));
     }
 };
 } // namespace Pennylane::LightningTensor::Cutn

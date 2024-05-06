@@ -81,7 +81,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     }
 
     explicit MPSCutn(const std::size_t numQubits, const std::size_t maxBondDim,
-                     DevTag<int> &dev_tag)
+                     DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
@@ -156,10 +156,10 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
                     "Please ensure all elements of a basis state should be "
                     "either 0 or 1.");
 
-        PL_ABORT_IF(this->MPSInitialized_ == true,
+        PL_ABORT_IF(this->MPSInitialized_ == MPSStatus::MPSInitSet,
                     "setBasisState() can be called only once.");
 
-        this->MPSInitialized_ = true;
+        this->MPSInitialized_ = MPSStatus::MPSInitSet;
 
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
@@ -196,12 +196,12 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * std::vector<ComplexT>
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        PL_ABORT_IF_NOT(this->MPSFinalized_ == false,
-                        "getDataVector() method to return the full state "
-                        "vector can't be called "
-                        "after cutensornetStateFinalizeMPS is called");
+        PL_ABORT_IF(this->MPSFinalized_ == MPSStatus::MPSFinalizedSet,
+                    "getDataVector() method to return the full state "
+                    "vector can't be called "
+                    "after cutensornetStateFinalizeMPS is called");
 
-        this->MPSFinalized_ = true;
+        this->MPSFinalized_ = MPSStatus::MPSFinalizedSet;
 
         // 1D representation
         std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
