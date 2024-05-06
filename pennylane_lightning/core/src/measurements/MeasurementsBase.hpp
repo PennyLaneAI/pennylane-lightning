@@ -61,10 +61,14 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
   public:
 #ifdef _ENABLE_PLGPU
     explicit MeasurementsBase(StateVectorT &statevector)
-        : _statevector{statevector} {};
+        : _statevector{statevector} {
+        setRandomSeed();
+    };
 #else
     explicit MeasurementsBase(const StateVectorT &statevector)
-        : _statevector{statevector} {};
+        : _statevector{statevector} {
+        setRandomSeed();
+    };
 #endif
 
     /**

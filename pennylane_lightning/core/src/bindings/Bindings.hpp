@@ -459,6 +459,8 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
+        .def("setSeed", &Measurements<StateVectorT>::setSeed,
+             "Sets the seed of a measurement object.")
         .def("generate_samples", [](Measurements<StateVectorT> &M,
                                     size_t num_wires, size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);

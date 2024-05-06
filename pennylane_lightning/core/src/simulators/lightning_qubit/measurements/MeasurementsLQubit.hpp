@@ -469,7 +469,6 @@ class Measurements final
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<size_t, size_t> cache;
-        this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -564,7 +563,6 @@ class Measurements final
         std::vector<size_t> samples(num_samples * num_qubits, 0);
         std::uniform_real_distribution<PrecisionT> distribution(0.0, 1.0);
         std::unordered_map<size_t, size_t> cache;
-        this->setRandomSeed();
 
         const size_t N = probabilities.size();
         std::vector<double> bucket(N);

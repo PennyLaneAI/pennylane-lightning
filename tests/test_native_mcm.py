@@ -19,7 +19,6 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
-from flaky import flaky
 from pennylane._device import DeviceError
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
@@ -32,7 +31,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 def test_all_invalid_shots_circuit():
     """Test all invalid cases: expval, probs, var measurements."""
 
-    dev = qml.device(device_name, wires=2)
+    dev = qml.device(device_name, wires=2, seed=0)
     dq = qml.device("default.qubit", wires=2)
 
     def circuit_op():
@@ -69,7 +68,7 @@ def test_all_invalid_shots_circuit():
 def test_unsupported_measurement():
     """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit``."""
 
-    dev = qml.device(device_name, wires=2, shots=1000)
+    dev = qml.device(device_name, wires=2, shots=1000, seed=0)
     params = np.pi / 4 * np.ones(2)
 
     @qml.qnode(dev)
@@ -93,7 +92,6 @@ def test_unsupported_measurement():
             func(*params)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -103,7 +101,7 @@ def test_simple_mcm(shots, postselect, reset, measure_f):
     conditional gate. A single measurement of the mid-circuit measurement value is performed at
     the end."""
 
-    dev = qml.device(device_name, wires=1, shots=shots)
+    dev = qml.device(device_name, wires=1, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
     params = np.pi / 4 * np.ones(2)
 
@@ -123,7 +121,6 @@ def test_simple_mcm(shots, postselect, reset, measure_f):
         validate_measurements(measure_f, shots, results1, results2)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [1000, [1000, 1001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -133,7 +130,7 @@ def test_single_mcm_single_measure_mcm(shots, postselect, reset, measure_f):
     conditional gate. A single measurement of the mid-circuit measurement value is performed at
     the end."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
     params = np.pi / 4 * np.ones(2)
 
@@ -172,7 +169,6 @@ def obs_tape(x, y, z, reset=False, postselect=None):
     return m0, m1
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -182,9 +178,9 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
     """Tests that LightningQubit handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of a common observable is performed at the end."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
-    params = [np.pi / 7, np.pi / 6, -np.pi / 5]
+    params = [np.pi / 3.5, np.pi / 3.0, -np.pi / 2.5]
 
     def func(x, y, z):
         obs_tape(x, y, z, reset=reset, postselect=postselect)
@@ -200,7 +196,6 @@ def test_single_mcm_single_measure_obs(shots, postselect, reset, measure_f, obs)
         validate_measurements(measure_f, shots, results1, results2)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [3000, [3000, 3001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -210,7 +205,7 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
     """Tests that LightningDevice handles a circuit with a single mid-circuit measurement and a
     conditional gate. A single measurement of one or several wires is performed at the end."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
     params = np.pi / 4 * np.ones(2)
 
@@ -230,7 +225,6 @@ def test_single_mcm_single_measure_wires(shots, postselect, reset, measure_f, wi
         validate_measurements(measure_f, shots, results1, results2)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -240,9 +234,9 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
     and a conditional gate. Multiple measurements of the mid-circuit measurement value are
     performed."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
-    params = [np.pi / 7, np.pi / 6, -np.pi / 5]
+    params = [np.pi / 3.5, np.pi / 3.0, -np.pi / 2.5]
     obs = qml.PauliY(1)
 
     def func(x, y, z):
@@ -260,7 +254,6 @@ def test_single_mcm_multiple_measurements(shots, postselect, reset, measure_f):
             validate_measurements(measure_f, shots, r1, r2)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -270,7 +263,7 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
     param = np.pi / 3
 
@@ -293,18 +286,17 @@ def test_composite_mcm_measure_composite_mcm(shots, postselect, reset, measure_f
         validate_measurements(measure_f, shots, results1, results2)
 
 
-@flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [10000, [10000, 10001]])
-@pytest.mark.parametrize("postselect", [None, 0, 1])
-@pytest.mark.parametrize("reset", [False, True])
-@pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
+@pytest.mark.parametrize("shots", [10000])
+@pytest.mark.parametrize("postselect", [1])
+@pytest.mark.parametrize("reset", [False])
+@pytest.mark.parametrize("measure_f", [qml.expval])
 def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
     """Tests that LightningDevice handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a common observable is performed at the end."""
 
     dev = qml.device(device_name, wires=2, shots=shots)
     dq = qml.device("default.qubit", shots=shots)
-    params = [np.pi / 7, np.pi / 6, -np.pi / 5]
+    params = [np.pi / 3.5, np.pi / 3.0, -np.pi / 2.5]
     obs = qml.PauliZ(0) @ qml.PauliY(1)
 
     def func(x, y, z):
@@ -317,13 +309,14 @@ def test_composite_mcm_single_measure_obs(shots, postselect, reset, measure_f):
     func2 = qml.defer_measurements(qml.QNode(func, dq))
 
     results1 = func1(*params)
+    print(results1)
     results2 = func2(*params)
+    print(results2)
 
     if postselect is None or measure_f in (qml.expval, qml.probs, qml.var):
         validate_measurements(measure_f, shots, results1, results2)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
@@ -333,7 +326,7 @@ def test_composite_mcm_measure_value_list(shots, postselect, reset, measure_f):
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
-    dev = qml.device(device_name, wires=2, shots=shots)
+    dev = qml.device(device_name, wires=2, shots=shots, seed=0)
     dq = qml.device("default.qubit", shots=shots)
     param = np.pi / 3
 

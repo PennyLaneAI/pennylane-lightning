@@ -58,7 +58,9 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
+def simulate(
+    circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None, rng=None
+) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -75,11 +77,15 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     """
     if mcmc is None:
         mcmc = {}
+    if rng is not None:
+        mcmc["seed"] = rng.integers(0, high=np.iinfo(np.int64).max)
     state.reset_state()
     has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
     if circuit.shots and has_mcm:
         mid_measurements = {}
-        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
+        # need to "split" the seed to avoid correlations
+        seed = None if rng is None else rng.integers(0, high=np.iinfo(np.int64).max)
+        final_state = state.get_final_state(circuit, mid_measurements=mid_measurements, seed=seed)
         return LightningMeasurements(final_state, **mcmc).measure_final_state(
             circuit, mid_measurements=mid_measurements
         )
@@ -479,8 +485,8 @@ class LightningQubit(Device):
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
         # TODO: Investigate usefulness of creating numpy random generator
-        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        self._rng = np.random.default_rng(seed)
+        self._seed = np.random.randint(0, high=np.iinfo(np.int64).max) if seed == "global" else seed
+        self._rng = np.random.default_rng(self._seed)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
@@ -589,15 +595,22 @@ class LightningQubit(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
         mcmc = {
-            "mcmc": self._mcmc,
             "kernel_name": self._kernel_name,
+            "mcmc": self._mcmc,
             "num_burnin": self._num_burnin,
         }
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
+            results.append(
+                simulate(
+                    circuit,
+                    self._statevector,
+                    mcmc=mcmc,
+                    rng=None if self._seed is None else self._rng,
+                )
+            )
 
         return tuple(results)
 

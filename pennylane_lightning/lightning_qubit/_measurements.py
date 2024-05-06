@@ -71,10 +71,14 @@ class LightningMeasurements:
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
+        seed: int = None,
     ) -> None:
+        self._seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         self._qubit_state = qubit_state
         self._dtype = qubit_state.dtype
         self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
+        if seed is not None:
+            self._measurement_lightning.setSeed(self._seed)
         self._mcmc = mcmc
         self._kernel_name = kernel_name
         self._num_burnin = num_burnin
