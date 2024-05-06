@@ -170,7 +170,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         if: |
-          github.github.event_name == 'release' ||
+          github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
@@ -187,7 +187,7 @@ jobs:
     runs-on: ubuntu-latest
 
     if: |
-      github.github.event_name == 'release' ||
+      github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
