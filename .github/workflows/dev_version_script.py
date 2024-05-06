@@ -95,18 +95,22 @@ if __name__ == "__main__":
     #  - A prerelease, has `X.Y.Z-prerelease` in _version.py
     #  - The prerelease startswith `dev`. We do not want to auto bump for non-dev prerelease.
     if pr_version.prerelease and pr_version.prerelease.startswith(DEV_PRERELEASE_TAG_PREFIX):
-        # If master branch does not have a prerelease (for any reason) OR does not have an ending number
-        # Then default to the starting tag
-        if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
-            next_prerelease_version = DEV_PRERELEASE_TAG_START
+        # If this is the first prerelease PR, do nothing!
+        if pr_version.prerelease == DEV_PRERELEASE_TAG_START:
+            print("PR is dev0 prerelease ... Nothing to do!")
         else:
-            # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
-            next_prerelease_version = master_version.next_version("prerelease").prerelease
-        new_version = master_version.replace(prerelease=next_prerelease_version)
-        if pr_version != new_version:
-            print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
-            update_prerelease_version(args.pr, new_version)
-        else:
-            print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
+            # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+            # Then default to the starting tag
+            if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
+                next_prerelease_version = DEV_PRERELEASE_TAG_START
+            else:
+                # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
+                next_prerelease_version = master_version.next_version("prerelease").prerelease
+            new_version = master_version.replace(prerelease=next_prerelease_version)
+            if pr_version != new_version:
+                print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
+                update_prerelease_version(args.pr, new_version)
+            else:
+                print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
     else:
         print("PR is not a dev prerelease ... Nothing to do!")
