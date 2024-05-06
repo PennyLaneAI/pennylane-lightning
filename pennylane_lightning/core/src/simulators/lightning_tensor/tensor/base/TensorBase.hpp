@@ -42,8 +42,8 @@ template <class PrecisionT, class Derived> class TensorBase {
     TensorBase(std::size_t rank, const std::vector<std::size_t> &modes,
                const std::vector<std::size_t> &extents)
         : rank_(rank), modes_(modes), extents_(extents) {
-        PL_ABORT_IF(rank_ != extents_.size(),
-                    "Please check if rank or extents are set correctly.");
+        PL_ABORT_IF_NOT(rank_ == extents_.size(),
+                        "Please check if rank or extents are set correctly.");
         length_ = 1;
         for (auto extent : extents) {
             length_ *= extent;

@@ -46,10 +46,6 @@ namespace Pennylane::LightningTensor::Cutn {
 
 template <class Precision, class Derived>
 class CutnBase : public TensornetBase<Precision, Derived> {
-  protected:
-    MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
-    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
-
   private:
     using BaseType = TensornetBase<Precision, Derived>;
     SharedCutnHandle handle_;

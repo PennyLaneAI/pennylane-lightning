@@ -29,17 +29,17 @@ using namespace Pennylane::LightningTensor::Cutn::Util;
 
 template <typename TypeList> void testTensornetBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        using MPST = typename TypeList::Type;
+        using MPS_T = typename TypeList::Type;
 
         const size_t num_qubits = 4;
         const std::size_t maxBondDim = 2;
         std::vector<std::size_t> qubitDims = {2, 2, 2, 2};
         DevTag<int> dev_tag{0, 0};
 
-        MPST mps_state{num_qubits, maxBondDim, dev_tag};
+        MPS_T mps_state{num_qubits, maxBondDim, dev_tag};
 
         DYNAMIC_SECTION("Methods implemented in the base class - "
-                        << MPSToName<MPST>::name) {
+                        << MPSToName<MPS_T>::name) {
             REQUIRE(mps_state.getNumQubits() == 4);
             REQUIRE(mps_state.getQubitDims() == qubitDims);
         }

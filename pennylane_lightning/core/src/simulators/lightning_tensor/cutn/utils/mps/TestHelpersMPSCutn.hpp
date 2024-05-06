@@ -14,8 +14,7 @@
 #pragma once
 /**
  * @file
- * This file defines the necessary functionality to test over LQubit State
- * Vectors.
+ * This file defines the necessary functionality to test over LTensor MPS.
  */
 #include "MPSCutn.hpp"
 #include "TypeList.hpp"

@@ -58,6 +58,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
     using BaseType = CutnBase<Precision, MPSCutn>;
 
+    MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
+    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
+
     const std::size_t maxBondDim_;
 
     const std::vector<std::vector<std::size_t>> sitesModes_;
@@ -152,14 +155,14 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             basisState.begin(), basisState.end(),
             [](std::size_t bitVal) { return bitVal == 0 || bitVal == 1; });
 
-        PL_ABORT_IF(allZeroOrOne == false,
-                    "Please ensure all elements of a basis state should be "
-                    "either 0 or 1.");
+        PL_ABORT_IF_NOT(allZeroOrOne,
+                        "Please ensure all elements of a basis state should be "
+                        "either 0 or 1.");
 
-        PL_ABORT_IF(this->MPSInitialized_ == MPSStatus::MPSInitSet,
+        PL_ABORT_IF(MPSInitialized_ == MPSStatus::MPSInitSet,
                     "setBasisState() can be called only once.");
 
-        this->MPSInitialized_ = MPSStatus::MPSInitSet;
+        MPSInitialized_ = MPSStatus::MPSInitSet;
 
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
@@ -196,12 +199,12 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
      * std::vector<ComplexT>
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        PL_ABORT_IF(this->MPSFinalized_ == MPSStatus::MPSFinalizedSet,
+        PL_ABORT_IF(MPSFinalized_ == MPSStatus::MPSFinalizedSet,
                     "getDataVector() method to return the full state "
                     "vector can't be called "
                     "after cutensornetStateFinalizeMPS is called");
 
-        this->MPSFinalized_ = MPSStatus::MPSFinalizedSet;
+        MPSFinalized_ = MPSStatus::MPSFinalizedSet;
 
         // 1D representation
         std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
@@ -233,9 +236,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Return siteModes to the member initializer
      *
-     * @return const std::vector<std::vector<std::size_t>>
+     * @return std::vector<std::vector<std::size_t>>
      */
-    const std::vector<std::vector<std::size_t>> setSitesModes_() {
+    std::vector<std::vector<std::size_t>> setSitesModes_() {
         std::vector<std::vector<std::size_t>> localSitesModes;
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             std::vector<std::size_t> localSiteModes;
@@ -261,9 +264,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Return sitesExtents to the member initializer
      *
-     * @return const std::vector<std::vector<std::size_t>>
+     * @return std::vector<std::vector<std::size_t>>
      */
-    const std::vector<std::vector<std::size_t>> setSitesExtents_() {
+    std::vector<std::vector<std::size_t>> setSitesExtents_() {
         std::vector<std::vector<std::size_t>> localSitesExtents;
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
@@ -289,9 +292,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Return siteExtents_int64 to the member initializer
      *
-     * @return const std::vector<std::vector<int64_t>>
+     * @return std::vector<std::vector<int64_t>>
      */
-    const std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
+    std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
         std::vector<std::vector<int64_t>> localSitesExtents_int64;
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
@@ -329,13 +332,13 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     void updateQuantumStateMPS_(const int64_t *const *extentsIn,
                                 uint64_t **tensorsIn) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
-            /*const cutensornetHandle_t*/ BaseType::getCutnHandle(),
+            /*const cutensornetHandle_t */ BaseType::getCutnHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
-            /*cutensornetBoundaryCondition_t*/
+            /*cutensornetBoundaryCondition_t */
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /*const int64_t *const*/ extentsIn,
-            /*const int64_t *const*/ nullptr,
-            /*void **/ reinterpret_cast<void **>(tensorsIn)));
+            /*const int64_t *const* */ extentsIn,
+            /*const int64_t *const* */ nullptr,
+            /*void ** */ reinterpret_cast<void **>(tensorsIn)));
     }
 };
 } // namespace Pennylane::LightningTensor::Cutn
