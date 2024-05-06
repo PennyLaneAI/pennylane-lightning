@@ -62,13 +62,9 @@ TEMPLATE_TEST_CASE("CudaTensor::baseMethods", "[CudaTensor]", float, double) {
 
     SECTION("getRank()") { CHECK(tensor.getRank() == rank); }
 
-    SECTION("getModes()") {
-        CHECK(tensor.getModes() == Pennylane::Util::approx(modes));
-    }
+    SECTION("getModes()") { CHECK(tensor.getModes() == modes); }
 
-    SECTION("getExtents()") {
-        CHECK(tensor.getExtents() == Pennylane::Util::approx(extents));
-    }
+    SECTION("getExtents()") { CHECK(tensor.getExtents() == extents); }
 
     SECTION("getLength()") { CHECK(tensor.getLength() == length); }
 }

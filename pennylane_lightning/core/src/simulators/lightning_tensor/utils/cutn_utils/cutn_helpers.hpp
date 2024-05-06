@@ -25,11 +25,13 @@
 
 namespace Pennylane::LightningTensor::Cutn::Util {
 
-enum MPSStatus {
-    MPSInitNotSet,
+enum class MPSStatus : uint32_t {
+    BEGIN = 0,
+    MPSInitNotSet = 0,
     MPSInitSet,
     MPSFinalizedNotSet,
-    MPSFinalizedSet
+    MPSFinalizedSet,
+    END
 };
 
 /**

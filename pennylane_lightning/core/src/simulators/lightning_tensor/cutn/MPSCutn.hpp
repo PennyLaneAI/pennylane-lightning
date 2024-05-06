@@ -54,6 +54,7 @@ namespace Pennylane::LightningTensor::Cutn {
  * @tparam Precision Floating-point precision type.
  */
 
+// TODO check if CRTP is required by the end of project.
 template <class Precision>
 class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
   private:
@@ -121,8 +122,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     /**
      * @brief Get a vector of pointers to tensor data of each site
      *
-     * @return std::vector<void *> Note void is required by
-     * cutensornet backend.
+     * @return std::vector<uint64_t *>
      */
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
         std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
