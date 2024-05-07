@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file cutnError.hpp
+ * @file tncudaError.hpp
  * Defines macros that throws Exception from cutensornet failure error codes.
  */
 

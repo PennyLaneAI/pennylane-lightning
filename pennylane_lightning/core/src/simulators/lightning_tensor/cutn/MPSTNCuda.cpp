@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "MPSCutn.hpp"
+#include "MPSTNCuda.hpp"
 
 // explicit instantiation
 template class Pennylane::LightningTensor::TNCuda::MPSTNCuda<float>;

@@ -26,12 +26,12 @@
 #include <cuda.h>
 #include <cutensornet.h>
 
-#include "CudaTensor.hpp"
+#include "TensorCuda.hpp"
 #include "TensorBase.hpp"
 #include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
-#include "cutnError.hpp"
-#include "cutn_helpers.hpp"
+#include "tncudaError.hpp"
+#include "tncuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
@@ -62,7 +62,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
-        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
+        : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           dev_tag_({device_id, stream_id}) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
@@ -86,7 +86,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     }
 
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
-        : BaseType(numQubits), handle_(make_shared_cutn_handle()),
+        : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           dev_tag_(dev_tag) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor

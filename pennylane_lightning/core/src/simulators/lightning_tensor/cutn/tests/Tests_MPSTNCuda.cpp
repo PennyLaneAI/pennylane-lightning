@@ -23,7 +23,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "MPSCutn.hpp"
+#include "MPSTNCuda.hpp"
 #include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"

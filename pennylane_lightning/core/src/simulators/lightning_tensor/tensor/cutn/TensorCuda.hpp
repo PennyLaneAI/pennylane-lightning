@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file CudaTensor.hpp
+ * @file TensorCuda.hpp
  * CUDA-capable tensor class for cuTensorNet backends.
  */
 
@@ -41,21 +41,21 @@ namespace Pennylane::LightningTensor::TNCuda {
  */
 
 template <class PrecisionT>
-class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
+class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
   public:
-    using BaseType = TensorBase<PrecisionT, CudaTensor>;
+    using BaseType = TensorBase<PrecisionT, TensorCuda>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
-    CudaTensor(const std::size_t rank, const std::vector<std::size_t> &modes,
+    TensorCuda(const std::size_t rank, const std::vector<std::size_t> &modes,
                const std::vector<std::size_t> &extents,
                const DevTag<int> &dev_tag, bool device_alloc = true)
-        : TensorBase<PrecisionT, CudaTensor<PrecisionT>>(rank, modes, extents),
+        : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
-    CudaTensor() = delete;
+    TensorCuda() = delete;
 
-    ~CudaTensor() = default;
+    ~TensorCuda() = default;
 
     /**
      * @brief Explicitly copy data from GPU device to host memory.

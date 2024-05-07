@@ -3,13 +3,13 @@ project(${PL_TENSOR}_utils LANGUAGES CXX)
 
 add_library(${PL_TENSOR}_utils INTERFACE)
 
-set(CUTN_UTILS_ADDED FALSE CACHE BOOL "Add cutn_utils header files")
+set(TNCUDA_UTILS_ADDED FALSE CACHE BOOL "Add tncuda_utils header files")
 
 foreach(BACKEND ${PL_BACKEND})
-    if("${PL_TENSOR_METHOD}" STREQUAL "mps" AND NOT CUTN_UTILS_ADDED)
+    if("${PL_TENSOR_METHOD}" STREQUAL "mps" AND NOT TNCUDA_UTILS_ADDED)
         add_subdirectory(mps)
         target_include_directories(${PL_TENSOR}_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mps)
-        target_link_libraries(${PL_TENSOR}_utils INTERFACE mps_cutn_utils)
+        target_link_libraries(${PL_TENSOR}_utils INTERFACE mps_tncuda_utils)
         set(CUDA_UTILS_ADDED TRUE)
     endif()
 endforeach()

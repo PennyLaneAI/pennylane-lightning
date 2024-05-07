@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(CudaTensor_tests)
+project(TensorCuda_tests)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -14,25 +14,25 @@ FetchAndIncludeCatch()
 # Define library
 ################################################################################
 
-add_library(CudaTensor_tests INTERFACE)
-target_link_libraries(CudaTensor_tests INTERFACE  Catch2::Catch2)
+add_library(TensorCuda_tests INTERFACE)
+target_link_libraries(TensorCuda_tests INTERFACE  Catch2::Catch2)
 
-ProcessTestOptions(CudaTensor_tests)
+ProcessTestOptions(TensorCuda_tests)
 
 # Create dependency on the dynamically defined simulator/backend target.
-target_link_libraries(CudaTensor_tests INTERFACE lightning_utils cuda_tensor)
+target_link_libraries(TensorCuda_tests INTERFACE lightning_utils tensor_cuda)
 
-target_sources(CudaTensor_tests INTERFACE runner_lightning_tensor_CudaTensor.cpp)
+target_sources(TensorCuda_tests INTERFACE runner_lightning_tensor_TensorCuda.cpp)
 
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Tests_CudaTensor.cpp
+set(TEST_SOURCES    Tests_TensorCuda.cpp
                     )
 
-add_executable(CudaTensor_test_runner ${TEST_SOURCES})
-target_link_libraries(CudaTensor_test_runner PRIVATE  CudaTensor_tests)
+add_executable(TensorCuda_test_runner ${TEST_SOURCES})
+target_link_libraries(TensorCuda_test_runner PRIVATE  TensorCuda_tests)
 
-catch_discover_tests(CudaTensor_test_runner)
+catch_discover_tests(TensorCuda_test_runner)
 
-install(TARGETS CudaTensor_test_runner DESTINATION bin)
+install(TARGETS TensorCuda_test_runner DESTINATION bin)

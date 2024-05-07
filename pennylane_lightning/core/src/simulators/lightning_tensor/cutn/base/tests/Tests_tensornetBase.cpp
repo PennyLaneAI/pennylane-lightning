@@ -18,7 +18,7 @@
 
 #include "TypeList.hpp"
 
-#include "TestHelpersMPSCutn.hpp"
+#include "TestHelpersMPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda::Util;
 

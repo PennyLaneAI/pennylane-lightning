@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file cutn_helpers.hpp
+ * @file tncuda_helpers.hpp
  */
 
 #pragma once
@@ -21,7 +21,7 @@
 #include <memory>
 #include <utility>
 
-#include "cutnError.hpp"
+#include "tncudaError.hpp"
 
 namespace Pennylane::LightningTensor::TNCuda::Util {
 
@@ -38,7 +38,7 @@ enum class MPSStatus : uint32_t {
  * Utility function object to tell std::shared_ptr how to
  * release/destroy cutensornet objects.
  */
-struct CuTNHandleDeleter {
+struct TNCudaHandleDeleter {
     void operator()(cutensornetHandle_t handle) const {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroy(handle));
     }
@@ -50,9 +50,9 @@ using SharedTNCudaHandle =
 /**
  * @brief Creates a SharedTNCudaHandle (a shared pointer to a cutensornetHandle)
  */
-inline SharedTNCudaHandle make_shared_cutn_handle() {
+inline SharedTNCudaHandle make_shared_tncuda_handle() {
     cutensornetHandle_t h;
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
-    return {h, CuTNHandleDeleter()};
+    return {h, TNCudaHandleDeleter()};
 }
 } // namespace Pennylane::LightningTensor::TNCuda::Util

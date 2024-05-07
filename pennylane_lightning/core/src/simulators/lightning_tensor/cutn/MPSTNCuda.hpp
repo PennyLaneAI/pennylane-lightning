@@ -27,14 +27,14 @@
 #include <cuda.h>
 #include <cutensornet.h>
 
-#include "CudaTensor.hpp"
-#include "CutnBase.hpp"
+#include "TensorCuda.hpp"
+#include "TNCudaBase.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
-#include "cutnError.hpp"
-#include "cutn_helpers.hpp"
+#include "tncudaError.hpp"
+#include "tncuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
@@ -69,7 +69,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
 
-    std::vector<CudaTensor<Precision>> tensors_;
+    std::vector<TensorCuda<Precision>> tensors_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -212,7 +212,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
         std::vector<std::size_t> output_extent(
             std::size_t{1}, std::size_t{1} << BaseType::getNumQubits());
-        CudaTensor<Precision> output_tensor(output_modes.size(), output_modes,
+        TensorCuda<Precision> output_tensor(output_modes.size(), output_modes,
                                             output_extent,
                                             BaseType::getDevTag());
 

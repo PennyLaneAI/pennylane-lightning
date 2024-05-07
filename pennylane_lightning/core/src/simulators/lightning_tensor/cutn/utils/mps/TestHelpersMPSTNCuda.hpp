@@ -16,7 +16,7 @@
  * @file
  * This file defines the necessary functionality to test over LTensor MPS.
  */
-#include "MPSCutn.hpp"
+#include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
 
 /// @cond DEV

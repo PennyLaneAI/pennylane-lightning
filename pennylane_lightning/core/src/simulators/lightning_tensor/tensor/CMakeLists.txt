@@ -5,12 +5,12 @@ add_library(${PL_BACKEND}_tensor INTERFACE)
 
 add_subdirectory(base)
 
-set(CUTN_UTILS_ADDED FALSE CACHE BOOL "Add cutn_utils header files")
+set(TNCUDA_UTILS_ADDED FALSE CACHE BOOL "Add tncuda_utils header files")
 
-if("${PL_TENSOR_BACKEND}" STREQUAL "cutensornet" AND NOT CUTN_UTILS_ADDED)
+if("${PL_TENSOR_BACKEND}" STREQUAL "cutensornet" AND NOT TNCUDA_UTILS_ADDED)
     add_subdirectory(cutn)
     target_include_directories(${PL_BACKEND}_tensor INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/cutn)
-    target_link_libraries(${PL_BACKEND}_tensor INTERFACE cuda_tensor)
+    target_link_libraries(${PL_BACKEND}_tensor INTERFACE tensor_cuda)
     set(CUDA_UTILS_ADDED TRUE)
 endif()
 

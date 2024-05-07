@@ -15,7 +15,7 @@
 #include <catch2/catch.hpp>
 #include <cmath>
 
-#include "CudaTensor.hpp"
+#include "TensorCuda.hpp"
 #include "DevTag.hpp"
 
 #include "TestHelpers.hpp"
@@ -29,15 +29,15 @@ using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("CudaTensor::Constructibility", "[Default Constructibility]",
+TEMPLATE_TEST_CASE("TensorCuda::Constructibility", "[Default Constructibility]",
                    float, double) {
-    SECTION("CudaTensor<>") {
-        REQUIRE(!std::is_constructible_v<CudaTensor<TestType>()>);
+    SECTION("TensorCuda<>") {
+        REQUIRE(!std::is_constructible_v<TensorCuda<TestType>()>);
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("CudaTensor::Constructibility",
-                           "[General Constructibility]", (CudaTensor),
+TEMPLATE_PRODUCT_TEST_CASE("TensorCuda::Constructibility",
+                           "[General Constructibility]", (TensorCuda),
                            (float, double)) {
     using TensorT = TestType;
 
@@ -51,14 +51,14 @@ TEMPLATE_PRODUCT_TEST_CASE("CudaTensor::Constructibility",
     }
 }
 
-TEMPLATE_TEST_CASE("CudaTensor::baseMethods", "[CudaTensor]", float, double) {
+TEMPLATE_TEST_CASE("TensorCuda::baseMethods", "[TensorCuda]", float, double) {
     const std::size_t rank = 3;
     const std::vector<std::size_t> modes = {0, 1, 2};
     const std::vector<std::size_t> extents = {2, 2, 2};
     const size_t length = 8;
     DevTag<int> dev_tag{0, 0};
 
-    CudaTensor<TestType> tensor{rank, modes, extents, dev_tag};
+    TensorCuda<TestType> tensor{rank, modes, extents, dev_tag};
 
     SECTION("getRank()") { CHECK(tensor.getRank() == rank); }
 

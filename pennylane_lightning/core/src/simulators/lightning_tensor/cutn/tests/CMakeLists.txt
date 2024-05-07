@@ -20,12 +20,12 @@ target_link_libraries(${PL_TENSOR}_tests INTERFACE     Catch2::Catch2
 
 ProcessTestOptions(${PL_TENSOR}_tests)
 
-target_sources(${PL_TENSOR}_tests INTERFACE runner_lightning_tensor_CutnMPS.cpp)
+target_sources(${PL_TENSOR}_tests INTERFACE runner_lightning_tensor_MPSTNCuda.cpp)
 
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Tests_CutnMPS.cpp
+set(TEST_SOURCES    Tests_MPSTNCuda.cpp
 )
 
 add_executable(${PL_TENSOR}_test_runner ${TEST_SOURCES})

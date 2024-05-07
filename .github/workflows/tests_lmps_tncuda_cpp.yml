@@ -1,4 +1,4 @@
-name: Testing::Linux::x86_64::MPSCutn::C++
+name: Testing::Linux::x86_64::MPSTNCuda::C++
 # TODO remove MPS from the workflow name and the workflow filename once exact is in.
 # TODO remove the `PL_TENSOR_METHOD` option once exact TN is added.
 # TODO remove the `pl_tensor_method` once exact TN is added.
@@ -16,7 +16,7 @@ on:
   release:
   pull_request:
     paths:
-      - .github/workflows/tests_lmps_cutn_cpp.yml
+      - .github/workflows/tests_lmps_tncuda_cpp.yml
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
       - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
@@ -31,7 +31,7 @@ env:
   GCC_VERSION: 11
 
 concurrency:
-  group: tests_lmps_cutn_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lmps_tncuda_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
           nvcc --version
           nvidia-smi
   
-  cpptestswithMPSCutn:
+  cpptestswithMPSTNCuda:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [builddeps]
     strategy:
@@ -70,7 +70,7 @@ jobs:
         pl_tensor_backend: ["cutensornet"]
         cuda_version: ["12"]
 
-    name: C++ tests (Lightning-Tensor-MPS-Cutn)
+    name: C++ tests (Lightning-Tensor-MPS-TNCuda)
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
@@ -86,7 +86,7 @@ jobs:
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
-      - name: Checkout PennyLane-Lightning-Tensor-MPS-Cutn
+      - name: Checkout PennyLane-Lightning-Tensor-MPS-TNCuda
         uses: actions/checkout@v4
         with:
           path: main
@@ -162,7 +162,7 @@ jobs:
 
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptestswithMPSCutn]
+    needs: [cpptestswithMPSTNCuda]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
