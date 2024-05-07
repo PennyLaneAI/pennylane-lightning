@@ -15,6 +15,9 @@
 * Update Linux wheels to use manylinux_2_28 images.
   [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
 
+* Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
+  [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
+
 ### Documentation
 
 ### Bug fixes
@@ -23,13 +26,16 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
 # Release 0.36.0
 
 ### New features since last release
+
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
@@ -185,7 +191,7 @@ Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 

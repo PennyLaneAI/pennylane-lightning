@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the generic lightning tensor class.
+Unit tests for the LightningTensor class.
 """
 
 
@@ -84,14 +84,20 @@ def test_support_derivatives():
 def test_compute_derivatives():
     """Test that an error is raised if the `compute_derivatives` method is called."""
     dev = LightningTensor()
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(
+        NotImplementedError,
+        match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
+    ):
         dev.compute_derivatives(circuits=None)
 
 
 def test_execute_and_compute_derivatives():
     """Test that an error is raised if `execute_and_compute_derivative` method is called."""
     dev = LightningTensor()
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(
+        NotImplementedError,
+        match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
+    ):
         dev.execute_and_compute_derivatives(circuits=None)
 
 
@@ -104,12 +110,18 @@ def test_supports_vjp():
 def test_compute_vjp():
     """Test that an error is raised if `compute_vjp` method is called."""
     dev = LightningTensor()
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(
+        NotImplementedError,
+        match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
+    ):
         dev.compute_vjp(circuits=None, cotangents=None)
 
 
 def test_execute_and_compute_vjp():
     """Test that an error is raised if `execute_and_compute_vjp` method is called."""
     dev = LightningTensor()
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(
+        NotImplementedError,
+        match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
+    ):
         dev.execute_and_compute_vjp(circuits=None, cotangents=None)
