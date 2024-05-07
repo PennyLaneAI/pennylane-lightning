@@ -9,29 +9,6 @@
 
 ### Improvements
 
-* Update Linux wheels to use manylinux_2_28 images.
-  [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
-
-### Documentation
-
-### Bug fixes
-
-### Contributors
-
-This release contains contributions from (in alphabetical order):
-
-Amintor Dusko, Shuli Shu
-
----
-
-# Release 0.36.0
-
-### New features since last release
-
-### Breaking changes
-
-### Improvements
-
 * The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
   [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
   
@@ -46,7 +23,7 @@ Amintor Dusko, Shuli Shu
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
