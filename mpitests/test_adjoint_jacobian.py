@@ -28,6 +28,9 @@ from pennylane import numpy as np
 from pennylane import qnode
 from scipy.stats import unitary_group
 
+if not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -109,12 +112,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name == "lightning.gpu" and ld._CPP_BINARY_AVAILABLE:
+        if device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
-        elif ld._CPP_BINARY_AVAILABLE:
-            message = "This method does not support statevector return type."
         else:
-            message = "Adjoint differentiation method does not support measurement StateMP"
+            message = "Adjoint differentiation method does not support measurement StateMP."
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
@@ -144,7 +145,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         jac = dev.adjoint_jacobian(tape)
         assert len(jac) == 0
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
@@ -159,7 +159,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ):
             dev.adjoint_jacobian(tape)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
         with qml.tape.QuantumTape() as tape:
@@ -332,7 +331,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]  # pylint: disable=no-member
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -522,7 +520,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -601,7 +598,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             dM2 = dev.adjoint_jacobian(tape, starting_state=state_vector)
             assert np.allclose(dM1, dM2, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_provide_wrong_starting_state(self, dev):
         """Tests raise an exception when provided starting state mismatches."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -624,7 +620,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
     )
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_state_return_type(self, dev):
         """Tests raise an exception when the return type is State"""
         with qml.tape.QuantumTape() as tape:
@@ -635,7 +630,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         with pytest.raises(
             qml.QuantumFunctionError,
-            match="This method does not support statevector return type.",
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             dev.adjoint_jacobian(tape)
 
@@ -675,7 +670,6 @@ class TestAdjointJacobianQNode:
         ):
             qml.grad(circ)(0.1)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
         args = np.array([0.54, 0.1, 0.5], requires_grad=True)
@@ -766,7 +760,6 @@ class TestAdjointJacobianQNode:
 
         assert np.allclose(grad_D[0], expected, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_gradient_repeated_gate_parameters(self, mocker, dev):
         """Tests that repeated use of a free parameter in a multi-parameter gate yields correct
         gradients."""
