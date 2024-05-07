@@ -27,10 +27,10 @@
 #include <cuda.h>
 #include <cutensornet.h>
 
-#include "TensorCuda.hpp"
-#include "TNCudaBase.hpp"
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
+#include "TNCudaBase.hpp"
+#include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"

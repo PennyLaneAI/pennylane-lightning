@@ -15,8 +15,8 @@
 #include <catch2/catch.hpp>
 #include <cmath>
 
-#include "TensorCuda.hpp"
 #include "DevTag.hpp"
+#include "TensorCuda.hpp"
 
 #include "TestHelpers.hpp"
 

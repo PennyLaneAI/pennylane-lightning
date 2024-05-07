@@ -26,8 +26,8 @@
 #include <cuda.h>
 #include <cutensornet.h>
 
-#include "TensorCuda.hpp"
 #include "TensorBase.hpp"
+#include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"
