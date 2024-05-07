@@ -189,7 +189,7 @@ jobs:
             $COVERAGE_FLAGS --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
