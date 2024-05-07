@@ -1,6 +1,32 @@
+# Release 0.37.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
+  [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Vincent Michaud-Rioux
+
+---
+
 # Release 0.36.0
 
 ### New features since last release
+
+* Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
+  [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)
 
 * Add compile-time support for AVX2/512 streaming operations in `lightning.qubit`.
   [(#664)](https://github.com/PennyLaneAI/pennylane-lightning/pull/664)
@@ -67,9 +93,6 @@
   [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
 
 ### Improvements
-
-* The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
-  [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
 
 * Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for `lightning.kokkos` wheels.
   [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
