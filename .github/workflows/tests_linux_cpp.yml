@@ -275,7 +275,7 @@ jobs:
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
-    name: Multiple-backends C++ Tests (kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
+    name: Multiple backends C++ Tests (kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:

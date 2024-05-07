@@ -125,7 +125,7 @@ jobs:
         blas: ["OFF", "ON"]
         group: [1, 2, 3, 4]
     timeout-minutes: 60
-    name: Python tests
+    name: ${{matrix.pl_backend}} Python Tests (test-group-${{ matrix.group }}, ENABLE_BLAS=${{ matrix.kokkos_version }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:

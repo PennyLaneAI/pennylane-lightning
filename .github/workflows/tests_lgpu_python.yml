@@ -65,7 +65,7 @@ jobs:
         default_backend: ["lightning_qubit"]
         cuda_version: ["12"]
 
-    name: Python tests with LGPU
+    name: ${{matrix.pl_backend}} Python Tests (cuda-${{matrix.cuda_version}})
     runs-on:
       - ubuntu-22.04
       - self-hosted

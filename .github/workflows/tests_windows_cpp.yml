@@ -100,12 +100,13 @@ jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 30
-    name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
+    name: ${{matrix.pl_backend}} C++ Tests (Windows)
+
     steps:
       - uses: actions/setup-python@v4
         name: Install Python
@@ -174,7 +175,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
     timeout-minutes: 30
-    name: C++ tests (Windows, Kokkos)
+    name: ${{matrix.pl_backend}} C++ Tests (Windows) (kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
 
     steps:

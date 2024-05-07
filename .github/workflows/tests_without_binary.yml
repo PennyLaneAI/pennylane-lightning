@@ -34,11 +34,12 @@ jobs:
   pythontests:
     needs: [determine_runner]
     timeout-minutes: 30
-    name: Python tests
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     strategy:
       matrix:
         pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
+
+    name: ${{matrix.pl_backend}} Python Tests (Without Binary)
 
     steps:
       - name: Checkout PennyLane-Lightning
