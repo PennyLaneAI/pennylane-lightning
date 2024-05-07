@@ -8,6 +8,9 @@
 
 * The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
   [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
+  
+* Update Linux wheels to use manylinux_2_28 images.
+  [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
 
 ### Documentation
 
@@ -17,6 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Amintor Dusko
 Vincent Michaud-Rioux
 
 ---
