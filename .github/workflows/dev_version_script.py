@@ -107,13 +107,18 @@ if __name__ == "__main__":
         if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
             next_prerelease_version = DEV_PRERELEASE_TAG_START
         else:
-            # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
-            next_prerelease_version = master_version.next_version("prerelease").prerelease
-        new_version = master_version.replace(prerelease=next_prerelease_version)
-        if pr_version != new_version:
-            print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
-            update_prerelease_version(args.pr, new_version)
-        else:
-            print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
+            # If master branch does not have a prerelease (for any reason) OR does not have an ending number
+            # Then default to the starting tag
+            if not master_version.prerelease or master_version.prerelease == DEV_PRERELEASE_TAG_PREFIX:
+                next_prerelease_version = DEV_PRERELEASE_TAG_START
+            else:
+                # Generate the next prerelease version (eg: dev1 -> dev2). Sourcing from master version.
+                next_prerelease_version = master_version.next_version("prerelease").prerelease
+            new_version = master_version.replace(prerelease=next_prerelease_version)
+            if pr_version != new_version:
+                print(f"Updating PR package version from -> '{pr_version}', to -> {new_version}")
+                update_prerelease_version(args.pr, new_version)
+            else:
+                print(f"PR is on the expected version '{new_version}' ... Nothing to do!")
     else:
         print("PR is not a dev prerelease ... Nothing to do!")

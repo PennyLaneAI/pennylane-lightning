@@ -31,6 +31,7 @@
 
 #include "LinearAlgebra.hpp"
 #include "MeasurementsBase.hpp"
+#include "NDPermuter.hpp"
 #include "Observables.hpp"
 #include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
@@ -44,6 +45,7 @@ using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
+namespace PUtil = Pennylane::Util;
 } // namespace
 /// @endcond
 
@@ -100,16 +102,17 @@ class Measurements final
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
+
         // Sorting wires.
         std::vector<size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
             sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
+
         // Determining probabilities for the sorted wires.
         const ComplexT *arr_data = this->_statevector.getData();
 
         size_t num_qubits = this->_statevector.getNumQubits();
-
         const std::vector<size_t> all_indices =
             Gates::generateBitPatterns(sorted_wires, num_qubits);
         const std::vector<size_t> all_offsets = Gates::generateBitPatterns(
@@ -125,12 +128,29 @@ class Measurements final
             }
             ind_probs++;
         }
-        // Transposing the probabilities tensor with the indices determined
-        // at the beginning.
+
+        // Permute the data according to the required wire ordering
         if (wires != sorted_wires) {
-            probabilities = Pennylane::Util::transpose_state_tensor(
-                probabilities, sorted_ind_wires);
+            static constexpr std::size_t CACHE_SIZE = 8;
+            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
+            std::vector<std::size_t> shape(wires.size(), 2);
+            std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
+            std::vector<std::string> wire_labels_new(wires.size(), "");
+
+            std::transform(sorted_wires.begin(), sorted_wires.end(),
+                           wire_labels_old.begin(), [](std::size_t index) {
+                               return std::to_string(index);
+                           });
+            std::transform(
+                wires.begin(), wires.end(), wire_labels_new.begin(),
+                [](std::size_t index) { return std::to_string(index); });
+
+            auto probs_sorted = probabilities;
+            p.Transpose(probabilities, shape, probs_sorted, wire_labels_old,
+                        wire_labels_new);
+            return probs_sorted;
         }
+
         return probabilities;
     }
 

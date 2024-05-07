@@ -17,6 +17,7 @@ FetchAndIncludeCatch()
 add_library(lightning_qubit_measurements_tests INTERFACE)
 target_link_libraries(lightning_qubit_measurements_tests INTERFACE  Catch2::Catch2
                                                                     lightning_measurements
+                                                                    lightning_qubit_observables
                                                                     lightning_qubit_measurements
                                                                     )
 

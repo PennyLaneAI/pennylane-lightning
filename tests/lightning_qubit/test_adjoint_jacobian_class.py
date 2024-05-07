@@ -125,7 +125,7 @@ class TestAdjointJacobian:
 
         with pytest.raises(
             qml.QuantumFunctionError,
-            match="This method does not support statevector return type",
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=3), tape)
 

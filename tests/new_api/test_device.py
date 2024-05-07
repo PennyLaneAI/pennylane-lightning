@@ -737,12 +737,14 @@ class TestDerivatives:
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type"
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             _ = dev.compute_derivatives(qs, config)
 
         with pytest.raises(
-            qml.QuantumFunctionError, match="This method does not support statevector return type"
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             _ = dev.execute_and_compute_derivatives(qs, config)
 

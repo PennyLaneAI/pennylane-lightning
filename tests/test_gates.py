@@ -24,7 +24,7 @@ from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
@@ -250,7 +250,6 @@ def test_arbitrary_inv_unitary_correct():
 
 
 @pytest.mark.skipif(ld._new_API, reason="Old API required")
-@pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
 @pytest.mark.parametrize(
     "obs,has_rotation",
     [
