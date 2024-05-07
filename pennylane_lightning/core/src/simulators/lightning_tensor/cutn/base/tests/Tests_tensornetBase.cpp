@@ -20,7 +20,7 @@
 
 #include "TestHelpersMPSCutn.hpp"
 
-using namespace Pennylane::LightningTensor::Cutn::Util;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 
 /**
  * @file

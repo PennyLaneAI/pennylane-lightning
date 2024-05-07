@@ -32,7 +32,7 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 } // namespace
 
-namespace Pennylane::LightningTensor::Cutn {
+namespace Pennylane::LightningTensor::TNCuda {
 
 /**
  * @brief CRTP-enabled class for CUDA-capable Tensor.
@@ -75,4 +75,4 @@ class CudaTensor final : public TensorBase<PrecisionT, CudaTensor<PrecisionT>> {
   private:
     std::shared_ptr<DataBuffer<CFP_t>> data_buffer_;
 };
-} // namespace Pennylane::LightningTensor::Cutn
+} // namespace Pennylane::LightningTensor::TNCuda

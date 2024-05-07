@@ -25,7 +25,7 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningGPU::Util;
-using namespace Pennylane::LightningTensor::Cutn;
+using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
 /// @endcond
 

@@ -15,5 +15,5 @@
 #include "MPSCutn.hpp"
 
 // explicit instantiation
-template class Pennylane::LightningTensor::Cutn::MPSCutn<float>;
-template class Pennylane::LightningTensor::Cutn::MPSCutn<double>;
+template class Pennylane::LightningTensor::TNCuda::MPSTNCuda<float>;
+template class Pennylane::LightningTensor::TNCuda::MPSTNCuda<double>;

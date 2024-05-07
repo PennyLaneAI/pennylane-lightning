@@ -21,20 +21,20 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane::LightningTensor::Cutn;
+using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor::Cutn::Util {
+namespace Pennylane::LightningTensor::TNCuda::Util {
 template <class MPS> struct MPSToName;
 
-template <> struct MPSToName<MPSCutn<float>> {
-    constexpr static auto name = "MPSCutn<float>";
+template <> struct MPSToName<MPSTNCuda<float>> {
+    constexpr static auto name = "MPSTNCuda<float>";
 };
-template <> struct MPSToName<MPSCutn<double>> {
-    constexpr static auto name = "MPSCutn<double>";
+template <> struct MPSToName<MPSTNCuda<double>> {
+    constexpr static auto name = "MPSTNCuda<double>";
 };
 
 using TestMPSBackends =
-    Pennylane::Util::TypeList<MPSCutn<float>, MPSCutn<double>, void>;
-} // namespace Pennylane::LightningTensor::Cutn::Util
+    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
+} // namespace Pennylane::LightningTensor::TNCuda::Util

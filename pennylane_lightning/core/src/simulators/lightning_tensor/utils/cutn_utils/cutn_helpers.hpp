@@ -23,7 +23,7 @@
 
 #include "cutnError.hpp"
 
-namespace Pennylane::LightningTensor::Cutn::Util {
+namespace Pennylane::LightningTensor::TNCuda::Util {
 
 enum class MPSStatus : uint32_t {
     BEGIN = 0,
@@ -44,15 +44,15 @@ struct CuTNHandleDeleter {
     }
 };
 
-using SharedCutnHandle =
+using SharedTNCudaHandle =
     std::shared_ptr<std::remove_pointer<cutensornetHandle_t>::type>;
 
 /**
- * @brief Creates a SharedCutnHandle (a shared pointer to a cutensornetHandle)
+ * @brief Creates a SharedTNCudaHandle (a shared pointer to a cutensornetHandle)
  */
-inline SharedCutnHandle make_shared_cutn_handle() {
+inline SharedTNCudaHandle make_shared_cutn_handle() {
     cutensornetHandle_t h;
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
     return {h, CuTNHandleDeleter()};
 }
-} // namespace Pennylane::LightningTensor::Cutn::Util
+} // namespace Pennylane::LightningTensor::TNCuda::Util

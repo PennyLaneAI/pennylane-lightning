@@ -23,7 +23,7 @@
 
 #include "Error.hpp"
 
-namespace Pennylane::LightningTensor::Cutn {
+namespace Pennylane::LightningTensor::TNCuda {
 template <class Precision, class Derived> class TensornetBase {
   private:
     std::size_t numQubits_;
@@ -67,4 +67,4 @@ template <class Precision, class Derived> class TensornetBase {
         return numQubits_;
     };
 };
-} // namespace Pennylane::LightningTensor::Cutn
+} // namespace Pennylane::LightningTensor::TNCuda

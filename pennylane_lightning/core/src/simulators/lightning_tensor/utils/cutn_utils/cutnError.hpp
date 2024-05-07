@@ -39,20 +39,19 @@ using namespace Pennylane::Util;
  * @param err cuQuantum cutensornet function error-code.
  */
 #define PL_CUTENSORNET_IS_SUCCESS(err)                                         \
-    PL_ABORT_IF_NOT(                                                           \
-        err == CUTENSORNET_STATUS_SUCCESS,                                     \
-        Pennylane::LightningTensor::Cutn::Util::GetCuTensorNetworkErrorString( \
-            err)                                                               \
-            .c_str())
+    PL_ABORT_IF_NOT(err == CUTENSORNET_STATUS_SUCCESS,                         \
+                    Pennylane::LightningTensor::TNCuda::Util::                 \
+                        GetCuTensorNetworkErrorString(err)                     \
+                            .c_str())
 #else
 #define PL_CUTENSORNET_IS_SUCCESS                                              \
     { static_cast<void>(err); }
 #endif
 
-namespace Pennylane::LightningTensor::Cutn::Util {
+namespace Pennylane::LightningTensor::TNCuda::Util {
 static const std::string
 GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {
     return cutensornetGetErrorString(err);
 }
-} // namespace Pennylane::LightningTensor::Cutn::Util
+} // namespace Pennylane::LightningTensor::TNCuda::Util
   // LCOV_EXCL_STOP

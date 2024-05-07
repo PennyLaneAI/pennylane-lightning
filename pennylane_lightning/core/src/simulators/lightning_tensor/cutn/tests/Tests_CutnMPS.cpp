@@ -31,21 +31,21 @@
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::Util;
-using namespace Pennylane::LightningTensor::Cutn;
+using namespace Pennylane::LightningTensor::TNCuda;
 
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
-TEMPLATE_TEST_CASE("MPSCutn::Constructibility", "[Default Constructibility]",
+TEMPLATE_TEST_CASE("MPSTNCuda::Constructibility", "[Default Constructibility]",
                    float, double) {
-    SECTION("MPSCutn<>") {
-        REQUIRE(!std::is_constructible_v<MPSCutn<TestType>()>);
+    SECTION("MPSTNCuda<>") {
+        REQUIRE(!std::is_constructible_v<MPSTNCuda<TestType>()>);
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("MPSCutn::Constructibility",
-                           "[General Constructibility]", (MPSCutn),
+TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
+                           "[General Constructibility]", (MPSTNCuda),
                            (float, double)) {
     using MPST = TestType;
 
@@ -56,8 +56,8 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSCutn::Constructibility",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
-                   double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
+                   float, double) {
     std::vector<std::vector<size_t>> basisStates = {
         {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
         {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}};
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
         std::size_t maxBondDim = 3;
         std::vector<size_t> basisState = {0, 0, 0, 0};
 
-        MPSCutn<TestType> mps_state{num_qubits, maxBondDim};
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         REQUIRE_THROWS_WITH(
             mps_state.setBasisState(basisState),
@@ -80,7 +80,7 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
         std::size_t maxBondDim = 3;
         std::vector<size_t> basisState = {0, 0, 2};
 
-        MPSCutn<TestType> mps_state{num_qubits, maxBondDim};
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         REQUIRE_THROWS_WITH(
             mps_state.setBasisState(basisState),
@@ -93,7 +93,7 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
-        MPSCutn<TestType> mps_state{num_qubits, bondDim};
+        MPSTNCuda<TestType> mps_state{num_qubits, bondDim};
 
         mps_state.reset();
 
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
-        MPSCutn<TestType> mps_state{num_qubits, maxBondDim};
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         mps_state.setBasisState(basisStates[stateIdx]);
 
@@ -137,12 +137,12 @@ TEMPLATE_TEST_CASE("MPSCutn::SetBasisStates() & reset()", "[MPSCutn]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSCutn::getDataVector()", "[MPSCutn]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = 2;
     DevTag<int> dev_tag{0, 0};
 
-    MPSCutn<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+    MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
 
     SECTION("Get zero state") {
         std::vector<std::complex<TestType>> expected_state(

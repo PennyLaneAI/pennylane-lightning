@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file CutnBase.hpp
+ * @file TNCudaBase.hpp
  * Base class for cuTensorNet-backed tensor networks.
  */
 
@@ -37,18 +37,18 @@
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningTensor::Cutn;
-using namespace Pennylane::LightningTensor::Cutn::Util;
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 ///@endcond
 
-namespace Pennylane::LightningTensor::Cutn {
+namespace Pennylane::LightningTensor::TNCuda {
 
 template <class Precision, class Derived>
-class CutnBase : public TensornetBase<Precision, Derived> {
+class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
     using BaseType = TensornetBase<Precision, Derived>;
-    SharedCutnHandle handle_;
+    SharedTNCudaHandle handle_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
     cutensornetComputeType_t typeCompute_;
@@ -58,10 +58,10 @@ class CutnBase : public TensornetBase<Precision, Derived> {
                                        // states as v24.03
 
   public:
-    CutnBase() = delete;
+    TNCudaBase() = delete;
 
-    explicit CutnBase(const std::size_t numQubits, int device_id = 0,
-                      cudaStream_t stream_id = 0)
+    explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
+                        cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_({device_id, stream_id}) {
         // TODO this code block could be moved to base class and need to revisit
@@ -85,7 +85,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /*  cutensornetState_t * */ &quantumState_));
     }
 
-    explicit CutnBase(const std::size_t numQubits, DevTag<int> dev_tag)
+    explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_cutn_handle()),
           dev_tag_(dev_tag) {
         // TODO this code block could be moved to base class and need to revisit
@@ -109,7 +109,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             /*  cutensornetState_t * */ &quantumState_));
     }
 
-    ~CutnBase() {
+    ~TNCudaBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
@@ -118,7 +118,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
      *
      * @return cutensornetHandle_t
      */
-    [[nodiscard]] auto getCutnHandle() const -> cutensornetHandle_t {
+    [[nodiscard]] auto getTNCudaHandle() const -> cutensornetHandle_t {
         return handle_.get();
     }
 
@@ -152,7 +152,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
         int64_t worksize{0};
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cutensornetWorksizePref_t */
             CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
@@ -176,7 +176,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
     void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
                             void *scratchPtr, std::size_t worksize) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
             /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
@@ -194,14 +194,14 @@ class CutnBase : public TensornetBase<Precision, Derived> {
                       std::vector<void *> &tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetCreateWorkspaceDescriptor(getCutnHandle(), &workDesc));
+            cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
 
         // TODO we assign half (magic number is) of free memory size to the
         // maximum memory usage.
         const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
             /* size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
@@ -220,7 +220,7 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            /* const cutensornetHandle_t */ getCutnHandle(),
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* int64_t * */ extentsPtr.data(),
@@ -232,4 +232,4 @@ class CutnBase : public TensornetBase<Precision, Derived> {
             cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 };
-} // namespace Pennylane::LightningTensor::Cutn
+} // namespace Pennylane::LightningTensor::TNCuda

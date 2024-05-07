@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file MPSCutn.hpp
+ * @file MPSTNCuda.hpp
  * MPS class with cuTensorNet backend. Note that current implementation only
  * support the open boundary condition.
  */
@@ -40,12 +40,12 @@
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
-using namespace Pennylane::LightningTensor::Cutn;
-using namespace Pennylane::LightningTensor::Cutn::Util;
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor::Cutn {
+namespace Pennylane::LightningTensor::TNCuda {
 
 /**
  * @brief Managed memory MPS class using cutensornet high-level APIs
@@ -56,9 +56,9 @@ namespace Pennylane::LightningTensor::Cutn {
 
 // TODO check if CRTP is required by the end of project.
 template <class Precision>
-class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
+class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   private:
-    using BaseType = CutnBase<Precision, MPSCutn>;
+    using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
     MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
@@ -76,24 +76,25 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     using ComplexT = std::complex<Precision>;
 
   public:
-    MPSCutn() = delete;
+    MPSTNCuda() = delete;
 
-    explicit MPSCutn(const std::size_t numQubits, const std::size_t maxBondDim)
+    explicit MPSTNCuda(const std::size_t numQubits,
+                       const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
     }
 
-    explicit MPSCutn(const std::size_t numQubits, const std::size_t maxBondDim,
-                     DevTag<int> dev_tag)
+    explicit MPSTNCuda(const std::size_t numQubits,
+                       const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
     }
 
-    ~MPSCutn() = default;
+    ~MPSTNCuda() = default;
 
     /**
      * @brief Get the max bond dimension.
@@ -333,7 +334,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     void updateQuantumStateMPS_(const int64_t *const *extentsIn,
                                 uint64_t **tensorsIn) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
-            /*const cutensornetHandle_t */ BaseType::getCutnHandle(),
+            /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
             /*cutensornetBoundaryCondition_t */
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
@@ -342,4 +343,4 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
             /*void ** */ reinterpret_cast<void **>(tensorsIn)));
     }
 };
-} // namespace Pennylane::LightningTensor::Cutn
+} // namespace Pennylane::LightningTensor::TNCuda
