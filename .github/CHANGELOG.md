@@ -6,8 +6,14 @@
 
 ### Improvements
 
+* The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
+  [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
+  
 * Update Linux wheels to use manylinux_2_28 images.
   [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
+
+* Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
+  [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
 
 ### Documentation
 
@@ -17,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
+Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux
 
 ---
 
@@ -69,7 +75,6 @@ Amintor Dusko
 
 * Split Lightning-Qubit and Lightning-Kokkos CPU Python tests with `pytest-split`. Remove `SERIAL` from Kokkos' `exec_model` matrix. Remove `all` from Lightning-Kokkos' `pl_backend` matrix. Move `clang-tidy` checks to `tidy.yml`. Avoid editable `pip` installations.
   [(#696)](https://github.com/PennyLaneAI/pennylane-lightning/pull/696)
-
 * Update `lightning.gpu` and `lightning.kokkos` to raise an error instead of falling back to `default.qubit`.
   [(#689)](https://github.com/PennyLaneAI/pennylane-lightning/pull/689)
 
@@ -167,11 +172,20 @@ Amintor Dusko
 * Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
   [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
 
+* Refactor of dev prerelease auto-update-version workflow.
+  [(#685)](https://github.com/PennyLaneAI/pennylane-lightning/pull/685)
+
+* Remove gates unsupported by catalyst from toml file.
+  [(#698)](https://github.com/PennyLaneAI/pennylane-lightning/pull/698)
+
+* Increase tolerance for a flaky test.
+  [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
