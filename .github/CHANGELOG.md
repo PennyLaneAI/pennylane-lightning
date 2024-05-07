@@ -20,8 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko
-Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux
 
 ---
 
