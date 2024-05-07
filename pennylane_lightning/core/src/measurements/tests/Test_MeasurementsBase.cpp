@@ -84,7 +84,7 @@ template <typename TypeList> void testProbabilities() {
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
             input = {
-#ifdef _ENABLE_PLGPU
+#if defined(_ENABLE_PLGPU)
                 // Bit index reodering conducted in the python layer
                 // for L-GPU. Also L-GPU backend doesn't support
                 // out of order wires for probability calculation
@@ -92,9 +92,9 @@ template <typename TypeList> void testProbabilities() {
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}}
 #else
-                {{0, 1, 2},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}},
+#if defined(_ENABLE_PLQUBIT)
+                // LightningQubit currently supports arbitrary wire index
+                // ordering.
                 {{0, 2, 1},
                  {0.67078706, 0.0870997, 0.03062806, 0.00397696, 0.17564072,
                   0.02280642, 0.00801973, 0.00104134}},
@@ -102,18 +102,23 @@ template <typename TypeList> void testProbabilities() {
                  {0.67078706, 0.03062806, 0.17564072, 0.00801973, 0.0870997,
                   0.00397696, 0.02280642, 0.00104134}},
                 {{1, 2, 0},
-                 {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806,
-                  0.00397696, 0.00801973, 0.00104134}},
-                {{2, 0, 1},
                  {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997,
                   0.02280642, 0.00397696, 0.00104134}},
+                {{2, 0, 1},
+                 {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806,
+                  0.00397696, 0.00801973, 0.00104134}},
                 {{2, 1, 0},
                  {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806,
                   0.00801973, 0.00397696, 0.00104134}},
+                {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
+
+#endif
+                {{0, 1, 2},
+                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                  0.00801973, 0.02280642, 0.00104134}},
                 {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
                 {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
                 {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-                {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
                 {{0}, {0.79249179, 0.20750821}},
                 {{1}, {0.88507558, 0.11492442}},
                 {{2}, {0.9563339, 0.0436661}}
@@ -570,7 +575,7 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -839,7 +844,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
             size_t num_shots = 80000;
@@ -1011,7 +1016,7 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsShotVar() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -1147,7 +1152,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
@@ -1555,7 +1560,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#ifndef _MSC_VER
+#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliY", std::vector<size_t>{0});
@@ -1636,6 +1641,7 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
                                   expected, static_cast<PrecisionT>(0.20)));
         }
 
+#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             using ComplexT = typename StateVectorT::ComplexT;
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -1664,6 +1670,7 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
+#endif
 
         testHamiltonianObsVarShot<typename TypeList::Next>();
     }

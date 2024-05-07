@@ -29,12 +29,13 @@ target_sources(utils_tests INTERFACE runner_utils.cpp)
 set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_ConstantUtil.cpp
                     Test_Error.cpp
+                    Test_NDPermuter.cpp
                     Test_RuntimeInfo.cpp
                     Test_TypeTraits.cpp
                     Test_Util.cpp
                     )
 
-if(NOT WIN32)
+if(ENABLE_LAPACK)
     list(APPEND TEST_SOURCES Test_UtilLinearAlg.cpp)
 endif()
 

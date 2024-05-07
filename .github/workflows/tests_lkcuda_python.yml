@@ -1,4 +1,4 @@
-name: Testing::LKokkos::GPU
+name: Testing::x86_64::LKokkos::CUDA::Python
 on:
   workflow_call:
     inputs:
@@ -11,6 +11,11 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    paths-ignore:
+      - pennylane_lightning/core/src/simulators/lightning_gpu/**
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_gpu/**
+      - pennylane_lightning/lightning_qubit/**
   push:
     branches:
       - master
@@ -23,7 +28,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_gpu-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lkcuda_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -94,94 +99,6 @@ jobs:
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-
-  cpptestswithKokkos:
-    if: ${{ github.sha == 'xxxxxxxx' }}
-    needs: [builddeps]
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_kokkos"]
-        exec_model: ["CUDA"]
-        kokkos_version: ["4.2.00"]
-
-    name: C++ tests (Kokkos)
-    runs-on:
-      - ${{ matrix.os }}
-      - self-hosted
-      - gpu
-
-    steps:
-      - name: Validate GPU version and installed compiler
-        run: |
-          source /etc/profile.d/modules.sh
-          module use /opt/modules
-          module load cuda/12.2
-          echo "${PATH}" >> $GITHUB_PATH
-          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
-          nvcc --version
-          nvidia-smi
-
-      - name: Restoring cached dependencies
-        id: kokkos-cache
-        uses: actions/cache/restore@v3
-        with:
-          path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
-
-      - name: Copy cached libraries
-        run: |
-          mkdir -p ${{ github.workspace }}/Kokkos
-          ls -ltrh
-          cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
-
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-        with:
-          path: main
-
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
-
-      - name: Build and run unit tests
-        run: |
-          cd main
-          cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DBUILD_TESTS=ON \
-            -DENABLE_PYTHON=OFF \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
-            -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DENABLE_COVERAGE=ON
-          cmake --build ./Build
-          cd ./Build
-          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
-          lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
-          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
-          if-no-files-found: error
 
   pythontestswithKokkos:
     needs: [builddeps]
@@ -291,9 +208,9 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
@@ -313,10 +230,10 @@ jobs:
         run: |
           cd main
           CMAKE_ARGS="-DPL_BACKEND="lightning_qubit" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND="lightning_kokkos" -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
@@ -325,12 +242,10 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.kokkos python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.kokkos --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          for device in lightning.qubit lightning.kokkos; do
+            pl-device-test --device ${device} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
+            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          done
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results

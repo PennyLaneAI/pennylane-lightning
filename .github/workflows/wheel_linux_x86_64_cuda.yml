@@ -15,6 +15,7 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: wheel_linux_x86_64_cu12-${{ github.ref }}
@@ -22,26 +23,35 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-latest
+
+
   linux-wheels-x86-64:
-    needs: [set_wheel_build_matrix]
+    needs: [set_wheel_build_matrix, determine_runner]
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         arch: [x86_64]
         pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux2014_x86_64"]
     timeout-minutes: 30
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
-    runs-on: ${{ matrix.os }}
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     container: ${{ matrix.container_img }}
 
     steps:
@@ -106,7 +116,11 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v3
-        if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master' || steps.rc_build.outputs.match != ''}}
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master' ||
+          steps.rc_build.outputs.match != ''
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: ./wheelhouse/*.whl
@@ -120,7 +134,9 @@ jobs:
         cuda_version: ["12"]
 
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'release' || github.ref == 'refs/heads/master'}}
+    if: |
+      github.event_name == 'release' ||
+      github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -133,4 +149,3 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_LGPU_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
-

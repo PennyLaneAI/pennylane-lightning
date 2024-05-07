@@ -80,17 +80,14 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
     if circuit.shots and has_mcm:
         mid_measurements = {}
         final_state = state.get_final_state(circuit, mid_measurements=mid_measurements)
-        if any(v == -1 for v in mid_measurements.values()):
-            return None, mid_measurements
-        return (
-            LightningMeasurements(final_state, **mcmc).measure_final_state(circuit),
-            mid_measurements,
+        return LightningMeasurements(final_state, **mcmc).measure_final_state(
+            circuit, mid_measurements=mid_measurements
         )
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
-def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):
+def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
     """Compute the Jacobian for a single quantum script.
 
     Args:
@@ -99,17 +96,21 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False)
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP. Default is False.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
         TensorLike: The Jacobian of the quantum script
     """
-    circuit = circuit.map_to_standard_wires()
+    if wire_map is not None:
+        [circuit], _ = qml.map_wires(circuit, wire_map)
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
-def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False):
+def simulate_and_jacobian(
+    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+):
     """Simulate a single quantum script and compute its Jacobian.
 
     Args:
@@ -118,20 +119,26 @@ def simulate_and_jacobian(circuit: QuantumTape, state: LightningStateVector, bat
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP. Default is False.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
         Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    circuit = circuit.map_to_standard_wires()
+    if wire_map is not None:
+        [circuit], _ = qml.map_wires(circuit, wire_map)
     res = simulate(circuit, state)
     jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
     return res, jac
 
 
 def vjp(
-    circuit: QuantumTape, cotangents: Tuple[Number], state: LightningStateVector, batch_obs=False
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
 ):
     """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
     Args:
@@ -144,10 +151,13 @@ def vjp(
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the VJP. This value is only relevant when the lightning
             qubit is built with OpenMP.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
     Returns:
         TensorLike: The VJP of the quantum script
     """
-    circuit = circuit.map_to_standard_wires()
+    if wire_map is not None:
+        [circuit], _ = qml.map_wires(circuit, wire_map)
     state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
@@ -156,7 +166,11 @@ def vjp(
 
 
 def simulate_and_vjp(
-    circuit: QuantumTape, cotangents: Tuple[Number], state: LightningStateVector, batch_obs=False
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
 ):
     """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
     Args:
@@ -169,11 +183,14 @@ def simulate_and_vjp(
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
     Returns:
         Tuple[TensorLike]: The results of the simulation and the calculated VJP
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    circuit = circuit.map_to_standard_wires()
+    if wire_map is not None:
+        [circuit], _ = qml.map_wires(circuit, wire_map)
     res = simulate(circuit, state)
     _vjp = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(circuit, cotangents)
     return res, _vjp
@@ -416,6 +433,8 @@ class LightningQubit(Device):
             qubit is built with OpenMP.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _new_API = True
@@ -451,6 +470,11 @@ class LightningQubit(Device):
             )
 
         super().__init__(wires=wires, shots=shots)
+
+        if isinstance(wires, int):
+            self._wire_map = None  # should just use wires as is
+        else:
+            self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
@@ -571,7 +595,8 @@ class LightningQubit(Device):
         }
         results = []
         for circuit in circuits:
-            circuit = circuit.map_to_standard_wires()
+            if self._wire_map is not None:
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(simulate(circuit, self._statevector, mcmc=mcmc))
 
         return tuple(results)
@@ -616,8 +641,10 @@ class LightningQubit(Device):
             Tuple: The jacobian for each trainable parameter
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+
         return tuple(
-            jacobian(circuit, self._statevector, batch_obs=batch_obs) for circuit in circuits
+            jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            for circuit in circuits
         )
 
     def execute_and_compute_derivatives(
@@ -636,7 +663,10 @@ class LightningQubit(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_jacobian(c, self._statevector, batch_obs=batch_obs) for c in circuits
+            simulate_and_jacobian(
+                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for c in circuits
         )
         return tuple(zip(*results))
 
@@ -689,7 +719,7 @@ class LightningQubit(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
-            vjp(circuit, cots, self._statevector, batch_obs=batch_obs)
+            vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
             for circuit, cots in zip(circuits, cotangents)
         )
 
@@ -711,7 +741,9 @@ class LightningQubit(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
-            simulate_and_vjp(circuit, cots, self._statevector, batch_obs=batch_obs)
+            simulate_and_vjp(
+                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))

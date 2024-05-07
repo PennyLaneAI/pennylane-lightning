@@ -12,21 +12,32 @@ on:
       - master
   release:
     types: [published]
+  workflow_dispatch:
 
 concurrency:
   group: wheel_noarch-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-latest
+
+
   build-pure-python-wheel:
-    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'ci:build_wheels')
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
+    needs: [determine_runner]
     strategy:
       matrix:
-        os: [ubuntu-latest]
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     timeout-minutes: 30
-    name: ${{ matrix.os }} - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
-    runs-on: ${{ matrix.os }}
+    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -62,7 +73,9 @@ jobs:
           python -m twine check main/dist/*.whl
 
       - uses: actions/upload-artifact@v3
-        if: ${{ matrix.pl_backend == 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
+        if: |
+          matrix.pl_backend == 'lightning_qubit' &&
+          (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
@@ -91,7 +104,9 @@ jobs:
 
     steps:
       - uses: actions/download-artifact@v3
-        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
+        if: |
+          matrix.pl_backend == 'lightning_qubit' &&
+          github.event_name == 'release'
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
@@ -109,4 +124,3 @@ jobs:
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: dist
-

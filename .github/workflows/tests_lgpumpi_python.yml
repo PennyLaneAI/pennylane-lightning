@@ -1,4 +1,4 @@
-name: Tests::Linux::x86_64::LGPU::MPI
+name: Testing::x86_64::LGPU-MPI::Python
 on:
   workflow_call:
     inputs:
@@ -15,7 +15,11 @@ on:
     branches:
       - main
   pull_request:
-
+    paths-ignore:
+      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_kokkos/**
+      - pennylane_lightning/lightning_qubit/**
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
@@ -23,143 +27,10 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: gpu-test-mpi-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
-  cpp_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
-      - ubuntu-22.04
-      - multi-gpu
-    strategy:
-      max-parallel: 1
-      matrix:
-        mpilib: ["mpich", "openmpi"]
-        cuda_version_maj: ["12"]
-        cuda_version_min: ["2"]
-    timeout-minutes: 30
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-
-      - name: Switch to stable build of Lightning-GPU
-        if: inputs.lightning-version == 'stable'
-        run: |
-          git fetch tags --force
-          git checkout $(git tag | sort -V | tail -1)
-      - uses: actions/setup-python@v5
-        id: setup_python
-        name: Install Python
-        with:
-          python-version: '3.9'
-
-      # Since the self-hosted runner can be re-used. It is best to set up all package
-      # installations in a virtual environment that gets cleaned at the end of each workflow run
-      - name: Setup Python virtual environment
-        id: setup_venv
-        env:
-          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
-        run: |
-          # Clear any pre-existing venvs
-          rm -rf venv_*
-
-          # Create new venv for this workflow_run
-          python --version
-          python -m venv ${{ env.VENV_NAME }}
-
-          # Add the venv to PATH for subsequent steps
-          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
-
-          # Adding venv name as an output for subsequent steps to reference if needed
-          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
-
-      - name: Display Python-Path
-        id: python_path
-        run: |
-          py_path=$(which python)
-          echo "Python Interpreter Path => $py_path"
-          echo "python=$py_path" >> $GITHUB_OUTPUT
-
-          pip_path=$(which python)
-          echo "PIP Path => $pip_path"
-          echo "pip=$pip_path" >> $GITHUB_OUTPUT
-
-      - name: Install required packages
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu12 scipy
-
-      - name: Validate GPU version and installed compiler and modules
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules && module load cuda/${{ matrix.cuda_version_maj }}
-          which -a nvcc
-          nvcc --version
-          ls -R /opt/modules
-
-      - name: Validate Multi-GPU packages
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          echo 'Checking for ${{ matrix.mpilib }}'
-          which -a mpirun
-          mpirun --version
-          which -a mpicxx
-          mpicxx --version
-          module unload ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-
-      - name: Build and run unit tests
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
-          cmake . -BBuild \
-            -DPL_BACKEND=lightning_gpu \
-            -DENABLE_PYTHON=OFF \
-            -DENABLE_MPI=ON \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DENABLE_COVERAGE=ON \
-            -DBUILD_TESTS=ON \
-            -DCMAKE_CXX_COMPILER=mpicxx \
-            -DCMAKE_CUDA_COMPILER=$(which nvcc) \
-            -DCMAKE_CUDA_ARCHITECTURES="86" \
-            -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
-            -G Ninja
-          cmake --build ./Build
-          cd ./Build
-          mkdir -p ./tests/results
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-          for file in *runner_mpi ; do mpirun -np 2 ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-          lcov --directory . -b ../pennylane_lightning/src --capture --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports
-          path: ./Build/tests/results/
-          if-no-files-found: error
-
-      - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-          path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
-          if-no-files-found: error
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf * .git .gitignore .github
-          pip cache purge
-
 
   python_tests:
     if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
@@ -234,7 +105,7 @@ jobs:
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           python -m pip install -r requirements-dev.txt
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          PL_BACKEND=lightning_qubit python -m pip install -e . -vv
+          PL_BACKEND=lightning_qubit python -m pip install . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -257,7 +128,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
-          PL_BACKEND=lightning_gpu python -m pip install -e . --verbose
+          PL_BACKEND=lightning_gpu python -m pip install . --verbose
 
       # There are issues running py-cov with MPI. A solution is to use coverage as reported
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
@@ -276,33 +147,6 @@ jobs:
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
           if-no-files-found: error
 
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf * .git .gitignore .github
-          pip cache purge
-
-  upload-to-codecov-linux-cpp:
-    needs: ["cpp_tests"]
-    name: Upload coverage data to codecov
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@v3
-        with:
-          name: ubuntu-codecov-results-cpp
-
-      - name: Upload to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          fail_ci_if_error: true
-          verbose: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-      
       - name: Cleanup
         if: always()
         run: |

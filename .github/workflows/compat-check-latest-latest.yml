@@ -6,38 +6,45 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests_linux:
-    name: Lightning Compatibility test (tests_linux) - latest/latest
-    uses: ./.github/workflows/tests_linux.yml
+  tests_lgpu_python:
+    name: Lightning Compatibility test (tests_lgpu_python) - latest/latest
+    uses: ./.github/workflows/tests_lgpu_python.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-    secrets: inherit # pass all secrets
-  tests_lkokkos_gpu:
-    name: Lightning Compatibility test (tests_lkokkos_gpu) - latest/latest
-    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    secrets: inherit
+  tests_lgpumpi_python:
+    name: Lightning Compatibility test (tests_lgpumpi_python) - latest/latest
+    uses: ./.github/workflows/tests_lgpumpi_python.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-    secrets: inherit # pass all secrets
-  tests_lgpu_gpu:
-    name: Lightning Compatibility test (tests_lgpu_gpu) - latest/latest
-    uses: ./.github/workflows/tests_gpu_cuda.yml
+    secrets: inherit
+  tests_lqcpu_python:
+    name: Lightning Compatibility test (tests_lqcpu_python) - latest/latest
+    uses: ./.github/workflows/tests_lqcpu_python.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-    secrets: inherit # pass all secrets
-  tests_lgpu_gpu_mpi:
-    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - latest/latest
-    uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
+    secrets: inherit
+  tests_lkcpu_python:
+    name: Lightning Compatibility test (tests_lkcpu_python) - latest/latest
+    uses: ./.github/workflows/tests_lkcpu_python.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-    secrets: inherit # pass all secrets
+    secrets: inherit
+  tests_lkcuda_python:
+    name: Lightning Compatibility test (tests_lkcuda_python) - latest/latest
+    uses: ./.github/workflows/tests_lkcuda_python.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
+    secrets: inherit
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - latest/latest
     uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: latest
       pennylane-version: latest
-    secrets: inherit # pass all secrets
+    secrets: inherit
