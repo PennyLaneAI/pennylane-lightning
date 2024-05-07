@@ -20,9 +20,16 @@ jobs:
       lightning-version: latest
       pennylane-version: latest
     secrets: inherit
-  tests_linux_python:
-    name: Lightning Compatibility test (tests_linux_python) - latest/latest
-    uses: ./.github/workflows/tests_linux_python.yml
+  tests_lqcpu_python:
+    name: Lightning Compatibility test (tests_lqcpu_python) - latest/latest
+    uses: ./.github/workflows/tests_lqcpu_python.yml
+    with:
+      lightning-version: latest
+      pennylane-version: latest
+    secrets: inherit
+  tests_lkcpu_python:
+    name: Lightning Compatibility test (tests_lkcpu_python) - latest/latest
+    uses: ./.github/workflows/tests_lkcpu_python.yml
     with:
       lightning-version: latest
       pennylane-version: latest

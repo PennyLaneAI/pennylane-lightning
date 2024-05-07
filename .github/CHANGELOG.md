@@ -1,4 +1,22 @@
-# Release 0.36.0-dev
+# Release 0.37.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+---
+
+# Release 0.36.0
 
 ### New features since last release
 
@@ -14,7 +32,7 @@
 * `lightning.kokkos` supports mid-circuit measurements.
   [(#672)](https://github.com/PennyLaneAI/pennylane-lightning/pull/672)
 
-* Add dynamic linking to LAPACK/OpenBlas shared objects in scipy.libs for both C++ and Python layer.
+* Add dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` for both C++ and Python layer.
   [(#653)](https://github.com/PennyLaneAI/pennylane-lightning/pull/653)
 
 * `lightning.qubit` supports mid-circuit measurements.
@@ -32,7 +50,7 @@
 * Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
   [(#627)](https://github.com/PennyLaneAI/pennylane-lightning/pull/627)
 
-* Add LightningAdjointJacobian to support `lightning.qubit2`.
+* Add `LightningAdjointJacobian` to support `lightning.qubit2`.
   [(#631)](https://github.com/PennyLaneAI/pennylane-lightning/pull/631)
 
 * Add `lightning.qubit2` device which uses the new device API.
@@ -46,6 +64,12 @@
   [(#649)](https://github.com/PennyLaneAI/pennylane-lightning/pull/649)
 
 ### Breaking changes
+
+* Split Lightning-Qubit and Lightning-Kokkos CPU Python tests with `pytest-split`. Remove `SERIAL` from Kokkos' `exec_model` matrix. Remove `all` from Lightning-Kokkos' `pl_backend` matrix. Move `clang-tidy` checks to `tidy.yml`. Avoid editable `pip` installations.
+  [(#696)](https://github.com/PennyLaneAI/pennylane-lightning/pull/696)
+
+* Update `lightning.gpu` and `lightning.kokkos` to raise an error instead of falling back to `default.qubit`.
+  [(#689)](https://github.com/PennyLaneAI/pennylane-lightning/pull/689)
 
 * Add `paths` directives to test workflows to avoid running tests that cannot be impacted by changes.
   [(#699)](https://github.com/PennyLaneAI/pennylane-lightning/pull/699)
@@ -68,7 +92,7 @@
 
 ### Improvements
 
-* Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for LKokkos wheels.
+* Add tests for Windows Wheels, fix ill-defined caching, and set the proper backend for `lightning.kokkos` wheels.
   [(#693)](https://github.com/PennyLaneAI/pennylane-lightning/pull/693)
 
 * Replace string comparisons by `isinstance` checks where possible.
@@ -108,17 +132,20 @@
 
 ### Bug fixes
 
+* Fix wire order permutations when using `qml.probs` with out-of-order wires.
+  [(#707)](https://github.com/PennyLaneAI/pennylane-lightning/pull/707)
+
 * Lightning Qubit once again respects the wire order specified on device instantiation.
   [(#705)](https://github.com/PennyLaneAI/pennylane-lightning/pull/705)
 
 * `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit`'s `simulate` is modified accordingly.
-  [(#694)](https://github.com/PennyLaneAI/pennylane/pull/694)
+  [(#694)](https://github.com/PennyLaneAI/pennylane-lightning/pull/694)
 
 * `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
-  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+  [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
 * `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
-  [(#687)](https://github.com/PennyLaneAI/pennylane/pull/687)
+  [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
   [(#647)](https://github.com/PennyLaneAI/pennylane-lightning/pull/647)
@@ -138,14 +165,11 @@
 * Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
   [(#682)](https://github.com/PennyLaneAI/pennylane-lightning/pull/682)
 
-* Increase tolerance for a flaky test.
-  [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
-
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Christina Lee, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 

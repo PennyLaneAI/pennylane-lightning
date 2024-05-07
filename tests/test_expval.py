@@ -22,7 +22,7 @@ import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
 
-if ld._new_API and not ld._CPP_BINARY_AVAILABLE:
+if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
