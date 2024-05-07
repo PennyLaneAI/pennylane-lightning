@@ -39,7 +39,7 @@ jobs:
       matrix:
         pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
 
-    name: ${{matrix.pl_backend}} Python Tests (Without Binary)
+    name: Python Tests without Binary (${{ matrix.pl_backend }})
 
     steps:
       - name: Checkout PennyLane-Lightning

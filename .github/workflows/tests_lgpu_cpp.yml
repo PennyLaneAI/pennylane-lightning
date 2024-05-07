@@ -63,7 +63,7 @@ jobs:
         pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
 
-    name: ${{matrix.pl_backend}} C++ Tests (cuda-${{matrix.cuda_version}})
+    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
       - ubuntu-22.04
       - self-hosted

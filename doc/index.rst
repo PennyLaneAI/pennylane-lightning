@@ -44,7 +44,6 @@ The Lightning ecosystem provides the following devices:
    :hidden:
 
    dev/installation
-   dev/release_notes
    dev/docker
    dev/support
 
