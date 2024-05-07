@@ -6,13 +6,24 @@
 
 ### Improvements
 
+* Remove `CPhase` in favour of `CPhaseShift` in Lightning devices.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
+
+* Update Linux wheels to use manylinux_2_28 images.
+  [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
+
 ### Documentation
+
+* Add the release notes to docs.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 
 ### Bug fixes
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Ali Asadi, Amintor Dusko
 
 ---
 
