@@ -12,6 +12,9 @@
 * Update Linux wheels to use manylinux_2_28 images.
   [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
 
+* Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
+  [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
+
 ### Documentation
 
 ### Bug fixes
@@ -20,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux
 
 ---
 
@@ -182,7 +185,7 @@ Amintor Dusko, Vincent Michaud-Rioux
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Thomas Germain, Christina Lee, Erick Ochoa Lopez, Vincent Michaud-Rioux, Rashid N H M, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
