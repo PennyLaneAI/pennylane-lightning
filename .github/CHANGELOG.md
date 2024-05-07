@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Update Linux wheels to use manylinux_2_28 images.
+  [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
+
 ### Documentation
 
 ### Bug fixes
@@ -13,6 +16,8 @@
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
+
+Amintor Dusko
 
 ---
 
