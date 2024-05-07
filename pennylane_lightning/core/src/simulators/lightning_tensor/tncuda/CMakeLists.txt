@@ -57,6 +57,7 @@ endif()
 # Include all nested sources directories
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
+                           gates
                            utils
 )
 foreach(COMP ${COMPONENT_SUBDIRS})
