@@ -105,9 +105,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     };
 
     /**
-     * @brief Get a vector of pointers to extents of each site
+     * @brief Get a vector of pointers to extents of each site.
      *
-     * @return std::vector<int64_t const *> Note int64_t is
+     * @return std::vector<int64_t const *> Note int64_t const* is
      * required by cutensornet backend.
      */
     [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
@@ -120,7 +120,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     }
 
     /**
-     * @brief Get a vector of pointers to tensor data of each site
+     * @brief Get a vector of pointers to tensor data of each site.
      *
      * @return std::vector<uint64_t *>
      */
@@ -134,7 +134,7 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     }
 
     /**
-     * @brief Set a zero state
+     * @brief Set current quantum state as zero state.
      */
     void reset() {
         const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
@@ -142,9 +142,9 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     }
 
     /**
-     * @brief Set basis state
-     * NOTE: This API assumes the bond vector is [1,0,0,......] and current
-     * implementation only works for qubits.
+     * @brief Update quantum state with a basis state.
+     * NOTE: This API assumes the bond vector is a standard basis vector
+     * ([1,0,0,......]) and current implementation only works for qubit systems.
      * @param basisState Vector representation of a basis state.
      */
     void setBasisState(const std::vector<std::size_t> &basisState) {
@@ -190,14 +190,14 @@ class MPSCutn final : public CutnBase<Precision, MPSCutn<Precision>> {
     };
 
     /**
-     * @brief Get the full state vector representation of MPS quantum state.
+     * @brief Get the full state vector representation of a MPS quantum state.
      *
      * NOTE: This method is for MPS unit tests purpose only, given that full
      * state vector requires too much memory (`exp2(numQubits)`) in large
      * systems.
      *
-     * @return Full state vector representation of MPS quantum state on host
-     * std::vector<ComplexT>
+     * @return std::vector<ComplexT> Full state vector representation of MPS
+     * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
         PL_ABORT_IF(MPSFinalized_ == MPSStatus::MPSFinalizedSet,
