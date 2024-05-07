@@ -325,9 +325,37 @@ class MPSCutn : public MPSCutnBase<Precision, MPSCutn<Precision>> {
                                                                   par[0]),
                     ctrls, tgts, adjoint);
             } else {
-                applyGate_(BaseType::getGateCache()->get_gate_device_ptr(
-                               opName, par[0]),
-                           wires, adjoint);
+                // applyGate_(BaseType::getGateCache()->get_gate_device_ptr(
+                //                 opName, par[0]),
+                //             wires, adjoint);
+                /* TODO: Following code block shows that
+                 * cutensornetStateApplyTensorOperator only append the gate to
+                 * the MPS graph and does not apply the gate to the state. */
+                int64_t id;
+                std::vector<int32_t> stateModes(wires.size());
+                std::transform(wires.begin(), wires.end(), stateModes.begin(),
+                               [&](size_t x) {
+                                   return static_cast<int32_t>(
+                                       BaseType::getNumQubits() - 1 - x);
+                               });
+
+                std::string opName0 = "SWAP";
+                Precision par0 = 0;
+
+                PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
+                    BaseType::getCutnHandle(), BaseType::getQuantumState(),
+                    stateModes.size(), stateModes.data(),
+                    static_cast<void *>(
+                        BaseType::getGateCache()->get_gate_device_ptr(opName0,
+                                                                      par0)),
+                    nullptr, 1, 0, 1, &id));
+
+                cutensornetStateUpdateTensorOperator(
+                    BaseType::getCutnHandle(), BaseType::getQuantumState(), id,
+                    static_cast<void *>(
+                        BaseType::getGateCache()->get_gate_device_ptr(opName,
+                                                                      par[0])),
+                    1);
             }
         }
     }
