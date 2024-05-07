@@ -31,15 +31,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-22.04
+
 
   pythontests:
+    needs: [determine_runner]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 75
     name: Python tests
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
       - uses: actions/setup-python@v4
@@ -140,13 +146,13 @@ jobs:
 
 
   pythontestswithOpenBLAS:
+    needs: [determine_runner]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 75
     name: Python tests with OpenBLAS
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -242,12 +248,14 @@ jobs:
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
+    needs: [determine_runner]
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
+      runs_on: ${{ needs.determine_runner.outputs.runner_group }}
 
   pythontestswithKokkos:
-    needs: [build_and_cache_Kokkos]
+    needs: [build_and_cache_Kokkos, determine_runner]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -259,7 +267,7 @@ jobs:
             exec_model: OPENMP
     timeout-minutes: 75
     name: Python tests with Kokkos
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
       - name: Checkout PennyLane-Lightning

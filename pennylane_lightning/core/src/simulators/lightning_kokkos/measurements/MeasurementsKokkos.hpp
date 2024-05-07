@@ -506,6 +506,10 @@ class Measurements final
      * The basis columns are rearranged according to wires.
      */
     std::vector<PrecisionT> probs(const std::vector<size_t> &wires) {
+        PL_ABORT_IF_NOT(
+            std::is_sorted(wires.cbegin(), wires.cend()),
+            "LightningKokkos does not currently support out-of-order wire "
+            "indices with probability calculations");
         using MDPolicyType_2D =
             Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
 
@@ -645,6 +649,11 @@ class Measurements final
 
     std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
                                   size_t num_shots) {
+        PL_ABORT_IF_NOT(
+            std::is_sorted(wires.cbegin(), wires.cend()),
+            "LightningKokkos does not currently support out-of-order wire "
+            "indices with probability calculations");
+
         return BaseType::probs(wires, num_shots);
     }
 

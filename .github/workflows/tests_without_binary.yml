@@ -25,13 +25,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-22.04
+
   pythontests:
+    needs: [determine_runner]
     timeout-minutes: 30
     name: Python tests
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
 
     steps:
@@ -93,7 +99,7 @@ jobs:
         if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
         run: |
           cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv
+          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
 
       - name: Install backend device
         env:
@@ -101,7 +107,7 @@ jobs:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
           cd main
-          python -m pip install -e . -vv
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         run: |
