@@ -15,7 +15,7 @@
 /**
  * @file
  * Defines a class for the measurement of observables in quantum states
- * represented by a Lightning Qubit StateVector class.
+ * represented by a Lightning GPU StateVector class.
  */
 
 #pragma once

@@ -19,5 +19,6 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
-#define SCIPY_LIBS_PATH ""
+#define SCIPY_LIBS_PATH                                                        \
+    "/home/ali/miniforge3/envs/cat/lib/python3.11/site-packages/scipy.libs"
 #endif

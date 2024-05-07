@@ -84,7 +84,6 @@ matrix = [
         "PSWAP",
         "SISWAP",
         "SQISW",
-        "CPhase",
         "OrbitalRotation",
         "QubitCarry",
         "QubitSum",
