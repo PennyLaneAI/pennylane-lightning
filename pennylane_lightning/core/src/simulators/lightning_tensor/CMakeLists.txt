@@ -9,7 +9,7 @@ set(COMPONENT_SUBDIRS   utils
                         tensor)
 
 if("${PL_TENSOR_BACKEND}" STREQUAL "cutensornet")
-    list(APPEND COMPONENT_SUBDIRS cutn)
+    list(APPEND COMPONENT_SUBDIRS tncuda)
 else()
     message(FATAL_ERROR "Lightning Tensor currently doesn't support ${PL_TENSOR_BACKEND} method")
 endif()
