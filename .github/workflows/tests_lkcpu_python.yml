@@ -1,0 +1,274 @@
+name: Testing::x86_64::LKokkos::Python
+on:
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+      pennylane-version:
+        type: string
+        required: true
+        description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
+  pull_request:
+    paths-ignore:
+      - .github
+      - '!.github/workflows/tests_lkcpu_python.yml'
+      - pennylane_lightning/core/src/simulators/lightning_gpu/**
+      - pennylane_lightning/lightning_gpu/**
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_qubit/**
+  push:
+    branches:
+      - master
+
+env:
+  TF_VERSION: 2.10.0
+  TORCH_VERSION: 1.11.0+cpu
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  GCC_VERSION: 11
+  OMP_NUM_THREADS: "2"
+  OMP_PROC_BIND: "false"
+
+concurrency:
+  group: tests_lkcpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  cancel-in-progress: true
+
+jobs:
+
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-22.04
+
+  build_and_cache_Kokkos:
+    name: "Build and cache Kokkos"
+    uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
+    with:
+      os: ubuntu-22.04
+
+  build_lightning_kokkos_wheels:
+    needs: [determine_runner, build_and_cache_Kokkos]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_kokkos"]
+        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+    timeout-minutes: 60
+    name: Python tests with Kokkos
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git fetch --tags --force
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        run: |
+          rm -rf Kokkos
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          pwd
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install scipy wheel
+
+      - name: Get required Python packages
+        run: |
+          cd main
+          python -m pip install -r requirements-dev.txt
+
+      - name: Create device wheel
+        env:
+          PL_BACKEND: ${{ matrix.pl_backend }}
+        run: |
+          cd main
+          python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
+          python setup.py bdist_wheel
+          cd dist
+          WHEEL_NAME=$(ls *.whl)
+          cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+          echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+
+      - name: Send wheel name
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+          retention-days: 1
+          if-no-files-found: error
+          path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+
+      - name: Cache wheel directories
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+
+  test_lightning_kokkos_wheels:
+    needs: [determine_runner, build_and_cache_Kokkos, build_lightning_kokkos_wheels]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_kokkos"]
+        group: [1, 2, 3, 4, 5, 6, 7]
+        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+    timeout-minutes: 60
+    name: Python tests with Kokkos
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+
+    steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.9'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+          path: ${{ github.workspace }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+          path: ${{ github.workspace }}
+
+      - name: Get required Python packages
+        run: |
+          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
+          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
+          cd main
+          python -m pip install -r requirements-dev.txt
+          python -m pip install openfermionpyscf
+          SKIP_COMPILATION=True python -m pip install . -vv
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v4
+        with:
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          cd main
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+
+      - name: Install ML libraries for interfaces
+        run: |
+          python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          # TODO: Remove installing pytest-xdist with release v0.36.0
+          python -m pip install pytest-xdist
+          cd main/
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+              --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
+            mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+
+      - name: Upload test durations
+        uses: actions/upload-artifact@v4
+        with:
+          name: .test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+          retention-days: 1
+          if-no-files-found: error
+          path: ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          if-no-files-found: error
+
+  upload-to-codecov-linux-python:
+    needs: [determine_runner, test_lightning_kokkos_wheels]
+    name: Upload python coverage data to codecov
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v3
+        with:
+          name: ubuntu-codecov-results-python
+
+      - name: Combine coverage files
+        run: |
+          python -m pip install coverage
+          python -m coverage combine .coverage*
+          # Added cov xml -i to ignore "No source for code" random errors
+          # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
+          python -m coverage xml -i -o coverage-${{ github.job }}.xml
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          fail_ci_if_error: true
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}

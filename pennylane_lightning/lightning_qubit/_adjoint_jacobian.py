@@ -204,7 +204,9 @@ class LightningAdjointJacobian:
             return np.array([], dtype=self._dtype)
 
         if tape_return_type is State:
-            raise QuantumFunctionError("This method does not support statevector return type. ")
+            raise QuantumFunctionError(
+                "Adjoint differentiation method does not support measurement StateMP."
+            )
 
         if any(m.return_type is not Expectation for m in tape.measurements):
             raise QuantumFunctionError(

@@ -32,7 +32,7 @@ jobs:
         arch: [aarch64]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_aarch64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
     name: Kokkos core (${{ matrix.exec_model }}::${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
@@ -91,7 +91,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_aarch64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -135,13 +135,13 @@ jobs:
 
           CIBW_ENVIRONMENT: PL_BACKEND="${{ matrix.pl_backend }}" CMAKE_ARGS="-DENABLE_LAPACK=OFF"
 
-          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv; fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
