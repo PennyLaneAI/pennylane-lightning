@@ -5,7 +5,7 @@ add_library(${PL_BACKEND}_gates INTERFACE)
 
 target_include_directories(${PL_BACKEND}_gates INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(${PL_BACKEND}_gates INTERFACE ${PL_BACKEND}_utils )
+target_link_libraries(${PL_BACKEND}_gates INTERFACE ${PL_BACKEND}_utils ${PL_BACKEND}_tensor)
 
 set_property(TARGET ${PL_BACKEND}_gates PROPERTY POSITION_INDEPENDENT_CODE ON)
 
