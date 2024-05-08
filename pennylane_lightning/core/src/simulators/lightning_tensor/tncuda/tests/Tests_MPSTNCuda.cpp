@@ -138,7 +138,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
-    std::size_t num_qubits = 3;
+    std::size_t num_qubits = 10;
     std::size_t maxBondDim = 2;
     DevTag<int> dev_tag{0, 0};
 

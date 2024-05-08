@@ -115,11 +115,10 @@ template <class CFP_t> static constexpr auto getS() -> std::vector<CFP_t> {
  * of T gate data.
  */
 template <class CFP_t> static constexpr auto getT() -> std::vector<CFP_t> {
-    return {
-        cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ConstMultSC(
-            cuUtil::SQRT2<decltype(cuUtil::ONE<CFP_t>().x)>() / 2,
-            cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>()))};
+    return {cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+            cuUtil::ConstMultSC(
+                cuUtil::SQRT2<decltype(cuUtil::ONE<CFP_t>().x)>() / 2,
+                cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>()))};
 }
 
 /**

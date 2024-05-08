@@ -225,7 +225,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
      * @param worksize Memory size of a work space
      */
     void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                            void *scratchPtr, std::size_t worksize) {
+                            void *scratchPtr, std::size_t &worksize) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
@@ -249,7 +249,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
         // TODO we assign half (magic number is) of free memory size to the
         // maximum memory usage.
-        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+        std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

@@ -216,17 +216,60 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                                             output_extent,
                                             BaseType::getDevTag());
 
-        std::vector<void *> output_tensorPtr(
-            std::size_t{1},
-            static_cast<void *>(output_tensor.getDataBuffer().getData()));
+        // std::vector<void *> output_tensorPtr(
+        //     std::size_t{1},
+        //     static_cast<void *>(output_tensor.getDataBuffer().getData()));
 
-        std::vector<int64_t *> output_extentsPtr;
+        void *output_tensorPtr[] = {
+            static_cast<void *>(output_tensor.getDataBuffer().getData())};
+
+        // std::vector<int64_t *> output_extentsPtr;
         std::vector<int64_t> extent_int64(
             std::size_t{1},
             static_cast<int64_t>(std::size_t{1} << BaseType::getNumQubits()));
-        output_extentsPtr.emplace_back(extent_int64.data());
+        // output_extentsPtr.emplace_back(extent_int64.data());
 
-        this->computeState(output_extentsPtr, output_tensorPtr);
+        std::vector<int64_t *> output_extentsPtr(1, extent_int64.data());
+
+        // this->computeState(output_extentsPtr, output_tensorPtr);
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            BaseType::getTNCudaHandle(), &workDesc));
+
+        // TODO we assign half (magic number is) of free memory size to the
+        // maximum memory usage.
+        std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused in v24.03*/ 0x0));
+
+        std::size_t worksize = this->getWorkSpaceMemorySize(workDesc);
+
+        PL_ABORT_IF(std::size_t(worksize) > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length,
+                                               BaseType::getDevTag(), true);
+
+        this->setWorkSpaceMemory(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ nullptr,
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ output_tensorPtr,
+            /* cudaStream_t */ BaseType::getDevTag().getStreamID()));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
 
         std::vector<ComplexT> results(output_extent.front());
         output_tensor.CopyGpuDataToHost(results.data(), results.size());
