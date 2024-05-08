@@ -118,6 +118,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::PauliY,
         GateOperation::PauliZ,
         GateOperation::Hadamard,
+        GateOperation::SFDX,
         GateOperation::S,
         GateOperation::T,
         GateOperation::PhaseShift,
@@ -155,6 +156,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::PauliY,
         ControlledGateOperation::PauliZ,
         ControlledGateOperation::Hadamard,
+        ControlledGateOperation::SFDX,
         ControlledGateOperation::S,
         ControlledGateOperation::T,
         ControlledGateOperation::PhaseShift,
@@ -792,6 +794,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::complex<PrecisionT> v1 = arr[i1];
             arr[i0] = isqrt2 * v0 + isqrt2 * v1;
             arr[i1] = isqrt2 * v0 - isqrt2 * v1;
+            // arr[i0] = isqrt2 * v0 * isqrt2 + isqrt2 * v1 * isqrt2;
+            // arr[i1] = isqrt2 * v0 * isqrt2 - isqrt2 * v1 * isqrt2;
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
@@ -809,6 +813,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyHadamard(std::complex<PrecisionT> *arr, const size_t num_qubits,
                   const std::vector<size_t> &wires, const bool inverse) {
         applyNCHadamard(arr, num_qubits, {}, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void applyNCSFDX(std::complex<PrecisionT> *arr,
+                                const size_t num_qubits,
+                                const std::vector<size_t> &controlled_wires,
+                                const std::vector<bool> &controlled_values,
+                                const std::vector<size_t> &wires,
+                                [[maybe_unused]] const bool inverse) {
+        using ParamT = PrecisionT;
+        constexpr static auto isqrt2 = INVSQRT2<PrecisionT>();
+        auto core_function = [](std::complex<PrecisionT> *arr,
+                                const std::size_t i0, const std::size_t i1) {
+            const std::complex<PrecisionT> v0 = arr[i0];
+            const std::complex<PrecisionT> v1 = arr[i1];
+            arr[i0] = isqrt2 * v0 + isqrt2 * v1;
+            arr[i1] = isqrt2 * v0 - isqrt2 * v1;
+        };
+        if (controlled_wires.empty()) {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT>
+    static void
+    applySFDX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                  const std::vector<size_t> &wires, const bool inverse) {
+        applyNCSFDX(arr, num_qubits, {}, {}, wires, inverse);
     }
 
     template <class PrecisionT>

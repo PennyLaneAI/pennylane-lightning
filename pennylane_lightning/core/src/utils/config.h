@@ -17,7 +17,8 @@
  * Config file for the path to scipy.libs at compile time.
  */
 
+
 #ifndef CONFIG_H
 #define CONFIG_H
-#define SCIPY_LIBS_PATH ""
+#define SCIPY_LIBS_PATH "/home/frodox/Canada/Xanadu/xanadu_test/lib/python3.9/site-packages/scipy.libs"
 #endif

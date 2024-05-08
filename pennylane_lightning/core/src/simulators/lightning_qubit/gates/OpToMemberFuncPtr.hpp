@@ -82,6 +82,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::SFDX> {
+    constexpr static auto value =
+        &GateImplementation::template applySFDX<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::S> {
     constexpr static auto value =
         &GateImplementation::template applyS<PrecisionT>;
@@ -295,6 +301,12 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::Hadamard> {
     constexpr static auto value =
         &GateImplementation::template applyNCHadamard<PrecisionT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::SFDX> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCSFDX<PrecisionT>;
 };
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,

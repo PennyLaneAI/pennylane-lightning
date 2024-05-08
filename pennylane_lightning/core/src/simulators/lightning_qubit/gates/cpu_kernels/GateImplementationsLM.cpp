@@ -97,6 +97,12 @@ GateImplementationsLM::applyHadamard<float>(std::complex<float> *, size_t,
 template void
 GateImplementationsLM::applyHadamard<double>(std::complex<double> *, size_t,
                                              const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applySFDX<float>(std::complex<float> *, size_t,
+                                            const std::vector<size_t> &, bool);
+template void
+GateImplementationsLM::applySFDX<double>(std::complex<double> *, size_t,
+                                             const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyS<float>(std::complex<float> *,
                                                    size_t,
                                                    const std::vector<size_t> &,
@@ -290,6 +296,12 @@ template void GateImplementationsLM::applyNCHadamard<float>(
     std::complex<float> *, size_t, const std::vector<size_t> &,
     const std::vector<bool> &, const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCHadamard<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<bool> &, const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCSFDX<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<bool> &, const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCSFDX<double>(
     std::complex<double> *, size_t, const std::vector<size_t> &,
     const std::vector<bool> &, const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCS<float>(

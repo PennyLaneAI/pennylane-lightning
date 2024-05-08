@@ -199,6 +199,27 @@ void testApplyHadamard() {
 }
 PENNYLANE_RUN_TEST(Hadamard);
 
+template <typename PrecisionT, class GateImplementation>
+void testApplySFDX() {
+    using ComplexT = std::complex<PrecisionT>;
+    const size_t num_qubits = 3;
+    for (size_t index = 0; index < num_qubits; index++) {
+        auto st = createZeroState<ComplexT>(num_qubits);
+
+        GateImplementation::applySFDX(st.data(), num_qubits, {index},
+                                          false);
+
+        std::vector<char> expected_string;
+        expected_string.resize(num_qubits);
+        std::fill(expected_string.begin(), expected_string.end(), '0');
+        expected_string[index] = '+';
+        const auto expected = createProductState<PrecisionT>(
+            std::string_view{expected_string.data(), num_qubits});
+        CHECK(expected == approx(st));
+    }
+}
+PENNYLANE_RUN_TEST(SFDX);
+
 template <typename PrecisionT, class GateImplementation> void testApplyS() {
     using ComplexT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;

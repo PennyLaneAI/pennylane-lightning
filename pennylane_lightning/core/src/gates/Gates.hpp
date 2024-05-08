@@ -98,6 +98,20 @@ static constexpr auto getHadamard() -> std::vector<ComplexT<T>> {
 }
 
 /**
+ * @brief Create a matrix representation of the SFDX gate data in row-major
+ * format.
+ *
+ * @tparam ComplexT<T> Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<ComplexT<T>> Return constant expression
+ * of SFDX data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getSFDX() -> std::vector<ComplexT<T>> {
+    return {INVSQRT2<ComplexT, T>(), INVSQRT2<ComplexT, T>(),
+            INVSQRT2<ComplexT, T>(), -INVSQRT2<ComplexT, T>()};
+}
+
+/**
  * @brief Create a matrix representation of the S gate data in row-major format.
  *
  * @tparam ComplexT<T> Required precision of gate (`float` or `double`).
