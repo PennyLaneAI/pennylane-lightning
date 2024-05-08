@@ -562,8 +562,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
             sv.appendGateTensorOperator("CSWAP", {0, 2, 3}, inverse);
 
             auto results = sv.getDataVector();
+            // TODO remove the following line later. This is a test if we can
+            // call getDataVector() multiple times
+            auto results_test = sv.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
+            CHECK(results_test == Pennylane::Util::approx(expected_results));
         }
     }
 }

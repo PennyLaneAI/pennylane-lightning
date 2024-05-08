@@ -238,11 +238,9 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Save quantumState information to data provided by a user
      *
-     * @param extentsPtr Extents of each sites
-     * @param tensorPtr Pointer to tensors provided by a user
+     * @param tensorPtr Pointer to the tensor data provided by a user.
      */
-    void computeState(std::vector<int64_t *> &extentsPtr,
-                      std::vector<void *> &tensorPtr) {
+    void computeState(void **tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
@@ -274,9 +272,9 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ extentsPtr.data(),
+            /* int64_t * */ nullptr,
             /* int64_t *stridesOut */ nullptr,
-            /* void * */ tensorPtr.data(),
+            /* void * */ tensorPtr,
             /* cudaStream_t */ getDevTag().getStreamID()));
 
         PL_CUTENSORNET_IS_SUCCESS(
