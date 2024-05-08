@@ -64,14 +64,14 @@ def test_invalid_keyword_arg():
     """Test an invalid keyword argument."""
     with pytest.raises(
         TypeError,
-        match=f"Unexpected argument: fake_arg during initialization of the LightningTensor device.",
+        match=f"Unexpected argument: fake_arg during initialization of the default.tensor device.",
     ):
         LightningTensor(fake_arg=None)
 
 
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(ValueError, match="LightningTensor does not support finite shots."):
+    with pytest.raises(ValueError, match="default.tensor does not support finite shots."):
         LightningTensor(shots=5)
 
 
@@ -86,7 +86,7 @@ def test_compute_derivatives():
     dev = LightningTensor()
     with pytest.raises(
         NotImplementedError,
-        match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
+        match="The computation of derivatives has yet to be implemented for the default.tensor device.",
     ):
         dev.compute_derivatives(circuits=None)
 
@@ -96,7 +96,7 @@ def test_execute_and_compute_derivatives():
     dev = LightningTensor()
     with pytest.raises(
         NotImplementedError,
-        match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
+        match="The computation of derivatives has yet to be implemented for the default.tensor device.",
     ):
         dev.execute_and_compute_derivatives(circuits=None)
 
@@ -112,7 +112,7 @@ def test_compute_vjp():
     dev = LightningTensor()
     with pytest.raises(
         NotImplementedError,
-        match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
+        match="The computation of vector-Jacobian product has yet to be implemented for the default.tensor device.",
     ):
         dev.compute_vjp(circuits=None, cotangents=None)
 
@@ -122,6 +122,6 @@ def test_execute_and_compute_vjp():
     dev = LightningTensor()
     with pytest.raises(
         NotImplementedError,
-        match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
+        match="The computation of vector-Jacobian product has yet to be implemented for the default.tensor device.",
     ):
         dev.execute_and_compute_vjp(circuits=None, cotangents=None)

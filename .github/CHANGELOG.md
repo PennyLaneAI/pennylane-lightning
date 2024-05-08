@@ -15,6 +15,9 @@
 * Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
   [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
 
+* Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
+  [(#)]()
+
 ### Documentation
 
 ### Bug fixes
