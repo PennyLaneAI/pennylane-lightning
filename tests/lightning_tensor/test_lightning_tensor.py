@@ -37,13 +37,19 @@ def test_device_name_and_init(num_wires, c_dtype):
     """Test the class initialization and returned properties."""
     wires = Wires(range(num_wires)) if num_wires else None
     dev = LightningTensor(wires=wires, c_dtype=c_dtype)
-    assert dev.name == "lightning.tensor"
+    assert dev.name == "default.tensor"
     assert dev.c_dtype == c_dtype
     assert dev.wires == wires
     if num_wires is None:
         assert dev.num_wires == 0
     else:
         assert dev.num_wires == num_wires
+
+
+def test_device_available_as_plugin():
+    """Test that the device can be instantiated using ``qml.device``."""
+    dev = qml.device("default.tensor", wires=2)
+    assert isinstance(dev, LightningTensor)
 
 
 @pytest.mark.parametrize("backend", ["fake_backend"])
