@@ -48,7 +48,8 @@ using namespace Pennylane::LightningTensor::TNCuda;
 namespace Pennylane::LightningTensor {
 
 /**
- * @brief Memory management for gate tensor data on device and its id in the graph.
+ * @brief Memory management for gate tensor data on device and its id in the
+ * graph.
  *
  * @tparam PrecisionT Floating point precision.
  */

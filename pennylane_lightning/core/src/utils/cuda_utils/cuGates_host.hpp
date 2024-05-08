@@ -119,7 +119,7 @@ template <class CFP_t> static constexpr auto getT() -> std::vector<CFP_t> {
         cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
         cuUtil::ConstMultSC(
             cuUtil::SQRT2<decltype(cuUtil::ONE<CFP_t>().x)>() / 2,
-            cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>()))};
+            cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>()))};
 }
 
 /**
