@@ -188,9 +188,6 @@ suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
 if suffix == "Qubit":
-    print(
-        "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
-    )
     pennylane_plugins.append(
         "default.tensor = pennylane_lightning.lightning_tensor:LightningTensor"
     )
