@@ -1,121 +1,103 @@
-schema = 1
-
-[device]
-name = "lightning.gpu"
-
-[operators]
-# Observables supported by the device
-observables = [
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "Hermitian",
-        "Identity",
-        "SparseHamiltonian",
-        "Hamiltonian",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
-]
+# TODO: verify the contents of this file against what the device reports.
+schema = 2
 
 # The union of all gate types listed in this section must match what
 # the device considers "supported" through PennyLane's device API.
-[[operators.gates]]
-native = [
-        "Identity",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "S",
-        "T",
-        "PhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CNOT",
-        "CY",
-        "CZ",
-        "SWAP",
-        "CSWAP",
-        "Toffoli",
-        "IsingXX",
-        "IsingXY",
-        "IsingYY",
-        "IsingZZ",
-        "ControlledPhaseShift",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "MultiRZ",
-        "QubitUnitary",
-        "GlobalPhase",
-]
+[operators.gates.native]
+
+Identity               = { properties = [ "differentiable" ] }
+PauliX                 = { properties = [ "differentiable" ] }
+PauliY                 = { properties = [ "differentiable" ] }
+PauliZ                 = { properties = [ "differentiable" ] }
+Hadamard               = { properties = [ "differentiable" ] }
+S                      = { properties = [ "differentiable" ] }
+T                      = { properties = [ "differentiable" ] }
+PhaseShift             = { properties = [ "differentiable" ] }
+RX                     = { properties = [ "differentiable" ] }
+RY                     = { properties = [ "differentiable" ] }
+RZ                     = { properties = [ "differentiable" ] }
+Rot                    = { properties = [ "differentiable" ] }
+CNOT                   = { properties = [ "differentiable" ] }
+CY                     = { properties = [ "differentiable" ] }
+CZ                     = { properties = [ "differentiable" ] }
+SWAP                   = { properties = [ "differentiable" ] }
+CSWAP                  = { properties = [ "differentiable" ] }
+Toffoli                = { properties = [ "differentiable" ] }
+IsingXX                = { properties = [ "differentiable" ] }
+IsingXY                = { properties = [ "differentiable" ] }
+IsingYY                = { properties = [ "differentiable" ] }
+IsingZZ                = { properties = [ "differentiable" ] }
+ControlledPhaseShift   = { properties = [ "differentiable" ] }
+CRX                    = { properties = [ "differentiable" ] }
+CRY                    = { properties = [ "differentiable" ] }
+CRZ                    = { properties = [ "differentiable" ] }
+CRot                   = { properties = [ "differentiable" ] }
+SingleExcitation       = { properties = [ "differentiable" ] }
+SingleExcitationPlus   = { properties = [ "differentiable" ] }
+SingleExcitationMinus  = { properties = [ "differentiable" ] }
+DoubleExcitation       = { properties = [ "differentiable" ] }
+DoubleExcitationPlus   = { properties = [ "differentiable" ] }
+DoubleExcitationMinus  = { properties = [ "differentiable" ] }
+MultiRZ                = { properties = [ "differentiable" ] }
+QubitUnitary           = { properties = [ "differentiable" ] }
+GlobalPhase            = { properties = [ "differentiable" ] }
 
 # Operators that should be decomposed according to the algorithm used
 # by PennyLane's device API.
 # Optional, since gates not listed in this list will typically be decomposed by
 # default, but can be useful to express a deviation from this device's regular
 # strategy in PennyLane.
-decomp = [
-        "BasisState",
-        "QFT",
-        "QubitStateVector",
-        "StatePrep",
-        "MultiControlledX",
-]
+[operators.gates.decomp]
+
+BasisState             = {}
+QFT                    = {}
+QubitStateVector       = {}
+StatePrep              = {}
+MultiControlledX       = {}
 
 # Gates which should be translated to QubitUnitary
-matrix = [
-        "ControlledQubitUnitary",
-        "ECR",
-        "SX",
-        "ISWAP",
-        "PSWAP",
-        "SISWAP",
-        "SQISW",
-        "CPhase",
-        "OrbitalRotation",
-        "QubitCarry",
-        "QubitSum",
-        "DiagonalQubitUnitary",
-        "BlockEncode",
-]
+[operators.gates.matrix]
+
+
+ControlledQubitUnitary = {}
+ECR                    = {}
+SX                     = {}
+ISWAP                  = {}
+PSWAP                  = {}
+SISWAP                 = {}
+SQISW                  = {}
+OrbitalRotation        = {}
+QubitCarry             = {}
+QubitSum               = {}
+DiagonalQubitUnitary   = {}
+BlockEncode            = {}
+
+# Observables supported by the device
+[operators.observables]
+
+Identity               = {}
+PauliX                 = {}
+PauliY                 = {}
+PauliZ                 = {}
+Hadamard               = {}
+Hermitian              = {}
+Hamiltonian            = {}
+SparseHamiltonian      = {}
 
 [measurement_processes]
-exactshots = [
-	"Expval",
-	"Var",
-	"Probs",
-	"State",
-]
-finiteshots = [
-	"Expval",
-	"Var",
-	"Probs",
-	"Sample",
-	"Counts",
-]
+
+Expval                 = {}
+Var                    = {}
+Probs                  = {}
+State                  = { condition = [ "analytic" ] }
+Sample                 = { condition = [ "finiteshots" ] }
+Counts                  = { condition = [ "finiteshots" ] }
 
 [compilation]
 # If the device is compatible with qjit
 qjit_compatible = false
 # If the device requires run time generation of the quantum circuit.
 runtime_code_generation = false
-# If the device supports adjoint
-quantum_adjoint = false
-# If the device supports quantum control instructions natively
-quantum_control = false
 # If the device supports mid circuit measurements natively
 mid_circuit_measurement = false
 
