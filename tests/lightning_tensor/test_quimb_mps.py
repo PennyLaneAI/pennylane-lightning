@@ -23,6 +23,7 @@ import pennylane as qml
 import pytest
 import quimb.tensor as qtn
 from conftest import LightningDevice  # tested device
+from pennylane import QNode
 from pennylane.devices import DefaultQubit
 from pennylane.wires import Wires
 from scipy.sparse import csr_matrix
@@ -234,3 +235,47 @@ class TestQuimbMPS:
 
         with pytest.raises(NotImplementedError):
             dev.execute(tape)
+
+    def test_interface_jax(self, backend, method):
+        """Test the interface with JAX."""
+
+        jax = pytest.importorskip("jax")
+        dev = LightningTensor(wires=qml.wires.Wires(range(1)), backend=backend, method=method)
+        ref_dev = qml.device("default.qubit.jax", wires=1)
+
+        def circuit(x):
+            qml.RX(x[1], wires=0)
+            qml.Rot(x[0], x[1], x[2], wires=0)
+            return qml.expval(qml.Z(0))
+
+        weights = jax.numpy.array([0.2, 0.5, 0.1])
+        qnode = QNode(circuit, dev, interface="jax")
+        ref_qnode = QNode(circuit, ref_dev, interface="jax")
+
+        assert np.allclose(qnode(weights), ref_qnode(weights))
+
+    def test_interface_jax_jit(self, backend, method):
+        """Test the interface with JAX's JIT compiler."""
+
+        jax = pytest.importorskip("jax")
+        dev = LightningTensor(wires=qml.wires.Wires(range(1)), backend=backend, method=method)
+
+        @jax.jit
+        @qml.qnode(dev, interface="jax")
+        def circuit():
+            qml.Hadamard(0)
+            return qml.expval(qml.Z(0))
+
+        assert np.allclose(circuit(), 0.0)
+
+    def test_(self, backend, method):
+        """..."""
+
+        # jax = pytest.importorskip("jax")
+        dev = LightningTensor(wires=qml.wires.Wires(range(1)), backend=backend, method=method)
+
+        def circuit():
+            qml.RX(0.0, wires=0)
+
+        with pytest.raises(qml.QuantumFunctionError):
+            QNode(circuit, dev, interface="jax", diff_method="adjoint")
