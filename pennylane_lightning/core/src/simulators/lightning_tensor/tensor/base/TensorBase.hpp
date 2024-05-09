@@ -33,21 +33,20 @@ namespace Pennylane::LightningTensor {
  */
 template <class PrecisionT, class Derived> class TensorBase {
   private:
-    std::size_t rank_;                 // A rank N tensor has N modes
-    std::size_t length_;               // Number of elements
-    std::vector<std::size_t> modes_;   // modes for contraction identify
-    std::vector<std::size_t> extents_; // Number of elements in each mode
+    const std::size_t rank_;                 // A rank N tensor has N modes
+    std::size_t length_;                     // Number of elements
+    const std::vector<std::size_t> modes_;   // modes for contraction identify
+    const std::vector<std::size_t> extents_; // Number of elements in each mode
 
   public:
-    TensorBase(std::size_t rank, const std::vector<std::size_t> &modes,
-               const std::vector<std::size_t> &extents)
+    explicit TensorBase(std::size_t rank, const std::vector<std::size_t> &modes,
+                        const std::vector<std::size_t> &extents)
         : rank_(rank), modes_(modes), extents_(extents) {
         PL_ABORT_IF_NOT(rank_ == extents_.size(),
                         "Please check if rank or extents are set correctly.");
         length_ = 1;
-        for (auto extent : extents) {
-            length_ *= extent;
-        }
+        length_ = std::accumulate(extents.begin(), extents.end(),
+                                  std::size_t{1}, std::multiplies<>());
     }
 
     ~TensorBase() {}

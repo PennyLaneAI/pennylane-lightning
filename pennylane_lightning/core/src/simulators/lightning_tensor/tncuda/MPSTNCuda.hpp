@@ -61,7 +61,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
-    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
 
@@ -161,11 +160,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "Please ensure all elements of a basis state should be "
                         "either 0 or 1.");
 
-        PL_ABORT_IF(MPSInitialized_ == MPSStatus::MPSInitSet,
-                    "setBasisState() can be called only once.");
-
-        MPSInitialized_ = MPSStatus::MPSInitSet;
-
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
 
@@ -186,8 +180,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
 
-        updateQuantumStateMPS_(getSitesExtentsPtr().data(),
-                               getTensorsDataPtr().data());
+        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
+            MPSInitialized_ = MPSStatus::MPSInitSet;
+            updateQuantumStateMPS_();
+        }
     };
 
     /**
@@ -201,13 +197,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        PL_ABORT_IF(MPSFinalized_ == MPSStatus::MPSFinalizedSet,
-                    "getDataVector() method to return the full state "
-                    "vector can't be called "
-                    "after cutensornetStateFinalizeMPS is called");
-
-        MPSFinalized_ = MPSStatus::MPSFinalizedSet;
-
         // 1D representation
         std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
         std::vector<std::size_t> output_extent(
@@ -216,17 +205,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                                             output_extent,
                                             BaseType::getDevTag());
 
-        std::vector<void *> output_tensorPtr(
-            std::size_t{1},
-            static_cast<void *>(output_tensor.getDataBuffer().getData()));
+        void *output_tensorPtr[] = {
+            static_cast<void *>(output_tensor.getDataBuffer().getData())};
 
-        std::vector<int64_t *> output_extentsPtr;
-        std::vector<int64_t> extent_int64(
-            std::size_t{1},
-            static_cast<int64_t>(std::size_t{1} << BaseType::getNumQubits()));
-        output_extentsPtr.emplace_back(extent_int64.data());
-
-        this->computeState(output_extentsPtr, output_tensorPtr);
+        this->computeState(output_tensorPtr);
 
         std::vector<ComplexT> results(output_extent.front());
         output_tensor.CopyGpuDataToHost(results.data(), results.size());
@@ -328,19 +310,17 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * @brief Update quantumState (cutensornetState_t) with data provided by a
      * user
      *
-     * @param extentsIn Extents of each sites
-     * @param tensorsIn Pointer to tensors provided by a user
      */
-    void updateQuantumStateMPS_(const int64_t *const *extentsIn,
-                                uint64_t **tensorsIn) {
+    void updateQuantumStateMPS_() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
             /*cutensornetBoundaryCondition_t */
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /*const int64_t *const* */ extentsIn,
+            /*const int64_t *const* */ getSitesExtentsPtr().data(),
             /*const int64_t *const* */ nullptr,
-            /*void ** */ reinterpret_cast<void **>(tensorsIn)));
+            /*void ** */
+            reinterpret_cast<void **>(getTensorsDataPtr().data())));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
