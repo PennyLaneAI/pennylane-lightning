@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* `dynamic_one_shot` deals with post-selection during the post-processing phase, so Lightning-Qubit does not return `None`-valued measurements for mismatching samples anymore.
+  [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
+  
 ### Improvements
 
 * The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
