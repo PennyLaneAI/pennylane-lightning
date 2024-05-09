@@ -61,7 +61,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
-    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
 
@@ -161,11 +160,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "Please ensure all elements of a basis state should be "
                         "either 0 or 1.");
 
-        PL_ABORT_IF(MPSInitialized_ == MPSStatus::MPSInitSet,
-                    "setBasisState() can be called only once.");
-
-        MPSInitialized_ = MPSStatus::MPSInitSet;
-
         CFP_t value_cu =
             Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
 
@@ -186,8 +180,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
 
-        updateQuantumStateMPS_(getSitesExtentsPtr().data(),
-                               getTensorsDataPtr().data());
+        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
+            MPSInitialized_ = MPSStatus::MPSInitSet;
+            updateQuantumStateMPS_();
+        }
     };
 
     /**
@@ -314,19 +310,17 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * @brief Update quantumState (cutensornetState_t) with data provided by a
      * user
      *
-     * @param extentsIn Extents of each sites
-     * @param tensorsIn Pointer to tensors provided by a user
      */
-    void updateQuantumStateMPS_(const int64_t *const *extentsIn,
-                                uint64_t **tensorsIn) {
+    void updateQuantumStateMPS_() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
             /*cutensornetBoundaryCondition_t */
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /*const int64_t *const* */ extentsIn,
+            /*const int64_t *const* */ getSitesExtentsPtr().data(),
             /*const int64_t *const* */ nullptr,
-            /*void ** */ reinterpret_cast<void **>(tensorsIn)));
+            /*void ** */
+            reinterpret_cast<void **>(getTensorsDataPtr().data())));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

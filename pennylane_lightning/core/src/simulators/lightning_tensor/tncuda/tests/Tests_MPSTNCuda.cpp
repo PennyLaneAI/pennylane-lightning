@@ -135,6 +135,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
         CHECK(expected_state ==
               Pennylane::Util::approx(mps_state.getDataVector()));
     }
+
+    SECTION("Test different bondDim and different basisstate & reset()") {
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t stateIdx = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        mps_state.setBasisState(basisStates[stateIdx]);
+
+        mps_state.reset();
+
+        std::vector<std::complex<TestType>> expected_state(
+            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        std::size_t index = 0;
+
+        expected_state[index] = {1.0, 0.0};
+
+        CHECK(expected_state ==
+              Pennylane::Util::approx(mps_state.getDataVector()));
+    }
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {

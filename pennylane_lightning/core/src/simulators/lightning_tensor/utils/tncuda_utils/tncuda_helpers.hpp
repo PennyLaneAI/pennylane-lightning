@@ -29,8 +29,6 @@ enum class MPSStatus : uint32_t {
     BEGIN = 0,
     MPSInitNotSet = 0,
     MPSInitSet,
-    MPSFinalizedNotSet,
-    MPSFinalizedSet,
     END
 };
 
