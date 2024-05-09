@@ -42,12 +42,12 @@ _methods = frozenset({"mps"})
 
 
 def accepted_backends(backend: str) -> bool:
-    """A function that determines whether or not a backend is supported by ``lightning.tensor``."""
+    """A function that determines whether or not a backend is supported by ``default.tensor``."""
     return backend in _backends
 
 
 def accepted_methods(method: str) -> bool:
-    """A function that determines whether or not a method is supported by ``lightning.tensor``."""
+    """A function that determines whether or not a method is supported by ``default.tensor``."""
     return method in _methods
 
 
