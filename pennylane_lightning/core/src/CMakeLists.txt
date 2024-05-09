@@ -15,6 +15,7 @@ set(COMPONENT_SUBDIRS   algorithms
 )
 
 if("${PL_BACKEND}" STREQUAL "lightning_tensor")
+    add_subdirectory(gates)
     add_subdirectory(simulators)
     add_subdirectory(utils)
 else()
