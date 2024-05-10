@@ -169,9 +169,11 @@ RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
+ARG PENNYLANE_VERSION=v0.36.0
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
+    git \
     python3 \
     python3-pip \
     python3-venv \
@@ -264,9 +266,11 @@ RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
+ARG PENNYLANE_VERSION=v0.36.0
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
+    git \
     python3 \
     python3-pip \
     python3-venv \
