@@ -168,6 +168,22 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git fetch --tags --force
+          git checkout $(git tag | sort -V | tail -1)
+          git log -1 --format='%H'
+          git status
+
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
