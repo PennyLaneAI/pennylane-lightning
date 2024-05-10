@@ -37,10 +37,11 @@ namespace Pennylane::LightningQubit::Gates {
  *
  * @param indicesToExclude Indices to exclude from this call.
  * @param num_qubits Total number of qubits for statevector.
- * @return std::vector<size_t>
+ * @return std::vector<std::size_t>
  */
-auto getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
-                              size_t num_qubits) -> std::vector<size_t>;
+auto getIndicesAfterExclusion(const std::vector<std::size_t> &indicesToExclude,
+                              std::size_t num_qubits)
+    -> std::vector<std::size_t>;
 
 /**
  * @brief Generate indices for applying operations.
@@ -50,10 +51,10 @@ auto getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
  *
  * @param qubitIndices Indices of the qubits to apply operations.
  * @param num_qubits Number of qubits in register.
- * @return std::vector<size_t>
+ * @return std::vector<std::size_t>
  */
-auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
-                         size_t num_qubits) -> std::vector<size_t>;
+auto generateBitPatterns(const std::vector<std::size_t> &qubitIndices,
+                         std::size_t num_qubits) -> std::vector<std::size_t>;
 
 /**
  * @brief Internal utility struct to track data indices of application for
@@ -66,11 +67,11 @@ auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
  * 0110B}.
  */
 struct GateIndices {
-    const std::vector<size_t> internal; /**< Internal indices.
+    const std::vector<std::size_t> internal; /**< Internal indices.
                                           For the given wires with size n_wire,
                                           the output size is 2^n_wire. */
 
-    const std::vector<size_t>
+    const std::vector<std::size_t>
         external; /**< external External indices.
                     For the given wires with size n_wire, the
                     output size is 2^(num_qubits - n_wires). */
@@ -78,7 +79,7 @@ struct GateIndices {
     /**
      * @brief Create indices for gates.
      */
-    GateIndices(const std::vector<size_t> &wires, size_t num_qubits)
+    GateIndices(const std::vector<std::size_t> &wires, std::size_t num_qubits)
         : internal{generateBitPatterns(wires, num_qubits)},
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}

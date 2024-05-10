@@ -21,7 +21,7 @@
 #include <array>
 #include <bit>     // countr_zero, popcount, has_single_bit
 #include <climits> // CHAR_BIT
-#include <cstddef> // size_t
+#include <cstddef> // std::size_t
 #include <vector>
 
 namespace Pennylane::Util {
@@ -29,10 +29,10 @@ namespace Pennylane::Util {
  * @brief Faster log2 when the value is a power of 2.
  *
  * @param val Size of the state vector. Expected to be a power of 2.
- * @return size_t Log2(val), or the state vector's number of qubits.
+ * @return std::size_t Log2(val), or the state vector's number of qubits.
  */
-inline auto constexpr log2PerfectPower(size_t val) -> size_t {
-    return static_cast<size_t>(std::countr_zero(val));
+inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
+    return static_cast<std::size_t>(std::countr_zero(val));
 }
 
 /**
@@ -53,7 +53,7 @@ inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
  * @tparam IntegerType Integer type to use
  * @param nbits Number of bits to fill
  */
-template <class IntegerType = size_t>
+template <class IntegerType = std::size_t>
 inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
     static_assert(std::is_integral_v<IntegerType> &&
                   std::is_unsigned_v<IntegerType>);
@@ -69,8 +69,8 @@ inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
  * @tparam IntegerType Integer type to use
  * @param pos Position up to which bit one is filled.
  */
-template <class IntegerType = size_t>
-inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
+template <class IntegerType = std::size_t>
+inline auto constexpr fillLeadingOnes(size_t pos) -> std::size_t {
     static_assert(std::is_integral_v<IntegerType> &&
                   std::is_unsigned_v<IntegerType>);
 
@@ -80,9 +80,9 @@ inline auto constexpr fillLeadingOnes(size_t pos) -> size_t {
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-inline auto constexpr bitswap(size_t bits, const size_t i, const size_t j)
-    -> size_t {
-    size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
+inline auto constexpr bitswap(size_t bits, const std::size_t i,
+                              const std::size_t j) -> std::size_t {
+    std::size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
     return bits ^ ((x << i) | (x << j));
 }
 

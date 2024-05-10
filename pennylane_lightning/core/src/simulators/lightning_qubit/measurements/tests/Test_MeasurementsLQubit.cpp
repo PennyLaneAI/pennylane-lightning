@@ -57,14 +57,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval(PauliX, wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval("PauliX", wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
@@ -77,7 +77,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -99,7 +99,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -136,14 +136,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var(PauliX, wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var("PauliX", wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
@@ -156,7 +156,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
 
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -178,7 +178,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -225,11 +225,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
         }
         SECTION("Testing probs(NamedObs)") {
             const auto obs1 = Observables::NamedObs<StateVectorT>(
-                {"PauliX"}, std::vector<size_t>{0});
+                {"PauliX"}, std::vector<std::size_t>{0});
             const auto obs2 = Observables::NamedObs<StateVectorT>(
-                {"PauliZ"}, std::vector<size_t>{0});
+                {"PauliZ"}, std::vector<std::size_t>{0});
             const auto obs3 = Observables::NamedObs<StateVectorT>(
-                {"Hadamard"}, std::vector<size_t>{0});
+                {"Hadamard"}, std::vector<std::size_t>{0});
             auto p0_obs1 = Measurer.probs(obs1);
             auto p0_obs2 = Measurer.probs(obs2);
             auto p0_obs3 = Measurer.probs(obs3);
@@ -551,17 +551,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
         0.67078706, 0.03062806, 0.0870997,  0.00397696,
         0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-    size_t num_qubits = 3;
-    size_t N = std::pow(2, num_qubits);
-    size_t num_samples = 100000;
-    size_t num_burnin = 1000;
+    std::size_t num_qubits = 3;
+    std::size_t N = std::pow(2, num_qubits);
+    std::size_t num_samples = 100000;
+    std::size_t num_burnin = 1000;
 
     std::string kernel = "Local";
     auto &&samples =
         Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
 
-    std::vector<size_t> counts(N, 0);
-    std::vector<size_t> samples_decimal(num_samples, 0);
+    std::vector<std::size_t> counts(N, 0);
+    std::vector<std::size_t> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
     for (size_t i = 0; i < num_samples; i++) {
@@ -613,17 +613,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
         0.67078706, 0.03062806, 0.0870997,  0.00397696,
         0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-    size_t num_qubits = 3;
-    size_t N = std::pow(2, num_qubits);
-    size_t num_samples = 100000;
-    size_t num_burnin = 1000;
+    std::size_t num_qubits = 3;
+    std::size_t N = std::pow(2, num_qubits);
+    std::size_t num_samples = 100000;
+    std::size_t num_burnin = 1000;
 
     const std::string kernel = "NonZeroRandom";
     auto &&samples =
         Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
 
-    std::vector<size_t> counts(N, 0);
-    std::vector<size_t> samples_decimal(num_samples, 0);
+    std::vector<std::size_t> counts(N, 0);
+    std::vector<std::size_t> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
     for (size_t i = 0; i < num_samples; i++) {

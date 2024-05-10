@@ -32,7 +32,7 @@ template <class PrecisionT> struct getProbFunctor {
         : arr(arr_), probability(probability_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
+    void operator()(const std::size_t k) const {
         const PrecisionT REAL = arr(k).real();
         const PrecisionT IMAG = arr(k).imag();
         probability(k) = REAL * REAL + IMAG * IMAG;
@@ -56,31 +56,31 @@ struct Sampler {
     Kokkos::View<PrecisionT *> cdf;
     GeneratorPool<ExecutionSpace> rand_pool;
 
-    const size_t num_qubits;
-    const size_t length;
+    const std::size_t num_qubits;
+    const std::size_t length;
 
     Sampler(Kokkos::View<size_t *> samples_, Kokkos::View<PrecisionT *> cdf_,
-            GeneratorPool<ExecutionSpace> rand_pool_, const size_t num_qubits_,
-            const size_t length_)
+            GeneratorPool<ExecutionSpace> rand_pool_,
+            const std::size_t num_qubits_, const std::size_t length_)
         : samples(samples_), cdf(cdf_), rand_pool(rand_pool_),
           num_qubits(num_qubits_), length(length_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k) const {
+    void operator()(const std::size_t k) const {
         // Get a random number state from the pool for the active thread
         auto rand_gen = rand_pool.get_state();
         PrecisionT U_rand = rand_gen.drand(0.0, 1.0);
         // Give the state back, which will allow another thread to acquire it
         rand_pool.free_state(rand_gen);
-        size_t index;
+        std::size_t index;
 
         // Binary search for the bin index of cumulative probability
         // distribution that generated random number U falls into.
         if (U_rand <= cdf(1)) {
             index = 0;
         } else {
-            size_t low_idx = 1, high_idx = length;
-            size_t mid_idx;
+            std::size_t low_idx = 1, high_idx = length;
+            std::size_t mid_idx;
             PrecisionT cdf_t;
             while (high_idx - low_idx > 1) {
                 mid_idx = high_idx - ((high_idx - low_idx) >> 1U);
@@ -112,7 +112,7 @@ struct Sampler {
 struct getTransposedIndexFunctor {
     Kokkos::View<size_t *> sorted_ind_wires;
     Kokkos::View<size_t *> trans_index;
-    const size_t max_index_sorted_ind_wires;
+    const std::size_t max_index_sorted_ind_wires;
     getTransposedIndexFunctor(Kokkos::View<size_t *> sorted_ind_wires_,
                               Kokkos::View<size_t *> trans_index_,
                               const int length_sorted_ind_wires_)
@@ -120,11 +120,11 @@ struct getTransposedIndexFunctor {
           max_index_sorted_ind_wires(length_sorted_ind_wires_ - 1) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t i, const size_t j) const {
-        const size_t axis = sorted_ind_wires(j);
-        const size_t index = i / (1L << (max_index_sorted_ind_wires - j));
-        const size_t sub_index = (index % 2)
-                                 << (max_index_sorted_ind_wires - axis);
+    void operator()(const std::size_t i, const std::size_t j) const {
+        const std::size_t axis = sorted_ind_wires(j);
+        const std::size_t index = i / (1L << (max_index_sorted_ind_wires - j));
+        const std::size_t sub_index = (index % 2)
+                                      << (max_index_sorted_ind_wires - axis);
         Kokkos::atomic_add(&trans_index(i), sub_index);
     }
 };
@@ -149,8 +149,8 @@ template <class PrecisionT> struct getTransposedFunctor {
           trans_index(trans_index_) {}
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t i) const {
-        const size_t new_index = trans_index(i);
+    void operator()(const std::size_t i) const {
+        const std::size_t new_index = trans_index(i);
         transProb(i) = probability(new_index);
     }
 };

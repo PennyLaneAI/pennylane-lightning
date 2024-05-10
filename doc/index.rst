@@ -43,9 +43,9 @@ The Lightning ecosystem provides the following devices:
    :titlesonly:
    :hidden:
 
-   installation
-   docker
-   support
+   dev/installation
+   dev/docker
+   dev/support
 
 .. toctree::
    :maxdepth: 2

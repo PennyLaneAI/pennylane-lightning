@@ -45,7 +45,7 @@ using std::size_t;
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                    "[StateVectorKokkos_Generator]", float, double) {
     {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
                    "[StateVectorKokkos_Generator]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
 
@@ -138,7 +138,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitation",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 
@@ -230,7 +230,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationMinus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 
@@ -322,7 +322,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 

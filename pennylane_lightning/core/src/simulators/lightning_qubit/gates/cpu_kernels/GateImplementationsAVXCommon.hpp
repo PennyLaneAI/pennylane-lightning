@@ -80,8 +80,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static void applyPauliX(std::complex<PrecisionT> *arr,
-                            const size_t num_qubits,
-                            const std::vector<size_t> &wires,
+                            const std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliXAVX =
             AVXCommon::ApplyPauliX<PrecisionT,
@@ -99,8 +99,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static void applyPauliY(std::complex<PrecisionT> *arr,
-                            const size_t num_qubits,
-                            const std::vector<size_t> &wires,
+                            const std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliYAVX =
             AVXCommon::ApplyPauliY<PrecisionT,
@@ -118,8 +118,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static void applyPauliZ(std::complex<PrecisionT> *arr,
-                            const size_t num_qubits,
-                            const std::vector<size_t> &wires,
+                            const std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         using ApplyPauliZAVX =
             AVXCommon::ApplyPauliZ<PrecisionT,
@@ -136,8 +136,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
-    static void applyS(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                       const std::vector<size_t> &wires,
+    static void applyS(std::complex<PrecisionT> *arr,
+                       const std::size_t num_qubits,
+                       const std::vector<std::size_t> &wires,
                        [[maybe_unused]] bool inverse) {
         using ApplySAVX = AVXCommon::ApplyS<PrecisionT, Derived::packed_bytes /
                                                             sizeof(PrecisionT)>;
@@ -151,8 +152,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
-    static void applyT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                       const std::vector<size_t> &wires,
+    static void applyT(std::complex<PrecisionT> *arr,
+                       const std::size_t num_qubits,
+                       const std::vector<std::size_t> &wires,
                        [[maybe_unused]] bool inverse) {
         using ApplyTAVX = AVXCommon::ApplyT<PrecisionT, Derived::packed_bytes /
                                                             sizeof(PrecisionT)>;
@@ -168,9 +170,9 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyPhaseShift(std::complex<PrecisionT> *arr,
-                                const size_t num_qubits,
-                                const std::vector<size_t> &wires, bool inverse,
-                                ParamT angle) {
+                                const std::size_t num_qubits,
+                                const std::vector<std::size_t> &wires,
+                                bool inverse, ParamT angle) {
         using ApplyPhaseShiftAVX =
             AVXCommon::ApplyPhaseShift<PrecisionT, Derived::packed_bytes /
                                                        sizeof(PrecisionT)>;
@@ -188,8 +190,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static void applyHadamard(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits,
-                              const std::vector<size_t> &wires,
+                              const std::size_t num_qubits,
+                              const std::vector<std::size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         using ApplyHadamardAVX =
             AVXCommon::ApplyHadamard<PrecisionT, Derived::packed_bytes /
@@ -205,9 +207,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        ParamT angle) {
+    static void
+    applyRX(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+            const std::vector<std::size_t> &wires, bool inverse, ParamT angle) {
         using ApplyRXAVX =
             AVXCommon::ApplyRX<PrecisionT,
                                Derived::packed_bytes / sizeof(PrecisionT)>;
@@ -222,9 +224,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        ParamT angle) {
+    static void
+    applyRY(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+            const std::vector<std::size_t> &wires, bool inverse, ParamT angle) {
         using ApplyRYAVX =
             AVXCommon::ApplyRY<PrecisionT,
                                Derived::packed_bytes / sizeof(PrecisionT)>;
@@ -239,9 +241,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
-                        ParamT angle) {
+    static void
+    applyRZ(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+            const std::vector<std::size_t> &wires, bool inverse, ParamT angle) {
         using ApplyRZAVX =
             AVXCommon::ApplyRZ<PrecisionT,
                                Derived::packed_bytes / sizeof(PrecisionT)>;
@@ -256,8 +258,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRot(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyRot(std::complex<PrecisionT> *arr,
+                         const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT phi, ParamT theta, ParamT omega) {
         PL_ASSERT(wires.size() == 1);
 
@@ -270,8 +273,9 @@ class GateImplementationsAVXCommon
 
     /* Two-qubit gates*/
     template <class PrecisionT>
-    static void applyCZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires,
+    static void applyCZ(std::complex<PrecisionT> *arr,
+                        const std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse) {
         using ApplyCZAVX =
             AVXCommon::ApplyCZ<PrecisionT,
@@ -290,8 +294,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
-    static void applyCY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                        const std::vector<size_t> &wires,
+    static void applyCY(std::complex<PrecisionT> *arr,
+                        const std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse) {
         using ApplyCYAVX =
             AVXCommon::ApplyCY<PrecisionT,
@@ -310,9 +315,10 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
-    static void
-    applySWAP(std::complex<PrecisionT> *arr, const size_t num_qubits,
-              const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
+    static void applySWAP(std::complex<PrecisionT> *arr,
+                          const std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
         using ApplySWAPAVX =
             AVXCommon::ApplySWAP<PrecisionT,
                                  Derived::packed_bytes / sizeof(PrecisionT)>;
@@ -330,9 +336,10 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT>
-    static void
-    applyCNOT(std::complex<PrecisionT> *arr, const size_t num_qubits,
-              const std::vector<size_t> &wires, [[maybe_unused]] bool inverse) {
+    static void applyCNOT(std::complex<PrecisionT> *arr,
+                          const std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
 
         using ApplyCNOTAVX =
@@ -356,8 +363,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyIsingXX(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
+                             const std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 2);
 
@@ -378,8 +385,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyIsingXY(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
+                             const std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 2);
 
@@ -400,8 +407,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyIsingYY(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
+                             const std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 2);
 
@@ -422,8 +429,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyIsingZZ(std::complex<PrecisionT> *arr,
-                             const size_t num_qubits,
-                             const std::vector<size_t> &wires,
+                             const std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         using ApplyIsingZZAVX =
             AVXCommon::ApplyIsingZZ<PrecisionT,
@@ -444,8 +451,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
-                                          const size_t num_qubits,
-                                          const std::vector<size_t> &wires,
+                                          const std::size_t num_qubits,
+                                          const std::vector<std::size_t> &wires,
                                           [[maybe_unused]] bool inverse,
                                           ParamT angle) {
         using ApplyControlledPhaseShiftAVX =
@@ -468,8 +475,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRX(std::complex<PrecisionT> *arr,
+                         const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         using ApplyCRXAVX =
             AVXCommon::ApplyCRX<PrecisionT,
@@ -487,8 +495,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRY(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRY(std::complex<PrecisionT> *arr,
+                         const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         using ApplyCRYAVX =
             AVXCommon::ApplyCRY<PrecisionT,
@@ -506,8 +515,9 @@ class GateImplementationsAVXCommon
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRZ(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRZ(std::complex<PrecisionT> *arr,
+                         const std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         using ApplyCRZAVX =
             AVXCommon::ApplyCRZ<PrecisionT,
@@ -528,8 +538,8 @@ class GateImplementationsAVXCommon
     /* Generators */
     template <class PrecisionT>
     static auto applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
-                                         const size_t num_qubits,
-                                         const std::vector<size_t> &wires,
+                                         const std::size_t num_qubits,
+                                         const std::vector<std::size_t> &wires,
                                          [[maybe_unused]] bool inverse)
         -> PrecisionT {
         using ApplyGeneratorPhaseShiftAVX = AVXCommon::ApplyGeneratorPhaseShift<
@@ -551,8 +561,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static auto applyGeneratorIsingXX(std::complex<PrecisionT> *arr,
-                                      const size_t num_qubits,
-                                      const std::vector<size_t> &wires,
+                                      const std::size_t num_qubits,
+                                      const std::vector<std::size_t> &wires,
                                       [[maybe_unused]] bool inverse)
         -> PrecisionT {
         using ApplyGeneratorIsingXXAVX = AVXCommon::ApplyGeneratorIsingXX<
@@ -574,8 +584,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static auto applyGeneratorIsingYY(std::complex<PrecisionT> *arr,
-                                      const size_t num_qubits,
-                                      const std::vector<size_t> &wires,
+                                      const std::size_t num_qubits,
+                                      const std::vector<std::size_t> &wires,
                                       [[maybe_unused]] bool inverse)
         -> PrecisionT {
         using ApplyGeneratorIsingYYAVX = AVXCommon::ApplyGeneratorIsingYY<
@@ -597,8 +607,8 @@ class GateImplementationsAVXCommon
 
     template <class PrecisionT>
     static auto applyGeneratorIsingZZ(std::complex<PrecisionT> *arr,
-                                      const size_t num_qubits,
-                                      const std::vector<size_t> &wires,
+                                      const std::size_t num_qubits,
+                                      const std::vector<std::size_t> &wires,
                                       [[maybe_unused]] bool inverse)
         -> PrecisionT {
         using ApplyGeneratorIsingZZAVX = AVXCommon::ApplyGeneratorIsingZZ<

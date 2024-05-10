@@ -97,14 +97,14 @@ class Measurements final
      * The basis columns are rearranged according to wires.
      */
     std::vector<PrecisionT>
-    probs(const std::vector<size_t> &wires,
-          [[maybe_unused]] const std::vector<size_t> &device_wires = {}) {
+    probs(const std::vector<std::size_t> &wires,
+          [[maybe_unused]] const std::vector<std::size_t> &device_wires = {}) {
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
 
         // Sorting wires.
-        std::vector<size_t> sorted_wires(wires.size());
+        std::vector<std::size_t> sorted_wires(wires.size());
         for (size_t pos = 0; pos < wires.size(); pos++) {
             sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
@@ -112,16 +112,16 @@ class Measurements final
         // Determining probabilities for the sorted wires.
         const ComplexT *arr_data = this->_statevector.getData();
 
-        size_t num_qubits = this->_statevector.getNumQubits();
-        const std::vector<size_t> all_indices =
+        std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::vector<std::size_t> all_indices =
             Gates::generateBitPatterns(sorted_wires, num_qubits);
-        const std::vector<size_t> all_offsets = Gates::generateBitPatterns(
+        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
             Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
             num_qubits);
 
         std::vector<PrecisionT> probabilities(all_indices.size(), 0);
 
-        size_t ind_probs = 0;
+        std::size_t ind_probs = 0;
         for (auto index : all_indices) {
             for (auto offset : all_offsets) {
                 probabilities[ind_probs] += std::norm(arr_data[index + offset]);
@@ -165,7 +165,7 @@ class Measurements final
      * in lexicographic order.
      */
     std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  size_t num_shots = 0) {
+                                  std::size_t num_shots = 0) {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -190,8 +190,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      */
 
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  size_t num_shots) {
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
+                                  std::size_t num_shots) {
         return BaseType::probs(wires, num_shots);
     }
 
@@ -203,7 +203,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     PrecisionT expval(const std::vector<ComplexT> &matrix,
-                      const std::vector<size_t> &wires) {
+                      const std::vector<std::size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -225,7 +225,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     PrecisionT expval(const std::string &operation,
-                      const std::vector<size_t> &wires) {
+                      const std::vector<std::size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -285,7 +285,7 @@ class Measurements final
     template <typename op_type>
     std::vector<PrecisionT>
     expval(const std::vector<op_type> &operations_list,
-           const std::vector<std::vector<size_t>> &wires_list) {
+           const std::vector<std::vector<std::size_t>> &wires_list) {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -338,8 +338,9 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -352,7 +353,7 @@ class Measurements final
      * @return Variance of the given observable.
      */
 
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
         return BaseType::var(obs, num_shots);
     }
@@ -394,7 +395,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     PrecisionT var(const std::string &operation,
-                   const std::vector<size_t> &wires) {
+                   const std::vector<std::size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -404,7 +405,7 @@ class Measurements final
 
         const std::complex<PrecisionT> *opsv_data =
             operator_statevector.getData();
-        size_t orgsv_len = this->_statevector.getLength();
+        std::size_t orgsv_len = this->_statevector.getLength();
 
         PrecisionT mean_square =
             std::real(innerProdC(opsv_data, opsv_data, orgsv_len));
@@ -422,7 +423,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     PrecisionT var(const std::vector<ComplexT> &matrix,
-                   const std::vector<size_t> &wires) {
+                   const std::vector<std::size_t> &wires) {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -432,7 +433,7 @@ class Measurements final
 
         const std::complex<PrecisionT> *opsv_data =
             operator_statevector.getData();
-        size_t orgsv_len = this->_statevector.getLength();
+        std::size_t orgsv_len = this->_statevector.getLength();
 
         PrecisionT mean_square =
             std::real(innerProdC(opsv_data, opsv_data, orgsv_len));
@@ -455,7 +456,7 @@ class Measurements final
     template <typename op_type>
     std::vector<PrecisionT>
     var(const std::vector<op_type> &operations_list,
-        const std::vector<std::vector<size_t>> &wires_list) {
+        const std::vector<std::vector<std::size_t>> &wires_list) {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -482,13 +483,14 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<size_t>
+    std::vector<std::size_t>
     generate_samples_metropolis(const std::string &kernelname,
-                                size_t num_burnin, size_t num_samples) {
-        size_t num_qubits = this->_statevector.getNumQubits();
+                                std::size_t num_burnin,
+                                std::size_t num_samples) {
+        std::size_t num_qubits = this->_statevector.getNumQubits();
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
-        std::vector<size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, size_t> cache;
+        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
+        std::unordered_map<size_t, std::size_t> cache;
         this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
@@ -499,7 +501,7 @@ class Measurements final
         auto tk =
             kernel_factory(transition_kernel, this->_statevector.getData(),
                            this->_statevector.getNumQubits());
-        size_t idx = 0;
+        std::size_t idx = 0;
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
@@ -513,7 +515,7 @@ class Measurements final
                                   idx);
 
             if (cache.contains(idx)) {
-                size_t cache_id = cache[idx];
+                std::size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
                           samples.begin() + i * num_qubits);
@@ -577,20 +579,20 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<size_t> generate_samples(size_t num_samples) {
-        const size_t num_qubits = this->_statevector.getNumQubits();
+    std::vector<std::size_t> generate_samples(size_t num_samples) {
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         auto &&probabilities = probs();
 
-        std::vector<size_t> samples(num_samples * num_qubits, 0);
+        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::uniform_real_distribution<PrecisionT> distribution(0.0, 1.0);
-        std::unordered_map<size_t, size_t> cache;
+        std::unordered_map<size_t, std::size_t> cache;
         this->setRandomSeed();
 
-        const size_t N = probabilities.size();
+        const std::size_t N = probabilities.size();
         std::vector<double> bucket(N);
-        std::vector<size_t> bucket_partner(N);
-        std::stack<size_t> overfull_bucket_ids;
-        std::stack<size_t> underfull_bucket_ids;
+        std::vector<std::size_t> bucket_partner(N);
+        std::stack<std::size_t> overfull_bucket_ids;
+        std::stack<std::size_t> underfull_bucket_ids;
 
         for (size_t i = 0; i < N; i++) {
             bucket[i] = N * probabilities[i];
@@ -606,10 +608,10 @@ class Measurements final
         // Run alias algorithm
         while (!underfull_bucket_ids.empty() && !overfull_bucket_ids.empty()) {
             // get an overfull bucket
-            size_t i = overfull_bucket_ids.top();
+            std::size_t i = overfull_bucket_ids.top();
 
             // get an underfull bucket
-            size_t j = underfull_bucket_ids.top();
+            std::size_t j = underfull_bucket_ids.top();
             underfull_bucket_ids.pop();
 
             // underfull bucket is partned with an overfull bucket
@@ -632,13 +634,13 @@ class Measurements final
         // Pick samples
         for (size_t i = 0; i < num_samples; i++) {
             PrecisionT pct = distribution(this->rng) * N;
-            auto idx = static_cast<size_t>(pct);
+            auto idx = static_cast<std::size_t>(pct);
             if (pct - idx > bucket[idx]) {
                 idx = bucket_partner[idx];
             }
             // If cached, retrieve sample from cache
             if (cache.contains(idx)) {
-                size_t cache_id = cache[idx];
+                std::size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
                           samples.begin() + i * num_qubits);
@@ -707,12 +709,12 @@ class Measurements final
      * @param distrib Random number distribution.
      * @param init_idx Init index of basis state.
      */
-    size_t
+    std::size_t
     metropolis_step(const StateVectorT &sv,
                     const std::unique_ptr<TransitionKernel<PrecisionT>> &tk,
                     std::mt19937 &gen,
                     std::uniform_real_distribution<PrecisionT> &distrib,
-                    size_t init_idx) {
+                    std::size_t init_idx) {
         auto init_plog = std::log(
             (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
                 .real());

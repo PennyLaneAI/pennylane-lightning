@@ -36,7 +36,7 @@ namespace Pennylane::Util {
  * @param bytes Number of bytes to allocate
  * @return Pointer to the allocated memory
  */
-inline auto alignedAlloc(uint32_t alignment, size_t bytes,
+inline auto alignedAlloc(uint32_t alignment, std::size_t bytes,
                          bool zero_init = false) -> void * {
     if (bytes % alignment != 0) {
         bytes = alignment * (bytes / alignment + 1);
@@ -209,12 +209,12 @@ struct Undefined {};
 
 ///@cond DEV
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
-    constexpr static size_t value = std::max(
+    constexpr static std::size_t value = std::max(
         TypeList::Type::template required_alignment<PrecisionT>,
         commonAlignmentHelper<PrecisionT, typename TypeList::Next>::value);
 };
 template <class PrecisionT> struct commonAlignmentHelper<PrecisionT, void> {
-    constexpr static size_t value = 1;
+    constexpr static std::size_t value = 1;
 };
 /// @endcond
 } // namespace Pennylane::Util

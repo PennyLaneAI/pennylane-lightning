@@ -213,8 +213,8 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
  */
 template <class Data_t>
 inline bool
-isApproxEqual(const Data_t *data1, const size_t length1, const Data_t *data2,
-              const size_t length2,
+isApproxEqual(const Data_t *data1, const std::size_t length1,
+              const Data_t *data2, const std::size_t length2,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
@@ -308,7 +308,7 @@ template <typename PrecisionT>
 auto createPlusState(size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        size_t{1U} << num_qubits, 1.0,
+        std::size_t{1U} << num_qubits, 1.0,
         getBestAllocator<std::complex<PrecisionT>>());
     for (auto &elem : res) {
         elem /= std::sqrt(1U << num_qubits);
@@ -320,10 +320,10 @@ auto createPlusState(size_t num_qubits)
  * @brief create a random state
  */
 template <typename PrecisionT, class RandomEngine>
-auto createRandomStateVectorData(RandomEngine &re, size_t num_qubits)
+auto createRandomStateVectorData(RandomEngine &re, std::size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        size_t{1U} << num_qubits, 0.0,
+        std::size_t{1U} << num_qubits, 0.0,
         getBestAllocator<std::complex<PrecisionT>>());
     std::uniform_real_distribution<PrecisionT> dist;
     for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
@@ -359,7 +359,7 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
         PrecisionT elem = 1.0;
         for (size_t n = 0; n < str.length(); n++) {
             char c = str[n];
-            const size_t wire = str.length() - 1 - n;
+            const std::size_t wire = str.length() - 1 - n;
             switch (c) {
             case '0':
                 elem *= zero[(k >> wire) & 1U];
@@ -394,14 +394,14 @@ auto createNonTrivialState(size_t num_qubits = 3) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    size_t data_size = Util::exp2(num_qubits);
+    std::size_t data_size = Util::exp2(num_qubits);
 
     std::vector<ComplexT> arr(data_size, ComplexT{0, 0});
     arr[0] = ComplexT{1, 0};
     StateVectorT Measured_StateVector(arr.data(), data_size);
 
     std::vector<std::string> gates;
-    std::vector<std::vector<size_t>> wires;
+    std::vector<std::vector<std::size_t>> wires;
     std::vector<bool> inv_op(num_qubits * 2, false);
     std::vector<std::vector<PrecisionT>> phase;
 
@@ -451,7 +451,7 @@ void write_CSR_vectors(std::vector<IndexT> &row_map,
     entries.resize(numNNZ);
     values.resize(numNNZ);
     for (IndexT rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-        size_t idx = row_map[rowIdx];
+        std::size_t idx = row_map[rowIdx];
         if (rowIdx == 0) {
             entries[0] = rowIdx;
             entries[1] = rowIdx + 1;
@@ -516,7 +516,7 @@ bool operator==(const std::vector<T, AllocA> &lhs,
  * @return std::vector<T>
  */
 template <class T>
-auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
+auto linspace(T start, T end, std::size_t num_points) -> std::vector<T> {
     std::vector<T> data(num_points);
     T step = (end - start) / (num_points - 1);
     for (size_t i = 0; i < num_points; i++) {
@@ -526,7 +526,7 @@ auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
 }
 
 template <typename RandomEngine>
-std::vector<int> randomIntVector(RandomEngine &re, size_t size, int min,
+std::vector<int> randomIntVector(RandomEngine &re, std::size_t size, int min,
                                  int max) {
     std::uniform_int_distribution<int> dist(min, max);
     std::vector<int> res;
@@ -548,10 +548,10 @@ std::vector<int> randomIntVector(RandomEngine &re, size_t size, int min,
  * @return Generated unitary matrix in row-major format
  */
 template <typename PrecisionT, class RandomEngine>
-auto randomUnitary(RandomEngine &re, size_t num_qubits)
+auto randomUnitary(RandomEngine &re, std::size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t dim = (1U << num_qubits);
+    const std::size_t dim = (1U << num_qubits);
     std::vector<ComplexT> res(dim * dim, ComplexT{});
 
     std::normal_distribution<PrecisionT> dist;

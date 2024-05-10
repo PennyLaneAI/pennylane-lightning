@@ -65,8 +65,8 @@ constexpr bool testAllGatesImplemented() {
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM0(GATE_NAME)                       \
     template <class PrecisionT>                                                \
     static void apply##GATE_NAME(                                              \
-        std::complex<PrecisionT> *arr, size_t num_qubits,                      \
-        const std::vector<size_t> &wires, bool inverse) {                      \
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,                 \
+        const std::vector<std::size_t> &wires, bool inverse) {                 \
         static_cast<void>(arr);                                                \
         static_cast<void>(num_qubits);                                         \
         static_cast<void>(wires);                                              \
@@ -75,8 +75,8 @@ constexpr bool testAllGatesImplemented() {
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM1(GATE_NAME)                       \
     template <class PrecisionT, class ParamT>                                  \
     static void apply##GATE_NAME(                                              \
-        std::complex<PrecisionT> *arr, size_t num_qubits,                      \
-        const std::vector<size_t> &wires, bool inverse, ParamT) {              \
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,                 \
+        const std::vector<std::size_t> &wires, bool inverse, ParamT) {         \
         static_cast<void>(arr);                                                \
         static_cast<void>(num_qubits);                                         \
         static_cast<void>(wires);                                              \
@@ -85,8 +85,8 @@ constexpr bool testAllGatesImplemented() {
 #define PENNYLANE_TESTS_DEFINE_GATE_OP_PARAM3(GATE_NAME)                       \
     template <class PrecisionT, class ParamT>                                  \
     static void apply##GATE_NAME(std::complex<PrecisionT> *arr,                \
-                                 size_t num_qubits,                            \
-                                 const std::vector<size_t> &wires,             \
+                                 std::size_t num_qubits,                       \
+                                 const std::vector<std::size_t> &wires,        \
                                  bool inverse, ParamT, ParamT, ParamT) {       \
         static_cast<void>(arr);                                                \
         static_cast<void>(num_qubits);                                         \
@@ -99,8 +99,8 @@ constexpr bool testAllGatesImplemented() {
 #define PENNYLANE_TESTS_DEFINE_GENERATOR_OP(GENERATOR_NAME)                    \
     template <class PrecisionT>                                                \
     static PrecisionT applyGenerator##GENERATOR_NAME(                          \
-        std::complex<PrecisionT> *arr, size_t num_qubits,                      \
-        const std::vector<size_t> &wires, bool adj) {                          \
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,                 \
+        const std::vector<std::size_t> &wires, bool adj) {                     \
         static_cast<void>(arr);                                                \
         static_cast<void>(num_qubits);                                         \
         static_cast<void>(wires);                                              \
@@ -120,9 +120,10 @@ class DummyImplementation {
     constexpr static std::string_view name = "Dummy";
 
     template <class PrecisionT>
-    static void applyMatrix(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::complex<PrecisionT> *matrix,
-                            const std::vector<size_t> &wires, bool inverse) {
+    static void
+    applyMatrix(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                const std::complex<PrecisionT> *matrix,
+                const std::vector<std::size_t> &wires, bool inverse) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
         static_cast<void>(matrix);
@@ -209,7 +210,8 @@ struct ImplementedGenerators {
         GeneratorOpToMemberFuncPtr<PrecisionT, DummyImplementation, op>::value;
 };
 
-template <typename PrecisionT, typename ParamT, class ValueClass, size_t op_idx>
+template <typename PrecisionT, typename ParamT, class ValueClass,
+          std::size_t op_idx>
 constexpr auto opFuncPtrPairsIter() {
     if constexpr (op_idx < ValueClass::value.size()) {
         constexpr auto op = ValueClass::value[op_idx];
@@ -236,15 +238,15 @@ constexpr auto opFuncPtrPairsIter() {
 template <typename PrecisionT, typename ParamT>
 constexpr static auto gate_op_func_ptr_pairs =
     opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGates,
-                       static_cast<size_t>(GateOperation::BEGIN)>();
+                       static_cast<std::size_t>(GateOperation::BEGIN)>();
 
 template <typename PrecisionT, typename ParamT>
 constexpr static auto generator_op_func_ptr_pairs =
     opFuncPtrPairsIter<PrecisionT, ParamT, ImplementedGenerators,
-                       static_cast<size_t>(GeneratorOperation::BEGIN)>();
+                       static_cast<std::size_t>(GeneratorOperation::BEGIN)>();
 
-template <typename PrecisionT, typename ParamT, size_t num_params,
-          size_t tuple_idx>
+template <typename PrecisionT, typename ParamT, std::size_t num_params,
+          std::size_t tuple_idx>
 constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
     if constexpr (tuple_idx <
                   std::tuple_size_v<
@@ -265,7 +267,7 @@ constexpr auto gateOpFuncPtrPairsWithNumParamsIter() {
     }
 }
 
-template <typename PrecisionT, typename ParamT, size_t num_params>
+template <typename PrecisionT, typename ParamT, std::size_t num_params>
 constexpr auto gate_op_func_ptr_with_params = Pennylane::Util::tuple_to_array(
     gateOpFuncPtrPairsWithNumParamsIter<PrecisionT, ParamT, num_params, 0>());
 
@@ -273,7 +275,7 @@ template <typename PrecisionT, typename ParamT>
 constexpr auto generator_op_func_ptr = Pennylane::Util::tuple_to_array(
     generator_op_func_ptr_pairs<PrecisionT, PrecisionT>);
 
-template <typename T, typename U, size_t size>
+template <typename T, typename U, std::size_t size>
 auto testUniqueness(const std::array<std::pair<T, U>, size> &pairs) {
     REQUIRE(Util::count_unique(Util::first_elems_of(pairs)) == pairs.size());
     REQUIRE(Util::count_unique(Util::second_elems_of(pairs)) == pairs.size());

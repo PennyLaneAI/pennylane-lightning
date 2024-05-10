@@ -52,7 +52,7 @@ using namespace Pennylane::LightningQubit::Util;
  * @param
  */
 template <class StateVectorT, class RandomEngine>
-auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
+auto createRandomOps(RandomEngine &re, std::size_t length, std::size_t wires)
     -> OpsData<StateVectorT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -64,10 +64,11 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
 
     std::vector<std::string> ops_names;
     std::vector<std::vector<PrecisionT>> ops_params;
-    std::vector<std::vector<size_t>> ops_wires;
+    std::vector<std::vector<std::size_t>> ops_wires;
     std::vector<bool> ops_inverses;
 
-    std::uniform_int_distribution<size_t> gate_dist(0, gates_to_use.size() - 1);
+    std::uniform_int_distribution<std::size_t> gate_dist(
+        0, gates_to_use.size() - 1);
     std::uniform_real_distribution<PrecisionT> param_dist(0.0, 2 * M_PI);
     std::uniform_int_distribution<int> inverse_dist(0, 1);
 
@@ -85,7 +86,7 @@ auto createRandomOps(RandomEngine &re, size_t length, size_t wires)
             ops_wires,
             ops_inverses,
             std::vector<std::vector<ComplexT>>(length),
-            std::vector<std::vector<size_t>>(length),
+            std::vector<std::vector<std::size_t>>(length),
             std::vector<std::vector<bool>>(length)};
 }
 
@@ -342,10 +343,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
         std::mt19937 re{1337};
         auto ops_data = createRandomOps<StateVectorT>(re, 10, 3);
         auto obs = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
 
-        const size_t num_params = [&]() {
-            size_t r = 0;
+        const std::size_t num_params = [&]() {
+            std::size_t r = 0;
             for (const auto &ops_params : ops_data.getOpsParams()) {
                 if (!ops_params.empty()) {
                     ++r;
@@ -354,7 +355,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             return r;
         }();
 
-        std::vector<size_t> trainable_params(num_params);
+        std::vector<std::size_t> trainable_params(num_params);
         std::iota(trainable_params.begin(), trainable_params.end(), 0);
 
         VectorT ini_st = createProductState<PrecisionT>("+++");

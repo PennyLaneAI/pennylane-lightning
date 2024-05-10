@@ -16,30 +16,31 @@
 #include "Util.hpp" // exp2, maxDecimalForQubit
 
 namespace Pennylane::LightningQubit::Gates {
-auto getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
-                              size_t num_qubits) -> std::vector<size_t> {
-    std::set<size_t> indices;
+auto getIndicesAfterExclusion(const std::vector<std::size_t> &indicesToExclude,
+                              std::size_t num_qubits)
+    -> std::vector<std::size_t> {
+    std::set<std::size_t> indices;
     for (size_t i = 0; i < num_qubits; i++) {
         indices.emplace(i);
     }
-    for (const size_t &excludedIndex : indicesToExclude) {
+    for (const std::size_t &excludedIndex : indicesToExclude) {
         indices.erase(excludedIndex);
     }
     return {indices.begin(), indices.end()};
 }
 
-auto generateBitPatterns(const std::vector<size_t> &qubitIndices,
-                         size_t num_qubits) -> std::vector<size_t> {
-    std::vector<size_t> indices;
+auto generateBitPatterns(const std::vector<std::size_t> &qubitIndices,
+                         std::size_t num_qubits) -> std::vector<std::size_t> {
+    std::vector<std::size_t> indices;
     indices.reserve(Pennylane::Util::exp2(qubitIndices.size()));
     indices.emplace_back(0);
 
     // NOLINTNEXTLINE(modernize-loop-convert)
     for (auto index_it = qubitIndices.rbegin(); index_it != qubitIndices.rend();
          index_it++) {
-        const size_t value =
+        const std::size_t value =
             Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
-        const size_t currentSize = indices.size();
+        const std::size_t currentSize = indices.size();
         for (size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
         }

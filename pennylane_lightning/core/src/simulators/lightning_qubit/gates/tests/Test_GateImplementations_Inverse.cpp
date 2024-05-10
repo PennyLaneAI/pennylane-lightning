@@ -45,7 +45,7 @@ using namespace Pennylane::LightningQubit::Gates;
 
 template <typename PrecisionT, class RandomEngine>
 void testInverseGateKernel(RandomEngine &re, KernelType kernel,
-                           GateOperation gate_op, size_t num_qubits) {
+                           GateOperation gate_op, std::size_t num_qubits) {
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     const auto gate_name = lookup(Constant::gate_names, gate_op);
@@ -72,7 +72,7 @@ void testInverseGateKernel(RandomEngine &re, KernelType kernel,
 
 template <typename PrecisionT, class RandomEngine>
 void testInverseForAllGatesKernel(RandomEngine &re, KernelType kernel,
-                                  size_t num_qubits) {
+                                  std::size_t num_qubits) {
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
     for (const auto gate_op : dispatcher.registeredGatesForKernel(kernel)) {

@@ -112,7 +112,7 @@ jobs:
         exec_model: ["CUDA"]
         kokkos_version: ["4.2.00"]
 
-    name: Python tests with Kokkos
+    name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
