@@ -221,6 +221,26 @@ template <class PrecisionT> class TNCudaGateCache {
              return cuGates::getControlledPhaseShift<CFP_t>(
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        {"IsingXX",
+         [&](auto &&params) {
+             return cuGates::getIsingXX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingYY",
+         [&](auto &&params) {
+             return cuGates::getIsingYY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingZZ",
+         [&](auto &&params) {
+             return cuGates::getIsingZZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingXY",
+         [&](auto &&params) {
+             return cuGates::getIsingXY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
         {"SingleExcitation",
          [&](auto &&params) {
              return cuGates::getSingleExcitation<CFP_t>(
