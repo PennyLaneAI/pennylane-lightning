@@ -25,7 +25,7 @@
 #include <complex>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 struct ApplyControlledPhaseShift {
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
@@ -33,13 +33,13 @@ struct ApplyControlledPhaseShift {
 
     constexpr static auto perm = Permutation::compilePermutation<PrecisionT>(
         Permutation::swapRealImag(Permutation::identity<packed_size>()));
-    constexpr static size_t packed_size_ = packed_size;
+    constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
     /**
      * @brief Permutation applying imaginary `i` to |11>
      */
-    template <size_t rev_wire0, size_t rev_wire1>
+    template <size_t rev_wire0, std::size_t rev_wire1>
     static consteval auto applyInternalInternalPermutation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
@@ -57,9 +57,9 @@ struct ApplyControlledPhaseShift {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t rev_wire0, size_t rev_wire1, class ParamT>
+    template <size_t rev_wire0, std::size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, bool inverse,
+                                      std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
         const auto isin = inverse ? -std::sin(angle) : std::sin(angle);
 
@@ -129,12 +129,14 @@ struct ApplyControlledPhaseShift {
 
     template <size_t min_rev_wire, class ParamT>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t max_rev_wire,
-                                      bool inverse, ParamT angle) {
-        const size_t max_rev_wire_shift =
-            (static_cast<size_t>(1U) << max_rev_wire);
-        const size_t max_wire_parity = fillTrailingOnes(max_rev_wire);
-        const size_t max_wire_parity_inv = fillLeadingOnes(max_rev_wire + 1);
+                                      std::size_t num_qubits,
+                                      std::size_t max_rev_wire, bool inverse,
+                                      ParamT angle) {
+        const std::size_t max_rev_wire_shift =
+            (static_cast<std::size_t>(1U) << max_rev_wire);
+        const std::size_t max_wire_parity = fillTrailingOnes(max_rev_wire);
+        const std::size_t max_wire_parity_inv =
+            fillLeadingOnes(max_rev_wire + 1);
 
         const auto isin = inverse ? -std::sin(angle) : std::sin(angle);
         const auto real_factor = [angle]() {
@@ -175,9 +177,9 @@ struct ApplyControlledPhaseShift {
             applyInternalExternalPermutation<min_rev_wire>();
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 =
+            const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
-            const size_t i1 = i0 | max_rev_wire_shift;
+            const std::size_t i1 = i0 | max_rev_wire_shift;
 
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
 
@@ -189,20 +191,23 @@ struct ApplyControlledPhaseShift {
     }
 
     template <class ParamT>
-    static void
-    applyExternalExternal(std::complex<PrecisionT> *arr,
-                          const size_t num_qubits, const size_t rev_wire0,
-                          const size_t rev_wire1, bool inverse, ParamT angle) {
+    static void applyExternalExternal(std::complex<PrecisionT> *arr,
+                                      const std::size_t num_qubits,
+                                      const std::size_t rev_wire0,
+                                      const std::size_t rev_wire1, bool inverse,
+                                      ParamT angle) {
         using namespace Permutation;
-        const size_t rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        const size_t rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)
+                                            << rev_wire0;
+        const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
+                                            << rev_wire1;
 
-        const size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
-        const size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
+        const std::size_t rev_wire_min = std::min(rev_wire0, rev_wire1);
+        const std::size_t rev_wire_max = std::max(rev_wire0, rev_wire1);
 
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
+        const std::size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const std::size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
         const auto isin = inverse ? -std::sin(angle) : std::sin(angle);
@@ -214,9 +219,10 @@ struct ApplyControlledPhaseShift {
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
+            const std::size_t i00 = ((k << 2U) & parity_high) |
+                                    ((k << 1U) & parity_middle) |
+                                    (k & parity_low);
+            const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11
 

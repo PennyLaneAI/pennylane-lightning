@@ -85,14 +85,14 @@ template <typename PrecisionT> class DynamicDispatcher {
     using CFP_t = std::complex<PrecisionT>;
 
     using GateFunc = std::function<void(
-        std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
-        const std::vector<size_t> & /*wires*/, bool /*inverse*/,
+        std::complex<PrecisionT> * /*data*/, std::size_t /*num_qubits*/,
+        const std::vector<std::size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
     using ControlledGateFunc = std::function<void(
-        std::complex<PrecisionT> * /*data*/, size_t /*num_qubits*/,
-        const std::vector<size_t> & /*controlled_wires*/,
+        std::complex<PrecisionT> * /*data*/, std::size_t /*num_qubits*/,
+        const std::vector<std::size_t> & /*controlled_wires*/,
         const std::vector<bool> & /*controlled_values*/,
-        const std::vector<size_t> & /*wires*/, bool /*inverse*/,
+        const std::vector<std::size_t> & /*wires*/, bool /*inverse*/,
         const std::vector<PrecisionT> & /*params*/)>;
 
     using GeneratorFunc = Gates::GeneratorFuncPtrT<PrecisionT>;
@@ -522,9 +522,9 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyOperation(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                         const std::string &op_name,
-                        const std::vector<size_t> &wires, bool inverse,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params = {}) const {
         applyOperation(kernel, data, num_qubits, strToGateOp(op_name), wires,
                        inverse, params);
@@ -541,9 +541,9 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyOperation(KernelType kernel, CFP_t *data, size_t num_qubits,
-                        GateOperation gate_op, const std::vector<size_t> &wires,
-                        bool inverse,
+    void applyOperation(KernelType kernel, CFP_t *data, std::size_t num_qubits,
+                        GateOperation gate_op,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params = {}) const {
         const auto iter = gate_kernels_.find(std::make_pair(gate_op, kernel));
         PL_ABORT_IF(iter == gate_kernels_.cend(),
@@ -566,11 +566,12 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
-                             const std::string &op_name,
-                             const std::vector<size_t> &controlled_wires,
+    void applyControlledGate(KernelType kernel, CFP_t *data,
+                             std::size_t num_qubits, const std::string &op_name,
+                             const std::vector<std::size_t> &controlled_wires,
                              const std::vector<bool> &controlled_values,
-                             const std::vector<size_t> &wires, bool inverse,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse,
                              const std::vector<PrecisionT> &params = {}) const {
         applyControlledGate(kernel, data, num_qubits,
                             strToControlledGateOp(op_name), controlled_wires,
@@ -591,11 +592,13 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyControlledGate(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyControlledGate(KernelType kernel, CFP_t *data,
+                             std::size_t num_qubits,
                              const ControlledGateOperation op_name,
-                             const std::vector<size_t> &controlled_wires,
+                             const std::vector<std::size_t> &controlled_wires,
                              const std::vector<bool> &controlled_values,
-                             const std::vector<size_t> &wires, bool inverse,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse,
                              const std::vector<PrecisionT> &params = {}) const {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
@@ -621,12 +624,12 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param params List of parameters
      */
     void
-    applyOperations(KernelType kernel, CFP_t *data, size_t num_qubits,
+    applyOperations(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                     const std::vector<std::string> &ops,
-                    const std::vector<std::vector<size_t>> &wires,
+                    const std::vector<std::vector<std::size_t>> &wires,
                     const std::vector<bool> &inverse,
                     const std::vector<std::vector<PrecisionT>> &params) const {
-        const size_t numOperations = ops.size();
+        const std::size_t numOperations = ops.size();
         PL_ABORT_IF(numOperations != wires.size() ||
                         numOperations != params.size(),
                     "Invalid arguments: number of operations, wires, and "
@@ -647,11 +650,11 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires List of wires to apply each gate to.
      * @param inverse List of inverses
      */
-    void applyOperations(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyOperations(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                          const std::vector<std::string> &ops,
-                         const std::vector<std::vector<size_t>> &wires,
+                         const std::vector<std::vector<std::size_t>> &wires,
                          const std::vector<bool> &inverse) const {
-        const size_t numOperations = ops.size();
+        const std::size_t numOperations = ops.size();
         PL_ABORT_IF(numOperations != wires.size(),
                     "Invalid arguments: number of operations, wires, and "
                     "parameters must all be equal");
@@ -671,9 +674,10 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyMatrix(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                      const std::complex<PrecisionT> *matrix,
-                     const std::vector<size_t> &wires, bool inverse) const {
+                     const std::vector<std::size_t> &wires,
+                     bool inverse) const {
         PL_ASSERT(num_qubits >= wires.size());
 
         const auto mat_op = [n_wires = wires.size()]() {
@@ -704,9 +708,10 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    void applyMatrix(KernelType kernel, CFP_t *data, size_t num_qubits,
+    void applyMatrix(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                      const std::vector<std::complex<PrecisionT>> &matrix,
-                     const std::vector<size_t> &wires, bool inverse) const {
+                     const std::vector<std::size_t> &wires,
+                     bool inverse) const {
         PL_ABORT_IF_NOT(matrix.size() == exp2(2 * wires.size()),
                         "The size of matrix does not match with the given "
                         "number of wires");
@@ -725,11 +730,11 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param inverse Indicate whether inverse should be taken.
      */
     void applyControlledMatrix(KernelType kernel, CFP_t *data,
-                               size_t num_qubits,
+                               std::size_t num_qubits,
                                const std::complex<PrecisionT> *matrix,
-                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<std::size_t> &controlled_wires,
                                const std::vector<bool> &controlled_values,
-                               const std::vector<size_t> &wires,
+                               const std::vector<std::size_t> &wires,
                                bool inverse) const {
         PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
@@ -767,9 +772,9 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
-    auto applyGenerator(KernelType kernel, CFP_t *data, size_t num_qubits,
+    auto applyGenerator(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                         GeneratorOperation gntr_op,
-                        const std::vector<size_t> &wires, bool adj) const
+                        const std::vector<std::size_t> &wires, bool adj) const
         -> PrecisionT {
         using Pennylane::Gates::Constant::generator_names;
         const auto iter =
@@ -791,9 +796,9 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
-    auto applyGenerator(KernelType kernel, CFP_t *data, size_t num_qubits,
+    auto applyGenerator(KernelType kernel, CFP_t *data, std::size_t num_qubits,
                         const std::string &op_name,
-                        const std::vector<size_t> &wires, bool adj) const
+                        const std::vector<std::size_t> &wires, bool adj) const
         -> PrecisionT {
         return applyGenerator(kernel, data, num_qubits,
                               strToGeneratorOp(op_name), wires, adj);
@@ -812,13 +817,14 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
-    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
-                                  size_t num_qubits,
-                                  const ControlledGeneratorOperation gntr_op,
-                                  const std::vector<size_t> &controlled_wires,
-                                  const std::vector<bool> &controlled_values,
-                                  const std::vector<size_t> &wires,
-                                  bool inverse) const -> PrecisionT {
+    auto
+    applyControlledGenerator(KernelType kernel, CFP_t *data,
+                             std::size_t num_qubits,
+                             const ControlledGeneratorOperation gntr_op,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse) const -> PrecisionT {
 
         using Pennylane::Gates::Constant::controlled_generator_names;
         const auto iter =
@@ -844,12 +850,13 @@ template <typename PrecisionT> class DynamicDispatcher {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of gate.
      */
-    auto applyControlledGenerator(KernelType kernel, CFP_t *data,
-                                  size_t num_qubits, const std::string &op_name,
-                                  const std::vector<size_t> &controlled_wires,
-                                  const std::vector<bool> &controlled_values,
-                                  const std::vector<size_t> &wires,
-                                  bool inverse) const -> PrecisionT {
+    auto
+    applyControlledGenerator(KernelType kernel, CFP_t *data,
+                             std::size_t num_qubits, const std::string &op_name,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse) const -> PrecisionT {
         return applyControlledGenerator(
             kernel, data, num_qubits, strToControlledGeneratorOp(op_name),
             controlled_wires, controlled_values, wires, inverse);

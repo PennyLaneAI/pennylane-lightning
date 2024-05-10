@@ -12,10 +12,16 @@
   
 ### Improvements
 
+* Update C++ and Python GitHub actions names to include the matrix info.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
+
+* Remove `CPhase` in favour of `CPhaseShift` in Lightning devices.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
+
 * The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
   [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
   
-* Update Linux wheels to use manylinux_2_28 images.
+* Update Linux wheels to use `manylinux_2_28` images.
   [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
 
 * Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
@@ -32,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 

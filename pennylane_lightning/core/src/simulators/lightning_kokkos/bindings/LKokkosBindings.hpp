@@ -73,7 +73,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const size_t index) {
+            [](StateVectorT &sv, const std::size_t index) {
                 sv.setBasisState(index);
             },
             "Create Basis State on Device.")
@@ -105,7 +105,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<ComplexT *, size_t>(&StateVectorT::HostToDevice),
+             py::overload_cast<ComplexT *, std::size_t>(
+                 &StateVectorT::HostToDevice),
              "Synchronize data from the host device to GPU.")
         .def(
             "HostToDevice",
@@ -113,7 +114,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 const py::buffer_info numpyArrayInfo = host_sv.request();
                 auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
                 const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
                 if (length) {
                     device_sv.HostToDevice(data_ptr, length);
                 }
@@ -122,7 +123,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
-               const std::vector<size_t> &wires, bool inv,
+               const std::vector<std::size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
                [[maybe_unused]] const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
@@ -169,13 +170,13 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
-               const std::vector<size_t> &wires) {
+               const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
                     static_cast<ComplexT *>(matrix.request().ptr);
@@ -198,12 +199,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a sparse Hamiltonian.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(

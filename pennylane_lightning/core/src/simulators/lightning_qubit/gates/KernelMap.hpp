@@ -88,11 +88,11 @@ class DispatchElement final {
   private:
     KernelType kernel_;
     uint32_t priority_;
-    Util::IntegerInterval<size_t> interval_;
+    Util::IntegerInterval<std::size_t> interval_;
 
   public:
     DispatchElement(KernelType kernel, uint32_t priority,
-                    Util::IntegerInterval<size_t> interval)
+                    Util::IntegerInterval<std::size_t> interval)
         : kernel_{kernel}, priority_{priority}, interval_{interval} {}
     DispatchElement(const DispatchElement &other) = default;
     DispatchElement(DispatchElement &&other) = default;
@@ -101,7 +101,8 @@ class DispatchElement final {
     ~DispatchElement() = default;
 
     [[nodiscard]] uint32_t getPriority() const { return priority_; }
-    [[nodiscard]] Util::IntegerInterval<size_t> getIntegerInterval() const {
+    [[nodiscard]] Util::IntegerInterval<std::size_t>
+    getIntegerInterval() const {
         return interval_;
     }
     [[nodiscard]] KernelType getKernelType() const { return kernel_; }
@@ -139,7 +140,7 @@ class PriorityDispatchSet {
 
     [[nodiscard]] bool
     conflict(uint32_t test_priority,
-             const Util::IntegerInterval<size_t> &test_interval) const {
+             const Util::IntegerInterval<std::size_t> &test_interval) const {
         const auto test_elem =
             DispatchElement{KernelType::None, test_priority, test_interval};
         const auto [b, e] =
@@ -216,7 +217,8 @@ constexpr static AllMemoryModel all_memory_model{};
  * For a given number of qubit, threading, and memory model, this class
  * returns the best kernels for each gate/generator/matrix operation.
  */
-template <class Operation, size_t cache_size = 16> class OperationKernelMap {
+template <class Operation, std::size_t cache_size = 16>
+class OperationKernelMap {
   public:
     using EnumDispatchKernalMap =
         std::unordered_map<std::pair<Operation, uint32_t /* dispatch_key */>,
@@ -257,7 +259,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      *
      * @return Constructed element of the cache.
      */
-    [[nodiscard]] auto updateCache(const size_t num_qubits,
+    [[nodiscard]] auto updateCache(const std::size_t num_qubits,
                                    uint32_t dispatch_key) const
         -> std::unordered_map<Operation, KernelType> {
         std::unordered_map<Operation, KernelType> kernel_for_op;
@@ -314,7 +316,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      */
     void assignKernelForOp(Operation op, Threading threading,
                            CPUMemoryModel memory_model, uint32_t priority,
-                           const Util::IntegerInterval<size_t> &interval,
+                           const Util::IntegerInterval<std::size_t> &interval,
                            KernelType kernel) {
         const auto &dispatcher = DynamicDispatcher<double>::getInstance();
         PL_ABORT_IF(!dispatcher.isRegisteredKernel(kernel),
@@ -343,7 +345,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      */
     void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy,
                            CPUMemoryModel memory_model,
-                           const Util::IntegerInterval<size_t> &interval,
+                           const Util::IntegerInterval<std::size_t> &interval,
                            KernelType kernel) {
         /* Priority for all threading is 1 */
 
@@ -358,7 +360,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      */
     void assignKernelForOp(Operation op, Threading threading,
                            [[maybe_unused]] AllMemoryModel dummy,
-                           const Util::IntegerInterval<size_t> &interval,
+                           const Util::IntegerInterval<std::size_t> &interval,
                            KernelType kernel) {
         /* Priority for all memory model is 2 */
 
@@ -373,7 +375,7 @@ template <class Operation, size_t cache_size = 16> class OperationKernelMap {
      */
     void assignKernelForOp(Operation op, [[maybe_unused]] AllThreading dummy1,
                            [[maybe_unused]] AllMemoryModel dummy2,
-                           const Util::IntegerInterval<size_t> &interval,
+                           const Util::IntegerInterval<std::size_t> &interval,
                            KernelType kernel) {
         /* Priority is 0 */
 

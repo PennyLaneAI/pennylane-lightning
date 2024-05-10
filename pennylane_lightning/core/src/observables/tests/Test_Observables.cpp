@@ -123,7 +123,7 @@ template <typename TypeList> void testNamedObsBase() {
 
         DYNAMIC_SECTION("Unsupported NamedObs for applyInPlaceShots") {
             std::mt19937_64 re{1337};
-            constexpr size_t num_qubits = 3;
+            constexpr std::size_t num_qubits = 3;
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -131,7 +131,7 @@ template <typename TypeList> void testNamedObsBase() {
             auto obs = NamedObsT("RY", {0}, {0.4});
 
             std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
+            std::vector<std::size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
@@ -210,7 +210,7 @@ template <typename TypeList> void testHermitianObsBase() {
         DYNAMIC_SECTION("Failed to create a HermitianObs- "
                         << StateVectorToName<StateVectorT>::name) {
             std::mt19937_64 re{1337};
-            constexpr size_t num_qubits = 3;
+            constexpr std::size_t num_qubits = 3;
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -219,7 +219,7 @@ template <typename TypeList> void testHermitianObsBase() {
                 HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 1.0, 0.0}, {0}};
 
             std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
+            std::vector<std::size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
@@ -252,11 +252,11 @@ template <typename TypeList> void testTensorProdObsBase() {
                         << StateVectorToName<StateVectorT>::name) {
             auto ob1 = std::make_shared<HermitianObsT>(
                 std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<size_t>{0, 1});
-            auto ob2_1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
-            auto ob2_2 =
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{2});
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{1});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{2});
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_THROWS_AS(TensorProdObsT::create({ob1, ob2}),
@@ -268,11 +268,11 @@ template <typename TypeList> void testTensorProdObsBase() {
             << StateVectorToName<StateVectorT>::name) {
             auto ob1 = std::make_shared<HermitianObsT>(
                 std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<size_t>{0, 1});
-            auto ob2_1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
-            auto ob2_2 =
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{3});
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{2});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{3});
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_NOTHROW(TensorProdObsT::create({ob1, ob2}));
@@ -280,10 +280,10 @@ template <typename TypeList> void testTensorProdObsBase() {
 
         DYNAMIC_SECTION("Constructing an invalid TensorProd(TensorProd) - "
                         << StateVectorToName<StateVectorT>::name) {
-            auto ob2_1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
-            auto ob2_2 =
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{3});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{2});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{3});
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_THROWS_AS(TensorProdObsT::create({ob2}),
@@ -292,29 +292,39 @@ template <typename TypeList> void testTensorProdObsBase() {
 
         DYNAMIC_SECTION("getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
-            auto ob = TensorProdObsT(
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+            auto ob =
+                TensorProdObsT(std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1}));
             REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
         }
 
         DYNAMIC_SECTION("Compare tensor product observables"
                         << StateVectorToName<StateVectorT>::name) {
-            auto ob1 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
-            auto ob2 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
-            auto ob3 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{2})};
-            auto ob4 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
+            auto ob1 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob2 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob3 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{2})};
+            auto ob4 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
 
-            auto ob5 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0})};
+            auto ob5 = TensorProdObsT{std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{0})};
 
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
@@ -331,8 +341,10 @@ template <typename TypeList> void testTensorProdObsBase() {
             using VectorT = TestVector<ComplexT>;
 
             auto obs = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2}),
+                std::make_shared<NamedObsT>("PauliX",
+                                            std::vector<std::size_t>{0}),
+                std::make_shared<NamedObsT>("PauliX",
+                                            std::vector<std::size_t>{2}),
             };
 
             SECTION("Test using |1+0>") {
@@ -371,12 +383,12 @@ template <typename TypeList> void testTensorProdObsBase() {
         DYNAMIC_SECTION("Failed for ApplyInPlaceShots"
                         << StateVectorToName<StateVectorT>::name) {
             using VectorT = TestVector<ComplexT>;
-            auto X0 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
-            auto X1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
-            auto X2 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
+            auto X0 = std::make_shared<NamedObsT>("PauliX",
+                                                  std::vector<std::size_t>{0});
+            auto X1 = std::make_shared<NamedObsT>("PauliX",
+                                                  std::vector<std::size_t>{1});
+            auto X2 = std::make_shared<NamedObsT>("PauliX",
+                                                  std::vector<std::size_t>{2});
 
             auto ham = HamiltonianT::create({0.8, 0.5, 0.7}, {
                                                                  X0,
@@ -391,7 +403,7 @@ template <typename TypeList> void testTensorProdObsBase() {
             StateVectorT state_vector(st_data.data(), st_data.size());
 
             std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
+            std::vector<std::size_t> ob_wires;
 
             REQUIRE_THROWS_AS(
                 obs.applyInPlaceShots(state_vector, eigenValues, ob_wires),
@@ -421,11 +433,13 @@ template <typename TypeList> void testHamiltonianBase() {
         const auto h = PrecisionT{0.809}; // half of the golden ratio
 
         auto zz = std::make_shared<TensorProdObsT>(
-            std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-            std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1}));
 
-        auto x1 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
-        auto x2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+        auto x1 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto x2 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
 
         DYNAMIC_SECTION(
             "Hamiltonian constructor only accepts valid arguments - "
@@ -439,10 +453,10 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("getObsName - "
                             << StateVectorToName<StateVectorT>::name) {
-                auto X0 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{0});
-                auto Z2 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{2});
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
 
                 REQUIRE(
                     HamiltonianT::create({0.3, 0.5}, {X0, Z2})->getObsName() ==
@@ -452,26 +466,26 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("Compare Hamiltonians - "
                             << StateVectorToName<StateVectorT>::name) {
-                auto X0 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{0});
-                auto X1 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{1});
-                auto X2 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{2});
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto X1 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{1});
+                auto X2 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{2});
 
-                auto Y0 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{0});
-                auto Y1 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{1});
-                auto Y2 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{2});
+                auto Y0 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{0});
+                auto Y1 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{1});
+                auto Y2 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{2});
 
-                auto Z0 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{0});
-                auto Z1 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{1});
-                auto Z2 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{2});
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z1 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{1});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
 
                 auto ham1 = HamiltonianT::create(
                     {0.8, 0.5, 0.7},
@@ -521,16 +535,16 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("getWires - "
                             << StateVectorToName<StateVectorT>::name) {
-                auto Z0 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{0});
-                auto Z5 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{5});
-                auto Z9 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{9});
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z5 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{5});
+                auto Z9 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{9});
 
                 auto ham1 = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
 
-                REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
+                REQUIRE(ham1->getWires() == std::vector<std::size_t>{0, 5, 9});
             }
 
             DYNAMIC_SECTION("applyInPlace must fail - "
@@ -554,7 +568,7 @@ template <typename TypeList> void testHamiltonianBase() {
                 StateVectorT state_vector(st_data.data(), st_data.size());
 
                 std::vector<std::vector<PrecisionT>> eigenValues;
-                std::vector<size_t> ob_wires;
+                std::vector<std::size_t> ob_wires;
 
                 REQUIRE_THROWS_AS(
                     ham->applyInPlaceShots(state_vector, eigenValues, ob_wires),
@@ -614,7 +628,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
         DYNAMIC_SECTION("SparseHamiltonianBase - getWires - "
                         << StateVectorToName<StateVectorT>::name) {
-            REQUIRE(sparseH->getWires() == std::vector<size_t>{0, 1, 2});
+            REQUIRE(sparseH->getWires() == std::vector<std::size_t>{0, 1, 2});
         }
 
         DYNAMIC_SECTION("SparseHamiltonianBase - getObsName - "
@@ -650,7 +664,7 @@ template <typename TypeList> void testSparseHamiltonianBase() {
             StateVectorT state_vector(init_state.data(), init_state.size());
 
             std::vector<std::vector<PrecisionT>> eigenValues;
-            std::vector<size_t> ob_wires;
+            std::vector<std::size_t> ob_wires;
 
             REQUIRE_THROWS_WITH(
                 sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
