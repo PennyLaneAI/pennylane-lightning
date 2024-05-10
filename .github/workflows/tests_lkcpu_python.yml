@@ -178,11 +178,7 @@ jobs:
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
-          git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
-          git log -1 --format='%H'
-          git status
+          python -m pip install -U pennylane-lightning --no-deps
 
       - uses: actions/download-artifact@v4
         with:
@@ -201,7 +197,9 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install . -vv
+          if [ ${{ inputs.lightning-version }} != 'stable' ]; then
+            SKIP_COMPILATION=True python -m pip install . -vv
+          fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build
