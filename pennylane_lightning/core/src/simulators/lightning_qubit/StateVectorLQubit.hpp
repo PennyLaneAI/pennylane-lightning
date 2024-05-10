@@ -261,8 +261,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
   protected:
     explicit StateVectorLQubit(size_t num_qubits, Threading threading,
                                CPUMemoryModel memory_model)
-        : BaseType(num_qubits), threading_{threading}, memory_model_{
-                                                           memory_model} {
+        : BaseType(num_qubits), threading_{threading},
+          memory_model_{memory_model} {
         setKernels(num_qubits, threading, memory_model);
     }
 

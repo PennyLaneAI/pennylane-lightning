@@ -194,7 +194,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp parallel default(none)                                             \
     shared(instance, records, rd, num_qubits, threadings, memory_models)       \
-        firstprivate(num_iter)
+    firstprivate(num_iter)
 #endif
     {
         std::mt19937 re;

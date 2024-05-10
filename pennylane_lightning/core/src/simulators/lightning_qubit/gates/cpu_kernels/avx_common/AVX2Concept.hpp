@@ -30,8 +30,12 @@ namespace Internal {
 template <typename T> struct AVX2Intrinsic {
     static_assert(std::is_same_v<T, float> || std::is_same_v<T, double>);
 };
-template <> struct AVX2Intrinsic<float> { using Type = __m256; };
-template <> struct AVX2Intrinsic<double> { using Type = __m256d; };
+template <> struct AVX2Intrinsic<float> {
+    using Type = __m256;
+};
+template <> struct AVX2Intrinsic<double> {
+    using Type = __m256d;
+};
 } // namespace Internal
 ///@endcond
 
