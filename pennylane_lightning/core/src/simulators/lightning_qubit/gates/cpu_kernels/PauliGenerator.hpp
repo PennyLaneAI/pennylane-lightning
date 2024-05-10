@@ -32,24 +32,27 @@ template <class GateImplementation> class PauliGenerator {
   public:
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorRX(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) -> PrecisionT {
+    applyGeneratorRX(std::complex<PrecisionT> *data, std::size_t num_qubits,
+                     const std::vector<std::size_t> &wires, bool adj)
+        -> PrecisionT {
         GateImplementation::applyPauliX(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorRY(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) -> PrecisionT {
+    applyGeneratorRY(std::complex<PrecisionT> *data, std::size_t num_qubits,
+                     const std::vector<std::size_t> &wires, bool adj)
+        -> PrecisionT {
         GateImplementation::applyPauliY(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);
     }
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorRZ(std::complex<PrecisionT> *data, size_t num_qubits,
-                     const std::vector<size_t> &wires, bool adj) -> PrecisionT {
+    applyGeneratorRZ(std::complex<PrecisionT> *data, std::size_t num_qubits,
+                     const std::vector<std::size_t> &wires, bool adj)
+        -> PrecisionT {
         GateImplementation::applyPauliZ(data, num_qubits, wires, adj);
         // NOLINTNEXTLINE(readability-magic-numbers)
         return -static_cast<PrecisionT>(0.5);

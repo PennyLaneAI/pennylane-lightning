@@ -41,7 +41,7 @@ using namespace Pennylane::LightningGPU;
 
 TEMPLATE_TEST_CASE("LightningGPU:applyOperation", "[LightningGPU_Param]",
                    double) {
-    const size_t num_qubits = 1;
+    const std::size_t num_qubits = 1;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -54,7 +54,7 @@ TEMPLATE_TEST_CASE("LightningGPU:applyOperation", "[LightningGPU_Param]",
 
 TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 1;
+    const std::size_t num_qubits = 1;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -186,7 +186,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRY", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -248,7 +248,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
                    float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -311,7 +311,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
 TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -362,7 +362,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
     const bool adjoint = GENERATE(true, false);
 
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<std::vector<TestType>> angles{
         std::vector<TestType>{0.3, 0.8, 2.4},
@@ -420,7 +420,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
     const bool adjoint = GENERATE(true, false);
 
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -487,7 +487,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -640,7 +640,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXY", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -735,7 +735,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -986,7 +986,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRZ", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1033,7 +1033,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
 TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1114,7 +1114,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
 TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1195,7 +1195,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
 TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1234,7 +1234,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
 TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1291,7 +1291,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
 TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1348,7 +1348,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
 TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
                    double) {
     using cp_t = std::complex<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.initSV();
 
@@ -1426,7 +1426,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
-    const size_t num_qubits = 5;
+    const std::size_t num_qubits = 5;
 
     // Note: gates are defined as right-to-left order
 
@@ -1554,7 +1554,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
                    "[LightningGPU_Param]", float, double) {
     using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
     sv_init.initSV();
@@ -1585,9 +1585,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGlobalPhase",
                    "[StateVectorCudaManaged_Param]", double) {
     using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const size_t index = GENERATE(0, 1, 2);
+    const std::size_t index = GENERATE(0, 1, 2);
     const TestType param = 0.234;
     const ComplexT phase = std::exp(ComplexT{0, (inverse) ? param : -param});
 
@@ -1607,9 +1607,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
                    "[StateVectorCudaManaged_Param]", double) {
     using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const size_t index = GENERATE(0, 1, 2);
+    const std::size_t index = GENERATE(0, 1, 2);
     /* The `phase` array contains the diagonal entries of the controlled-phase
        operator. It can be created in Python using the following command
 

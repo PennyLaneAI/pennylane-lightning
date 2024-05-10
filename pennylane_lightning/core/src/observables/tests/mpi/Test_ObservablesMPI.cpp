@@ -186,11 +186,11 @@ template <typename TypeList> void testTensorProdObsBase() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             auto ob1 = std::make_shared<HermitianObsT>(
                 std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<size_t>{0, 1});
-            auto ob2_1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
-            auto ob2_2 =
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{2});
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{1});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{2});
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_THROWS_AS(TensorProdObsT::create({ob1, ob2}),
@@ -202,11 +202,11 @@ template <typename TypeList> void testTensorProdObsBase() {
             << StateVectorMPIToName<StateVectorT>::name) {
             auto ob1 = std::make_shared<HermitianObsT>(
                 std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<size_t>{0, 1});
-            auto ob2_1 =
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
-            auto ob2_2 =
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{3});
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{2});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{3});
             auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
             REQUIRE_NOTHROW(TensorProdObsT::create({ob1, ob2}));
@@ -214,29 +214,39 @@ template <typename TypeList> void testTensorProdObsBase() {
 
         DYNAMIC_SECTION("getObsName - "
                         << StateVectorMPIToName<StateVectorT>::name) {
-            auto ob = TensorProdObsT(
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+            auto ob =
+                TensorProdObsT(std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1}));
             REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
         }
 
         DYNAMIC_SECTION("Compare tensor product observables"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            auto ob1 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
-            auto ob2 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
-            auto ob3 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{2})};
-            auto ob4 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1})};
+            auto ob1 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob2 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob3 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{2})};
+            auto ob4 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
 
-            auto ob5 = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0})};
+            auto ob5 = TensorProdObsT{std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{0})};
 
             REQUIRE(ob1 == ob2);
             REQUIRE(ob1 != ob3);
@@ -249,22 +259,24 @@ template <typename TypeList> void testTensorProdObsBase() {
             using VectorT = TestVector<ComplexT>;
 
             auto obs = TensorProdObsT{
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0}),
-                std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2}),
+                std::make_shared<NamedObsT>("PauliX",
+                                            std::vector<std::size_t>{0}),
+                std::make_shared<NamedObsT>("PauliX",
+                                            std::vector<std::size_t>{2}),
             };
 
             SECTION("Test using |1+0>") {
                 MPIManager mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
-                const size_t num_qubits = 3;
-                size_t mpi_buffersize = 1;
+                const std::size_t num_qubits = 3;
+                std::size_t mpi_buffersize = 1;
 
                 int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                            mpi_manager.getSize())) -
                                        1;
                 int nLocalIndexBits = num_qubits - nGlobalIndexBits;
-                size_t subSvLength = 1 << nLocalIndexBits;
+                std::size_t subSvLength = 1 << nLocalIndexBits;
                 mpi_manager.Barrier();
 
                 int nDevices = 0; // Number of GPU devices per node
@@ -304,14 +316,14 @@ template <typename TypeList> void testTensorProdObsBase() {
                 MPIManager mpi_manager(MPI_COMM_WORLD);
                 REQUIRE(mpi_manager.getSize() == 2);
 
-                const size_t num_qubits = 4;
-                size_t mpi_buffersize = 1;
+                const std::size_t num_qubits = 4;
+                std::size_t mpi_buffersize = 1;
 
                 int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                            mpi_manager.getSize())) -
                                        1;
                 int nLocalIndexBits = num_qubits - nGlobalIndexBits;
-                size_t subSvLength = 1 << nLocalIndexBits;
+                std::size_t subSvLength = 1 << nLocalIndexBits;
                 mpi_manager.Barrier();
 
                 int nDevices = 0; // Number of GPU devices per node
@@ -370,8 +382,8 @@ template <typename TypeList> void testHamiltonianBase() {
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
-        const size_t num_qubits = 3;
-        size_t mpi_buffersize = 1;
+        const std::size_t num_qubits = 3;
+        std::size_t mpi_buffersize = 1;
 
         int nGlobalIndexBits =
             std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) -
@@ -389,11 +401,13 @@ template <typename TypeList> void testHamiltonianBase() {
         const auto h = PrecisionT{0.809}; // half of the golden ratio
 
         auto zz = std::make_shared<TensorProdObsT>(
-            std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-            std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1}));
 
-        auto x1 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
-        auto x2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+        auto x1 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto x2 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
 
         DYNAMIC_SECTION(
             "Hamiltonian constructor only accepts valid arguments - "
@@ -407,10 +421,10 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("getObsName - "
                             << StateVectorMPIToName<StateVectorT>::name) {
-                auto X0 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{0});
-                auto Z2 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{2});
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
 
                 REQUIRE(
                     HamiltonianT::create({0.3, 0.5}, {X0, Z2})->getObsName() ==
@@ -420,26 +434,26 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("Compare Hamiltonians - "
                             << StateVectorMPIToName<StateVectorT>::name) {
-                auto X0 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{0});
-                auto X1 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{1});
-                auto X2 = std::make_shared<NamedObsT>("PauliX",
-                                                      std::vector<size_t>{2});
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto X1 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{1});
+                auto X2 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{2});
 
-                auto Y0 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{0});
-                auto Y1 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{1});
-                auto Y2 = std::make_shared<NamedObsT>("PauliY",
-                                                      std::vector<size_t>{2});
+                auto Y0 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{0});
+                auto Y1 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{1});
+                auto Y2 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{2});
 
-                auto Z0 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{0});
-                auto Z1 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{1});
-                auto Z2 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{2});
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z1 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{1});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
 
                 auto ham1 = HamiltonianT::create(
                     {0.8, 0.5, 0.7},
@@ -489,16 +503,16 @@ template <typename TypeList> void testHamiltonianBase() {
 
             DYNAMIC_SECTION("getWires - "
                             << StateVectorMPIToName<StateVectorT>::name) {
-                auto Z0 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{0});
-                auto Z5 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{5});
-                auto Z9 = std::make_shared<NamedObsT>("PauliZ",
-                                                      std::vector<size_t>{9});
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z5 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{5});
+                auto Z9 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{9});
 
                 auto ham1 = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
 
-                REQUIRE(ham1->getWires() == std::vector<size_t>{0, 5, 9});
+                REQUIRE(ham1->getWires() == std::vector<std::size_t>{0, 5, 9});
             }
 
             DYNAMIC_SECTION("applyInPlace must fail - "
@@ -536,11 +550,11 @@ template <typename TypeList> void testSparseHamiltonianBase() {
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
 
-        size_t mpi_buffersize = 1;
-        size_t nGlobalIndexBits =
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-        size_t subSvLength = 1 << nLocalIndexBits;
+        std::size_t mpi_buffersize = 1;
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        std::size_t subSvLength = 1 << nLocalIndexBits;
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);

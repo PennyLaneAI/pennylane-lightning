@@ -1652,7 +1652,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
     const std::string gate_name = "GlobalPhase";
     {
         using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 

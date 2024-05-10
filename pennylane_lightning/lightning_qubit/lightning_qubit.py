@@ -241,7 +241,6 @@ _operations = frozenset(
         "CZ",
         "PhaseShift",
         "ControlledPhaseShift",
-        "CPhase",
         "RX",
         "RY",
         "RZ",

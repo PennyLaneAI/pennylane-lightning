@@ -85,7 +85,7 @@ class StateVectorKokkos final
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedConstSizeTHostView =
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedPrecisionHostView =
         Kokkos::View<PrecisionT *, Kokkos::HostSpace,
@@ -127,11 +127,11 @@ class StateVectorKokkos final
      *
      * @param index Index of the target element.
      */
-    void setBasisState(const size_t index) {
+    void setBasisState(const std::size_t index) {
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            sv_view.size(), KOKKOS_LAMBDA(const size_t i) {
+            sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
                 sv_view(i) =
                     (i == index) ? ComplexT{1.0, 0.0} : ComplexT{0.0, 0.0};
             });
@@ -256,7 +256,8 @@ class StateVectorKokkos final
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
         if (opName == "Identity") {
@@ -306,9 +307,10 @@ class StateVectorKokkos final
      * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<std::size_t> &controlled_wires,
                         const std::vector<bool> &controlled_values,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF_NOT(controlled_wires.empty(),
@@ -386,10 +388,11 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    inline void applyMatrix(ComplexT *matrix, const std::vector<size_t> &wires,
+    inline void applyMatrix(ComplexT *matrix,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
+        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
         KokkosVector matrix_(matrix, n * n);
         applyMultiQubitOp(matrix_, wires, inverse);
     }
@@ -402,7 +405,7 @@ class StateVectorKokkos final
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(std::vector<ComplexT> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
@@ -420,11 +423,11 @@ class StateVectorKokkos final
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        size_t n = static_cast<std::size_t>(1U) << wires.size();
-        size_t n2 = n * n;
+        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
+        std::size_t n2 = n * n;
         KokkosVector matrix_("matrix_", n2);
         Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
         applyMultiQubitOp(matrix_, wires, inverse);
@@ -438,7 +441,7 @@ class StateVectorKokkos final
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const std::vector<ComplexT> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
@@ -448,7 +451,7 @@ class StateVectorKokkos final
     }
 
     void applyNamedOperation(const std::string &opName,
-                             const std::vector<size_t> &wires,
+                             const std::vector<std::size_t> &wires,
                              bool inverse = false,
                              const std::vector<fp_t> &params = {}) {
         switch (reverse_lookup(gate_names, std::string_view{opName})) {
@@ -576,7 +579,8 @@ class StateVectorKokkos final
      * @param params Optional parameter list for parametric gates.
      */
     auto applyGenerator(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
         switch (reverse_lookup(generator_names, std::string_view{opName})) {
         case GeneratorOperation::RX:
@@ -666,7 +670,7 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     template <template <class, bool> class functor_t, int nqubits>
-    void applyGateFunctor(const std::vector<size_t> &wires,
+    void applyGateFunctor(const std::vector<std::size_t> &wires,
                           bool inverse = false,
                           const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
@@ -692,7 +696,8 @@ class StateVectorKokkos final
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params parameters for this gate
      */
-    void applyMultiRZ(const std::vector<size_t> &wires, bool inverse = false,
+    void applyMultiRZ(const std::vector<std::size_t> &wires,
+                      bool inverse = false,
                       const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
 
@@ -714,7 +719,7 @@ class StateVectorKokkos final
      * @param inverse Indicates whether to use adjoint of gate.
      * @param params parameters for this gate
      */
-    void applyGlobalPhase(const std::vector<size_t> &wires,
+    void applyGlobalPhase(const std::vector<std::size_t> &wires,
                           bool inverse = false,
                           const std::vector<fp_t> &params = {}) {
         auto &&num_qubits = this->getNumQubits();
@@ -740,7 +745,7 @@ class StateVectorKokkos final
      * @param params parameters for this gate
      */
     auto applyGeneratorMultiRZ(
-        const std::vector<size_t> &wires, bool inverse = false,
+        const std::vector<std::size_t> &wires, bool inverse = false,
         [[maybe_unused]] const std::vector<fp_t> &params = {}) -> fp_t {
         auto &&num_qubits = this->getNumQubits();
 
@@ -901,7 +906,7 @@ class StateVectorKokkos final
     }
 
   private:
-    size_t num_qubits_;
+    std::size_t num_qubits_;
     std::mutex init_mutex_;
     std::unique_ptr<KokkosVector> data_;
     inline static bool is_exit_reg_ = false;

@@ -29,7 +29,7 @@
 #include <utility>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
+template <typename PrecisionT, std::size_t packed_size> struct ApplyCRZ {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
 
@@ -58,7 +58,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
      * @brief Factor for real parts
      * [1, 1, 1, 1, cos(phi/2), cos(phi/2), cos(phi/2), cos(phi/2)]
      */
-    template <size_t control, size_t target, class ParamT>
+    template <size_t control, std::size_t target, class ParamT>
     static auto applyInternalInternalRealFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
 
@@ -79,7 +79,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
      * @brief Factor for imaginary parts
      * [0, 0, 0, 0, sin(phi/2), -sin(phi/2), -sin(phi/2), sin(phi/2)]
      */
-    template <size_t control, size_t target, class ParamT>
+    template <size_t control, std::size_t target, class ParamT>
     static auto applyInternalInternalImagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
 
@@ -101,9 +101,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         return setValue(arr);
     }
 
-    template <size_t control, size_t target, class ParamT>
+    template <size_t control, std::size_t target, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, bool inverse,
+                                      std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
         constexpr static auto perm = applyInternalImagPermutation<control>();
 
@@ -167,16 +167,16 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
      * external wires.
      */
     template <size_t control, typename ParamT>
-    static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t target,
-                                      bool inverse, ParamT angle) {
+    static void
+    applyInternalExternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          std::size_t target, bool inverse, ParamT angle) {
         // control qubit is internal but target qubit is external
         constexpr static auto perm = applyInternalImagPermutation<control>();
 
-        const size_t target_rev_wire_shift =
-            (static_cast<size_t>(1U) << target);
-        const size_t target_wire_parity = fillTrailingOnes(target);
-        const size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
+        const std::size_t target_rev_wire_shift =
+            (static_cast<std::size_t>(1U) << target);
+        const std::size_t target_wire_parity = fillTrailingOnes(target);
+        const std::size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
 
         if (inverse) {
             angle *= -1.0;
@@ -188,9 +188,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
             applyInternalExternalImagFactor<control>(angle);
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 =
+            const std::size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
-            const size_t i1 = i0 | target_rev_wire_shift;
+            const std::size_t i1 = i0 | target_rev_wire_shift;
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
@@ -234,14 +234,15 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
     }
 
     template <size_t target, typename ParamT>
-    static void applyExternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t control,
-                                      bool inverse, ParamT angle) {
+    static void
+    applyExternalInternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          std::size_t control, bool inverse, ParamT angle) {
         using namespace Permutation;
 
-        const size_t control_shift = (static_cast<size_t>(1U) << control);
-        const size_t max_wire_parity = fillTrailingOnes(control);
-        const size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
+        const std::size_t control_shift =
+            (static_cast<std::size_t>(1U) << control);
+        const std::size_t max_wire_parity = fillTrailingOnes(control);
+        const std::size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
@@ -253,9 +254,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         const auto imag_factor = applyExternalInternalImagFactor<target>(angle);
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 =
+            const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
-            const size_t i1 = i0 | control_shift;
+            const std::size_t i1 = i0 | control_shift;
 
             const auto v1 =
                 PrecisionAVXConcept::load(arr + i1); // control bit is 1
@@ -267,19 +268,21 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
 
     template <typename ParamT>
     static void applyExternalExternal(std::complex<PrecisionT> *arr,
-                                      const size_t num_qubits,
-                                      const size_t control, const size_t target,
-                                      bool inverse, ParamT angle) {
+                                      const std::size_t num_qubits,
+                                      const std::size_t control,
+                                      const std::size_t target, bool inverse,
+                                      ParamT angle) {
         using namespace Permutation;
-        const size_t control_shift = static_cast<size_t>(1U) << control;
-        const size_t target_shift = static_cast<size_t>(1U) << target;
+        const std::size_t control_shift = static_cast<std::size_t>(1U)
+                                          << control;
+        const std::size_t target_shift = static_cast<std::size_t>(1U) << target;
 
-        const size_t rev_wire_min = std::min(control, target);
-        const size_t rev_wire_max = std::max(control, target);
+        const std::size_t rev_wire_min = std::min(control, target);
+        const std::size_t rev_wire_max = std::max(control, target);
 
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
+        const std::size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const std::size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
         constexpr static auto perm = compilePermutation<Precision>(
@@ -296,10 +299,11 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCRZ {
         const auto imag_factor_m = -imag_factor_p;
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | control_shift;
-            const size_t i11 = i00 | control_shift | target_shift;
+            const std::size_t i00 = ((k << 2U) & parity_high) |
+                                    ((k << 1U) & parity_middle) |
+                                    (k & parity_low);
+            const std::size_t i10 = i00 | control_shift;
+            const std::size_t i11 = i00 | control_shift | target_shift;
 
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11

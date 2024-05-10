@@ -82,7 +82,8 @@ template <typename TypeList> void testProbabilities() {
         using PrecisionT = typename StateVectorT::PrecisionT;
 
         // Expected results calculated with Pennylane default.qubit:
-        std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
+        std::vector<
+            std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
             input = {
 #if defined(_ENABLE_PLGPU)
                 // Bit index reodering conducted in the python layer
@@ -161,7 +162,8 @@ template <typename TypeList> void testProbabilitiesShots() {
         using PrecisionT = typename StateVectorT::PrecisionT;
 
         // Expected results calculated with Pennylane default.qubit:
-        std::vector<std::pair<std::vector<size_t>, std::vector<PrecisionT>>>
+        std::vector<
+            std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
             input = {// prob shots only support in-order target wires for now
                      {{0, 1, 2},
                       {0.67078706, 0.03062806, 0.0870997, 0.00397696,
@@ -186,7 +188,7 @@ template <typename TypeList> void testProbabilitiesShots() {
         DYNAMIC_SECTION(
             "Looping over different wire configurations - shots- fullsystem"
             << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 10000;
+            std::size_t num_shots = 10000;
             probabilities = Measurer.probs(num_shots);
             REQUIRE_THAT(input[0].second,
                          Catch::Approx(probabilities).margin(5e-2));
@@ -196,7 +198,7 @@ template <typename TypeList> void testProbabilitiesShots() {
             "Looping over different wire configurations - shots- sub system"
             << StateVectorToName<StateVectorT>::name) {
             for (const auto &term : input) {
-                size_t num_shots = 10000;
+                std::size_t num_shots = 10000;
                 probabilities = Measurer.probs(term.first, num_shots);
                 REQUIRE_THAT(term.second,
                              Catch::Approx(probabilities).margin(5e-2));
@@ -218,7 +220,7 @@ template <typename TypeList> void testProbabilitiesObs() {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
 
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
@@ -240,7 +242,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 Measurements<StateVectorT> Measurer(sv);
 
                 auto prob_obs = Measurer_obs.probs(obs);
-                auto prob = Measurer.probs(std::vector<size_t>({i}));
+                auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
@@ -258,7 +260,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 Measurements<StateVectorT> Measurer(sv);
 
                 auto prob_obs = Measurer_obs.probs(obs);
-                auto prob = Measurer.probs(std::vector<size_t>({i}));
+                auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
@@ -273,7 +275,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 Measurements<StateVectorT> Measurer(sv);
 
                 auto prob_obs = Measurer_obs.probs(obs);
-                auto prob = Measurer.probs(std::vector<size_t>({i}));
+                auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
@@ -290,7 +292,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 Measurements<StateVectorT> Measurer(sv);
 
                 auto prob_obs = Measurer_obs.probs(obs);
-                auto prob = Measurer.probs(std::vector<size_t>({i}));
+                auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
@@ -305,7 +307,7 @@ template <typename TypeList> void testProbabilitiesObs() {
                 Measurements<StateVectorT> Measurer(sv);
 
                 auto prob_obs = Measurer_obs.probs(obs);
-                auto prob = Measurer.probs(std::vector<size_t>({i}));
+                auto prob = Measurer.probs(std::vector<std::size_t>({i}));
 
                 REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
             }
@@ -314,11 +316,11 @@ template <typename TypeList> void testProbabilitiesObs() {
         DYNAMIC_SECTION("Test TensorProd XYZ"
                         << StateVectorToName<StateVectorT>::name) {
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto Y2 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{2});
+                "PauliY", std::vector<std::size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
 
             Measurements<StateVectorT> Measurer_obs(statevector);
@@ -330,7 +332,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             Measurements<StateVectorT> Measurer(sv);
 
             auto prob_obs = Measurer_obs.probs(*obs);
-            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
@@ -338,11 +340,11 @@ template <typename TypeList> void testProbabilitiesObs() {
         DYNAMIC_SECTION("Test TensorProd YHI"
                         << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
             auto H1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Hadamard", std::vector<size_t>{1});
+                "Hadamard", std::vector<std::size_t>{1});
             auto I2 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{2});
+                "Identity", std::vector<std::size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
 
             Measurements<StateVectorT> Measurer_obs(statevector);
@@ -355,7 +357,7 @@ template <typename TypeList> void testProbabilitiesObs() {
             Measurements<StateVectorT> Measurer(sv);
 
             auto prob_obs = Measurer_obs.probs(*obs);
-            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 
             REQUIRE_THAT(prob_obs, Catch::Approx(prob).margin(1e-6));
         }
@@ -386,11 +388,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
         DYNAMIC_SECTION("Test TensorProd XYZ"
                         << StateVectorToName<StateVectorT>::name) {
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto Y2 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{2});
+                "PauliY", std::vector<std::size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1, Y2});
 
             Measurements<StateVectorT> Measurer_obs_shots(statevector);
@@ -401,13 +403,13 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            size_t num_shots = 10000;
+            std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
 
 #ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
 #else
-            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 #endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
@@ -416,11 +418,11 @@ template <typename TypeList> void testProbabilitiesObsShots() {
         DYNAMIC_SECTION("Test TensorProd YHI"
                         << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
             auto H1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Hadamard", std::vector<size_t>{1});
+                "Hadamard", std::vector<std::size_t>{1});
             auto I2 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{2});
+                "Identity", std::vector<std::size_t>{2});
             auto obs = TensorProdObs<StateVectorT>::create({Y0, H1, I2});
 
             Measurements<StateVectorT> Measurer_obs_shots(statevector);
@@ -432,12 +434,12 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             Measurements<StateVectorT> Measurer(sv);
 
-            size_t num_shots = 10000;
+            std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
 #ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<size_t>({2, 1, 0}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
 #else
-            auto prob = Measurer.probs(std::vector<size_t>({0, 1, 2}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
 #endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
@@ -467,7 +469,7 @@ template <typename TypeList> void testNamedObsExpval() {
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
 
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ"};
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::vector<PrecisionT>> exp_values_ref = {
@@ -513,7 +515,7 @@ template <typename TypeList> void testNamedObsExpvalShot() {
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
 
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
                                              "Hadamard", "Identity"};
         // Expected results calculated with Pennylane default.qubit:
@@ -527,8 +529,8 @@ template <typename TypeList> void testNamedObsExpvalShot() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                size_t num_shots = 20000;
-                std::vector<size_t> shots_range = {};
+                std::size_t num_shots = 20000;
+                std::vector<std::size_t> shots_range = {};
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
@@ -547,8 +549,8 @@ template <typename TypeList> void testNamedObsExpvalShot() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires-with shots_range"
                             << StateVectorToName<StateVectorT>::name) {
-                size_t num_shots = 20000;
-                std::vector<size_t> shots_range;
+                std::size_t num_shots = 20000;
+                std::vector<std::size_t> shots_range;
                 for (size_t i = 0; i < num_shots; i += 2) {
                     shots_range.push_back(i);
                 }
@@ -599,8 +601,8 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
                                      ComplexT{2, -1}, ComplexT{2, 0}};
 
             HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
-            size_t num_shots = 80000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 80000;
+            std::vector<std::size_t> shots_range = {};
 
             PrecisionT expected = Measurer.expval(obs);
 
@@ -618,8 +620,8 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
                                      ComplexT{0, 1}, ComplexT{0, 0}};
 
             HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
 
             PrecisionT expected = Measurer.expval(obs);
 
@@ -637,8 +639,8 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
                                      ComplexT{1, 0}, ComplexT{0, 0}};
 
             HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
 
             PrecisionT expected = Measurer.expval(obs);
 
@@ -656,8 +658,8 @@ template <typename TypeList> void testHermitianObsExpvalShot() {
                                      ComplexT{0, 0}, ComplexT{-1, 0}};
 
             HermitianObs<StateVectorT> obs(Hermitian_matrix, {1});
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
 
             PrecisionT expected = Measurer.expval(obs);
 
@@ -702,7 +704,7 @@ template <typename TypeList> void testHermitianObsExpval() {
 
         DYNAMIC_SECTION("Varying wires - 2x2 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+            std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
                 0.644217687237691, 0.4794255386042027, 0.29552020666133955};
@@ -722,7 +724,7 @@ template <typename TypeList> void testHermitianObsExpval() {
 
         DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {
+            std::vector<std::vector<std::size_t>> wires_list = {
                 {0, 1}, {0, 2}, {1, 2}, {2, 1}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
@@ -776,12 +778,12 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 
         DYNAMIC_SECTION(" - Without shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
             auto expected = PrecisionT(-0.36);
             auto result = Measurer.expval(*obs, num_shots, shots_range);
@@ -792,12 +794,12 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 
         DYNAMIC_SECTION(" - With Identity but no shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto I1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{1});
+                "Identity", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
             PrecisionT expected = Measurer.expval(*obs);
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
@@ -808,15 +810,15 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 
         DYNAMIC_SECTION(" With shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range;
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range;
             for (size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
             auto expected = PrecisionT(-0.36);
             auto result = Measurer.expval(*obs, num_shots, shots_range);
@@ -827,15 +829,15 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range;
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range;
             for (size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto I1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{1});
+                "Identity", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
             PrecisionT expected = Measurer.expval(*obs);
             PrecisionT result = Measurer.expval(*obs, num_shots, shots_range);
@@ -847,16 +849,16 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
 #ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 80000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 80000;
+            std::vector<std::size_t> shots_range = {};
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
 
             std::vector<ComplexT> Hermitian_matrix1{
                 ComplexT{3, 0}, ComplexT{2, 1}, ComplexT{2, -1},
                 ComplexT{-3, 0}};
             auto H1 = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_matrix1, std::vector<size_t>{1});
+                Hermitian_matrix1, std::vector<std::size_t>{1});
 
             auto obs = TensorProdObs<StateVectorT>::create({X0, H1});
             PrecisionT expected = Measurer.expval(*obs);
@@ -891,7 +893,7 @@ template <typename TypeList> void testNamedObsVar() {
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
 
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ"};
         // Expected results calculated with Pennylane default.qubit:
         std::vector<std::vector<PrecisionT>> exp_values_ref = {
@@ -921,7 +923,7 @@ template <typename TypeList> void testNamedObsVar() {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
                     PrecisionT expected = exp_values_ref[ind_obs][ind_wires];
-                    size_t num_shots = 20000;
+                    std::size_t num_shots = 20000;
                     PrecisionT result = Measurer.var(obs, num_shots);
 
                     REQUIRE_THAT(result,
@@ -962,7 +964,7 @@ template <typename TypeList> void testHermitianObsVar() {
 
         DYNAMIC_SECTION("Varying wires - 2x2 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+            std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
                 0.5849835714501204, 0.7701511529340699, 0.9126678074548389};
@@ -982,7 +984,7 @@ template <typename TypeList> void testHermitianObsVar() {
 
         DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {
+            std::vector<std::vector<std::size_t>> wires_list = {
                 {0, 1}, {0, 2}, {1, 2}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
@@ -1039,7 +1041,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
 
         DYNAMIC_SECTION("Varying wires - 2x2 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+            std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
                 0.5849835714501204, 0.7701511529340699, 0.9126678074548389};
@@ -1052,7 +1054,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
                 PrecisionT expected = exp_values_ref[ind_wires];
-                size_t num_shots = 20000;
+                std::size_t num_shots = 20000;
                 PrecisionT result = Measurer.var(obs, num_shots);
 
                 REQUIRE_THAT(result,
@@ -1063,7 +1065,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
 
         DYNAMIC_SECTION("Varying wires - 4x4 matrix - "
                         << StateVectorToName<StateVectorT>::name) {
-            std::vector<std::vector<size_t>> wires_list = {
+            std::vector<std::vector<std::size_t>> wires_list = {
                 {0, 1}, {0, 2}, {1, 2}};
             // Expected results calculated with Pennylane default.qubit:
             std::vector<PrecisionT> exp_values_ref = {
@@ -1082,7 +1084,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
 
-                size_t num_shots = 20000;
+                std::size_t num_shots = 20000;
                 PrecisionT expected = exp_values_ref[ind_wires];
                 PrecisionT result = Measurer.var(obs, num_shots);
 
@@ -1122,11 +1124,11 @@ template <typename TypeList> void testTensorProdObsVarShot() {
 
         DYNAMIC_SECTION(" Without Identity"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, Z1});
             auto expected = Measurer.var(*obs);
             auto result = Measurer.var(*obs, num_shots);
@@ -1137,13 +1139,13 @@ template <typename TypeList> void testTensorProdObsVarShot() {
 
         DYNAMIC_SECTION(" full wires"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             auto X2 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{2});
+                "PauliX", std::vector<std::size_t>{2});
             auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{1});
+                "PauliY", std::vector<std::size_t>{1});
             auto Z0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{0});
+                "PauliZ", std::vector<std::size_t>{0});
             auto obs = TensorProdObs<StateVectorT>::create({X2, Y1, Z0});
             auto expected = Measurer.var(*obs);
             auto result = Measurer.var(*obs, num_shots);
@@ -1156,7 +1158,7 @@ template <typename TypeList> void testTensorProdObsVarShot() {
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             const PrecisionT theta = M_PI / 2;
             const PrecisionT real_term = std::cos(theta);
             const PrecisionT imag_term = std::sin(theta);
@@ -1170,10 +1172,10 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
             auto Her = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_matrix, std::vector<size_t>{0, 2});
+                Hermitian_matrix, std::vector<std::size_t>{0, 2});
 
             auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{1});
+                "PauliY", std::vector<std::size_t>{1});
 
             auto obs = TensorProdObs<StateVectorT>::create({Her, Y1});
             auto expected = Measurer.var(*obs);
@@ -1186,14 +1188,14 @@ template <typename TypeList> void testTensorProdObsVarShot() {
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
 
             MatrixT Hermitian_matrix(4, {0, 0});
             Hermitian_matrix[0] = 1;
             Hermitian_matrix[3] = -1;
 
             auto Her = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_matrix, std::vector<size_t>{1});
+                Hermitian_matrix, std::vector<std::size_t>{1});
 
             auto obs = TensorProdObs<StateVectorT>::create({Her});
             auto expected = Measurer.var(*obs);
@@ -1206,13 +1208,13 @@ template <typename TypeList> void testTensorProdObsVarShot() {
 
         DYNAMIC_SECTION(" full wires with apply operations"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             auto X2 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{2});
+                "PauliX", std::vector<std::size_t>{2});
             auto Y1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{1});
+                "PauliY", std::vector<std::size_t>{1});
             auto Z0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{0});
+                "PauliZ", std::vector<std::size_t>{0});
             auto obs = TensorProdObs<StateVectorT>::create({X2, Y1, Z0});
 
             statevector.applyOperations({"Hadamard", "PauliZ", "S", "Hadamard"},
@@ -1230,11 +1232,11 @@ template <typename TypeList> void testTensorProdObsVarShot() {
 
         DYNAMIC_SECTION(" With Identity"
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto I1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{1});
+                "Identity", std::vector<std::size_t>{1});
             auto obs = TensorProdObs<StateVectorT>::create({X0, I1});
             PrecisionT expected = Measurer.var(*obs);
             PrecisionT result = Measurer.var(*obs, num_shots);
@@ -1257,7 +1259,7 @@ template <typename TypeList> void testSamples() {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
 
-        constexpr size_t twos[] = {
+        constexpr std::size_t twos[] = {
             1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
             1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
             1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
@@ -1279,13 +1281,13 @@ template <typename TypeList> void testSamples() {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
             0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-        size_t num_qubits = 3;
-        size_t N = std::pow(2, num_qubits);
-        size_t num_samples = 100000;
+        std::size_t num_qubits = 3;
+        std::size_t N = std::pow(2, num_qubits);
+        std::size_t num_samples = 100000;
         auto &&samples = Measurer.generate_samples(num_samples);
 
-        std::vector<size_t> counts(N, 0);
-        std::vector<size_t> samples_decimal(num_samples, 0);
+        std::vector<std::size_t> counts(N, 0);
+        std::vector<std::size_t> samples_decimal(num_samples, 0);
 
         // convert samples to decimal and then bin them in counts
         for (size_t i = 0; i < num_samples; i++) {
@@ -1328,7 +1330,7 @@ template <typename TypeList> void testSamplesCountsObs() {
         StateVectorT statevector(statevector_data.data(),
                                  statevector_data.size());
 
-        constexpr size_t twos[] = {
+        constexpr std::size_t twos[] = {
             1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
             1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
             1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
@@ -1340,7 +1342,7 @@ template <typename TypeList> void testSamplesCountsObs() {
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
 
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> obs_name = {"PauliX", "PauliY", "PauliZ",
                                              "Hadamard", "Identity"};
         // Expected results calculated with Pennylane default.qubit:
@@ -1354,7 +1356,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Sample Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                size_t num_shots = 20000;
+                std::size_t num_shots = 20000;
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
@@ -1377,7 +1379,7 @@ template <typename TypeList> void testSamplesCountsObs() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Counts Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                size_t num_shots = 20000;
+                std::size_t num_shots = 20000;
                 for (size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
@@ -1404,13 +1406,13 @@ template <typename TypeList> void testSamplesCountsObs() {
                 0.67078706, 0.03062806, 0.0870997,  0.00397696,
                 0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-            size_t num_qubits = 3;
-            size_t N = std::pow(2, num_qubits);
-            size_t num_samples = 100000;
+            std::size_t num_qubits = 3;
+            std::size_t N = std::pow(2, num_qubits);
+            std::size_t num_samples = 100000;
             auto &&samples = Measurer.sample(num_samples);
 
-            std::vector<size_t> counts(N, 0);
-            std::vector<size_t> samples_decimal(num_samples, 0);
+            std::vector<std::size_t> counts(N, 0);
+            std::vector<std::size_t> samples_decimal(num_samples, 0);
 
             // convert samples to decimal and then bin them in counts
             for (size_t i = 0; i < num_samples; i++) {
@@ -1441,13 +1443,13 @@ template <typename TypeList> void testSamplesCountsObs() {
                 0.67078706, 0.03062806, 0.0870997,  0.00397696,
                 0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-            size_t num_qubits = 3;
-            size_t N = std::pow(2, num_qubits);
-            size_t num_samples = 100000;
+            std::size_t num_qubits = 3;
+            std::size_t N = std::pow(2, num_qubits);
+            std::size_t num_samples = 100000;
 
             auto &&counts_sample = Measurer.counts(num_samples);
 
-            std::vector<size_t> counts(N, 0);
+            std::vector<std::size_t> counts(N, 0);
 
             // convert samples to decimal and then bin them in counts
             for (auto &it : counts_sample) {
@@ -1501,16 +1503,16 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
         Measurements<StateVectorT> Measurer(statevector);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
 
         DYNAMIC_SECTION("Without shots_range "
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range = {};
 
             auto res = Measurer.expval(*ob, num_shots, shots_range);
             auto expected = PrecisionT(-0.086);
@@ -1521,8 +1523,8 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 
         DYNAMIC_SECTION("With shots_range "
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 20000;
-            std::vector<size_t> shots_range;
+            std::size_t num_shots = 20000;
+            std::vector<std::size_t> shots_range;
             for (size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
@@ -1537,15 +1539,15 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
         DYNAMIC_SECTION("TensorProd with shots_range "
                         << StateVectorToName<StateVectorT>::name) {
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliX", std::vector<size_t>{0});
+                "PauliX", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto obs0 = TensorProdObs<StateVectorT>::create({X0, Z1});
 
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
             auto H1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Hadamard", std::vector<size_t>{1});
+                "Hadamard", std::vector<std::size_t>{1});
             auto obs1 = TensorProdObs<StateVectorT>::create({Y0, H1});
 
             auto obs =
@@ -1554,7 +1556,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             Measurements<StateVectorT> Measurer_analytic(sv);
             auto expected = Measurer_analytic.expval(*obs);
 
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
             auto res = Measurer.expval(*obs, num_shots, {});
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
@@ -1563,17 +1565,17 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
 #ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
 
             std::vector<ComplexT> Hermitian_mat{ComplexT{3, 0}, ComplexT{2, 1},
                                                 ComplexT{2, -1},
                                                 ComplexT{-3, 0}};
             auto Her1 = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_mat, std::vector<size_t>{1});
+                Hermitian_mat, std::vector<std::size_t>{1});
 
             auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, Her1});
 
-            size_t num_shots = 100000;
+            std::size_t num_shots = 100000;
 
             auto res = Measurer.expval(*ob, num_shots, {});
             auto expected = Measurer.expval(*ob);
@@ -1609,13 +1611,13 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
 
         DYNAMIC_SECTION("YZ" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
             auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
 
             auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, Z1});
 
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
 
             auto res = Measurer.var(*ob, num_shots);
             auto expected = Measurer.var(*ob);
@@ -1626,13 +1628,13 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
 
         DYNAMIC_SECTION("YI" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
             auto I1 = std::make_shared<NamedObs<StateVectorT>>(
-                "Identity", std::vector<size_t>{1});
+                "Identity", std::vector<std::size_t>{1});
 
             auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5}, {Y0, I1});
 
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
 
             auto res = Measurer.var(*ob, num_shots);
             auto expected = Measurer.var(*ob);
@@ -1645,24 +1647,24 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             using ComplexT = typename StateVectorT::ComplexT;
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
-                "PauliY", std::vector<size_t>{0});
+                "PauliY", std::vector<std::size_t>{0});
 
             std::vector<ComplexT> Hermitian_mat1{ComplexT{3, 0}, ComplexT{2, 1},
                                                  ComplexT{2, -1},
                                                  ComplexT{-3, 0}};
             auto Her1 = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_mat1, std::vector<size_t>{1});
+                Hermitian_mat1, std::vector<std::size_t>{1});
 
             std::vector<ComplexT> Hermitian_mat2{ComplexT{2, 0}, ComplexT{1, 1},
                                                  ComplexT{1, -1},
                                                  ComplexT{-6, 0}};
             auto Her2 = std::make_shared<HermitianObs<StateVectorT>>(
-                Hermitian_mat2, std::vector<size_t>{2});
+                Hermitian_mat2, std::vector<std::size_t>{2});
 
             auto ob = Hamiltonian<StateVectorT>::create({0.5, 0.5, 1.0},
                                                         {Y0, Her1, Her2});
 
-            size_t num_shots = 20000;
+            std::size_t num_shots = 20000;
 
             auto res = Measurer.var(*ob, num_shots);
             auto expected = Measurer.var(*ob);
@@ -1704,8 +1706,8 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
 
         DYNAMIC_SECTION("Failed for expval "
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 1000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 1000;
+            std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.expval(*sparseH, num_shots, shots_range),
                 Catch::Matchers::Contains("SparseHamiltonian observables do "
@@ -1714,8 +1716,8 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
 
         DYNAMIC_SECTION("Failed for var "
                         << StateVectorToName<StateVectorT>::name) {
-            size_t num_shots = 1000;
-            std::vector<size_t> shots_range = {};
+            std::size_t num_shots = 1000;
+            std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.var(*sparseH, num_shots),
                 Catch::Matchers::Contains("SparseHamiltonian observables do "
