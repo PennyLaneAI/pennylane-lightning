@@ -50,8 +50,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
 
     SECTION("StateVectorLQubitManaged<TestType> {size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorLQubitManaged<TestType>,
-                                        size_t>);
-        const size_t num_qubits = 4;
+                                        std::size_t>);
+        const std::size_t num_qubits = 4;
         StateVectorLQubitManaged<PrecisionT> sv(num_qubits);
 
         REQUIRE(sv.getNumQubits() == 4);
@@ -62,7 +62,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
         REQUIRE(std::is_constructible_v<StateVectorLQubitManaged<TestType>,
                                         TestVectorT>);
-        const size_t num_qubits = 5;
+        const std::size_t num_qubits = 5;
         TestVectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         StateVectorLQubitManaged<PrecisionT> sv(st_data);
@@ -99,7 +99,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
 
     SECTION("updateData") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         StateVectorLQubitManaged<PrecisionT> sv(num_qubits);
 
         TestVectorT st_data =

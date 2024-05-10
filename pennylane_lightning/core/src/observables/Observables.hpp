@@ -77,7 +77,7 @@ template <class StateVectorT> class Observable {
     virtual void
     applyInPlaceShots(StateVectorT &sv,
                       std::vector<std::vector<PrecisionT>> &eigenValues,
-                      std::vector<size_t> &ob_wires) const = 0;
+                      std::vector<std::size_t> &ob_wires) const = 0;
 
     /**
      * @brief Get the name of the observable
@@ -87,7 +87,7 @@ template <class StateVectorT> class Observable {
     /**
      * @brief Get the wires the observable applies to.
      */
-    [[nodiscard]] virtual auto getWires() const -> std::vector<size_t> = 0;
+    [[nodiscard]] virtual auto getWires() const -> std::vector<std::size_t> = 0;
 
     /**
      * @brief Get the observable data.
@@ -134,7 +134,7 @@ class NamedObsBase : public Observable<StateVectorT> {
 
   protected:
     std::string obs_name_;
-    std::vector<size_t> wires_;
+    std::vector<std::size_t> wires_;
     std::vector<PrecisionT> params_;
 
   private:
@@ -155,7 +155,7 @@ class NamedObsBase : public Observable<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObsBase(std::string obs_name, std::vector<size_t> wires,
+    NamedObsBase(std::string obs_name, std::vector<std::size_t> wires,
                  std::vector<PrecisionT> params = {})
         : obs_name_{std::move(obs_name)}, wires_{std::move(wires)},
           params_{std::move(params)} {}
@@ -167,7 +167,7 @@ class NamedObsBase : public Observable<StateVectorT> {
         return obs_stream.str();
     }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
 
@@ -177,7 +177,7 @@ class NamedObsBase : public Observable<StateVectorT> {
 
     void applyInPlaceShots(StateVectorT &sv,
                            std::vector<std::vector<PrecisionT>> &eigenValues,
-                           std::vector<size_t> &ob_wires) const override {
+                           std::vector<std::size_t> &ob_wires) const override {
         ob_wires.clear();
         eigenValues.clear();
         ob_wires.push_back(wires_[0]);
@@ -218,7 +218,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
 
   protected:
     MatrixT matrix_;
-    std::vector<size_t> wires_;
+    std::vector<std::size_t> wires_;
 
 #ifdef PL_USE_LAPACK
     std::vector<PrecisionT> eigenVals_;
@@ -241,7 +241,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObsBase(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObsBase(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
 
@@ -268,7 +268,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
 
     [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
 
@@ -283,7 +283,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
-        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
+        [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
 #ifdef PL_USE_LAPACK
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
@@ -320,7 +320,7 @@ template <class StateVectorT>
 class TensorProdObsBase : public Observable<StateVectorT> {
   protected:
     std::vector<std::shared_ptr<Observable<StateVectorT>>> obs_;
-    std::vector<size_t> all_wires_;
+    std::vector<std::size_t> all_wires_;
 
   private:
     [[nodiscard]] auto isEqual(const Observable<StateVectorT> &other) const
@@ -357,7 +357,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
                      "from a single TensorProdObsBase.");
         }
 
-        std::unordered_set<size_t> wires;
+        std::unordered_set<std::size_t> wires;
         for (const auto &ob : obs_) {
             const auto ob_wires = ob->getWires();
             for (const auto wire : ob_wires) {
@@ -366,7 +366,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
                 wires.insert(wire);
             }
         }
-        all_wires_ = std::vector<size_t>(wires.begin(), wires.end());
+        all_wires_ = std::vector<std::size_t>(wires.begin(), wires.end());
         std::sort(all_wires_.begin(), all_wires_.end());
     }
 
@@ -407,16 +407,16 @@ class TensorProdObsBase : public Observable<StateVectorT> {
     /**
      * @brief Get the number of operations in observable.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getSize() const -> size_t { return obs_.size(); }
+    [[nodiscard]] auto getSize() const -> std::size_t { return obs_.size(); }
 
     /**
      * @brief Get the wires for each observable operation.
      *
-     * @return const std::vector<std::vector<size_t>>&
+     * @return const std::vector<std::vector<std::size_t>>&
      */
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return all_wires_;
     }
 
@@ -436,7 +436,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
 
     void applyInPlaceShots(StateVectorT &sv,
                            std::vector<std::vector<PrecisionT>> &eigenValues,
-                           std::vector<size_t> &ob_wires) const override {
+                           std::vector<std::size_t> &ob_wires) const override {
         for (const auto &ob : obs_) {
             if (ob->getObsName().find("Hamiltonian") != std::string::npos) {
                 PL_ABORT("Hamiltonian observables as a term of an TensorProd "
@@ -449,7 +449,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
         ob_wires.clear();
         for (const auto &ob : obs_) {
             std::vector<std::vector<PrecisionT>> eigenVals;
-            std::vector<size_t> ob_wire;
+            std::vector<std::size_t> ob_wire;
             ob->applyInPlaceShots(sv, eigenVals, ob_wire);
             ob_wires.push_back(ob_wire[0]);
             eigenValues.push_back(eigenVals[0]);
@@ -544,19 +544,19 @@ class HamiltonianBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
-        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
+        [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
         PL_ABORT("Hamiltonian observables as a term of an observable do not "
                  "support shot measurement.");
     }
 
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
-        std::unordered_set<size_t> wires;
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        std::unordered_set<std::size_t> wires;
 
         for (const auto &ob : obs_) {
             const auto ob_wires = ob->getWires();
             wires.insert(ob_wires.begin(), ob_wires.end());
         }
-        auto all_wires = std::vector<size_t>(wires.begin(), wires.end());
+        auto all_wires = std::vector<std::size_t>(wires.begin(), wires.end());
         std::sort(all_wires.begin(), all_wires.end());
         return all_wires;
     }
@@ -677,7 +677,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     void applyInPlaceShots(
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
-        [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
+        [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
         PL_ABORT(
             "SparseHamiltonian observables do not support shot measurement.");
     }
@@ -703,7 +703,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
     /**
      * @brief Get the wires the observable applies to.
      */
-    [[nodiscard]] auto getWires() const -> std::vector<size_t> override {
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     };
 };

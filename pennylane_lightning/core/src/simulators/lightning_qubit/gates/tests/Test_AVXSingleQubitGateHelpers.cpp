@@ -22,14 +22,14 @@ using namespace Pennylane::LightningQubit::Gates::AVXCommon;
 } // namespace
 /// @endcond
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 struct MockSingleQubitGateWithoutParam {
     using Precision = PrecisionT;
-    constexpr static size_t packed_size_ = packed_size;
+    constexpr static std::size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
-    static std::tuple<std::string, size_t, bool>
-    applyInternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static std::tuple<std::string, std::size_t, bool>
+    applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
@@ -37,9 +37,9 @@ struct MockSingleQubitGateWithoutParam {
         return {"applyInternal", rev_wire, inverse};
     }
 
-    static std::tuple<std::string, size_t, bool>
-    applyExternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                  const size_t rev_wire, bool inverse) {
+    static std::tuple<std::string, std::size_t, bool>
+    applyExternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+                  const std::size_t rev_wire, bool inverse) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
         static_cast<void>(rev_wire);
@@ -48,14 +48,14 @@ struct MockSingleQubitGateWithoutParam {
     }
 };
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 struct MockSingleQubitGateWithParam {
     using Precision = PrecisionT;
-    constexpr static size_t packed_size_ = packed_size;
+    constexpr static std::size_t packed_size_ = packed_size;
 
     template <size_t rev_wire, class ParamT>
-    static std::tuple<std::string, size_t, bool>
-    applyInternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static std::tuple<std::string, std::size_t, bool>
+    applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse, ParamT angle) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
@@ -65,9 +65,9 @@ struct MockSingleQubitGateWithParam {
     }
 
     template <class ParamT>
-    static std::tuple<std::string, size_t, bool>
-    applyExternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                  const size_t rev_wire, bool inverse, ParamT angle) {
+    static std::tuple<std::string, std::size_t, bool>
+    applyExternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+                  const std::size_t rev_wire, bool inverse, ParamT angle) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
         static_cast<void>(rev_wire);
@@ -81,14 +81,14 @@ struct MockSingleQubitGateWithParam {
  * @brief Mock class that only `applyExternal` takes a parameter (which is
  * wrong).
  */
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 struct MockSingleQubitGateSomethingWrong {
     using Precision = PrecisionT;
-    constexpr static size_t packed_size_ = packed_size;
+    constexpr static std::size_t packed_size_ = packed_size;
 
     template <size_t rev_wire>
-    static std::tuple<std::string, size_t, bool>
-    applyInternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
+    static std::tuple<std::string, std::size_t, bool>
+    applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
@@ -97,9 +97,9 @@ struct MockSingleQubitGateSomethingWrong {
     }
 
     template <class ParamT>
-    static std::tuple<std::string, size_t, bool>
-    applyExternal(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                  const size_t rev_wire, bool inverse, ParamT angle) {
+    static std::tuple<std::string, std::size_t, bool>
+    applyExternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+                  const std::size_t rev_wire, bool inverse, ParamT angle) {
         static_cast<void>(arr);
         static_cast<void>(num_qubits);
         static_cast<void>(rev_wire);
@@ -147,14 +147,15 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateHelper template functions",
 
 TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
                    "[SingleQubitGateHelper]", float, double) {
-    auto fallback = [](std::complex<TestType> *arr, size_t num_qubits,
-                       const std::vector<size_t> &wires,
-                       bool inverse) -> std::tuple<std::string, size_t, bool> {
+    auto fallback =
+        [](std::complex<TestType> *arr, std::size_t num_qubits,
+           const std::vector<std::size_t> &wires,
+           bool inverse) -> std::tuple<std::string, std::size_t, bool> {
         static_cast<void>(arr);
         return {"fallback", num_qubits - wires[0] - 1, inverse};
     };
     SECTION("Test SingleQubitGateWithoutParamHelper with packed_size = 4") {
-        constexpr size_t packed_size = 4;
+        constexpr std::size_t packed_size = 4;
         std::vector<std::complex<TestType>> arr(
             16, std::complex<TestType>{0.0, 0.0});
         SingleQubitGateWithoutParamHelper<
@@ -199,7 +200,7 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
     }
 
     SECTION("Test SingleQubitGateWithoutParamHelper with packed_size = 8") {
-        constexpr size_t packed_size = 8;
+        constexpr std::size_t packed_size = 8;
         std::vector<std::complex<TestType>> arr(
             16, std::complex<TestType>{0.0, 0.0});
         SingleQubitGateWithoutParamHelper<
@@ -253,15 +254,15 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithoutParamHelper",
 TEMPLATE_TEST_CASE("Test SingleQubitGateWithParamHelper",
                    "[SingleQubitGateHelper]", float, double) {
     auto fallback =
-        [](std::complex<TestType> *arr, size_t num_qubits,
-           const std::vector<size_t> &wires, bool inverse,
-           TestType angle) -> std::tuple<std::string, size_t, bool> {
+        [](std::complex<TestType> *arr, std::size_t num_qubits,
+           const std::vector<std::size_t> &wires, bool inverse,
+           TestType angle) -> std::tuple<std::string, std::size_t, bool> {
         static_cast<void>(arr);
         static_cast<void>(angle);
         return {"fallback", num_qubits - wires[0] - 1, inverse};
     };
     SECTION("Test SingleQubitGateWithoutParamHelper with packed_size = 4") {
-        constexpr size_t packed_size = 4;
+        constexpr std::size_t packed_size = 4;
         std::vector<std::complex<TestType>> arr(
             16, std::complex<TestType>{0.0, 0.0});
         SingleQubitGateWithParamHelper<
@@ -308,7 +309,7 @@ TEMPLATE_TEST_CASE("Test SingleQubitGateWithParamHelper",
     }
 
     SECTION("Test SingleQubitGateWithoutParamHelper with packed_size = 8") {
-        constexpr size_t packed_size = 8;
+        constexpr std::size_t packed_size = 8;
         std::vector<std::complex<TestType>> arr(
             16, std::complex<TestType>{0.0, 0.0});
         SingleQubitGateWithParamHelper<

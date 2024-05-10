@@ -54,13 +54,13 @@ inline auto wires2Parity(const std::size_t num_qubits,
     }
     const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);
 
-    Kokkos::View<const size_t *, Kokkos::HostSpace,
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         rev_wire_shifts_host(rev_wire_shifts_.data(), rev_wire_shifts_.size());
     Kokkos::resize(rev_wire_shifts, rev_wire_shifts_host.size());
     Kokkos::deep_copy(rev_wire_shifts, rev_wire_shifts_host);
 
-    Kokkos::View<const size_t *, Kokkos::HostSpace,
+    Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         parity_host(parity_.data(), parity_.size());
     Kokkos::resize(parity, parity_host.size());

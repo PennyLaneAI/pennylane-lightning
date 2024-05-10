@@ -39,7 +39,7 @@ template <class PrecisionT> struct axpy_KokkosFunctor {
         x = x_;
         y = y_;
     }
-    KOKKOS_INLINE_FUNCTION void operator()(const size_t k) const {
+    KOKKOS_INLINE_FUNCTION void operator()(const std::size_t k) const {
         y[k] += alpha * x[k];
     }
 };
@@ -57,7 +57,7 @@ template <class PrecisionT>
 inline auto axpy_Kokkos(Kokkos::complex<PrecisionT> alpha,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> x,
                         Kokkos::View<Kokkos::complex<PrecisionT> *> y,
-                        size_t length) {
+                        std::size_t length) {
     Kokkos::parallel_for(length, axpy_KokkosFunctor<PrecisionT>(alpha, x, y));
 }
 
@@ -88,7 +88,7 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t row) const {
+    void operator()(const std::size_t row) const {
         Kokkos::complex<PrecisionT> tmp = {0.0, 0.0};
         for (size_t j = indptr[row]; j < indptr[row + 1]; j++) {
             tmp += data[j] * x[indices[j]];
@@ -115,14 +115,14 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
  */
 template <class PrecisionT, class ComplexT>
 void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
-                     const size_t *row_map, const size_t row_map_size,
-                     const size_t *entries_ptr, const ComplexT *values_ptr,
-                     const size_t numNNZ) {
+                     const std::size_t *row_map, const std::size_t row_map_size,
+                     const std::size_t *entries_ptr, const ComplexT *values_ptr,
+                     const std::size_t numNNZ) {
     using ConstComplexHostView =
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using ConstSizeTHostView =
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using KokkosSizeTVector = Kokkos::View<size_t *>;
     using KokkosVector = Kokkos::View<ComplexT *>;
@@ -158,7 +158,7 @@ template <class PrecisionT> struct getRealOfComplexInnerProductFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k, PrecisionT &inner) const {
+    void operator()(const std::size_t k, PrecisionT &inner) const {
         inner += real(x[k]) * real(y[k]) + imag(x[k]) * imag(y[k]);
     }
 };
@@ -200,7 +200,7 @@ template <class PrecisionT> struct getImagOfComplexInnerProductFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const size_t k, PrecisionT &inner) const {
+    void operator()(const std::size_t k, PrecisionT &inner) const {
         inner += real(x[k]) * imag(y[k]) - imag(x[k]) * real(y[k]);
     }
 };

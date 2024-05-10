@@ -55,7 +55,7 @@ class NamedObs final : public NamedObsBase<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObs(std::string obs_name, std::vector<size_t> wires,
+    NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
@@ -90,7 +90,7 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObs(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
         : BaseType{matrix, wires} {}
 };
 

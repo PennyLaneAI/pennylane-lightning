@@ -53,36 +53,37 @@ namespace Pennylane::LightningGPU {
 // declarations of external functions (defined in initSV.cu).
 extern void setStateVector_CUDA(cuComplex *sv, int &num_indices,
                                 cuComplex *value, int *indices,
-                                size_t thread_per_block,
+                                std::size_t thread_per_block,
                                 cudaStream_t stream_id);
 extern void setStateVector_CUDA(cuDoubleComplex *sv, long &num_indices,
                                 cuDoubleComplex *value, long *indices,
-                                size_t thread_per_block,
+                                std::size_t thread_per_block,
                                 cudaStream_t stream_id);
 
 extern void setBasisState_CUDA(cuComplex *sv, cuComplex &value,
-                               const size_t index, bool async,
+                               const std::size_t index, bool async,
                                cudaStream_t stream_id);
 extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
-                               const size_t index, bool async,
+                               const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
-extern void globalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
                                         cuComplex phase,
-                                        size_t thread_per_block,
+                                        std::size_t thread_per_block,
                                         cudaStream_t stream_id);
-extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
+extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
                                         cuDoubleComplex phase,
-                                        size_t thread_per_block,
+                                        std::size_t thread_per_block,
                                         cudaStream_t stream_id);
 
-extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, size_t num_sv,
+extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
                                          bool adjoint, cuComplex *phase,
-                                         size_t thread_per_block,
+                                         std::size_t thread_per_block,
                                          cudaStream_t stream_id);
-extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, size_t num_sv,
-                                         bool adjoint, cuDoubleComplex *phase,
-                                         size_t thread_per_block,
+extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv,
+                                         std::size_t num_sv, bool adjoint,
+                                         cuDoubleComplex *phase,
+                                         std::size_t thread_per_block,
                                          cudaStream_t stream_id);
 
 /**
@@ -113,7 +114,7 @@ class StateVectorCudaManaged
           cublascaller_(make_shared_cublas_caller()), gate_cache_(true){};
 
     StateVectorCudaManaged(
-        size_t num_qubits, const DevTag<int> &dev_tag, bool alloc = true,
+        std::size_t num_qubits, const DevTag<int> &dev_tag, bool alloc = true,
         SharedCusvHandle cusvhandle_in = make_shared_cusv_handle(),
         SharedCublasCaller cublascaller_in = make_shared_cublas_caller(),
         SharedCusparseHandle cusparsehandle_in = make_shared_cusparse_handle())
@@ -126,13 +127,13 @@ class StateVectorCudaManaged
         BaseType::initSV();
     };
 
-    StateVectorCudaManaged(const CFP_t *gpu_data, size_t length)
+    StateVectorCudaManaged(const CFP_t *gpu_data, std::size_t length)
         : StateVectorCudaManaged(Pennylane::Util::log2(length)) {
         BaseType::CopyGpuDataToGpuIn(gpu_data, length, false);
     }
 
     StateVectorCudaManaged(
-        const CFP_t *gpu_data, size_t length, DevTag<int> dev_tag,
+        const CFP_t *gpu_data, std::size_t length, DevTag<int> dev_tag,
         SharedCusvHandle handle_in = make_shared_cusv_handle(),
         SharedCublasCaller cublascaller_in = make_shared_cublas_caller(),
         SharedCusparseHandle cusparsehandle_in = make_shared_cusparse_handle())
@@ -144,12 +145,13 @@ class StateVectorCudaManaged
     }
 
     StateVectorCudaManaged(const std::complex<Precision> *host_data,
-                           size_t length)
+                           std::size_t length)
         : StateVectorCudaManaged(Pennylane::Util::log2(length)) {
         BaseType::CopyHostDataToGpu(host_data, length, false);
     }
 
-    StateVectorCudaManaged(std::complex<Precision> *host_data, size_t length)
+    StateVectorCudaManaged(std::complex<Precision> *host_data,
+                           std::size_t length)
         : StateVectorCudaManaged(Pennylane::Util::log2(length)) {
         BaseType::CopyHostDataToGpu(host_data, length, false);
     }
@@ -172,8 +174,8 @@ class StateVectorCudaManaged
      * @param index Index of the target element.
      * @param async Use an asynchronous memory copy.
      */
-    void setBasisState(const std::complex<Precision> &value, const size_t index,
-                       const bool async = false) {
+    void setBasisState(const std::complex<Precision> &value,
+                       const std::size_t index, const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -192,7 +194,7 @@ class StateVectorCudaManaged
      * @param indices Pointer to indices of the target elements.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, size_t thread_per_block = 256>
+    template <class index_type, std::size_t thread_per_block = 256>
     void setStateVector(const index_type num_indices,
                         const std::complex<Precision> *values,
                         const index_type *indices, const bool async = false) {
@@ -266,7 +268,7 @@ class StateVectorCudaManaged
      * @param matrix Gate data (in row-major format).
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint,
+                        const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         const std::vector<ComplexT> &matrix) {
         std::vector<CFP_t> matrix_cu(matrix.size());
@@ -291,7 +293,8 @@ class StateVectorCudaManaged
      * @param gate_matrix Gate data (in row-major format).
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint = false,
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false,
                         const std::vector<Precision> &params = {0.0},
                         const std::vector<CFP_t> &gate_matrix = {}) {
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
@@ -381,8 +384,8 @@ class StateVectorCudaManaged
      * @param adjoint Indicates whether to use adjoint of gate.
      */
     auto applyGenerator(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint = false)
-        -> PrecisionT {
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false) -> PrecisionT {
         auto it = generator_map_.find(opName);
         PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
         return (it->second)(wires, adjoint);
@@ -397,10 +400,11 @@ class StateVectorCudaManaged
      * @param adjoint Indicate whether inverse should be taken.
      */
     void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
-                     const std::vector<size_t> &wires, bool adjoint = false) {
+                     const std::vector<std::size_t> &wires,
+                     bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::string opName = {};
-        size_t n = size_t{1} << wires.size();
+        std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
         std::vector<CFP_t> matrix_cu(matrix.size());
@@ -421,7 +425,8 @@ class StateVectorCudaManaged
      * @param adjoint Indicate whether inverse should be taken.
      */
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
-                     const std::vector<size_t> &wires, bool adjoint = false) {
+                     const std::vector<std::size_t> &wires,
+                     bool adjoint = false) {
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
@@ -692,9 +697,9 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT
-    applyGeneratorGlobalPhase([[maybe_unused]] const std::vector<size_t> &wires,
-                              [[maybe_unused]] bool adj = false) {
+    inline PrecisionT applyGeneratorGlobalPhase(
+        [[maybe_unused]] const std::vector<std::size_t> &wires,
+        [[maybe_unused]] bool adj = false) {
         return static_cast<PrecisionT>(-1.0);
     }
 
@@ -706,7 +711,7 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRX(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRX(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliX(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -719,7 +724,7 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRY(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRY(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliY(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -732,7 +737,7 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRZ(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRZ(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliZ(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -798,8 +803,9 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorPhaseShift(const std::vector<size_t> &wires,
-                                               bool adj = false) {
+    inline PrecisionT
+    applyGeneratorPhaseShift(const std::vector<std::size_t> &wires,
+                             bool adj = false) {
         applyOperation("P_11", wires, adj, {0.0}, cuGates::getP11_CU<CFP_t>());
         return static_cast<PrecisionT>(1.0);
     }
@@ -811,11 +817,11 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRX(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRX(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliX(std::vector<size_t>{wires.back()}, adj);
+        applyPauliX(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -826,11 +832,11 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRY(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRY(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliY(std::vector<size_t>{wires.back()}, adj);
+        applyPauliY(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -841,11 +847,11 @@ class StateVectorCudaManaged
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRZ(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRZ(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliZ(std::vector<size_t>{wires.back()}, adj);
+        applyPauliZ(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -857,7 +863,7 @@ class StateVectorCudaManaged
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
     inline PrecisionT
-    applyGeneratorControlledPhaseShift(const std::vector<size_t> &wires,
+    applyGeneratorControlledPhaseShift(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyOperation("P_1111", {wires}, adj, {0.0},
                        cuGates::getP1111_CU<CFP_t>());
@@ -1005,10 +1011,10 @@ class StateVectorCudaManaged
     mutable SharedCusparseHandle
         cusparsehandle_; // This member is mutable to allow lazy initialization.
     GateCache<Precision> gate_cache_;
-    using ParFunc = std::function<void(const std::vector<size_t> &, bool,
+    using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;
     using GeneratorFunc =
-        std::function<Precision(const std::vector<size_t> &, bool)>;
+        std::function<Precision(const std::vector<std::size_t> &, bool)>;
 
     using FMap = std::unordered_map<std::string, ParFunc>;
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
@@ -1372,7 +1378,7 @@ class StateVectorCudaManaged
                                const std::vector<std::size_t> &tgts,
                                bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
 
         std::vector<int> ctrlsInt(ctrls.size());
@@ -1411,7 +1417,7 @@ class StateVectorCudaManaged
             /* const uint32_t */ tgts.size(),
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
         // allocate external workspace if necessary
         // LCOV_EXCL_START
@@ -1438,7 +1444,7 @@ class StateVectorCudaManaged
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
+            /* std::size_t */ extraWorkspaceSizeInBytes));
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));

@@ -35,11 +35,12 @@ template <class PrecisionT, bool inverse = false> struct hadamardFunctor {
     std::size_t wire_parity_inv;
 
     hadamardFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                    std::size_t num_qubits, const std::vector<size_t> &wires,
+                    std::size_t num_qubits,
+                    const std::vector<std::size_t> &wires,
                     [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -81,11 +82,11 @@ template <class PrecisionT, bool inverse = false> struct pauliXFunctor {
     std::size_t wire_parity_inv;
 
     pauliXFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                  std::size_t num_qubits, const std::vector<size_t> &wires,
+                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                   [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -108,11 +109,11 @@ template <class PrecisionT, bool inverse = false> struct pauliYFunctor {
     std::size_t wire_parity_inv;
 
     pauliYFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                  std::size_t num_qubits, const std::vector<size_t> &wires,
+                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                   [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -138,11 +139,11 @@ template <class PrecisionT, bool inverse = false> struct pauliZFunctor {
     std::size_t wire_parity_inv;
 
     pauliZFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                  std::size_t num_qubits, const std::vector<size_t> &wires,
+                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                   [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -166,11 +167,11 @@ template <class PrecisionT, bool inverse = false> struct sFunctor {
     Kokkos::complex<PrecisionT> shift;
 
     sFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-             std::size_t num_qubits, const std::vector<size_t> &wires,
+             std::size_t num_qubits, const std::vector<std::size_t> &wires,
              [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
         shift =
@@ -196,11 +197,11 @@ template <class PrecisionT, bool inverse = false> struct tFunctor {
     Kokkos::complex<PrecisionT> shift;
 
     tFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-             std::size_t num_qubits, const std::vector<size_t> &wires,
+             std::size_t num_qubits, const std::vector<std::size_t> &wires,
              [[maybe_unused]] const std::vector<PrecisionT> &params) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
         shift = (inverse) ? conj(exp(Kokkos::complex<PrecisionT>(
@@ -232,13 +233,13 @@ template <class PrecisionT, bool inverse = false> struct cnotFunctor {
     std::size_t parity_middle;
 
     cnotFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                std::size_t num_qubits, const std::vector<size_t> &wires,
+                std::size_t num_qubits, const std::vector<std::size_t> &wires,
                 [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[1] - 1;
         rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -276,13 +277,13 @@ template <class PrecisionT, bool inverse = false> struct cyFunctor {
     std::size_t parity_middle;
 
     cyFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-              std::size_t num_qubits, const std::vector<size_t> &wires,
+              std::size_t num_qubits, const std::vector<std::size_t> &wires,
               [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[1] - 1;
         rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -321,13 +322,13 @@ template <class PrecisionT, bool inverse = false> struct czFunctor {
     std::size_t parity_middle;
 
     czFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-              std::size_t num_qubits, const std::vector<size_t> &wires,
+              std::size_t num_qubits, const std::vector<std::size_t> &wires,
               [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[1] - 1;
         rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -363,13 +364,13 @@ template <class PrecisionT, bool inverse = false> struct swapFunctor {
     std::size_t parity_middle;
 
     swapFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                std::size_t num_qubits, const std::vector<size_t> &wires,
+                std::size_t num_qubits, const std::vector<std::size_t> &wires,
                 [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[1] - 1;
         rev_wire1 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -414,15 +415,15 @@ template <class PrecisionT, bool inverse = false> struct cSWAPFunctor {
     Kokkos::complex<PrecisionT> shifts_2;
 
     cSWAPFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                 std::size_t num_qubits, const std::vector<size_t> &wires,
+                 std::size_t num_qubits, const std::vector<std::size_t> &wires,
                  [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[2] - 1;
         rev_wire1 = num_qubits - wires[1] - 1;
         rev_wire2 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
+        rev_wire2_shift = static_cast<std::size_t>(1U) << rev_wire2;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
@@ -481,15 +482,16 @@ template <class PrecisionT, bool inverse = false> struct toffoliFunctor {
     Kokkos::complex<PrecisionT> shifts_2;
 
     toffoliFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> &arr_,
-                   std::size_t num_qubits, const std::vector<size_t> &wires,
+                   std::size_t num_qubits,
+                   const std::vector<std::size_t> &wires,
                    [[maybe_unused]] const std::vector<PrecisionT> &params) {
         rev_wire0 = num_qubits - wires[2] - 1;
         rev_wire1 = num_qubits - wires[1] - 1;
         rev_wire2 = num_qubits - wires[0] - 1; // Control qubit
 
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
-        rev_wire2_shift = static_cast<size_t>(1U) << rev_wire2;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
+        rev_wire2_shift = static_cast<std::size_t>(1U) << rev_wire2;
 
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);

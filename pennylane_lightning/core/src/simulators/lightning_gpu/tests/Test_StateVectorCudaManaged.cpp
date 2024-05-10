@@ -55,8 +55,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::Constructibility",
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
-    SECTION("StateVectorBackend<TestType> {ComplexT*, size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, size_t>);
+    SECTION("StateVectorBackend<TestType> {ComplexT*, std::size_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, std::size_t>);
     }
     SECTION(
         "StateVectorBackend<TestType> {const StateVectorBackend<TestType>&}") {
@@ -76,7 +76,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::getDataVector",
     using VectorT = TestVector<std::complex<PrecisionT>>;
     std::mt19937_64 re{1337};
 
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     VectorT st_data = createRandomStateVectorData<PrecisionT>(re, num_qubits);
     StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
                               st_data.size());
@@ -97,7 +97,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
@@ -110,7 +110,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
     SECTION("Test wrong number of wires") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -134,7 +134,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -147,7 +147,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
     SECTION("Test a matrix represent PauliX") {
         std::vector<ComplexT> m = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -173,7 +173,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
     std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -205,7 +205,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
     }
 
     SECTION("Test invalid arguments with parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -238,8 +238,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
     std::mt19937_64 re{1337};
 
     SECTION("StateVectorCudaManaged<TestType> {size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, size_t>);
-        const size_t num_qubits = 4;
+        REQUIRE(std::is_constructible_v<StateVectorT, std::size_t>);
+        const std::size_t num_qubits = 4;
         StateVectorT sv(num_qubits);
 
         REQUIRE(sv.getNumQubits() == 4);
@@ -247,10 +247,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
         REQUIRE(sv.getDataVector().size() == 16);
     }
 
-    SECTION("StateVectorCudaManaged<TestType> {ComplexT *, size_t}") {
+    SECTION("StateVectorCudaManaged<TestType> {ComplexT *, std::size_t}") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
-        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, size_t>);
-        const size_t num_qubits = 5;
+        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, std::size_t>);
+        const std::size_t num_qubits = 5;
         TestVectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         StateVectorT sv(reinterpret_cast<ComplexT *>(st_data.data()),

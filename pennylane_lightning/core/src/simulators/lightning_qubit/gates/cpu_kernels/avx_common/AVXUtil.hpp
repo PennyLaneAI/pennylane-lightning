@@ -31,11 +31,11 @@ using Pennylane::Util::fillTrailingOnes;
 using Pennylane::Util::INVSQRT2;
 using Pennylane::Util::log2PerfectPower;
 
-template <typename PrecisionT, size_t packed_size> struct AVXIntrinsic {
+template <typename PrecisionT, std::size_t packed_size> struct AVXIntrinsic {
     static_assert((sizeof(PrecisionT) * packed_size == 32) ||
                   (sizeof(PrecisionT) * packed_size == 64));
 };
-template <typename T, size_t size>
+template <typename T, std::size_t size>
 using AVXIntrinsicType = typename AVXIntrinsic<T, size>::Type;
 #ifdef PL_USE_AVX2
 template <> struct AVXIntrinsic<float, 8> {
@@ -61,7 +61,7 @@ template <> struct AVXIntrinsic<double, 8> {
 /**
  * @brief one or minus one parity for reverse wire in packed data.
  */
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 constexpr auto internalParity(size_t rev_wire)
     -> AVXIntrinsicType<PrecisionT, packed_size>;
 #ifdef PL_USE_AVX2
@@ -79,7 +79,7 @@ template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
     return _mm256_setzero_ps();
 }
 template <>
-constexpr auto internalParity<double, 4>([[maybe_unused]] size_t rev_wire)
+constexpr auto internalParity<double, 4>([[maybe_unused]] std::size_t rev_wire)
     -> __m256d {
     PL_ASSERT(rev_wire == 0);
     // When Z is applied to the 0th qubit
@@ -139,9 +139,9 @@ constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
  * @brief Factor that is applied to the intrinsic type for product of
  * pure imaginary value.
  */
-template <typename PrecisionT, size_t packed_size> struct ImagFactor;
+template <typename PrecisionT, std::size_t packed_size> struct ImagFactor;
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 constexpr auto imagFactor(PrecisionT val = 1.0) {
     return ImagFactor<PrecisionT, packed_size>::create(val);
 }
@@ -173,7 +173,7 @@ template <> struct ImagFactor<double, 8> {
 // LCOV_EXCL_STOP
 #endif
 
-template <typename PrecisionT, size_t packed_size> struct Set1;
+template <typename PrecisionT, std::size_t packed_size> struct Set1;
 #ifdef PL_USE_AVX2
 template <> struct Set1<float, 8> {
     constexpr static auto create(float val) -> AVXIntrinsicType<float, 8> {
@@ -202,7 +202,7 @@ template <> struct Set1<double, 8> {
 // LCOV_EXCL_STOP
 #endif
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 constexpr auto set1(PrecisionT val) {
     return Set1<PrecisionT, packed_size>::create(val);
 }
@@ -302,7 +302,7 @@ constexpr __m512i setr512i(int64_t  e0, int64_t  e1, int64_t  e2, int64_t  e3,
  * @tparam Func Type of a function
  * @param func Binary output function
  */
-template <typename PrecisionT, size_t packed_size, typename Func>
+template <typename PrecisionT, std::size_t packed_size, typename Func>
 auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     PL_LOOP_SIMD
@@ -321,7 +321,7 @@ auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
  * As we treat a complex number as two real numbers, this helps when we
  * multiply function outcomes to a AVX intrinsic type.
  */
-template <typename PrecisionT, size_t packed_size, typename Func>
+template <typename PrecisionT, std::size_t packed_size, typename Func>
 auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     PL_LOOP_SIMD

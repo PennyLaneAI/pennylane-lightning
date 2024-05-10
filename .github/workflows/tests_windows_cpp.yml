@@ -53,7 +53,7 @@ jobs:
         exec_model: ${{ fromJson(needs.win-set-matrix-x86.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
     timeout-minutes: 30
-    name: Kokkos core (${{ matrix.exec_model }})
+    name: Build Kokkos core (kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -100,12 +100,13 @@ jobs:
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     timeout-minutes: 30
-    name: C++ tests (Windows)
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
         pl_backend: ["lightning_qubit"]
+    name: C++ Tests (${{ matrix.pl_backend }}, on-${{ matrix.os }})
+
     steps:
       - uses: actions/setup-python@v4
         name: Install Python
@@ -114,7 +115,7 @@ jobs:
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v3
-      
+
       - name: Install dependencies
         run: |
           python -m pip install cmake build ninja scipy
@@ -155,7 +156,7 @@ jobs:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
           if-no-files-found: error
-          
+
       - name: Upload coverage results
         uses: actions/upload-artifact@v3
         with:
@@ -174,7 +175,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.win-set-matrix-x86.outputs.kokkos_version) }}
 
     timeout-minutes: 30
-    name: C++ tests (Windows, Kokkos)
+    name: C++ Tests (${{matrix.pl_backend}}, on-${{ matrix.os }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ matrix.os }}
 
     steps:
