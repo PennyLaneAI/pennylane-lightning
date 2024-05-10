@@ -21,7 +21,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::Experimental::swap;
+using Kokkos::kokkos_swap;
 } // namespace
 /// @endcond
 
@@ -96,8 +96,8 @@ template <class PrecisionT, bool adj = false> struct generatorIsingXXFunctor {
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-        swap(arr[i00], arr[i11]);
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i00], arr[i11]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -143,7 +143,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingXYFunctor {
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
 
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
         arr[i00] = Kokkos::complex<PrecisionT>{0.0, 0.0};
         arr[i11] = Kokkos::complex<PrecisionT>{0.0, 0.0};
     }
@@ -194,7 +194,7 @@ template <class PrecisionT, bool adj = false> struct generatorIsingYYFunctor {
         const auto v00 = arr[i00];
         arr[i00] = -arr[i11];
         arr[i11] = -v00;
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -291,7 +291,7 @@ struct generatorSingleExcitationFunctor {
         arr[i01] *= ComplexT{0, 1};
         arr[i10] *= ComplexT{0, -1};
         arr[i11] = ComplexT{};
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -340,7 +340,7 @@ struct generatorSingleExcitationMinusFunctor {
 
         arr[i01] *= ComplexT{0, 1};
         arr[i10] *= ComplexT{0, -1};
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -393,7 +393,7 @@ struct generatorSingleExcitationPlusFunctor {
         arr[i10] *= ComplexT{0, -1};
         arr[i11] *= -1;
 
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -644,7 +644,7 @@ struct generatorDoubleExcitationMinusFunctor {
 
         arr[i0011] *= ComplexT{0, 1};
         arr[i1100] *= ComplexT{0, -1};
-        swap(arr[i1100], arr[i0011]);
+        kokkos_swap(arr[i1100], arr[i0011]);
     }
 };
 
@@ -753,7 +753,7 @@ struct generatorDoubleExcitationPlusFunctor {
 
         arr[i0011] *= ComplexT{0, -1};
         arr[i1100] *= ComplexT{0, 1};
-        swap(arr[i1100], arr[i0011]);
+        kokkos_swap(arr[i1100], arr[i0011]);
     }
 };
 
@@ -847,7 +847,7 @@ template <class PrecisionT, bool adj = false> struct generatorCRXFunctor {
 
         arr[i00] = Kokkos::complex<PrecisionT>{0.0, 0.0};
         arr[i01] = Kokkos::complex<PrecisionT>{0.0, 0.0};
-        swap(arr[i10], arr[i11]);
+        kokkos_swap(arr[i10], arr[i11]);
     }
 };
 

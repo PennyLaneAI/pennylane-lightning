@@ -21,7 +21,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::Experimental::swap;
+using Kokkos::kokkos_swap;
 } // namespace
 /// @endcond
 
@@ -95,7 +95,7 @@ template <class PrecisionT, bool inverse = false> struct pauliXFunctor {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
-        swap(arr[i0], arr[i1]);
+        kokkos_swap(arr[i0], arr[i1]);
     }
 };
 
@@ -258,7 +258,7 @@ template <class PrecisionT, bool inverse = false> struct cnotFunctor {
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i11 = i00 | rev_wire1_shift | rev_wire0_shift;
 
-        swap(arr[i10], arr[i11]);
+        kokkos_swap(arr[i10], arr[i11]);
     }
 };
 
@@ -388,7 +388,7 @@ template <class PrecisionT, bool inverse = false> struct swapFunctor {
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i10 = i00 | rev_wire1_shift;
         const std::size_t i01 = i00 | rev_wire0_shift;
-        swap(arr[i10], arr[i01]);
+        kokkos_swap(arr[i10], arr[i01]);
     }
 };
 
@@ -455,7 +455,7 @@ template <class PrecisionT, bool inverse = false> struct cSWAPFunctor {
         const std::size_t i101 = i000 | rev_wire2_shift | rev_wire0_shift;
         const std::size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
 
-        swap(arr[i101], arr[i110]);
+        kokkos_swap(arr[i101], arr[i110]);
     }
 };
 
@@ -523,7 +523,7 @@ template <class PrecisionT, bool inverse = false> struct toffoliFunctor {
             i000 | rev_wire2_shift | rev_wire1_shift | rev_wire0_shift;
         const std::size_t i110 = i000 | rev_wire2_shift | rev_wire1_shift;
 
-        swap(arr[i111], arr[i110]);
+        kokkos_swap(arr[i111], arr[i110]);
     }
 };
 
