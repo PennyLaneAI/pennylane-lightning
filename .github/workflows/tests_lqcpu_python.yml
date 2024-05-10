@@ -14,6 +14,7 @@ on:
     paths-ignore:
       - .github
       - '!.github/workflows/tests_lqcpu_python.yml'
+      - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**

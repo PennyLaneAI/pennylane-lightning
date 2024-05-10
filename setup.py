@@ -177,7 +177,7 @@ requirements = [
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core"]
+    packages_list += ["pennylane_lightning.core", "pennylane_lightning.lightning_tensor"]
 else:
     requirements += ["pennylane_lightning==" + version]
 
@@ -187,6 +187,10 @@ if suffix == "gpu":
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
+if suffix == "Qubit":
+    pennylane_plugins.append(
+        "default.tensor = pennylane_lightning.lightning_tensor:LightningTensor"
+    )
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
@@ -222,7 +226,11 @@ if backend == "lightning_qubit":
                 "pennylane_lightning.core": [
                     os.path.join("src", "*"),
                     os.path.join("src", "**", "*"),
-                ]
+                ],
+                "pennylane_lightning.lightning_tensor": [
+                    os.path.join("backends", "*"),
+                    os.path.join("backends", "**", "*"),
+                ],
             },
         }
     )
