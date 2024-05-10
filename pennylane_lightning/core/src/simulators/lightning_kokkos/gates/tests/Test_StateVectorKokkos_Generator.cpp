@@ -47,7 +47,7 @@ using std::size_t;
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                    "[StateVectorKokkos_Generator]", float, double) {
     SECTION("applyGenerator") {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         StateVectorKokkos<TestType> state_vector{num_qubits};
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
@@ -69,7 +69,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
                    "[StateVectorKokkos_Generator]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
 
@@ -122,7 +122,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
         auto result_gate_svp = kokkos_gate_svp.getDataVector();
         auto result_gate_svm = kokkos_gate_svm.getDataVector();
 
-        for (size_t j = 0; j < exp2(num_qubits); j++) {
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
@@ -151,7 +151,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitation",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 
@@ -211,7 +211,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitation",
             kokkos_gate_svm.DeviceToHost(result_gate_svm.data(),
                                          result_gate_svm.size());
 
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(-scale * imag(result_gntr_sv[j]) ==
                       Approx(0.5 *
                              (real(result_gate_svp[j]) -
@@ -243,7 +243,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationMinus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 
@@ -303,7 +303,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationMinus",
             kokkos_gate_svm.DeviceToHost(result_gate_svm.data(),
                                          result_gate_svm.size());
 
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(-scale * imag(result_gntr_sv[j]) ==
                       Approx(0.5 *
                              (real(result_gate_svp[j]) -
@@ -335,7 +335,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         const TestType ep = 1e-3;
         const TestType EP = 1e-4;
 
@@ -395,7 +395,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
             kokkos_gate_svm.DeviceToHost(result_gate_svm.data(),
                                          result_gate_svm.size());
 
-            for (size_t j = 0; j < exp2(num_qubits); j++) {
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(-scale * imag(result_gntr_sv[j]) ==
                       Approx(0.5 *
                              (real(result_gate_svp[j]) -

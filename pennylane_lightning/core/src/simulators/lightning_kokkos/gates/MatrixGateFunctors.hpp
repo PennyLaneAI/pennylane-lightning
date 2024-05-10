@@ -55,7 +55,7 @@ template <class Precision> struct multiQubitOpFunctor {
     multiQubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                         const KokkosComplexVector &matrix_,
                         const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
@@ -117,10 +117,10 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     const std::size_t n_wires = 1;
     const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
-    size_t rev_wire;
-    size_t rev_wire_shift;
-    size_t wire_parity;
-    size_t wire_parity_inv;
+    std::size_t rev_wire;
+    std::size_t rev_wire_shift;
+    std::size_t wire_parity;
+    std::size_t wire_parity_inv;
 
     apply1QubitOpFunctor(
         KokkosComplexVector arr_, std::size_t num_qubits_,
@@ -131,15 +131,16 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
         num_qubits = num_qubits_;
 
         rev_wire = num_qubits - wires_[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t k) const {
-        const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-        const size_t i1 = i0 | rev_wire_shift;
+        const std::size_t i0 =
+            ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        const std::size_t i1 = i0 | rev_wire_shift;
         const Kokkos::complex<PrecisionT> v0 = arr[i0];
         const Kokkos::complex<PrecisionT> v1 = arr[i1];
 
@@ -178,8 +179,8 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1; // Control qubit
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
         parity_low = fillTrailingOnes(rev_wire_min);
@@ -237,7 +238,7 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     apply3QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
@@ -311,7 +312,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     apply4QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
@@ -421,7 +422,7 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     apply5QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const size_t *, Kokkos::HostSpace,
+        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>
             wires_host(wires_.data(), wires_.size());
         Kokkos::resize(wires, wires_host.size());
