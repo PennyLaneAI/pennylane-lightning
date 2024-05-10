@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Update dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` with `pybind11` APIs for C++ layer.
+  [(#701)](https://github.com/PennyLaneAI/pennylane-lightning/pull/701)
+
 * `dynamic_one_shot` deals with post-selection during the post-processing phase, so Lightning-Qubit does not return `None`-valued measurements for mismatching samples anymore.
   [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
   
@@ -29,7 +32,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey
+Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
