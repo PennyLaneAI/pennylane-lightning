@@ -1,3 +1,4 @@
+pybind11
 pytest~=8.0.0
 pytest-benchmark
 pytest-cov

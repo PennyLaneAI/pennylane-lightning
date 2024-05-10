@@ -100,7 +100,3 @@ if (UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD64)|(X64)|(x64)|(x86_64)"))
     message(STATUS "ENABLE AVX for X64 on UNIX compatible system.")
     target_compile_options(lightning_compile_options INTERFACE -mavx)
 endif()
-
-#if(ENABLE_LAPACK)
-#    target_compile_options(lightning_compile_options INTERFACE "-DPL_USE_LAPACK=1")
-#endif()
