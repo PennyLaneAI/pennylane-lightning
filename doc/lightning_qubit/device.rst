@@ -29,7 +29,6 @@ Supported operations and observables
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
-    ~pennylane.CPhase
     ~pennylane.CRot
     ~pennylane.CRX
     ~pennylane.CRY

@@ -53,7 +53,7 @@ class AdjointJacobian final
      */
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
-                               PrecisionT scaling_coeff, size_t idx) {
+                               PrecisionT scaling_coeff, std::size_t idx) {
         jac[idx] = -2 * scaling_coeff *
                    getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                             sv2.getView());
@@ -89,12 +89,12 @@ class AdjointJacobian final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
         // We can assume the trainable params are sorted (from Python)
-        const std::vector<size_t> &tp = jd.getTrainableParams();
-        const size_t tp_size = tp.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &tp = jd.getTrainableParams();
+        const std::size_t tp_size = tp.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         if (!jd.hasTrainableParams()) {
             return;
@@ -107,8 +107,8 @@ class AdjointJacobian final
             "observables provided.");
 
         // Track positions within par and non-par operations
-        size_t trainableParamNumber = tp_size - 1;
-        size_t current_param_idx =
+        std::size_t trainableParamNumber = tp_size - 1;
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
         auto tp_it = tp.rbegin();
         const auto tp_rend = tp.rend();
@@ -154,7 +154,7 @@ class AdjointJacobian final
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
                     for (size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
-                        const size_t idx =
+                        const std::size_t idx =
                             trainableParamNumber + obs_idx * tp_size;
                         updateJacobian(H_lambda[obs_idx], mu, jac,
                                        scalingFactor, idx);
@@ -165,7 +165,7 @@ class AdjointJacobian final
                 current_param_idx--;
             }
             BaseType::applyOperationsAdj(H_lambda, ops,
-                                         static_cast<size_t>(op_idx));
+                                         static_cast<std::size_t>(op_idx));
         }
     }
 };

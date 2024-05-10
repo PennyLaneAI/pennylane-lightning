@@ -77,8 +77,8 @@ class AdjointJacobian final
     inline void
     updateJacobian(const std::vector<StateVectorT> &sv1s,
                    const StateVectorT &sv2, std::span<PrecisionT> &jac,
-                   PrecisionT scaling_coeff, size_t num_observables,
-                   size_t param_index, size_t tp_size,
+                   PrecisionT scaling_coeff, std::size_t num_observables,
+                   std::size_t param_index, std::size_t tp_size,
                    DataBuffer<CFP_t, int> &device_buffer_jac_single_param,
                    std::vector<CFP_t> &host_buffer_jac_single_param) {
         host_buffer_jac_single_param.clear();
@@ -99,7 +99,7 @@ class AdjointJacobian final
             host_buffer_jac_single_param.data(),
             host_buffer_jac_single_param.size(), false);
         for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
-            size_t idx = param_index + obs_idx * tp_size;
+            std::size_t idx = param_index + obs_idx * tp_size;
             jac[idx] =
                 -2 * scaling_coeff * host_buffer_jac_single_param[obs_idx].y;
         }
@@ -130,8 +130,9 @@ class AdjointJacobian final
 
         const auto &obs = jd.getObservables();
 
-        const std::vector<size_t> &trainableParams = jd.getTrainableParams();
-        const size_t tp_size = trainableParams.size();
+        const std::vector<std::size_t> &trainableParams =
+            jd.getTrainableParams();
+        const std::size_t tp_size = trainableParams.size();
 
         // Create a vector of threads for separate GPU executions
         using namespace std::chrono_literals;
@@ -243,11 +244,12 @@ class AdjointJacobian final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
-        const std::vector<size_t> &trainableParams = jd.getTrainableParams();
-        const size_t tp_size = trainableParams.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &trainableParams =
+            jd.getTrainableParams();
+        const std::size_t tp_size = trainableParams.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         PL_ABORT_IF_NOT(
             jac.size() == tp_size * num_observables,
@@ -256,8 +258,8 @@ class AdjointJacobian final
             "observables provided.");
 
         // Track positions within par and non-par operations
-        size_t trainableParamNumber = tp_size - 1;
-        size_t current_param_idx =
+        std::size_t trainableParamNumber = tp_size - 1;
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
         auto tp_it = trainableParams.rbegin();
         const auto tp_rend = trainableParams.rend();
@@ -336,7 +338,7 @@ class AdjointJacobian final
                 current_param_idx--;
             }
             this->applyOperationsAdj(H_lambda, ops,
-                                     static_cast<size_t>(op_idx));
+                                     static_cast<std::size_t>(op_idx));
         }
     }
 };

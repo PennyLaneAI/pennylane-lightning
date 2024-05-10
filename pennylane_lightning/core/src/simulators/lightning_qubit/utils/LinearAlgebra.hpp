@@ -78,16 +78,16 @@ enum class Trans : int {
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
+          std::size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
-              std::complex<T> &result, const size_t data_size) {
+              std::complex<T> &result, const std::size_t data_size) {
 #if defined(_OPENMP)
 #pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
                                   ConstSum(omp_out, omp_in))                   \
     initializer(omp_priv = std::complex<T>{0, 0})
 
-    size_t nthreads = data_size / NTERMS;
+    std::size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
         nthreads = 1;
     }
@@ -111,10 +111,10 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1U
-                                  << 20U)> // NOLINT(readability-magic-numbers)
+          std::size_t STD_CROSSOVER =
+              (1U << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
-                      const size_t data_size) -> std::complex<T> {
+                      const std::size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
@@ -148,10 +148,10 @@ inline auto innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
  * @param data_size Size of data arrays.
  */
 template <class T,
-          size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
+          std::size_t NTERMS = (1U << 19U)> // NOLINT(readability-magic-numbers)
 inline static void
 omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
-               std::complex<T> &result, const size_t data_size) {
+               std::complex<T> &result, const std::size_t data_size) {
 #if defined(_OPENMP)
 #pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
                                   ConstSum(omp_out, omp_in))                   \
@@ -159,7 +159,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #endif
 
 #if defined(_OPENMP)
-    size_t nthreads = data_size / NTERMS;
+    std::size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
         nthreads = 1;
     }
@@ -186,10 +186,10 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @return std::complex<T> Result of inner product operation.
  */
 template <class T,
-          size_t STD_CROSSOVER = (1U
-                                  << 20U)> // NOLINT(readability-magic-numbers)
+          std::size_t STD_CROSSOVER =
+              (1U << 20U)> // NOLINT(readability-magic-numbers)
 inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
-                       const size_t data_size) -> std::complex<T> {
+                       const std::size_t data_size) -> std::complex<T> {
     std::complex<T> result(0, 0);
 
     if constexpr (USE_CBLAS) {
@@ -214,7 +214,7 @@ inline auto innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
  * @brief Calculates the inner-product using the best available method.
  *
  * @see innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
- * const size_t data_size)
+ * const std::size_t data_size)
  */
 template <class T, class AllocA, class AllocB>
 inline auto innerProd(const std::vector<std::complex<T>, AllocA> &v1,
@@ -228,7 +228,7 @@ inline auto innerProd(const std::vector<std::complex<T>, AllocA> &v1,
  * first dataset conjugated.
  *
  * @see innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
- * const size_t data_size)
+ * const std::size_t data_size)
  */
 template <class T, class AllocA, class AllocB>
 inline auto innerProdC(const std::vector<std::complex<T>, AllocA> &v1,
@@ -250,15 +250,16 @@ inline auto innerProdC(const std::vector<std::complex<T>, AllocA> &v1,
  * row-wise.
  */
 template <class T>
-inline static void
-omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
-                  std::complex<T> *v_out, size_t m, size_t n, Trans transpose) {
+inline static void omp_matrixVecProd(const std::complex<T> *mat,
+                                     const std::complex<T> *v_in,
+                                     std::complex<T> *v_out, std::size_t m,
+                                     std::size_t n, Trans transpose) {
     if (!v_out) {
         return;
     }
 
-    size_t row;
-    size_t col;
+    std::size_t row;
+    std::size_t col;
 
     {
         switch (transpose) {
@@ -313,7 +314,7 @@ omp_matrixVecProd(const std::complex<T> *mat, const std::complex<T> *v_in,
 template <class T>
 inline void matrixVecProd(const std::complex<T> *mat,
                           const std::complex<T> *v_in, std::complex<T> *v_out,
-                          size_t m, size_t n,
+                          std::size_t m, std::size_t n,
                           Trans transpose = Trans::NoTranspose) {
     if (!v_out) {
         return;
@@ -339,13 +340,14 @@ inline void matrixVecProd(const std::complex<T> *mat,
  * @brief Calculates the matrix-vector product using the best available method.
  *
  * @see void matrixVecProd(const std::complex<T> *mat, const
- * std::complex<T> *v_in, std::complex<T> *v_out, size_t m, size_t n, size_t
- * nthreads = 1, bool transpose = false)
+ * std::complex<T> *v_in, std::complex<T> *v_out, std::size_t m, std::size_t n,
+ * std::size_t nthreads = 1, bool transpose = false)
  */
 template <class T>
 inline auto matrixVecProd(const std::vector<std::complex<T>> &mat,
-                          const std::vector<std::complex<T>> &v_in, size_t m,
-                          size_t n, Trans transpose = Trans::NoTranspose)
+                          const std::vector<std::complex<T>> &v_in,
+                          std::size_t m, std::size_t n,
+                          Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
@@ -375,16 +377,18 @@ inline auto matrixVecProd(const std::vector<std::complex<T>> &mat,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
-inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
-                               size_t m1, size_t m2, size_t n1, size_t n2) {
-    size_t r;
-    size_t s;
+template <class T,
+          std::size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
+inline static void CFTranspose(const T *mat, T *mat_t, std::size_t m,
+                               std::size_t n, std::size_t m1, std::size_t m2,
+                               std::size_t n1, std::size_t n2) {
+    std::size_t r;
+    std::size_t s;
 
-    size_t r1;
-    size_t s1;
-    size_t r2;
-    size_t s2;
+    std::size_t r1;
+    std::size_t s1;
+    std::size_t r2;
+    std::size_t s2;
 
     r1 = m2 - m1;
     s1 = n2 - n1;
@@ -423,17 +427,19 @@ inline static void CFTranspose(const T *mat, T *mat_t, size_t m, size_t n,
  * @param n1 Index of the first column.
  * @param n2 Index of the last column.
  */
-template <class T, size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
+template <class T,
+          std::size_t BLOCKSIZE = 16> // NOLINT(readability-magic-numbers)
 inline static void CFTranspose(const std::complex<T> *mat,
-                               std::complex<T> *mat_t, size_t m, size_t n,
-                               size_t m1, size_t m2, size_t n1, size_t n2) {
-    size_t r;
-    size_t s;
+                               std::complex<T> *mat_t, std::size_t m,
+                               std::size_t n, std::size_t m1, std::size_t m2,
+                               std::size_t n1, std::size_t n2) {
+    std::size_t r;
+    std::size_t s;
 
-    size_t r1;
-    size_t s1;
-    size_t r2;
-    size_t s2;
+    std::size_t r1;
+    std::size_t s1;
+    std::size_t r2;
+    std::size_t s2;
 
     r1 = m2 - m1;
     s1 = n2 - n1;
@@ -468,7 +474,7 @@ inline static void CFTranspose(const std::complex<T> *mat,
  * @return mat transpose of shape n * m.
  */
 template <class T, class Allocator = std::allocator<T>>
-inline auto Transpose(std::span<const T> mat, size_t m, size_t n,
+inline auto Transpose(std::span<const T> mat, std::size_t m, std::size_t n,
                       Allocator allocator = std::allocator<T>())
     -> std::vector<T, Allocator> {
     if (mat.size() != m * n) {
@@ -495,8 +501,8 @@ inline auto Transpose(std::span<const T> mat, size_t m, size_t n,
  * @return mat transpose of shape n * m.
  */
 template <class T, class Allocator>
-inline auto Transpose(const std::vector<T, Allocator> &mat, size_t m, size_t n)
-    -> std::vector<T, Allocator> {
+inline auto Transpose(const std::vector<T, Allocator> &mat, std::size_t m,
+                      std::size_t n) -> std::vector<T, Allocator> {
     return Transpose(std::span<const T>{mat}, m, n, mat.get_allocator());
 }
 
@@ -512,14 +518,14 @@ inline auto Transpose(const std::vector<T, Allocator> &mat, size_t m, size_t n)
  * @param n Number of columns of `mat`.
  */
 template <class T>
-inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
-                          size_t n) {
+inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, std::size_t m,
+                          std::size_t n) {
     if (!v_out) {
         return;
     }
 
-    size_t i;
-    size_t j;
+    std::size_t i;
+    std::size_t j;
 
     constexpr T z = static_cast<T>(0.0);
     bool allzero = true;
@@ -549,12 +555,12 @@ inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t m,
  * @brief Calculates the vector-matrix product using the best available method.
  *
  * @see inline void vecMatrixProd(const T *v_in,
- * const T *mat, T *v_out, size_t m, size_t n)
+ * const T *mat, T *v_out, std::size_t m, std::size_t n)
  */
 template <class T, class AllocA, class AllocB>
 inline auto vecMatrixProd(const std::vector<T, AllocA> &v_in,
-                          const std::vector<T, AllocB> &mat, size_t m, size_t n)
-    -> std::vector<T> {
+                          const std::vector<T, AllocB> &mat, std::size_t m,
+                          std::size_t n) -> std::vector<T> {
     if (v_in.size() != m) {
         throw std::invalid_argument("Invalid size for the input vector");
     }
@@ -572,13 +578,13 @@ inline auto vecMatrixProd(const std::vector<T, AllocA> &v_in,
 /**
  * @brief Calculates the vector-matrix product using the best available method.
  *
- * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out, size_t
- * m, size_t n)
+ * @see inline void vecMatrixProd(const T *v_in, const T *mat, T *v_out,
+ * std::size_t m, std::size_t n)
  */
 template <class T, class AllocA, class AllocB, class AllocC>
 inline void
 vecMatrixProd(std::vector<T, AllocA> &v_out, const std::vector<T, AllocB> &v_in,
-              const std::vector<T, AllocC> &mat, size_t m, size_t n) {
+              const std::vector<T, AllocC> &mat, std::size_t m, std::size_t n) {
     if (mat.size() != m * n) {
         throw std::invalid_argument(
             "Invalid number of rows and columns for the input matrix");
@@ -610,12 +616,12 @@ vecMatrixProd(std::vector<T, AllocA> &v_out, const std::vector<T, AllocB> &v_in,
  *  To transpose a matrix efficiently, check Util::Transpose
  */
 
-template <class T, size_t STRIDE = 2>
+template <class T, std::size_t STRIDE = 2>
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 inline void omp_matrixMatProd(const std::complex<T> *m_left,
                               const std::complex<T> *m_right,
-                              std::complex<T> *m_out, size_t m, size_t n,
-                              size_t k, Trans transpose) {
+                              std::complex<T> *m_out, std::size_t m,
+                              std::size_t n, std::size_t k, Trans transpose) {
     if (!m_out) {
         return;
     }
@@ -655,9 +661,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
     firstprivate(m, n, k)
 #endif
         for (size_t row = 0; row < m; row += STRIDE) {
-            size_t i;
-            size_t j;
-            size_t l;
+            std::size_t i;
+            std::size_t j;
+            std::size_t l;
             std::complex<T> t;
             for (size_t col = 0; col < n; col += STRIDE) {
                 for (size_t blk = 0; blk < k; blk += STRIDE) {
@@ -696,8 +702,8 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 template <class T>
 inline void matrixMatProd(const std::complex<T> *m_left,
                           const std::complex<T> *m_right,
-                          std::complex<T> *m_out, size_t m, size_t n, size_t k,
-                          Trans transpose = Trans::NoTranspose) {
+                          std::complex<T> *m_out, std::size_t m, std::size_t n,
+                          std::size_t k, Trans transpose = Trans::NoTranspose) {
     if (!m_out) {
         return;
     }
@@ -728,16 +734,16 @@ inline void matrixMatProd(const std::complex<T> *m_left,
  * @brief Calculates the matrix-matrix product using the best available method.
  *
  * @see void matrixMatProd(const std::complex<T> *m_left, const std::complex<T>
- * *m_right, std::complex<T> *m_out, size_t m, size_t n, size_t k, size_t
- * nthreads = 1, bool transpose = false)
+ * *m_right, std::complex<T> *m_out, std::size_t m, std::size_t n, std::size_t
+ * k, std::size_t nthreads = 1, bool transpose = false)
  *
  * @note consider transpose=true, to get a better performance.
  *  To transpose a matrix efficiently, check Util::Transpose
  */
 template <class T>
 inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
-                          const std::vector<std::complex<T>> m_right, size_t m,
-                          size_t n, size_t k,
+                          const std::vector<std::complex<T>> m_right,
+                          std::size_t m, std::size_t n, std::size_t k,
                           Trans transpose = Trans::NoTranspose)
     -> std::vector<std::complex<T>> {
     if (m_left.size() != m * k) {
@@ -770,8 +776,9 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
  * @param x Vector to add
  * @param y Vector to be added
  */
-template <class T,
-          size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
+template <
+    class T,
+    std::size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
 void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
                      std::complex<T> *y) {
     if (dim < STD_CROSSOVER) {

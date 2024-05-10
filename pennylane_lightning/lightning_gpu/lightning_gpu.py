@@ -150,7 +150,6 @@ allowed_operations = {
     "CZ",
     "PhaseShift",
     "ControlledPhaseShift",
-    "CPhase",
     "RX",
     "RY",
     "RZ",

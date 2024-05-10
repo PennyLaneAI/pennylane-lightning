@@ -323,7 +323,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void applyOperation(Pennylane::Gates::KernelType kernel,
                         const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         auto *arr = this->getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
@@ -339,7 +340,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param params Optional parameter list for parametric gates.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         auto *arr = this->getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -360,9 +362,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param params Optional parameter list for parametric gates.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<std::size_t> &controlled_wires,
                         const std::vector<bool> &controlled_values,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
@@ -386,7 +389,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     template <typename Alloc>
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -410,9 +413,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     template <typename Alloc>
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &controlled_wires,
+                        const std::vector<std::size_t> &controlled_wires,
                         const std::vector<bool> &controlled_values,
-                        const std::vector<size_t> &wires, bool inverse,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
@@ -440,10 +443,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of operator.
      */
-    [[nodiscard]] inline auto
-    applyGenerator(Pennylane::Gates::KernelType kernel,
-                   const std::string &opName, const std::vector<size_t> &wires,
-                   bool adj = false) -> PrecisionT {
+    [[nodiscard]] inline auto applyGenerator(
+        Pennylane::Gates::KernelType kernel, const std::string &opName,
+        const std::vector<std::size_t> &wires, bool adj = false) -> PrecisionT {
         auto *arr = this->getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, this->getNumQubits(), opName, wires, adj);
@@ -457,7 +459,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param adj Indicates whether to use adjoint of operator.
      */
     [[nodiscard]] auto applyGenerator(const std::string &opName,
-                                      const std::vector<size_t> &wires,
+                                      const std::vector<std::size_t> &wires,
                                       bool adj = false) -> PrecisionT {
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -476,10 +478,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param wires Wires the gate applies to.
      * @param adj Indicates whether to use adjoint of operator.
      */
-    [[nodiscard]] auto applyGenerator(
-        const std::string &opName, const std::vector<size_t> &controlled_wires,
-        const std::vector<bool> &controlled_values,
-        const std::vector<size_t> &wires, bool adj = false) -> PrecisionT {
+    [[nodiscard]] auto
+    applyGenerator(const std::string &opName,
+                   const std::vector<std::size_t> &controlled_wires,
+                   const std::vector<bool> &controlled_values,
+                   const std::vector<std::size_t> &wires, bool adj = false)
+        -> PrecisionT {
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
@@ -498,10 +502,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    inline void applyControlledMatrix(
-        const ComplexT *matrix, const std::vector<size_t> &controlled_wires,
-        const std::vector<bool> &controlled_values,
-        const std::vector<size_t> &wires, bool inverse = false) {
+    inline void
+    applyControlledMatrix(const ComplexT *matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
@@ -538,9 +544,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     inline void
     applyControlledMatrix(const std::vector<ComplexT> matrix,
-                          const std::vector<size_t> &controlled_wires,
+                          const std::vector<std::size_t> &controlled_wires,
                           const std::vector<bool> &controlled_values,
-                          const std::vector<size_t> &wires,
+                          const std::vector<std::size_t> &wires,
                           bool inverse = false) {
         applyControlledMatrix(matrix.data(), controlled_wires,
                               controlled_values, wires, inverse);
@@ -557,7 +563,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     inline void applyMatrix(Pennylane::Gates::KernelType kernel,
                             const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
@@ -579,7 +585,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     inline void applyMatrix(Pennylane::Gates::KernelType kernel,
                             const std::vector<ComplexT> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
@@ -597,7 +603,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         using Pennylane::Gates::MatrixOperation;
 
@@ -625,7 +631,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     template <typename Alloc>
     inline void applyMatrix(const std::vector<ComplexT, Alloc> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
@@ -645,8 +651,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void collapse(const std::size_t wire, const bool branch) {
         auto *arr = this->getData();
-        const size_t stride = pow(2, this->num_qubits_ - (1 + wire));
-        const size_t vec_size = pow(2, this->num_qubits_);
+        const std::size_t stride = pow(2, this->num_qubits_ - (1 + wire));
+        const std::size_t vec_size = pow(2, this->num_qubits_);
         const auto section_size = vec_size / stride;
         const auto half_section_size = section_size / 2;
 
@@ -655,9 +661,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // *_*_*_*_ for stride 1
         // **__**__ for stride 2
         // ****____ for stride 4
-        const size_t k = branch ? 0 : 1;
+        const std::size_t k = branch ? 0 : 1;
         for (size_t idx = 0; idx < half_section_size; idx++) {
-            const size_t offset = stride * (k + 2 * idx);
+            const std::size_t offset = stride * (k + 2 * idx);
             for (size_t ids = 0; ids < stride; ids++) {
                 arr[offset + ids] = {0., 0.};
             }

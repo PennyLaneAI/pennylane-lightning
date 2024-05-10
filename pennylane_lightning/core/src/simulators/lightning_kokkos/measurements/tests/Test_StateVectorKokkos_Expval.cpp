@@ -44,7 +44,7 @@ using std::size_t;
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::NonExistent",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorKokkos<TestType> kokkos_sv{num_qubits};
     auto m = Measurements(kokkos_sv);
 
@@ -56,7 +56,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::NonExistent",
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueIdentity",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ONE = TestType(1);
     StateVectorKokkos<TestType> kokkos_sv{num_qubits};
     auto m = Measurements(kokkos_sv);
@@ -74,7 +74,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueIdentity",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliX",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -118,7 +118,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliX",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliY",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -181,7 +181,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValuePauliZ",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueHadamard",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
         SECTION("Using expval") {
@@ -199,7 +199,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueSingleQubitOp",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
@@ -223,7 +223,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueTwoQubitOp",
                    "[StateVectorKokkosManaged_Expval]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
         SECTION("Using expval") {
@@ -251,17 +251,17 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::getExpectationValueTwoQubitOp",
 TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval",
                    "[StateVectorKokkos_Expval]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     SECTION("GetExpectationIdentity") {
         StateVectorKokkos<TestType> kokkos_sv{num_qubits};
         auto m = Measurements(kokkos_sv);
-        std::vector<size_t> wires{0, 1, 2};
+        std::vector<std::size_t> wires{0, 1, 2};
 
         kokkos_sv.applyOperation("Hadamard", {0}, false);
         kokkos_sv.applyOperation("CNOT", {0, 1}, false);
         kokkos_sv.applyOperation("CNOT", {1, 2}, false);
 
-        size_t matrix_dim = static_cast<size_t>(1U) << num_qubits;
+        std::size_t matrix_dim = static_cast<std::size_t>(1U) << num_qubits;
         std::vector<ComplexT> matrix(matrix_dim * matrix_dim);
 
         for (size_t i = 0; i < matrix.size(); i++) {
@@ -283,7 +283,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval",
         StateVectorKokkos<TestType> kokkos_sv{init_state.data(),
                                               init_state.size()};
         auto m = Measurements(kokkos_sv);
-        std::vector<size_t> wires{0, 1, 2};
+        std::vector<std::size_t> wires{0, 1, 2};
         std::vector<ComplexT> matrix{
             {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
             {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
@@ -345,9 +345,9 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         auto m = Measurements(kokkos_sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = Hamiltonian<StateVectorKokkos<TestType>>::create({0.3, 0.5},
                                                                    {X0, Z1});
@@ -369,9 +369,9 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         auto m = Measurements(kokkos_sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Z1});
         auto res = m.expval(*ob);
@@ -385,7 +385,7 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     using VectorT = TestVector<std::complex<TestType>>;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 7;
+    const std::size_t num_qubits = 7;
     VectorT sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
 
     StateVectorKokkos<TestType> kokkos_sv(
@@ -393,15 +393,15 @@ TEMPLATE_TEST_CASE("Test expectation value of NQubit Hermitian",
     auto m = Measurements(kokkos_sv);
 
     auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliX", std::vector<size_t>{0});
+        "PauliX", std::vector<std::size_t>{0});
     auto Y1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliY", std::vector<size_t>{1});
+        "PauliY", std::vector<std::size_t>{1});
     auto Z2 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliZ", std::vector<size_t>{2});
+        "PauliZ", std::vector<std::size_t>{2});
     auto X3 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliX", std::vector<size_t>{3});
+        "PauliX", std::vector<std::size_t>{3});
     auto Y4 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliY", std::vector<size_t>{4});
+        "PauliY", std::vector<std::size_t>{4});
 
     ComplexT j{0.0, 1.0};
     ComplexT u{1.0, 0.0};
@@ -545,9 +545,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
                                               init_state.size()};
         auto m = Measurements(kokkos_sv);
 
-        std::vector<size_t> index_ptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-        std::vector<size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
-                                       4, 7, 5, 6, 5, 6, 4, 7};
+        std::vector<std::size_t> index_ptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
+        std::vector<std::size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
+                                            4, 7, 5, 6, 5, 6, 4, 7};
         std::vector<ComplexT> values = {
             {3.1415, 0.0},  {0.0, -3.1415}, {3.1415, 0.0}, {0.0, 3.1415},
             {0.0, -3.1415}, {3.1415, 0.0},  {0.0, 3.1415}, {3.1415, 0.0},
@@ -574,11 +574,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval_Sparse",
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(statevector);
-        const size_t num_qubits = 3;
-        const size_t data_size = Pennylane::Util::exp2(num_qubits);
+        const std::size_t num_qubits = 3;
+        const std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<size_t> row_map;
-        std::vector<size_t> entries;
+        std::vector<std::size_t> row_map;
+        std::vector<std::size_t> entries;
         std::vector<ComplexT> values;
         write_CSR_vectors(row_map, entries, values, data_size);
 

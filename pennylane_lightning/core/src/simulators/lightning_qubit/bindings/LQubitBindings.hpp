@@ -120,9 +120,9 @@ void applyControlledMatrix(
     StateVectorT &st,
     const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
                       py::array::c_style | py::array::forcecast> &matrix,
-    const std::vector<size_t> &controlled_wires,
+    const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
-    const std::vector<size_t> &wires, bool inverse = false) {
+    const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
     st.applyControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
@@ -146,9 +146,9 @@ void registerControlledGate(PyClass &pyclass) {
             const std::string doc = "Apply the " + gate_name + " gate.";
             auto func = [gate_name = gate_name](
                             StateVectorT &sv,
-                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,
-                            const std::vector<size_t> &wires, bool inverse,
+                            const std::vector<std::size_t> &wires, bool inverse,
                             const std::vector<ParamT> &params) {
                 sv.applyOperation(gate_name, controlled_wires,
                                   controlled_values, wires, inverse, params);
@@ -179,7 +179,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const size_t index) {
+            [](StateVectorT &sv, const std::size_t index) {
                 sv.setBasisState(index);
             },
             "Create Basis State.")
@@ -214,7 +214,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 const py::buffer_info numpyArrayInfo = state.request();
                 auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
                 const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
                 if (length) {
                     device_sv.updateData(data_ptr, length);
                 }
@@ -245,7 +245,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = size_t;
+    using sparse_index_type = std::size_t;
     using np_arr_sparse_ind =
         py::array_t<sparse_index_type,
                     py::array::c_style | py::array::forcecast>;
@@ -253,7 +253,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
@@ -271,12 +271,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a sparse Hamiltonian.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(
@@ -292,27 +292,28 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.")
-        .def("generate_mcmc_samples",
-             [](Measurements<StateVectorT> &M, size_t num_wires,
-                const std::string &kernelname, size_t num_burnin,
-                size_t num_shots) {
-                 std::vector<size_t> &&result = M.generate_samples_metropolis(
-                     kernelname, num_burnin, num_shots);
+        .def("generate_mcmc_samples", [](Measurements<StateVectorT> &M,
+                                         std::size_t num_wires,
+                                         const std::string &kernelname,
+                                         std::size_t num_burnin,
+                                         std::size_t num_shots) {
+            std::vector<std::size_t> &&result = M.generate_samples_metropolis(
+                kernelname, num_burnin, num_shots);
 
-                 const size_t ndim = 2;
-                 const std::vector<size_t> shape{num_shots, num_wires};
-                 constexpr auto sz = sizeof(size_t);
-                 const std::vector<size_t> strides{sz * num_wires, sz};
-                 // return 2-D NumPy array
-                 return py::array(py::buffer_info(
-                     result.data(), /* data as contiguous array  */
-                     sz,            /* size of one scalar        */
-                     py::format_descriptor<size_t>::format(), /* data type */
-                     ndim,   /* number of dimensions      */
-                     shape,  /* shape of the matrix       */
-                     strides /* strides for each axis     */
-                     ));
-             });
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
+            constexpr auto sz = sizeof(size_t);
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
+            // return 2-D NumPy array
+            return py::array(py::buffer_info(
+                result.data(), /* data as contiguous array  */
+                sz,            /* size of one scalar        */
+                py::format_descriptor<std::size_t>::format(), /* data type */
+                ndim,   /* number of dimensions      */
+                shape,  /* shape of the matrix       */
+                strides /* strides for each axis     */
+                ));
+        });
 }
 
 /**
@@ -374,7 +375,7 @@ template <class StateVectorT, class np_arr_c>
 auto registerVJP(VectorJacobianProduct<StateVectorT> &calculate_vjp,
                  const StateVectorT &sv,
                  const OpsData<StateVectorT> &operations, const np_arr_c &dy,
-                 const std::vector<size_t> &trainableParams)
+                 const std::vector<std::size_t> &trainableParams)
     -> py::array_t<std::complex<typename StateVectorT::PrecisionT>> {
     /* Do not cast non-conforming array. Argument trainableParams
      * should only contain indices for operations.
@@ -395,7 +396,7 @@ auto registerVJP(VectorJacobianProduct<StateVectorT> &calculate_vjp,
     calculate_vjp(
         std::span{vjp}, jd,
         std::span{static_cast<const std::complex<PrecisionT> *>(buffer.ptr),
-                  static_cast<size_t>(buffer.size)});
+                  static_cast<std::size_t>(buffer.size)});
 
     return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
 }

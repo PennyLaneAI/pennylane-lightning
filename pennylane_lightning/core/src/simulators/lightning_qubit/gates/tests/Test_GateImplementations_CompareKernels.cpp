@@ -84,7 +84,8 @@ auto kernelsImplementingMatrix(MatrixOperation mat_op)
  * the results.
  */
 template <typename PrecisionT, class RandomEngine>
-void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
+void testApplyGate(RandomEngine &re, GateOperation gate_op,
+                   std::size_t num_qubits) {
     using Pennylane::Gates::Constant::gate_names;
 
     const auto implementing_kernels =
@@ -132,13 +133,13 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
 TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
                    "[GateImplementations_CompareKernels]", float, double) {
     /* We test all gate operations up to the number of qubits we give */
-    constexpr size_t max_num_qubits = 5;
+    constexpr std::size_t max_num_qubits = 5;
     std::mt19937 re{1337};
     for_each_enum<GateOperation>([&](GateOperation gate_op) {
-        const size_t min_num_qubits = [=] {
+        const std::size_t min_num_qubits = [=] {
             if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates,
                                gate_op)) {
-                return size_t{1};
+                return std::size_t{1};
             }
             return lookup(Pennylane::Gates::Constant::gate_wires, gate_op);
         }();
@@ -150,8 +151,8 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
 }
 
 template <typename PrecisionT, class RandomEngine>
-void testMatrixOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
-                  bool inverse) {
+void testMatrixOp(RandomEngine &re, std::size_t num_qubits,
+                  std::size_t num_wires, bool inverse) {
     using Pennylane::Gates::Constant::matrix_names;
     PL_ASSERT(num_wires > 0);
 
@@ -208,7 +209,7 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
                    "[Test_GateImplementations_CompareKernels]", float, double) {
     std::mt19937 re{1337};
 
-    const size_t num_qubits = 5;
+    const std::size_t num_qubits = 5;
 
     for (bool inverse : {true, false}) {
         for (size_t num_wires = 1; num_wires <= 5; num_wires++) {

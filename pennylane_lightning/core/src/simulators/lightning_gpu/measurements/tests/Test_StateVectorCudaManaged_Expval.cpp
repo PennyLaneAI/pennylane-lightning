@@ -47,7 +47,7 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
                    double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ONE = TestType(1);
     StateVectorT sv{num_qubits};
     sv.initSV();
@@ -66,7 +66,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
                    double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -118,7 +118,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
                    double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -186,7 +186,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float,
                    double) {
     {
         using StateVectorT = StateVectorCudaManaged<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
         SECTION("Using expval") {
@@ -205,18 +205,18 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
                    "[StateVectorCudaManaged_Expval]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     SECTION("GetExpectationIdentity") {
         StateVectorT sv{num_qubits};
         sv.initSV();
         auto m = Measurements(sv);
-        std::vector<size_t> wires{0, 1, 2};
+        std::vector<std::size_t> wires{0, 1, 2};
 
         sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                            {{0}, {0, 1}, {1, 2}}, {{false}, {false}, {false}});
 
-        size_t matrix_dim = static_cast<size_t>(1U) << num_qubits;
+        std::size_t matrix_dim = static_cast<std::size_t>(1U) << num_qubits;
         std::vector<ComplexT> matrix(matrix_dim * matrix_dim);
 
         for (size_t i = 0; i < matrix.size(); i++) {
@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
                                          {0.3, 0.4}, {0.4, 0.5}};
         StateVectorT sv{init_state.data(), init_state.size()};
         auto m = Measurements(sv);
-        std::vector<size_t> wires{0, 1, 2};
+        std::vector<std::size_t> wires{0, 1, 2};
         std::vector<ComplexT> matrix{
             {0.5, 0.0},  {0.2, 0.5},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5},
             {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},  {0.2, -0.5}, {0.3, 0.0},
@@ -298,9 +298,9 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         auto m = Measurements(sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.expval(*ob);
@@ -321,9 +321,9 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         auto m = Measurements(sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
         auto res = m.expval(*ob);
@@ -374,8 +374,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval_Sparse",
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(sv);
-        const size_t num_qubits = 3;
-        size_t data_size = Pennylane::Util::exp2(num_qubits);
+        const std::size_t num_qubits = 3;
+        std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
         std::vector<IdxT> row_map;
         std::vector<IdxT> entries;
