@@ -52,7 +52,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXY",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.267462841882, 0.010768564798},
@@ -112,7 +112,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRX",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        size_t num_qubits = 1;
+        std::size_t num_qubits = 1;
         std::vector<TestType> angles = {0.1, 0.6};
         std::vector<std::vector<ComplexT>> expected_results{
             std::vector<ComplexT>{ComplexT{0.9987502603949663, 0.0},
@@ -153,7 +153,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRY",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        size_t num_qubits = 1;
+        std::size_t num_qubits = 1;
         const std::vector<TestType> angles{0.2, 0.7, 2.9};
         std::vector<std::vector<ComplexT>> expected_results{
             std::vector<ComplexT>{{0.8731983044562817, 0.04786268954660339},
@@ -197,7 +197,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRZ",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        size_t num_qubits = 3;
+        std::size_t num_qubits = 3;
         const std::vector<TestType> angles{0.2, 0.7, 2.9};
         const ComplexT coef(1.0 / (2 * std::sqrt(2)), 0);
 
@@ -249,7 +249,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
     const bool inverse = GENERATE(false, true);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     const TestType sign = (inverse) ? -1.0 : 1.0;
@@ -303,9 +303,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyGlobalPhase",
                    "[StateVectorKokkosManaged_Param]", double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const size_t index = GENERATE(0, 1, 2);
+    const std::size_t index = GENERATE(0, 1, 2);
     const TestType param = 0.234;
     const ComplexT phase = Kokkos::exp(ComplexT{0, (inverse) ? param : -param});
 
@@ -325,9 +325,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
                    "[StateVectorKokkosManaged_Param]", double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const size_t index = GENERATE(0, 1, 2);
+    const std::size_t index = GENERATE(0, 1, 2);
     /* The `phase` array contains the diagonal entries of the controlled-phase
        operator. It can be created in Python using the following command
 
@@ -359,7 +359,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
                    "[StateVectorKokkosManaged_Param]", double) {
     const bool inverse = GENERATE(false, true);
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 2.4};
     const TestType sign = (inverse) ? -1.0 : 1.0;
@@ -398,7 +398,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyRot",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     const std::vector<std::vector<TestType>> angles{
         std::vector<TestType>{0.3, 0.8, 2.4},
         std::vector<TestType>{0.5, 1.1, 3.0},
@@ -439,7 +439,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
     const bool inverse = GENERATE(false, true);
 
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
     std::vector<ComplexT> expected_results(8);
@@ -471,7 +471,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyCRot",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -537,7 +537,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -603,7 +603,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -655,7 +655,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -709,7 +709,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitation",
     const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -752,7 +752,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationMinus",
     const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -795,7 +795,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applySingleExcitationPlus",
     const bool inverse = GENERATE(false, true);
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -847,7 +847,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitation",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -934,7 +934,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationMinus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -1021,7 +1021,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyDoubleExcitationPlus",
                  std::pair<std::size_t, std::size_t>{3, 3});
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         std::vector<ComplexT> ini_st{
             ComplexT{0.125681356503, 0.252712197380},
@@ -1105,11 +1105,11 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
         1U << 30U, 1U << 31U};
 
     // Defining the State Vector that will be measured.
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     StateVectorKokkos<TestType> measure_sv{num_qubits};
 
     std::vector<std::string> gates;
-    std::vector<std::vector<size_t>> wires;
+    std::vector<std::vector<std::size_t>> wires;
     std::vector<bool> inv_op(num_qubits * 2, false);
     std::vector<std::vector<TestType>> phase;
 
@@ -1132,14 +1132,14 @@ TEMPLATE_TEST_CASE("Sample", "[StateVectorKokkosManaged_Param]", float,
         0.67078706, 0.03062806, 0.0870997,  0.00397696,
         0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
-    size_t N = std::pow(2, num_qubits);
-    size_t num_samples = 100000;
+    std::size_t N = std::pow(2, num_qubits);
+    std::size_t num_samples = 100000;
 
     auto m = Measures::Measurements(measure_sv);
     auto samples = m.generate_samples(num_samples);
 
-    std::vector<size_t> counts(N, 0);
-    std::vector<size_t> samples_decimal(num_samples, 0);
+    std::vector<std::size_t> counts(N, 0);
+    std::vector<std::size_t> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
     for (size_t i = 0; i < num_samples; i++) {
@@ -1168,7 +1168,7 @@ TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     std::mt19937_64 re{1337};
-    const size_t num_qubits = 7;
+    const std::size_t num_qubits = 7;
     auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
 
     StateVectorKokkos<TestType> kokkos_sv(
@@ -1178,15 +1178,15 @@ TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
     auto m = Measurements(kokkos_sv);
 
     auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliX", std::vector<size_t>{0});
+        "PauliX", std::vector<std::size_t>{0});
     auto Y1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliY", std::vector<size_t>{1});
+        "PauliY", std::vector<std::size_t>{1});
     auto Z2 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliZ", std::vector<size_t>{2});
+        "PauliZ", std::vector<std::size_t>{2});
     auto X3 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliX", std::vector<size_t>{3});
+        "PauliX", std::vector<std::size_t>{3});
     auto Y4 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-        "PauliY", std::vector<size_t>{4});
+        "PauliY", std::vector<std::size_t>{4});
 
     ComplexT j{0.0, 1.0};
     ComplexT u{1.0, 0.0};

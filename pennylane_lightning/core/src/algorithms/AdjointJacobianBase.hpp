@@ -53,7 +53,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
     inline void applyOperations(UpdatedStateVectorT &state,
                                 const OpsData<StateVectorT> &operations,
                                 bool adj = false) {
-        for (size_t op_idx = 0; op_idx < operations.getOpsName().size();
+        for (std::size_t op_idx = 0; op_idx < operations.getOpsName().size();
              op_idx++) {
             if (operations.getOpsControlledWires()[op_idx].empty()) {
                 state.applyOperation(operations.getOpsName()[op_idx],
@@ -86,7 +86,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
     template <class UpdatedStateVectorT>
     inline void applyOperationAdj(UpdatedStateVectorT &state,
                                   const OpsData<StateVectorT> &operations,
-                                  size_t op_idx) {
+                                  std::size_t op_idx) {
         if (operations.getOpsControlledWires()[op_idx].empty()) {
             state.applyOperation(operations.getOpsName()[op_idx],
                                  operations.getOpsWires()[op_idx],
@@ -115,7 +115,7 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      */
     inline void applyOperationsAdj(std::vector<StateVectorT> &states,
                                    const OpsData<StateVectorT> &operations,
-                                   size_t op_idx) {
+                                   std::size_t op_idx) {
         for (auto &state : states) {
             applyOperationAdj(state, operations, op_idx);
         }
@@ -132,8 +132,8 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @return PrecisionT Generator scaling coefficient.
      */
     inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
-                               const std::vector<size_t> &wires, const bool adj)
-        -> PrecisionT {
+                               const std::vector<std::size_t> &wires,
+                               const bool adj) -> PrecisionT {
         return sv.applyGenerator(op_name, wires, adj);
     }
 
@@ -150,10 +150,10 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
      * @return PrecisionT Generator scaling coefficient.
      */
     inline auto applyGenerator(StateVectorT &sv, const std::string &op_name,
-                               const std::vector<size_t> &controlled_wires,
+                               const std::vector<std::size_t> &controlled_wires,
                                const std::vector<bool> &controlled_values,
-                               const std::vector<size_t> &wires, const bool adj)
-        -> PrecisionT {
+                               const std::vector<std::size_t> &wires,
+                               const bool adj) -> PrecisionT {
         return sv.applyGenerator(op_name, controlled_wires, controlled_values,
                                  wires, adj);
     }
@@ -182,8 +182,8 @@ template <class StateVectorT, class Derived> class AdjointJacobianBase {
         std::vector<StateVectorT> &states, const StateVectorT &reference_state,
         const std::vector<std::shared_ptr<Observable<StateVectorT>>>
             &observables) {
-        size_t num_observables = observables.size();
-        for (size_t i = 0; i < num_observables; i++) {
+        std::size_t num_observables = observables.size();
+        for (std::size_t i = 0; i < num_observables; i++) {
             states[i].updateData(reference_state);
             applyObservable(states[i], *observables[i]);
         }

@@ -29,8 +29,8 @@ template <class StateVectorT>
 class JacobianDataMPI final : public JacobianData<StateVectorT> {
   private:
     using BaseType = JacobianData<StateVectorT>;
-    const size_t numGlobalQubits_;
-    const size_t numLocalQubits_;
+    const std::size_t numGlobalQubits_;
+    const std::size_t numLocalQubits_;
 
     MPIManager mpi_manager_;
     const DevTag<int> dev_tag_;
@@ -62,7 +62,7 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
      */
     JacobianDataMPI(size_t num_params, const StateVectorT &sv,
                     std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
-                    OpsData<StateVectorT> ops, std::vector<size_t> trainP)
+                    OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : JacobianData<StateVectorT>(num_params, sv.getLength(), sv.getData(),
                                      obs, ops, trainP),
           numGlobalQubits_(sv.getNumGlobalQubits()),
@@ -85,11 +85,11 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
     /**
      * @brief Get the number of wires distributed across devices.
      */
-    auto getNumGlobalQubits() const -> size_t { return numGlobalQubits_; }
+    auto getNumGlobalQubits() const -> std::size_t { return numGlobalQubits_; }
 
     /**
      * @brief Get the number of wires within the local devices.
      */
-    auto getNumLocalQubits() const -> size_t { return numLocalQubits_; }
+    auto getNumLocalQubits() const -> std::size_t { return numLocalQubits_; }
 };
 } // namespace Pennylane::Algorithms

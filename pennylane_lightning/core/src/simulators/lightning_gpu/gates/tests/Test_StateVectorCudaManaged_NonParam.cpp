@@ -1134,7 +1134,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
             init_state[0], init_state[2], init_state[4], init_state[6]};
 
         // default setting of the number of threads in a block is 256.
-        const size_t threads_per_block = 1024;
+        const std::size_t threads_per_block = 1024;
 
         sv.template setStateVector<index_type, threads_per_block>(
             values.size(), values.data(), indices.data(), false);
@@ -1165,7 +1165,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
         StateVectorCudaManaged<TestType> sv{num_qubits};
         sv.CopyHostDataToGpu(init_state.data(), init_state.size());
 
-        size_t index = 0;
+        std::size_t index = 0;
         std::complex<PrecisionT> values = init_state[1];
 
         sv.setBasisState(values, index, false);

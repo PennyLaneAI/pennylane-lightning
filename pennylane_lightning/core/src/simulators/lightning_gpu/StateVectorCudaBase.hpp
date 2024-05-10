@@ -153,7 +153,8 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      * @param sv Complex data pointer to receive data from device.
      */
     inline void CopyGpuDataToHost(std::complex<Precision> *host_sv,
-                                  size_t length, bool async = false) const {
+                                  std::size_t length,
+                                  bool async = false) const {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
         data_buffer_->CopyGpuDataToHost(host_sv, length, async);
@@ -202,13 +203,13 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      *
      */
     void initSV(bool async = false) {
-        size_t index = 0;
+        std::size_t index = 0;
         const std::complex<Precision> value(1, 0);
         static_cast<Derived *>(this)->setBasisState(value, index, async);
     };
 
   protected:
-    using ParFunc = std::function<void(const std::vector<size_t> &, bool,
+    using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;
     using FMap = std::unordered_map<std::string, ParFunc>;
 

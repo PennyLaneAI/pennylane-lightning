@@ -15,7 +15,7 @@
 /**
  * @file
  * Defines a class for the measurement of observables in quantum states
- * represented by a Lightning Qubit StateVector class.
+ * represented by a Lightning GPU StateVector class.
  */
 
 #pragma once
@@ -91,7 +91,8 @@ class Measurements final
      * order.
      * @return std::vector<PrecisionT>
      */
-    auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+    auto probs(const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()) ||
                             std::is_sorted(wires.rbegin(), wires.rend()),
                         "LightningGPU does not currently support out-of-order "
@@ -153,7 +154,7 @@ class Measurements final
      * @return std::vector<PrecisionT>
      */
     auto probs() -> std::vector<PrecisionT> {
-        std::vector<size_t> wires;
+        std::vector<std::size_t> wires;
         for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
@@ -171,7 +172,7 @@ class Measurements final
      * in lexicographic order.
      */
     std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  size_t num_shots = 0) {
+                                  std::size_t num_shots = 0) {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -196,8 +197,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      */
 
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  size_t num_shots) {
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
+                                  std::size_t num_shots) {
         PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()),
                         "LightningGPU does not currently support out-of-order "
                         "wire indices with probability calculations");
@@ -210,16 +211,16 @@ class Measurements final
      *
      * @param num_samples Number of Samples
      *
-     * @return std::vector<size_t> A 1-d array storing the samples.
+     * @return std::vector<std::size_t> A 1-d array storing the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
+    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         const int bitStringLen = this->_statevector.getNumQubits();
 
         std::vector<int> bitOrdering(num_qubits);
@@ -240,12 +241,12 @@ class Measurements final
         for (size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
         }
-        std::vector<size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, size_t> cache;
+        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
+        std::unordered_map<size_t, std::size_t> cache;
         std::vector<custatevecIndex_t> bitStrings(num_samples);
 
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
         // create sampler and check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerCreate(
             this->_statevector.getCusvHandle(), this->_statevector.getData(),
@@ -276,7 +277,7 @@ class Measurements final
             auto idx = bitStrings[i];
             // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
-                size_t cache_id = cache[idx];
+                std::size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
                           samples.begin() + i * num_qubits);
@@ -348,8 +349,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    auto expval(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto expval(const std::string &operation,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
         std::vector<ComplexT> gate_matrix = {};
         return this->expval_(operation, wires, params, gate_matrix);
@@ -366,7 +367,7 @@ class Measurements final
      */
     template <typename op_type>
     auto expval(const std::vector<op_type> &operations_list,
-                const std::vector<std::vector<size_t>> &wires_list)
+                const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
@@ -412,8 +413,9 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -425,7 +427,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<ComplexT> &matrix,
-                const std::vector<size_t> &wires) -> PrecisionT {
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         return this->expval_(wires, matrix);
     }
 
@@ -550,8 +552,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    auto var(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto var(const std::string &operation,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
         ob_sv.applyOperation(operation, wires);
@@ -581,7 +583,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     auto var(const std::vector<ComplexT> &matrix,
-             const std::vector<size_t> &wires) -> PrecisionT {
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
         ob_sv.applyMatrix(matrix, wires);
@@ -615,7 +617,7 @@ class Measurements final
      */
     template <typename op_type>
     auto var(const std::vector<op_type> &operations_list,
-             const std::vector<std::vector<size_t>> &wires_list)
+             const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
@@ -692,7 +694,7 @@ class Measurements final
      * @return Variance of the given observable.
      */
 
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
         return BaseType::var(obs, num_shots);
     }
@@ -710,7 +712,8 @@ class Measurements final
      * if does not exist.
      * @return auto Expectation value.
      */
-    auto expval_(const std::string &obsName, const std::vector<size_t> &wires,
+    auto expval_(const std::string &obsName,
+                 const std::vector<std::size_t> &wires,
                  const std::vector<PrecisionT> &params = {0.0},
                  const std::vector<std::complex<PrecisionT>> &gate_matrix = {})
         -> PrecisionT {
@@ -730,7 +733,7 @@ class Measurements final
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
      */
-    auto expval_(const std::vector<size_t> &wires,
+    auto expval_(const std::vector<std::size_t> &wires,
                  const std::vector<std::complex<PrecisionT>> &gate_matrix)
         -> PrecisionT {
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
@@ -747,7 +750,8 @@ class Measurements final
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires =
+            std::vector<std::size_t>{wires.rbegin(), wires.rend()};
 
         auto expect_val = this->getExpectationValueDeviceMatrix_(
             matrix_cu.data(), local_wires);
@@ -765,7 +769,7 @@ class Measurements final
     getExpectationValueDeviceMatrix_(const CFP_t *matrix,
                                      const std::vector<std::size_t> &tgts) {
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
 
         std::vector<int> tgtsInt(tgts.size());
         std::transform(tgts.begin(), tgts.end(), tgtsInt.begin(),
@@ -774,7 +778,7 @@ class Measurements final
                                this->_statevector.getNumQubits() - 1 - x);
                        });
 
-        size_t nIndexBits = this->_statevector.getNumQubits();
+        std::size_t nIndexBits = this->_statevector.getNumQubits();
         cudaDataType_t data_type;
         cudaDataType_t expectationDataType =
             CUDA_C_64F; // Requested by the custatevecComputeExpectation API
@@ -799,7 +803,7 @@ class Measurements final
             /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
@@ -826,7 +830,7 @@ class Measurements final
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
+            /* std::size_t */ extraWorkspaceSizeInBytes));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
