@@ -124,7 +124,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake~=3.24.0 build
+            python -m pip install pybind11 cmake~=3.24.0 build pybind11
 
           CIBW_ENVIRONMENT: |
             PL_BACKEND="${{ matrix.pl_backend }}"

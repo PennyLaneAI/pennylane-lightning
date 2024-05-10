@@ -138,7 +138,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
+            python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy pybind11
 
           PL_BACKEND: ${{ matrix.pl_backend }}
 
