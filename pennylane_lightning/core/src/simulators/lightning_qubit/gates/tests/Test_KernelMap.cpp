@@ -36,12 +36,12 @@ using Pennylane::Util::LightningException;
 TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     auto pds = PriorityDispatchSet();
     pds.emplace(Pennylane::Gates::KernelType::PI, 10U,
-                Util::IntegerInterval<size_t>(10, 20));
+                Util::IntegerInterval<std::size_t>(10, 20));
 
     SECTION("Test conflict") {
         /* If two elements has the same priority but integer intervals overlap,
          * they conflict. */
-        REQUIRE(pds.conflict(10U, Util::IntegerInterval<size_t>(19, 23)));
+        REQUIRE(pds.conflict(10U, Util::IntegerInterval<std::size_t>(19, 23)));
     }
 
     SECTION("Get Kernel") {
@@ -96,12 +96,12 @@ TEST_CASE("Test unallowed kernel", "[KernelMap]") {
         OperationKernelMap<Pennylane::Gates::GateOperation>::getInstance();
     REQUIRE_THROWS(instance.assignKernelForOp(
         Pennylane::Gates::GateOperation::PauliX, Threading::SingleThread,
-        CPUMemoryModel::Unaligned, 0, Util::full_domain<size_t>(),
+        CPUMemoryModel::Unaligned, 0, Util::full_domain<std::size_t>(),
         KernelType::None));
 
     REQUIRE_THROWS(instance.assignKernelForOp(
         Pennylane::Gates::GateOperation::PauliX, Threading::SingleThread,
-        CPUMemoryModel::Unaligned, 0, Util::full_domain<size_t>(),
+        CPUMemoryModel::Unaligned, 0, Util::full_domain<std::size_t>(),
         KernelType::AVX2));
 }
 
@@ -140,10 +140,10 @@ TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
             24, Threading::SingleThread,
             CPUMemoryModel::Unaligned)[Pennylane::Gates::GateOperation::PauliX];
 
-        instance.assignKernelForOp(Pennylane::Gates::GateOperation::PauliX,
-                                   Threading::SingleThread,
-                                   CPUMemoryModel::Unaligned, 100,
-                                   Util::full_domain<size_t>(), KernelType::PI);
+        instance.assignKernelForOp(
+            Pennylane::Gates::GateOperation::PauliX, Threading::SingleThread,
+            CPUMemoryModel::Unaligned, 100, Util::full_domain<std::size_t>(),
+            KernelType::PI);
 
         REQUIRE(instance.getKernelMap(24, Threading::SingleThread,
                                       CPUMemoryModel::Unaligned)
@@ -175,7 +175,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
     auto &instance =
         OperationKernelMap<Pennylane::Gates::GateOperation>::getInstance();
 
-    const auto num_qubits = std::vector<size_t>{4, 6, 8, 10, 12, 14, 16};
+    const auto num_qubits = std::vector<std::size_t>{4, 6, 8, 10, 12, 14, 16};
     const auto threadings =
         std::vector<Threading>{Threading::SingleThread, Threading::MultiThread};
     const auto memory_models = std::vector<CPUMemoryModel>{
@@ -189,12 +189,12 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
     records.push_back(instance.getKernelMap(12, Threading::SingleThread,
                                             CPUMemoryModel::Aligned256));
 
-    constexpr size_t num_iter = 8096;
+    constexpr std::size_t num_iter = 8096;
 
 #ifdef _OPENMP
 #pragma omp parallel default(none)                                             \
     shared(instance, records, rd, num_qubits, threadings, memory_models)       \
-    firstprivate(num_iter)
+        firstprivate(num_iter)
 #endif
     {
         std::mt19937 re;
@@ -204,11 +204,11 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #endif
         { re.seed(rd()); }
 
-        std::uniform_int_distribution<size_t> num_qubit_dist(
+        std::uniform_int_distribution<std::size_t> num_qubit_dist(
             0, num_qubits.size() - 1);
-        std::uniform_int_distribution<size_t> threading_dist(
+        std::uniform_int_distribution<std::size_t> threading_dist(
             0, threadings.size() - 1);
-        std::uniform_int_distribution<size_t> memory_model_dist(
+        std::uniform_int_distribution<std::size_t> memory_model_dist(
             0, memory_models.size() - 1);
 
         std::vector<EnumKernelMap> res;

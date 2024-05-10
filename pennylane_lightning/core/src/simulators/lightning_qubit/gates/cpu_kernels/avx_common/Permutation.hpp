@@ -34,15 +34,16 @@ namespace Pennylane::LightningQubit::Gates::AVXCommon::Permutation {
 /**
  * @brief Maintain permutation related data in a compile time.
  */
-template <typename PrecisionT, size_t packed_size> struct CompiledPermutation {
+template <typename PrecisionT, std::size_t packed_size>
+struct CompiledPermutation {
     // Cannot use unspecialized version
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "Unsupported data typed and packed size.");
 };
 
 template <> struct CompiledPermutation<float, 8> {
     using PrecisionT_ = float;
-    constexpr static size_t packed_size_ = 8;
+    constexpr static std::size_t packed_size_ = 8;
 
     const bool within_lane_;
     const int imm8_ = 0;
@@ -59,7 +60,7 @@ template <> struct CompiledPermutation<float, 8> {
 
 template <> struct CompiledPermutation<double, 4> {
     using PrecisionT_ = double;
-    constexpr static size_t packed_size_ = 4;
+    constexpr static std::size_t packed_size_ = 4;
 
     const bool within_lane_;
     const int imm8_ = 0;
@@ -75,7 +76,7 @@ template <> struct CompiledPermutation<double, 4> {
 };
 template <> struct CompiledPermutation<float, 16> {
     using PrecisionT_ = float;
-    constexpr static size_t packed_size_ = 16;
+    constexpr static std::size_t packed_size_ = 16;
 
     const bool within_lane_;
     const int imm8_ = 0;
@@ -91,7 +92,7 @@ template <> struct CompiledPermutation<float, 16> {
 };
 template <> struct CompiledPermutation<double, 8> {
     using PrecisionT_ = float;
-    constexpr static size_t packed_size_ = 8;
+    constexpr static std::size_t packed_size_ = 8;
 
     const bool within_lane_;
     const int imm8_ = 0;
@@ -112,9 +113,9 @@ template <> struct CompiledPermutation<double, 8> {
  * @tparam size Size of the permutation
  * @param permutation Permutation as an array
  */
-template <typename PrecisionT, size_t size>
+template <typename PrecisionT, std::size_t size>
 constexpr bool isWithinLane(const std::array<uint8_t, size> &permutation) {
-    constexpr size_t size_within_lane = 16 / sizeof(PrecisionT);
+    constexpr std::size_t size_within_lane = 16 / sizeof(PrecisionT);
 
     std::array<uint32_t, size_within_lane> lane = {
         0,
@@ -195,12 +196,12 @@ getPermutation16x512i(const std::array<uint8_t, 16> &permutation) {
 // LCOV_EXCL_STOP
 #endif
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 constexpr auto compilePermutation(
     [[maybe_unused]] const std::array<uint8_t, packed_size> &permutation)
     -> CompiledPermutation<PrecisionT, packed_size> {
     // Raise a compile error when instantiated
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "Only specialized classes can be used");
 };
 
@@ -279,7 +280,7 @@ constexpr auto identity() -> std::array<uint8_t, packed_size> {
  */
 template <size_t packed_size>
 constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
-                    size_t rev_wire) -> std::array<uint8_t, packed_size> {
+                    std::size_t rev_wire) -> std::array<uint8_t, packed_size> {
     std::array<uint8_t, packed_size> res{};
 
     for (size_t k = 0; k < packed_size / 2; k++) {

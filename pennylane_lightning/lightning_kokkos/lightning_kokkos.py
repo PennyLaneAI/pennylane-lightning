@@ -392,9 +392,6 @@ class LightningKokkos(LightningBase):
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
         sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
-        if operation.postselect is not None and sample != operation.postselect:
-            mid_measurements[operation] = -1
-            return
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
         if operation.reset and bool(sample):
@@ -481,8 +478,6 @@ class LightningKokkos(LightningBase):
                 )
 
         self.apply_lightning(operations, mid_measurements=mid_measurements)
-        if mid_measurements is not None and any(v == -1 for v in mid_measurements.values()):
-            self._apply_basis_state(np.zeros(self.num_wires), wires=self.wires)
 
     # pylint: disable=protected-access
     def expval(self, observable, shot_range=None, bin_size=None):

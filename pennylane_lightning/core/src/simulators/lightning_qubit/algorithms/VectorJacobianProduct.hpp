@@ -90,7 +90,7 @@ class VectorJacobianProduct final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         // We can assume the trainable params are sorted (from Python)
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::size_t num_param_ops = ops.getNumParOps();
         const auto &trainable_params = jd.getTrainableParams();
 
         PL_ABORT_IF_NOT(jac.size() == trainable_params.size(),
@@ -111,9 +111,9 @@ class VectorJacobianProduct final
 
         const auto tp_rend = trainable_params.rend();
         auto tp_it = trainable_params.rbegin();
-        size_t current_param_idx =
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
-        size_t trainable_param_idx = trainable_params.size() - 1;
+        std::size_t trainable_param_idx = trainable_params.size() - 1;
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
@@ -157,8 +157,9 @@ class VectorJacobianProduct final
                 }
                 --current_param_idx;
             }
-            this->applyOperationAdj(lambda, ops, static_cast<size_t>(op_idx));
-            this->applyOperationAdj(mu, ops, static_cast<size_t>(op_idx));
+            this->applyOperationAdj(lambda, ops,
+                                    static_cast<std::size_t>(op_idx));
+            this->applyOperationAdj(mu, ops, static_cast<std::size_t>(op_idx));
         }
     }
 };

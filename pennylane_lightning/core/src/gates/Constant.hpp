@@ -199,7 +199,7 @@ using CMatrixView =
 /**
  * @brief Number of wires for gates besides multi-qubit gates
  */
-using GateNWires = typename std::pair<GateOperation, size_t>;
+using GateNWires = typename std::pair<GateOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array gate_wires = {
     GateNWires{GateOperation::Identity, 1},
     GateNWires{GateOperation::PauliX, 1},
@@ -237,7 +237,7 @@ using GateNWires = typename std::pair<GateOperation, size_t>;
     GateNWires{GateOperation::GlobalPhase, 1},
 };
 
-using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
+using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array controlled_gate_wires = {
     CGateNWires{ControlledGateOperation::PauliX, 1},
     CGateNWires{ControlledGateOperation::PauliY, 1},
@@ -267,7 +267,7 @@ using CGateNWires = typename std::pair<ControlledGateOperation, size_t>;
 /**
  * @brief Number of wires for generators besides multi-qubit gates
  */
-using GeneratorNWires = typename std::pair<GeneratorOperation, size_t>;
+using GeneratorNWires = typename std::pair<GeneratorOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array generator_wires = {
     GeneratorNWires{GeneratorOperation::PhaseShift, 1},
     GeneratorNWires{GeneratorOperation::RX, 1},
@@ -291,7 +291,7 @@ using GeneratorNWires = typename std::pair<GeneratorOperation, size_t>;
 };
 
 using CGeneratorNWires =
-    typename std::pair<ControlledGeneratorOperation, size_t>;
+    typename std::pair<ControlledGeneratorOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array controlled_generator_wires = {
     CGeneratorNWires{ControlledGeneratorOperation::PhaseShift, 1},
     CGeneratorNWires{ControlledGeneratorOperation::RX, 1},
@@ -313,7 +313,7 @@ using CGeneratorNWires =
 /**
  * @brief Number of parameters for gates
  */
-using GateNParams = typename std::pair<GateOperation, size_t>;
+using GateNParams = typename std::pair<GateOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array gate_num_params = {
     GateNParams{GateOperation::Identity, 0},
     GateNParams{GateOperation::PauliX, 0},
@@ -355,7 +355,7 @@ using GateNParams = typename std::pair<GateOperation, size_t>;
 /**
  * @brief Number of parameters for gates
  */
-using CGateNParams = typename std::pair<ControlledGateOperation, size_t>;
+using CGateNParams = typename std::pair<ControlledGateOperation, std::size_t>;
 [[maybe_unused]] constexpr std::array controlled_gate_num_params = {
     CGateNParams{ControlledGateOperation::PauliX, 0},
     CGateNParams{ControlledGateOperation::PauliY, 0},

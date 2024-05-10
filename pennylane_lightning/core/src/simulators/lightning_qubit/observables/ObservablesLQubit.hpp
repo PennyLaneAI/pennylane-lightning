@@ -63,7 +63,7 @@ class NamedObs final : public NamedObsBase<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObs(std::string obs_name, std::vector<size_t> wires,
+    NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
@@ -98,7 +98,7 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObs(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
         : BaseType{matrix, wires} {}
 };
 
@@ -205,7 +205,7 @@ struct HamiltonianApplyInPlace<StateVectorLQubitManaged<PrecisionT>, true> {
             &terms,
         StateVectorLQubitManaged<PrecisionT> &sv) {
         std::exception_ptr ex = nullptr;
-        const size_t length = sv.getLength();
+        const std::size_t length = sv.getLength();
         auto allocator = sv.allocator();
 
         std::vector<ComplexT, decltype(allocator)> sum(length, ComplexT{},
@@ -254,7 +254,7 @@ struct HamiltonianApplyInPlace<StateVectorLQubitRaw<PrecisionT>, true> {
                         Observable<StateVectorLQubitRaw<PrecisionT>>>> &terms,
                     StateVectorLQubitRaw<PrecisionT> &sv) {
         std::exception_ptr ex = nullptr;
-        const size_t length = sv.getLength();
+        const std::size_t length = sv.getLength();
         std::vector<ComplexT> sum(length, ComplexT{});
 
 #pragma omp parallel default(none) firstprivate(length)                        \

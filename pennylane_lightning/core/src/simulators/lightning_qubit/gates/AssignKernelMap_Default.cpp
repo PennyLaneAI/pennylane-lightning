@@ -36,7 +36,7 @@ using Util::less_than_equal_to;
 /// @endcond
 
 namespace Pennylane::LightningQubit::KernelMap::Internal {
-constexpr static auto all_qubit_numbers = full_domain<size_t>();
+constexpr static auto all_qubit_numbers = full_domain<std::size_t>();
 
 void assignKernelsForGateOp_Default() {
     auto &instance = OperationKernelMap<GateOperation>::getInstance();

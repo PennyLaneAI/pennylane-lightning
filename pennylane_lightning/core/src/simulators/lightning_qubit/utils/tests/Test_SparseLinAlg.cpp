@@ -41,8 +41,8 @@ using std::vector;
 /// @endcond
 
 TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Sparse]", float, double) {
-    size_t num_qubits = 3;
-    size_t data_size = Util::exp2(num_qubits);
+    std::size_t num_qubits = 3;
+    std::size_t data_size = Util::exp2(num_qubits);
 
     std::vector<std::vector<complex<TestType>>> vectors = {
         {0.33160916, 0.90944626, 0.81097291, 0.46112135, 0.42801563, 0.38077181,
@@ -68,8 +68,8 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Sparse]", float, double) {
          {-0.45507653, -0.41765428},
          {-0.78213328, -0.28539948}}};
 
-    std::vector<size_t> row_map;
-    std::vector<size_t> entries;
+    std::vector<std::size_t> row_map;
+    std::vector<std::size_t> entries;
     std::vector<complex<TestType>> values;
     write_CSR_vectors(row_map, entries, values, data_size);
 

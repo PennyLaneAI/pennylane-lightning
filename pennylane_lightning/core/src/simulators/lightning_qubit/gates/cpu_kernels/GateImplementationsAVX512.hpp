@@ -41,12 +41,13 @@ class GateImplementationsAVX512
     };
 
     template <typename PrecisionT>
-    static void
-    applySingleQubitOp(std::complex<PrecisionT> *arr, const size_t num_qubits,
-                       const std::complex<PrecisionT> *matrix,
-                       const std::vector<size_t> &wires, bool inverse = false) {
+    static void applySingleQubitOp(std::complex<PrecisionT> *arr,
+                                   const std::size_t num_qubits,
+                                   const std::complex<PrecisionT> *matrix,
+                                   const std::vector<std::size_t> &wires,
+                                   bool inverse = false) {
         PL_ASSERT(wires.size() == 1);
-        const size_t rev_wire = num_qubits - wires[0] - 1;
+        const std::size_t rev_wire = num_qubits - wires[0] - 1;
 
         using SingleQubitOpProdAVX512 =
             AVXCommon::ApplySingleQubitOp<PrecisionT,

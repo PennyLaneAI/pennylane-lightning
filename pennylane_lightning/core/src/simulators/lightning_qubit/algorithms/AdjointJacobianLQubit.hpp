@@ -70,7 +70,7 @@ class AdjointJacobian final
     inline void
     updateJacobian(std::vector<StateVectorT> &states, OtherStateVectorT &sv,
                    std::span<PrecisionT> &jac, PrecisionT scaling_coeff,
-                   size_t obs_idx, size_t mat_row_idx) {
+                   std::size_t obs_idx, std::size_t mat_row_idx) {
         jac[mat_row_idx + obs_idx] =
             -2 * scaling_coeff *
             std::imag(innerProdC(states[obs_idx].getData(), sv.getData(),
@@ -93,7 +93,7 @@ class AdjointJacobian final
         const std::vector<std::shared_ptr<Observable<StateVectorT>>>
             &observables) {
         std::exception_ptr ex = nullptr;
-        size_t num_observables = observables.size();
+        std::size_t num_observables = observables.size();
 
         if (num_observables > 1) {
             /* Globally scoped exception value to be captured within OpenMP
@@ -151,13 +151,13 @@ class AdjointJacobian final
      */
     inline void applyOperationsAdj(std::vector<StateVectorT> &states,
                                    const OpsData<StateVectorT> &operations,
-                                   size_t op_idx) {
+                                   std::size_t op_idx) {
         // clang-format off
         // Globally scoped exception value to be captured within OpenMP block.
         // See the following for OpenMP design decisions:
         // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
         std::exception_ptr ex = nullptr;
-        size_t num_states = states.size();
+        std::size_t num_states = states.size();
         #if defined(_OPENMP)
             #pragma omp parallel default(none)                                 \
                 shared(states, operations, op_idx, ex, num_states)
@@ -217,12 +217,12 @@ class AdjointJacobian final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
         // We can assume the trainable params are sorted (from Python)
-        const std::vector<size_t> &tp = jd.getTrainableParams();
-        const size_t tp_size = tp.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &tp = jd.getTrainableParams();
+        const std::size_t tp_size = tp.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         if (!jd.hasTrainableParams()) {
             return;
@@ -235,8 +235,8 @@ class AdjointJacobian final
             "observables provided.");
 
         // Track positions within par and non-par operations
-        size_t trainableParamNumber = tp_size - 1;
-        size_t current_param_idx =
+        std::size_t trainableParamNumber = tp_size - 1;
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
 
         // Create $U_{1:p}\vert \lambda \rangle$
@@ -255,7 +255,7 @@ class AdjointJacobian final
 
         // Pointer to data storage for StateVectorLQubitRaw<PrecisionT>:
         std::unique_ptr<std::vector<std::vector<ComplexT>>> H_lambda_storage;
-        size_t lambda_qubits = lambda.getNumQubits();
+        std::size_t lambda_qubits = lambda.getNumQubits();
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
             H_lambda = std::make_unique<std::vector<StateVectorT>>(
@@ -318,7 +318,7 @@ class AdjointJacobian final
                                   !ops.getOpsInverses()[op_idx]) *
                                   (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                    const size_t mat_row_idx =
+                    const std::size_t mat_row_idx =
                         trainableParamNumber * num_observables;
 
                     // clang-format off
@@ -340,7 +340,8 @@ class AdjointJacobian final
                 }
                 current_param_idx--;
             }
-            applyOperationsAdj(*H_lambda, ops, static_cast<size_t>(op_idx));
+            applyOperationsAdj(*H_lambda, ops,
+                               static_cast<std::size_t>(op_idx));
         }
         const auto jac_transpose = Transpose(std::span<const PrecisionT>{jac},
                                              tp_size, num_observables);

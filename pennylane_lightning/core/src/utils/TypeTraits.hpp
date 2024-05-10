@@ -20,9 +20,7 @@
 #include <limits>
 
 namespace Pennylane::Util {
-template <typename T> struct remove_complex {
-    using type = T;
-};
+template <typename T> struct remove_complex { using type = T; };
 template <typename T> struct remove_complex<std::complex<T>> {
     using type = T;
 };
@@ -49,15 +47,13 @@ template <typename T> constexpr bool is_complex_v = is_complex<T>::value;
 
 template <class F> struct FuncReturn {
     // When instantiated
-    static_assert(sizeof(F) == std::numeric_limits<size_t>::max(),
+    static_assert(sizeof(F) == std::numeric_limits<std::size_t>::max(),
                   "The given type is not a function. Currently, lambda"
                   "functions are not supported.");
 };
 template <class R, class... A> struct FuncReturn<R (*)(A...)> {
     using Type = R;
 };
-template <class R, class... A> struct FuncReturn<R(A...)> {
-    using Type = R;
-};
+template <class R, class... A> struct FuncReturn<R(A...)> { using Type = R; };
 
 } // namespace Pennylane::Util

@@ -59,10 +59,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::Constructibility",
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
-    SECTION("StateVectorBackend<TestType> {ComplexT*, size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, size_t>);
+    SECTION("StateVectorBackend<TestType> {ComplexT*, std::size_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, std::size_t>);
     }
-    SECTION("StateVectorBackend<TestType> {ComplexT*, size_t}: Fails if "
+    SECTION("StateVectorBackend<TestType> {ComplexT*, std::size_t}: Fails if "
             "provided an inconsistent length.") {
         std::vector<ComplexT> st_data(14, 0.0);
         REQUIRE_THROWS_WITH(
@@ -90,7 +90,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a std::vector",
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -103,7 +103,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a std::vector",
 
     SECTION("Test wrong number of wires") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -127,7 +127,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -137,7 +137,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
     }
 
     SECTION("Test with different number of wires") {
-        const size_t num_qubits = 5;
+        const std::size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
             VectorT st_data_1 =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -146,7 +146,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
             StateVectorT state_vector_1(st_data_1.data(), st_data_1.size());
             StateVectorT state_vector_2(st_data_2.data(), st_data_2.size());
 
-            std::vector<size_t> wires(num_wires);
+            std::vector<std::size_t> wires(num_wires);
             std::iota(wires.begin(), wires.end(), 0);
 
             const auto m = randomUnitary<PrecisionT>(re, num_wires);
@@ -175,7 +175,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyOperations",
     std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -193,7 +193,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyOperations",
     }
 
     SECTION("Test invalid arguments with parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);

@@ -37,11 +37,11 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProd") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                auto sz = static_cast<size_t>(1U << i);
+                auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(0,
-                                                       size_t{1U} << (i + 1));
+                std::complex<TestType> expected_result(0, std::size_t{1U}
+                                                              << (i + 1));
                 std::complex<TestType> result = Util::innerProd(data1, data2);
                 CHECK(isApproxEqual(result, expected_result));
             }
@@ -61,11 +61,11 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProd-inline") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                auto sz = static_cast<size_t>(1U << i);
+                auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(0,
-                                                       size_t{1U} << (i + 1));
+                std::complex<TestType> expected_result(0, std::size_t{1U}
+                                                              << (i + 1));
                 std::complex<TestType> result = Util::innerProd<TestType, 1>(
                     data1.data(), data2.data(), sz);
                 CHECK(isApproxEqual(result, expected_result));
@@ -87,7 +87,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProdC") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                auto sz = static_cast<size_t>(1U << i);
+                auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
                 std::complex<TestType> expected_result(size_t{1U} << (i + 1),
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProdC-inline") {
         SECTION("Iterative increment") {
             for (size_t i = 0; i < 12; i++) {
-                auto sz = static_cast<size_t>(1U << i);
+                auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
                 std::complex<TestType> expected_result(size_t{1U} << (i + 1),
@@ -475,9 +475,9 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             CHECK(m_out_1 == approx(m_out_exp));
         }
         SECTION("Random complex non-square") {
-            const size_t m = 4;
-            const size_t k = 2;
-            const size_t n = 8;
+            const std::size_t m = 4;
+            const std::size_t k = 2;
+            const std::size_t n = 8;
             std::vector<std::complex<TestType>> mat1{
                 {-0.08981826740301613, -0.27637263739311546},
                 {0.8727813226706924, 0.258896589429058},
@@ -832,7 +832,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util][LinearAlgebra]", float, double) {
     std::mt19937 re{1337};
 
     for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
-        const size_t dim = (1U << num_qubits);
+        const std::size_t dim = (1U << num_qubits);
         const auto unitary = randomUnitary<PrecisionT>(re, num_qubits);
 
         auto unitary_dagger = Util::Transpose(unitary, dim, dim);

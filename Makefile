@@ -89,8 +89,8 @@ test-builtin:
 	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000 -n auto
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops -n auto
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
 
 test-cpp:
 	rm -rf ./BuildTests

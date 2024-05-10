@@ -50,8 +50,8 @@ namespace Pennylane::LightningQubit {
 template <class PrecisionT, class ParamT, class GateImplementation,
           Pennylane::Gates::GateOperation gate_op>
 constexpr auto gateOpToFunctor() {
-    return [](std::complex<PrecisionT> *data, size_t num_qubits,
-              const std::vector<size_t> &wires, bool inverse,
+    return [](std::complex<PrecisionT> *data, std::size_t num_qubits,
+              const std::vector<std::size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
         constexpr auto func_ptr =
             Gates::GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
@@ -78,10 +78,10 @@ constexpr auto gateOpToFunctor() {
 template <class PrecisionT, class ParamT, class GateImplementation,
           Pennylane::Gates::ControlledGateOperation gate_op>
 constexpr auto controlledGateOpToFunctor() {
-    return [](std::complex<PrecisionT> *data, size_t num_qubits,
-              const std::vector<size_t> &controlled_wires,
+    return [](std::complex<PrecisionT> *data, std::size_t num_qubits,
+              const std::vector<std::size_t> &controlled_wires,
               const std::vector<bool> &controlled_values,
-              const std::vector<size_t> &wires, bool inverse,
+              const std::vector<std::size_t> &wires, bool inverse,
               const std::vector<PrecisionT> &params) {
         constexpr auto func_ptr = Gates::ControlledGateOpToMemberFuncPtr<
             PrecisionT, ParamT, GateImplementation, gate_op>::value;
@@ -101,7 +101,7 @@ constexpr auto controlledGateOpToFunctor() {
  * function pointers.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
-          size_t gate_idx>
+          std::size_t gate_idx>
 constexpr auto constructGateOpsFunctorTupleIter() {
     if constexpr (gate_idx == GateImplementation::implemented_gates.size()) {
         return std::tuple{};
@@ -120,7 +120,7 @@ constexpr auto constructGateOpsFunctorTupleIter() {
  * constructControlledGateOpsFunctorTuple
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
-          size_t gate_idx>
+          std::size_t gate_idx>
 constexpr auto constructControlledGateOpsFunctorTupleIter() {
     if constexpr (gate_idx ==
                   GateImplementation::implemented_controlled_gates.size()) {
@@ -141,7 +141,7 @@ constexpr auto constructControlledGateOpsFunctorTupleIter() {
 /**
  * @brief Internal recursion function for constructGeneratorOpsFunctorTuple
  */
-template <class PrecisionT, class GateImplementation, size_t gntr_idx>
+template <class PrecisionT, class GateImplementation, std::size_t gntr_idx>
 constexpr auto constructGeneratorOpsFunctorTupleIter() {
     if constexpr (gntr_idx ==
                   GateImplementation::implemented_generators.size()) {
@@ -162,7 +162,7 @@ constexpr auto constructGeneratorOpsFunctorTupleIter() {
  * @brief Internal recursion function for
  * constructControlledGeneratorOpsFunctorTuple
  */
-template <class PrecisionT, class GateImplementation, size_t gntr_idx>
+template <class PrecisionT, class GateImplementation, std::size_t gntr_idx>
 constexpr auto constructControlledGeneratorOpsFunctorTupleIter() {
     if constexpr (gntr_idx ==
                   GateImplementation::implemented_controlled_generators
@@ -184,7 +184,7 @@ constexpr auto constructControlledGeneratorOpsFunctorTupleIter() {
 /**
  * @brief Internal recursive function for constructMatrixOpsFunctorTuple
  */
-template <class PrecisionT, class GateImplementation, size_t mat_idx>
+template <class PrecisionT, class GateImplementation, std::size_t mat_idx>
 constexpr auto constructMatrixOpsFunctorTupleIter() {
     if constexpr (mat_idx == GateImplementation::implemented_matrices.size()) {
         return std::tuple{};
@@ -205,7 +205,7 @@ constexpr auto constructMatrixOpsFunctorTupleIter() {
  * @brief Internal recursive function for
  * constructControlledMatrixOpsFunctorTuple
  */
-template <class PrecisionT, class GateImplementation, size_t mat_idx>
+template <class PrecisionT, class GateImplementation, std::size_t mat_idx>
 constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
     if constexpr (mat_idx ==
                   GateImplementation::implemented_controlled_matrices.size()) {
@@ -232,9 +232,8 @@ constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
  * @tparam GateImplementation Gate implementation class.
  */
 template <class PrecisionT, class ParamT, class GateImplementation>
-constexpr auto gate_op_functor_tuple =
-    constructGateOpsFunctorTupleIter<PrecisionT, ParamT, GateImplementation,
-                                     0>();
+constexpr auto gate_op_functor_tuple = constructGateOpsFunctorTupleIter<
+    PrecisionT, ParamT, GateImplementation, 0>();
 
 /**
  * @brief Tuple of controlled gate operation and function pointer pairs.

@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* `dynamic_one_shot` deals with post-selection during the post-processing phase, so Lightning-Qubit does not return `None`-valued measurements for mismatching samples anymore.
+  [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
+  
 ### Improvements
 
 * Update C++ and Python GitHub actions names to include the matrix info.
@@ -21,6 +24,9 @@
 * Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
   [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
 
+* Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
+  [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
+
 ### Documentation
 
 ### Bug fixes
@@ -29,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey
 
 ---
 

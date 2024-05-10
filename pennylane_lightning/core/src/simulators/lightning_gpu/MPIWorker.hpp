@@ -35,11 +35,11 @@ using SharedLocalStream =
 using SharedMPIWorker = std::shared_ptr<
     std::remove_pointer<custatevecSVSwapWorkerDescriptor_t>::type>;
 
-inline size_t mebibyteToBytes(const size_t mebibytes) {
-    return mebibytes * size_t{1024 * 1024};
+inline std::size_t mebibyteToBytes(const std::size_t mebibytes) {
+    return mebibytes * std::size_t{1024 * 1024};
 }
 
-inline double bytesToMebibytes(const size_t bytes) {
+inline double bytesToMebibytes(const std::size_t bytes) {
     return static_cast<double>(bytes) / (1024.0 * 1024.0);
 }
 
@@ -102,26 +102,27 @@ inline SharedLocalStream make_shared_local_stream() {
 template <typename CFP_t>
 SharedMPIWorker
 make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
-                       const size_t mpi_buf_size, CFP_t *sv,
-                       const size_t numLocalQubits, cudaStream_t localStream) {
+                       const std::size_t mpi_buf_size, CFP_t *sv,
+                       const std::size_t numLocalQubits,
+                       cudaStream_t localStream) {
     custatevecSVSwapWorkerDescriptor_t svSegSwapWorker = nullptr;
 
     int nDevices_int = 0;
     PL_CUDA_IS_SUCCESS(cudaGetDeviceCount(&nDevices_int));
 
-    size_t nDevices = static_cast<size_t>(nDevices_int);
+    std::size_t nDevices = static_cast<std::size_t>(nDevices_int);
 
     // Ensure the number of P2P devices is calculated based on the number of MPI
     // processes within the node
     nDevices = mpi_manager.getSizeNode() < nDevices ? mpi_manager.getSizeNode()
                                                     : nDevices;
 
-    size_t nP2PDeviceBits = std::bit_width(nDevices) - 1;
+    std::size_t nP2PDeviceBits = std::bit_width(nDevices) - 1;
 
-    size_t p2pEnabled_local = 1;
+    std::size_t p2pEnabled_local = 1;
     // P2P access check
     if (nP2PDeviceBits != 0) {
-        size_t local_device_id = mpi_manager.getRank() % nDevices;
+        std::size_t local_device_id = mpi_manager.getRank() % nDevices;
 
         for (size_t devId = 0; devId < nDevices; ++devId) {
             if (devId != local_device_id) {
@@ -137,7 +138,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         }
 
         auto isP2PEnabled =
-            mpi_manager.allreduce<size_t>(p2pEnabled_local, "min");
+            mpi_manager.allreduce<std::size_t>(p2pEnabled_local, "min");
         // P2PDeviceBits is set as 0 for all MPI processes if P2P access is not
         // supported by any pair of devices of any node
         if (!isP2PEnabled) {
@@ -187,8 +188,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
     std::vector<int> subSVIndicesP2P;
     std::vector<cudaEvent_t> remoteEvents;
 
-    size_t extraWorkspaceSize = 0;
-    size_t minTransferWorkspaceSize = 0;
+    std::size_t extraWorkspaceSize = 0;
+    std::size_t minTransferWorkspaceSize = 0;
 
     PL_CUSTATEVEC_IS_SUCCESS(custatevecSVSwapWorkerCreate(
         /* custatevecHandle_t */ handle,
@@ -199,8 +200,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* cudaEvent_t */ localEvent,
         /* cudaDataType_t */ svDataType,
         /* cudaStream_t */ localStream,
-        /* size_t* */ &extraWorkspaceSize,
-        /* size_t* */ &minTransferWorkspaceSize));
+        /* std::size_t* */ &extraWorkspaceSize,
+        /* std::size_t* */ &minTransferWorkspaceSize));
 
     PL_CUDA_IS_SUCCESS(cudaMalloc(&d_extraWorkspace, extraWorkspaceSize));
 
@@ -208,13 +209,13 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* custatevecHandle_t */ handle,
         /* custatevecSVSwapWorkerDescriptor_t */ svSegSwapWorker,
         /* void* */ d_extraWorkspace,
-        /* size_t */ extraWorkspaceSize));
+        /* std::size_t */ extraWorkspaceSize));
 
-    size_t transferWorkspaceSize; // In bytes and its value should be power
-                                  // of 2.
+    std::size_t transferWorkspaceSize; // In bytes and its value should be power
+                                       // of 2.
 
     if (mpi_buf_size == 0) {
-        transferWorkspaceSize = size_t{1} << numLocalQubits;
+        transferWorkspaceSize = std::size_t{1} << numLocalQubits;
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
             transferWorkspaceSize = transferWorkspaceSize * sizeof(double) * 2;
@@ -223,7 +224,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         }
         // With the default setting, transfer work space is limited to 64 MiB
         // based on the benchmark tests on the Perlmutter.
-        size_t buffer_limit = 64;
+        std::size_t buffer_limit = 64;
         double transferWorkspaceSizeInMiB =
             bytesToMebibytes(transferWorkspaceSize);
         if (transferWorkspaceSizeInMiB > static_cast<double>(buffer_limit)) {
@@ -241,7 +242,7 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         /* custatevecHandle_t */ handle,
         /* custatevecSVSwapWorkerDescriptor_t */ svSegSwapWorker,
         /* void* */ d_transferWorkspace,
-        /* size_t */ transferWorkspaceSize));
+        /* std::size_t */ transferWorkspaceSize));
 
     // LCOV_EXCL_START
     // Won't be covered by CI checks with 2 nvidia GPUs without nvlink
@@ -262,13 +263,14 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
         mpi_manager.Allgather<cudaIpcEventHandle_t>(
             eventHandle, ipcEventHandles, sizeof(eventHandle));
         //  get remove device pointers and events
-        size_t nSubSVsP2P = size_t{1} << nP2PDeviceBits;
-        size_t p2pSubSVIndexBegin =
+        std::size_t nSubSVsP2P = std::size_t{1} << nP2PDeviceBits;
+        std::size_t p2pSubSVIndexBegin =
             (mpi_manager.getRank() / nSubSVsP2P) * nSubSVsP2P;
-        size_t p2pSubSVIndexEnd = p2pSubSVIndexBegin + nSubSVsP2P;
+        std::size_t p2pSubSVIndexEnd = p2pSubSVIndexBegin + nSubSVsP2P;
         for (size_t p2pSubSVIndex = p2pSubSVIndexBegin;
              p2pSubSVIndex < p2pSubSVIndexEnd; p2pSubSVIndex++) {
-            if (static_cast<size_t>(mpi_manager.getRank()) == p2pSubSVIndex)
+            if (static_cast<std::size_t>(mpi_manager.getRank()) ==
+                p2pSubSVIndex)
                 continue; // don't need local sub state vector pointer
             void *d_subSVP2P = nullptr;
             const auto &dstMemHandle = ipcMemHandles[p2pSubSVIndex];
