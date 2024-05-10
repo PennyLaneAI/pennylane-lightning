@@ -23,6 +23,7 @@
 
 #include <catch2/catch.hpp>
 
+#include "ConstantUtil.hpp"
 #include "Error.hpp"
 #include "GateFunctors.hpp"
 #include "Gates.hpp"
@@ -87,16 +88,20 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
         "PhaseShift", "RX", "RY", "RZ", "ControlledPhaseShift", "CRX", "CRY",
         "CRZ", "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
-        "DoubleExcitationMinus", "DoubleExcitationPlus");
+        "DoubleExcitationMinus", "DoubleExcitationPlus", "Rot", "CRot");
     {
+        auto gate_op =
+            reverse_lookup(Constant::gate_names, std::string_view{gate_name});
+        auto num_params = lookup(Constant::gate_num_params, gate_op);
+        auto params = std::vector<PrecisionT>(num_params, param);
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
-            str_to_gates_.at(gate_name), {param}, inverse);
+            str_to_gates_.at(gate_name), params, inverse);
 
         StateVectorT kokkos_sv_ops{ini_st.data(), ini_st.size()};
         StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
 
         const auto wires = createWires(str_to_gates_.at(gate_name), num_qubits);
-        kokkos_sv_ops.applyOperation(gate_name, wires, inverse, {param});
+        kokkos_sv_ops.applyOperation(gate_name, wires, inverse, params);
         kokkos_sv_mat.applyOperation("Matrix", wires, false, {}, gate_matrix);
 
         auto result_ops = kokkos_sv_ops.getDataVector();
