@@ -32,7 +32,7 @@ jobs:
         arch: [ppc64le]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        container_img: ["quay.io/pypa/manylinux_2_28_ppc64le"]
     timeout-minutes: 45
     name: Kokkos core (${{ matrix.exec_model }}::${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
@@ -91,7 +91,7 @@ jobs:
         cibw_build: ${{fromJson(needs.set_wheel_build_matrix.outputs.python_version)}}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_ppc64le"]
+        container_img: ["quay.io/pypa/manylinux_2_28_ppc64le"]
     timeout-minutes: 45
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{"cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12"}')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
@@ -134,7 +134,7 @@ jobs:
 
           CIBW_ENVIRONMENT: PL_BACKEND="${{ matrix.pl_backend }}" 
 
-          CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux2014
+          CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 

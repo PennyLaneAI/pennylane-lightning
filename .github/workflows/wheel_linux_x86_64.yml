@@ -6,7 +6,7 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 13
 
 on:
   pull_request:
@@ -32,17 +32,22 @@ jobs:
     with:
       event_name: ${{ github.event_name }}
 
+  determine_runner:
+    name: Determine runner type to use
+    uses: ./.github/workflows/determine-workflow-runner.yml
+    with:
+      default_runner: ubuntu-latest
+
   build_dependencies:
-    needs: [set_wheel_build_matrix]
+    needs: [set_wheel_build_matrix, determine_runner]
     strategy:
       matrix:
-        os: [ubuntu-latest]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     container: ${{ matrix.container_img }}
 
     steps:
@@ -57,12 +62,12 @@ jobs:
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
           apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
-          echo "COMPILER=g++-11" >> $GITHUB_ENV
+          echo "COMPILER=g++-13" >> $GITHUB_ENV
 
-      - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
+      - name: Install dependencies (AlmaLinux)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          yum update -y && yum install -y cmake ninja-build
+          dnf update -y && dnf install -y cmake ninja-build
           echo "COMPILER=g++" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
@@ -90,21 +95,22 @@ jobs:
           cd -
 
   linux-wheels-x86-64:
-    needs: [set_wheel_build_matrix, build_dependencies]
+    needs: [set_wheel_build_matrix, build_dependencies, determine_runner]
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
         arch: [x86_64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
-        container_img: ["quay.io/pypa/manylinux2014_x86_64"]
+        container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
-    runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container_img }}
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    container:
+      image: ${{ matrix.container_img }}
+      options: --privileged
 
     steps:
       - name: Restoring cached dependencies
@@ -123,18 +129,18 @@ jobs:
           mkdir Kokkos
           cp -rf /root/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
-      - name: Install dependencies (CentOS)
-        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux2014_x86_64') }}
+      - name: Install dependencies (AlmaLinux)
+        if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
-          # Reduce wait time for repos not responding
-          cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-          yum update -y && yum install -y docker
+          dnf update -y && dnf install -y podman
 
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
 
       - name: Build wheels
         env:
+          CIBW_CONTAINER_ENGINE: "podman"
+
           CIBW_ARCHS_LINUX: ${{matrix.arch}}
 
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -143,26 +149,26 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
+            cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
             python -m pip install ninja cmake~=3.24.0 scipy
-            yum clean all -y
-            yum install centos-release-scl-rh -y
-            yum install devtoolset-11-gcc-c++ -y
-            source /opt/rh/devtoolset-11/enable -y
+            dnf clean all -y
+            dnf install gcc-toolset-13 -y
+            source /opt/rh/gcc-toolset-13/enable -y
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/devtoolset-11/root/usr/bin:$PATH" \
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" pip install -e . -vv; fi
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv; fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
           CIBW_BUILD_VERBOSITY: 3
 

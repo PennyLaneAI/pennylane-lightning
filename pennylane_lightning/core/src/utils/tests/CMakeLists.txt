@@ -29,6 +29,7 @@ target_sources(utils_tests INTERFACE runner_utils.cpp)
 set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_ConstantUtil.cpp
                     Test_Error.cpp
+                    Test_NDPermuter.cpp
                     Test_RuntimeInfo.cpp
                     Test_TypeTraits.cpp
                     Test_Util.cpp

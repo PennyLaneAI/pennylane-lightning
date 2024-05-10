@@ -13,6 +13,9 @@ on:
   release:
   pull_request:
     paths-ignore:
+      - .github
+      - '!.github/workflows/tests_lgpu_python.yml'
+      - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
       - pennylane_lightning/lightning_kokkos/**
@@ -42,8 +45,6 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
 
     steps:
@@ -61,14 +62,13 @@ jobs:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
         pl_backend: ["lightning_gpu"]
         default_backend: ["lightning_qubit"]
         cuda_version: ["12"]
 
     name: Python tests with LGPU
     runs-on:
-      - ${{ matrix.os }}
+      - ubuntu-22.04
       - self-hosted
       - gpu
 
@@ -172,12 +172,12 @@ jobs:
           cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
           rm -rf build
 
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
@@ -200,11 +200,11 @@ jobs:
           cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
           rm -rf build
           
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install -e . -vv
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
