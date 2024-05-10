@@ -173,6 +173,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
 requirements = [
     "pennylane>=0.34",
     "scipy",
+    "pybind11"
 ]
 
 packages_list = ["pennylane_lightning." + backend]
