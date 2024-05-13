@@ -42,10 +42,10 @@ template <class Precision, class index_type> class CSRMatrix {
     std::vector<std::complex<Precision>> values_;
 
   public:
-    CSRMatrix(size_t num_rows, size_t nnz)
+    CSRMatrix(size_t num_rows, std::size_t nnz)
         : columns_(nnz, 0), csrOffsets_(num_rows + 1, 0), values_(nnz){};
 
-    CSRMatrix(size_t num_rows, size_t nnz, index_type *column_ptr,
+    CSRMatrix(size_t num_rows, std::size_t nnz, index_type *column_ptr,
               index_type *csrOffsets_ptr, std::complex<Precision> *value_ptr)
         : columns_(column_ptr, column_ptr + nnz),
           csrOffsets_(csrOffsets_ptr, csrOffsets_ptr + num_rows + 1),
@@ -88,30 +88,30 @@ template <class Precision, class index_type> class CSRMatrix {
  * @return auto A vector of vector of CSRMatrix.
  */
 template <class Precision, class index_type>
-auto splitCSRMatrix(MPIManager &mpi_manager, const size_t &num_rows,
+auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
                     const index_type *csrOffsets_ptr,
                     const index_type *columns_ptr,
                     const std::complex<Precision> *values_ptr)
     -> std::vector<std::vector<CSRMatrix<Precision, index_type>>> {
-    size_t num_row_blocks = mpi_manager.getSize();
-    size_t num_col_blocks = num_row_blocks;
+    std::size_t num_row_blocks = mpi_manager.getSize();
+    std::size_t num_col_blocks = num_row_blocks;
 
     std::vector<std::vector<CSRMatrix<Precision, index_type>>>
         splitSparseMatrix(
             num_row_blocks,
             std::vector<CSRMatrix<Precision, index_type>>(num_col_blocks));
 
-    size_t row_block_size = num_rows / num_row_blocks;
-    size_t col_block_size = row_block_size;
+    std::size_t row_block_size = num_rows / num_row_blocks;
+    std::size_t col_block_size = row_block_size;
 
     // Add OpenMP support here later. Need to pay attention to
     // race condition.
-    size_t current_global_row, current_global_col;
-    size_t block_row_id, block_col_id;
-    size_t local_row_id, local_col_id;
+    std::size_t current_global_row, current_global_col;
+    std::size_t block_row_id, block_col_id;
+    std::size_t local_row_id, local_col_id;
     for (size_t row = 0; row < num_rows; row++) {
-        for (size_t col_idx = static_cast<size_t>(csrOffsets_ptr[row]);
-             col_idx < static_cast<size_t>(csrOffsets_ptr[row + 1]);
+        for (size_t col_idx = static_cast<std::size_t>(csrOffsets_ptr[row]);
+             col_idx < static_cast<std::size_t>(csrOffsets_ptr[row + 1]);
              col_idx++) {
             current_global_row = row;
             current_global_col = columns_ptr[col_idx];
@@ -146,7 +146,8 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const size_t &num_rows,
         for (size_t block_col_id = 0; block_col_id < num_col_blocks;
              block_col_id++) {
             auto &localSpMat = splitSparseMatrix[block_row_id][block_col_id];
-            size_t local_csr_offset_size = localSpMat.getCsrOffsets().size();
+            std::size_t local_csr_offset_size =
+                localSpMat.getCsrOffsets().size();
             for (size_t i0 = 1; i0 < local_csr_offset_size; i0++) {
                 localSpMat.getCsrOffsets()[i0] +=
                     localSpMat.getCsrOffsets()[i0 - 1];
@@ -170,11 +171,11 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const size_t &num_rows,
 template <class Precision, class index_type>
 auto scatterCSRMatrix(MPIManager &mpi_manager,
                       std::vector<CSRMatrix<Precision, index_type>> &matrix,
-                      size_t local_num_rows, size_t root)
+                      std::size_t local_num_rows, std::size_t root)
     -> CSRMatrix<Precision, index_type> {
-    size_t num_col_blocks = mpi_manager.getSize();
+    std::size_t num_col_blocks = mpi_manager.getSize();
 
-    std::vector<size_t> nnzs;
+    std::vector<std::size_t> nnzs;
 
     if (mpi_manager.getRank() == root) {
         nnzs.reserve(matrix.size());
@@ -183,7 +184,7 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
         }
     }
 
-    size_t local_nnz = mpi_manager.scatter<size_t>(nnzs, 0)[0];
+    std::size_t local_nnz = mpi_manager.scatter<std::size_t>(nnzs, 0)[0];
 
     CSRMatrix<Precision, index_type> localCSRMatrix(local_num_rows, local_nnz);
 
@@ -194,8 +195,8 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
     }
 
     for (size_t k = 1; k < num_col_blocks; k++) {
-        size_t dest = k;
-        size_t source = root;
+        std::size_t dest = k;
+        std::size_t source = root;
 
         if (mpi_manager.getRank() == 0 && matrix[k].getValues().size()) {
             mpi_manager.Send<std::complex<Precision>>(matrix[k].getValues(),

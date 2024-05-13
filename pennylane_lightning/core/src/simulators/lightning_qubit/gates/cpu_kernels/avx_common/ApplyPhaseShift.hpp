@@ -25,12 +25,12 @@
 #include <complex>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
+template <typename PrecisionT, std::size_t packed_size> struct ApplyPhaseShift {
     using Precision = PrecisionT;
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
 
-    constexpr static size_t packed_size_ = packed_size;
+    constexpr static std::size_t packed_size_ = packed_size;
 
     /**
      * @brief Permutation for applying `i` if a bit is 1
@@ -92,7 +92,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
 
     template <size_t rev_wire, typename ParamT>
     static void applyInternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits, bool inverse,
+                              const std::size_t num_qubits, bool inverse,
                               ParamT angle) {
         constexpr static auto perm = applyInternalPermutation(rev_wire);
         const auto cos_factor = cosFactor(rev_wire, angle);
@@ -108,13 +108,14 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
     }
 
     template <typename ParamT>
-    static void applyExternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits, const size_t rev_wire,
-                              bool inverse, ParamT angle) {
+    static void
+    applyExternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
+                  const std::size_t rev_wire, bool inverse, ParamT angle) {
         using namespace Permutation;
-        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        const size_t wire_parity = fillTrailingOnes(rev_wire);
-        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+        const std::size_t rev_wire_shift =
+            (static_cast<std::size_t>(1U) << rev_wire);
+        const std::size_t wire_parity = fillTrailingOnes(rev_wire);
+        const std::size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         const auto cos_factor =
             set1<PrecisionT, packed_size>(static_cast<PrecisionT>(cos(angle)));
@@ -126,8 +127,9 @@ template <typename PrecisionT, size_t packed_size> struct ApplyPhaseShift {
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
         for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | rev_wire_shift;
+            const std::size_t i0 =
+                ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            const std::size_t i1 = i0 | rev_wire_shift;
 
             const auto v1 = PrecisionAVXConcept::load(arr + i1);
             const auto w1 = cos_factor * v1 + isin_factor * permute<perm>(v1);

@@ -82,14 +82,15 @@ concept SingleQubitGate =
     SingleQubitGateWithoutParam<T> || SingleQubitGateWithParam<T>;
 
 namespace Internal {
-template <SingleQubitGateWithoutParam AVXImpl, size_t... rev_wire>
+template <SingleQubitGateWithoutParam AVXImpl, std::size_t... rev_wire>
 constexpr auto
 InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
     -> decltype(auto) {
     return std::array{&AVXImpl::template applyInternal<rev_wire>...};
 }
 
-template <SingleQubitGateWithParam AVXImpl, typename ParamT, size_t... rev_wire>
+template <SingleQubitGateWithParam AVXImpl, typename ParamT,
+          std::size_t... rev_wire>
 constexpr auto
 InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
     -> decltype(auto) {
@@ -104,7 +105,7 @@ InternalFunctions_Iter([[maybe_unused]] std::index_sequence<rev_wire...> dummy)
  */
 template <SingleQubitGateWithoutParam AVXImpl>
 constexpr auto InternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
+    constexpr std::size_t internal_wires =
         log2PerfectPower(AVXImpl::packed_size_ / 2);
     return InternalFunctions_Iter<AVXImpl>(
         std::make_index_sequence<internal_wires>());
@@ -118,7 +119,7 @@ constexpr auto InternalFunctions() -> decltype(auto) {
  */
 template <SingleQubitGateWithParam AVXImpl, typename ParamT>
 constexpr auto InternalFunctions() -> decltype(auto) {
-    constexpr size_t internal_wires =
+    constexpr std::size_t internal_wires =
         log2PerfectPower(AVXImpl::packed_size_ / 2);
     return InternalFunctions_Iter<AVXImpl, ParamT>(
         std::make_index_sequence<internal_wires>());
@@ -135,9 +136,9 @@ class SingleQubitGateWithoutParamHelper {
     using Precision = typename AVXImpl::Precision;
     using ReturnType =
         typename FuncReturn<decltype(AVXImpl::applyExternal)>::Type;
-    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
-                                    const std::vector<size_t> &, bool);
-    constexpr static size_t packed_size = AVXImpl::packed_size_;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, std::size_t,
+                                    const std::vector<std::size_t> &, bool);
+    constexpr static std::size_t packed_size = AVXImpl::packed_size_;
 
   private:
     FuncType fallback_func_;
@@ -155,17 +156,17 @@ class SingleQubitGateWithoutParamHelper {
      * @param wires Wires the gate applies to
      * @param inverse Apply the inverse of the gate when true
      */
-    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
-                    const std::vector<size_t> &wires, bool inverse) const
+    auto operator()(std::complex<Precision> *arr, const std::size_t num_qubits,
+                    const std::vector<std::size_t> &wires, bool inverse) const
         -> ReturnType {
         PL_ASSERT(wires.size() == 1);
 
-        constexpr static size_t internal_wires =
+        constexpr static std::size_t internal_wires =
             log2PerfectPower(packed_size / 2);
         constexpr static auto internal_functions =
             Internal::InternalFunctions<AVXImpl>();
 
-        const size_t rev_wire = num_qubits - wires[0] - 1;
+        const std::size_t rev_wire = num_qubits - wires[0] - 1;
 
         if (exp2(num_qubits) < packed_size / 2) {
             return fallback_func_(arr, num_qubits, wires, inverse);
@@ -189,9 +190,10 @@ class SingleQubitGateWithParamHelper {
     using Precision = typename AVXImpl::Precision;
     using ReturnType = typename FuncReturn<
         decltype(AVXImpl::template applyExternal<ParamT>)>::Type;
-    using FuncType = ReturnType (*)(std::complex<Precision> *, size_t,
-                                    const std::vector<size_t> &, bool, ParamT);
-    constexpr static size_t packed_size = AVXImpl::packed_size_;
+    using FuncType = ReturnType (*)(std::complex<Precision> *, std::size_t,
+                                    const std::vector<std::size_t> &, bool,
+                                    ParamT);
+    constexpr static std::size_t packed_size = AVXImpl::packed_size_;
 
   private:
     FuncType fallback_func_;
@@ -210,17 +212,17 @@ class SingleQubitGateWithParamHelper {
      * @param inverse Apply the inverse of the gate when true
      * @param angle Parameter of the gate
      */
-    auto operator()(std::complex<Precision> *arr, const size_t num_qubits,
-                    const std::vector<size_t> &wires, bool inverse,
+    auto operator()(std::complex<Precision> *arr, const std::size_t num_qubits,
+                    const std::vector<std::size_t> &wires, bool inverse,
                     ParamT angle) const -> ReturnType {
         PL_ASSERT(wires.size() == 1);
 
-        constexpr static size_t internal_wires =
+        constexpr static std::size_t internal_wires =
             log2PerfectPower(packed_size / 2);
         constexpr static auto internal_functions =
             Internal::InternalFunctions<AVXImpl, ParamT>();
 
-        const size_t rev_wire = num_qubits - wires[0] - 1;
+        const std::size_t rev_wire = num_qubits - wires[0] - 1;
 
         // When the size of an array is smaller than the AVX type
         if (exp2(num_qubits) < packed_size / 2) {

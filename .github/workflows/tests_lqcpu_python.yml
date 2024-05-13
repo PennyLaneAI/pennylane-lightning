@@ -12,8 +12,9 @@ on:
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
     paths-ignore:
-      - .github
+      - .github/**
       - '!.github/workflows/tests_lqcpu_python.yml'
+      - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
@@ -48,7 +49,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
         blas: ["OFF", "ON"]
     timeout-minutes: 60
-    name: Python tests
+    name: Build (${{ matrix.pl_backend }}, blas-${{ matrix.blas }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -125,7 +126,7 @@ jobs:
         blas: ["OFF", "ON"]
         group: [1, 2, 3, 4]
     timeout-minutes: 60
-    name: Python tests
+    name: Python Tests (${{ matrix.pl_backend }}, blas-${{ matrix.blas }}, test-group-${{ matrix.group }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:

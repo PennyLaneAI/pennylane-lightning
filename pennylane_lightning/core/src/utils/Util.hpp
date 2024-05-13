@@ -234,18 +234,18 @@ inline static constexpr auto INVSQRT2() -> ComplexT<T> {
  * @param n the exponent
  * @return value of 2^n
  */
-inline auto exp2(const size_t &n) -> size_t {
-    return static_cast<size_t>(1) << n;
+inline auto exp2(const std::size_t &n) -> std::size_t {
+    return static_cast<std::size_t>(1) << n;
 }
 
 /**
  * @brief Log2 calculation.
  *
  * @param value Value to calculate for.
- * @return size_t
+ * @return std::size_t
  */
-inline auto log2(size_t value) -> size_t {
-    return static_cast<size_t>(std::log2(value));
+inline auto log2(size_t value) -> std::size_t {
+    return static_cast<std::size_t>(std::log2(value));
 }
 
 /**
@@ -256,7 +256,8 @@ inline auto log2(size_t value) -> size_t {
  * @param qubits the number of qubits in the circuit
  * @return decimal value for the qubit at specified index
  */
-inline auto maxDecimalForQubit(size_t qubitIndex, size_t qubits) -> size_t {
+inline auto maxDecimalForQubit(size_t qubitIndex, std::size_t qubits)
+    -> std::size_t {
     PL_ASSERT(qubitIndex < qubits);
     return exp2(qubits - qubitIndex - 1);
 }
@@ -273,7 +274,7 @@ struct PairHash {
      * @param p A pair to compute hash
      */
     template <typename T, typename U>
-    size_t operator()(const std::pair<T, U> &p) const {
+    std::size_t operator()(const std::pair<T, U> &p) const {
         return std::hash<T>()(p.first) ^ std::hash<U>()(p.second);
     }
 };
@@ -350,7 +351,7 @@ inline auto operator<<(std::ostream &os, const std::set<T> &s)
  * @param data_size Size of the data
  */
 template <class T>
-auto squaredNorm(const T *data, size_t data_size) -> remove_complex_t<T> {
+auto squaredNorm(const T *data, std::size_t data_size) -> remove_complex_t<T> {
     if constexpr (is_complex_v<T>) {
         // complex type
         using PrecisionT = remove_complex_t<T>;
@@ -387,14 +388,14 @@ auto squaredNorm(const std::vector<T, Alloc> &vec) -> remove_complex_t<T> {
  * @return a vector with indices that would sort the array.
  */
 template <typename T>
-inline auto sorting_indices(const T *arr, size_t length)
-    -> std::vector<size_t> {
-    std::vector<size_t> indices(length);
+inline auto sorting_indices(const T *arr, std::size_t length)
+    -> std::vector<std::size_t> {
+    std::vector<std::size_t> indices(length);
     iota(indices.begin(), indices.end(), 0);
 
     // indices will be sorted in accordance to the array provided.
     sort(indices.begin(), indices.end(),
-         [&arr](size_t i1, size_t i2) { return arr[i1] < arr[i2]; });
+         [&arr](size_t i1, std::size_t i2) { return arr[i1] < arr[i2]; });
 
     return indices;
 }
@@ -407,7 +408,8 @@ inline auto sorting_indices(const T *arr, size_t length)
  * @return a vector with indices that would sort the vector.
  */
 template <typename T>
-inline auto sorting_indices(const std::vector<T> &vec) -> std::vector<size_t> {
+inline auto sorting_indices(const std::vector<T> &vec)
+    -> std::vector<std::size_t> {
     return sorting_indices(vec.data(), vec.size());
 }
 
@@ -419,13 +421,13 @@ inline auto sorting_indices(const std::vector<T> &vec) -> std::vector<size_t> {
  *
  * @param qubitIndices Indices of the qubits to apply operations.
  * @param num_qubits Number of qubits in register.
- * @return std::vector<size_t>
+ * @return std::vector<std::size_t>
  */
 
 inline auto
-getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
-                         size_t num_qubits) -> std::vector<size_t> {
-    std::vector<size_t> indices;
+getIndicesAfterExclusion(const std::vector<std::size_t> &indicesToExclude,
+                         std::size_t num_qubits) -> std::vector<std::size_t> {
+    std::vector<std::size_t> indices;
     for (size_t i = 0; i < num_qubits; i++) {
         indices.emplace_back(i);
     }
@@ -448,21 +450,22 @@ getIndicesAfterExclusion(const std::vector<size_t> &indicesToExclude,
  *
  * @param qubitIndices Indices of the qubits to apply operations.
  * @param num_qubits Number of qubits in register.
- * @return std::vector<size_t>
+ * @return std::vector<std::size_t>
  */
 
-inline auto generateBitsPatterns(const std::vector<size_t> &qubitIndices,
-                                 size_t num_qubits) -> std::vector<size_t> {
-    std::vector<size_t> indices;
+inline auto generateBitsPatterns(const std::vector<std::size_t> &qubitIndices,
+                                 std::size_t num_qubits)
+    -> std::vector<std::size_t> {
+    std::vector<std::size_t> indices;
     indices.reserve(exp2(qubitIndices.size()));
     indices.emplace_back(0);
 
     for (size_t index_it0 = 0; index_it0 < qubitIndices.size(); index_it0++) {
-        size_t index_it = qubitIndices.size() - 1 - index_it0;
-        const size_t value =
+        std::size_t index_it = qubitIndices.size() - 1 - index_it0;
+        const std::size_t value =
             maxDecimalForQubit(qubitIndices[index_it], num_qubits);
 
-        const size_t currentSize = indices.size();
+        const std::size_t currentSize = indices.size();
         for (size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
         }
@@ -478,10 +481,10 @@ inline auto generateBitsPatterns(const std::vector<size_t> &qubitIndices,
  * @return unsigned int with the new transposed index.
  */
 inline auto transposed_state_index(size_t ind,
-                                   const std::vector<size_t> &new_axes)
-    -> size_t {
-    size_t new_index = 0;
-    const size_t max_axis = new_axes.size() - 1;
+                                   const std::vector<std::size_t> &new_axes)
+    -> std::size_t {
+    std::size_t new_index = 0;
+    const std::size_t max_axis = new_axes.size() - 1;
     // NOLINTNEXTLINE(modernize-loop-convert)
     for (auto axis = new_axes.rbegin(); axis != new_axes.rend(); ++axis) {
         new_index += (ind % 2) << (max_axis - *axis);
@@ -501,7 +504,7 @@ inline auto transposed_state_index(size_t ind,
  */
 template <typename T>
 auto transpose_state_tensor(const std::vector<T> &tensor,
-                            const std::vector<size_t> &new_axes)
+                            const std::vector<std::size_t> &new_axes)
     -> std::vector<T> {
     std::vector<T> transposed_tensor(tensor.size());
     for (size_t ind = 0; ind < tensor.size(); ind++) {
@@ -546,7 +549,7 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  * @return is_Hermitian Is the matrix a Hermitian matrix or not.
  */
 template <typename T>
-bool is_Hermitian(size_t n, size_t lda,
+bool is_Hermitian(size_t n, std::size_t lda,
                   const std::vector<std::complex<T>> &mat) {
     // TODO OMP support
     for (size_t i = 0; i < n; i++) {

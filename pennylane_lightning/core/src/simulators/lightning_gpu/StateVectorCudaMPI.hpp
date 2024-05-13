@@ -57,18 +57,18 @@ namespace Pennylane::LightningGPU {
 // declarations of external functions (defined in initSV.cu).
 extern void setStateVector_CUDA(cuComplex *sv, int &num_indices,
                                 cuComplex *value, int *indices,
-                                size_t thread_per_block,
+                                std::size_t thread_per_block,
                                 cudaStream_t stream_id);
 extern void setStateVector_CUDA(cuDoubleComplex *sv, long &num_indices,
                                 cuDoubleComplex *value, long *indices,
-                                size_t thread_per_block,
+                                std::size_t thread_per_block,
                                 cudaStream_t stream_id);
 
 extern void setBasisState_CUDA(cuComplex *sv, cuComplex &value,
-                               const size_t index, bool async,
+                               const std::size_t index, bool async,
                                cudaStream_t stream_id);
 extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
-                               const size_t index, bool async,
+                               const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
 /**
@@ -83,8 +83,8 @@ class StateVectorCudaMPI final
   private:
     using BaseType = StateVectorCudaBase<Precision, StateVectorCudaMPI>;
 
-    size_t numGlobalQubits_;
-    size_t numLocalQubits_;
+    std::size_t numGlobalQubits_;
+    std::size_t numLocalQubits_;
     MPIManager mpi_manager_;
 
     SharedCusvHandle handle_;
@@ -106,8 +106,8 @@ class StateVectorCudaMPI final
     StateVectorCudaMPI() = delete;
 
     StateVectorCudaMPI(MPIManager mpi_manager, const DevTag<int> &dev_tag,
-                       size_t mpi_buf_size, size_t num_global_qubits,
-                       size_t num_local_qubits)
+                       std::size_t mpi_buf_size, std::size_t num_global_qubits,
+                       std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -124,8 +124,8 @@ class StateVectorCudaMPI final
     };
 
     StateVectorCudaMPI(MPI_Comm mpi_communicator, const DevTag<int> &dev_tag,
-                       size_t mpi_buf_size, size_t num_global_qubits,
-                       size_t num_local_qubits)
+                       std::size_t mpi_buf_size, std::size_t num_global_qubits,
+                       std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -141,8 +141,9 @@ class StateVectorCudaMPI final
         mpi_manager_.Barrier();
     };
 
-    StateVectorCudaMPI(const DevTag<int> &dev_tag, size_t mpi_buf_size,
-                       size_t num_global_qubits, size_t num_local_qubits)
+    StateVectorCudaMPI(const DevTag<int> &dev_tag, std::size_t mpi_buf_size,
+                       std::size_t num_global_qubits,
+                       std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -158,8 +159,9 @@ class StateVectorCudaMPI final
         mpi_manager_.Barrier();
     };
 
-    StateVectorCudaMPI(const DevTag<int> &dev_tag, size_t num_global_qubits,
-                       size_t num_local_qubits, const CFP_t *gpu_data)
+    StateVectorCudaMPI(const DevTag<int> &dev_tag,
+                       std::size_t num_global_qubits,
+                       std::size_t num_local_qubits, const CFP_t *gpu_data)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -171,14 +173,15 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
-        size_t length = 1 << numLocalQubits_;
+        std::size_t length = 1 << numLocalQubits_;
         BaseType::CopyGpuDataToGpuIn(gpu_data, length, false);
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize())
         mpi_manager_.Barrier();
     }
 
-    StateVectorCudaMPI(const DevTag<int> &dev_tag, size_t num_global_qubits,
-                       size_t num_local_qubits)
+    StateVectorCudaMPI(const DevTag<int> &dev_tag,
+                       std::size_t num_global_qubits,
+                       std::size_t num_local_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -226,19 +229,19 @@ class StateVectorCudaMPI final
     /**
      * @brief Get the total number of wires.
      */
-    auto getTotalNumQubits() const -> size_t {
+    auto getTotalNumQubits() const -> std::size_t {
         return numGlobalQubits_ + numLocalQubits_;
     }
 
     /**
      * @brief Get the number of wires distributed across devices.
      */
-    auto getNumGlobalQubits() const -> size_t { return numGlobalQubits_; }
+    auto getNumGlobalQubits() const -> std::size_t { return numGlobalQubits_; }
 
     /**
      * @brief Get the number of wires within the local devices.
      */
-    auto getNumLocalQubits() const -> size_t { return numLocalQubits_; }
+    auto getNumLocalQubits() const -> std::size_t { return numLocalQubits_; }
 
     /**
      * @brief Get pointer to custatevecSVSwapWorkerDescriptor.
@@ -255,14 +258,14 @@ class StateVectorCudaMPI final
      * @param index Index of the target element.
      * @param async Use an asynchronous memory copy.
      */
-    void setBasisState(const std::complex<Precision> &value, const size_t index,
-                       const bool async = false) {
-        size_t rankId = index >> BaseType::getNumQubits();
+    void setBasisState(const std::complex<Precision> &value,
+                       const std::size_t index, const bool async = false) {
+        std::size_t rankId = index >> BaseType::getNumQubits();
 
-        size_t local_index =
-            static_cast<size_t>(rankId *
-                                std::pow(2.0, static_cast<long double>(
-                                                  BaseType::getNumQubits()))) ^
+        std::size_t local_index =
+            static_cast<std::size_t>(
+                rankId * std::pow(2.0, static_cast<long double>(
+                                           BaseType::getNumQubits()))) ^
             index;
         BaseType::getDataBuffer().zeroInit();
 
@@ -287,7 +290,7 @@ class StateVectorCudaMPI final
      * @param indices Pointer to indices of the target elements.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, size_t thread_per_block = 256>
+    template <class index_type, std::size_t thread_per_block = 256>
     void setStateVector(const index_type num_indices,
                         const std::complex<Precision> *values,
                         const index_type *indices, const bool async = false) {
@@ -296,15 +299,15 @@ class StateVectorCudaMPI final
         std::vector<index_type> indices_local;
         std::vector<std::complex<Precision>> values_local;
 
-        for (size_t i = 0; i < static_cast<size_t>(num_indices); i++) {
+        for (size_t i = 0; i < static_cast<std::size_t>(num_indices); i++) {
             int index = indices[i];
             PL_ASSERT(index >= 0);
-            size_t rankId =
-                static_cast<size_t>(index) >> BaseType::getNumQubits();
+            std::size_t rankId =
+                static_cast<std::size_t>(index) >> BaseType::getNumQubits();
 
             if (rankId == mpi_manager_.getRank()) {
                 int local_index =
-                    static_cast<size_t>(
+                    static_cast<std::size_t>(
                         rankId * std::pow(2.0, static_cast<long double>(
                                                    BaseType::getNumQubits()))) ^
                     index;
@@ -349,7 +352,7 @@ class StateVectorCudaMPI final
      * @param matrix Matrix representation of gate.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint,
+                        const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         [[maybe_unused]] const std::vector<ComplexT> &matrix) {
         std::vector<CFP_t> matrix_cu(matrix.size());
@@ -374,7 +377,7 @@ class StateVectorCudaMPI final
      * @param gate_matrix Matrix representation of gate.
      */
     void applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
+        const std::string &opName, const std::vector<std::size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {}) {
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
@@ -461,8 +464,8 @@ class StateVectorCudaMPI final
      * @param adjoint Indicates whether to use adjoint of gate.
      */
     auto applyGenerator(const std::string &opName,
-                        const std::vector<size_t> &wires, bool adjoint = false)
-        -> PrecisionT {
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false) -> PrecisionT {
         auto it = generator_map_.find(opName);
         PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
         return (it->second)(wires, adjoint);
@@ -477,10 +480,11 @@ class StateVectorCudaMPI final
      * @param adjoint Indicate whether inverse should be taken.
      */
     void applyMatrix(const std::complex<PrecisionT> *gate_matrix,
-                     const std::vector<size_t> &wires, bool adjoint = false) {
+                     const std::vector<std::size_t> &wires,
+                     bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::string opName = {};
-        size_t n = size_t{1} << wires.size();
+        std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
         std::vector<CFP_t> matrix_cu(matrix.size());
@@ -501,7 +505,8 @@ class StateVectorCudaMPI final
      * @param adjoint Indicate whether inverse should be taken.
      */
     void applyMatrix(const std::vector<std::complex<PrecisionT>> &gate_matrix,
-                     const std::vector<size_t> &wires, bool adjoint = false) {
+                     const std::vector<std::size_t> &wires,
+                     bool adjoint = false) {
         PL_ABORT_IF(gate_matrix.size() !=
                         Pennylane::Util::exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
@@ -772,7 +777,7 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRX(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRX(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliX(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -785,7 +790,7 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRY(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRY(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliY(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -798,7 +803,7 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorRZ(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorRZ(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyPauliZ(wires, adj);
         return -static_cast<PrecisionT>(0.5);
@@ -864,8 +869,9 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorPhaseShift(const std::vector<size_t> &wires,
-                                               bool adj = false) {
+    inline PrecisionT
+    applyGeneratorPhaseShift(const std::vector<std::size_t> &wires,
+                             bool adj = false) {
         applyOperation("P_11", wires, adj, {0.0}, cuGates::getP11_CU<CFP_t>());
         return static_cast<PrecisionT>(1.0);
     }
@@ -877,11 +883,11 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRX(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRX(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliX(std::vector<size_t>{wires.back()}, adj);
+        applyPauliX(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -892,11 +898,11 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRY(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRY(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliY(std::vector<size_t>{wires.back()}, adj);
+        applyPauliY(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -907,11 +913,11 @@ class StateVectorCudaMPI final
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
-    inline PrecisionT applyGeneratorCRZ(const std::vector<size_t> &wires,
+    inline PrecisionT applyGeneratorCRZ(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
                        cuGates::getP11_CU<CFP_t>());
-        applyPauliZ(std::vector<size_t>{wires.back()}, adj);
+        applyPauliZ(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -923,7 +929,7 @@ class StateVectorCudaMPI final
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
     inline PrecisionT
-    applyGeneratorControlledPhaseShift(const std::vector<size_t> &wires,
+    applyGeneratorControlledPhaseShift(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyOperation("P_1111", {wires}, adj, {0.0},
                        cuGates::getP1111_CU<CFP_t>());
@@ -1077,7 +1083,8 @@ class StateVectorCudaMPI final
      * if does not exist.
      * @return auto Expectation value.
      */
-    auto expval(const std::string &obsName, const std::vector<size_t> &wires,
+    auto expval(const std::string &obsName,
+                const std::vector<std::size_t> &wires,
                 const std::vector<Precision> &params = {0.0},
                 const std::vector<CFP_t> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
@@ -1096,7 +1103,7 @@ class StateVectorCudaMPI final
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
      */
-    auto expval(const std::vector<size_t> &wires,
+    auto expval(const std::vector<std::size_t> &wires,
                 const std::vector<std::complex<Precision>> &gate_matrix) {
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
 
@@ -1112,7 +1119,8 @@ class StateVectorCudaMPI final
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires =
+            std::vector<std::size_t>{wires.rbegin(), wires.rend()};
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto expect_val =
             getExpectationValueDeviceMatrix(matrix_cu.data(), local_wires).x;
@@ -1155,7 +1163,7 @@ class StateVectorCudaMPI final
         std::vector<std::size_t> tgtsSwapStatus;
         std::vector<std::vector<int2>> tgtswirePairs;
         // Local target wires (required by expvalOnPauliBasis)
-        std::vector<std::vector<size_t>> localTgts;
+        std::vector<std::vector<std::size_t>> localTgts;
         localTgts.reserve(tgts.size());
 
         tgtsVecProcess(this->getNumLocalQubits(), this->getTotalNumQubits(),
@@ -1172,7 +1180,7 @@ class StateVectorCudaMPI final
         if (isAllTargetsLocal) {
             expvalOnPauliBasis(pauli_words, localTgts, expect_local);
         } else {
-            size_t wirePairsIdx = 0;
+            std::size_t wirePairsIdx = 0;
             for (size_t i = 0; i < pauli_words.size(); i++) {
                 if (tgtsSwapStatus[i] == WiresSwapStatus::UnSwappable) {
                     auto opsNames = pauliStringToOpNames(pauli_words[i]);
@@ -1182,7 +1190,7 @@ class StateVectorCudaMPI final
                         this->getData());
 
                     for (size_t opsIdx = 0; opsIdx < tgts[i].size(); opsIdx++) {
-                        std::vector<size_t> wires = {tgts[i][opsIdx]};
+                        std::vector<std::size_t> wires = {tgts[i][opsIdx]};
                         tmp.applyOperation({opsNames[opsIdx]},
                                            {tgts[i][opsIdx]}, {false});
                     }
@@ -1198,7 +1206,7 @@ class StateVectorCudaMPI final
                 } else {
                     std::vector<std::string> pauli_words_idx(
                         1, std::string(pauli_words[i]));
-                    std::vector<std::vector<size_t>> tgts_idx;
+                    std::vector<std::vector<std::size_t>> tgts_idx;
                     tgts_idx.push_back(localTgts[i]);
                     std::vector<double> expval_local(1);
 
@@ -1227,10 +1235,10 @@ class StateVectorCudaMPI final
     }
 
   private:
-    using ParFunc = std::function<void(const std::vector<size_t> &, bool,
+    using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;
     using GeneratorFunc =
-        std::function<Precision(const std::vector<size_t> &, bool)>;
+        std::function<Precision(const std::vector<std::size_t> &, bool)>;
 
     using FMap = std::unordered_map<std::string, ParFunc>;
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
@@ -1674,11 +1682,11 @@ class StateVectorCudaMPI final
             applyCuSVPauliGate(pauli_words, ctrlsInt, tgtsInt, param,
                                use_adjoint);
         } else {
-            size_t counts_global_wires =
+            std::size_t counts_global_wires =
                 std::count_if(statusWires.begin(),
                               statusWires.begin() + this->getNumLocalQubits(),
                               [](int i) { return i != WireStatus::Default; });
-            size_t counts_local_wires =
+            std::size_t counts_local_wires =
                 ctrlsInt.size() + tgtsInt.size() - counts_global_wires;
             PL_ABORT_IF(
                 counts_global_wires >
@@ -1722,7 +1730,7 @@ class StateVectorCudaMPI final
                                    const std::vector<int> &tgts,
                                    bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
 
         cudaDataType_t data_type;
@@ -1749,7 +1757,7 @@ class StateVectorCudaMPI final
             /* const uint32_t */ tgts.size(),
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
         // allocate external workspace if necessary
         // LCOV_EXCL_START
@@ -1776,7 +1784,7 @@ class StateVectorCudaMPI final
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
+            /* std::size_t */ extraWorkspaceSizeInBytes));
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
@@ -1833,11 +1841,11 @@ class StateVectorCudaMPI final
         if (!StatusGlobalWires) {
             applyCuSVDeviceMatrixGate(matrix, ctrlsInt, tgtsInt, use_adjoint);
         } else {
-            size_t counts_global_wires =
+            std::size_t counts_global_wires =
                 std::count_if(statusWires.begin(),
                               statusWires.begin() + this->getNumLocalQubits(),
                               [](int i) { return i != WireStatus::Default; });
-            size_t counts_local_wires =
+            std::size_t counts_local_wires =
                 ctrlsInt.size() + tgtsInt.size() - counts_global_wires;
             PL_ABORT_IF(
                 counts_global_wires >
@@ -1876,9 +1884,9 @@ class StateVectorCudaMPI final
                                              const std::vector<int> &tgts,
                                              CFP_t &expect) {
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
 
-        size_t nIndexBits = BaseType::getNumQubits();
+        std::size_t nIndexBits = BaseType::getNumQubits();
         cudaDataType_t data_type;
         custatevecComputeType_t compute_type;
         cudaDataType_t expectationDataType = CUDA_C_64F;
@@ -1902,7 +1910,7 @@ class StateVectorCudaMPI final
             /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
             /* const uint32_t */ tgts.size(),
             /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
             PL_CUDA_IS_SUCCESS(
@@ -1927,7 +1935,7 @@ class StateVectorCudaMPI final
             /* const uint32_t */ tgts.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
+            /* std::size_t */ extraWorkspaceSizeInBytes));
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes) {
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
@@ -2046,7 +2054,7 @@ class StateVectorCudaMPI final
         //
         // the main loop of index bit swaps
         //
-        constexpr size_t nLoops = 2;
+        constexpr std::size_t nLoops = 2;
         for (size_t loop = 0; loop < nLoops; loop++) {
             for (int swapBatchIndex = 0;
                  swapBatchIndex < static_cast<int>(nSwapBatches);

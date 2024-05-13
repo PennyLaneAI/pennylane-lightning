@@ -29,21 +29,22 @@ using namespace Pennylane::LightningGPU::MPI;
 
 TEMPLATE_TEST_CASE("CSRMatrix", "[Sparse Matrix]", float, double) {
     SECTION("Default constructibility") {
-        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, size_t>>);
+        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, std::size_t>>);
     }
 
     SECTION("Constructibility") {
-        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, size_t>, size_t,
-                                        size_t>);
+        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, std::size_t>,
+                                        std::size_t, std::size_t>);
     }
 
     SECTION("Constructibility - optional parameters") {
-        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, size_t>, size_t,
-                                        size_t, size_t *, size_t *,
-                                        std::complex<TestType> *>);
-        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, int32_t>, size_t,
-                                        size_t, int32_t *, int32_t *,
-                                        std::complex<TestType> *>);
+        REQUIRE(
+            std::is_constructible_v<CSRMatrix<TestType, std::size_t>,
+                                    std::size_t, std::size_t, std::size_t *,
+                                    std::size_t *, std::complex<TestType> *>);
+        REQUIRE(std::is_constructible_v<CSRMatrix<TestType, int32_t>,
+                                        std::size_t, std::size_t, int32_t *,
+                                        int32_t *, std::complex<TestType> *>);
     }
 }
 
@@ -110,7 +111,7 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
                 mpi_manager, num_rows, csrOffsets, columns, values);
         }
 
-        size_t local_num_rows = num_rows / size;
+        std::size_t local_num_rows = num_rows / size;
 
         std::vector<CSRMatrix<TestType, index_type>> localCSRMatVector;
         for (size_t i = 0; i < mpi_manager.getSize(); i++) {
