@@ -113,6 +113,11 @@ jobs:
       options: --privileged
 
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v3
