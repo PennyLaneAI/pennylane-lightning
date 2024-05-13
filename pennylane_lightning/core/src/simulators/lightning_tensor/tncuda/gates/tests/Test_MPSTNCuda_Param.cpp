@@ -269,8 +269,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift",
         std::vector<std::vector<cp_t>> expected_results = {
             {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
              ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
-            {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3],
-             ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][3]}};
+            {ps_data[1][0], ps_data[1][0], ps_data[1][0], ps_data[1][0],
+             ps_data[1][0], ps_data[1][3], ps_data[1][0], ps_data[1][3]}};
 
         for (auto &vec : expected_results) {
             scaleVector(vec, coef);
@@ -282,12 +282,26 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift",
             sv.appendGateTensorOperator("Hadamard", {0}, false);
             sv.appendGateTensorOperator("Hadamard", {1}, false);
             sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("ControlledPhaseShift", {index},
-                                        inverse, {angles[index]});
+            sv.appendGateTensorOperator("ControlledPhaseShift", {0, 1}, inverse,
+                                        {angles[0]});
 
             auto results = sv.getDataVector();
 
-            CHECK(results == Pennylane::Util::approx(expected_results[index]));
+            CHECK(results == Pennylane::Util::approx(expected_results[0]));
+        }
+
+        SECTION("Apply non-adjacent wire indices using dispatcher") {
+            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+
+            sv.appendGateTensorOperator("Hadamard", {0}, false);
+            sv.appendGateTensorOperator("Hadamard", {1}, false);
+            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            sv.appendGateTensorOperator("ControlledPhaseShift", {0, 2}, inverse,
+                                        {angles[1]});
+
+            auto results = sv.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
