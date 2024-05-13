@@ -116,7 +116,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
+          python-version: ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }}
 
       - name: Restoring cached dependencies
         id: kokkos-cache
