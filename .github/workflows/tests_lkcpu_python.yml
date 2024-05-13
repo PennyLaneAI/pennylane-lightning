@@ -197,7 +197,7 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          if [ ${{ inputs.lightning-version }} != 'stable' ]; then
+          if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
