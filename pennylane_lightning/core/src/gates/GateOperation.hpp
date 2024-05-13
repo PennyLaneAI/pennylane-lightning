@@ -34,6 +34,7 @@ enum class GateOperation : uint32_t {
     Hadamard,
     S,
     T,
+    SX,
     PhaseShift,
     RX,
     RY,
@@ -67,7 +68,6 @@ enum class GateOperation : uint32_t {
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
-    SFDX,
     END
 };
 
@@ -80,6 +80,7 @@ enum class ControlledGateOperation : uint32_t {
     Hadamard,
     S,
     T,
+    SX,
     PhaseShift,
     RX,
     RY,
@@ -101,7 +102,6 @@ enum class ControlledGateOperation : uint32_t {
     MultiRZ,
     GlobalPhase,
     /* END (placeholder) */
-    SFDX,
     END
 };
 

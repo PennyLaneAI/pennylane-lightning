@@ -56,13 +56,13 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::Hadamard, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(GateOperation::SFDX, all_threading,
-                               all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::S, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(GateOperation::T, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(GateOperation::SX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(GateOperation::PhaseShift, all_threading,
@@ -251,13 +251,13 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::Hadamard, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::SFDX, all_threading,
-                               all_memory_model, all_qubit_numbers,
-                               KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::S, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::T, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::SX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::PhaseShift,
