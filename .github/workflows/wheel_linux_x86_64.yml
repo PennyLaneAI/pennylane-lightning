@@ -113,6 +113,11 @@ jobs:
       options: --privileged
 
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }}
+
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v3
@@ -135,7 +140,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install cibuildwheel
-        run: python3.9 -m pip install cibuildwheel~=2.16.0
+        run: python -m pip install cibuildwheel~=2.16.0
 
       - name: Build wheels
         env:
@@ -150,7 +155,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.24.0 scipy pybind11
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
@@ -172,12 +177,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python -m pip install twine
+          python -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build

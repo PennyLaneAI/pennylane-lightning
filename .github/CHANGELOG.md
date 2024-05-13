@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Update dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` with `pybind11` APIs for C++ layer.
+  [(#701)](https://github.com/PennyLaneAI/pennylane-lightning/pull/701)
+  
 * `dynamic_one_shot` uses shot-vectors in the auxiliary tape to tell the device how many times to repeat the tape. Lightning-Qubit is updated accordingly.
   [(#724)](https://github.com/PennyLaneAI/pennylane-lightning/pull/724)
 
@@ -38,7 +41,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
