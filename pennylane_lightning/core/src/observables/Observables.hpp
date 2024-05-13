@@ -278,6 +278,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<size_t> &ob_wires) const override {
+
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
