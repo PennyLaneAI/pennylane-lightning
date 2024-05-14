@@ -36,7 +36,7 @@ void registerMatrix(
     StateVectorT &st,
     const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
                       py::array::c_style | py::array::forcecast> &matrix,
-    const std::vector<size_t> &wires, bool inverse = false) {
+    const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
     st.applyMatrix(static_cast<const ComplexT *>(matrix.request().ptr), wires,
                    inverse);
@@ -69,7 +69,7 @@ void registerGatesForStateVector(PyClass &pyclass) {
             std::string(lookup(Constant::gate_names, gate_op));
         const std::string doc = "Apply the " + gate_name + " gate.";
         auto func = [gate_name = gate_name](
-                        StateVectorT &sv, const std::vector<size_t> &wires,
+                        StateVectorT &sv, const std::vector<std::size_t> &wires,
                         bool inverse, const std::vector<ParamT> &params) {
             sv.applyOperation(gate_name, wires, inverse, params);
         };

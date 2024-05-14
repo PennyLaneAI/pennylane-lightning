@@ -42,7 +42,7 @@ namespace Pennylane {
  */
 template <class PrecisionT, class Derived> class StateVectorBase {
   protected:
-    size_t num_qubits_{0};
+    std::size_t num_qubits_{0};
 
   public:
     /**
@@ -71,7 +71,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      *
      * @return std::size_t
      */
-    [[nodiscard]] auto getTotalNumQubits() const -> size_t {
+    [[nodiscard]] auto getTotalNumQubits() const -> std::size_t {
         return num_qubits_;
     }
 
@@ -80,8 +80,8 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      *
      * @return The size of the statevector
      */
-    [[nodiscard]] size_t getLength() const {
-        return static_cast<size_t>(exp2(num_qubits_));
+    [[nodiscard]] std::size_t getLength() const {
+        return static_cast<std::size_t>(exp2(num_qubits_));
     }
 
     /**
@@ -106,7 +106,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param params Optional parameter list for parametric gates.
      */
     inline void applyOperation(const std::string &opName,
-                               const std::vector<size_t> &wires,
+                               const std::vector<std::size_t> &wires,
                                bool adjoint = false,
                                const std::vector<PrecisionT> &params = {}) {
         return static_cast<Derived *>(this)->applyOperation(opName, wires,
@@ -125,10 +125,10 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      */
     void
     applyOperations(const std::vector<std::string> &ops,
-                    const std::vector<std::vector<size_t>> &ops_wires,
+                    const std::vector<std::vector<std::size_t>> &ops_wires,
                     const std::vector<bool> &ops_adjoint,
                     const std::vector<std::vector<PrecisionT>> &ops_params) {
-        const size_t numOperations = ops.size();
+        const std::size_t numOperations = ops.size();
         PL_ABORT_IF(
             numOperations != ops_wires.size(),
             "Invalid arguments: number of operations, wires, inverses, and "
@@ -157,9 +157,9 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * inverted.
      */
     void applyOperations(const std::vector<std::string> &ops,
-                         const std::vector<std::vector<size_t>> &ops_wires,
+                         const std::vector<std::vector<std::size_t>> &ops_wires,
                          const std::vector<bool> &ops_adjoint) {
-        const size_t numOperations = ops.size();
+        const std::size_t numOperations = ops.size();
         PL_ABORT_IF_NOT(
             numOperations == ops_wires.size(),
             "Invalid arguments: number of operations, wires, and inverses "
@@ -181,7 +181,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param adjoint Indicates whether to use adjoint of operator.
      */
     inline auto applyGenerator(const std::string &opName,
-                               const std::vector<size_t> &wires,
+                               const std::vector<std::size_t> &wires,
                                bool adjoint = false) -> PrecisionT {
         return static_cast<Derived *>(this)->applyGenerator(opName, wires,
                                                             adjoint);
@@ -196,7 +196,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         return static_cast<Derived *>(this)->applyMatrix(matrix, wires,
                                                          inverse);

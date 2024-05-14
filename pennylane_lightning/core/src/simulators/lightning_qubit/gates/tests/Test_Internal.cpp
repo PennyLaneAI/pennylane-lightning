@@ -116,9 +116,9 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     }
 }
 
-size_t binomialCeff(size_t n, size_t r) {
-    size_t num = 1;
-    size_t dem = 1;
+size_t binomialCeff(size_t n, std::size_t r) {
+    std::size_t num = 1;
+    std::size_t dem = 1;
     for (size_t k = 0; k < r; k++) {
         num *= (n - k);
     }
@@ -128,8 +128,8 @@ size_t binomialCeff(size_t n, size_t r) {
     return num / dem;
 }
 
-size_t permSize(size_t n, size_t r) {
-    size_t res = 1;
+size_t permSize(size_t n, std::size_t r) {
+    std::size_t res = 1;
     for (size_t k = 0; k < r; k++) {
         res *= (n - k);
     }
@@ -141,12 +141,12 @@ size_t permSize(size_t n, size_t r) {
  */
 TEST_CASE("createAllWires", "[Test_Internal]") {
     SECTION("order = false") {
-        const std::vector<std::pair<size_t, size_t>> test_pairs{
+        const std::vector<std::pair<size_t, std::size_t>> test_pairs{
             {4, 2},  {8, 3},  {12, 1}, {12, 2}, {12, 3},  {12, 4},  {12, 5},
             {12, 6}, {12, 7}, {12, 8}, {12, 9}, {12, 10}, {12, 11}, {12, 12}};
 
         for (const auto &[n, r] : test_pairs) {
-            std::vector<std::set<size_t>> vec;
+            std::vector<std::set<std::size_t>> vec;
             auto v = CombinationGenerator(n, r).all_perms();
 
             REQUIRE(v.size() == binomialCeff(n, r));
@@ -156,8 +156,8 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
             }
 
             std::sort(v.begin(), v.end(),
-                      [](const std::vector<size_t> &v1,
-                         const std::vector<size_t> &v2) {
+                      [](const std::vector<std::size_t> &v1,
+                         const std::vector<std::size_t> &v2) {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically
@@ -167,7 +167,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
         }
     }
     SECTION("order = true") {
-        const std::vector<std::pair<size_t, size_t>> test_pairs{
+        const std::vector<std::pair<size_t, std::size_t>> test_pairs{
             {4, 2}, {8, 3}, {12, 1}, {12, 2}, {12, 3}, {12, 4}, {12, 5}};
 
         for (const auto &[n, r] : test_pairs) {
@@ -179,8 +179,8 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
             }
 
             std::sort(v.begin(), v.end(),
-                      [](const std::vector<size_t> &v1,
-                         const std::vector<size_t> &v2) {
+                      [](const std::vector<std::size_t> &v1,
+                         const std::vector<std::size_t> &v2) {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically

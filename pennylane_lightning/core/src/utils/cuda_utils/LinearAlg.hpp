@@ -337,7 +337,7 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     cusparseSpMatDescr_t mat;
     cusparseDnVecDescr_t vecX, vecY;
 
-    size_t bufferSize = 0;
+    std::size_t bufferSize = 0;
 
     // Create sparse matrix A in CSR format
     PL_CUSPARSE_IS_SUCCESS(cusparseCreateCsr(
@@ -378,7 +378,7 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
         /* cusparseDnVecDescr_t */ vecY,
         /* cudaDataType */ data_type,
         /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
-        /* size_t* */ &bufferSize));
+        /* std::size_t* */ &bufferSize));
 
     DataBuffer<CFP_t, int> dBuffer{bufferSize, device_id, stream_id, true};
 
@@ -468,7 +468,7 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     cusparseDnVecDescr_t vecX;
     cusparseDnVecDescr_t vecY;
 
-    size_t bufferSize = 0;
+    std::size_t bufferSize = 0;
 
     // Create sparse matrix A in CSR format
     PL_CUSPARSE_IS_SUCCESS(cusparseCreateCsr(
@@ -509,7 +509,7 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
         /* cusparseDnVecDescr_t */ vecY,
         /* cudaDataType */ data_type,
         /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
-        /* size_t* */ &bufferSize));
+        /* std::size_t* */ &bufferSize));
 
     DataBuffer<cudaDataType_t, int> dBuffer{bufferSize, device_id, stream_id,
                                             true};

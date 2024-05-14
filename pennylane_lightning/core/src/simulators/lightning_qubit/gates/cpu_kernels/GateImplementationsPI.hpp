@@ -60,7 +60,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     constexpr static KernelType kernel_id = KernelType::PI;
     constexpr static std::string_view name = "PI";
     template <typename PrecisionT>
-    constexpr static size_t required_alignment =
+    constexpr static std::size_t required_alignment =
         std::alignment_of_v<PrecisionT>;
     template <typename PrecisionT>
     constexpr static uint32_t packed_bytes = sizeof(PrecisionT);
@@ -143,15 +143,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
      */
     template <class PrecisionT>
     static inline void
-    applySingleQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+    applySingleQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                        const std::complex<PrecisionT> *matrix,
-                       const std::vector<size_t> &wires, bool inverse = false) {
+                       const std::vector<std::size_t> &wires,
+                       bool inverse = false) {
         PL_ASSERT(wires.size() == 1);
 
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         if (inverse) {
-            for (const size_t &externalIndex : externalIndices) {
+            for (const std::size_t &externalIndex : externalIndices) {
                 std::complex<PrecisionT> *shiftedState = arr + externalIndex;
                 const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
                 const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
@@ -165,7 +166,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                         v1; // NOLINT(readability-magic-numbers)
             }
         } else {
-            for (const size_t &externalIndex : externalIndices) {
+            for (const std::size_t &externalIndex : externalIndices) {
                 std::complex<PrecisionT> *shiftedState = arr + externalIndex;
                 const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
                 const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
@@ -189,15 +190,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
      * @param inverse Indicate whether inverse should be taken.
      */
     template <class PrecisionT>
-    static inline void
-    applyTwoQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
-                    const std::complex<PrecisionT> *matrix,
-                    const std::vector<size_t> &wires, bool inverse = false) {
+    static inline void applyTwoQubitOp(std::complex<PrecisionT> *arr,
+                                       std::size_t num_qubits,
+                                       const std::complex<PrecisionT> *matrix,
+                                       const std::vector<std::size_t> &wires,
+                                       bool inverse = false) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         if (inverse) {
-            for (const size_t &externalIndex : externalIndices) {
+            for (const std::size_t &externalIndex : externalIndices) {
                 std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
                 const std::complex<PrecisionT> v00 = shiftedState[indices[0]];
@@ -225,7 +227,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                 // NOLINTEND(readability-magic-numbers)
             }
         } else {
-            for (const size_t &externalIndex : externalIndices) {
+            for (const std::size_t &externalIndex : externalIndices) {
                 std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
                 const std::complex<PrecisionT> v00 = shiftedState[indices[0]];
@@ -262,17 +264,17 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
      */
     template <class PrecisionT>
     static void
-    applyMultiQubitOp(std::complex<PrecisionT> *arr, size_t num_qubits,
+    applyMultiQubitOp(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                       const std::complex<PrecisionT> *matrix,
-                      const std::vector<size_t> &wires, bool inverse) {
+                      const std::vector<std::size_t> &wires, bool inverse) {
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
         std::vector<std::complex<PrecisionT>> v(indices.size());
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             // Gather
-            size_t pos = 0;
-            for (const size_t &index : indices) {
+            std::size_t pos = 0;
+            for (const std::size_t &index : indices) {
                 v[pos] = shiftedState[index];
                 pos++;
             }
@@ -280,21 +282,21 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             // Apply + scatter
             if (inverse) {
                 for (size_t i = 0; i < indices.size(); i++) {
-                    size_t index = indices[i];
+                    std::size_t index = indices[i];
                     shiftedState[index] = 0;
 
                     for (size_t j = 0; j < indices.size(); j++) {
-                        const size_t baseIndex = j * indices.size();
+                        const std::size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
                             std::conj(matrix[baseIndex + i]) * v[j];
                     }
                 }
             } else {
                 for (size_t i = 0; i < indices.size(); i++) {
-                    size_t index = indices[i];
+                    std::size_t index = indices[i];
                     shiftedState[index] = 0;
 
-                    const size_t baseIndex = i * indices.size();
+                    const std::size_t baseIndex = i * indices.size();
                     for (size_t j = 0; j < indices.size(); j++) {
                         shiftedState[index] += matrix[baseIndex + j] * v[j];
                     }
@@ -305,8 +307,9 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Single qubit operators */
     template <class PrecisionT>
-    static void applyIdentity(std::complex<PrecisionT> *arr, size_t num_qubits,
-                              const std::vector<size_t> &wires,
+    static void applyIdentity(std::complex<PrecisionT> *arr,
+                              std::size_t num_qubits,
+                              const std::vector<std::size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 1);
         static_cast<void>(arr);        // No-op
@@ -315,26 +318,28 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applyPauliX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::vector<size_t> &wires,
+    static void applyPauliX(std::complex<PrecisionT> *arr,
+                            std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[1]]);
         }
     }
 
     template <class PrecisionT>
-    static void applyPauliY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::vector<size_t> &wires,
+    static void applyPauliY(std::complex<PrecisionT> *arr,
+                            std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::complex<PrecisionT> v0 = shiftedState[indices[0]];
             shiftedState[indices[0]] =
@@ -346,26 +351,28 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applyPauliZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                            const std::vector<size_t> &wires,
+    static void applyPauliZ(std::complex<PrecisionT> *arr,
+                            std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires,
                             [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[1]] = -shiftedState[indices[1]];
         }
     }
 
     template <class PrecisionT>
-    static void applyHadamard(std::complex<PrecisionT> *arr, size_t num_qubits,
-                              const std::vector<size_t> &wires,
+    static void applyHadamard(std::complex<PrecisionT> *arr,
+                              std::size_t num_qubits,
+                              const std::vector<std::size_t> &wires,
                               [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
@@ -379,23 +386,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applyS(std::complex<PrecisionT> *arr, size_t num_qubits,
-                       const std::vector<size_t> &wires, bool inverse) {
+    static void applyS(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                       const std::vector<std::size_t> &wires, bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> shift =
             (inverse) ? -Pennylane::Util::IMAG<PrecisionT>()
                       : Pennylane::Util::IMAG<PrecisionT>();
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[1]] *= shift;
         }
     }
 
     template <class PrecisionT>
-    static void applyT(std::complex<PrecisionT> *arr, size_t num_qubits,
-                       const std::vector<size_t> &wires, bool inverse) {
+    static void applyT(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                       const std::vector<std::size_t> &wires, bool inverse) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -405,7 +412,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                       : std::exp(std::complex<PrecisionT>(
                             0, static_cast<PrecisionT>(M_PI / 4)));
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[1]] *= shift;
         }
@@ -414,23 +421,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     /* Single qubit operators with a parameter */
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyPhaseShift(std::complex<PrecisionT> *arr,
-                                size_t num_qubits,
-                                const std::vector<size_t> &wires, bool inverse,
-                                ParamT angle) {
+                                std::size_t num_qubits,
+                                const std::vector<std::size_t> &wires,
+                                bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> s =
             inverse ? std::conj(std::exp(std::complex<PrecisionT>(0, angle)))
                     : std::exp(std::complex<PrecisionT>(0, angle));
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[1]] *= s;
         }
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
+    static void applyRX(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         ParamT angle) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -439,7 +446,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
@@ -451,8 +458,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
+    static void applyRY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         ParamT angle) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -461,7 +468,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
@@ -471,8 +478,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires, bool inverse,
+    static void applyRZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse,
                         ParamT angle) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -486,7 +493,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::complex<PrecisionT> shift2 =
             (inverse) ? std::conj(second) : second;
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] *= shift1;
             shiftedState[indices[1]] *= shift2;
@@ -494,8 +501,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyRot(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT phi, ParamT theta, ParamT omega) {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -509,7 +516,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::complex<PrecisionT> t4 =
             (inverse) ? std::conj(rot[3]) : rot[3];
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[0]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[1]];
@@ -520,24 +527,24 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Two qubit operators */
     template <class PrecisionT>
-    static void applyCNOT(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    static void applyCNOT(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[2]], shiftedState[indices[3]]);
         }
     }
 
     template <class PrecisionT>
-    static void applyCY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires,
+    static void applyCY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::complex<PrecisionT> v2 = shiftedState[indices[2]];
             shiftedState[indices[2]] =
@@ -549,25 +556,25 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applyCZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                        const std::vector<size_t> &wires,
+    static void applyCZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[3]] *= -1;
         }
     }
 
     template <class PrecisionT>
-    static void applySWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    static void applySWAP(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[1]], shiftedState[indices[2]]);
         }
@@ -575,9 +582,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Two qubit operators with a parameter */
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyIsingXX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires, bool inverse,
-                             ParamT angle) {
+    static void applyIsingXX(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         using ComplexT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -585,7 +593,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             const auto v0 = shiftedState[indices[0]];
@@ -605,9 +613,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires, bool inverse,
-                             ParamT angle) {
+    static void applyIsingXY(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         using ComplexT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -615,7 +624,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             const auto v0 = shiftedState[indices[0]];
@@ -633,9 +642,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires, bool inverse,
-                             ParamT angle) {
+    static void applyIsingYY(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         using ComplexT = std::complex<PrecisionT>;
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -643,7 +653,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT cr = std::cos(angle / 2);
         const PrecisionT sj =
             inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             const auto v0 = shiftedState[indices[0]];
@@ -663,9 +673,10 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires, bool inverse,
-                             ParamT angle) {
+    static void applyIsingZZ(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
@@ -677,7 +688,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             shiftedState[indices[0]] *= shifts[0];
@@ -689,8 +700,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void applyControlledPhaseShift(std::complex<PrecisionT> *arr,
-                                          size_t num_qubits,
-                                          const std::vector<size_t> &wires,
+                                          std::size_t num_qubits,
+                                          const std::vector<std::size_t> &wires,
                                           bool inverse, ParamT angle) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -698,15 +709,15 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::complex<PrecisionT> s =
             inverse ? std::conj(std::exp(std::complex<PrecisionT>(0, angle)))
                     : std::exp(std::complex<PrecisionT>(0, angle));
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[3]] *= s;
         }
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRX(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -714,7 +725,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT js =
             (inverse) ? -std::sin(-angle / 2) : std::sin(-angle / 2);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[3]];
@@ -726,8 +737,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -735,7 +746,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const PrecisionT c = std::cos(angle / 2);
         const PrecisionT s =
             (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[3]];
@@ -745,8 +756,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                         const std::vector<size_t> &wires, bool inverse,
+    static void applyCRZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                         const std::vector<std::size_t> &wires, bool inverse,
                          ParamT angle) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -760,7 +771,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
                                                  -std::sin(angle / 2))
                       : std::complex<PrecisionT>(std::cos(angle / 2),
                                                  std::sin(angle / 2));
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[2]] *= m00;
             shiftedState[indices[3]] *= m11;
@@ -768,8 +779,8 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void applyCRot(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires, bool inverse,
+    static void applyCRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires, bool inverse,
                           ParamT phi, ParamT theta, ParamT omega) {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
@@ -781,7 +792,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
         const std::complex<PrecisionT> t3 = (inverse) ? -rot[2] : rot[2];
         const std::complex<PrecisionT> t4 =
             (inverse) ? std::conj(rot[3]) : rot[3];
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const std::complex<PrecisionT> v0 = shiftedState[indices[2]];
             const std::complex<PrecisionT> v1 = shiftedState[indices[3]];
@@ -792,15 +803,16 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     /* Three-qubit gate */
     template <class PrecisionT>
-    static void applyToffoli(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
+    static void applyToffoli(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 3);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         // Participating swapped indices
-        static const size_t op_idx0 = 6;
-        static const size_t op_idx1 = 7;
-        for (const size_t &externalIndex : externalIndices) {
+        static const std::size_t op_idx0 = 6;
+        static const std::size_t op_idx1 = 7;
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[op_idx0]],
                       shiftedState[indices[op_idx1]]);
@@ -808,16 +820,17 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     }
 
     template <class PrecisionT>
-    static void applyCSWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
-                           const std::vector<size_t> &wires,
+    static void applyCSWAP(std::complex<PrecisionT> *arr,
+                           std::size_t num_qubits,
+                           const std::vector<std::size_t> &wires,
                            [[maybe_unused]] bool inverse) {
         PL_ASSERT(wires.size() == 3);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         // Participating swapped indices
-        static const size_t op_idx0 = 5;
-        static const size_t op_idx1 = 6;
+        static const std::size_t op_idx0 = 5;
+        static const std::size_t op_idx1 = 6;
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[op_idx0]],
                       shiftedState[indices[op_idx1]]);
@@ -827,26 +840,29 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     /* Four-qubit gates */
     template <class PrecisionT, class ParamT = PrecisionT>
     static void
-    applyDoubleExcitation(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyDoubleExcitation(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT = PrecisionT>
     static void
-    applyDoubleExcitationMinus(std::complex<PrecisionT> *arr, size_t num_qubits,
-                               const std::vector<size_t> &wires,
+    applyDoubleExcitationMinus(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &wires,
                                [[maybe_unused]] bool inverse, ParamT angle);
 
     template <class PrecisionT, class ParamT = PrecisionT>
-    static void
-    applyDoubleExcitationPlus(std::complex<PrecisionT> *arr, size_t num_qubits,
-                              const std::vector<size_t> &wires,
-                              [[maybe_unused]] bool inverse, ParamT angle);
+    static void applyDoubleExcitationPlus(std::complex<PrecisionT> *arr,
+                                          std::size_t num_qubits,
+                                          const std::vector<std::size_t> &wires,
+                                          [[maybe_unused]] bool inverse,
+                                          ParamT angle);
 
     /* Multi-qubit gates */
     template <class PrecisionT, class ParamT>
-    static void applyMultiRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
+    static void applyMultiRZ(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool inverse, ParamT angle) {
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
         const std::complex<PrecisionT> first =
@@ -858,7 +874,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             for (size_t k = 0; k < indices.size(); k++) {
                 shiftedState[indices[k]] *= shifts[std::popcount(k) % 2];
@@ -869,12 +885,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     /* Gate generators */
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorPhaseShift(std::complex<PrecisionT> *arr, size_t num_qubits,
-                             const std::vector<size_t> &wires,
+    applyGeneratorPhaseShift(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
                              [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 1);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = std::complex<PrecisionT>{0.0, 0.0};
         }
@@ -884,12 +901,12 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorCRX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
+    applyGeneratorCRX(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                      const std::vector<std::size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = ZERO<PrecisionT>();
             shiftedState[indices[1]] = ZERO<PrecisionT>();
@@ -902,13 +919,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorIsingXX(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyGeneratorIsingXX(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             std::swap(shiftedState[indices[0]], shiftedState[indices[3]]);
             std::swap(shiftedState[indices[2]], shiftedState[indices[1]]);
@@ -920,13 +937,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyGeneratorIsingXY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             std::swap(shiftedState[indices[2]], shiftedState[indices[1]]);
@@ -940,13 +957,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorIsingYY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyGeneratorIsingYY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const auto v00 = shiftedState[indices[0]];
             shiftedState[indices[0]] = -shiftedState[indices[3]];
@@ -960,13 +977,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorIsingZZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                          const std::vector<size_t> &wires,
+    applyGeneratorIsingZZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
                           [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
 
             shiftedState[indices[1]] *= -1;
@@ -979,13 +996,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorCRY(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
+    applyGeneratorCRY(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                      const std::vector<std::size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             const auto v0 = shiftedState[indices[2]];
             shiftedState[indices[0]] = ZERO<PrecisionT>();
@@ -1000,13 +1017,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto
-    applyGeneratorCRZ(std::complex<PrecisionT> *arr, size_t num_qubits,
-                      const std::vector<size_t> &wires,
+    applyGeneratorCRZ(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                      const std::vector<std::size_t> &wires,
                       [[maybe_unused]] bool adj) -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = ZERO<PrecisionT>();
             shiftedState[indices[1]] = ZERO<PrecisionT>();
@@ -1018,13 +1035,13 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
     template <class PrecisionT>
     [[nodiscard]] static auto applyGeneratorControlledPhaseShift(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        const std::vector<std::size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT {
         PL_ASSERT(wires.size() == 2);
         const auto [indices, externalIndices] = GateIndices(wires, num_qubits);
 
-        for (const size_t &externalIndex : externalIndices) {
+        for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
             shiftedState[indices[0]] = 0;
             shiftedState[indices[1]] = 0;
@@ -1037,302 +1054,341 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
     template <class PrecisionT>
     [[nodiscard]] static auto
     applyGeneratorDoubleExcitation(std::complex<PrecisionT> *arr,
-                                   size_t num_qubits,
-                                   const std::vector<size_t> &wires,
+                                   std::size_t num_qubits,
+                                   const std::vector<std::size_t> &wires,
                                    [[maybe_unused]] bool adj) -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto applyGeneratorDoubleExcitationMinus(
-        std::complex<PrecisionT> *arr, size_t num_qubits,
-        const std::vector<size_t> &wires, [[maybe_unused]] bool adj)
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        const std::vector<std::size_t> &wires, [[maybe_unused]] bool adj)
         -> PrecisionT;
 
     template <class PrecisionT>
     [[nodiscard]] static auto
     applyGeneratorDoubleExcitationPlus(std::complex<PrecisionT> *arr,
-                                       size_t num_qubits,
-                                       const std::vector<size_t> &wires,
+                                       std::size_t num_qubits,
+                                       const std::vector<std::size_t> &wires,
                                        [[maybe_unused]] bool adj) -> PrecisionT;
 };
 
 // Matrix operations
 extern template void GateImplementationsPI::applySingleQubitOp<float>(
-    std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, bool);
+    std::complex<float> *, std::size_t, const std::complex<float> *,
+    const std::vector<std::size_t> &, bool);
 extern template void GateImplementationsPI::applySingleQubitOp<double>(
-    std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, bool);
+    std::complex<double> *, std::size_t, const std::complex<double> *,
+    const std::vector<std::size_t> &, bool);
 
 extern template void GateImplementationsPI::applyTwoQubitOp<float>(
-    std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, bool);
+    std::complex<float> *, std::size_t, const std::complex<float> *,
+    const std::vector<std::size_t> &, bool);
 extern template void GateImplementationsPI::applyTwoQubitOp<double>(
-    std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, bool);
+    std::complex<double> *, std::size_t, const std::complex<double> *,
+    const std::vector<std::size_t> &, bool);
 
 extern template void GateImplementationsPI::applyMultiQubitOp<float>(
-    std::complex<float> *, size_t, const std::complex<float> *,
-    const std::vector<size_t> &, bool);
+    std::complex<float> *, std::size_t, const std::complex<float> *,
+    const std::vector<std::size_t> &, bool);
 extern template void GateImplementationsPI::applyMultiQubitOp<double>(
-    std::complex<double> *, size_t, const std::complex<double> *,
-    const std::vector<size_t> &, bool);
+    std::complex<double> *, std::size_t, const std::complex<double> *,
+    const std::vector<std::size_t> &, bool);
 
 // Single-qubit gates
+extern template void GateImplementationsPI::applyIdentity<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
+extern template void GateImplementationsPI::applyIdentity<double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
+    bool);
+
+extern template void GateImplementationsPI::applyPauliX<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyIdentity<float>(std::complex<float> *, size_t,
-                                            const std::vector<size_t> &, bool);
+GateImplementationsPI::applyPauliX<double>(std::complex<double> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool);
+
+extern template void GateImplementationsPI::applyPauliY<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyIdentity<double>(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool);
+GateImplementationsPI::applyPauliY<double>(std::complex<double> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool);
+
+extern template void GateImplementationsPI::applyPauliZ<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
+extern template void
+GateImplementationsPI::applyPauliZ<double>(std::complex<double> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool);
+
+extern template void GateImplementationsPI::applyHadamard<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
+extern template void GateImplementationsPI::applyHadamard<double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
+    bool);
 
 extern template void
-GateImplementationsPI::applyPauliX<float>(std::complex<float> *, size_t,
-                                          const std::vector<size_t> &, bool);
+GateImplementationsPI::applyS<float>(std::complex<float> *, std::size_t,
+                                     const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyPauliX<double>(std::complex<double> *, size_t,
-                                           const std::vector<size_t> &, bool);
+GateImplementationsPI::applyS<double>(std::complex<double> *, std::size_t,
+                                      const std::vector<std::size_t> &, bool);
 
 extern template void
-GateImplementationsPI::applyPauliY<float>(std::complex<float> *, size_t,
-                                          const std::vector<size_t> &, bool);
+GateImplementationsPI::applyT<float>(std::complex<float> *, std::size_t,
+                                     const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyPauliY<double>(std::complex<double> *, size_t,
-                                           const std::vector<size_t> &, bool);
-
-extern template void
-GateImplementationsPI::applyPauliZ<float>(std::complex<float> *, size_t,
-                                          const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyPauliZ<double>(std::complex<double> *, size_t,
-                                           const std::vector<size_t> &, bool);
-
-extern template void
-GateImplementationsPI::applyHadamard<float>(std::complex<float> *, size_t,
-                                            const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyHadamard<double>(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool);
-
-extern template void
-GateImplementationsPI::applyS<float>(std::complex<float> *, size_t,
-                                     const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyS<double>(std::complex<double> *, size_t,
-                                      const std::vector<size_t> &, bool);
-
-extern template void
-GateImplementationsPI::applyT<float>(std::complex<float> *, size_t,
-                                     const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyT<double>(std::complex<double> *, size_t,
-                                      const std::vector<size_t> &, bool);
+GateImplementationsPI::applyT<double>(std::complex<double> *, std::size_t,
+                                      const std::vector<std::size_t> &, bool);
 
 extern template void GateImplementationsPI::applyPhaseShift<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyPhaseShift<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
-extern template void GateImplementationsPI::applyRX<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+extern template void
+GateImplementationsPI::applyRX<float, float>(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool, float);
 extern template void GateImplementationsPI::applyRX<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
-extern template void GateImplementationsPI::applyRY<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+extern template void
+GateImplementationsPI::applyRY<float, float>(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool, float);
 extern template void GateImplementationsPI::applyRY<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
-extern template void GateImplementationsPI::applyRZ<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+extern template void
+GateImplementationsPI::applyRZ<float, float>(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool, float);
 extern template void GateImplementationsPI::applyRZ<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
-extern template void
-GateImplementationsPI::applyRot<float, float>(std::complex<float> *, size_t,
-                                              const std::vector<size_t> &, bool,
-                                              float, float, float);
-extern template void
-GateImplementationsPI::applyRot<double, double>(std::complex<double> *, size_t,
-                                                const std::vector<size_t> &,
-                                                bool, double, double, double);
+extern template void GateImplementationsPI::applyRot<float, float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float, float, float);
+extern template void GateImplementationsPI::applyRot<double, double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double, double, double);
 
 // Two-qubit gates
 extern template void
-GateImplementationsPI::applyCNOT<float>(std::complex<float> *, size_t,
-                                        const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCNOT<float>(std::complex<float> *, std::size_t,
+                                        const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyCNOT<double>(std::complex<double> *, size_t,
-                                         const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCNOT<double>(std::complex<double> *, std::size_t,
+                                         const std::vector<std::size_t> &,
+                                         bool);
 
 extern template void
-GateImplementationsPI::applyCY<float>(std::complex<float> *, size_t,
-                                      const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCY<float>(std::complex<float> *, std::size_t,
+                                      const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyCY<double>(std::complex<double> *, size_t,
-                                       const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCY<double>(std::complex<double> *, std::size_t,
+                                       const std::vector<std::size_t> &, bool);
 
 extern template void
-GateImplementationsPI::applyCZ<float>(std::complex<float> *, size_t,
-                                      const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCZ<float>(std::complex<float> *, std::size_t,
+                                      const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyCZ<double>(std::complex<double> *, size_t,
-                                       const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCZ<double>(std::complex<double> *, std::size_t,
+                                       const std::vector<std::size_t> &, bool);
 
 extern template void
-GateImplementationsPI::applySWAP<float>(std::complex<float> *, size_t,
-                                        const std::vector<size_t> &, bool);
+GateImplementationsPI::applySWAP<float>(std::complex<float> *, std::size_t,
+                                        const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applySWAP<double>(std::complex<double> *, size_t,
-                                         const std::vector<size_t> &, bool);
+GateImplementationsPI::applySWAP<double>(std::complex<double> *, std::size_t,
+                                         const std::vector<std::size_t> &,
+                                         bool);
 
 extern template void GateImplementationsPI::applyIsingXX<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyIsingXX<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyIsingXY<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyIsingXY<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyIsingYY<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyIsingYY<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyIsingZZ<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyIsingZZ<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void
 GateImplementationsPI::applyControlledPhaseShift<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void
 GateImplementationsPI::applyControlledPhaseShift<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyCRX<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyCRX<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyCRY<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyCRY<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 extern template void GateImplementationsPI::applyCRZ<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyCRZ<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
-extern template void
-GateImplementationsPI::applyCRot<float, float>(std::complex<float> *, size_t,
-                                               const std::vector<size_t> &,
-                                               bool, float, float, float);
-extern template void
-GateImplementationsPI::applyCRot<double, double>(std::complex<double> *, size_t,
-                                                 const std::vector<size_t> &,
-                                                 bool, double, double, double);
+extern template void GateImplementationsPI::applyCRot<float, float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float, float, float);
+extern template void GateImplementationsPI::applyCRot<double, double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double, double, double);
 
+extern template void GateImplementationsPI::applyToffoli<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyToffoli<float>(std::complex<float> *, size_t,
-                                           const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyToffoli<double>(std::complex<double> *, size_t,
-                                            const std::vector<size_t> &, bool);
+GateImplementationsPI::applyToffoli<double>(std::complex<double> *, std::size_t,
+                                            const std::vector<std::size_t> &,
+                                            bool);
 
+extern template void GateImplementationsPI::applyCSWAP<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
 extern template void
-GateImplementationsPI::applyCSWAP<float>(std::complex<float> *, size_t,
-                                         const std::vector<size_t> &, bool);
-extern template void
-GateImplementationsPI::applyCSWAP<double>(std::complex<double> *, size_t,
-                                          const std::vector<size_t> &, bool);
+GateImplementationsPI::applyCSWAP<double>(std::complex<double> *, std::size_t,
+                                          const std::vector<std::size_t> &,
+                                          bool);
 
 extern template void GateImplementationsPI::applyMultiRZ<float, float>(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool, float);
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
 extern template void GateImplementationsPI::applyMultiRZ<double, double>(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool, double);
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 /* Generators */
 extern template auto GateImplementationsPI::applyGeneratorPhaseShift(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto GateImplementationsPI::applyGeneratorPhaseShift(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
+
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRX(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRX(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
+
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRY(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRY(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
+
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRZ(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRZ(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
+
 extern template auto
-GateImplementationsPI::applyGeneratorPhaseShift(std::complex<double> *, size_t,
-                                                const std::vector<size_t> &,
-                                                bool) -> double;
-
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRX(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRX(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
-    -> double;
-
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRY(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRY(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
-    -> double;
-
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRZ(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-extern template auto PauliGenerator<GateImplementationsPI>::applyGeneratorRZ(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
-    -> double;
-
+GateImplementationsPI::applyGeneratorIsingXX(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool) -> float;
 extern template auto GateImplementationsPI::applyGeneratorIsingXX(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-extern template auto
-GateImplementationsPI::applyGeneratorIsingXX(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool)
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> double;
 
-extern template auto
-GateImplementationsPI::applyGeneratorIsingXY(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool)
-    -> double;
 extern template auto GateImplementationsPI::applyGeneratorIsingXY(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
+extern template auto
+GateImplementationsPI::applyGeneratorIsingXY(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool) -> float;
 
+extern template auto
+GateImplementationsPI::applyGeneratorIsingYY(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool) -> float;
 extern template auto GateImplementationsPI::applyGeneratorIsingYY(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-extern template auto
-GateImplementationsPI::applyGeneratorIsingYY(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool)
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> double;
 
-extern template auto
-GateImplementationsPI::applyGeneratorIsingZZ(std::complex<double> *, size_t,
-                                             const std::vector<size_t> &, bool)
-    -> double;
 extern template auto GateImplementationsPI::applyGeneratorIsingZZ(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
-
-extern template auto GateImplementationsPI::applyGeneratorCRX(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> double;
 extern template auto
-GateImplementationsPI::applyGeneratorCRX(std::complex<double> *, size_t,
-                                         const std::vector<size_t> &, bool)
+GateImplementationsPI::applyGeneratorIsingZZ(std::complex<float> *, std::size_t,
+                                             const std::vector<std::size_t> &,
+                                             bool) -> float;
+
+extern template auto
+GateImplementationsPI::applyGeneratorCRX(std::complex<float> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto
+GateImplementationsPI::applyGeneratorCRX(std::complex<double> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
     -> double;
 
-extern template auto GateImplementationsPI::applyGeneratorCRY(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
-GateImplementationsPI::applyGeneratorCRY(std::complex<double> *, size_t,
-                                         const std::vector<size_t> &, bool)
+GateImplementationsPI::applyGeneratorCRY(std::complex<float> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto
+GateImplementationsPI::applyGeneratorCRY(std::complex<double> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
     -> double;
 
-extern template auto GateImplementationsPI::applyGeneratorCRZ(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
 extern template auto
-GateImplementationsPI::applyGeneratorCRZ(std::complex<double> *, size_t,
-                                         const std::vector<size_t> &, bool)
+GateImplementationsPI::applyGeneratorCRZ(std::complex<float> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
+    -> float;
+extern template auto
+GateImplementationsPI::applyGeneratorCRZ(std::complex<double> *, std::size_t,
+                                         const std::vector<std::size_t> &, bool)
     -> double;
 
 extern template auto GateImplementationsPI::applyGeneratorControlledPhaseShift(
-    std::complex<float> *, size_t, const std::vector<size_t> &, bool) -> float;
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
+    -> float;
 extern template auto GateImplementationsPI::applyGeneratorControlledPhaseShift(
-    std::complex<double> *, size_t, const std::vector<size_t> &, bool)
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> double;
 } // namespace Pennylane::LightningQubit::Gates

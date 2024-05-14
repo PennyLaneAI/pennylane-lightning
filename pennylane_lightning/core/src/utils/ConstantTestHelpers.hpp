@@ -39,7 +39,7 @@ namespace Pennylane::LightningQubit::Util {
  * @tparam size Size of the array.
  * @param arr Array to extract.
  */
-template <typename T, typename U, size_t size>
+template <typename T, typename U, std::size_t size>
 constexpr std::array<T, size>
 first_elems_of(const std::array<std::pair<T, U>, size> &arr) {
     std::array<T, size> res = {
@@ -57,7 +57,7 @@ first_elems_of(const std::array<std::pair<T, U>, size> &arr) {
  * @tparam size Size of the array.
  * @param arr Array to extract.
  */
-template <typename T, typename U, size_t size>
+template <typename T, typename U, std::size_t size>
 constexpr std::array<U, size>
 second_elems_of(const std::array<std::pair<T, U>, size> &arr) {
     std::array<U, size> res = {
@@ -75,11 +75,11 @@ second_elems_of(const std::array<std::pair<T, U>, size> &arr) {
  *
  * @tparam T Type of array elements
  * @tparam size Size of the array
- * @return size_t
+ * @return std::size_t
  */
-template <typename T, size_t size>
-constexpr size_t count_unique(const std::array<T, size> &arr) {
-    size_t res = 0;
+template <typename T, std::size_t size>
+constexpr std::size_t count_unique(const std::array<T, size> &arr) {
+    std::size_t res = 0;
 
     for (size_t i = 0; i < size; i++) {
         bool counted = false;
@@ -104,12 +104,12 @@ constexpr size_t count_unique(const std::array<T, size> &arr) {
  *
  * @tparam T Type of array elements
  * @tparam size Size of the array
- * @return size_t
+ * @return std::size_t
  */
-template <std::three_way_comparable T, size_t size>
-constexpr size_t count_unique(const std::array<T, size> &arr) {
+template <std::three_way_comparable T, std::size_t size>
+constexpr std::size_t count_unique(const std::array<T, size> &arr) {
     auto arr_cpd = arr;
-    size_t dup_cnt = 0;
+    std::size_t dup_cnt = 0;
     std::sort(std::begin(arr_cpd), std::end(arr_cpd));
     for (size_t i = 0; i < size - 1; i++) {
         if (arr_cpd[i] == arr_cpd[i + 1]) {

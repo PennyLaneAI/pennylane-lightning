@@ -79,8 +79,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::StateVectorCudaMPI",
                                       std::size_t, std::size_t,
                                       std::size_t>::value);
     }
-    SECTION(
-        "StateVectorCudaMPI<TestType> {DevTag, std::size_t, size_t, CFP_t}") {
+    SECTION("StateVectorCudaMPI<TestType> {DevTag, std::size_t, std::size_t, "
+            "CFP_t}") {
         if (std::is_same_v<TestType, double>) {
             REQUIRE(std::is_constructible<StateVectorCudaMPI<TestType>,
                                           DevTag<int>, std::size_t, std::size_t,
@@ -105,12 +105,12 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
     mpi_manager.Barrier();
 
     std::vector<cp_t> init_state(Pennylane::Util::exp2(num_qubits));
@@ -182,12 +182,12 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
     mpi_manager.Barrier();
 
     int index;
@@ -237,12 +237,13 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
         REQUIRE(mpi_manager.getSize() == 2);                                   \
-        size_t mpi_buffersize = 1;                                             \
-        size_t nGlobalIndexBits =                                              \
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;    \
-        size_t nLocalIndexBits = (NUM_QUBITS)-nGlobalIndexBits;                \
-        size_t subSvLength = 1 << nLocalIndexBits;                             \
-        size_t svLength = 1 << (NUM_QUBITS);                                   \
+        std::size_t mpi_buffersize = 1;                                        \
+        std::size_t nGlobalIndexBits =                                         \
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) -  \
+            1;                                                                 \
+        std::size_t nLocalIndexBits = (NUM_QUBITS)-nGlobalIndexBits;           \
+        std::size_t subSvLength = 1 << nLocalIndexBits;                        \
+        std::size_t svLength = 1 << (NUM_QUBITS);                              \
         mpi_manager.Barrier();                                                 \
         std::vector<cp_t> expected_sv(svLength);                               \
         std::vector<cp_t> local_state(subSvLength);                            \

@@ -72,7 +72,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param seed Seed
      */
-    void setSeed(const size_t seed) { rng.seed(seed); }
+    void setSeed(const std::size_t seed) { rng.seed(seed); }
 
     /**
      * @brief Randomly set the seed of the internal random generator
@@ -122,7 +122,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+    auto probs(const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
         return static_cast<Derived *>(this)->probs(wires);
     };
 
@@ -133,7 +134,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return 1-D vector of samples in binary with each sample
      * separated by a stride equal to the number of qubits.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
+    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
         return static_cast<Derived *>(this)->generate_samples(num_samples);
     };
 
@@ -147,8 +148,9 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range = {}) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range = {}) -> PrecisionT {
         PrecisionT result{0.0};
 
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
@@ -183,17 +185,18 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Expectation value with respect to the given observable.
      */
     auto measure_with_samples(const Observable<StateVectorT> &obs,
-                              const size_t &num_shots,
-                              const std::vector<size_t> &shot_range)
+                              const std::size_t &num_shots,
+                              const std::vector<std::size_t> &shot_range)
         -> std::vector<PrecisionT> {
-        const size_t num_qubits = _statevector.getTotalNumQubits();
-        std::vector<size_t> obs_wires;
+        const std::size_t num_qubits = _statevector.getTotalNumQubits();
+        std::vector<std::size_t> obs_wires;
         std::vector<std::vector<PrecisionT>> eigenValues;
 
         auto sub_samples =
             _sample_state(obs, num_shots, shot_range, obs_wires, eigenValues);
 
-        size_t num_samples = shot_range.empty() ? num_shots : shot_range.size();
+        std::size_t num_samples =
+            shot_range.empty() ? num_shots : shot_range.size();
 
         std::vector<PrecisionT> obs_samples(num_samples, 0);
 
@@ -204,8 +207,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
 
         for (size_t i = 0; i < num_samples; i++) {
-            size_t idx = 0;
-            size_t wire_idx = 0;
+            std::size_t idx = 0;
+            std::size_t wire_idx = 0;
             for (auto &obs_wire : obs_wires) {
                 idx += sub_samples[i * num_qubits + obs_wire]
                        << (obs_wires.size() - 1 - wire_idx);
@@ -225,7 +228,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Variance of the given observable.
      */
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
         PrecisionT result{0.0};
         if (obs.getObsName().find("SparseHamiltonian") != std::string::npos) {
@@ -237,7 +240,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             auto coeffs = obs.getCoeffs();
             auto obs_terms = obs.getObs();
 
-            size_t obs_term_idx = 0;
+            std::size_t obs_term_idx = 0;
             for (const auto &coeff : coeffs) {
                 result +=
                     coeff * coeff * var(*obs_terms[obs_term_idx], num_shots);
@@ -269,12 +272,12 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const Observable<StateVectorT> &obs, size_t num_shots = 0)
+    auto probs(const Observable<StateVectorT> &obs, std::size_t num_shots = 0)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
-        std::vector<size_t> obs_wires;
+        std::vector<std::size_t> obs_wires;
         std::vector<std::vector<PrecisionT>> eigenvalues;
         if constexpr (std::is_same_v<
                           typename StateVectorT::MemoryStorageT,
@@ -286,7 +289,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             sv.updateData(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            if (num_shots > size_t{0}) {
+            if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
             return measure.probs(obs_wires);
@@ -294,7 +297,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            if (num_shots > size_t{0}) {
+            if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
             return measure.probs(obs_wires);
@@ -310,22 +313,23 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(const std::vector<size_t> &wires, size_t num_shots)
+    auto probs(const std::vector<std::size_t> &wires, std::size_t num_shots)
         -> std::vector<PrecisionT> {
         auto counts_map = counts(num_shots);
 
-        size_t num_wires = _statevector.getTotalNumQubits();
+        std::size_t num_wires = _statevector.getTotalNumQubits();
 
         std::vector<PrecisionT> prob_shots(size_t{1} << wires.size(), 0.0);
 
         for (auto &it : counts_map) {
-            size_t bitVal = 0;
+            std::size_t bitVal = 0;
             for (size_t bit = 0; bit < wires.size(); bit++) {
                 // Mapping the value of wires[bit]th bit to local [bit]th bit of
                 // the output
-                bitVal += ((it.first >> (num_wires - size_t{1} - wires[bit])) &
-                           size_t{1})
-                          << (wires.size() - size_t{1} - bit);
+                bitVal +=
+                    ((it.first >> (num_wires - std::size_t{1} - wires[bit])) &
+                     std::size_t{1})
+                    << (wires.size() - std::size_t{1} - bit);
             }
 
             prob_shots[bitVal] +=
@@ -345,7 +349,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     auto probs(size_t num_shots) -> std::vector<PrecisionT> {
         auto counts_map = counts(num_shots);
 
-        size_t num_wires = _statevector.getTotalNumQubits();
+        std::size_t num_wires = _statevector.getTotalNumQubits();
 
         std::vector<PrecisionT> prob_shots(size_t{1} << num_wires, 0.0);
 
@@ -365,13 +369,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Samples of eigenvalues of the observable
      */
-    auto sample(const Observable<StateVectorT> &obs, const size_t &num_shots)
-        -> std::vector<PrecisionT> {
+    auto sample(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots) -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             obs.getObsName().find("Hamiltonian") != std::string::npos,
             "Hamiltonian and Sparse Hamiltonian do not support samples().");
-        std::vector<size_t> obs_wires;
-        std::vector<size_t> shot_range = {};
+        std::vector<std::size_t> obs_wires;
+        std::vector<std::size_t> shot_range = {};
 
         return measure_with_samples(obs, num_shots, shot_range);
     }
@@ -383,7 +387,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Raw basis state samples
      */
-    auto sample(const size_t &num_shots) -> std::vector<size_t> {
+    auto sample(const std::size_t &num_shots) -> std::vector<std::size_t> {
         Derived measure(_statevector);
         return measure.generate_samples(num_shots);
     }
@@ -395,12 +399,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param obs The observable to sample
      * @param num_shots Number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<PrecisionT, size_t> with format
+     * @return std::unordered_map<PrecisionT, std::size_t> with format
      * ``{'EigenValue': num_occurences}``
      */
-    auto counts(const Observable<StateVectorT> &obs, const size_t &num_shots)
-        -> std::unordered_map<PrecisionT, size_t> {
-        std::unordered_map<PrecisionT, size_t> outcome_map;
+    auto counts(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots)
+        -> std::unordered_map<PrecisionT, std::size_t> {
+        std::unordered_map<PrecisionT, std::size_t> outcome_map;
         auto sample_data = sample(obs, num_shots);
         for (size_t i = 0; i < num_shots; i++) {
             auto key = sample_data[i];
@@ -420,16 +425,17 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param num_shots Number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<size_t, size_t> with format ``{'outcome':
+     * @return std::unordered_map<size_t, std::size_t> with format ``{'outcome':
      * num_occurences}``
      */
-    auto counts(const size_t &num_shots) -> std::unordered_map<size_t, size_t> {
-        std::unordered_map<size_t, size_t> outcome_map;
+    auto counts(const std::size_t &num_shots)
+        -> std::unordered_map<size_t, std::size_t> {
+        std::unordered_map<size_t, std::size_t> outcome_map;
         auto sample_data = sample(num_shots);
 
-        size_t num_wires = _statevector.getTotalNumQubits();
+        std::size_t num_wires = _statevector.getTotalNumQubits();
         for (size_t i = 0; i < num_shots; i++) {
-            size_t key = 0;
+            std::size_t key = 0;
             for (size_t j = 0; j < num_wires; j++) {
                 key += sample_data[i * num_wires + j] << (num_wires - 1 - j);
             }
@@ -455,16 +461,16 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @param obs_wires Observable wires.
      * @param eigenValues eigenvalues of the observable.
      *
-     * @return std::vector<size_t> samples in std::vector
+     * @return std::vector<std::size_t> samples in std::vector
      */
     auto _sample_state(const Observable<StateVectorT> &obs,
-                       const size_t &num_shots,
-                       const std::vector<size_t> &shot_range,
-                       std::vector<size_t> &obs_wires,
+                       const std::size_t &num_shots,
+                       const std::vector<std::size_t> &shot_range,
+                       std::vector<std::size_t> &obs_wires,
                        std::vector<std::vector<PrecisionT>> &eigenValues)
-        -> std::vector<size_t> {
-        const size_t num_qubits = _statevector.getTotalNumQubits();
-        std::vector<size_t> samples;
+        -> std::vector<std::size_t> {
+        const std::size_t num_qubits = _statevector.getTotalNumQubits();
+        std::vector<std::size_t> samples;
         if constexpr (std::is_same_v<
                           typename StateVectorT::MemoryStorageT,
                           Pennylane::Util::MemoryStorageLocation::External>) {
@@ -483,9 +489,10 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         }
 
         if (!shot_range.empty()) {
-            std::vector<size_t> sub_samples(shot_range.size() * num_qubits);
+            std::vector<std::size_t> sub_samples(shot_range.size() *
+                                                 num_qubits);
             // Get a slice of samples based on the shot_range vector
-            size_t shot_idx = 0;
+            std::size_t shot_idx = 0;
             for (const auto &i : shot_range) {
                 for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
                     // TODO some extra work to make it cache-friendly

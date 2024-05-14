@@ -4,4 +4,5 @@ pytest-cov
 pytest-mock
 pytest-xdist
 flaky
+autoray<0.6.10
 git+https://github.com/PennyLaneAI/pennylane.git@master

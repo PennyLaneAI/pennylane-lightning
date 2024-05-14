@@ -43,7 +43,7 @@ namespace Pennylane::Util {
  * @param arr Array to lookup
  * @param key Key to find
  */
-template <typename Key, typename Value, size_t size>
+template <typename Key, typename Value, std::size_t size>
 constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
                       const Key &key) -> Value {
     for (size_t idx = 0; idx < size; idx++) {
@@ -64,7 +64,7 @@ constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
  * @param arr Array to lookup
  * @param value Value to find
  */
-template <typename Key, typename Value, size_t size>
+template <typename Key, typename Value, std::size_t size>
 constexpr auto
 reverse_lookup(const std::array<std::pair<Key, Value>, size> &arr,
                const Value &value) -> Key {
@@ -84,7 +84,7 @@ reverse_lookup(const std::array<std::pair<Key, Value>, size> &arr,
  * @param arr Array to check.
  * @param elem Element to find.
  */
-template <typename U, size_t size>
+template <typename U, std::size_t size>
 constexpr auto array_has_elem(const std::array<U, size> &arr, const U &elem)
     -> bool {
     for (size_t idx = 0; idx < size; idx++) {
@@ -104,7 +104,7 @@ constexpr auto array_has_elem(const std::array<U, size> &arr, const U &elem)
  * @param arr Array to lookup
  * @param value Value to find
  */
-template <typename Key, typename Value, size_t size>
+template <typename Key, typename Value, std::size_t size>
 constexpr auto
 array_contains(const std::array<std::pair<Key, Value>, size> &arr,
                const Value &value) -> bool {
@@ -168,7 +168,7 @@ namespace Internal {
 /**
  * @brief Helper function for reverse_pairs
  */
-template <class T, class U, size_t size, std::size_t... I>
+template <class T, class U, std::size_t size, std::size_t... I>
 constexpr auto
 reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
                      [[maybe_unused]] std::index_sequence<I...> dummy) {
@@ -186,7 +186,7 @@ reverse_pairs_helper(const std::array<std::pair<T, U>, size> &arr,
  * @param arr Array to reverse
  * @return reversed array
  */
-template <class T, class U, size_t size>
+template <class T, class U, std::size_t size>
 constexpr auto reverse_pairs(const std::array<std::pair<T, U>, size> &arr)
     -> std::array<std::pair<U, T>, size> {
     return Internal::reverse_pairs_helper(arr,

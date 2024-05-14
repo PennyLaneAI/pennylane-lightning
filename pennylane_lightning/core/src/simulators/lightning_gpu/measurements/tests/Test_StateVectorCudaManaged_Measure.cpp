@@ -48,14 +48,14 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", float, double) {
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval(PauliX, wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval("PauliX", wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
@@ -68,7 +68,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", float, double) {
 
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -90,7 +90,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[Measurements]", float, double) {
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -139,7 +139,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
     SECTION("Testing for Pauli words:") {
         PrecisionT exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
         std::vector<std::complex<PrecisionT>> coeffs = {
             ComplexT{0.1, 0.0}, ComplexT{0.2, 0.0}, ComplexT{0.3, 0.0}};
@@ -191,14 +191,14 @@ TEMPLATE_TEST_CASE("Variances", "[Measurements]", float, double) {
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var(PauliX, wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var("PauliX", wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
@@ -211,7 +211,7 @@ TEMPLATE_TEST_CASE("Variances", "[Measurements]", float, double) {
 
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -233,7 +233,7 @@ TEMPLATE_TEST_CASE("Variances", "[Measurements]", float, double) {
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -256,10 +256,10 @@ TEMPLATE_TEST_CASE("Variances", "[Measurements]", float, double) {
 TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
-    std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {
-        {{2, 1, 0},
-         {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
-          0.02280642, 0.00104134}}};
+    std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+        input = {{{2, 1, 0},
+                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                   0.00801973, 0.02280642, 0.00104134}}};
 
     // Defining the State Vector that will be measured.
     const std::size_t num_qubits = 3;

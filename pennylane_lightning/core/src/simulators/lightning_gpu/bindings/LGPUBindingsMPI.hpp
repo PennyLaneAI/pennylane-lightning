@@ -86,7 +86,8 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             })) // qubits, device
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const size_t index, const bool use_async) {
+            [](StateVectorT &sv, const std::size_t index,
+               const bool use_async) {
                 const std::complex<PrecisionT> value(1, 0);
                 sv.setBasisState(value, index, use_async);
             },
@@ -114,7 +115,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             },
             "Synchronize data from another GPU device to current device.")
         .def("DeviceToHost",
-             py::overload_cast<std::complex<PrecisionT> *, size_t, bool>(
+             py::overload_cast<std::complex<PrecisionT> *, std::size_t, bool>(
                  &StateVectorT::CopyGpuDataToHost, py::const_),
              "Synchronize data from the GPU device to host.")
         .def(
@@ -129,8 +130,8 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<const std::complex<PrecisionT> *, size_t, bool>(
-                 &StateVectorT::CopyHostDataToGpu),
+             py::overload_cast<const std::complex<PrecisionT> *, std::size_t,
+                               bool>(&StateVectorT::CopyHostDataToGpu),
              "Synchronize data from the host device to GPU.")
         .def("HostToDevice",
              py::overload_cast<const std::vector<std::complex<PrecisionT>> &,
@@ -143,7 +144,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
                 const auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
                 const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
                 if (length) {
                     gpu_sv.CopyHostDataToGpu(data_ptr, length, async);
                 }
@@ -158,7 +159,7 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
-               const std::vector<size_t> &wires, bool inv,
+               const std::vector<std::size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
                [[maybe_unused]] const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
@@ -202,7 +203,7 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (MeasurementsMPI<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &MeasurementsMPI<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
@@ -222,7 +223,7 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
             "expval",
             [](MeasurementsMPI<StateVectorT> &M,
                const std::vector<std::string> &pauli_words,
-               const std::vector<std::vector<size_t>> &target_wires,
+               const std::vector<std::vector<std::size_t>> &target_wires,
                const np_arr_c &coeffs) {
                 return M.expval(pauli_words, target_wires,
                                 static_cast<ComplexT *>(coeffs.request().ptr));
@@ -231,7 +232,7 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
         .def(
             "expval",
             [](MeasurementsMPI<StateVectorT> &M, const np_arr_c &matrix,
-               const std::vector<size_t> &wires) {
+               const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
                     static_cast<ComplexT *>(matrix.request().ptr);
@@ -242,12 +243,12 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
             "Expected value of a Hermitian observable.")
         .def("var",
              [](MeasurementsMPI<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (MeasurementsMPI<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &MeasurementsMPI<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(

@@ -84,11 +84,11 @@ class Measurements final
      * @param wires Wires to apply the observable to.
      */
     template <template <class> class functor_t, int num_wires>
-    PrecisionT applyExpValNamedFunctor(const std::vector<size_t> &wires) {
+    PrecisionT applyExpValNamedFunctor(const std::vector<std::size_t> &wires) {
         if constexpr (num_wires > 0)
             PL_ASSERT(wires.size() == num_wires);
 
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(exp2(num_qubits - num_wires),
@@ -107,9 +107,9 @@ class Measurements final
      */
     template <template <class> class functor_t, int num_wires>
     PrecisionT applyExpValFunctor(const KokkosVector &matrix,
-                                  const std::vector<size_t> &wires) {
+                                  const std::vector<std::size_t> &wires) {
         PL_ASSERT(wires.size() == num_wires);
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(
@@ -208,7 +208,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     PrecisionT expval(const std::vector<ComplexT> &matrix_,
-                      const std::vector<size_t> &wires) {
+                      const std::vector<std::size_t> &wires) {
         PL_ABORT_IF(matrix_.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
@@ -226,7 +226,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     PrecisionT expval(const std::string &operation,
-                      const std::vector<size_t> &wires) {
+                      const std::vector<std::size_t> &wires) {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
             return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
@@ -262,7 +262,7 @@ class Measurements final
     template <typename op_type>
     std::vector<PrecisionT>
     expval(const std::vector<op_type> &operations_list,
-           const std::vector<std::vector<size_t>> &wires_list) {
+           const std::vector<std::vector<std::size_t>> &wires_list) {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -285,8 +285,9 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -358,7 +359,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     PrecisionT var(const std::string &operation,
-                   const std::vector<size_t> &wires) {
+                   const std::vector<std::size_t> &wires) {
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
 
@@ -379,7 +380,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     PrecisionT var(const std::vector<ComplexT> &matrix,
-                   const std::vector<size_t> &wires) {
+                   const std::vector<std::size_t> &wires) {
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyMatrix(matrix, wires);
 
@@ -405,7 +406,7 @@ class Measurements final
     template <typename op_type>
     std::vector<PrecisionT>
     var(const std::vector<op_type> &operations_list,
-        const std::vector<std::vector<size_t>> &wires_list) {
+        const std::vector<std::vector<std::size_t>> &wires_list) {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -467,7 +468,7 @@ class Measurements final
      * @return Variance of the given observable.
      */
 
-    auto var(const Observable<StateVectorT> &obs, const size_t &num_shots)
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
         return BaseType::var(obs, num_shots);
     }
@@ -479,7 +480,7 @@ class Measurements final
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        const size_t N = this->_statevector.getLength();
+        const std::size_t N = this->_statevector.getLength();
 
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         Kokkos::View<PrecisionT *> d_probability("d_probability", N);
@@ -505,7 +506,7 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires) {
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires) {
         PL_ABORT_IF_NOT(
             std::is_sorted(wires.cbegin(), wires.cend()),
             "LightningKokkos does not currently support out-of-order wire "
@@ -515,12 +516,12 @@ class Measurements final
 
         //  Determining probabilities for the sorted wires.
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        std::vector<size_t> sorted_ind_wires(wires);
+        std::vector<std::size_t> sorted_ind_wires(wires);
         const bool is_sorted_wires =
             std::is_sorted(sorted_ind_wires.begin(), sorted_ind_wires.end());
-        std::vector<size_t> sorted_wires(wires);
+        std::vector<std::size_t> sorted_wires(wires);
 
         if (!is_sorted_wires) {
             sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
@@ -528,12 +529,14 @@ class Measurements final
                 sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
 
-        std::vector<size_t> all_indices =
+        std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(sorted_wires, num_qubits);
 
-        std::vector<size_t> all_offsets = Pennylane::Util::generateBitsPatterns(
-            Pennylane::Util::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
+        std::vector<std::size_t> all_offsets =
+            Pennylane::Util::generateBitsPatterns(
+                Pennylane::Util::getIndicesAfterExclusion(sorted_wires,
+                                                          num_qubits),
+                num_qubits);
 
         Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
                                                    all_indices.size());
@@ -564,8 +567,8 @@ class Measurements final
 
         Kokkos::parallel_for(
             "Set_Prob", mdpolicy_2d0,
-            KOKKOS_LAMBDA(const size_t i, const size_t j) {
-                const size_t index = d_all_indices(i) + d_all_offsets(j);
+            KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
+                const std::size_t index = d_all_indices(i) + d_all_offsets(j);
                 const PrecisionT REAL = arr_data(index).real();
                 const PrecisionT IMAG = arr_data(index).imag();
                 const PrecisionT value = REAL * REAL + IMAG * IMAG;
@@ -622,7 +625,7 @@ class Measurements final
      * in lexicographic order.
      */
     std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  size_t num_shots = 0) {
+                                  std::size_t num_shots = 0) {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -647,8 +650,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      */
 
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires,
-                                  size_t num_shots) {
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
+                                  std::size_t num_shots) {
         PL_ABORT_IF_NOT(
             std::is_sorted(wires.cbegin(), wires.cend()),
             "LightningKokkos does not currently support out-of-order wire "
@@ -663,14 +666,14 @@ class Measurements final
      *
      * @param num_samples Number of Samples
      *
-     * @return std::vector<size_t> to the samples.
+     * @return std::vector<std::size_t> to the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const size_t N = this->_statevector.getLength();
+    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t N = this->_statevector.getLength();
 
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         Kokkos::View<PrecisionT *> probability("probability", N);
@@ -683,7 +686,7 @@ class Measurements final
         // Convert probability distribution to cumulative distribution
         Kokkos::parallel_scan(
             Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-            KOKKOS_LAMBDA(const size_t k, PrecisionT &update_value,
+            KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                           const bool is_final) {
                 const PrecisionT val_k = probability(k);
                 if (is_final)
@@ -702,7 +705,7 @@ class Measurements final
             Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                 samples, probability, rand_pool, num_qubits, N));
 
-        std::vector<size_t> samples_h(num_samples * num_qubits);
+        std::vector<std::size_t> samples_h(num_samples * num_qubits);
 
         using UnmanagedSize_tHostView =
             Kokkos::View<size_t *, Kokkos::HostSpace,

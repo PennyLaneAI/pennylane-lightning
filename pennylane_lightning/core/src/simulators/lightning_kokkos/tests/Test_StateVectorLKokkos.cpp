@@ -53,10 +53,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::Constructibility",
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
-    SECTION("StateVectorBackend<TestType> {ComplexT*, size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, size_t>);
+    SECTION("StateVectorBackend<TestType> {ComplexT*, std::size_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, ComplexT *, std::size_t>);
     }
-    SECTION("StateVectorBackend<TestType> {ComplexT*, size_t}: Fails if "
+    SECTION("StateVectorBackend<TestType> {ComplexT*, std::size_t}: Fails if "
             "provided an inconsistent length.") {
         std::vector<ComplexT> st_data(14, 0.0);
         REQUIRE_THROWS_WITH(
@@ -83,7 +83,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
 
     SECTION("Test wrong matrix size") {
         std::vector<ComplexT> m(7, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
@@ -96,7 +96,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
 
     SECTION("Test wrong number of wires") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -120,7 +120,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
 
     SECTION("Test wrong matrix") {
         std::vector<ComplexT> m(8, 0.0);
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -132,7 +132,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
 
     SECTION("Test with different number of wires") {
         using KokkosVector = typename StateVectorT::KokkosVector;
-        const size_t num_qubits = 5;
+        const std::size_t num_qubits = 5;
         for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
             VectorT st_data_1 =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -144,7 +144,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
                 reinterpret_cast<ComplexT *>(st_data_2.data()),
                 st_data_2.size());
 
-            std::vector<size_t> wires(num_wires);
+            std::vector<std::size_t> wires(num_wires);
             std::iota(wires.begin(), wires.end(), 0);
 
             auto m = randomUnitary<PrecisionT>(re, num_wires);
@@ -174,7 +174,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
     std::mt19937_64 re{1337};
 
     SECTION("Test invalid arguments without parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -205,7 +205,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
     }
 
     SECTION("Test invalid arguments with parameters") {
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
 
         VectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -230,7 +230,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
     }
 
     SECTION("Test invalid operation name and no matrix") {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         StateVectorT state_vector(num_qubits);
 
@@ -248,8 +248,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
     std::mt19937_64 re{1337};
 
     SECTION("StateVectorKokkos<TestType> {size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorKokkos<TestType>, size_t>);
-        const size_t num_qubits = 4;
+        REQUIRE(
+            std::is_constructible_v<StateVectorKokkos<TestType>, std::size_t>);
+        const std::size_t num_qubits = 4;
         StateVectorKokkos<PrecisionT> sv(num_qubits);
 
         REQUIRE(sv.getNumQubits() == 4);
@@ -257,11 +258,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
         REQUIRE(sv.getDataVector().size() == 16);
     }
 
-    SECTION("StateVectorKokkos<TestType> {ComplexT *, size_t}") {
+    SECTION("StateVectorKokkos<TestType> {ComplexT *, std::size_t}") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
         REQUIRE(std::is_constructible_v<StateVectorKokkos<TestType>, ComplexT *,
-                                        size_t>);
-        const size_t num_qubits = 5;
+                                        std::size_t>);
+        const std::size_t num_qubits = 5;
         TestVectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         StateVectorKokkos<PrecisionT> sv(
@@ -272,11 +273,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
         REQUIRE(sv.getDataVector().size() == 32);
     }
 
-    SECTION("StateVectorKokkos<TestType> {ComplexT *, size_t}") {
+    SECTION("StateVectorKokkos<TestType> {ComplexT *, std::size_t}") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
         REQUIRE(std::is_constructible_v<StateVectorKokkos<TestType>,
                                         std::vector<ComplexT>>);
-        const size_t num_qubits = 5;
+        const std::size_t num_qubits = 5;
         TestVectorT st_data =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         std::vector<ComplexT> data_(st_data.data(),
@@ -296,7 +297,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::StateVectorKokkos",
 
     SECTION("updateData") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         StateVectorKokkos<PrecisionT> sv(num_qubits);
 
         TestVectorT st_data =

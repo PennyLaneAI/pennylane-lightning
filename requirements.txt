@@ -7,3 +7,4 @@ pytest-cov
 pytest-mock
 scipy
 pytest-xdist
+autoray<0.6.10
