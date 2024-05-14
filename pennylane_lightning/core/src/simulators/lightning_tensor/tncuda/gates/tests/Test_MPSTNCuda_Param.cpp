@@ -1151,3 +1151,23 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
         }
     }
 }
+
+TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
+                   double) {
+    // TODO only support inverse = false now
+    const bool inverse = GENERATE(false);
+    {
+        std::size_t num_qubits = 5;
+        std::size_t maxExtent = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        const std::vector<TestType> angles = {0.3};
+        SECTION("Throw errors") {
+            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+
+            REQUIRE_THROWS_WITH(sv.appendGateTensorOperator(
+                                    "MultiRZ", {0, 1}, inverse, {angles[0]}),
+                                Catch::Contains("Unsupported gate."));
+        }
+    }
+}

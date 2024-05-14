@@ -89,7 +89,7 @@ template <class PrecisionT> class TNCudaGateCache {
             auto gate_data_host = parametric_gates_.at(gate_name)({gate_param});
             add_gate(gate_id, gate_key, gate_data_host);
         } else {
-            throw std::runtime_error("Gate not supported.");
+            throw std::runtime_error("Unsupported gate.");
         }
     }
     /**
