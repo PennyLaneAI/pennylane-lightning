@@ -13,9 +13,15 @@ set(COMPONENT_SUBDIRS   algorithms
                         simulators
                         utils
 )
-foreach(COMP ${COMPONENT_SUBDIRS})
-    add_subdirectory(${COMP})
-endforeach()
+
+if("${PL_BACKEND}" STREQUAL "lightning_tensor")
+    add_subdirectory(simulators)
+    add_subdirectory(utils)
+else()
+    foreach(COMP ${COMPONENT_SUBDIRS})
+        add_subdirectory(${COMP})
+    endforeach()
+endif()
 
 if (BUILD_TESTS)
     # Include macros supporting tests.
