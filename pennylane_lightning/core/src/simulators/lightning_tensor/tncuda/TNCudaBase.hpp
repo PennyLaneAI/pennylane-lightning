@@ -49,6 +49,7 @@ template <class Precision, class Derived>
 class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using ComplexT = std::complex<Precision>;
     using BaseType = TensornetBase<Precision, Derived>;
     SharedTNCudaHandle handle_;
     cudaDataType_t typeData_;
@@ -150,7 +151,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     void appendGateTensorOperator(
         const std::string &opName, const std::vector<size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {}) {
+        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
 
         DataBuffer<Precision, int> dummy_device_data(
@@ -180,7 +181,17 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
 
-        gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
+        if (!gate_matrix.empty()) {
+            std::vector<CFP_t> matrix_cu(gate_matrix.size());
+            std::transform(gate_matrix.begin(), gate_matrix.end(),
+                           matrix_cu.begin(), [](const ComplexT &x) {
+                               return cuUtil::complexToCu<ComplexT>(x);
+                           });
+            auto gate_key = std::make_pair(opName, par);
+            gate_cache_->add_gate(static_cast<size_t>(id), gate_key, matrix_cu);
+        } else {
+            gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
+        }
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

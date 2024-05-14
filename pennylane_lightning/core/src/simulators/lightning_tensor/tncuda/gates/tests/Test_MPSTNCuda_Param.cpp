@@ -1171,3 +1171,33 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
         }
     }
 }
+
+TEMPLATE_TEST_CASE("MPSTNCuda::applyMatrix", "[MPSTNCuda_param]", float,
+                   double) {
+    // TODO only support inverse = false now
+    const bool inverse = GENERATE(false);
+    {
+        using cp_t = std::complex<TestType>;
+        std::size_t num_qubits = 3;
+        std::size_t maxExtent = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        const std::vector<cp_t> x_gate{cuUtil::ZERO<cp_t>(),
+                                       cuUtil::ONE<cp_t>(), cuUtil::ONE<cp_t>(),
+                                       cuUtil::ZERO<cp_t>()};
+
+        SECTION("Append tensor operator with host data and wires") {
+            const std::size_t index = GENERATE(0, 1, 2);
+            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+
+            sv.appendGateTensorOperator("applyMatrix", {index}, inverse, {},
+                                        x_gate);
+
+            auto results = sv.getDataVector();
+
+            CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
+            CHECK(results[0b1 << (num_qubits - index - 1)] ==
+                  cuUtil::ONE<std::complex<TestType>>());
+        }
+    }
+}
