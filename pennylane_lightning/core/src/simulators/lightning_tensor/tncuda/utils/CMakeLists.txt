@@ -10,7 +10,7 @@ foreach(BACKEND ${PL_BACKEND})
         add_subdirectory(mps)
         target_include_directories(${PL_TENSOR}_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mps)
         target_link_libraries(${PL_TENSOR}_utils INTERFACE mps_tncuda_utils)
-        set(CUDA_UTILS_ADDED TRUE)
+        set(TNCUDA_UTILS_ADDED TRUE)
     endif()
 endforeach()
 
