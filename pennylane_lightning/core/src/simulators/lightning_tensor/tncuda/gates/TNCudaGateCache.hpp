@@ -56,7 +56,7 @@ namespace Pennylane::LightningTensor {
 template <class PrecisionT> class TNCudaGateCache {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
-    using gate_key_info = std::pair<const std::string, PrecisionT>;
+    using gate_key_info = std::pair<const std::string, std::vector<PrecisionT>>;
     using gate_info = std::pair<gate_key_info, TensorCuda<PrecisionT>>;
     TNCudaGateCache() = delete;
     TNCudaGateCache(const TNCudaGateCache &other) = delete;
@@ -77,7 +77,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      */
     void add_gate(const size_t gate_id, const std::string &gate_name,
-                  PrecisionT gate_param) {
+                  std::vector<PrecisionT> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         if (nonparametric_gates_.find(gate_name) !=
@@ -196,6 +196,13 @@ template <class PrecisionT> class TNCudaGateCache {
              return cuGates::getRZ<CFP_t>(
                  std::forward<decltype(params[0])>(params[0]));
          }},
+        {"Rot",
+         [&](auto &&params) {
+             return cuGates::getRot<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
+         }},
         {"CRX",
          [&](auto &&params) {
              return cuGates::getCRX<CFP_t>(
@@ -214,7 +221,9 @@ template <class PrecisionT> class TNCudaGateCache {
         {"CRot",
          [&](auto &&params) {
              return cuGates::getCRot<CFP_t>(
-                 std::forward<decltype(params)>(params));
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
          }},
         {"ControlledPhaseShift",
          [&](auto &&params) {

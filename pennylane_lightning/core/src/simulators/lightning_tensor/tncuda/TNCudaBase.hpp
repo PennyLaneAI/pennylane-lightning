@@ -180,7 +180,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
 
-        gate_cache_->add_gate(static_cast<size_t>(id), opName, par[0]);
+        gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

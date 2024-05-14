@@ -553,6 +553,7 @@ static auto getCRZ(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
             second};
 }
 
@@ -659,10 +660,10 @@ static auto getSingleExcitation(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -736,10 +737,10 @@ static auto getSingleExcitationMinus(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -815,10 +816,10 @@ static auto getSingleExcitationPlus(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -889,7 +890,7 @@ static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     mat[17] = cuUtil::ONE<CFP_t>();
     mat[34] = cuUtil::ONE<CFP_t>();
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = cuUtil::ONE<CFP_t>();
     mat[85] = cuUtil::ONE<CFP_t>();
     mat[102] = cuUtil::ONE<CFP_t>();
@@ -898,7 +899,7 @@ static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     mat[153] = cuUtil::ONE<CFP_t>();
     mat[170] = cuUtil::ONE<CFP_t>();
     mat[187] = cuUtil::ONE<CFP_t>();
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = cuUtil::ONE<CFP_t>();
     mat[238] = cuUtil::ONE<CFP_t>();
@@ -961,7 +962,7 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -970,7 +971,7 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -1049,7 +1050,7 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -1058,7 +1059,7 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;

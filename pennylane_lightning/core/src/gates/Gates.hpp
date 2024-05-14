@@ -449,6 +449,7 @@ static auto getCRZ(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
             second};
 }
 
