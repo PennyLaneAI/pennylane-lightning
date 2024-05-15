@@ -42,12 +42,12 @@ _methods = frozenset({"mps"})
 
 
 def accepted_backends(backend: str) -> bool:
-    """A function that determines whether or not a backend is supported by ``default.tensor``."""
+    """A function that determines whether or not a backend is supported by ``lightning.tensor``."""
     return backend in _backends
 
 
 def accepted_methods(method: str) -> bool:
-    """A function that determines whether or not a method is supported by ``default.tensor``."""
+    """A function that determines whether or not a method is supported by ``lightning.tensor``."""
     return method in _methods
 
 
@@ -103,7 +103,6 @@ class LightningTensor(Device):
         c_dtype=np.complex128,
         **kwargs,
     ):
-
         if not accepted_backends(backend):
             raise ValueError(f"Unsupported backend: {backend}")
 
@@ -111,7 +110,7 @@ class LightningTensor(Device):
             raise ValueError(f"Unsupported method: {method}")
 
         if shots is not None:
-            raise ValueError("default.tensor does not support finite shots.")
+            raise ValueError("lightning.tensor does not support finite shots.")
 
         super().__init__(wires=wires, shots=shots)
 
@@ -143,13 +142,13 @@ class LightningTensor(Device):
         for arg in kwargs:
             if arg not in self._device_options:
                 raise TypeError(
-                    f"Unexpected argument: {arg} during initialization of the default.tensor device."
+                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
     @property
     def name(self):
         """The name of the device."""
-        return "default.tensor"
+        return "lightning.tensor"
 
     @property
     def num_wires(self):
@@ -266,7 +265,7 @@ class LightningTensor(Device):
             Tuple: The Jacobian for each trainable parameter.
         """
         raise NotImplementedError(
-            "The computation of derivatives has yet to be implemented for the default.tensor device."
+            "The computation of derivatives has yet to be implemented for the lightning.tensor device."
         )
 
     def execute_and_compute_derivatives(
@@ -284,7 +283,7 @@ class LightningTensor(Device):
             tuple: A numeric result of the computation and the gradient.
         """
         raise NotImplementedError(
-            "The computation of derivatives has yet to be implemented for the default.tensor device."
+            "The computation of derivatives has yet to be implemented for the lightning.tensor device."
         )
 
     # pylint: disable=unused-argument
@@ -323,7 +322,7 @@ class LightningTensor(Device):
             tensor-like: A numeric result of computing the vector-Jacobian product.
         """
         raise NotImplementedError(
-            "The computation of vector-Jacobian product has yet to be implemented for the default.tensor device."
+            "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
         )
 
     def execute_and_compute_vjp(
@@ -344,5 +343,5 @@ class LightningTensor(Device):
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector-Jacobian product
         """
         raise NotImplementedError(
-            "The computation of vector-Jacobian product has yet to be implemented for the default.tensor device."
+            "The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device."
         )
