@@ -198,7 +198,6 @@ class TestQuimbMPS:
                 assert isinstance(result, (float, np.ndarray))
 
         else:
-
             tape = qml.tape.QuantumScript(
                 [qml.PauliX(0)],
                 [qml.expval(obs[observable])],

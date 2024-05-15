@@ -37,6 +37,9 @@
 
 ### Bug fixes
 
+* The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
+  [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
