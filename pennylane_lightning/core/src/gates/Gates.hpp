@@ -1172,12 +1172,17 @@ static auto getIsingZZ(T angle) -> std::vector<ComplexT<T>> {
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
     return {
-        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        -ONE<ComplexT, T>(),
+        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),
     };
 }
 
