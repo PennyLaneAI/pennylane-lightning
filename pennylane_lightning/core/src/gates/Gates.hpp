@@ -632,12 +632,17 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitationMinus()
     -> std::vector<ComplexT<T>> {
     return {
-        ONE<ComplexT, T>(),   ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
     };
 }
 
@@ -690,12 +695,17 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitationPlus()
     -> std::vector<ComplexT<T>> {
     return {
-        -ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        -ONE<ComplexT, T>(),
+        -ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),
     };
 }
 
@@ -1025,14 +1035,17 @@ static auto getIsingXY(T angle) -> std::vector<ComplexT<T>> {
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             c,
             neg_is,
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             neg_is,
             c,
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
