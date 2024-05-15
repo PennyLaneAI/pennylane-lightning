@@ -50,6 +50,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
         mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
+        mps_state.get_final_state();
         auto ob = NamedObs<StateTensorT>("Identity", {0});
         auto res = measure.expval(ob, mps_state);
         CHECK(res.real() == Approx(ONE));
