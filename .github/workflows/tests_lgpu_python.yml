@@ -187,7 +187,7 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
