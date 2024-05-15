@@ -63,6 +63,9 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     std::shared_ptr<TNCudaGateCache<Precision>> gate_cache_;
 
   public:
+    using PrecisionT = Precision;
+
+  public:
     TNCudaBase() = delete;
 
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
@@ -121,6 +124,15 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     }
 
     /**
+     * @brief Get the CUDA data type.
+     *
+     * @return cudaDataType_t
+     */
+    [[nodiscard]] auto getCudaDataType() const -> cudaDataType_t {
+        return typeData_;
+    }
+
+    /**
      * @brief Get the cutensornet handle that the object is using.
      *
      * @return cutensornetHandle_t
@@ -148,7 +160,81 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         return dev_tag_;
     }
 
-    void appendGateTensorOperator(
+    /**
+     * @brief Return pointer to gate cache.
+     *
+     * @return  TNCudaGateCache<Precision>*
+     */
+    [[nodiscard]] auto getGateCache() const -> TNCudaGateCache<Precision> * {
+        return gate_cache_.get();
+    }
+
+    /**
+     * @brief Append multiple gates to the compute graph.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_adjoint Indicates whether gate at matched index is to be
+     * inverted.
+     */
+    void
+    applyOperations(const std::vector<std::string> &ops,
+                    const std::vector<std::vector<std::size_t>> &ops_wires,
+                    const std::vector<bool> &ops_adjoint,
+                    const std::vector<std::vector<PrecisionT>> &ops_params) {
+        const std::size_t numOperations = ops.size();
+        PL_ABORT_IF_NOT(
+            numOperations == ops_wires.size(),
+            "Invalid arguments: number of operations, wires, and inverses "
+            "must all be equal");
+        PL_ABORT_IF_NOT(
+            numOperations == ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires and inverses"
+            "must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
+                                 ops_params[i]);
+        }
+    }
+
+    /**
+     * @brief Apply multiple gates to the state-vector.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_adjoint Indicates whether gate at matched index is to be
+     * inverted.
+     */
+    void applyOperations(const std::vector<std::string> &ops,
+                         const std::vector<std::vector<std::size_t>> &ops_wires,
+                         const std::vector<bool> &ops_adjoint) {
+        const std::size_t numOperations = ops.size();
+        PL_ABORT_IF_NOT(
+            numOperations == ops_wires.size(),
+            "Invalid arguments: number of operations, wires, and inverses "
+            "must all be equal");
+        PL_ABORT_IF_NOT(
+            numOperations == ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires and inverses"
+            "must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
+        }
+    }
+
+    /**
+     * @brief Append a single gate to the compute graph.
+     *
+     * @param opName Gate's name.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional gate matrix for custom gates.
+     */
+
+    void applyOperation(
         const std::string &opName, const std::vector<size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {

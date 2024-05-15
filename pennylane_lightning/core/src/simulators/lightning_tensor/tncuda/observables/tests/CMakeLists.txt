@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(${PL_TENSOR}_gates_tests)
+project(TNCuda_observables_tests)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -14,24 +14,24 @@ FetchAndIncludeCatch()
 # Define library
 ################################################################################
 
-add_library(${PL_TENSOR}_gates_tests INTERFACE)
-target_link_libraries(${PL_TENSOR}_gates_tests INTERFACE     Catch2::Catch2
-                                                                ${PL_TENSOR}_gates
+add_library(TNCuda_observables_tests INTERFACE)
+target_link_libraries(TNCuda_observables_tests INTERFACE     Catch2::Catch2
+${PL_TENSOR}_gates
+                                                                TNCuda_observables
                                                                 ${PL_TENSOR}
                                                                 )
 
-ProcessTestOptions(${PL_TENSOR}_gates_tests)
+ProcessTestOptions(TNCuda_observables_tests)
 
-target_sources(${PL_TENSOR}_gates_tests INTERFACE runner_lightning_tensor_gates.cpp)
+target_sources(TNCuda_observables_tests INTERFACE runner_TNCuda_observables.cpp)
 
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_MPSTNCuda_NonParam.cpp
-                    Test_MPSTNCuda_Param.cpp)
+set(TEST_SOURCES Test_Observables_TNCuda.cpp)
 
-add_executable(${PL_TENSOR}_gates_test_runner ${TEST_SOURCES})
-target_link_libraries(${PL_TENSOR}_gates_test_runner PRIVATE ${PL_TENSOR}_gates_tests)
-catch_discover_tests(${PL_TENSOR}_gates_test_runner)
+add_executable(TNCuda_observables_test_runner ${TEST_SOURCES})
+target_link_libraries(TNCuda_observables_test_runner PRIVATE TNCuda_observables_tests)
+catch_discover_tests(TNCuda_observables_test_runner)
 
-install(TARGETS ${PL_TENSOR}_gates_test_runner DESTINATION bin)
+install(TARGETS TNCuda_observables_test_runner DESTINATION bin)

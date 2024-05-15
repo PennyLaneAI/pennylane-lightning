@@ -37,7 +37,7 @@ option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
 target_link_libraries(${PL_TENSOR} PUBLIC  lightning_compile_options
                                             lightning_external_libs
-                                            ${PL_BACKEND}_gates
+                                            ${PL_TENSOR}_gates
                                             ${PL_BACKEND}_tensor
                                             ${PL_BACKEND}_tensornetBase
                                             ${PL_BACKEND}_utils
@@ -59,6 +59,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
                            gates
+                           observables
                            utils
 )
 foreach(COMP ${COMPONENT_SUBDIRS})

@@ -77,7 +77,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      */
     void add_gate(const size_t gate_id, const std::string &gate_name,
-                  std::vector<PrecisionT> gate_param) {
+                  [[maybe_unused]] std::vector<PrecisionT> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         if (nonparametric_gates_.find(gate_name) !=
@@ -132,6 +132,20 @@ template <class PrecisionT> class TNCudaGateCache {
      */
     CFP_t *get_gate_device_ptr(const size_t gate_id) {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
+    }
+
+    std::vector<CFP_t>
+    get_gate_host_vector(const std::string &gate_name,
+                         [[maybe_unused]] std::vector<PrecisionT> gate_param) {
+        if (nonparametric_gates_.find(gate_name) !=
+            nonparametric_gates_.end()) {
+            return nonparametric_gates_.at(gate_name)();
+        } else if (parametric_gates_.find(gate_name) !=
+                   parametric_gates_.end()) {
+            return parametric_gates_.at(gate_name)({gate_param});
+        } else {
+            throw std::runtime_error("Unsupported gate.");
+        }
     }
 
   private:

@@ -51,7 +51,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyHadamard", "[MPSTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {index}, inverse);
+            sv.applyOperation("Hadamard", {index}, inverse);
             cp_t expected(1.0 / std::sqrt(2), 0);
 
             auto results = sv.getDataVector();
@@ -76,7 +76,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliX", "[MPSTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("PauliX", {index}, inverse);
+            sv.applyOperation("PauliX", {index}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -111,10 +111,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliY", "[MPSTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("PauliY", {index}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("Hadamard", {1}, false);
+            sv.applyOperation("Hadamard", {2}, false);
+            sv.applyOperation("PauliY", {index}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -145,11 +145,11 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliZ", "[MPSTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("Hadamard", {1}, false);
+            sv.applyOperation("Hadamard", {2}, false);
 
-            sv.appendGateTensorOperator("PauliZ", {index}, inverse);
+            sv.applyOperation("PauliZ", {index}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -183,11 +183,11 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyS", "[MPSTNCuda_Nonparam]", float, double) {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("Hadamard", {1}, false);
+            sv.applyOperation("Hadamard", {2}, false);
 
-            sv.appendGateTensorOperator("S", {index}, inverse);
+            sv.applyOperation("S", {index}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -221,11 +221,11 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyT", "[MPSTNCuda_Nonparam]", float, double) {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("Hadamard", {1}, false);
+            sv.applyOperation("Hadamard", {2}, false);
 
-            sv.appendGateTensorOperator("T", {index}, inverse);
+            sv.applyOperation("T", {index}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -245,9 +245,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
         SECTION("Apply adjacent wire indices using dispatcher") {
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("CNOT", {0, 1}, inverse);
-            sv.appendGateTensorOperator("CNOT", {1, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("CNOT", {0, 1}, inverse);
+            sv.applyOperation("CNOT", {1, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -259,8 +259,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
         SECTION("Apply non-adjacent wire indices using dispatcher") {
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("CNOT", {0, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("CNOT", {0, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -291,9 +291,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("SWAP", {0, 1}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("SWAP", {0, 1}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -312,9 +312,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("SWAP", {0, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("SWAP", {0, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -345,9 +345,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CY", {0, 1}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CY", {0, 1}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -367,9 +367,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CY", {0, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CY", {0, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -401,9 +401,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CZ", {0, 1}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CZ", {0, 1}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -423,9 +423,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CZ", {0, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CZ", {0, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -458,9 +458,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("Toffoli", {0, 1, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("Toffoli", {0, 1, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -490,9 +490,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("Toffoli", {0, 2, 3}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("Toffoli", {0, 2, 3}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -525,9 +525,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CSWAP", {0, 1, 2}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CSWAP", {0, 1, 2}, inverse);
 
             auto results = sv.getDataVector();
 
@@ -557,9 +557,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
 
             MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("PauliX", {1}, false);
-            sv.appendGateTensorOperator("CSWAP", {0, 2, 3}, inverse);
+            sv.applyOperation("Hadamard", {0}, false);
+            sv.applyOperation("PauliX", {1}, false);
+            sv.applyOperation("CSWAP", {0, 2, 3}, inverse);
 
             auto results = sv.getDataVector();
             // TODO remove the following line later. This is a test if we can
