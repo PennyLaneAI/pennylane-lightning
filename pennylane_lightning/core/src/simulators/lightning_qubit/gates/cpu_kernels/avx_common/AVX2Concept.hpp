@@ -56,6 +56,18 @@ template <typename T> struct AVX2Concept {
     }
 
     PL_FORCE_INLINE
+    static auto load(const PrecisionT *p) -> IntrinsicType {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
+            return _mm256_load_ps(p);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            return _mm256_load_pd(p);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    PL_FORCE_INLINE
     static auto loadu(const std::complex<PrecisionT> *p) -> IntrinsicType {
         if constexpr (std::is_same_v<PrecisionT, float>) {
             return _mm256_loadu_ps(reinterpret_cast<const PrecisionT *>(p));
@@ -85,6 +97,18 @@ template <typename T> struct AVX2Concept {
             _mm256_store_ps(reinterpret_cast<PrecisionT *>(p), value);
         } else if (std::is_same_v<PrecisionT, double>) {
             _mm256_store_pd(reinterpret_cast<PrecisionT *>(p), value);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    PL_FORCE_INLINE
+    static void store_(PrecisionT *p, IntrinsicType value) {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
+            _mm256_store_ps(p, value);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            _mm256_store_pd(p, value);
         } else {
             static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>);
