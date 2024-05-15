@@ -59,6 +59,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
                            gates
+                           measurements
                            observables
                            utils
 )
