@@ -22,7 +22,6 @@
 #include <utility>
 
 #include "tncudaError.hpp"
-#include <cuda.h>
 
 namespace Pennylane::LightningTensor::TNCuda::Util {
 
@@ -52,7 +51,6 @@ using SharedTNCudaHandle =
  * @brief Creates a SharedTNCudaHandle (a shared pointer to a cutensornetHandle)
  */
 inline SharedTNCudaHandle make_shared_tncuda_handle() {
-    cudaSetDevice(0);
     cutensornetHandle_t h;
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
     return {h, TNCudaHandleDeleter()};
