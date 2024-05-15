@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
+
 ### Breaking changes
 
 * `dynamic_one_shot` uses shot-vectors in the auxiliary tape to tell the device how many times to repeat the tape. Lightning-Qubit is updated accordingly.
@@ -34,17 +37,23 @@
 
 ### Bug fixes
 
+* The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
+  [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
 # Release 0.36.0
 
 ### New features since last release
+
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)

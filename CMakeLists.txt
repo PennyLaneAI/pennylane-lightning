@@ -73,6 +73,11 @@ endif()
 # Print PL_BACKEND
 foreach(BACKEND ${PL_BACKEND})
     message(STATUS "PL_BACKEND: ${BACKEND}")
+    if("${BACKEND}" STREQUAL "lightning_tensor")
+        set(PL_TENSOR_METHOD "mps" CACHE STRING "PennyLane LightningTensor MPS simulator.")
+        set(PL_TENSOR_BACKEND "cutensornet" CACHE STRING "PennyLane LightningTensor backed by cutensornet")
+        set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_METHOD}_${PL_TENSOR_BACKEND}")
+    endif()
 endforeach()
 
 # Process compile options
