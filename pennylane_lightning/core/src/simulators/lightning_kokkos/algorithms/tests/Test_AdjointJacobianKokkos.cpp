@@ -68,11 +68,11 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
     std::uniform_real_distribution<PrecisionT> dist(-1.0, 1.0);
 
-    for (size_t k = 0; k < n_terms; k++) {
+    for (std::size_t k = 0; k < n_terms; k++) {
         auto term_pauli = randomIntVector(re, num_qubits, 0, 3);
 
         std::vector<std::shared_ptr<Observable<StateVectorT>>> term_comp;
-        for (size_t i = 0; i < num_qubits; i++) {
+        for (std::size_t i = 0; i < num_qubits; i++) {
             if (term_pauli[i] == 0) {
                 continue;
             }
@@ -86,7 +86,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
         coeffs.emplace_back(dist(re));
         terms.emplace_back(TensorProdObs<StateVectorT>::create(term_comp));
     }
-    std::vector<ComplexT> psi(size_t{1} << num_qubits);
+    std::vector<ComplexT> psi(std::size_t{1} << num_qubits);
     std::normal_distribution<PrecisionT> ndist;
     for (auto &e : psi) {
         e = ndist(re);
