@@ -158,7 +158,7 @@ jobs:
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force_reinstall
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'

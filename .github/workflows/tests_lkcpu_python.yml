@@ -200,7 +200,7 @@ jobs:
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
-          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force_reinstall
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
