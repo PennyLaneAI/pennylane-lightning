@@ -152,7 +152,7 @@ class AdjointJacobian final
                             ops.getOpsWires()[op_idx],
                             !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         const std::size_t idx =
                             trainableParamNumber + obs_idx * tp_size;

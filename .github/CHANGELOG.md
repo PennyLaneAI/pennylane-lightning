@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
+  [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
+  
 * Update C++ and Python GitHub actions names to include the matrix info.
   [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 

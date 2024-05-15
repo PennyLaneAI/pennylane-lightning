@@ -52,14 +52,15 @@ template <class PrecisionT> struct getProbFunctor {
 template <class PrecisionT, template <class ExecutionSpace> class GeneratorPool,
           class ExecutionSpace = Kokkos::DefaultExecutionSpace>
 struct Sampler {
-    Kokkos::View<size_t *> samples;
+    Kokkos::View<std::size_t *> samples;
     Kokkos::View<PrecisionT *> cdf;
     GeneratorPool<ExecutionSpace> rand_pool;
 
     const std::size_t num_qubits;
     const std::size_t length;
 
-    Sampler(Kokkos::View<size_t *> samples_, Kokkos::View<PrecisionT *> cdf_,
+    Sampler(Kokkos::View<std::size_t *> samples_,
+            Kokkos::View<PrecisionT *> cdf_,
             GeneratorPool<ExecutionSpace> rand_pool_,
             const std::size_t num_qubits_, const std::size_t length_)
         : samples(samples_), cdf(cdf_), rand_pool(rand_pool_),
@@ -95,7 +96,7 @@ struct Sampler {
             }
             index = high_idx - 1;
         }
-        for (size_t j = 0; j < num_qubits; j++) {
+        for (std::size_t j = 0; j < num_qubits; j++) {
             samples(k * num_qubits + (num_qubits - 1 - j)) = (index >> j) & 1U;
         }
     }
@@ -110,11 +111,11 @@ struct Sampler {
  * @param max_index_sorted_ind_wires_ Length of sorted_ind_wires.
  */
 struct getTransposedIndexFunctor {
-    Kokkos::View<size_t *> sorted_ind_wires;
-    Kokkos::View<size_t *> trans_index;
+    Kokkos::View<std::size_t *> sorted_ind_wires;
+    Kokkos::View<std::size_t *> trans_index;
     const std::size_t max_index_sorted_ind_wires;
-    getTransposedIndexFunctor(Kokkos::View<size_t *> sorted_ind_wires_,
-                              Kokkos::View<size_t *> trans_index_,
+    getTransposedIndexFunctor(Kokkos::View<std::size_t *> sorted_ind_wires_,
+                              Kokkos::View<std::size_t *> trans_index_,
                               const int length_sorted_ind_wires_)
         : sorted_ind_wires(sorted_ind_wires_), trans_index(trans_index_),
           max_index_sorted_ind_wires(length_sorted_ind_wires_ - 1) {}
@@ -141,10 +142,10 @@ struct getTransposedIndexFunctor {
 template <class PrecisionT> struct getTransposedFunctor {
     Kokkos::View<PrecisionT *> transProb;
     Kokkos::View<PrecisionT *> probability;
-    Kokkos::View<size_t *> trans_index;
+    Kokkos::View<std::size_t *> trans_index;
     getTransposedFunctor(Kokkos::View<PrecisionT *> transProb_,
                          Kokkos::View<PrecisionT *> probability_,
-                         Kokkos::View<size_t *> trans_index_)
+                         Kokkos::View<std::size_t *> trans_index_)
         : transProb(transProb_), probability(probability_),
           trans_index(trans_index_) {}
 
