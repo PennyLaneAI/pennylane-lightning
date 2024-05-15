@@ -27,9 +27,9 @@ using Pennylane::Util::LightningException;
 
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
-    using StateVectorT = TestType;
-    using PrecisionT = typename StateVectorT::PrecisionT;
-    using NamedObsT = NamedObs<StateVectorT>;
+    using StateTensorT = TestType;
+    using PrecisionT = typename StateTensorT::PrecisionT;
+    using NamedObsT = NamedObs<StateTensorT>;
 
     SECTION("Non-Default constructibility") {
         REQUIRE(!std::is_constructible_v<NamedObsT>);
@@ -65,5 +65,31 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
             LightningException);
         REQUIRE_NOTHROW(
             NamedObsT("Rot", {0}, std::vector<PrecisionT>{0.3, 0.4, 0.5}));
+    }
+
+    SECTION("Throw errors for applyInPlace() method") {
+        auto obs = NamedObsT("PauliX", {0});
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = 2;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        REQUIRE_THROWS_WITH(
+            obs.applyInPlace(mps_state),
+            Catch::Matchers::Contains(
+                "Lightning.Tensor doesn't support the applyInPlace() method."));
+    }
+
+    SECTION("Throw errors for applyInPlaceShots() method") {
+        auto obs = NamedObsT("PauliX", {0});
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = 2;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        REQUIRE_THROWS_WITH(
+            obs.applyInPlaceShots(mps_state),
+            Catch::Matchers::Contains(
+                "Lightning.Tensor doesn't support the applyInPlace() method."));
     }
 }
