@@ -569,12 +569,17 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorSingleExcitation()
     -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        -IMAG<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        IMAG<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), -IMAG<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
     };
 }
 
