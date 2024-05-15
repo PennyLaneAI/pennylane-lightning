@@ -378,6 +378,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.PauliY,
         qml.PauliZ,
         qml.Hadamard,
+        qml.SX,
         qml.S,
         qml.T,
         qml.PhaseShift,
