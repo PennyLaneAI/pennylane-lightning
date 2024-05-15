@@ -50,14 +50,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval(PauliX, wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval("PauliX", wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
@@ -75,7 +75,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {Identity, Identity, Identity};
@@ -112,7 +112,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"Identity", "Identity", "Identity"};
@@ -158,14 +158,14 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
 
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var(PauliX, wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
     }
 
     SECTION("Testing single operation defined by its name:") {
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var("PauliX", wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
@@ -178,7 +178,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
 
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -200,7 +200,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -222,17 +222,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
 
 TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     // Probabilities calculated with Pennylane default.qubit:
-    std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {
-        {{0, 1, 2},
-         {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
-          0.02280642, 0.00104134}},
-        // TODO: Fix LK out-of-order permutations
-        {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
-        {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
-        {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-        {{0}, {0.79249179, 0.20750821}},
-        {{1}, {0.88507558, 0.11492442}},
-        {{2}, {0.9563339, 0.0436661}}};
+    std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+        input = {{{0, 1, 2},
+                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                   0.00801973, 0.02280642, 0.00104134}},
+                 // TODO: Fix LK out-of-order permutations
+                 {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                 {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                 {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                 {{0}, {0.79249179, 0.20750821}},
+                 {{1}, {0.88507558, 0.11492442}},
+                 {{2}, {0.9563339, 0.0436661}}};
 
     // Defining the State Vector that will be measured.
     const std::size_t num_qubits = 3;
@@ -258,37 +258,61 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
                                           statevector_data.size());
 
     // Transposition axes and expected result.
-    std::vector<std::pair<std::vector<size_t>, std::vector<size_t>>> input = {
-        {{0, 1, 2}, {0, 1, 2, 3, 4, 5, 6, 7}},
-        {{0, 2, 1}, {0, 2, 1, 3, 4, 6, 5, 7}},
-        {{1, 0, 2}, {0, 1, 4, 5, 2, 3, 6, 7}},
-        {{1, 2, 0}, {0, 4, 1, 5, 2, 6, 3, 7}},
-        {{2, 0, 1}, {0, 2, 4, 6, 1, 3, 5, 7}},
-        {{2, 1, 0}, {0, 4, 2, 6, 1, 5, 3, 7}},
-        {{0, 1, 2, 3}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}},
-        {{0, 1, 3, 2}, {0, 2, 1, 3, 4, 6, 5, 7, 8, 10, 9, 11, 12, 14, 13, 15}},
-        {{0, 2, 1, 3}, {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15}},
-        {{0, 2, 3, 1}, {0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15}},
-        {{0, 3, 1, 2}, {0, 2, 4, 6, 1, 3, 5, 7, 8, 10, 12, 14, 9, 11, 13, 15}},
-        {{0, 3, 2, 1}, {0, 4, 2, 6, 1, 5, 3, 7, 8, 12, 10, 14, 9, 13, 11, 15}},
-        {{1, 0, 2, 3}, {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15}},
-        {{1, 0, 3, 2}, {0, 2, 1, 3, 8, 10, 9, 11, 4, 6, 5, 7, 12, 14, 13, 15}},
-        {{1, 2, 0, 3}, {0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15}},
-        {{1, 2, 3, 0}, {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15}},
-        {{1, 3, 0, 2}, {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15}},
-        {{1, 3, 2, 0}, {0, 8, 2, 10, 1, 9, 3, 11, 4, 12, 6, 14, 5, 13, 7, 15}},
-        {{2, 0, 1, 3}, {0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15}},
-        {{2, 0, 3, 1}, {0, 4, 1, 5, 8, 12, 9, 13, 2, 6, 3, 7, 10, 14, 11, 15}},
-        {{2, 1, 0, 3}, {0, 1, 8, 9, 4, 5, 12, 13, 2, 3, 10, 11, 6, 7, 14, 15}},
-        {{2, 1, 3, 0}, {0, 8, 1, 9, 4, 12, 5, 13, 2, 10, 3, 11, 6, 14, 7, 15}},
-        {{2, 3, 0, 1}, {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}},
-        {{2, 3, 1, 0}, {0, 8, 4, 12, 1, 9, 5, 13, 2, 10, 6, 14, 3, 11, 7, 15}},
-        {{3, 0, 1, 2}, {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}},
-        {{3, 0, 2, 1}, {0, 4, 2, 6, 8, 12, 10, 14, 1, 5, 3, 7, 9, 13, 11, 15}},
-        {{3, 1, 0, 2}, {0, 2, 8, 10, 4, 6, 12, 14, 1, 3, 9, 11, 5, 7, 13, 15}},
-        {{3, 1, 2, 0}, {0, 8, 2, 10, 4, 12, 6, 14, 1, 9, 3, 11, 5, 13, 7, 15}},
-        {{3, 2, 0, 1}, {0, 4, 8, 12, 2, 6, 10, 14, 1, 5, 9, 13, 3, 7, 11, 15}},
-        {{3, 2, 1, 0}, {0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15}}};
+    std::vector<std::pair<std::vector<std::size_t>, std::vector<std::size_t>>>
+        input = {{{0, 1, 2}, {0, 1, 2, 3, 4, 5, 6, 7}},
+                 {{0, 2, 1}, {0, 2, 1, 3, 4, 6, 5, 7}},
+                 {{1, 0, 2}, {0, 1, 4, 5, 2, 3, 6, 7}},
+                 {{1, 2, 0}, {0, 4, 1, 5, 2, 6, 3, 7}},
+                 {{2, 0, 1}, {0, 2, 4, 6, 1, 3, 5, 7}},
+                 {{2, 1, 0}, {0, 4, 2, 6, 1, 5, 3, 7}},
+                 {{0, 1, 2, 3},
+                  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}},
+                 {{0, 1, 3, 2},
+                  {0, 2, 1, 3, 4, 6, 5, 7, 8, 10, 9, 11, 12, 14, 13, 15}},
+                 {{0, 2, 1, 3},
+                  {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15}},
+                 {{0, 2, 3, 1},
+                  {0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15}},
+                 {{0, 3, 1, 2},
+                  {0, 2, 4, 6, 1, 3, 5, 7, 8, 10, 12, 14, 9, 11, 13, 15}},
+                 {{0, 3, 2, 1},
+                  {0, 4, 2, 6, 1, 5, 3, 7, 8, 12, 10, 14, 9, 13, 11, 15}},
+                 {{1, 0, 2, 3},
+                  {0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15}},
+                 {{1, 0, 3, 2},
+                  {0, 2, 1, 3, 8, 10, 9, 11, 4, 6, 5, 7, 12, 14, 13, 15}},
+                 {{1, 2, 0, 3},
+                  {0, 1, 8, 9, 2, 3, 10, 11, 4, 5, 12, 13, 6, 7, 14, 15}},
+                 {{1, 2, 3, 0},
+                  {0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15}},
+                 {{1, 3, 0, 2},
+                  {0, 2, 8, 10, 1, 3, 9, 11, 4, 6, 12, 14, 5, 7, 13, 15}},
+                 {{1, 3, 2, 0},
+                  {0, 8, 2, 10, 1, 9, 3, 11, 4, 12, 6, 14, 5, 13, 7, 15}},
+                 {{2, 0, 1, 3},
+                  {0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15}},
+                 {{2, 0, 3, 1},
+                  {0, 4, 1, 5, 8, 12, 9, 13, 2, 6, 3, 7, 10, 14, 11, 15}},
+                 {{2, 1, 0, 3},
+                  {0, 1, 8, 9, 4, 5, 12, 13, 2, 3, 10, 11, 6, 7, 14, 15}},
+                 {{2, 1, 3, 0},
+                  {0, 8, 1, 9, 4, 12, 5, 13, 2, 10, 3, 11, 6, 14, 7, 15}},
+                 {{2, 3, 0, 1},
+                  {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15}},
+                 {{2, 3, 1, 0},
+                  {0, 8, 4, 12, 1, 9, 5, 13, 2, 10, 6, 14, 3, 11, 7, 15}},
+                 {{3, 0, 1, 2},
+                  {0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15}},
+                 {{3, 0, 2, 1},
+                  {0, 4, 2, 6, 8, 12, 10, 14, 1, 5, 3, 7, 9, 13, 11, 15}},
+                 {{3, 1, 0, 2},
+                  {0, 2, 8, 10, 4, 6, 12, 14, 1, 3, 9, 11, 5, 7, 13, 15}},
+                 {{3, 1, 2, 0},
+                  {0, 8, 2, 10, 4, 12, 6, 14, 1, 9, 3, 11, 5, 13, 7, 15}},
+                 {{3, 2, 0, 1},
+                  {0, 4, 8, 12, 2, 6, 10, 14, 1, 5, 9, 13, 3, 7, 11, 15}},
+                 {{3, 2, 1, 0},
+                  {0, 8, 4, 12, 2, 10, 6, 14, 1, 9, 5, 13, 3, 11, 7, 15}}};
 
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     using UnmanagedSizeTHostView =
@@ -298,11 +322,11 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
     SECTION("Looping over different wire configurations:") {
         for (auto &term : input) {
             // Defining a tensor to be transposed.
-            std::vector<size_t> indices(static_cast<std::size_t>(1U)
-                                        << term.first.size());
+            std::vector<std::size_t> indices(static_cast<std::size_t>(1U)
+                                             << term.first.size());
             std::iota(indices.begin(), indices.end(), 0);
 
-            std::vector<size_t> results(indices.size());
+            std::vector<std::size_t> results(indices.size());
 
             Kokkos::View<size_t *> d_indices("d_indices", indices.size());
             Kokkos::View<size_t *> d_results("d_results", indices.size());
@@ -332,8 +356,8 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
             Kokkos::parallel_for(
                 "Transpose",
                 Kokkos::RangePolicy<KokkosExecSpace>(0, indices.size()),
-                getTransposedFunctor<size_t>(d_results, d_indices,
-                                             d_trans_index));
+                getTransposedFunctor<std::size_t>(d_results, d_indices,
+                                                  d_trans_index));
 
             Kokkos::deep_copy(
                 UnmanagedSizeTHostView(results.data(), results.size()),

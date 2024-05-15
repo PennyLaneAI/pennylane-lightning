@@ -12,7 +12,7 @@ on:
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
     paths-ignore:
-      - .github
+      - .github/**
       - '!.github/workflows/tests_lkcpu_python.yml'
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
@@ -58,7 +58,7 @@ jobs:
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
-    name: Python tests with Kokkos
+    name: Build (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -153,7 +153,7 @@ jobs:
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
-    name: Python tests with Kokkos
+    name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}, test-group-${{ matrix.group }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -167,6 +167,18 @@ jobs:
         with:
           fetch-tags: true
           path: main
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          python -m pip install -U pennylane-lightning --no-deps
 
       - uses: actions/download-artifact@v4
         with:
@@ -185,7 +197,9 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install . -vv
+          if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
+            SKIP_COMPILATION=True python -m pip install . -vv
+          fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build

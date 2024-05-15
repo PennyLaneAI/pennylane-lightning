@@ -126,7 +126,7 @@ auto createStateVectorFromNumpyData(
     }
     auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
     return StateVectorT(
-        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
+        {data_ptr, static_cast<std::size_t>(numpyArrayInfo.shape[0])});
 }
 
 /**
@@ -149,7 +149,7 @@ auto getNumpyArrayAlignment(const py::array &numpyArray) -> CPUMemoryModel {
  * @return Numpy array
  */
 template <typename T>
-auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size,
+auto alignedNumpyArray(CPUMemoryModel memory_model, std::size_t size,
                        bool zeroInit = false) -> py::array {
     using Pennylane::Util::alignedAlloc;
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
@@ -318,7 +318,7 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
-            [](const std::string &name, const std::vector<size_t> &wires) {
+            [](const std::string &name, const std::vector<std::size_t> &wires) {
                 return NamedObs<StateVectorT>(name, wires);
             }))
         .def("__repr__", &NamedObs<StateVectorT>::getObsName)
@@ -341,7 +341,7 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
-            [](const np_arr_c &matrix, const std::vector<size_t> &wires) {
+            [](const np_arr_c &matrix, const std::vector<std::size_t> &wires) {
                 auto buffer = matrix.request();
                 const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
                 return HermitianObs<StateVectorT>(
@@ -438,7 +438,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     pyclass
         .def("probs",
              [](Measurements<StateVectorT> &M,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
@@ -460,17 +460,18 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
             },
             "Variance of an observable object.")
         .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    size_t num_wires, size_t num_shots) {
+                                    std::size_t num_wires,
+                                    std::size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);
-            const size_t ndim = 2;
-            const std::vector<size_t> shape{num_shots, num_wires};
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
             constexpr auto sz = sizeof(size_t);
-            const std::vector<size_t> strides{sz * num_wires, sz};
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(
                 result.data(), /* data as contiguous array  */
                 sz,            /* size of one scalar        */
-                py::format_descriptor<size_t>::format(), /* data type */
+                py::format_descriptor<std::size_t>::format(), /* data type */
                 ndim,   /* number of dimensions      */
                 shape,  /* shape of the matrix       */
                 strides /* strides for each axis     */
@@ -486,7 +487,7 @@ auto registerAdjointJacobian(
     AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
     const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
     const OpsData<StateVectorT> &operations,
-    const std::vector<size_t> &trainableParams)
+    const std::vector<std::size_t> &trainableParams)
     -> py::array_t<typename StateVectorT::PrecisionT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
@@ -530,15 +531,15 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     py::class_<OpsData<StateVectorT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<std::size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<std::size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &,
-                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<std::size_t>> &,
                       const std::vector<std::vector<bool>> &>())
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
@@ -568,10 +569,10 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
         function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
            const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<size_t>> &ops_wires,
+           const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
            const std::vector<np_arr_c> &ops_matrices,
-           const std::vector<std::vector<size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
            const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
@@ -609,7 +610,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &observables,
                const OpsData<StateVectorT> &operations,
-               const std::vector<size_t> &trainableParams) {
+               const std::vector<std::size_t> &trainableParams) {
                 using PrecisionT = typename StateVectorT::PrecisionT;
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),

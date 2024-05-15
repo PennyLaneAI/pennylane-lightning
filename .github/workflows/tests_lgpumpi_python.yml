@@ -16,7 +16,7 @@ on:
       - main
   pull_request:
     paths-ignore:
-      - .github
+      - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**

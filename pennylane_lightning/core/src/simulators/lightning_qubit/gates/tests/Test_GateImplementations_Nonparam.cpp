@@ -87,7 +87,7 @@ using namespace Pennylane::Util;
 template <typename PrecisionT, class GateImplementation>
 void testApplyIdentity() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
@@ -114,7 +114,7 @@ PENNYLANE_RUN_TEST(Identity);
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliX() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     DYNAMIC_SECTION(GateImplementation::name
                     << ", PauliX - " << PrecisionToName<PrecisionT>::value) {
         for (size_t index = 0; index < num_qubits; index++) {
@@ -134,7 +134,7 @@ PENNYLANE_RUN_TEST(PauliX);
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliY() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     constexpr ComplexT p =
         ConstMult(static_cast<PrecisionT>(0.5),
@@ -159,7 +159,7 @@ PENNYLANE_RUN_TEST(PauliY);
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliZ() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     constexpr ComplexT p(static_cast<PrecisionT>(0.5) * INVSQRT2<PrecisionT>());
     constexpr ComplexT m(ConstMult(-1, p));
@@ -181,7 +181,7 @@ PENNYLANE_RUN_TEST(PauliZ);
 template <typename PrecisionT, class GateImplementation>
 void testApplyHadamard() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     for (size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
 
@@ -201,7 +201,7 @@ PENNYLANE_RUN_TEST(Hadamard);
 
 template <typename PrecisionT, class GateImplementation> void testApplyS() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     constexpr ComplexT r(static_cast<PrecisionT>(0.5) * INVSQRT2<PrecisionT>());
     constexpr ComplexT i(ConstMult(r, IMAG<PrecisionT>()));
@@ -223,7 +223,7 @@ PENNYLANE_RUN_TEST(S);
 
 template <typename PrecisionT, class GateImplementation> void testApplyT() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     // Test using |+++> state
 
     ComplexT r(1.0 / (2.0 * std::sqrt(2)), 0);
@@ -248,7 +248,7 @@ PENNYLANE_RUN_TEST(T);
  ******************************************************************************/
 
 template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     SECTION("CNOT0,1 |000> = |000>") {
         const auto ini_st = createProductState<PrecisionT>("000");
@@ -287,7 +287,7 @@ PENNYLANE_RUN_TEST(CNOT);
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplyCY() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ini_st_aligned = createProductState<PrecisionT>(
         "+10"); // Test using |+10> state using AlignedAllocator
     std::vector<ComplexT> ini_st{
@@ -363,7 +363,7 @@ PENNYLANE_RUN_TEST(CY);
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplyCZ() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     auto ini_st_aligned = createProductState<PrecisionT>(
         "+10"); // Test using |+10> state using AlignedAllocator
@@ -429,7 +429,7 @@ PENNYLANE_RUN_TEST(CZ);
 // NOLINTNEXTLINE: Avoiding complexity errors
 template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ini_st_aligned = createProductState<PrecisionT>(
         "+10"); // Test using |+10> state using AlignedAllocator
     std::vector<ComplexT> ini_st{
@@ -519,7 +519,7 @@ PENNYLANE_RUN_TEST(SWAP);
 template <typename PrecisionT, class GateImplementation>
 void testApplyToffoli() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ini_st_aligned = createProductState<PrecisionT>(
         "+10"); // Test using |+10> state using AlignedAllocator
     std::vector<ComplexT> ini_st{
@@ -598,7 +598,7 @@ PENNYLANE_RUN_TEST(Toffoli);
 
 template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
 
     auto ini_st_aligned = createProductState<PrecisionT>(
         "+10"); // Test using |+10> state using AlignedAllocator
@@ -665,8 +665,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
     std::mt19937 re{1337};
     const int num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
-    const size_t control = GENERATE(0, 1, 2, 3);
-    const size_t wire = GENERATE(0, 1, 2, 3);
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
     StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
     StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
 
@@ -680,25 +680,25 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv1.updateData(st0);
 
             sv0.applyOperation("CNOT", {control, wire});
-            sv1.applyOperation("PauliX", std::vector<size_t>{control},
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
 
         if (control != 0 && wire != 0) {
             sv0.applyOperation("Toffoli", {0, control, wire});
-            sv1.applyOperation("PauliX", std::vector<size_t>{0, control},
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{0, control},
                                std::vector<bool>{true, true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
 
             sv0.applyOperation("Toffoli", {control, 0, wire});
-            sv1.applyOperation("PauliX", std::vector<size_t>{control, 0},
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 0},
                                std::vector<bool>{true, true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -714,9 +714,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv1.updateData(st0);
 
             sv0.applyOperation("CY", {control, wire});
-            sv1.applyOperation("PauliY", std::vector<size_t>{control},
+            sv1.applyOperation("PauliY", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -732,9 +732,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv1.updateData(st0);
 
             sv0.applyOperation("CZ", {control, wire});
-            sv1.applyOperation("PauliZ", std::vector<size_t>{control},
+            sv1.applyOperation("PauliZ", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -751,12 +751,12 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             const auto matrix = getHadamard<std::complex, PrecisionT>();
 
-            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+            sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
-                                      std::vector<size_t>{wire});
-            sv1.applyOperation("Hadamard", std::vector<size_t>{control},
+                                      std::vector<std::size_t>{wire});
+            sv1.applyOperation("Hadamard", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -772,12 +772,12 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
 
             const auto matrix = getS<std::complex, PrecisionT>();
 
-            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+            sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
-                                      std::vector<size_t>{wire});
-            sv1.applyOperation("S", std::vector<size_t>{control},
+                                      std::vector<std::size_t>{wire});
+            sv1.applyOperation("S", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -795,12 +795,12 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             const std::vector<std::complex<PrecisionT>> matrix =
                 getT<std::complex, PrecisionT>();
 
-            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+            sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
-                                      std::vector<size_t>{wire});
-            sv1.applyOperation("T", std::vector<size_t>{control},
+                                      std::vector<std::size_t>{wire});
+            sv1.applyOperation("T", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire});
+                               std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -814,9 +814,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
     std::mt19937 re{1337};
     const int num_qubits = 4;
     const auto margin = PrecisionT{1e-5};
-    const size_t control = GENERATE(0, 1, 2, 3);
-    const size_t wire0 = GENERATE(0, 1, 2, 3);
-    const size_t wire1 = GENERATE(0, 1, 2, 3);
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3);
     StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
     StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
 
@@ -829,9 +829,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv0.updateData(st0);
             sv1.updateData(st0);
             sv0.applyOperation("CSWAP", {control, wire0, wire1});
-            sv1.applyOperation("SWAP", std::vector<size_t>{control},
+            sv1.applyOperation("SWAP", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire0, wire1});
+                               std::vector<std::size_t>{wire0, wire1});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -847,12 +847,12 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
             sv1.updateData(st0);
             const std::vector<std::complex<PrecisionT>> matrix =
                 getSWAP<std::complex, PrecisionT>();
-            sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+            sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
-                                      std::vector<size_t>{wire0, wire1});
-            sv1.applyOperation("SWAP", std::vector<size_t>{control},
+                                      std::vector<std::size_t>{wire0, wire1});
+            sv1.applyOperation("SWAP", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
-                               std::vector<size_t>{wire0, wire1});
+                               std::vector<std::size_t>{wire0, wire1});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
@@ -865,7 +865,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::controlled Toffoli",
     std::mt19937 re{1337};
     const int num_qubits = 6;
     const auto margin = PrecisionT{1e-5};
-    const size_t control = GENERATE(0, 1, 2);
+    const std::size_t control = GENERATE(0, 1, 2);
     StateVectorLQubitManaged<PrecisionT> sv0(num_qubits);
     StateVectorLQubitManaged<PrecisionT> sv1(num_qubits);
 
@@ -874,11 +874,11 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::controlled Toffoli",
     sv1.updateData(st0);
     const std::vector<std::complex<PrecisionT>> matrix =
         getToffoli<std::complex, PrecisionT>();
-    sv0.applyControlledMatrix(matrix, std::vector<size_t>{control},
+    sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
                               std::vector<bool>{true},
-                              std::vector<size_t>{3, 4, 5});
-    sv1.applyOperation("PauliX", std::vector<size_t>{control, 3, 4},
+                              std::vector<std::size_t>{3, 4, 5});
+    sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 3, 4},
                        std::vector<bool>{true, true, true},
-                       std::vector<size_t>{5});
+                       std::vector<std::size_t>{5});
     REQUIRE(sv0.getDataVector() == approx(sv1.getDataVector()).margin(margin));
 }

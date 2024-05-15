@@ -46,16 +46,16 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
     auto statevector_data =
         createNonTrivialState<StateVectorCudaManaged<TestType>>();
 
-    size_t num_qubits = 3;
+    std::size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -79,7 +79,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
         mpi_manager.Barrier();
         const std::vector<ComplexT> PauliX = {ComplexT{0, 0}, ComplexT{1, 0},
                                               ComplexT{1, 0}, ComplexT{0, 0}};
-        const std::vector<size_t> wires_single = {0};
+        const std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval(PauliX, wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
@@ -93,7 +93,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
 
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval("PauliX", wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
@@ -113,7 +113,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
 
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -142,7 +142,7 @@ TEMPLATE_TEST_CASE("Expected Values", "[MeasurementsMPI]", float, double) {
         mpi_manager.Barrier();
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -198,12 +198,12 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t numqubits = 4;
-    size_t mpi_buffersize = 1;
+    std::size_t numqubits = 4;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = numqubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = numqubits - nGlobalIndexBits;
     mpi_manager.Barrier();
 
     std::vector<cp_t> init_sv{{0.1653855288944372, 0.08360762242222763},
@@ -242,7 +242,8 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
         mpi_manager.Barrier();
 
         std::vector<std::string> pauli_words = {"XYZI", "ZZXX"};
-        std::vector<std::vector<size_t>> tgts = {{0, 1, 2, 3}, {0, 1, 2, 3}};
+        std::vector<std::vector<std::size_t>> tgts = {{0, 1, 2, 3},
+                                                      {0, 1, 2, 3}};
         std::vector<std::complex<PrecisionT>> coeffs = {{0.1, 0.0}, {0.2, 0.0}};
 
         auto expval_mpi = Measurer.expval(pauli_words, tgts, coeffs.data());
@@ -255,7 +256,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
         mpi_manager.Barrier();
 
         std::vector<std::string> pauli_words = {"X", "Y", "Z", "I"};
-        std::vector<std::vector<size_t>> tgts = {{0}, {0}, {0}, {0}};
+        std::vector<std::vector<std::size_t>> tgts = {{0}, {0}, {0}, {0}};
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
 
@@ -269,7 +270,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
         mpi_manager.Barrier();
 
         std::vector<std::string> pauli_words = {"X", "Y", "Z", "I"};
-        std::vector<std::vector<size_t>> tgts = {
+        std::vector<std::vector<std::size_t>> tgts = {
             {numqubits - 1}, {numqubits - 1}, {numqubits - 1}, {numqubits - 1}};
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0}};
@@ -285,7 +286,7 @@ TEMPLATE_TEST_CASE("Pauliwords base on expval", "[MeasurementsMPI]", float,
 
         std::vector<std::string> pauli_words = {"X", "XY", "XYZ", "XYZI",
                                                 "X", "Y",  "Z",   "I"};
-        std::vector<std::vector<size_t>> tgts = {
+        std::vector<std::vector<std::size_t>> tgts = {
             {0}, {0, 1}, {0, 1, 2}, {0, 1, 2, 3}, {3}, {3}, {3}, {3}};
         std::vector<std::complex<PrecisionT>> coeffs = {
             {0.1, 0.0}, {0.2, 0.0}, {0.3, 0.0}, {0.4, 0.0},
@@ -306,16 +307,16 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     auto statevector_data =
         createNonTrivialState<StateVectorCudaManaged<TestType>>();
 
-    size_t num_qubits = 3;
+    std::size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -338,7 +339,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var(PauliX, wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
@@ -347,7 +348,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
     SECTION("Testing single operation defined by its name:") {
         MeasurementsMPI<StateVectorT> Measurer(sv);
         mpi_manager.Barrier();
-        std::vector<size_t> wires_single = {0};
+        std::vector<std::size_t> wires_single = {0};
         PrecisionT variance = Measurer.var("PauliX", wires_single);
         PrecisionT variances_ref = 0.7572222;
         REQUIRE(variance == Approx(variances_ref).margin(1e-6));
@@ -362,7 +363,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::vector<ComplexT>> operations_list;
 
         operations_list = {PauliX, PauliX, PauliX};
@@ -386,7 +387,7 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
         mpi_manager.Barrier();
         std::vector<PrecisionT> variances;
         std::vector<PrecisionT> variances_ref;
-        std::vector<std::vector<size_t>> wires_list = {{0}, {1}, {2}};
+        std::vector<std::vector<std::size_t>> wires_list = {{0}, {1}, {2}};
         std::vector<std::string> operations_list;
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
@@ -409,25 +410,25 @@ TEMPLATE_TEST_CASE("Variances", "[MeasurementsMPI]", double) {
 TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
-    std::vector<std::pair<std::vector<size_t>, std::vector<TestType>>> input = {
-        {{2, 1, 0},
-         {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072, 0.00801973,
-          0.02280642, 0.00104134}}};
+    std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+        input = {{{2, 1, 0},
+                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
+                   0.00801973, 0.02280642, 0.00104134}}};
 
     // Defining the statevector that will be measured.
     auto statevector_data =
         createNonTrivialState<StateVectorCudaManaged<TestType>>();
 
-    size_t num_qubits = 3;
+    std::size_t num_qubits = 3;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);

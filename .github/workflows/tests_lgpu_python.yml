@@ -13,7 +13,7 @@ on:
   release:
   pull_request:
     paths-ignore:
-      - .github
+      - .github/**
       - '!.github/workflows/tests_lgpu_python.yml'
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
@@ -66,7 +66,7 @@ jobs:
         default_backend: ["lightning_qubit"]
         cuda_version: ["12"]
 
-    name: Python tests with LGPU
+    name: Python Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
       - ubuntu-22.04
       - self-hosted
@@ -133,7 +133,7 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
-          
+
           pip_path=$(which python)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
@@ -166,7 +166,7 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Build and install package
-        env: 
+        env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
@@ -181,20 +181,20 @@ jobs:
 
       - name: Run PennyLane-Lightning-GPU unit tests
         if: ${{ matrix.pl_backend != 'all'}}
-        env: 
+        env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=40000 $COVERAGE_FLAGS --cov-append 
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS 
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
-        env: 
+        env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
@@ -202,13 +202,13 @@ jobs:
           CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
           rm -rf build
-          
+
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
-        env: 
+        env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |

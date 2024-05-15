@@ -26,7 +26,7 @@ using namespace Pennylane::Gates;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Gates {
-template <typename T, size_t size1, size_t size2>
+template <typename T, std::size_t size1, std::size_t size2>
 constexpr auto are_mutually_disjoint(const std::array<T, size1> &arr1,
                                      const std::array<T, size2> &arr2) -> bool {
     return std::all_of(arr1.begin(), arr1.end(), [&arr2](const auto &elem) {
@@ -39,8 +39,8 @@ constexpr auto are_mutually_disjoint(const std::array<T, size1> &arr1,
  ******************************************************************************/
 
 static_assert(Constant::gate_names.size() ==
-                  static_cast<size_t>(GateOperation::END) -
-                      static_cast<size_t>(GateOperation::BEGIN),
+                  static_cast<std::size_t>(GateOperation::END) -
+                      static_cast<std::size_t>(GateOperation::BEGIN),
               "Constant gate_names must be defined for all gate operations.");
 static_assert(Util::count_unique(Util::first_elems_of(Constant::gate_names)) ==
                   Constant::gate_names.size(),
@@ -64,8 +64,8 @@ constexpr auto check_generator_names_starts_with() -> bool {
 
 static_assert(
     Constant::generator_names.size() ==
-        static_cast<size_t>(GeneratorOperation::END) -
-            static_cast<size_t>(GeneratorOperation::BEGIN),
+        static_cast<std::size_t>(GeneratorOperation::END) -
+            static_cast<std::size_t>(GeneratorOperation::BEGIN),
     "Constant generator_names must be defined for all generator operations.");
 static_assert(
     Util::count_unique(Util::first_elems_of(Constant::generator_names)) ==
@@ -81,8 +81,8 @@ static_assert(
  ******************************************************************************/
 
 static_assert(Constant::gate_wires.size() ==
-                  static_cast<size_t>(GateOperation::END) -
-                      static_cast<size_t>(GateOperation::BEGIN) -
+                  static_cast<std::size_t>(GateOperation::END) -
+                      static_cast<std::size_t>(GateOperation::BEGIN) -
                       Constant::multi_qubit_gates.size(),
               "Constant gate_wires must be defined for all gate operations "
               "acting on a fixed number of qubits.");
@@ -100,8 +100,8 @@ static_assert(Util::count_unique(Util::first_elems_of(Constant::gate_wires)) ==
 
 static_assert(
     Constant::generator_wires.size() ==
-        static_cast<size_t>(GeneratorOperation::END) -
-            static_cast<size_t>(GeneratorOperation::BEGIN) -
+        static_cast<std::size_t>(GeneratorOperation::END) -
+            static_cast<std::size_t>(GeneratorOperation::BEGIN) -
             Constant::multi_qubit_generators.size(),
     "Constant generator_wires must be defined for all generator operations "
     "acting on a fixed number of qubits.");

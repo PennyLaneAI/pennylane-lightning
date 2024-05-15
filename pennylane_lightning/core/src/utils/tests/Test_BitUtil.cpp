@@ -25,7 +25,7 @@ using namespace Pennylane;
 // NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
     SECTION("isPerfectPowerOf2") {
-        size_t n = 1U;
+        std::size_t n = 1U;
         CHECK(Util::isPerfectPowerOf2(n));
         for (size_t k = 0; k < sizeof(size_t) - 2; k++) {
             n *= 2;
@@ -39,7 +39,7 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
         CHECK(!Util::isPerfectPowerOf2(1000000000U));
 
         if constexpr (sizeof(size_t) == 8) {
-            // if size_t is uint64_t
+            // if std::size_t is uint64_t
             CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
         }
     }

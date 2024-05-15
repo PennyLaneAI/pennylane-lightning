@@ -61,29 +61,31 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
     }
-    SECTION("StateVectorBackend<TestType> {MPIManager, DevTag<int>, size_t, "
-            "size_t, size_t}") {
+    SECTION(
+        "StateVectorBackend<TestType> {MPIManager, DevTag<int>, std::size_t, "
+        "size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPIManager, DevTag<int>,
-                                        size_t, size_t, size_t>);
+                                        std::size_t, std::size_t, std::size_t>);
     }
-    SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, size_t, "
-            "size_t, size_t}") {
+    SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, std::size_t, "
+            "size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPI_Comm, DevTag<int>,
-                                        size_t, size_t, size_t>);
+                                        std::size_t, std::size_t, std::size_t>);
     }
-    SECTION(
-        "StateVectorBackend<TestType> {DevTag<int>, size_t, size_t, size_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, size_t,
-                                        size_t, size_t>);
+    SECTION("StateVectorBackend<TestType> {DevTag<int>, std::size_t, "
+            "std::size_t, std::size_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, std::size_t,
+                                        std::size_t, std::size_t>);
     }
-    SECTION(
-        "StateVectorBackend<TestType> {DevTag<int>, size_t, size_t, CFP_t}") {
-        REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, size_t,
-                                        size_t, CFP_t *>);
+    SECTION("StateVectorBackend<TestType> {DevTag<int>, std::size_t, "
+            "std::size_t, CFP_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, std::size_t,
+                                        std::size_t, CFP_t *>);
     }
-    SECTION("StateVectorBackend<TestType> {DevTag<int>, size_t, size_t}") {
-        REQUIRE(
-            std::is_constructible_v<StateVectorT, DevTag<int>, size_t, size_t>);
+    SECTION("StateVectorBackend<TestType> {DevTag<int>, std::size_t, "
+            "std::size_t}") {
+        REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, std::size_t,
+                                        std::size_t>);
     }
     SECTION(
         "StateVectorBackend<TestType> {const StateVectorBackend<TestType>&}") {
@@ -98,16 +100,16 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a std::vector",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 128;
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t mpi_buffersize = 128;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
     mpi_manager.Barrier();
 
     std::vector<ComplexT> local_state(subSvLength);
@@ -157,16 +159,16 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyMatrix with a pointer",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t mpi_buffersize = 1;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
     mpi_manager.Barrier();
 
     std::vector<ComplexT> local_state(subSvLength);
@@ -220,16 +222,16 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::applyOperations",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    const size_t num_qubits = 4;
+    const std::size_t num_qubits = 4;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t mpi_buffersize = 1;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
     mpi_manager.Barrier();
 
     std::vector<ComplexT> local_state(subSvLength);

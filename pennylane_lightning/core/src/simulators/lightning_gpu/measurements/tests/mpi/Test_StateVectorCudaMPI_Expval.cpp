@@ -49,17 +49,17 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 
 TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
-    const size_t num_qubits = 3;
+    const std::size_t num_qubits = 3;
     auto ONE = TestType(1);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -87,7 +87,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
     {
         using StateVectorT = StateVectorCudaMPI<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -95,11 +95,11 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
-        size_t mpi_buffersize = 1;
+        std::size_t mpi_buffersize = 1;
 
-        size_t nGlobalIndexBits =
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
@@ -159,7 +159,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
     {
         using StateVectorT = StateVectorCudaMPI<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -168,11 +168,11 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
-        size_t mpi_buffersize = 1;
+        std::size_t mpi_buffersize = 1;
 
-        size_t nGlobalIndexBits =
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
@@ -231,16 +231,16 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaMPI_Expval]", float, double) {
         // Defining the statevector that will be measured.
         auto statevector_data =
             createNonTrivialState<StateVectorCudaManaged<TestType>>();
-        size_t num_qubits = 3;
+        std::size_t num_qubits = 3;
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
-        size_t mpi_buffersize = 1;
+        std::size_t mpi_buffersize = 1;
 
-        size_t nGlobalIndexBits =
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
@@ -270,17 +270,17 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[StateVectorCudaMPI_Expval]", float, double) {
 TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
     {
         using StateVectorT = StateVectorCudaMPI<TestType>;
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
         MPIManager mpi_manager(MPI_COMM_WORLD);
         REQUIRE(mpi_manager.getSize() == 2);
 
-        size_t mpi_buffersize = 1;
+        std::size_t mpi_buffersize = 1;
 
-        size_t nGlobalIndexBits =
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-        size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+        std::size_t nGlobalIndexBits =
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+        std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
         int nDevices = 0;
         cudaGetDeviceCount(&nDevices);
@@ -311,12 +311,12 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t num_qubits = 3;
-    size_t mpi_buffersize = 1;
+    std::size_t num_qubits = 3;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -340,9 +340,9 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         auto m = MeasurementsMPI(sv);
 
         auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.expval(*ob);
@@ -359,12 +359,12 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t num_qubits = 3;
-    size_t mpi_buffersize = 1;
+    std::size_t num_qubits = 3;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -386,9 +386,9 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         auto m = MeasurementsMPI(sv);
 
         auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
         auto res = m.expval(*ob);
@@ -407,12 +407,12 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t num_qubits = 3;
-    size_t mpi_buffersize = 1;
+    std::size_t num_qubits = 3;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -467,7 +467,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Hamiltonian_expval_Sparse",
         // This object attaches to the statevector allowing several
         // measurements.
         MeasurementsMPI<StateVectorT> Measurer(sv);
-        size_t data_size = Pennylane::Util::exp2(num_qubits);
+        std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
         std::vector<IdxT> row_map;
         std::vector<IdxT> entries;

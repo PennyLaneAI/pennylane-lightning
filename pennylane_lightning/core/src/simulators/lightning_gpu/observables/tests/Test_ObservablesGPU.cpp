@@ -35,13 +35,13 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]",
 
     SECTION("Constructibility") {
         REQUIRE(std::is_constructible_v<NamedObsT, std::string,
-                                        std::vector<size_t>>);
+                                        std::vector<std::size_t>>);
     }
 
     SECTION("Constructibility - optional parameters") {
-        REQUIRE(
-            std::is_constructible_v<NamedObsT, std::string, std::vector<size_t>,
-                                    std::vector<PrecisionT>>);
+        REQUIRE(std::is_constructible_v<NamedObsT, std::string,
+                                        std::vector<std::size_t>,
+                                        std::vector<PrecisionT>>);
     }
 
     SECTION("Copy constructibility") {
@@ -79,7 +79,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HermitianObs", "[Observables]",
 
     SECTION("Constructibility") {
         REQUIRE(std::is_constructible_v<HermitianObsT, MatrixT,
-                                        std::vector<size_t>>);
+                                        std::vector<std::size_t>>);
     }
 
     SECTION("Copy constructibility") {
@@ -183,9 +183,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasher", "[Observables]",
                                       {-0.7071067811865475, 0}};
 
     auto obs1 =
-        std::make_shared<HermitianT>(hermitian_h, std::vector<size_t>{0});
-    auto obs2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
-    auto obs3 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{3});
+        std::make_shared<HermitianT>(hermitian_h, std::vector<std::size_t>{0});
+    auto obs2 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{2});
+    auto obs3 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{3});
 
     auto tp_obs1 = std::make_shared<TensorProdObsT>(obs1, obs2);
     auto tp_obs2 = std::make_shared<TensorProdObsT>(obs2, obs3);
@@ -221,11 +223,13 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
     const auto h = PrecisionT{0.809}; // half of the golden ratio
 
     auto zz = std::make_shared<TensorProdObsT>(
-        std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-        std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+        std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0}),
+        std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1}));
 
-    auto x1 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
-    auto x2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+    auto x1 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+    auto x2 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
 
     auto ham = HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
 

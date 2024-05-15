@@ -67,7 +67,7 @@ template <typename TypeList> void testStateVectorBase() {
         using StateVectorT = typename TypeList::Type;
         using ComplexT = typename StateVectorT::ComplexT;
 
-        const size_t num_qubits = 4;
+        const std::size_t num_qubits = 4;
         auto st_data = createZeroState<ComplexT>(num_qubits);
 
         StateVectorT state_vector(st_data.data(), st_data.size());
@@ -94,7 +94,7 @@ template <typename TypeList> void testApplyOperations() {
         using PrecisionT = typename StateVectorT::PrecisionT;
         using ComplexT = typename StateVectorT::ComplexT;
 
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
 
         DYNAMIC_SECTION("Apply operations without parameters - "
                         << StateVectorToName<StateVectorT>::name) {

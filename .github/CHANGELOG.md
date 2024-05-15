@@ -2,24 +2,36 @@
 
 ### New features since last release
 
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
+
 ### Breaking changes
+
+* `dynamic_one_shot` uses shot-vectors in the auxiliary tape to tell the device how many times to repeat the tape. Lightning-Qubit is updated accordingly.
+  [(#724)](https://github.com/PennyLaneAI/pennylane-lightning/pull/724)
 
 * `dynamic_one_shot` deals with post-selection during the post-processing phase, so Lightning-Qubit does not return `None`-valued measurements for mismatching samples anymore.
   [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
-  
+
 ### Improvements
 
 * Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
   [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
   
+* Update C++ and Python GitHub actions names to include the matrix info.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
+
+* Remove `CPhase` in favour of `CPhaseShift` in Lightning devices.
+  [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
+
 * The various OpenMP configurations of Lightning-Qubit are tested in parallel on different Github Actions runners.
   [(#712)](https://github.com/PennyLaneAI/pennylane-lightning/pull/712)
-  
-* Update Linux wheels to use manylinux_2_28 images.
+
+* Update Linux wheels to use `manylinux_2_28` images.
   [(#667)](https://github.com/PennyLaneAI/pennylane-lightning/pull/667)
 
 * Add support for `qml.expval` and `qml.var` in the `lightning.tensor` device for the `quimb` interface and the MPS method.
-  [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)  
+  [(#686)](https://github.com/PennyLaneAI/pennylane-lightning/pull/686)
 
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
@@ -28,17 +40,23 @@
 
 ### Bug fixes
 
+* The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
+  [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
 # Release 0.36.0
 
 ### New features since last release
+
+* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+  [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
   [(#671)](https://github.com/PennyLaneAI/pennylane-lightning/pull/671)

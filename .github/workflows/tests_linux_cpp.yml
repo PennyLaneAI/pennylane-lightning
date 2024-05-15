@@ -51,7 +51,7 @@ jobs:
         - enable_kernel_omp: OFF
           enable_kernel_avx_stream: ON
     timeout-minutes: 60
-    name: C++ tests
+    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAM=${{ matrix.enable_kernel_avx_stream }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -113,7 +113,7 @@ jobs:
       matrix:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 60
-    name: C++ tests (OpenBLAS)
+    name: C++ Tests (${{ matrix.pl_backend }}, blas-ON)
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -181,7 +181,7 @@ jobs:
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
-    name: C++ tests (Kokkos)
+    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -275,7 +275,7 @@ jobs:
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
-    name: C++ tests (multiple backends)
+    name: C++ Tests (multiple-backends, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
