@@ -62,6 +62,8 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     std::shared_ptr<TNCudaGateCache<Precision>> gate_cache_;
 
+    cutensornetNetworkOperator_t obsOperator_;
+
   public:
     using PrecisionT = Precision;
 
@@ -92,6 +94,15 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
             /* cudaDataType_t */ typeData_,
             /*  cutensornetState_t * */ &quantumState_));
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* int32_t */ static_cast<int32_t>(BaseType::getNumQubits()),
+            /* const int64_t stateModeExtents */
+            reinterpret_cast<int64_t *>(
+                const_cast<size_t *>(BaseType::getQubitDims().data())),
+            /* cudaDataType_t */ typeData_,
+            /* cutensornetNetworkOperator_t */ &obsOperator_));
     }
 
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
@@ -117,11 +128,22 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
             /* cudaDataType_t */ typeData_,
             /*  cutensornetState_t * */ &quantumState_));
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* int32_t */ static_cast<int32_t>(BaseType::getNumQubits()),
+            /* const int64_t stateModeExtents */
+            reinterpret_cast<int64_t *>(
+                const_cast<size_t *>(BaseType::getQubitDims().data())),
+            /* cudaDataType_t */ typeData_,
+            /* cutensornetNetworkOperator_t */ &obsOperator_));
     }
 
     ~TNCudaBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
+
+    cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
 
     /**
      * @brief Get the CUDA data type.
@@ -146,7 +168,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
      *
      * @return cutensornetState_t
      */
-    [[nodiscard]] auto getQuantumState() const -> cutensornetState_t {
+    [[nodiscard]] auto getQuantumState() -> cutensornetState_t {
         return quantumState_;
     };
 
@@ -289,6 +311,75 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* int32_t unitary*/ 1));
     }
 
+    void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
+
+    ComplexT expval() {
+        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
+
+        cutensornetStateExpectation_t expectation;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* cutensornetNetworkOperator_t */ obsOperator_,
+            /* cutensornetStateExpectation_t * */ &expectation));
+
+        // Configure the computation of the specified quantum circuit
+        // expectation value
+        const int32_t numHyperSamples = 10;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
+            /* const void * */ &numHyperSamples,
+            /* size_t */ sizeof(numHyperSamples)));
+
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
+
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        // Prepare the specified quantum circuit expectation value for
+        // computation
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cudaStream_t [unused] */ 0x0));
+
+        std::size_t worksize = getWorkSpaceMemorySize(workDesc);
+
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device.\n");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<size_t, int> d_scratch(d_scratch_length, getDevTag(), true);
+
+        setWorkSpaceMemory(
+            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* void* */ static_cast<void *>(&expectVal),
+            /* void* */ static_cast<void *>(&stateNorm2),
+            /* cudaStream_t unused */ 0x0));
+
+        expectVal /= stateNorm2;
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
+
+        return expectVal;
+    }
+
   protected:
     /**
      * @brief Returns the workspace size.
@@ -337,7 +428,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
      *
      * @param tensorPtr Pointer to the tensor data provided by a user.
      */
-    void computeState(void **tensorPtr) {
+    void computeState(int64_t **extentsPtr, void **tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
@@ -369,7 +460,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ nullptr,
+            /* int64_t * */ extentsPtr,
             /* int64_t *stridesOut */ nullptr,
             /* void * */ tensorPtr,
             /* cudaStream_t */ getDevTag().getStreamID()));

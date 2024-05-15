@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <functional>
 #include <vector>
 
 #include "Error.hpp"
@@ -44,7 +45,6 @@ template <class PrecisionT, class Derived> class TensorBase {
         : rank_(rank), modes_(modes), extents_(extents) {
         PL_ABORT_IF_NOT(rank_ == extents_.size(),
                         "Please check if rank or extents are set correctly.");
-        length_ = 1;
         length_ = std::accumulate(extents.begin(), extents.end(),
                                   std::size_t{1}, std::multiplies<>());
     }

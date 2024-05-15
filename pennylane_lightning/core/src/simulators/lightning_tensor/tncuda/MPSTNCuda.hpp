@@ -61,6 +61,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
+    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
 
@@ -69,6 +70,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
 
     std::vector<TensorCuda<Precision>> tensors_;
+
+    std::vector<TensorCuda<Precision>> tensors_out_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -134,6 +137,20 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<uint64_t *>
+     */
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<int64_t *> {
+        std::vector<int64_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsOutDataPtr[i] = reinterpret_cast<int64_t *>(
+                tensors_out_[i].getDataBuffer().getData());
+        }
+        return tensorsOutDataPtr;
+    }
+
+    /**
      * @brief Set current quantum state as zero state.
      */
     void reset() {
@@ -186,6 +203,36 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         }
     };
 
+    void get_final_state() {
+        if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
+            MPSFinalized_ = MPSStatus::MPSFinalizedSet;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
+                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetBoundaryCondition_t */
+                CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+                /* const int64_t *const extentsOut[] */
+                getSitesExtentsPtr().data(),
+                /*strides=*/nullptr));
+        }
+
+        // Optional: SVD
+        cutensornetTensorSVDAlgo_t algo =
+            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */
+            CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
+            /* const void * */ &algo,
+            /* size_t */ sizeof(algo)));
+
+        this->computeState(
+            const_cast<int64_t **>(getSitesExtentsPtr().data()),
+            reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
+    }
+
     /**
      * @brief Get the full state vector representation of a MPS quantum state.
      *
@@ -208,7 +255,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         void *output_tensorPtr[] = {
             static_cast<void *>(output_tensor.getDataBuffer().getData())};
 
-        this->computeState(output_tensorPtr);
+        this->computeState(nullptr, output_tensorPtr);
 
         std::vector<ComplexT> results(output_extent.front());
         output_tensor.CopyGpuDataToHost(results.data(), results.size());
@@ -303,6 +350,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             // construct mps tensors reprensentation
             tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                   sitesExtents_[i], BaseType::getDevTag());
+
+            tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                      sitesExtents_[i], BaseType::getDevTag());
         }
     }
 

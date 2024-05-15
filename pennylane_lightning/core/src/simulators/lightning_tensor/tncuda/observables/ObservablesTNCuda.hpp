@@ -18,10 +18,13 @@
 #include <functional>
 #include <vector>
 
+#include <iostream>
+
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "Observables.hpp"
 #include "TNCudaGateCache.hpp"
+#include "TensorCuda.hpp"
 #include "Util.hpp"
 #include "cuError.hpp"
 #include "tncudaError.hpp"
@@ -57,7 +60,27 @@ template <class StateTensorT> class ObservableTNCuda {
     ObservableTNCuda &operator=(ObservableTNCuda &&) noexcept = default;
 
   protected:
-    cutensornetNetworkOperator_t obsOperator_{nullptr};
+    // cutensornetNetworkOperator_t obsOperator_{nullptr};
+
+    /**
+     * @brief Apply the observable to the given statevector in place.
+     */
+    /*
+    void createTNOperator(StateTensorT &state_tensor) {
+        // PL_ABORT_IF_NOT(
+        //     obsOperator_ == nullptr,
+        //     "The createTNOperator() method can be called only once.");
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /-* const cutensornetHandle_t *-/ state_tensor.getTNCudaHandle(),
+            /-* int32_t *-/ static_cast<int32_t>(state_tensor.getNumQubits()),
+            /-* const int64_t stateModeExtents *-/
+            reinterpret_cast<int64_t *>(
+                const_cast<size_t *>(state_tensor.getQubitDims().data())),
+            /-* cudaDataType_t *-/ state_tensor.getCudaDataType(),
+            /-* cutensornetNetworkOperator_t *-/ &obsOperator_));
+    }
+    */
 
   private:
     /**
@@ -72,31 +95,13 @@ template <class StateTensorT> class ObservableTNCuda {
 
   public:
     virtual ~ObservableTNCuda() {
-        if (obsOperator_ != nullptr) {
-            PL_CUTENSORNET_IS_SUCCESS(
-                cutensornetDestroyNetworkOperator(obsOperator_));
-        }
+        // if (obsOperator_ != nullptr) {
+        //     PL_CUTENSORNET_IS_SUCCESS(
+        //         cutensornetDestroyNetworkOperator(obsOperator_));
+        // }
     }
 
-    /**
-     * @brief Apply the observable to the given statevector in place.
-     */
-    void createTNOperator(StateTensorT &state_tensor) {
-        PL_ABORT_IF_NOT(
-            obsOperator_ == nullptr,
-            "The createTNOperator() method can be called only once.");
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ state_tensor.getTNCudaHandle(),
-            /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
-            /* const int64_t stateModeExtents */
-            reinterpret_cast<int64_t *>(
-                const_cast<size_t *>(state_tensor.getQubitDims().data())),
-            /* cudaDataType_t */ state_tensor.getCudaDataType(),
-            /* cutensornetNetworkOperator_t */ &obsOperator_));
-    }
-
-    cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
+    // cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
 
     virtual void appendTNOperator(StateTensorT &state_tensor) = 0;
 
@@ -189,7 +194,7 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
      */
     NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
-        : obs_name_{std::move(obs_name)}, wires_{std::move(wires)},
+        : obs_name_{std::move(obs_name)}, wires_{wires},
           params_{std::move(params)} {
         using Pennylane::Gates::Constant::gate_names;
         using Pennylane::Gates::Constant::gate_num_params;
@@ -200,12 +205,12 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
         PL_ASSERT(lookup(gate_wires, gate_op) == this->wires_.size());
         PL_ASSERT(lookup(gate_num_params, gate_op) == this->params_.size());
 
-        wires_int_.resize(wires.size());
+        wires_int_ = std::vector<int32_t>(wires_.size());
 
-        std::transform(wires.begin(), wires.end(), wires_int_.begin(),
+        std::transform(wires_.begin(), wires_.end(), wires_int_.begin(),
                        [](size_t x) { return static_cast<int32_t>(x); });
 
-        numStateModes_.push_back(static_cast<int32_t>(wires.size()));
+        numStateModes_.push_back(static_cast<int32_t>(wires_.size()));
 
         stateModes_.push_back(wires_int_.data());
     }
@@ -224,32 +229,28 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
     }
 
     void appendTNOperator(StateTensorT &state_tensor) {
-        this->createTNOperator(state_tensor);
+        // this->createTNOperator(state_tensor);
 
-        auto &&par = (this->params_.empty()) ? std::vector<PrecisionT>{0.0}
-                                             : this->params_;
+        auto &&par = (params_.empty()) ? std::vector<PrecisionT>{0.0} : params_;
 
-        std::size_t rank = size_t{2} * wires_int_.size();
+        std::size_t rank = 2 * wires_int_.size();
         std::vector<std::size_t> modes(rank, 0);
         std::vector<std::size_t> extents(rank, 2);
 
-        auto &&tensor = TensorCuda<PrecisionT>(rank, modes, extents,
-                                               state_tensor.getDevTag());
+        tensorData_.emplace_back(rank, modes, extents,
+                                 state_tensor.getDevTag());
 
-        auto &&gate_host_vector =
-            state_tensor.getGateCache()->get_gate_host_vector(this->obs_name_,
-                                                              par);
+        auto gate_host_vector =
+            state_tensor.getGateCache()->get_gate_host_vector(obs_name_, par);
 
-        tensor.getDataBuffer().CopyHostDataToGpu(gate_host_vector.data(),
-                                                 gate_host_vector.size());
+        tensorData_.back().getDataBuffer().CopyHostDataToGpu(
+            gate_host_vector.data(), gate_host_vector.size());
 
-        tensorData_.emplace_back(std::move(tensor));
-
-        tensorDataPtr_[0] = tensorData_[0].getDataBuffer().getData();
+        tensorDataPtr_.push_back(tensorData_.back().getDataBuffer().getData());
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
             /* const cutensornetHandle_t */ state_tensor.getTNCudaHandle(),
-            /* cutensornetNetworkOperator_t */ this->obsOperator_,
+            /* cutensornetNetworkOperator_t */ state_tensor.getTNOperator(),
             /* cuDoubleComplex coefficient*/ cuDoubleComplex{1, 0.0},
             /* int32_t numTensors */ 1,
             /* const int32_t numStateModes[] */ numStateModes_.data(),

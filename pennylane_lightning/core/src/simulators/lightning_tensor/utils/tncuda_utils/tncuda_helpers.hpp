@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "tncudaError.hpp"
+#include <cuda.h>
 
 namespace Pennylane::LightningTensor::TNCuda::Util {
 
@@ -29,6 +30,8 @@ enum class MPSStatus : uint32_t {
     BEGIN = 0,
     MPSInitNotSet = 0,
     MPSInitSet,
+    MPSFinalizedNotSet,
+    MPSFinalizedSet,
     END
 };
 
@@ -49,6 +52,7 @@ using SharedTNCudaHandle =
  * @brief Creates a SharedTNCudaHandle (a shared pointer to a cutensornetHandle)
  */
 inline SharedTNCudaHandle make_shared_tncuda_handle() {
+    cudaSetDevice(0);
     cutensornetHandle_t h;
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
     return {h, TNCudaHandleDeleter()};

@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <complex>
-#include <iostream>
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -37,7 +36,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
                    double) {
     using StateTensorT = MPSTNCuda<TestType>;
-    // auto ONE = TestType(1);
+    auto ONE = TestType(1);
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
@@ -52,8 +51,8 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
         auto ob = NamedObs<StateTensorT>("Identity", {0});
-        measure.expval(ob, mps_state);
-        // CHECK(res == Approx(ONE));
+        auto res = measure.expval(ob, mps_state);
+        CHECK(res.real() == Approx(ONE));
     }
 }
 /*
