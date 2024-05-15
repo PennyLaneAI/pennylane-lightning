@@ -116,12 +116,12 @@ _observables = frozenset(
 
 
 def stopping_condition(op: qml.operation.Operator) -> bool:
-    """A function that determines if an operation is supported by ``default.tensor`` for this interface."""
+    """A function that determines if an operation is supported by ``lightning.tensor`` for this interface."""
     return op.name in _operations  # pragma: no cover
 
 
 def accepted_observables(obs: qml.operation.Operator) -> bool:
-    """A function that determines if an observable is supported by ``default.tensor`` for this interface."""
+    """A function that determines if an observable is supported by ``lightning.tensor`` for this interface."""
     return obs.name in _observables  # pragma: no cover
 
 
@@ -138,7 +138,6 @@ class QuimbMPS:
     """
 
     def __init__(self, num_wires, interf_opts, dtype=np.complex128):
-
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
 
