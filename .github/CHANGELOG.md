@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Updated Kokkos version and support to 4.3.01.
+  [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
+
 * Update C++ and Python GitHub actions names to include the matrix info.
   [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 
