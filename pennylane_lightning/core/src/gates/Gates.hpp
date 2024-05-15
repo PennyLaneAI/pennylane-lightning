@@ -965,12 +965,17 @@ template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorControlledPhaseShift()
     -> std::vector<ComplexT<T>> {
     return {
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
     };
 }
 
