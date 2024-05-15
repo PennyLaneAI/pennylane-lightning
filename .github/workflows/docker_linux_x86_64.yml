@@ -12,7 +12,7 @@ on:
       lightning-version:
         type: string
         required: true
-        description: The version of Lightning to use. This should be a valid git reference, e.g. v0.36.0.
+        description: The version of Lightning to use. This should be a valid git tag, e.g. v0.36.0.
       push-to-dockerhub:
         type: boolean
         required: true
