@@ -62,8 +62,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     std::shared_ptr<TNCudaGateCache<Precision>> gate_cache_;
 
-    cutensornetNetworkOperator_t obsOperator_;
-
   public:
     using PrecisionT = Precision;
 
@@ -94,15 +92,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
             /* cudaDataType_t */ typeData_,
             /*  cutensornetState_t * */ &quantumState_));
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* int32_t */ static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t stateModeExtents */
-            reinterpret_cast<int64_t *>(
-                const_cast<size_t *>(BaseType::getQubitDims().data())),
-            /* cudaDataType_t */ typeData_,
-            /* cutensornetNetworkOperator_t */ &obsOperator_));
     }
 
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
@@ -128,22 +117,11 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
             /* cudaDataType_t */ typeData_,
             /*  cutensornetState_t * */ &quantumState_));
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* int32_t */ static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t stateModeExtents */
-            reinterpret_cast<int64_t *>(
-                const_cast<size_t *>(BaseType::getQubitDims().data())),
-            /* cudaDataType_t */ typeData_,
-            /* cutensornetNetworkOperator_t */ &obsOperator_));
     }
 
     ~TNCudaBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
-
-    cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
 
     /**
      * @brief Get the CUDA data type.
@@ -313,7 +291,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
 
-    ComplexT expval() {
+    ComplexT expval(cutensornetNetworkOperator_t obsOperator) {
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
 
         cutensornetStateExpectation_t expectation;
@@ -321,7 +299,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* cutensornetNetworkOperator_t */ obsOperator_,
+            /* cutensornetNetworkOperator_t */ obsOperator,
             /* cutensornetStateExpectation_t * */ &expectation));
 
         // Configure the computation of the specified quantum circuit

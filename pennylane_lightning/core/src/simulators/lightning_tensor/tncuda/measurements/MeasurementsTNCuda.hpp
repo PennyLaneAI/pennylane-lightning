@@ -71,9 +71,9 @@ template <class StateTensorT> class Measurements {
      * @return Expectation value with respect to the given observable.
      */
     auto expval(ObservableTNCuda<StateTensorT> &ob, StateTensorT &state_tensor)
-        -> ComplexT {
+        -> PrecisionT {
         ob.appendTNOperator(state_tensor);
-        return state_tensor.expval();
+        return state_tensor.expval(ob.getTNOperator()).real();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Measures
