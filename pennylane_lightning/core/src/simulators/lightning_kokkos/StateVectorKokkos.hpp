@@ -74,12 +74,12 @@ class StateVectorKokkos final
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     using KokkosVector = Kokkos::View<ComplexT *>;
-    using KokkosSizeTVector = Kokkos::View<size_t *>;
+    using KokkosSizeTVector = Kokkos::View<std::size_t *>;
     using UnmanagedComplexHostView =
         Kokkos::View<ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedSizeTHostView =
-        Kokkos::View<size_t *, Kokkos::HostSpace,
+        Kokkos::View<std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedConstComplexHostView =
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
@@ -94,13 +94,13 @@ class StateVectorKokkos final
         Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using ScratchViewSizeT =
-        Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
+        Kokkos::View<std::size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
-    StateVectorKokkos(size_t num_qubits,
+    StateVectorKokkos(std::size_t num_qubits,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : BaseType{num_qubits} {
         num_qubits_ = num_qubits;
@@ -269,9 +269,13 @@ class StateVectorKokkos final
                 applyControlledGlobalPhase<false>(gate_matrix);
             }
         } else if (array_contains(gate_names, std::string_view{opName})) {
-            applyNamedOperation(opName, wires, inverse, params);
+            const std::size_t num_qubits = this->getNumQubits();
+            const GateOperation gateop =
+                reverse_lookup(gate_names, std::string_view{opName});
+            applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
+                                                 wires, inverse, params);
         } else {
-            PL_ABORT_IF(gate_matrix.size() == 0,
+            PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
                             std::string(" and no matrix provided."));
             KokkosVector matrix("gate_matrix", gate_matrix.size());
@@ -328,7 +332,7 @@ class StateVectorKokkos final
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      */
-    void applyMultiQubitOp(const KokkosVector &matrix,
+    void applyMultiQubitOp(const KokkosVector matrix,
                            const std::vector<std::size_t> &wires,
                            bool inverse = false) {
         auto &&num_qubits = this->getNumQubits();
@@ -450,125 +454,6 @@ class StateVectorKokkos final
         applyMatrix(matrix.data(), wires, inverse);
     }
 
-    void applyNamedOperation(const std::string &opName,
-                             const std::vector<std::size_t> &wires,
-                             bool inverse = false,
-                             const std::vector<fp_t> &params = {}) {
-        switch (reverse_lookup(gate_names, std::string_view{opName})) {
-        case GateOperation::PauliX:
-            applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::PauliY:
-            applyGateFunctor<pauliYFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::PauliZ:
-            applyGateFunctor<pauliZFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::Hadamard:
-            applyGateFunctor<hadamardFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::S:
-            applyGateFunctor<sFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::T:
-            applyGateFunctor<tFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RX:
-            applyGateFunctor<rxFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RY:
-            applyGateFunctor<ryFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::RZ:
-            applyGateFunctor<rzFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::PhaseShift:
-            applyGateFunctor<phaseShiftFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::Rot:
-            applyGateFunctor<rotFunctor, 1>(wires, inverse, params);
-            return;
-        case GateOperation::CY:
-            applyGateFunctor<cyFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CZ:
-            applyGateFunctor<czFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CNOT:
-            applyGateFunctor<cnotFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::SWAP:
-            applyGateFunctor<swapFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::ControlledPhaseShift:
-            applyGateFunctor<controlledPhaseShiftFunctor, 2>(wires, inverse,
-                                                             params);
-            return;
-        case GateOperation::CRX:
-            applyGateFunctor<crxFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CRY:
-            applyGateFunctor<cryFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CRZ:
-            applyGateFunctor<crzFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::CRot:
-            applyGateFunctor<cRotFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::IsingXX:
-            applyGateFunctor<isingXXFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::IsingXY:
-            applyGateFunctor<isingXYFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::IsingYY:
-            applyGateFunctor<isingYYFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::IsingZZ:
-            applyGateFunctor<isingZZFunctor, 2>(wires, inverse, params);
-            return;
-        case GateOperation::SingleExcitation:
-            applyGateFunctor<singleExcitationFunctor, 2>(wires, inverse,
-                                                         params);
-            return;
-        case GateOperation::SingleExcitationMinus:
-            applyGateFunctor<singleExcitationMinusFunctor, 2>(wires, inverse,
-                                                              params);
-            return;
-        case GateOperation::SingleExcitationPlus:
-            applyGateFunctor<singleExcitationPlusFunctor, 2>(wires, inverse,
-                                                             params);
-            return;
-        case GateOperation::DoubleExcitation:
-            applyGateFunctor<doubleExcitationFunctor, 4>(wires, inverse,
-                                                         params);
-            return;
-        case GateOperation::DoubleExcitationMinus:
-            applyGateFunctor<doubleExcitationMinusFunctor, 4>(wires, inverse,
-                                                              params);
-            return;
-        case GateOperation::DoubleExcitationPlus:
-            applyGateFunctor<doubleExcitationPlusFunctor, 4>(wires, inverse,
-                                                             params);
-            return;
-        case GateOperation::MultiRZ:
-            applyMultiRZ(wires, inverse, params);
-            return;
-        case GateOperation::GlobalPhase:
-            applyGlobalPhase(wires, inverse, params);
-            return;
-        case GateOperation::CSWAP:
-            applyGateFunctor<cSWAPFunctor, 3>(wires, inverse, params);
-            return;
-        case GateOperation::Toffoli:
-            applyGateFunctor<toffoliFunctor, 3>(wires, inverse, params);
-            return;
-        default:
-            PL_ABORT(std::string("Operation does not exist for ") + opName);
-        }
-    }
-
     /**
      * @brief Apply a single generator to the state vector using the given
      * kernel.
@@ -582,184 +467,11 @@ class StateVectorKokkos final
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<fp_t> &params = {}) -> fp_t {
-        switch (reverse_lookup(generator_names, std::string_view{opName})) {
-        case GeneratorOperation::RX:
-            applyGateFunctor<pauliXFunctor, 1>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::RY:
-            applyGateFunctor<pauliYFunctor, 1>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::RZ:
-            applyGateFunctor<pauliZFunctor, 1>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::PhaseShift:
-            applyGateFunctor<generatorPhaseShiftFunctor, 1>(wires, inverse,
-                                                            params);
-            return static_cast<fp_t>(1.0);
-        case GeneratorOperation::IsingXX:
-            applyGateFunctor<generatorIsingXXFunctor, 2>(wires, inverse,
-                                                         params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::IsingXY:
-            applyGateFunctor<generatorIsingXYFunctor, 2>(wires, inverse,
-                                                         params);
-            return static_cast<fp_t>(0.5);
-        case GeneratorOperation::IsingYY:
-            applyGateFunctor<generatorIsingYYFunctor, 2>(wires, inverse,
-                                                         params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::IsingZZ:
-            applyGateFunctor<generatorIsingZZFunctor, 2>(wires, inverse,
-                                                         params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::SingleExcitation:
-            applyGateFunctor<generatorSingleExcitationFunctor, 2>(
-                wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::SingleExcitationMinus:
-            applyGateFunctor<generatorSingleExcitationMinusFunctor, 2>(
-                wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::SingleExcitationPlus:
-            applyGateFunctor<generatorSingleExcitationPlusFunctor, 2>(
-                wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::DoubleExcitation:
-            applyGateFunctor<generatorDoubleExcitationFunctor, 4>(
-                wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::DoubleExcitationMinus:
-            applyGateFunctor<generatorDoubleExcitationMinusFunctor, 4>(
-                wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::DoubleExcitationPlus:
-            applyGateFunctor<generatorDoubleExcitationPlusFunctor, 4>(
-                wires, inverse, params);
-            return static_cast<fp_t>(0.5);
-        case GeneratorOperation::ControlledPhaseShift:
-            applyGateFunctor<generatorControlledPhaseShiftFunctor, 2>(
-                wires, inverse, params);
-            return static_cast<fp_t>(1);
-        case GeneratorOperation::CRX:
-            applyGateFunctor<generatorCRXFunctor, 2>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::CRY:
-            applyGateFunctor<generatorCRYFunctor, 2>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::CRZ:
-            applyGateFunctor<generatorCRZFunctor, 2>(wires, inverse, params);
-            return -static_cast<fp_t>(0.5);
-        case GeneratorOperation::MultiRZ:
-            return applyGeneratorMultiRZ(wires, inverse, params);
-        case GeneratorOperation::GlobalPhase:
-            return static_cast<PrecisionT>(-1.0);
-        /// LCOV_EXCL_START
-        default:
-            PL_ABORT(std::string("Generator does not exist for ") + opName);
-            /// LCOV_EXCL_STOP
-        }
-    }
-
-    /**
-     * @brief Templated method that applies special n-qubit gates.
-     *
-     * @tparam functor_t Gate functor class for Kokkos dispatcher.
-     * @tparam nqubits Number of qubits.
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    template <template <class, bool> class functor_t, int nqubits>
-    void applyGateFunctor(const std::vector<std::size_t> &wires,
-                          bool inverse = false,
-                          const std::vector<fp_t> &params = {}) {
-        auto &&num_qubits = this->getNumQubits();
-        PL_ASSERT(wires.size() == nqubits);
-        PL_ASSERT(wires.size() <= num_qubits);
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(
-                    0, exp2(num_qubits - nqubits)),
-                functor_t<fp_t, false>(*data_, num_qubits, wires, params));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(
-                    0, exp2(num_qubits - nqubits)),
-                functor_t<fp_t, true>(*data_, num_qubits, wires, params));
-        }
-    }
-
-    /**
-     * @brief Apply a MultiRZ operator to the state vector using a matrix
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    void applyMultiRZ(const std::vector<std::size_t> &wires,
-                      bool inverse = false,
-                      const std::vector<fp_t> &params = {}) {
-        auto &&num_qubits = this->getNumQubits();
-
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                multiRZFunctor<fp_t, false>(*data_, num_qubits, wires, params));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                multiRZFunctor<fp_t, true>(*data_, num_qubits, wires, params));
-        }
-    }
-
-    /**
-     * @brief Apply a GlobalPhase operator to the state vector using a matrix
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    void applyGlobalPhase(const std::vector<std::size_t> &wires,
-                          bool inverse = false,
-                          const std::vector<fp_t> &params = {}) {
-        auto &&num_qubits = this->getNumQubits();
-
-        if (!inverse) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                globalPhaseFunctor<fp_t, false>(*data_, num_qubits, wires,
-                                                params));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                globalPhaseFunctor<fp_t, true>(*data_, num_qubits, wires,
-                                               params));
-        }
-    }
-
-    /**
-     * @brief Apply a MultiRZ generator to the state vector using a matrix
-     *
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params parameters for this gate
-     */
-    auto applyGeneratorMultiRZ(
-        const std::vector<std::size_t> &wires, bool inverse = false,
-        [[maybe_unused]] const std::vector<fp_t> &params = {}) -> fp_t {
-        auto &&num_qubits = this->getNumQubits();
-
-        if (inverse == false) {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                generatorMultiRZFunctor<fp_t, false>(*data_, num_qubits,
-                                                     wires));
-        } else {
-            Kokkos::parallel_for(
-                Kokkos::RangePolicy<KokkosExecSpace>(0, exp2(num_qubits)),
-                generatorMultiRZFunctor<fp_t, true>(*data_, num_qubits, wires));
-        }
-        return -static_cast<fp_t>(0.5);
+        const std::size_t num_qubits = this->getNumQubits();
+        const GeneratorOperation generator_op =
+            reverse_lookup(generator_names, std::string_view{opName});
+        return applyNamedGenerator<KokkosExecSpace>(
+            generator_op, *data_, num_qubits, wires, inverse, params);
     }
 
     /**
@@ -814,7 +526,7 @@ class StateVectorKokkos final
      *
      * @param other Kokkos View
      */
-    void updateData(const KokkosVector &other) {
+    void updateData(const KokkosVector other) {
         Kokkos::deep_copy(*data_, other);
     }
 
