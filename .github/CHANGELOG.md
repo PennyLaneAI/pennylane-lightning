@@ -37,6 +37,9 @@
 
 ### Bug fixes
 
+* Fix AVX streaming operation support with newer GCC.
+  [(#729)](https://github.com/PennyLaneAI/pennylane-lightning/pull/729)
+
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
 
