@@ -544,6 +544,7 @@ static auto getSingleExcitation(T angle) -> std::vector<ComplexT<T>> {
             c,
             -s,
             ZERO<ComplexT, T>(),
+
             ZERO<ComplexT, T>(),
             s,
             c,
