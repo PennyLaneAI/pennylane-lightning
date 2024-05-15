@@ -107,7 +107,7 @@ class Measurements final
      */
     template <template <class> class functor_t, int num_wires>
     PrecisionT applyExpValFunctor(const KokkosVector matrix,
-                                  const std::vector<size_t> &wires) {
+                                  const std::vector<std::size_t> &wires) {
         PL_ASSERT(wires.size() == num_wires);
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
@@ -268,7 +268,7 @@ class Measurements final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -413,7 +413,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -441,7 +441,7 @@ class Measurements final
                    const index_type *entries_ptr, const ComplexT *values_ptr,
                    const index_type numNNZ) {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv{this->_statevector};
@@ -525,7 +525,7 @@ class Measurements final
 
         if (!is_sorted_wires) {
             sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-            for (size_t pos = 0; pos < wires.size(); pos++)
+            for (std::size_t pos = 0; pos < wires.size(); pos++)
                 sorted_wires[pos] = wires[sorted_ind_wires[pos]];
         }
 
@@ -541,12 +541,12 @@ class Measurements final
         Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
                                                    all_indices.size());
 
-        Kokkos::View<size_t *> d_sorted_ind_wires("d_sorted_ind_wires",
-                                                  sorted_ind_wires.size());
-        Kokkos::View<size_t *> d_all_indices("d_all_indices",
-                                             all_indices.size());
-        Kokkos::View<size_t *> d_all_offsets("d_all_offsets",
-                                             all_offsets.size());
+        Kokkos::View<std::size_t *> d_sorted_ind_wires("d_sorted_ind_wires",
+                                                       sorted_ind_wires.size());
+        Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
+                                                  all_indices.size());
+        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
+                                                  all_offsets.size());
 
         Kokkos::deep_copy(
             d_all_indices,
@@ -586,8 +586,8 @@ class Measurements final
             Kokkos::View<PrecisionT *> transposed_tensor("transposed_tensor",
                                                          all_indices.size());
 
-            Kokkos::View<size_t *> d_trans_index("d_trans_index",
-                                                 all_indices.size());
+            Kokkos::View<std::size_t *> d_trans_index("d_trans_index",
+                                                      all_indices.size());
 
             const int num_trans_tensor = transposed_tensor.size();
             const int num_sorted_ind_wires = sorted_ind_wires.size();
@@ -636,7 +636,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(size_t num_shots) {
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -671,13 +671,14 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::size_t N = this->_statevector.getLength();
 
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         Kokkos::View<PrecisionT *> probability("probability", N);
-        Kokkos::View<size_t *> samples("num_samples", num_samples * num_qubits);
+        Kokkos::View<std::size_t *> samples("num_samples",
+                                            num_samples * num_qubits);
 
         // Compute probability distribution from StateVector
         Kokkos::parallel_for(Kokkos::RangePolicy<KokkosExecSpace>(0, N),
@@ -708,7 +709,7 @@ class Measurements final
         std::vector<std::size_t> samples_h(num_samples * num_qubits);
 
         using UnmanagedSize_tHostView =
-            Kokkos::View<size_t *, Kokkos::HostSpace,
+            Kokkos::View<std::size_t *, Kokkos::HostSpace,
                          Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
         Kokkos::deep_copy(

@@ -981,8 +981,8 @@ static constexpr auto getGeneratorControlledPhaseShift()
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
 
-         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
 
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
         ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
@@ -1010,7 +1010,7 @@ static constexpr auto getGeneratorIsingXX() -> std::vector<ComplexT<T>> {
         ZERO<ComplexT, T>(), ONE<ComplexT, T>(),
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
 
-        ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
     };
 }
@@ -1192,7 +1192,7 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
 
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-        ONE<ComplexT, T>(), ZERO<ComplexT, T>(),
+        ONE<ComplexT, T>(),  ZERO<ComplexT, T>(),
 
         ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
         ZERO<ComplexT, T>(), -ONE<ComplexT, T>(),

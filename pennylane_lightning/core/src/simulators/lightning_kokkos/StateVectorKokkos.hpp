@@ -74,12 +74,12 @@ class StateVectorKokkos final
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     using KokkosVector = Kokkos::View<ComplexT *>;
-    using KokkosSizeTVector = Kokkos::View<size_t *>;
+    using KokkosSizeTVector = Kokkos::View<std::size_t *>;
     using UnmanagedComplexHostView =
         Kokkos::View<ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedSizeTHostView =
-        Kokkos::View<size_t *, Kokkos::HostSpace,
+        Kokkos::View<std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using UnmanagedConstComplexHostView =
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
@@ -94,13 +94,13 @@ class StateVectorKokkos final
         Kokkos::View<ComplexT *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using ScratchViewSizeT =
-        Kokkos::View<size_t *, KokkosExecSpace::scratch_memory_space,
+        Kokkos::View<std::size_t *, KokkosExecSpace::scratch_memory_space,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using TeamPolicy = Kokkos::TeamPolicy<>;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorKokkos() = delete;
-    StateVectorKokkos(size_t num_qubits,
+    StateVectorKokkos(std::size_t num_qubits,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : BaseType{num_qubits} {
         num_qubits_ = num_qubits;

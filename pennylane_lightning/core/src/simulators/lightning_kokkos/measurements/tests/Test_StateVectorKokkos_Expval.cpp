@@ -264,7 +264,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::Hamiltonian_expval",
         std::size_t matrix_dim = static_cast<std::size_t>(1U) << num_qubits;
         std::vector<ComplexT> matrix(matrix_dim * matrix_dim);
 
-        for (size_t i = 0; i < matrix.size(); i++) {
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             if (i % matrix_dim == i / matrix_dim)
                 matrix[i] = ComplexT{1, 0};
             else
