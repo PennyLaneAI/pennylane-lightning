@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
+  [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
+
 * `dynamic_one_shot` uses shot-vectors in the auxiliary tape to tell the device how many times to repeat the tape. Lightning-Qubit is updated accordingly.
   [(#724)](https://github.com/PennyLaneAI/pennylane-lightning/pull/724)
 
