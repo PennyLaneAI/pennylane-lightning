@@ -32,9 +32,11 @@ using namespace Pennylane::LightningTensor;
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningTensor::TNCuda;
 
+/// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Constructibility", "[Default Constructibility]",
                    float, double) {

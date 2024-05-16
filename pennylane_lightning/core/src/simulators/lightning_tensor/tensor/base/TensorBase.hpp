@@ -79,7 +79,7 @@ template <class Precision, class Derived> class TensorBase {
     /**
      * @brief Return the number of elements of a tensor object.
      *
-     * @return std::vector<std::size_t> Number of elements of a tensor object.
+     * @return std::size_t Number of elements of a tensor object.
      */
     [[nodiscard]] std::size_t getLength() const { return length_; }
 };

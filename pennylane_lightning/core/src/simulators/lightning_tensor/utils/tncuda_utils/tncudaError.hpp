@@ -27,7 +27,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+}// namespace
 /// @endcond
 
 #ifndef CUDA_UNSAFE

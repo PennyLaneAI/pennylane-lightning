@@ -27,10 +27,12 @@
 #include "TensorBase.hpp"
 #include "cuda_helpers.hpp"
 
+/// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 
@@ -61,14 +63,16 @@ class TensorCuda final : public TensorBase<Precision, TensorCuda<Precision>> {
     /**
      * @brief Explicitly copy data from GPU device to host memory.
      *
-     * @param sv Complex data pointer to receive data from device.
+     * @param host_tensor Complex data pointer to receive data from device.
+     * @param length Number of elements to copy.
+     * @param async If true, the copy is asynchronous.
      */
-    inline void CopyGpuDataToHost(std::complex<Precision> *host_sv,
+    inline void CopyGpuDataToHost(std::complex<Precision> *host_tensor,
                                   std::size_t length,
                                   bool async = false) const {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyGpuDataToHost(host_sv, length, async);
+        data_buffer_->CopyGpuDataToHost(host_tensor, length, async);
     }
 
     DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
