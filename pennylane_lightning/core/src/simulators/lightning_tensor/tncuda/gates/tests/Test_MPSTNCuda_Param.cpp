@@ -39,7 +39,7 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyPhaseShift", "[MPSTNCuda_Param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -78,7 +78,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPhaseShift", "[MPSTNCuda_Param]", float,
             scaleVector(vec, coef);
         }
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -95,7 +95,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPhaseShift", "[MPSTNCuda_Param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyRX", "[MPSTNCuda_Param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RX", "[MPSTNCuda_Param]", float, double) {
     const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRX", "[MPSTNCuda_Param]", float, double) {
             std::vector<cp_t>(std::size_t{1} << num_qubits, results[2]),
         };
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -132,7 +132,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRX", "[MPSTNCuda_Param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyRY", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RY", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
@@ -170,7 +170,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRY", "[MPSTNCuda_Nonparam]", float,
                                                          {-0.20141277, 0},
                                                          {0.45763839, 0}}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -186,7 +186,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRY", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyRZ", "[MPSTNCuda_Param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RZ", "[MPSTNCuda_Param]", float, double) {
     const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
@@ -226,7 +226,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRZ", "[MPSTNCuda_Param]", float, double) {
              {0.12811281, -0.32952558},
              {0.12811281, 0.32952558}}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -242,8 +242,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRZ", "[MPSTNCuda_Param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::ControlledPhaseShift",
+                   "[MPSTNCuda_Param]", float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -271,7 +271,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
             scaleVector(vec, coef);
         }
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -285,7 +285,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -301,7 +301,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
+                   double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -320,7 +321,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
             std::vector<cp_t>(0b1 << num_qubits),
             std::vector<cp_t>(0b1 << num_qubits)};
 
-        for (size_t i = 0; i < angles.size(); i++) {
+        for (std::size_t i = 0; i < angles.size(); i++) {
             const auto rot_mat =
                 (inverse) ? Gates::getRot<std::complex, TestType>(
                                 -angles[i][0], -angles[i][1], -angles[i][2])
@@ -330,7 +331,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
             expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
         }
 
-        SECTION("Apply using dispatcher") {
+        SECTION("Apply at different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -341,7 +342,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRot", "[MPSTNCuda_param]", float,
+                   double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -356,7 +358,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
         std::vector<cp_t> expected_results =
             std::vector<cp_t>(0b1 << num_qubits);
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperation("CRot", {0, 1}, inverse, angles);
@@ -366,7 +368,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
                   Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperation("CRot", {0, 2}, inverse, angles);
@@ -378,7 +380,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -407,7 +409,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
         expected_results[3][0] = {0.9210609940028851, 0.0};
         expected_results[3][5] = {0.0, -0.3894183423086505};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             const std::size_t index = GENERATE(0, 1);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -418,7 +420,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
                   Pennylane::Util::approx(expected_results[index]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             const std::size_t index = GENERATE(0, 1);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -432,7 +434,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -459,7 +461,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
         expected_results[1][4] = {0.34958337, 0.05283436};
         expected_results[1][6] = {0.34958337, 0.05283436};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -472,7 +474,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
                   Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -487,7 +489,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingYY", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -514,7 +516,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
         expected_results[1][4] = {0.34958337, -0.05283436};
         expected_results[1][6] = {0.34958337, -0.05283436};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -527,7 +529,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
                   Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -542,7 +544,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingZZ", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -569,7 +571,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
         expected_results[1][5] = {0.34958337, -0.05283436};
         expected_results[1][7] = {0.34958337, -0.05283436};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -582,7 +584,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
                   Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -597,7 +599,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRX", "[MPSTNCuda_param]", float,
+                   double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -623,7 +626,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
         expected_results[1][6] = {0.34958337, -0.05283436};
         expected_results[1][7] = {0.34958337, -0.05283436};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -637,7 +640,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -652,7 +655,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRY", "[MPSTNCuda_param]", float,
+                   double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -678,7 +682,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
         expected_results[1][6] = {0.29674901, 0.0};
         expected_results[1][7] = {0.40241773, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -692,7 +696,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -707,7 +711,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRZ", "[MPSTNCuda_param]", float,
+                   double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -733,7 +738,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
         expected_results[1][6] = {0.34958337, -0.05283436};
         expected_results[1][7] = {0.34958337, 0.05283436};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -747,7 +752,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -761,7 +766,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitation", "[MPSTNCuda_param]",
                    float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -788,7 +793,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
         expected_results[1][4] = {0.40241773, 0.0};
         expected_results[1][6] = {0.40241773, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -803,7 +808,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -819,8 +824,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationMinus",
+                   "[MPSTNCuda_param]", float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -846,7 +851,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][4] = {0.40241773, 0.0};
         expected_results[1][6] = {0.40241773, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -861,7 +866,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -877,8 +882,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
+                   "[MPSTNCuda_param]", float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -904,7 +909,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][4] = {0.40241773, 0.0};
         expected_results[1][6] = {0.40241773, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -919,7 +924,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -934,7 +939,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitation", "[MPSTNCuda_param]",
                    float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -961,7 +966,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
         expected_results[1][24] = {0.20120886, 0.0};
         expected_results[1][26] = {0.20120886, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -977,7 +982,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations(
@@ -994,8 +999,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationMinus",
+                   "[MPSTNCuda_param]", float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -1021,7 +1026,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][24] = {0.20120886, 0.0};
         expected_results[1][26] = {0.20120886, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -1037,7 +1042,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations(
@@ -1054,8 +1059,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
-                   float, double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationPlus",
+                   "[MPSTNCuda_param]", float, double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
@@ -1081,7 +1086,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][24] = {0.20120886, 0.0};
         expected_results[1][26] = {0.20120886, 0.0};
 
-        SECTION("Apply adjacent sites") {
+        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
             mps_state.reset();
 
@@ -1097,12 +1102,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent sites") {
+        SECTION("Apply non-adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations(
                 {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false},
+                {{0.0}, {0.0}, {0.0}, {0.0}, {0.0}});
 
             mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 4},
                                      inverse, angles);
@@ -1114,7 +1120,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::MultiRZ", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
@@ -1134,7 +1140,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyMatrix", "[MPSTNCuda_param]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Matrix", "[MPSTNCuda_param]", float,
                    double) {
     // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
