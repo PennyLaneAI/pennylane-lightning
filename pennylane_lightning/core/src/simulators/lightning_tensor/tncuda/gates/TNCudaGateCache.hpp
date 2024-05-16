@@ -77,7 +77,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      */
     void add_gate(const size_t gate_id, const std::string &gate_name,
-                  std::vector<PrecisionT> gate_param) {
+                  [[maybe_unused]] std::vector<PrecisionT> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         if (nonparametric_gates_.find(gate_name) !=

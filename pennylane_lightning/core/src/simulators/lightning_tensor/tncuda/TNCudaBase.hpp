@@ -49,6 +49,7 @@ template <class Precision, class Derived>
 class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using PrecisionT = Precision;
     using ComplexT = std::complex<Precision>;
     using BaseType = TensornetBase<Precision, Derived>;
     SharedTNCudaHandle handle_;
@@ -148,22 +149,84 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         return dev_tag_;
     }
 
-    void appendGateTensorOperator(
+    /**
+     * @brief Append multiple gates to the compute graph.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_adjoint Indicates whether gate at matched index is to be
+     * inverted.
+     */
+    void
+    applyOperations(const std::vector<std::string> &ops,
+                    const std::vector<std::vector<std::size_t>> &ops_wires,
+                    const std::vector<bool> &ops_adjoint,
+                    const std::vector<std::vector<PrecisionT>> &ops_params) {
+        const std::size_t numOperations = ops.size();
+        PL_ABORT_IF_NOT(
+            numOperations == ops_wires.size(),
+            "Invalid arguments: number of operations, wires, and inverses "
+            "must all be equal");
+        PL_ABORT_IF_NOT(
+            numOperations == ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires and inverses"
+            "must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
+                                 ops_params[i]);
+        }
+    }
+
+    /**
+     * @brief Append multiple gate tensors to the compute graph.
+     *
+     * @param ops Vector of gate names to be applied in order.
+     * @param ops_wires Vector of wires on which to apply index-matched gate
+     * name.
+     * @param ops_adjoint Indicates whether gate at matched index is to be
+     * inverted.
+     */
+    void applyOperations(const std::vector<std::string> &ops,
+                         const std::vector<std::vector<std::size_t>> &ops_wires,
+                         const std::vector<bool> &ops_adjoint) {
+        const std::size_t numOperations = ops.size();
+        PL_ABORT_IF_NOT(
+            numOperations == ops_wires.size(),
+            "Invalid arguments: number of operations, wires, and inverses "
+            "must all be equal");
+        PL_ABORT_IF_NOT(
+            numOperations == ops_adjoint.size(),
+            "Invalid arguments: number of operations, wires and inverses"
+            "must all be equal");
+        for (size_t i = 0; i < numOperations; i++) {
+            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
+        }
+    }
+
+    /**
+     * @brief Append a single gate tensor to the compute graph.
+     *
+     * @param opName Gate's name.
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional gate matrix for custom gates.
+     */
+
+    void applyOperation(
         const std::string &opName, const std::vector<size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-
         DataBuffer<Precision, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
-
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());
         std::transform(
             wires.begin(), wires.end(), stateModes.begin(), [&](size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
-
         // Note adjoint indicates whether or not all tensor elements of the
         // tensor operator will be complex conjugated adjoint in the following
         // API is not equivalent to inverse in the lightning context
@@ -180,7 +243,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
-
         if (!gate_matrix.empty()) {
             std::vector<CFP_t> matrix_cu(gate_matrix.size());
             std::transform(gate_matrix.begin(), gate_matrix.end(),
@@ -192,7 +254,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         } else {
             gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
         }
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),

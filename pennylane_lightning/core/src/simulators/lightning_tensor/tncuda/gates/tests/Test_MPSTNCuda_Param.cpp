@@ -80,15 +80,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPhaseShift", "[MPSTNCuda_Param]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("PhaseShift", {index}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("PhaseShift", {index}, inverse,
+                                     {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -118,15 +118,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRX", "[MPSTNCuda_Param]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("RX", {index}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RX", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -173,15 +172,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRY", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("RY", {index}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RY", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -230,15 +228,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRZ", "[MPSTNCuda_Param]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("RZ", {index}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RZ", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -275,29 +272,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
         }
 
         SECTION("Apply adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("ControlledPhaseShift", {0, 1}, inverse,
-                                        {angles[0]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("ControlledPhaseShift", {0, 1}, inverse,
+                                     {angles[0]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("ControlledPhaseShift", {0, 2}, inverse,
-                                        {angles[1]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
+                                     {angles[1]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -335,10 +332,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
 
         SECTION("Apply using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Rot", {index}, inverse, angles[index]);
-            CHECK(sv.getDataVector() ==
+            mps_state.applyOperation("Rot", {index}, inverse, angles[index]);
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
     }
@@ -360,22 +357,22 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
             std::vector<cp_t>(0b1 << num_qubits);
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("CRot", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRot", {0, 1}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("CRot", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRot", {0, 2}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
     }
@@ -412,23 +409,23 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
 
         SECTION("Apply adjacent sites") {
             const std::size_t index = GENERATE(0, 1);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("IsingXX", {0, 1}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperation("IsingXX", {0, 1}, inverse,
+                                     {angles[index]});
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
 
         SECTION("Apply non-adjacent sites") {
             const std::size_t index = GENERATE(0, 1);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("IsingXX", {0, 2}, inverse,
-                                        {angles[index]});
+            mps_state.applyOperation("IsingXX", {0, 2}, inverse,
+                                     {angles[index]});
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(
                       expected_results[index + angles.size()]));
         }
@@ -463,31 +460,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
         expected_results[1][6] = {0.34958337, 0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("IsingXY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingXY", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("IsingXY", {0, 2}, inverse, angles);
 
-            sv.appendGateTensorOperator("IsingXY", {0, 2}, inverse, angles);
+            auto results = mps_state.getDataVector();
 
-            auto results = sv.getDataVector();
-
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[1]));
         }
     }
@@ -521,32 +515,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
         expected_results[1][6] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("IsingYY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingYY", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("IsingYY", {0, 2}, inverse, angles);
+            mps_state.applyOperation("IsingYY", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
-            CHECK(sv.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[1]));
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
@@ -579,32 +570,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
         expected_results[1][7] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("IsingZZ", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("IsingZZ", {0, 2}, inverse, angles);
+            mps_state.applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
-            CHECK(sv.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[1]));
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
@@ -636,30 +624,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("CRX", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRX", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("CRX", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRX", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -693,30 +679,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("CRY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRY", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("CRY", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRY", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -750,30 +734,27 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.34958337, 0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("CRZ", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRZ", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("CRZ", {0, 2}, inverse, angles);
 
-            sv.appendGateTensorOperator("CRZ", {0, 2}, inverse, angles);
-
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -808,32 +789,30 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("SingleExcitation", {0, 1}, inverse,
-                                        angles);
+            mps_state.applyOperation("SingleExcitation", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("SingleExcitation", {0, 2}, inverse,
-                                        angles);
+            mps_state.applyOperation("SingleExcitation", {0, 2}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -868,32 +847,30 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("SingleExcitationMinus", {0, 1},
-                                        inverse, angles);
+            mps_state.applyOperation("SingleExcitationMinus", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("SingleExcitationMinus", {0, 2},
-                                        inverse, angles);
+            mps_state.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -928,32 +905,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.appendGateTensorOperator("SingleExcitationPlus", {0, 1}, inverse,
-                                        angles);
+            mps_state.applyOperation("SingleExcitationPlus", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
+                                     angles);
 
-            sv.appendGateTensorOperator("SingleExcitationPlus", {0, 2}, inverse,
-                                        angles);
-
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -988,36 +962,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitation", {0, 1, 2, 3},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitation", {0, 1, 2, 4},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 4}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1052,36 +1022,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitationMinus", {0, 1, 2, 3},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitationMinus", {0, 1, 2, 4},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 4},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1116,36 +1082,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitationPlus", {0, 1, 2, 3},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("Hadamard", {0}, false);
-            sv.appendGateTensorOperator("Hadamard", {1}, false);
-            sv.appendGateTensorOperator("Hadamard", {2}, false);
-            sv.appendGateTensorOperator("Hadamard", {3}, false);
-            sv.appendGateTensorOperator("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.appendGateTensorOperator("DoubleExcitationPlus", {0, 1, 2, 4},
-                                        inverse, angles);
+            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 4},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1163,10 +1125,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
         SECTION("Throw errors") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            REQUIRE_THROWS_WITH(sv.appendGateTensorOperator(
-                                    "MultiRZ", {0, 1}, inverse, {angles[0]}),
+            REQUIRE_THROWS_WITH(mps_state.applyOperation("MultiRZ", {0, 1},
+                                                         inverse, {angles[0]}),
                                 Catch::Contains("Unsupported gate."));
         }
     }
@@ -1188,12 +1150,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMatrix", "[MPSTNCuda_param]", float,
 
         SECTION("Append tensor operator with host data and wires") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.appendGateTensorOperator("applyMatrix", {index}, inverse, {},
-                                        x_gate);
+            mps_state.applyOperation("applyMatrix", {index}, inverse, {},
+                                     x_gate);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
             CHECK(results[0b1 << (num_qubits - index - 1)] ==
