@@ -53,9 +53,8 @@ using namespace Pennylane::Util;
     template <typename PrecisionT, class GateImplementation>                   \
     struct Apply##GATE_NAME##IsDefined<                                        \
         PrecisionT, GateImplementation,                                        \
-        std::enable_if_t<std::is_pointer_v<                                    \
-            decltype(&GateImplementation::template apply##GATE_NAME<           \
-                     PrecisionT>)>>> {                                         \
+        std::enable_if_t<std::is_pointer_v<decltype(                           \
+            &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
@@ -244,22 +243,21 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
 }
 PENNYLANE_RUN_TEST(T);
 
-template <typename PrecisionT, class GateImplementation>
-void testApplySX() {
-        // Test using |000> state
-        using ComplexT = std::complex<PrecisionT>;
-        const size_t num_qubits = 3;
+template <typename PrecisionT, class GateImplementation> void testApplySX() {
+    // Test using |000> state
+    using ComplexT = std::complex<PrecisionT>;
+    const size_t num_qubits = 3;
 
-        ComplexT z(0.0, 0.0);
-        // ComplexT p(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(0.5));
-        // ComplexT m(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(-0.5));
-        ComplexT p(0.5,  0.5);
-        ComplexT m(0.5, -0.5);
+    ComplexT z(0.0, 0.0);
+    // ComplexT p(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(0.5));
+    // ComplexT m(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(-0.5));
+    ComplexT p(0.5, 0.5);
+    ComplexT m(0.5, -0.5);
 
-        const std::vector<std::vector<ComplexT>> expected_results = {
-            {p, z, z, z, m, z, z, z},
-            {p, z, m, z, z, z, z, z},
-            {p, m, z, z, z, z, z, z}};
+    const std::vector<std::vector<ComplexT>> expected_results = {
+        {p, z, z, z, m, z, z, z},
+        {p, z, m, z, z, z, z, z},
+        {p, m, z, z, z, z, z, z}};
 
     for (size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
