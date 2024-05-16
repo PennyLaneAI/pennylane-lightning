@@ -236,10 +236,13 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             wires.begin(), wires.end(), stateModes.begin(), [&](std::size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
-        // Note `adjoint` in the cutensornet context indicates whether or not
-        // all tensor elements of the tensor operator will be complex
-        // conjugated. `adjoint` in the following API is not equivalent to
-        // `inverse` in the lightning context
+
+        // TODO: Need changes to support to the controlled gate tensor API once
+        // the API is finalized in cutensornet lib.
+        //  Note `adjoint` in the cutensornet context indicates whether or not
+        //  all tensor elements of the tensor operator will be complex
+        //  conjugated. `adjoint` in the following API is not equivalent to
+        //  `inverse` in the lightning context
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),

@@ -148,6 +148,8 @@ template <class Precision> class TNCudaGateCache {
     using NonParamGateFuncMap =
         std::unordered_map<std::string, NonParamGateFunc>;
 
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
     NonParamGateFuncMap nonparametric_gates_{
         {"Identity",
          [&]() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
@@ -172,6 +174,8 @@ template <class Precision> class TNCudaGateCache {
         {"CSWAP",
          [&]() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
 
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
     ParamGateFuncMap parametric_gates_{
         {"PhaseShift",
          [&](auto &&params) {
