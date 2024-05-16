@@ -152,7 +152,8 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     /**
      * @brief Append multiple gates to the compute graph.
-     *
+     * NOTE: This function does not update the quantum state but only appends
+     * gate tensor operator to the graph.
      * @param ops Vector of gate names to be applied in order.
      * @param ops_wires Vector of wires on which to apply index-matched gate
      * name.
@@ -181,7 +182,8 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     /**
      * @brief Append multiple gate tensors to the compute graph.
-     *
+     * NOTE: This function does not update the quantum state but only appends
+     * gate tensor operator to the graph.
      * @param ops Vector of gate names to be applied in order.
      * @param ops_wires Vector of wires on which to apply index-matched gate
      * name.
@@ -207,7 +209,8 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     /**
      * @brief Append a single gate tensor to the compute graph.
-     *
+     * NOTE: This function does not update the quantum state but only appends
+     * gate tensor operator to the graph.
      * @param opName Gate's name.
      * @param wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
@@ -228,11 +231,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             wires.begin(), wires.end(), stateModes.begin(), [&](size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
-        // Note adjoint indicates whether or not all tensor elements of the
-        // tensor operator will be complex conjugated adjoint in the following
-        // API is not equivalent to inverse in the lightning context
-        // NOTE: cutensornetStateApplyTensorOperator doesn't update the quantum
-        // state but only appends gate tensor operator to the graph.
+        // Note `adjoint` in the cutensornet context indicates whether or not
+        // all tensor elements of the tensor operator will be complex
+        // conjugated. `adjoint` in the following API is not equivalent to
+        // `inverse` in the lightning context
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
