@@ -133,7 +133,7 @@ template <class Precision> class TNCudaGateCache {
 
     std::vector<CFP_t>
     get_gate_host_vector(const std::string &gate_name,
-                         [[maybe_unused]] std::vector<PrecisionT> gate_param) {
+                         [[maybe_unused]] std::vector<Precision> gate_param) {
         if (nonparametric_gates_.find(gate_name) !=
             nonparametric_gates_.end()) {
             auto gate_data_host = nonparametric_gates_.at(gate_name)();

@@ -56,7 +56,6 @@ template <class Precision, class Derived>
 class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
-    using PrecisionT = Precision;
     using ComplexT = std::complex<Precision>;
     using BaseType = TensornetBase<Precision, Derived>;
     SharedTNCudaHandle handle_;

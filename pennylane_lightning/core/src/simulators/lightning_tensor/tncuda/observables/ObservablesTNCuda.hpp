@@ -65,7 +65,7 @@ template <class StateTensorT> class ObservableTNCuda {
     /**
      * @brief Create a tensor network operator for the observable.
      */
-    void createTNOperator(StateTensorT &state_tensor) {
+    void createTNOperator(const StateTensorT &state_tensor) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ state_tensor.getTNCudaHandle(),
             /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
@@ -97,7 +97,7 @@ template <class StateTensorT> class ObservableTNCuda {
 
     cutensornetNetworkOperator_t getTNOperator() { return obsOperator_; }
 
-    virtual void appendTNOperator(StateTensorT &state_tensor) = 0;
+    virtual void appendTNOperator(const StateTensorT &state_tensor) = 0;
 
     /**
      * @brief Get the name of the observable
@@ -217,7 +217,7 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
         return wires_;
     }
 
-    void appendTNOperator(StateTensorT &state_tensor) {
+    void appendTNOperator(const StateTensorT &state_tensor) {
         if (this->obsOperator_ == nullptr) {
             this->createTNOperator(state_tensor);
             std::transform(wires_.begin(), wires_.end(), wires_int_.begin(),

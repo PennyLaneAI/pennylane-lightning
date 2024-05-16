@@ -20,13 +20,10 @@
 
 #pragma once
 
-#include <algorithm>
 #include <complex>
 #include <cuda.h>
 #include <cutensornet.h>
-#include <random>
 #include <type_traits>
-#include <unordered_map>
 #include <vector>
 
 #include "MPSTNCuda.hpp"
@@ -53,7 +50,7 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
  * Observables are defined by its operator(matrix), the observable class,
  * or through a string-based function dispatch.
  *
- * @tparam MPSCutn type of the statevector to be measured.
+ * @tparam StateTensorT type of the state tensor to be measured.
  */
 template <class StateTensorT> class Measurements {
   private:
@@ -61,8 +58,11 @@ template <class StateTensorT> class Measurements {
     using ComplexT = typename StateTensorT::ComplexT;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
+    StateTensorT &state_tensor_;
+
   public:
-    explicit Measurements(){};
+    explicit Measurements(StateTensorT &state_tensor)
+        : state_tensor_(state_tensor){};
 
     /**
      * @brief Calculate expectation value for a general Observable.
@@ -70,10 +70,9 @@ template <class StateTensorT> class Measurements {
      * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCuda<StateTensorT> &ob, StateTensorT &state_tensor)
-        -> PrecisionT {
-        ob.appendTNOperator(state_tensor);
-        return state_tensor.expval(ob.getTNOperator()).real();
+    auto expval(ObservableTNCuda<StateTensorT> &ob) -> PrecisionT {
+        ob.appendTNOperator(state_tensor_);
+        return state_tensor_.expval(ob.getTNOperator()).real();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Measures
