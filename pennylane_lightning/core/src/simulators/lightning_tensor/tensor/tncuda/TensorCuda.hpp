@@ -27,10 +27,12 @@
 #include "TensorBase.hpp"
 #include "cuda_helpers.hpp"
 
+/// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 
@@ -40,17 +42,17 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam Precision Floating point precision.
  */
 
-template <class PrecisionT>
-class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
+template <class Precision>
+class TensorCuda final : public TensorBase<Precision, TensorCuda<Precision>> {
   public:
-    using BaseType = TensorBase<PrecisionT, TensorCuda>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using BaseType = TensorBase<Precision, TensorCuda>;
+    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
 
     explicit TensorCuda(const std::size_t rank,
                         const std::vector<std::size_t> &modes,
                         const std::vector<std::size_t> &extents,
                         const DevTag<int> &dev_tag, bool device_alloc = true)
-        : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(rank, modes, extents),
+        : TensorBase<Precision, TensorCuda<Precision>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
@@ -61,14 +63,16 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
     /**
      * @brief Explicitly copy data from GPU device to host memory.
      *
-     * @param sv Complex data pointer to receive data from device.
+     * @param host_tensor Complex data pointer to receive data from device.
+     * @param length Number of elements to copy.
+     * @param async If true, the copy is asynchronous.
      */
-    inline void CopyGpuDataToHost(std::complex<PrecisionT> *host_sv,
+    inline void CopyGpuDataToHost(std::complex<Precision> *host_tensor,
                                   std::size_t length,
                                   bool async = false) const {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
-        data_buffer_->CopyGpuDataToHost(host_sv, length, async);
+        data_buffer_->CopyGpuDataToHost(host_tensor, length, async);
     }
 
     DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }

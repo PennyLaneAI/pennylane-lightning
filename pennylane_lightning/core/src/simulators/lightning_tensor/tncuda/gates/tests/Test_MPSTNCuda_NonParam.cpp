@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <complex>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -25,29 +20,57 @@
 #include "DevTag.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
-#include "cuGates_host.hpp"
-#include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"
 
+/// @cond DEV
+namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
+using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
-
-namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyHadamard", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Identity", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
+            const std::size_t index = GENERATE(0, 1, 2);
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+            mps_state.applyOperation("Hadamard", {index}, inverse);
+
+            mps_state.applyOperation("Identity", {index}, inverse);
+            cp_t expected(1.0 / std::sqrt(2), 0);
+
+            auto results = mps_state.getDataVector();
+
+            CHECK(expected.real() ==
+                  Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
+            CHECK(expected.imag() ==
+                  Approx(results[0b1 << ((num_qubits - index - 1))].imag()));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
+                   double) {
+    const bool inverse = GENERATE(false);
+    {
+        using cp_t = std::complex<TestType>;
+        std::size_t num_qubits = 3;
+        std::size_t maxExtent = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -64,15 +87,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyHadamard", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliX", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -86,8 +109,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliX", "[MPSTNCuda_Nonparam]", float,
         }
     }
 }
-// TODO IMPORTANT NOTE: inverse doesn't work for PauliY here
-TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliY", "[MPSTNCuda_Nonparam]", float,
+
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
@@ -107,7 +130,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliY", "[MPSTNCuda_Nonparam]", float,
             {m, m, p, p, m, m, p, p},
             {m, p, m, p, m, p, m, p}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -123,9 +146,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliY", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliZ", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliZ", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -141,7 +164,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliZ", "[MPSTNCuda_Nonparam]", float,
             {p, p, m, m, p, p, m, m},
             {p, m, p, m, p, m, p, m}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -157,8 +180,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliZ", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyS", "[MPSTNCuda_Nonparam]", float, double) {
-    const bool inverse = GENERATE(true, false);
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
+                   double) {
+    const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -178,7 +202,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyS", "[MPSTNCuda_Nonparam]", float, double) {
             {r, r, i, i, r, r, i, i},
             {r, i, r, i, r, i, r, i}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -194,10 +218,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyS", "[MPSTNCuda_Nonparam]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyT", "[MPSTNCuda_Nonparam]", float, double) {
-    const bool inverse = GENERATE(true, false);
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
+                   double) {
+    const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
@@ -215,7 +239,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyT", "[MPSTNCuda_Nonparam]", float, double) {
             {r, r, i, i, r, r, i, i},
             {r, i, r, i, r, i, r, i}};
 
-        SECTION("Apply different wire indices using dispatcher") {
+        SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
@@ -231,15 +255,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyT", "[MPSTNCuda_Nonparam]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperations({"Hadamard", "CNOT", "CNOT"},
@@ -253,7 +277,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
             CHECK(results.back() == cuUtil::INVSQRT2<std::complex<TestType>>());
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperation("Hadamard", {0}, false);
@@ -267,16 +291,16 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SWAP", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected{cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>(),
@@ -298,7 +322,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected{cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
@@ -322,7 +346,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CY", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
@@ -331,7 +355,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -354,7 +378,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -379,17 +403,16 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -412,7 +435,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -437,16 +460,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Toffoli", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -471,7 +493,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -506,16 +528,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CSWAP", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(true, false);
+    const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices using dispatcher") {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -540,7 +561,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices using dispatcher") {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),

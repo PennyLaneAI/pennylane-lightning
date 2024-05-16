@@ -653,6 +653,10 @@ template <class CFP_t, class U = double>
 static auto getSingleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
 #ifdef _ENABLE_PLGPU
     const CFP_t s{-std::sin(p2), 0}; // column-major
 #else
@@ -734,7 +738,15 @@ static auto getSingleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+// TODO: To remove conditional compilation here in the future, current
+// implementation will block the simultaneous installation of LGPU and
+// cutensornet backends
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
+
     return {e,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -813,6 +825,10 @@ static auto getSingleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
 #ifdef _ENABLE_PLGPU
     const CFP_t s{-std::sin(p2), 0}; // column-major
 #else
@@ -892,6 +908,10 @@ template <class CFP_t, class U = double>
 static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
 #ifdef _ENABLE_PLGPU
     const CFP_t s{-std::sin(p2), 0}; // column-major
 #else
@@ -968,6 +988,10 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
 #ifdef _ENABLE_PLGPU
     const CFP_t s{-std::sin(p2), 0}; // column-major
 #else
@@ -1060,6 +1084,9 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
 #ifdef _ENABLE_PLGPU
     const CFP_t s{-std::sin(p2), 0}; // column-major
 #else
