@@ -267,7 +267,7 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t row, PrecisionT &expval) const {
-        for (size_t j = indptr[row]; j < indptr[row + 1]; j++) {
+        for (std::size_t j = indptr[row]; j < indptr[row + 1]; j++) {
             expval += real(conj(arr[row]) * data[j] * arr[indices[j]]);
         }
     }

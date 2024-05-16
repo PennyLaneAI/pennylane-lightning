@@ -49,12 +49,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyHadamard", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {index}, inverse);
+            mps_state.applyOperation("Hadamard", {index}, inverse);
             cp_t expected(1.0 / std::sqrt(2), 0);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(expected.real() ==
                   Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
@@ -74,11 +74,11 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliX", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("PauliX", {index}, inverse);
+            mps_state.applyOperation("PauliX", {index}, inverse);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
             CHECK(results[0b1 << (num_qubits - index - 1)] ==
@@ -109,14 +109,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliY", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("PauliY", {index}, inverse);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("PauliY", {index}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -143,15 +143,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPauliZ", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("PauliZ", {index}, inverse);
+            mps_state.applyOperation("PauliZ", {index}, inverse);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -181,15 +180,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyS", "[MPSTNCuda_Nonparam]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("S", {index}, inverse);
+            mps_state.applyOperation("S", {index}, inverse);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -219,15 +217,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyT", "[MPSTNCuda_Nonparam]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("T", {index}, inverse);
+            mps_state.applyOperation("T", {index}, inverse);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -243,13 +240,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
         DevTag<int> dev_tag{0, 0};
 
         SECTION("Apply adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("CNOT", {0, 1}, inverse);
-            sv.applyOperation("CNOT", {1, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "CNOT", "CNOT"},
+                                      {{0}, {0, 1}, {1, 2}},
+                                      {false, inverse, inverse});
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results.front() ==
                   cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -257,12 +254,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCNOT", "[MPSTNCuda_Nonparam]", float,
         }
 
         SECTION("Apply non-adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("CNOT", {0, 2}, inverse);
+            mps_state.applyOperation("Hadamard", {0}, false);
+            mps_state.applyOperation("CNOT", {0, 2}, inverse);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::INVSQRT2<std::complex<TestType>>());
             CHECK(results[5] == cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -289,13 +286,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
                                        std::complex<TestType>(1.0 / sqrt(2), 0),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("SWAP", {0, 1}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("SWAP", {0, 1}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected));
         }
@@ -310,13 +308,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySWAP", "[MPSTNCuda_Nonparam]", float,
                                        cuUtil::ZERO<std::complex<TestType>>(),
                                        cuUtil::ZERO<std::complex<TestType>>()};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("SWAP", {0, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("SWAP", {0, 2}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected));
         }
@@ -343,13 +342,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>()};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CY", {0, 1}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CY", {0, 1}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -365,13 +365,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCY", "[MPSTNCuda_Nonparam]", float,
                 cuUtil::ZERO<std::complex<TestType>>(),
                 std::complex<TestType>(0.0, 1.0 / sqrt(2))};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CY", {0, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CY", {0, 2}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -399,13 +400,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
                 std::complex<TestType>(-1 / sqrt(2), 0),
                 cuUtil::ZERO<std::complex<TestType>>()};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CZ", {0, 1}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CZ", {0, 1}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -421,13 +423,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCZ", "[MPSTNCuda_Nonparam]", float,
                 std::complex<TestType>(1.0 / sqrt(2), 0),
                 cuUtil::ZERO<std::complex<TestType>>()};
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CZ", {0, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CZ", {0, 2}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -456,13 +459,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
 
             std::size_t num_qubits = 3;
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("Toffoli", {0, 1, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("Toffoli", {0, 1, 2}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -488,13 +492,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyToffoli", "[MPSTNCuda_Nonparam]", float,
 
             std::size_t num_qubits = 4;
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("Toffoli", {0, 2, 3}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("Toffoli", {0, 2, 3}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -523,13 +528,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
 
             std::size_t num_qubits = 3;
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CSWAP", {0, 1, 2}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CSWAP", {0, 1, 2}, inverse);
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -555,16 +561,17 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCSWAP", "[MPSTNCuda_Nonparam]", float,
 
             std::size_t num_qubits = 4;
 
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("PauliX", {1}, false);
-            sv.applyOperation("CSWAP", {0, 2, 3}, inverse);
+            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
+                                      {false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("CSWAP", {0, 2, 3}, inverse);
+
+            auto results = mps_state.getDataVector();
             // TODO remove the following line later. This is a test if we can
             // call getDataVector() multiple times
-            auto results_test = sv.getDataVector();
+            auto results_test = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
             CHECK(results_test == Pennylane::Util::approx(expected_results));

@@ -49,6 +49,7 @@ template <class Precision, class Derived>
 class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using PrecisionT = Precision;
     using ComplexT = std::complex<Precision>;
     using BaseType = TensornetBase<Precision, Derived>;
     SharedTNCudaHandle handle_;
@@ -199,7 +200,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     }
 
     /**
-     * @brief Apply multiple gates to the state-vector.
+     * @brief Append multiple gate tensors to the compute graph.
      *
      * @param ops Vector of gate names to be applied in order.
      * @param ops_wires Vector of wires on which to apply index-matched gate
@@ -225,7 +226,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     }
 
     /**
-     * @brief Append a single gate to the compute graph.
+     * @brief Append a single gate tensor to the compute graph.
      *
      * @param opName Gate's name.
      * @param wires Wires to apply gate to.
@@ -239,17 +240,14 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-
         DataBuffer<Precision, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
-
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());
         std::transform(
             wires.begin(), wires.end(), stateModes.begin(), [&](size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
-
         // Note adjoint indicates whether or not all tensor elements of the
         // tensor operator will be complex conjugated adjoint in the following
         // API is not equivalent to inverse in the lightning context
@@ -266,7 +264,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
-
         if (!gate_matrix.empty()) {
             std::vector<CFP_t> matrix_cu(gate_matrix.size());
             std::transform(gate_matrix.begin(), gate_matrix.end(),
@@ -278,7 +275,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         } else {
             gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
         }
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
@@ -404,7 +400,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Save quantumState information to data provided by a user
      *
-     * @param tensorPtr Pointer to the tensor data provided by a user.
+     * @param tensorPtr Pointer to tensors provided by a user
      */
     void computeState(int64_t **extentsPtr, void **tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;

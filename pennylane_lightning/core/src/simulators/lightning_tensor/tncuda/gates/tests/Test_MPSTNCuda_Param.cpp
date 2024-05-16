@@ -80,14 +80,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyPhaseShift", "[MPSTNCuda_Param]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("PhaseShift", {index}, inverse, {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("PhaseShift", {index}, inverse,
+                                     {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -117,14 +118,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRX", "[MPSTNCuda_Param]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("RX", {index}, inverse, {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RX", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -171,14 +172,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRY", "[MPSTNCuda_Nonparam]", float,
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("RY", {index}, inverse, {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RY", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -227,14 +228,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRZ", "[MPSTNCuda_Param]", float, double) {
 
         SECTION("Apply different wire indices using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("RZ", {index}, inverse, {angles[index]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("RZ", {index}, inverse, {angles[index]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -271,29 +272,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledPhaseShift", "[MPSTNCuda_Param]",
         }
 
         SECTION("Apply adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("ControlledPhaseShift", {0, 1}, inverse,
-                              {angles[0]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("ControlledPhaseShift", {0, 1}, inverse,
+                                     {angles[0]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent wire indices using dispatcher") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
-                              {angles[1]});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            auto results = sv.getDataVector();
+            mps_state.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
+                                     {angles[1]});
+
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -331,10 +332,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyRot", "[MPSTNCuda_param]", float, double) {
 
         SECTION("Apply using dispatcher") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Rot", {index}, inverse, angles[index]);
-            CHECK(sv.getDataVector() ==
+            mps_state.applyOperation("Rot", {index}, inverse, angles[index]);
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
     }
@@ -356,22 +357,22 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRot", "[MPSTNCuda_param]", float, double) {
             std::vector<cp_t>(0b1 << num_qubits);
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("CRot", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRot", {0, 1}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("CRot", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRot", {0, 2}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
     }
@@ -408,21 +409,23 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXX", "[MPSTNCuda_param]", float,
 
         SECTION("Apply adjacent sites") {
             const std::size_t index = GENERATE(0, 1);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("IsingXX", {0, 1}, inverse, {angles[index]});
+            mps_state.applyOperation("IsingXX", {0, 1}, inverse,
+                                     {angles[index]});
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[index]));
         }
 
         SECTION("Apply non-adjacent sites") {
             const std::size_t index = GENERATE(0, 1);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("IsingXX", {0, 2}, inverse, {angles[index]});
+            mps_state.applyOperation("IsingXX", {0, 2}, inverse,
+                                     {angles[index]});
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(
                       expected_results[index + angles.size()]));
         }
@@ -457,31 +460,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingXY", "[MPSTNCuda_param]", float,
         expected_results[1][6] = {0.34958337, 0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("IsingXY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingXY", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("IsingXY", {0, 2}, inverse, angles);
 
-            sv.applyOperation("IsingXY", {0, 2}, inverse, angles);
+            auto results = mps_state.getDataVector();
 
-            auto results = sv.getDataVector();
-
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[1]));
         }
     }
@@ -515,32 +515,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingYY", "[MPSTNCuda_param]", float,
         expected_results[1][6] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("IsingYY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingYY", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("IsingYY", {0, 2}, inverse, angles);
+            mps_state.applyOperation("IsingYY", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
-            CHECK(sv.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[1]));
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
@@ -573,32 +570,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyIsingZZ", "[MPSTNCuda_param]", float,
         expected_results[1][7] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("IsingZZ", {0, 1}, inverse, angles);
+            mps_state.applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
-            CHECK(sv.getDataVector() ==
+            CHECK(mps_state.getDataVector() ==
                   Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("IsingZZ", {0, 2}, inverse, angles);
+            mps_state.applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
-            CHECK(sv.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[1]));
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
@@ -630,30 +624,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRX", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.34958337, -0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("CRX", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRX", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("CRX", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRX", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -687,30 +679,28 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRY", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("CRY", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRY", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("CRY", {0, 2}, inverse, angles);
+            mps_state.applyOperation("CRY", {0, 2}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -744,30 +734,27 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyCRZ", "[MPSTNCuda_param]", float, double) {
         expected_results[1][7] = {0.34958337, 0.05283436};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("CRZ", {0, 1}, inverse, angles);
+            mps_state.applyOperation("CRZ", {0, 1}, inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("CRZ", {0, 2}, inverse, angles);
 
-            sv.applyOperation("CRZ", {0, 2}, inverse, angles);
-
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -802,30 +789,30 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitation", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("SingleExcitation", {0, 1}, inverse, angles);
+            mps_state.applyOperation("SingleExcitation", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("SingleExcitation", {0, 2}, inverse, angles);
+            mps_state.applyOperation("SingleExcitation", {0, 2}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -860,30 +847,30 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("SingleExcitationMinus", {0, 1}, inverse, angles);
+            mps_state.applyOperation("SingleExcitationMinus", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("SingleExcitationMinus", {0, 2}, inverse, angles);
+            mps_state.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -918,30 +905,29 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applySingleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][6] = {0.40241773, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
 
-            sv.applyOperation("SingleExcitationPlus", {0, 1}, inverse, angles);
+            mps_state.applyOperation("SingleExcitationPlus", {0, 1}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+            mps_state.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
+                                     angles);
 
-            sv.applyOperation("SingleExcitationPlus", {0, 2}, inverse, angles);
-
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -976,36 +962,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitation", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitation", {0, 1, 2, 4}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 4}, inverse,
+                                     angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1040,36 +1022,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationMinus", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitationMinus", {0, 1, 2, 4}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 4},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1104,36 +1082,32 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyDoubleExcitationPlus", "[MPSTNCuda_param]",
         expected_results[1][26] = {0.20120886, 0.0};
 
         SECTION("Apply adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
-            sv.reset();
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+            mps_state.reset();
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent sites") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("Hadamard", {0}, false);
-            sv.applyOperation("Hadamard", {1}, false);
-            sv.applyOperation("Hadamard", {2}, false);
-            sv.applyOperation("Hadamard", {3}, false);
-            sv.applyOperation("Hadamard", {4}, false);
+            mps_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            sv.applyOperation("DoubleExcitationPlus", {0, 1, 2, 4}, inverse,
-                              angles);
+            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 4},
+                                     inverse, angles);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1151,11 +1125,11 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMultiRZ", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
         SECTION("Throw errors") {
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            REQUIRE_THROWS_WITH(
-                sv.applyOperation("MultiRZ", {0, 1}, inverse, {angles[0]}),
-                Catch::Contains("Unsupported gate."));
+            REQUIRE_THROWS_WITH(mps_state.applyOperation("MultiRZ", {0, 1},
+                                                         inverse, {angles[0]}),
+                                Catch::Contains("Unsupported gate."));
         }
     }
 }
@@ -1176,11 +1150,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMatrix", "[MPSTNCuda_param]", float,
 
         SECTION("Append tensor operator with host data and wires") {
             const std::size_t index = GENERATE(0, 1, 2);
-            MPSTNCuda<TestType> sv{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            sv.applyOperation("applyMatrix", {index}, inverse, {}, x_gate);
+            mps_state.applyOperation("applyMatrix", {index}, inverse, {},
+                                     x_gate);
 
-            auto results = sv.getDataVector();
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
             CHECK(results[0b1 << (num_qubits - index - 1)] ==

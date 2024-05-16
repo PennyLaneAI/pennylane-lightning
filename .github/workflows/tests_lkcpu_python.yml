@@ -168,6 +168,18 @@ jobs:
           fetch-tags: true
           path: main
 
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          python -m pip install -U pennylane-lightning --no-deps
+
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
@@ -185,7 +197,9 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install . -vv
+          if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
+            SKIP_COMPILATION=True python -m pip install . -vv
+          fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build

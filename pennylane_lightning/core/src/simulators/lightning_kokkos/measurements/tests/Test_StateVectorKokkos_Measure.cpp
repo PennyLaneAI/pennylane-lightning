@@ -316,7 +316,7 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
 
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;
     using UnmanagedSizeTHostView =
-        Kokkos::View<size_t *, Kokkos::HostSpace,
+        Kokkos::View<std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     SECTION("Looping over different wire configurations:") {
@@ -328,11 +328,11 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
 
             std::vector<std::size_t> results(indices.size());
 
-            Kokkos::View<size_t *> d_indices("d_indices", indices.size());
-            Kokkos::View<size_t *> d_results("d_results", indices.size());
-            Kokkos::View<size_t *> d_wires("d_wires", term.first.size());
-            Kokkos::View<size_t *> d_trans_index("d_trans_index",
-                                                 indices.size());
+            Kokkos::View<std::size_t *> d_indices("d_indices", indices.size());
+            Kokkos::View<std::size_t *> d_results("d_results", indices.size());
+            Kokkos::View<std::size_t *> d_wires("d_wires", term.first.size());
+            Kokkos::View<std::size_t *> d_trans_index("d_trans_index",
+                                                      indices.size());
 
             Kokkos::deep_copy(d_indices, UnmanagedSizeTHostView(
                                              indices.data(), indices.size()));
