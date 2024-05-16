@@ -2,9 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_simulators LANGUAGES CXX)
 
-if(NOT "${PL_BACKEND}" STREQUAL "lightning_tensor")
-    add_subdirectory(base)
-endif()
+add_subdirectory(base)
+
 ###############################################################################
 # Determine simulator and include its directory
 ###############################################################################
