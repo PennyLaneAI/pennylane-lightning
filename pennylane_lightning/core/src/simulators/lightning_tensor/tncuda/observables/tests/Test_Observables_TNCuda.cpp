@@ -30,8 +30,14 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
     using StateTensorT = TestType;
     using NamedObsT = NamedObs<StateTensorT>;
 
+    std::size_t bondDim = GENERATE(2, 3, 4, 5);
+    std::size_t num_qubits = 3;
+    std::size_t maxBondDim = bondDim;
+
+    StateTensorT mps_state{num_qubits, maxBondDim};
+
     SECTION("Test get obs name") {
-        auto obs = NamedObsT("PauliX", {0});
+        auto obs = NamedObsT(mps_state, "PauliX", {0});
 
         CHECK(obs.getObsName() == "PauliX[0]");
     }

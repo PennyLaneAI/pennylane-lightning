@@ -50,7 +50,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
         mps_state.get_final_state();
-        auto ob = NamedObs<StateTensorT>("Identity", {0});
+        auto ob = NamedObs<StateTensorT>(mps_state, "Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
     }

@@ -71,7 +71,6 @@ template <class StateTensorT> class Measurements {
      * @return Expectation value with respect to the given observable.
      */
     auto expval(ObservableTNCuda<StateTensorT> &ob) -> PrecisionT {
-        ob.appendTNOperator(state_tensor_);
         return state_tensor_.expval(ob.getTNOperator()).real();
     }
 };
