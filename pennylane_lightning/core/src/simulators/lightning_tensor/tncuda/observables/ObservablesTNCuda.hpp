@@ -46,7 +46,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  *
  * We note that all subclasses must be immutable (does not provide any setter).
  *
- * @tparam StateTensorT State vector class.
+ * @tparam StateTensorT State tensor class.
  */
 template <class StateTensorT> class ObservableTNCuda {
   public:
@@ -63,10 +63,9 @@ template <class StateTensorT> class ObservableTNCuda {
     cutensornetNetworkOperator_t obsOperator_{nullptr};
 
     /**
-     * @brief Apply the observable to the given statevector in place.
+     * @brief Create a tensor network operator for the observable.
      */
     void createTNOperator(StateTensorT &state_tensor) {
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ state_tensor.getTNCudaHandle(),
             /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
@@ -82,7 +81,7 @@ template <class StateTensorT> class ObservableTNCuda {
      * @brief Polymorphic function comparing this to another Observable
      * object.
      *
-     * @param Another instance of subclass of Observable<StateVectorT> to
+     * @param Another instance of subclass of Observable<StateTensorT> to
      * compare.
      */
     [[nodiscard]] virtual bool
@@ -146,7 +145,7 @@ template <class StateTensorT> class ObservableTNCuda {
 /**
  * @brief Class models named observables (PauliX, PauliY, PauliZ, etc.)
  *
- * @tparam StateVectorT State vector class.
+ * @tparam StateTensorT State tensor class.
  */
 template <typename StateTensorT>
 class NamedObs final : public ObservableTNCuda<StateTensorT> {
