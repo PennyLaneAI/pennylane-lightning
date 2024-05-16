@@ -129,7 +129,9 @@ void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             const std::size_t num_qubits, const std::vector<std::size_t> &wires,
             const bool inverse = false,
             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
-    const Kokkos::complex<PrecisionT> shift{0.0, (inverse) ? -1.0 : 1.0};
+    const Kokkos::complex<PrecisionT> shift =
+        (inverse) ? Kokkos::complex<PrecisionT>{0.0, -1.0}
+                  : Kokkos::complex<PrecisionT>{0.0, 1.0};
     applyNC1Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
