@@ -32,7 +32,7 @@ namespace Pennylane::LightningTensor {
  * @tparam Precision Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
  */
-template <class PrecisionT, class Derived> class TensorBase {
+template <class Precision, class Derived> class TensorBase {
   private:
     const std::size_t rank_;                 // A rank N tensor has N modes
     std::size_t length_;                     // Number of elements

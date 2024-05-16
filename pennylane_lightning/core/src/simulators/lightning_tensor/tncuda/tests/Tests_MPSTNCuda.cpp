@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <complex>
-#include <iostream>
 #include <limits>
 #include <type_traits>
 #include <utility>
@@ -50,22 +49,23 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
     using MPST = TestType;
 
     SECTION("MPST<TestType>") { REQUIRE(!std::is_constructible_v<MPST>); }
-    SECTION("MPST<TestType> {const size_t, const size_t, DevTag<int> }") {
-        REQUIRE(std::is_constructible_v<MPST, const size_t, const size_t,
-                                        DevTag<int>>);
+    SECTION(
+        "MPST<TestType> {const std::size_t, const std::size_t, DevTag<int> }") {
+        REQUIRE(std::is_constructible_v<MPST, const std::size_t,
+                                        const std::size_t, DevTag<int>>);
     }
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
                    float, double) {
-    std::vector<std::vector<size_t>> basisStates = {
+    std::vector<std::vector<std::size_t>> basisStates = {
         {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
         {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}};
 
     SECTION("Failure for wrong basisState size") {
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = 3;
-        std::vector<size_t> basisState = {0, 0, 0, 0};
+        std::vector<std::size_t> basisState = {0, 0, 0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -78,7 +78,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
     SECTION("Failure for wrong basisState input") {
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = 3;
-        std::vector<size_t> basisState = {0, 0, 2};
+        std::vector<std::size_t> basisState = {0, 0, 2};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -98,7 +98,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
         mps_state.reset();
 
         std::vector<std::complex<TestType>> expected_state(
-            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
         std::size_t index = 0;
 
@@ -121,13 +121,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
         mps_state.setBasisState(basisStates[stateIdx]);
 
         std::vector<std::complex<TestType>> expected_state(
-            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
         std::size_t index = 0;
 
-        for (size_t i = 0; i < basisStates[stateIdx].size(); i++) {
-            index +=
-                (size_t{1} << (num_qubits - i - 1)) * basisStates[stateIdx][i];
+        for (std::size_t i = 0; i < basisStates[stateIdx].size(); i++) {
+            index += (std::size_t{1} << (num_qubits - i - 1)) *
+                     basisStates[stateIdx][i];
         }
 
         expected_state[index] = {1.0, 0.0};
@@ -149,7 +149,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
         mps_state.reset();
 
         std::vector<std::complex<TestType>> expected_state(
-            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
         std::size_t index = 0;
 
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
     SECTION("Get zero state") {
         std::vector<std::complex<TestType>> expected_state(
-            size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
         expected_state[0] = {1.0, 0.0};
 

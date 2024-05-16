@@ -14,12 +14,12 @@
 
 /**
  * @file TNCudaGateCache.hpp
- * Memory management for Gate caches.
+ * Memory management for Gate tensor data affiliated to the tensor network
+ * graph.
  */
 
 #pragma once
 
-#include <cmath>
 #include <complex>
 #include <functional>
 #include <string>
@@ -27,14 +27,10 @@
 #include <utility>
 #include <vector>
 
-#include <iostream>
-
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "TensorCuda.hpp"
 #include "cuGates_host.hpp"
-#include "cuda.h"
-#include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
@@ -49,15 +45,15 @@ namespace Pennylane::LightningTensor::TNCuda::Gates {
 
 /**
  * @brief Memory management for gate tensor data on device and its id in the
- * graph.
+ * compute graph.
  *
- * @tparam PrecisionT Floating point precision.
+ * @tparam Precision Floating point precision.
  */
-template <class PrecisionT> class TNCudaGateCache {
+template <class Precision> class TNCudaGateCache {
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
-    using gate_key_info = std::pair<const std::string, std::vector<PrecisionT>>;
-    using gate_info = std::pair<gate_key_info, TensorCuda<PrecisionT>>;
+    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using gate_key_info = std::pair<const std::string, std::vector<Precision>>;
+    using gate_info = std::pair<gate_key_info, TensorCuda<Precision>>;
     TNCudaGateCache() = delete;
     TNCudaGateCache(const TNCudaGateCache &other) = delete;
     TNCudaGateCache(TNCudaGateCache &&other) = delete;
@@ -65,7 +61,8 @@ template <class PrecisionT> class TNCudaGateCache {
         : device_tag_(device_id, stream_id), total_alloc_bytes_{0} {}
     TNCudaGateCache(const DevTag<int> device_tag)
         : device_tag_{device_tag}, total_alloc_bytes_{0} {}
-    virtual ~TNCudaGateCache(){};
+
+    ~TNCudaGateCache(){};
 
     /**
      * @brief Add gate numerical value to the cache, indexed by the id of gate
@@ -76,8 +73,8 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_name String representing the name of the given gate.
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      */
-    void add_gate(const size_t gate_id, const std::string &gate_name,
-                  [[maybe_unused]] std::vector<PrecisionT> gate_param) {
+    void add_gate(const std::size_t gate_id, const std::string &gate_name,
+                  [[maybe_unused]] std::vector<Precision> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         if (nonparametric_gates_.find(gate_name) !=
@@ -104,14 +101,14 @@ template <class PrecisionT> class TNCudaGateCache {
      * representing the gate data on host.
      */
 
-    void add_gate(const size_t gate_id, gate_key_info gate_key,
+    void add_gate(const std::size_t gate_id, gate_key_info gate_key,
                   const std::vector<CFP_t> &gate_data_host) {
-        size_t rank = Pennylane::Util::log2(gate_data_host.size());
-        auto modes = std::vector<size_t>(rank, 0);
-        auto extents = std::vector<size_t>(rank, 2);
+        std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
+        auto modes = std::vector<std::size_t>(rank, 0);
+        auto extents = std::vector<std::size_t>(rank, 2);
 
         auto &&tensor =
-            TensorCuda<PrecisionT>(rank, modes, extents, device_tag_);
+            TensorCuda<Precision>(rank, modes, extents, device_tag_);
 
         device_gates_.emplace(
             std::piecewise_construct, std::forward_as_tuple(gate_id),
@@ -130,7 +127,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_id The id of gate tensor operator in the computate graph.
      * @return const CFP_t* Pointer to gate values on device.
      */
-    CFP_t *get_gate_device_ptr(const size_t gate_id) {
+    CFP_t *get_gate_device_ptr(const std::size_t gate_id) {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
     }
 
@@ -145,7 +142,7 @@ template <class PrecisionT> class TNCudaGateCache {
     };
 
     using ParamGateFunc =
-        std::function<std::vector<CFP_t>(const std::vector<PrecisionT> &)>;
+        std::function<std::vector<CFP_t>(const std::vector<Precision> &)>;
     using NonParamGateFunc = std::function<std::vector<CFP_t>()>;
     using ParamGateFuncMap = std::unordered_map<std::string, ParamGateFunc>;
     using NonParamGateFuncMap =

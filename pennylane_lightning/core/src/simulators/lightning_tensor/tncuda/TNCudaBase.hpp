@@ -45,7 +45,12 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 ///@endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
-
+/**
+ * @brief CRTP-enabled base class for cuTensorNet backends.
+ *
+ * @tparam Precision Floating point precision.
+ * @tparam Derived Derived class to instantiate using CRTP.
+ */
 template <class Precision, class Derived>
 class TNCudaBase : public TensornetBase<Precision, Derived> {
   private:
@@ -174,7 +179,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             numOperations == ops_adjoint.size(),
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
                                  ops_params[i]);
         }
@@ -202,7 +207,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             numOperations == ops_adjoint.size(),
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
         }
     }
@@ -219,7 +224,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
      */
 
     void applyOperation(
-        const std::string &opName, const std::vector<size_t> &wires,
+        const std::string &opName, const std::vector<std::size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
@@ -228,7 +233,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());
         std::transform(
-            wires.begin(), wires.end(), stateModes.begin(), [&](size_t x) {
+            wires.begin(), wires.end(), stateModes.begin(), [&](std::size_t x) {
                 return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
             });
         // Note `adjoint` in the cutensornet context indicates whether or not
@@ -253,9 +258,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
                                return cuUtil::complexToCu<ComplexT>(x);
                            });
             auto gate_key = std::make_pair(opName, par);
-            gate_cache_->add_gate(static_cast<size_t>(id), gate_key, matrix_cu);
+            gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
+                                  matrix_cu);
         } else {
-            gate_cache_->add_gate(static_cast<size_t>(id), opName, par);
+            gate_cache_->add_gate(static_cast<std::size_t>(id), opName, par);
         }
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -263,7 +269,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* int64_t tensorId*/ id,
             /* void* */
             static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(static_cast<size_t>(id))),
+                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
             /* int32_t unitary*/ 1));
     }
 

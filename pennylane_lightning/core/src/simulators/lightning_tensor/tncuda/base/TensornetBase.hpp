@@ -24,6 +24,12 @@
 #include "Error.hpp"
 
 namespace Pennylane::LightningTensor::TNCuda {
+/**
+ * @brief CRTP-enabled base class for cutensornet.
+ *
+ * @tparam Precision Floating point precision.
+ * @tparam Derived Derived class to instantiate using CRTP.
+ */
 template <class Precision, class Derived> class TensornetBase {
   private:
     std::size_t numQubits_;
@@ -34,7 +40,7 @@ template <class Precision, class Derived> class TensornetBase {
 
     explicit TensornetBase(const std::size_t numQubits)
         : numQubits_(numQubits) {
-        qubitDims_ = std::vector<size_t>(numQubits, size_t{2});
+        qubitDims_ = std::vector<std::size_t>(numQubits, std::size_t{2});
     }
 
     ~TensornetBase() = default;
