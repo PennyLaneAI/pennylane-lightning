@@ -254,6 +254,7 @@ _operations = frozenset(
         "C(Hadamard)",
         "C(S)",
         "C(T)",
+        "C(SX)",
         "C(PhaseShift)",
         "C(RX)",
         "C(RY)",
