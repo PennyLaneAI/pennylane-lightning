@@ -310,7 +310,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     /**
      * @brief Save quantumState information to data provided by a user
      *
-     * @param tensorPtr Pointer to the tensor data provided by a user.
+     * @param tensorPtr Pointer to tensors provided by a user
      */
     void computeState(void **tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;
