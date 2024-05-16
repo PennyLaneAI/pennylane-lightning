@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <complex>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -25,18 +20,18 @@
 #include "DevTag.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
-#include "cuGates_host.hpp"
-#include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"
 
+/// @cond DEV
+namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
+using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
-
-namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Identity", "[MPSTNCuda_Nonparam]", float,
                    double) {
@@ -227,7 +222,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
@@ -413,7 +407,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
@@ -471,7 +464,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Toffoli", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
@@ -540,7 +532,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CSWAP", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false);
     {
-
         using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};

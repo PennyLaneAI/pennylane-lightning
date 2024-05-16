@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
 #include <complex>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -27,17 +22,17 @@
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
 #include "TestHelpers.hpp"
-#include "cuGates_host.hpp"
-#include "cuda_helpers.hpp"
 
+/// @cond DEV
+namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
+using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
 using namespace Pennylane;
-
-namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
                    double) {
@@ -55,7 +50,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
         std::vector<std::vector<cp_t>> ps_data;
         ps_data.reserve(angles.size());
         for (auto &a : angles) {
-            ps_data.push_back(Gates::getPhaseShift<std::complex, TestType>(a));
+            ps_data.push_back(
+                Pennylane::Gates::getPhaseShift<std::complex, TestType>(a));
         }
 
         std::vector<std::vector<cp_t>> expected_results = {
@@ -258,7 +254,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::ControlledPhaseShift",
         std::vector<std::vector<cp_t>> ps_data;
         ps_data.reserve(angles.size());
         for (auto &a : angles) {
-            ps_data.push_back(Gates::getPhaseShift<std::complex, TestType>(a));
+            ps_data.push_back(
+                Pennylane::Gates::getPhaseShift<std::complex, TestType>(a));
         }
 
         std::vector<std::vector<cp_t>> expected_results = {
@@ -323,9 +320,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
 
         for (std::size_t i = 0; i < angles.size(); i++) {
             const auto rot_mat =
-                (inverse) ? Gates::getRot<std::complex, TestType>(
+                (inverse) ? Pennylane::Gates::getRot<std::complex, TestType>(
                                 -angles[i][0], -angles[i][1], -angles[i][2])
-                          : Gates::getRot<std::complex, TestType>(
+                          : Pennylane::Gates::getRot<std::complex, TestType>(
                                 angles[i][0], angles[i][1], angles[i][2]);
             expected_results[i][0] = rot_mat[0];
             expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];

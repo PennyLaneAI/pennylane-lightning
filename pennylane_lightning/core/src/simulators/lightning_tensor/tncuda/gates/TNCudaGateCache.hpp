@@ -45,7 +45,7 @@ using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor {
+namespace Pennylane::LightningTensor::TNCuda::Gates {
 
 /**
  * @brief Memory management for gate tensor data on device and its id in the
@@ -282,4 +282,4 @@ template <class PrecisionT> class TNCudaGateCache {
 
     std::unordered_map<std::size_t, gate_info, gate_info_hash> device_gates_;
 };
-} // namespace Pennylane::LightningTensor
+} // namespace Pennylane::LightningTensor::TNCuda::Gates
