@@ -20,6 +20,7 @@
 #pragma once
 
 #include <complex>
+#include <memory>
 #include <type_traits>
 #include <vector>
 
