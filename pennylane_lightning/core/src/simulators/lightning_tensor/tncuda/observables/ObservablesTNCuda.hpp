@@ -219,10 +219,9 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
 
         auto &&par = (params_.empty()) ? std::vector<PrecisionT>{0.0} : params_;
 
-        std::vector<std::size_t> extents(2 * wires_int_.size(), 2);
 
         tensorData_.emplace_back(
-            extents,
+            std::vector<std::size_t>(2 * wires_int_.size(), 2),
             state_tensor.getGateCache()->get_gate_host_vector(obs_name_, par),
             state_tensor.getDevTag());
 
