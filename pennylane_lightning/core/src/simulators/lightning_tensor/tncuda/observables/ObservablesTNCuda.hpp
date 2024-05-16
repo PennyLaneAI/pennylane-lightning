@@ -35,14 +35,13 @@ namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::Observables;
-namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
 /// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::Observables {
 
 /**
- * @brief A base class (CRTP) for all observable classes.
+ * @brief A base class for all observable classes.
  *
  * We note that all subclasses must be immutable (does not provide any setter).
  *
@@ -164,6 +163,8 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
     std::vector<PrecisionT> params_;
 
   private:
+    std::size_t numQubits_;
+    cuDoubleComplex coeff_{1, 0.0};
     std::size_t numTensors_{1};
     std::vector<int32_t> wires_int_;
     std::vector<int32_t> numStateModes_;
@@ -204,38 +205,31 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
         PL_ASSERT(lookup(gate_wires, gate_op) == this->wires_.size());
         PL_ASSERT(lookup(gate_num_params, gate_op) == this->params_.size());
 
+        numQubits_ = state_tensor.getNumQubits();
+
         wires_int_ = std::vector<int32_t>(wires_.size());
 
         numStateModes_.push_back(static_cast<int32_t>(wires_.size()));
 
-        std::transform(wires_.begin(), wires_.end(), wires_int_.begin(),
-                       [&](size_t x) {
-                           return static_cast<int32_t>(
-                               state_tensor.getNumQubits() - x - 1);
-                       });
+        std::transform(
+            wires_.begin(), wires_.end(), wires_int_.begin(),
+            [&](size_t x) { return static_cast<int32_t>(numQubits_ - x - 1); });
 
         stateModes_.push_back(wires_int_.data());
 
         auto &&par = (params_.empty()) ? std::vector<PrecisionT>{0.0} : params_;
 
-        std::size_t rank = 2 * wires_int_.size();
-        std::vector<std::size_t> modes(rank, 0);
-        std::vector<std::size_t> extents(rank, 2);
+        std::vector<std::size_t> extents(2 * wires_int_.size(), 2);
 
-        tensorData_.emplace_back(rank, modes, extents,
-                                 state_tensor.getDevTag());
-
-        auto gate_host_vector =
-            state_tensor.getGateCache()->get_gate_host_vector(obs_name_, par);
-
-        tensorData_.back().getDataBuffer().CopyHostDataToGpu(
-            gate_host_vector.data(), gate_host_vector.size());
+        tensorData_.emplace_back(
+            extents,
+            state_tensor.getGateCache()->get_gate_host_vector(obs_name_, par),
+            state_tensor.getDevTag());
 
         tensorDataPtr_.push_back(tensorData_.back().getDataBuffer().getData());
 
-        BaseType::appendTNOperator(cuDoubleComplex{1, 0.0}, numTensors_,
-                                   numStateModes_.data(), stateModes_.data(),
-                                   tensorDataPtr_.data());
+        BaseType::appendTNOperator(coeff_, numTensors_, numStateModes_.data(),
+                                   stateModes_.data(), tensorDataPtr_.data());
     }
 
     ~NamedObs() {}

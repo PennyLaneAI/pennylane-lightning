@@ -56,6 +56,16 @@ class TensorCuda final : public TensorBase<Precision, TensorCuda<Precision>> {
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
+    explicit TensorCuda(const std::vector<std::size_t> &extents,
+                        const std::vector<CFP_t> &host_tensor,
+                        const DevTag<int> &dev_tag, bool device_alloc = true)
+        : TensorBase<Precision, TensorCuda<Precision>>(extents),
+          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+              BaseType::getLength(), dev_tag, device_alloc)} {
+        data_buffer_->CopyHostDataToGpu(host_tensor.data(),
+                                        BaseType::getLength());
+    }
+
     TensorCuda() = delete;
 
     ~TensorCuda() = default;
