@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <complex>
+#include <functional>
 #include <vector>
 
 #include "cuda_helpers.hpp"
@@ -1470,5 +1471,180 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
             cuUtil::ONE<CFP_t>()};
 }
+
+template <class Precision> class DynamicGateDataAccess {
+  private:
+    DynamicGateDataAccess() = default;
+
+  public:
+    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    DynamicGateDataAccess(DynamicGateDataAccess &&) = delete;
+    DynamicGateDataAccess(const DynamicGateDataAccess &) = delete;
+    DynamicGateDataAccess &operator=(const DynamicGateDataAccess &) = delete;
+
+    ~DynamicGateDataAccess() = default;
+
+  public:
+    static DynamicGateDataAccess &getInstance() {
+        static DynamicGateDataAccess instance;
+        return instance;
+    }
+
+    auto
+    getGateData(const std::string &gate_name,
+                [[maybe_unused]] const std::vector<Precision> &params) const
+        -> std::vector<CFP_t> {
+        if (nonparametric_gates_.find(gate_name) !=
+            nonparametric_gates_.end()) {
+            return nonparametric_gates_.at(gate_name)();
+        } else if (parametric_gates_.find(gate_name) !=
+                   parametric_gates_.end()) {
+            return parametric_gates_.at(gate_name)(params);
+        } else {
+            throw std::invalid_argument("Unsupported gate: " + gate_name + ".");
+        }
+    }
+
+  private:
+    using ParamGateFunc =
+        std::function<std::vector<CFP_t>(const std::vector<Precision> &)>;
+    using NonParamGateFunc = std::function<std::vector<CFP_t>()>;
+    using ParamGateFuncMap = std::unordered_map<std::string, ParamGateFunc>;
+    using NonParamGateFuncMap =
+        std::unordered_map<std::string, NonParamGateFunc>;
+
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
+    NonParamGateFuncMap nonparametric_gates_{
+        {"Identity",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"PauliX",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"PauliY",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"PauliZ",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"S", []() -> std::vector<CFP_t> { return cuGates::getS<CFP_t>(); }},
+        {"Hadamard",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"T", []() -> std::vector<CFP_t> { return cuGates::getT<CFP_t>(); }},
+        {"SWAP",
+         []() -> std::vector<CFP_t> { return cuGates::getSWAP<CFP_t>(); }},
+        {"CNOT",
+         []() -> std::vector<CFP_t> { return cuGates::getCNOT<CFP_t>(); }},
+        {"Toffoli",
+         []() -> std::vector<CFP_t> { return cuGates::getToffoli<CFP_t>(); }},
+        {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
+        {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
+        {"CSWAP",
+         []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
+
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
+    ParamGateFuncMap parametric_gates_{
+        {"PhaseShift",
+         [](auto &&params) {
+             return cuGates::getPhaseShift<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RX",
+         [](auto &&params) {
+             return cuGates::getRX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RY",
+         [](auto &&params) {
+             return cuGates::getRY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RZ",
+         [](auto &&params) {
+             return cuGates::getRZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"Rot",
+         [](auto &&params) {
+             return cuGates::getRot<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
+         }},
+        {"CRX",
+         [](auto &&params) {
+             return cuGates::getCRX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRY",
+         [](auto &&params) {
+             return cuGates::getCRY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRZ",
+         [](auto &&params) {
+             return cuGates::getCRZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRot",
+         [](auto &&params) {
+             return cuGates::getCRot<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
+         }},
+        {"ControlledPhaseShift",
+         [](auto &&params) {
+             return cuGates::getControlledPhaseShift<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingXX",
+         [](auto &&params) {
+             return cuGates::getIsingXX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingYY",
+         [](auto &&params) {
+             return cuGates::getIsingYY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingZZ",
+         [](auto &&params) {
+             return cuGates::getIsingZZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingXY",
+         [](auto &&params) {
+             return cuGates::getIsingXY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitation",
+         [](auto &&params) {
+             return cuGates::getSingleExcitation<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitationMinus",
+         [](auto &&params) {
+             return cuGates::getSingleExcitationMinus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitationPlus",
+         [](auto &&params) {
+             return cuGates::getSingleExcitationPlus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitation",
+         [](auto &&params) {
+             return cuGates::getDoubleExcitation<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitationMinus",
+         [](auto &&params) {
+             return cuGates::getDoubleExcitationMinus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitationPlus", [](auto &&params) {
+             return cuGates::getDoubleExcitationPlus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }}};
+};
 
 } // namespace Pennylane::LightningGPU::cuGates
