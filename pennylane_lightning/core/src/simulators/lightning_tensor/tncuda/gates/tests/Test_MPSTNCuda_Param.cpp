@@ -1132,7 +1132,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::MultiRZ", "[MPSTNCuda_param]", float,
 
             REQUIRE_THROWS_WITH(mps_state.applyOperation("MultiRZ", {0, 1},
                                                          inverse, {angles[0]}),
-                                Catch::Contains("Unsupported gate."));
+                                Catch::Contains("Unsupported gate"));
         }
     }
 }

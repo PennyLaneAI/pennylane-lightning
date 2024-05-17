@@ -77,17 +77,10 @@ template <class Precision> class TNCudaGateCache {
                   [[maybe_unused]] std::vector<Precision> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
-        if (nonparametric_gates_.find(gate_name) !=
-            nonparametric_gates_.end()) {
-            auto gate_data_host = nonparametric_gates_.at(gate_name)();
-            add_gate(gate_id, gate_key, gate_data_host);
-        } else if (parametric_gates_.find(gate_name) !=
-                   parametric_gates_.end()) {
-            auto gate_data_host = parametric_gates_.at(gate_name)({gate_param});
-            add_gate(gate_id, gate_key, gate_data_host);
-        } else {
-            throw std::runtime_error("Unsupported gate.");
-        }
+        auto &gateMap =
+            cuGates::DynamicGateDataAccess<Precision>::getInstance();
+
+        add_gate(gate_id, gate_key, gateMap.getGateData(gate_name, gate_param));
     }
     /**
      * @brief Add gate numerical value to the cache, indexed by the id of gate
@@ -140,146 +133,6 @@ template <class Precision> class TNCudaGateCache {
             return std::hash<std::size_t>()(key_id);
         }
     };
-
-    using ParamGateFunc =
-        std::function<std::vector<CFP_t>(const std::vector<Precision> &)>;
-    using NonParamGateFunc = std::function<std::vector<CFP_t>()>;
-    using ParamGateFuncMap = std::unordered_map<std::string, ParamGateFunc>;
-    using NonParamGateFuncMap =
-        std::unordered_map<std::string, NonParamGateFunc>;
-
-    // TODO: Need changes to support to the controlled gate tensor API once the
-    // API is finalized in cutensornet lib.
-    static inline NonParamGateFuncMap nonparametric_gates_{
-        {"Identity",
-         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
-        {"PauliX",
-         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
-        {"PauliY",
-         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
-        {"PauliZ",
-         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
-        {"S", []() -> std::vector<CFP_t> { return cuGates::getS<CFP_t>(); }},
-        {"Hadamard",
-         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
-        {"T", []() -> std::vector<CFP_t> { return cuGates::getT<CFP_t>(); }},
-        {"SWAP",
-         []() -> std::vector<CFP_t> { return cuGates::getSWAP<CFP_t>(); }},
-        {"CNOT",
-         []() -> std::vector<CFP_t> { return cuGates::getCNOT<CFP_t>(); }},
-        {"Toffoli",
-         []() -> std::vector<CFP_t> { return cuGates::getToffoli<CFP_t>(); }},
-        {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
-        {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
-        {"CSWAP",
-         []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
-
-    // TODO: Need changes to support to the controlled gate tensor API once the
-    // API is finalized in cutensornet lib.
-    static inline ParamGateFuncMap parametric_gates_{
-        {"PhaseShift",
-         [](auto &&params) {
-             return cuGates::getPhaseShift<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"RX",
-         [](auto &&params) {
-             return cuGates::getRX<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"RY",
-         [](auto &&params) {
-             return cuGates::getRY<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"RZ",
-         [](auto &&params) {
-             return cuGates::getRZ<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"Rot",
-         [](auto &&params) {
-             return cuGates::getRot<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]),
-                 std::forward<decltype(params[1])>(params[1]),
-                 std::forward<decltype(params[2])>(params[2]));
-         }},
-        {"CRX",
-         [](auto &&params) {
-             return cuGates::getCRX<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"CRY",
-         [](auto &&params) {
-             return cuGates::getCRY<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"CRZ",
-         [](auto &&params) {
-             return cuGates::getCRZ<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"CRot",
-         [](auto &&params) {
-             return cuGates::getCRot<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]),
-                 std::forward<decltype(params[1])>(params[1]),
-                 std::forward<decltype(params[2])>(params[2]));
-         }},
-        {"ControlledPhaseShift",
-         [](auto &&params) {
-             return cuGates::getControlledPhaseShift<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"IsingXX",
-         [](auto &&params) {
-             return cuGates::getIsingXX<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"IsingYY",
-         [](auto &&params) {
-             return cuGates::getIsingYY<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"IsingZZ",
-         [](auto &&params) {
-             return cuGates::getIsingZZ<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"IsingXY",
-         [](auto &&params) {
-             return cuGates::getIsingXY<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"SingleExcitation",
-         [](auto &&params) {
-             return cuGates::getSingleExcitation<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"SingleExcitationMinus",
-         [](auto &&params) {
-             return cuGates::getSingleExcitationMinus<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"SingleExcitationPlus",
-         [](auto &&params) {
-             return cuGates::getSingleExcitationPlus<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"DoubleExcitation",
-         [](auto &&params) {
-             return cuGates::getDoubleExcitation<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"DoubleExcitationMinus",
-         [](auto &&params) {
-             return cuGates::getDoubleExcitationMinus<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }},
-        {"DoubleExcitationPlus", [](auto &&params) {
-             return cuGates::getDoubleExcitationPlus<CFP_t>(
-                 std::forward<decltype(params[0])>(params[0]));
-         }}};
 
     std::unordered_map<std::size_t, gate_info, gate_info_hash> device_gates_;
 };
