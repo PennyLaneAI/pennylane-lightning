@@ -386,6 +386,9 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RZ,
         qml.Rot,
         qml.SWAP,
+        
+        # iswap added
+        qml.ISWAP,
         qml.IsingXX,
         qml.IsingXY,
         qml.IsingYY,

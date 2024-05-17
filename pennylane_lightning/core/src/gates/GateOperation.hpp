@@ -44,6 +44,10 @@ enum class GateOperation : uint32_t {
     CY,
     CZ,
     SWAP,
+
+    /* iswap added */
+    ISWAP,
+
     IsingXX,
     IsingXY,
     IsingYY,
@@ -86,6 +90,10 @@ enum class ControlledGateOperation : uint32_t {
     Rot,
     /* Two-qubit gates */
     SWAP,
+
+    /* iswap added */
+    ISWAP,
+    
     IsingXX,
     IsingXY,
     IsingYY,

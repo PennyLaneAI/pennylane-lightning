@@ -513,6 +513,96 @@ template <typename PrecisionT, class GateImplementation> void testApplySWAP() {
 }
 PENNYLANE_RUN_TEST(SWAP);
 
+/* iswap added */
+template <typename PrecisionT, class GateImplementation> void testApplyISWAP() {
+    using ComplexT = std::complex<PrecisionT>;
+    const size_t num_qubits = 3;
+    auto ini_st_aligned = createProductState<PrecisionT>(
+        "+10"); // Test using |+10> state using AlignedAllocator
+    std::vector<ComplexT> ini_st{
+        ini_st_aligned.begin(),
+        ini_st_aligned
+            .end()}; // Converted aligned data to default vector alignment
+
+    CHECK(ini_st ==
+          std::vector<ComplexT>{ZERO<PrecisionT>(), ZERO<PrecisionT>(),
+                                INVSQRT2<PrecisionT>(), ZERO<PrecisionT>(),
+                                ZERO<PrecisionT>(), ZERO<PrecisionT>(),
+                                INVSQRT2<PrecisionT>(), ZERO<PrecisionT>()});
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", ISWAP 0,1 |+10> -> i|1+0> - "
+                    << PrecisionToName<PrecisionT>::value){
+
+        std::vector<ComplexT> expected{
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0, INVSQRT2<PrecisionT>()),
+            ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(INVSQRT2<PrecisionT>(), 0),
+            ZERO<PrecisionT>() };
+
+        auto sv01 = ini_st;
+        auto sv10 = ini_st;
+
+        GateImplementation::applyISWAP(sv01.data(), num_qubits, {0, 1}, false);
+        GateImplementation::applyISWAP(sv10.data(), num_qubits, {1, 0}, false);
+
+        CHECK(sv01 == expected);
+        CHECK(sv10 == expected);
+    }
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SWAP0,2 |+10> -> i|01+> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        std::vector<ComplexT> expected{
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(INVSQRT2<PrecisionT>(), 0),
+            std::complex<PrecisionT>(0, INVSQRT2<PrecisionT>()),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>()};
+
+        auto sv02 = ini_st;
+        auto sv20 = ini_st;
+
+        GateImplementation::applyISWAP(sv02.data(), num_qubits, {0, 2}, false);
+        GateImplementation::applyISWAP(sv20.data(), num_qubits, {2, 0}, false);
+
+        CHECK(sv02 == expected);
+        CHECK(sv20 == expected);
+    }
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", SWAP1,2 |+10> ->i |+01> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        std::vector<ComplexT> expected{
+            ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0, INVSQRT2<PrecisionT>()),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>(),
+            std::complex<PrecisionT>(0, INVSQRT2<PrecisionT>()),
+            ZERO<PrecisionT>(),
+            ZERO<PrecisionT>()};
+
+        auto sv12 = ini_st;
+        auto sv21 = ini_st;
+
+        GateImplementation::applyISWAP(sv12.data(), num_qubits, {1, 2}, false);
+        GateImplementation::applyISWAP(sv21.data(), num_qubits, {2, 1}, false);
+
+        CHECK(sv12 == expected);
+        CHECK(sv21 == expected);
+    }
+
+}
+PENNYLANE_RUN_TEST(ISWAP);
+
 /*******************************************************************************
  * Three-qubit gates
  ******************************************************************************/

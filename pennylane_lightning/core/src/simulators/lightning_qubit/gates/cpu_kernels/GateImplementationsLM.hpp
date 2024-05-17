@@ -130,6 +130,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::CY,
         GateOperation::CZ,
         GateOperation::SWAP,
+
+        /* iswap added */
+        GateOperation::ISWAP,
+
         GateOperation::CSWAP,
         GateOperation::Toffoli,
         GateOperation::IsingXX,
@@ -164,6 +168,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::RZ,
         ControlledGateOperation::Rot,
         ControlledGateOperation::SWAP,
+
+        /* iswap added */
+        ControlledGateOperation::ISWAP,
+
         ControlledGateOperation::IsingXX,
         ControlledGateOperation::IsingXY,
         ControlledGateOperation::IsingYY,
@@ -1301,6 +1309,48 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                           [[maybe_unused]] bool inverse) {
         applyNCSWAP(arr, num_qubits, {}, {}, wires, inverse);
     }
+
+
+    /* iswap added */
+    template <class PrecisionT>
+    static void applyNCISWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                            const std::vector<size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<size_t> &wires,
+                            [[maybe_unused]] bool inverse) {
+        using ParamT = PrecisionT;
+        auto core_function = [](std::complex<PrecisionT> *arr,
+                                [[maybe_unused]] const std::size_t i00,
+                                const std::size_t i01, const std::size_t i10,
+                                [[maybe_unused]] const std::size_t i11) {
+            // std::swap(arr[i10], arr[i01]);
+
+            
+            const auto v0 = arr[i01];
+            const auto v1 = arr[i10];
+            arr[i01] = {-std::imag(v1), std::real(v1)};
+            arr[i10] = {-std::imag(v0), std::real(v0)};
+            std::swap(arr[i10], arr[i01]);
+            
+        };
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applyISWAP(std::complex<PrecisionT> *arr, size_t num_qubits,
+                          const std::vector<size_t> &wires,
+                          [[maybe_unused]] bool inverse) {
+        applyNCISWAP(arr, num_qubits, {}, {}, wires, inverse);
+    }
+
 
     template <class PrecisionT>
     static void applyCSWAP(std::complex<PrecisionT> *arr,
