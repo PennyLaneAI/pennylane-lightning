@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* Updated Kokkos version and support to 4.3.01.
+  [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
+
 * Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
   [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
   
