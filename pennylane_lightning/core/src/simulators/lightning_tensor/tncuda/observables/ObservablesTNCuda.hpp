@@ -189,10 +189,12 @@ class NamedObsTNCuda final : public ObservableTNCuda<StateTensorT> {
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
+        auto &gateMap =
+            cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
+
         tensorData_.emplace_back(
             std::vector<std::size_t>(2 * wires_int_.size(), 2),
-            state_tensor.getGateCache()->get_gate_host_vector(obs_name, par),
-            state_tensor.getDevTag());
+            gateMap.getGateData(obs_name, par), state_tensor.getDevTag());
 
         tensorDataPtr_.push_back(tensorData_.back().getDataBuffer().getData());
 
