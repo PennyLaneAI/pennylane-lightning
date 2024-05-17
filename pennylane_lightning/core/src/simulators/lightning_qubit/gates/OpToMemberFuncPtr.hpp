@@ -155,12 +155,6 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
         &GateImplementation::template applyISWAP<PrecisionT>;
 };
 
-template <class PrecisionT, class ParamT, class GateImplementation>
-struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                                       ControlledGateOperation::ISWAP> {
-    constexpr static auto value =
-        &GateImplementation::template applyNCISWAP<PrecisionT>;
-};
 
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
@@ -360,6 +354,16 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyNCSWAP<PrecisionT>;
 };
+
+/* iswap added */
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::ISWAP> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCISWAP<PrecisionT>;
+};
+
+
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::IsingXX> {
