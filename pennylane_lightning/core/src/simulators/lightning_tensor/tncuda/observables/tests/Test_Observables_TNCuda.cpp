@@ -28,7 +28,7 @@ using Pennylane::Util::LightningException;
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
     using StateTensorT = TestType;
-    using NamedObsT = NamedObs<StateTensorT>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;

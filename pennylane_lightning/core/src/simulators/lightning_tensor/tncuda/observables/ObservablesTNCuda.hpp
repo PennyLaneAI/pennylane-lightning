@@ -29,7 +29,6 @@
 #include "cuError.hpp"
 #include "tncudaError.hpp"
 
-// using namespace Pennylane;
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
@@ -68,7 +67,7 @@ template <class StateTensorT> class ObservableTNCuda {
             /* cutensornetNetworkOperator_t */ &obsOperator_));
     }
 
-  private:
+    // private:
     /**
      * @brief Polymorphic function comparing this to another Observable
      * object.
@@ -76,8 +75,8 @@ template <class StateTensorT> class ObservableTNCuda {
      * @param Another instance of subclass of Observable<StateTensorT> to
      * compare.
      */
-    [[nodiscard]] virtual bool
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const = 0;
+    //[[nodiscard]] virtual bool
+    // isEqual(const ObservableTNCuda<StateTensorT> &other) const = 0;
 
   public:
     virtual ~ObservableTNCuda() {
@@ -151,6 +150,67 @@ template <class StateTensorT> class ObservableTNCuda {
  *
  * @tparam StateTensorT State tensor class.
  */
+
+template <typename StateTensorT>
+class NamedObsTNCuda final : public ObservableTNCuda<StateTensorT> {
+  private:
+    using BaseType = ObservableTNCuda<StateTensorT>;
+    using PrecisionT = typename StateTensorT::PrecisionT;
+
+    NamedObsBase<StateTensorT> obs_;
+
+    std::size_t numQubits_;
+    cuDoubleComplex coeff_{1, 0.0};
+    std::size_t numTensors_{1};
+    std::vector<int32_t> wires_int_;
+    std::vector<int32_t> numStateModes_;
+    std::vector<const int32_t *> stateModes_;
+    std::vector<const void *> tensorDataPtr_;
+    std::vector<TensorCuda<PrecisionT>> tensorData_;
+
+  public:
+    NamedObsTNCuda(const StateTensorT &state_tensor, std::string obs_name,
+                   std::vector<std::size_t> wires,
+                   std::vector<PrecisionT> params = {})
+        : BaseType(state_tensor), obs_{obs_name, wires, params} {
+        numQubits_ = state_tensor.getNumQubits();
+
+        wires_int_ = std::vector<int32_t>(wires.size());
+
+        numStateModes_.push_back(static_cast<int32_t>(wires.size()));
+
+        std::cout << getObsName() << std::endl;
+
+        std::transform(
+            wires.begin(), wires.end(), wires_int_.begin(),
+            [&](size_t x) { return static_cast<int32_t>(numQubits_ - x - 1); });
+
+        stateModes_.push_back(wires_int_.data());
+
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+
+        tensorData_.emplace_back(
+            std::vector<std::size_t>(2 * wires_int_.size(), 2),
+            state_tensor.getGateCache()->get_gate_host_vector(obs_name, par),
+            state_tensor.getDevTag());
+
+        tensorDataPtr_.push_back(tensorData_.back().getDataBuffer().getData());
+
+        BaseType::appendTNOperator(coeff_, numTensors_, numStateModes_.data(),
+                                   stateModes_.data(), tensorDataPtr_.data());
+    }
+
+    ~NamedObsTNCuda() {}
+
+    [[nodiscard]] auto getObsName() const -> std::string {
+        return obs_.getObsName();
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> {
+        return obs_.getWires();
+    }
+};
+/*
 template <typename StateTensorT>
 class NamedObs final : public ObservableTNCuda<StateTensorT> {
   private:
@@ -184,13 +244,13 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
     }
 
   public:
-    /**
+    /-**
      * @brief Construct a NamedObs object, representing a given observable.
      *
      * @param obs_name Name of the observable.
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
-     */
+     *-/
     NamedObs(const StateTensorT &state_tensor, std::string obs_name,
              std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
@@ -243,5 +303,5 @@ class NamedObs final : public ObservableTNCuda<StateTensorT> {
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
-};
+};*/
 } // namespace Pennylane::LightningTensor::TNCuda::Observables
