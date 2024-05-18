@@ -153,7 +153,7 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
      *
      * @return cutensornetState_t
      */
-    [[nodiscard]] auto getQuantumState() -> cutensornetState_t {
+    [[nodiscard]] auto getQuantumState() const -> cutensornetState_t {
         return quantumState_;
     };
 
@@ -297,8 +297,18 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
             /* int32_t unitary*/ 1));
     }
 
+    /**
+     * @brief Get final state of the quantum circuit.
+     * NOTE: This function does not only work for the MPS approximation.
+     */
     void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
 
+    /**
+     * @brief Compute the expectation value of the given observable represented by a cutensornetNetworkOperator object.
+     *
+     * @param obsOperator The observable represented by a cutensornetNetworkOperator object.
+     * @return ComplexT
+     */
     ComplexT expval(cutensornetNetworkOperator_t obsOperator) {
         ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
 
