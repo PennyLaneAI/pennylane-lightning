@@ -51,8 +51,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
                                   {{false}, {false}, {false}});
         mps_state.get_final_state();
         auto ob = NamedObs<StateTensorT>("Identity", {0});
-        auto tnoperator = ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-        auto res = measure.expval(tnoperator);
+        auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
     }
 }
@@ -78,9 +77,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                                       {{false}, {false}, {false}});
             mps_state.get_final_state();
             auto ob = NamedObs<StateTensorT>("PauliX", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
 
@@ -90,9 +87,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                 {{false}, {false}, {false}});
             mps_state.get_final_state();
             auto ob = NamedObs<StateTensorT>("PauliX", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
 
@@ -108,9 +103,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                 {{false}, {false}, {false}, {false}, {false}, {false}});
             mps_state.get_final_state();
             auto ob = NamedObs<StateTensorT>("PauliX", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
     }
@@ -137,9 +130,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
             auto ob = NamedObs<StateTensorT>("PauliY", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
 
@@ -148,9 +139,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
                                       {{false}, {false}, {false}},
                                       {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObs<StateTensorT>("PauliY", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
 
@@ -159,9 +148,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
                                       {{false}, {false}, {false}},
                                       {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObs<StateTensorT>("PauliY", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
     }
@@ -212,15 +199,11 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.get_final_state();
 
             auto ob = NamedObs<StateTensorT>("Hadamard", {0});
-            auto tnoperator =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
-            auto res = measure.expval(tnoperator);
+            auto res = measure.expval(ob);
             CHECK(res == Approx(-INVSQRT2).epsilon(1e-7));
 
             auto ob1 = NamedObs<StateTensorT>("Identity", {0});
-            auto tnoperator1 =
-                ObservableTNCudaOperator<StateTensorT>(mps_state, ob1);
-            auto res1 = measure.expval(tnoperator1);
+            auto res1 = measure.expval(ob1);
             CHECK(res1 == Approx(ONE));
         }
     }

@@ -28,6 +28,7 @@
 
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
+#include "ObservablesTNCuda_host.hpp"
 #include "TNCudaGateCache.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"
@@ -71,8 +72,11 @@ template <class StateTensorT> class Measurements {
      * @param ob Observable operator.
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCudaOperator<StateTensorT> &ob) -> PrecisionT {
-        return state_tensor_.expval(ob.getTNOperator()).real();
+    auto expval(Pennylane::LightningTensor::TNCuda::Observables::Observable<
+                StateTensorT> &ob) -> PrecisionT {
+        auto tnoperator =
+            ObservableTNCudaOperator<StateTensorT>(state_tensor_, ob);
+        return state_tensor_.expval(tnoperator.getTNOperator()).real();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Measures

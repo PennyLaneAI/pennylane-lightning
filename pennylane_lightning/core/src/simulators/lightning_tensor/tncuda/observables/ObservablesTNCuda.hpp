@@ -47,10 +47,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 
 // NOTE: Current design allows multiple measurements to be performed for a
 // circuit, however, users should ensure that the ObservableTNCudaOperator
-// object is created with the correct state tensor object. NOTE: Considering
-// moving the ObservableTNCudaOperator object creation to the Measurements
-// class, so that the ObservableTNCudaOperator object is created with the
-// correct state tensor object.
+// object is created with the correct state tensor object. 
 /**
  * @brief A base class for all observable classes.
  *
