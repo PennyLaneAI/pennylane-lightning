@@ -203,6 +203,10 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
 
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
+        auto ONE = TestType(1);
+
+        // NOTE: Following tests show that the current design can be measured
+        // multiple times with different observables
         SECTION("Using expval") {
             mps_state.applyOperation("PauliX", {0});
             mps_state.get_final_state();
@@ -212,6 +216,12 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
                 ObservableTNCudaOperator<StateTensorT>(mps_state, ob);
             auto res = measure.expval(tnoperator);
             CHECK(res == Approx(-INVSQRT2).epsilon(1e-7));
+
+            auto ob1 = NamedObs<StateTensorT>("Identity", {0});
+            auto tnoperator1 =
+                ObservableTNCudaOperator<StateTensorT>(mps_state, ob1);
+            auto res1 = measure.expval(tnoperator1);
+            CHECK(res1 == Approx(ONE));
         }
     }
 }

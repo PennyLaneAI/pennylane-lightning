@@ -304,9 +304,11 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
 
     /**
-     * @brief Compute the expectation value of the given observable represented by a cutensornetNetworkOperator object.
+     * @brief Compute the expectation value of the given observable represented
+     * by a cutensornetNetworkOperator object.
      *
-     * @param obsOperator The observable represented by a cutensornetNetworkOperator object.
+     * @param obsOperator The observable represented by a
+     * cutensornetNetworkOperator object.
      * @return ComplexT
      */
     ComplexT expval(cutensornetNetworkOperator_t obsOperator) {

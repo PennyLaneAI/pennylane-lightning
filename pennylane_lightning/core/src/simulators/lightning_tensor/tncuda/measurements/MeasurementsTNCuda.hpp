@@ -65,7 +65,8 @@ template <class StateTensorT> class Measurements {
         : state_tensor_(state_tensor){};
 
     /**
-     * @brief Calculate expectation value for a general Observable represented by an ObservableTNCudaOperator object.
+     * @brief Calculate expectation value for a general Observable represented
+     * by an ObservableTNCudaOperator object.
      *
      * @param ob Observable operator.
      * @return Expectation value with respect to the given observable.
