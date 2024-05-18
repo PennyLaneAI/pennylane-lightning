@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "MPSTNCuda.hpp"
-#include "ObservablesTNCuda.hpp"
+#include "ObservablesTNCuda_host.hpp"
 
 #include "TestHelpers.hpp"
 
@@ -28,7 +28,7 @@ using Pennylane::Util::LightningException;
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
     using StateTensorT = TestType;
-    using NamedObsT = NamedObsTNCuda<StateTensorT>;
+    using NamedObsT = NamedObs<StateTensorT>;
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
@@ -37,7 +37,7 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
     StateTensorT mps_state{num_qubits, maxBondDim};
 
     SECTION("Test get obs name") {
-        auto obs = NamedObsT(mps_state, "PauliX", {0});
+        auto obs = NamedObsT("PauliX", {0});
 
         CHECK(obs.getObsName() == "PauliX[0]");
     }

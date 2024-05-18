@@ -17,5 +17,5 @@
 
 using namespace Pennylane::LightningTensor::TNCuda;
 
-template class Observables::NamedObsTNCuda<MPSTNCuda<float>>;
-template class Observables::NamedObsTNCuda<MPSTNCuda<double>>;
+template class Observables::ObservableTNCudaOperator<MPSTNCuda<float>>;
+template class Observables::ObservableTNCudaOperator<MPSTNCuda<double>>;
