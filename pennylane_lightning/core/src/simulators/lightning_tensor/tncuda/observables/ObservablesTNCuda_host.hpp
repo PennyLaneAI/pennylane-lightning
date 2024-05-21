@@ -154,7 +154,7 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
 
   public:
     /**
-     * @brief Construct a NamedObsBase object, representing a given observable.
+     * @brief Construct a NamedObs object, representing a given observable.
      *
      * @param obs_name Name of the observable.
      * @param wires Argument to construct wires.
@@ -324,7 +324,7 @@ class TensorProdObs : public Observable<StateTensorT> {
      * brace-enclosed initializer list correctly.
      *
      * @param obs List of observables
-     * @return std::shared_ptr<TensorProdObsBase<StateTensorT>>
+     * @return std::shared_ptr<TensorProdObs<StateTensorT>>
      */
     static auto
     create(std::vector<std::shared_ptr<Observable<StateTensorT>>> obs)
@@ -376,4 +376,106 @@ class TensorProdObs : public Observable<StateTensorT> {
     }
 };
 
+/**
+ * @brief Base class for a general Hamiltonian representation as a sum of
+ * observables.
+ *
+ * @tparam StateTensorT State tensor class.
+ */
+template <class StateTensorT>
+class Hamiltonian : public Observable<StateTensorT> {
+  public:
+    using PrecisionT = typename StateTensorT::PrecisionT;
+    using CFP_t = typename StateTensorT::CFP_t;
+
+  private:
+    std::vector<std::complex<PrecisionT>> coeffs_ham_;
+    std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
+
+  public:
+    /**
+     * @brief Create a Hamiltonian from coefficients and observables
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     */
+    template <typename T1, typename T2>
+    Hamiltonian(T1 &&coeffs, T2 &&obs)
+        : coeffs_ham_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
+        PL_ASSERT(coeffs_ham_.size() == obs_.size());
+        for (const auto &coeff : coeffs_ham_) {
+            this->coeffs_.push_back(
+                {cuDoubleComplex{coeff.real(), coeff.imag()}});
+        }
+
+        for (const auto &ob : obs_) {
+            this->numTensors_.emplace_back(ob->getNumTensors().front());
+            this->numStateModes_.emplace_back(ob->getNumStateModes().front());
+            this->stateModes_.emplace_back(ob->getStateModes().front());
+            this->data_.emplace_back(ob->getData().front());
+        }
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     * @return std::shared_ptr<Hamiltonian<StateTensorT>>
+     */
+    static auto
+    create(std::initializer_list<std::complex<PrecisionT>> coeffs,
+           std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
+        -> std::shared_ptr<Hamiltonian<StateTensorT>> {
+        return std::shared_ptr<Hamiltonian<StateTensorT>>(
+            new Hamiltonian<StateTensorT>{std::move(coeffs), std::move(obs)});
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        std::unordered_set<std::size_t> wires;
+
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            wires.insert(ob_wires.begin(), ob_wires.end());
+        }
+        auto all_wires = std::vector<std::size_t>(wires.begin(), wires.end());
+        std::sort(all_wires.begin(), all_wires.end());
+        return all_wires;
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Pennylane::Util::operator<<;
+        std::ostringstream ss;
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ham_
+           << ", 'observables' : [";
+        const auto term_size = coeffs_ham_.size();
+        for (size_t t = 0; t < term_size; t++) {
+            ss << obs_[t]->getObsName();
+            if (t != term_size - 1) {
+                ss << ", ";
+            }
+        }
+        ss << "]}";
+        return ss.str();
+    }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateTensorT>>> override {
+        return obs_;
+    };
+
+    /**
+     * @brief Get the coefficients of the observable.
+     */
+    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
+        return coeffs_ham_;
+    };
+};
 } // namespace Pennylane::LightningTensor::TNCuda::Observables
