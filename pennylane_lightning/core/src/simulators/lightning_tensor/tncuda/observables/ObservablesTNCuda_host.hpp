@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <unordered_set>
 #include <vector>
 
 #include <iostream>
@@ -124,6 +125,11 @@ template <class StateTensorT> class Observable {
     }
 
     /**
+     * @brief Get the data of each tensor in each term on host.
+     */
+    [[nodiscard]] auto getData() -> vector3D<CFP_t> & { return data_; }
+
+    /**
      * @brief Get the coefficients of a observable.
      */
     [[nodiscard]] auto getCoeffs() const -> const vector1D<cuDoubleComplex> & {
@@ -231,4 +237,143 @@ class HermitianObs : public Observable<StateTensorT> {
         return wires_;
     }
 };
+
+/**
+ * @brief Base class for a tensor product of observables.
+ *
+ * @tparam StateTensorT State tensor class.
+ */
+template <class StateTensorT>
+class TensorProdObs : public Observable<StateTensorT> {
+  public:
+    using PrecisionT = typename StateTensorT::PrecisionT;
+    using CFP_t = typename StateTensorT::CFP_t;
+
+  protected:
+    std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
+    std::vector<std::size_t> all_wires_;
+
+  public:
+    /**
+     * @brief Create a tensor product of observables
+     *
+     * @param arg Arguments perfect forwarded to vector of observables.
+     */
+    template <typename... Ts>
+    explicit TensorProdObs(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
+        if (obs_.size() == 1 &&
+            obs_[0]->getObsName().find('@') != std::string::npos) {
+            // This would prevent the misuse of this constructor for creating
+            // TensorProdObs(TensorProdObs).
+            PL_ABORT("A new TensorProdObs observable cannot be created "
+                     "from a single TensorProdObs.");
+        }
+
+        this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
+        this->numTensors_.push_back(obs_.size());
+
+        vector1D<std::size_t> numStateModesLocal;
+        vector2D<std::size_t> stateModesLocal;
+        vector2D<CFP_t> dataLocal;
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            numStateModesLocal.emplace_back(ob_wires.size());
+            stateModesLocal.emplace_back(ob_wires);
+            dataLocal.emplace_back(ob->getData().front().front());
+        }
+
+        this->numStateModes_.emplace_back(numStateModesLocal);
+        this->stateModes_.emplace_back(stateModesLocal);
+        this->data_.emplace_back(dataLocal);
+
+        std::unordered_set<std::size_t> wires;
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            for (const auto wire : ob_wires) {
+                PL_ABORT_IF(wires.contains(wire),
+                            "All wires in observables must be disjoint.");
+                wires.insert(wire);
+            }
+        }
+        all_wires_ = std::vector<std::size_t>(wires.begin(), wires.end());
+        std::sort(all_wires_.begin(), all_wires_.end());
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param obs List of observables
+     * @return std::shared_ptr<TensorProdObs<StateTensorT>>
+     */
+    static auto
+    create(std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
+        -> std::shared_ptr<TensorProdObs<StateTensorT>> {
+        return std::shared_ptr<TensorProdObs<StateTensorT>>{
+            new TensorProdObs(std::move(obs))};
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param obs List of observables
+     * @return std::shared_ptr<TensorProdObsBase<StateTensorT>>
+     */
+    static auto
+    create(std::vector<std::shared_ptr<Observable<StateTensorT>>> obs)
+        -> std::shared_ptr<TensorProdObs<StateTensorT>> {
+        return std::shared_ptr<TensorProdObs<StateTensorT>>{
+            new TensorProdObs(std::move(obs))};
+    }
+
+    /**
+     * @brief Get the number of operations in observable.
+     *
+     * @return std::size_t
+     */
+    [[nodiscard]] auto getSize() const -> std::size_t { return obs_.size(); }
+
+    /**
+     * @brief Get the wires for each observable operation.
+     *
+     * @return const std::vector<std::vector<std::size_t>>&
+     */
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        return all_wires_;
+    }
+
+    /**
+     * @brief Get the observables in the tensor product.
+     *
+     * @return std::vector<std::shared_ptr<Observable<StateTensorT>>>
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateTensorT>>> override {
+        return obs_;
+    }
+
+    /**
+     * @brief Get the name of the observable
+     */
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Pennylane::Util::operator<<;
+        std::ostringstream obs_stream;
+        const auto obs_size = obs_.size();
+        for (size_t idx = 0; idx < obs_size; idx++) {
+            obs_stream << obs_[idx]->getObsName();
+            if (idx != obs_size - 1) {
+                obs_stream << " @ ";
+            }
+        }
+        return obs_stream.str();
+    }
+};
+
 } // namespace Pennylane::LightningTensor::TNCuda::Observables

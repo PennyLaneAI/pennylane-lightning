@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <complex>
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -264,5 +265,57 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
+                   "[MPSTNCuda_Expval]", float, double) {
+    using StateTensorT = MPSTNCuda<TestType>;
+    auto ZERO = TestType(0);
+    auto INVSQRT2 = TestType(0.707106781186547524401);
+    SECTION("Using XZ") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+        auto m = Measurements<StateTensorT>(mps_state);
+
+        auto X0 = std::make_shared<NamedObs<StateTensorT>>(
+            "PauliX", std::vector<std::size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
+            "PauliZ", std::vector<std::size_t>{1});
+
+        auto ob = TensorProdObs<StateTensorT>::create({X0, Z1});
+        auto res = m.expval(*ob);
+        CHECK(res == Approx(ZERO));
+    }
+
+    SECTION("Using HHH") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+        auto m = Measurements<StateTensorT>(mps_state);
+
+        auto H0 = std::make_shared<NamedObs<StateTensorT>>(
+            "Hadamard", std::vector<std::size_t>{0});
+        auto H1 = std::make_shared<NamedObs<StateTensorT>>(
+            "Hadamard", std::vector<std::size_t>{1});
+        auto H2 = std::make_shared<NamedObs<StateTensorT>>(
+            "Hadamard", std::vector<std::size_t>{2});
+
+        auto ob = TensorProdObs<StateTensorT>::create({H0, H1, H2});
+        auto res = m.expval(*ob);
+        CHECK(res == Approx(INVSQRT2 / 2));
     }
 }
