@@ -81,7 +81,7 @@ jobs:
         run: |
           cd main
           git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
           git log -1 --format='%H'
           git status
 
@@ -186,7 +186,7 @@ jobs:
         run: |
           cd main
           git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
           git log -1 --format='%H'
           git status
 
