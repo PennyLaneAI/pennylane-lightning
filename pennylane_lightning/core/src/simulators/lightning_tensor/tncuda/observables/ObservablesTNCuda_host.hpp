@@ -180,4 +180,55 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
         return wires_;
     }
 };
+
+/**
+ * @brief Base class for Hermitian observables
+ *
+ * @tparam StateTensorT State tensor class.
+ */
+template <class StateTensorT>
+class HermitianObs : public Observable<StateTensorT> {
+  public:
+    using PrecisionT = typename StateTensorT::PrecisionT;
+    using CFP_t = typename StateTensorT::CFP_t;
+    using ComplexT = typename StateTensorT::ComplexT;
+    using MatrixT = std::vector<ComplexT>;
+
+  private:
+    MatrixT matrix_;
+    std::vector<std::size_t> wires_;
+
+  public:
+    /**
+     * @brief Construct a HermitianObs object, representing a given observable.
+     *
+     * @param matrix Matrix in row major format.
+     * @param wires Wires the observable applies to.
+     */
+    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
+        : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
+        this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
+        this->numTensors_.push_back(std::size_t{1});
+        this->numStateModes_.push_back(
+            vector1D<std::size_t>(std::size_t{1}, wires_.size()));
+        this->stateModes_.push_back(
+            vector2D<std::size_t>(std::size_t{1}, wires_));
+        // Convert matrix to vector of vector
+        std::vector<CFP_t> matrix_cu(matrix_.size());
+        std::transform(matrix_.begin(), matrix_.end(), matrix_cu.begin(),
+                       [](const std::complex<PrecisionT> &x) {
+                           return cuUtil::complexToCu<std::complex<PrecisionT>>(
+                               x);
+                       });
+        this->data_.push_back(vector2D<CFP_t>(std::size_t{1}, matrix_cu));
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        return "Hermitian";
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        return wires_;
+    }
+};
 } // namespace Pennylane::LightningTensor::TNCuda::Observables

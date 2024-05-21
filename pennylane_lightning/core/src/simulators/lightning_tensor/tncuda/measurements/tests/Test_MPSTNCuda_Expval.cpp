@@ -208,3 +208,61 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
         }
     }
 }
+
+TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
+    {
+        using StateTensorT = MPSTNCuda<TestType>;
+        using ComplexT = typename StateTensorT::ComplexT;
+
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        auto measure = Measurements<StateTensorT>(mps_state);
+
+        auto ZERO = TestType(0);
+        auto ONE = TestType(1);
+
+        std::vector<ComplexT> mat = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+
+        SECTION("Using expval") {
+            mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+                                      {{0}, {0, 1}, {1, 2}},
+                                      {{false}, {false}, {false}});
+            mps_state.get_final_state();
+            auto ob =
+                HermitianObs<StateTensorT>(mat, std::vector<std::size_t>{0});
+            auto res = measure.expval(ob);
+            CHECK(res == ZERO);
+        }
+
+        SECTION("Using expval: Plus states") {
+            mps_state.applyOperations(
+                {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
+                {{false}, {false}, {false}});
+            mps_state.get_final_state();
+            auto ob = HermitianObs<StateTensorT>(mat, {0});
+            auto res = measure.expval(ob);
+            CHECK(res == Approx(ONE));
+        }
+
+        SECTION("Using expval: Minus states") {
+            mps_state.applyOperations(
+                {{"PauliX"},
+                 {"Hadamard"},
+                 {"PauliX"},
+                 {"Hadamard"},
+                 {"PauliX"},
+                 {"Hadamard"}},
+                {{0}, {0}, {1}, {1}, {2}, {2}},
+                {{false}, {false}, {false}, {false}, {false}, {false}});
+            mps_state.get_final_state();
+            auto ob = HermitianObs<StateTensorT>(mat, {0});
+            auto res = measure.expval(ob);
+            CHECK(res == -Approx(ONE));
+        }
+    }
+}
