@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include "MPSTNCuda.hpp"
-#include "ObservablesTNCuda_host.hpp"
+#include "ObservablesTNCuda.hpp"
 
 #include "TestHelpers.hpp"
 

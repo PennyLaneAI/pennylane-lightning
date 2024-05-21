@@ -28,7 +28,7 @@
 
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
-#include "ObservablesTNCuda_host.hpp"
+#include "ObservablesTNCudaOperator.hpp"
 #include "TNCudaGateCache.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"

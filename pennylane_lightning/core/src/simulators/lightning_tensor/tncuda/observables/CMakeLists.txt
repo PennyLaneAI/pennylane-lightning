@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(TNCuda_observables LANGUAGES CXX)
 
-set(OBSERVABLES_FILES ObservablesTNCuda.cpp CACHE INTERNAL "" FORCE)
+set(OBSERVABLES_FILES ObservablesTNCudaOperator.cpp CACHE INTERNAL "" FORCE)
 
 add_library(TNCuda_observables STATIC ${OBSERVABLES_FILES})
 

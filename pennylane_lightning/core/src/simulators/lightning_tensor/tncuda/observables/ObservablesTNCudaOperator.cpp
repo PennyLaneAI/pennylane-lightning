@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ObservablesTNCuda.hpp"
+#include "ObservablesTNCudaOperator.hpp"
 #include "MPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda;
