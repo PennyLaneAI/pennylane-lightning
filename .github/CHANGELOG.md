@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
+  [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
+
 * `dynamic_one_shot` uses shot-vectors in the auxiliary tape to tell the device how many times to repeat the tape. Lightning-Qubit is updated accordingly.
   [(#724)](https://github.com/PennyLaneAI/pennylane-lightning/pull/724)
 
@@ -15,6 +18,12 @@
 
 ### Improvements
 
+* Updated Kokkos version and support to 4.3.01.
+  [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
+
+* Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
+  [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
+  
 * Update C++ and Python GitHub actions names to include the matrix info.
   [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 
