@@ -14,10 +14,9 @@
 
 #pragma once
 
+#include <cuda.h>
 #include <unordered_set>
 #include <vector>
-
-#include <iostream>
 
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
@@ -42,9 +41,17 @@ template <class T> using vector3D = std::vector<std::vector<std::vector<T>>>;
 
 namespace Pennylane::LightningTensor::TNCuda::Observables {
 /**
- * @brief A base class for observable classes.
+ * @brief A base class for observable classes of cutensornet backends.
  *
- * We note that all subclasses must be immutable (does not provide any setter).
+ * We note that the observable classes for cutensornet backends are designed to
+ * be created in the same way as the observable classes for the statevector
+ * backends across the lightning ecosystem. However, the main difference between
+ * the observable objects for cutensornet backends and those for statevector
+ * backends is that the former store the tensor data in the observable base
+ * class. This is achieved by treating different types of observables as a
+ * subset of a Hamiltonian observables. This design is to ensure that the easy
+ * construction of an observable from the Python layer and its corresponding
+ * cutensornet network operator object.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -55,7 +62,9 @@ template <class StateTensorT> class Observable {
     using ComplexT = typename StateTensorT::ComplexT;
 
   protected:
-    vector1D<cuDoubleComplex> coeffs_; // coefficients of each term
+    vector1D<cuDoubleComplex>
+        coeffs_; // coefficients of each term, cuDoubleComplex is required by
+                 // the cutensornet backend
     vector1D<std::size_t> numTensors_; // number of tensors in each term
     vector2D<std::size_t>
         numStateModes_; // number of state modes of each tensor in each term
@@ -85,7 +94,6 @@ template <class StateTensorT> class Observable {
 
     /**
      * @brief Get the observable data.
-     *
      */
     [[nodiscard]] virtual auto getObs() const
         -> std::vector<std::shared_ptr<Observable<StateTensorT>>> {
@@ -93,11 +101,9 @@ template <class StateTensorT> class Observable {
     };
 
     /**
-     * @brief Apply the observable to the state tensor.
-     *
-     * @param sv State tensor to apply the observable to.
+     * @brief Get the number of tensors in each term (For non-Hamiltonian
+     * observables, the size of std::vector return is 1).
      */
-
     [[nodiscard]] auto getNumTensors() const -> const vector1D<std::size_t> & {
         return numTensors_;
     }
@@ -125,11 +131,6 @@ template <class StateTensorT> class Observable {
     }
 
     /**
-     * @brief Get the data of each tensor in each term on host.
-     */
-    [[nodiscard]] auto getData() -> vector3D<CFP_t> & { return data_; }
-
-    /**
      * @brief Get the coefficients of a observable.
      */
     [[nodiscard]] auto getCoeffs() const -> const vector1D<cuDoubleComplex> & {
@@ -138,7 +139,7 @@ template <class StateTensorT> class Observable {
 };
 
 /**
- * @brief Base class for named observables (PauliX, PauliY, PauliZ, etc.)
+ * @brief Named observables (PauliX, PauliY, PauliZ, etc.)
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -188,7 +189,7 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
 };
 
 /**
- * @brief Base class for Hermitian observables
+ * @brief Hermitian observables
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -222,8 +223,8 @@ class HermitianObs : public Observable<StateTensorT> {
         // Convert matrix to vector of vector
         std::vector<CFP_t> matrix_cu(matrix_.size());
         std::transform(matrix_.begin(), matrix_.end(), matrix_cu.begin(),
-                       [](const std::complex<PrecisionT> &x) {
-                           return cuUtil::complexToCu<std::complex<PrecisionT>>(
+                       [](const ComplexT &x) {
+                           return cuUtil::complexToCu<ComplexT>(
                                x);
                        });
         this->data_.push_back(vector2D<CFP_t>(std::size_t{1}, matrix_cu));
@@ -239,7 +240,7 @@ class HermitianObs : public Observable<StateTensorT> {
 };
 
 /**
- * @brief Base class for a tensor product of observables.
+ * @brief Tensor product of observables.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -248,6 +249,7 @@ class TensorProdObs : public Observable<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
+    using ComplexT = typename StateTensorT::ComplexT;
 
   protected:
     std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
@@ -267,6 +269,13 @@ class TensorProdObs : public Observable<StateTensorT> {
             // TensorProdObs(TensorProdObs).
             PL_ABORT("A new TensorProdObs observable cannot be created "
                      "from a single TensorProdObs.");
+        }
+
+        for (const auto &ob : obs_) {
+            PL_ABORT_IF(ob->getObsName().find("Hamiltonian") !=
+                            std::string::npos,
+                        "A TensorProdObs observable cannot be created from a "
+                        "Hamiltonian.");
         }
 
         this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
@@ -343,7 +352,7 @@ class TensorProdObs : public Observable<StateTensorT> {
     /**
      * @brief Get the wires for each observable operation.
      *
-     * @return const std::vector<std::vector<std::size_t>>&
+     * @return const std::vector<std::size_t>&
      */
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return all_wires_;
@@ -377,8 +386,7 @@ class TensorProdObs : public Observable<StateTensorT> {
 };
 
 /**
- * @brief Base class for a general Hamiltonian representation as a sum of
- * observables.
+ * @brief Hamiltonian representation as a sum of observables.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -387,9 +395,10 @@ class Hamiltonian : public Observable<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
+    using ComplexT = typename StateTensorT::ComplexT;
 
   private:
-    std::vector<std::complex<PrecisionT>> coeffs_ham_;
+    std::vector<ComplexT> coeffs_ham_;
     std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
 
   public:
@@ -403,6 +412,14 @@ class Hamiltonian : public Observable<StateTensorT> {
     Hamiltonian(T1 &&coeffs, T2 &&obs)
         : coeffs_ham_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
         PL_ASSERT(coeffs_ham_.size() == obs_.size());
+
+        for (const auto &ob : obs_) {
+            PL_ABORT_IF(ob->getObsName().find("Hamiltonian") !=
+                            std::string::npos,
+                        "A Hamiltonian observable cannot be created from a "
+                        "Hamiltonian.");
+        }
+
         for (const auto &coeff : coeffs_ham_) {
             this->coeffs_.push_back(
                 {cuDoubleComplex{coeff.real(), coeff.imag()}});
@@ -428,7 +445,7 @@ class Hamiltonian : public Observable<StateTensorT> {
      * @return std::shared_ptr<Hamiltonian<StateTensorT>>
      */
     static auto
-    create(std::initializer_list<std::complex<PrecisionT>> coeffs,
+    create(std::initializer_list<ComplexT> coeffs,
            std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
         -> std::shared_ptr<Hamiltonian<StateTensorT>> {
         return std::shared_ptr<Hamiltonian<StateTensorT>>(
@@ -474,7 +491,8 @@ class Hamiltonian : public Observable<StateTensorT> {
     /**
      * @brief Get the coefficients of the observable.
      */
-    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
+    [[nodiscard]] auto getCoeffs() const
+        -> std::vector<ComplexT> {
         return coeffs_ham_;
     };
 };
