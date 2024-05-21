@@ -177,9 +177,8 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
 
-        config = self._setup_execution_config(execution_config)
-
         # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
+        # config = self._setup_execution_config(execution_config)
         # program = self._interface.preprocess()
         # return program, config
 
