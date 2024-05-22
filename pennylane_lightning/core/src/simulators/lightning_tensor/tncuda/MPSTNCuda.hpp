@@ -76,6 +76,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
+    using PrecisionT = Precision;
 
   public:
     MPSTNCuda() = delete;

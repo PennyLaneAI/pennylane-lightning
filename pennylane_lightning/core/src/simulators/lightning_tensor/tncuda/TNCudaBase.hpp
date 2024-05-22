@@ -70,9 +70,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
 
   public:
-    using PrecisionT = PrecisionT;
-
-  public:
     TNCudaBase() = delete;
 
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
