@@ -34,6 +34,7 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
         auto obs = NamedObsT("PauliX", {0});
 
         CHECK(obs.getObsName() == "PauliX[0]");
+        CHECK(obs.getWires() == std::vector<std::size_t>{0});
     }
 }
 
@@ -49,6 +50,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
         SECTION("Test get obs name") {
             auto obs = HermitianObsT(mat, std::vector<std::size_t>{0});
             CHECK(obs.getObsName() == "Hermitian");
+            CHECK(obs.getWires() == std::vector<std::size_t>{0});
         }
     }
 }
@@ -68,6 +70,7 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
             auto obs = TensorProdObs<StateTensorT>::create({H0, H1});
 
             CHECK(obs->getObsName() == "Hadamard[0] @ Hadamard[1]");
+            CHECK(obs->getWires() == std::vector<std::size_t>{0, 1});
 
             REQUIRE_THROWS_WITH(TensorProdObs<StateTensorT>::create({obs}),
                                 Catch::Matchers::Contains(
@@ -102,6 +105,8 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
 
             auto ham_obs = Hamiltonian<StateTensorT>::create(
                 {{1.0, 0.0}, {1.0, 0.0}}, {H0, H1});
+
+            CHECK(ham_obs->getWires() == std::vector<std::size_t>{0, 1});
 
             REQUIRE(
                 ham_obs->getObsName() ==
