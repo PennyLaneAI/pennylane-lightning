@@ -126,8 +126,8 @@ def test_qnode_mcm_method(mcm_method, mocker):
 @pytest.mark.parametrize("postselect_shots", [True, False])
 def test_qnode_postselect_shots(postselect_shots):
     """Test that user specified qnode arg for discarding invalid shots is used correctly"""
-    shots = 10
-    device = qml.device(device_name, wires=3, shots=100)
+    shots = 100
+    device = qml.device(device_name, wires=3, shots=shots)
 
     @qml.qnode(device, postselect_shots=postselect_shots)
     def f(x):
