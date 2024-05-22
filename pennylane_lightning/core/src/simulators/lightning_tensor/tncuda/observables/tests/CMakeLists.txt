@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(TNCuda_observables_tests)
+project(${PL_BACKEND}_observables_tests)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -14,24 +14,24 @@ FetchAndIncludeCatch()
 # Define library
 ################################################################################
 
-add_library(TNCuda_observables_tests INTERFACE)
-target_link_libraries(TNCuda_observables_tests INTERFACE     Catch2::Catch2
-${PL_TENSOR}_gates
-                                                                TNCuda_observables
+add_library(${PL_BACKEND}_observables_tests INTERFACE)
+target_link_libraries(${PL_BACKEND}_observables_tests INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}_gates
+                                                                ${PL_BACKEND}_observables
                                                                 ${PL_TENSOR}
                                                                 )
 
-ProcessTestOptions(TNCuda_observables_tests)
+ProcessTestOptions(${PL_BACKEND}_observables_tests)
 
-target_sources(TNCuda_observables_tests INTERFACE runner_TNCuda_observables.cpp)
+target_sources(${PL_BACKEND}_observables_tests INTERFACE runner_${PL_BACKEND}_observables.cpp)
 
 ################################################################################
 # Define targets
 ################################################################################
 set(TEST_SOURCES Test_Observables_TNCuda.cpp)
 
-add_executable(TNCuda_observables_test_runner ${TEST_SOURCES})
-target_link_libraries(TNCuda_observables_test_runner PRIVATE TNCuda_observables_tests)
-catch_discover_tests(TNCuda_observables_test_runner)
+add_executable(${PL_BACKEND}_observables_test_runner ${TEST_SOURCES})
+target_link_libraries(${PL_BACKEND}_observables_test_runner PRIVATE ${PL_BACKEND}_observables_tests)
+catch_discover_tests(${PL_BACKEND}_observables_test_runner)
 
-install(TARGETS TNCuda_observables_test_runner DESTINATION bin)
+install(TARGETS ${PL_BACKEND}_observables_test_runner DESTINATION bin)

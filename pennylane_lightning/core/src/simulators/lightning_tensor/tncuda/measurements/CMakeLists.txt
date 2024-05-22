@@ -11,7 +11,7 @@ target_link_libraries(${PL_BACKEND}_measurements INTERFACE  lightning_compile_op
                                                             lightning_utils
                                                             ${PL_TENSOR}
                                                             ${PL_BACKEND}_utils
-                                                            TNCuda_observables
+                                                            ${PL_BACKEND}_observables
                                                             )
 
 if (BUILD_TESTS)

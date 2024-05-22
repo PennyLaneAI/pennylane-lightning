@@ -16,10 +16,10 @@ FetchAndIncludeCatch()
 
 add_library(${PL_BACKEND}_measurements_tests INTERFACE)
 target_link_libraries(${PL_BACKEND}_measurements_tests INTERFACE     Catch2::Catch2
-                                                                ${PL_TENSOR}_gates
+                                                                ${PL_BACKEND}_gates
                                                                 ${PL_BACKEND}_utils
                                                                 ${PL_BACKEND}_measurements
-                                                                TNCuda_observables
+                                                                ${PL_BACKEND}_observables
                                                                 ${PL_TENSOR}
                                                                 )
 

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(${PL_TENSOR}_gates_tests)
+project(${PL_BACKEND}_gates_tests)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)
@@ -14,15 +14,15 @@ FetchAndIncludeCatch()
 # Define library
 ################################################################################
 
-add_library(${PL_TENSOR}_gates_tests INTERFACE)
-target_link_libraries(${PL_TENSOR}_gates_tests INTERFACE     Catch2::Catch2
-                                                                ${PL_TENSOR}_gates
+add_library(${PL_BACKEND}_gates_tests INTERFACE)
+target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}_gates
                                                                 ${PL_TENSOR}
                                                                 )
 
-ProcessTestOptions(${PL_TENSOR}_gates_tests)
+ProcessTestOptions(${PL_BACKEND}_gates_tests)
 
-target_sources(${PL_TENSOR}_gates_tests INTERFACE runner_lightning_tensor_gates.cpp)
+target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_lightning_tensor_gates.cpp)
 
 ################################################################################
 # Define targets
@@ -30,8 +30,8 @@ target_sources(${PL_TENSOR}_gates_tests INTERFACE runner_lightning_tensor_gates.
 set(TEST_SOURCES    Test_MPSTNCuda_NonParam.cpp
                     Test_MPSTNCuda_Param.cpp)
 
-add_executable(${PL_TENSOR}_gates_test_runner ${TEST_SOURCES})
-target_link_libraries(${PL_TENSOR}_gates_test_runner PRIVATE ${PL_TENSOR}_gates_tests)
-catch_discover_tests(${PL_TENSOR}_gates_test_runner)
+add_executable(${PL_BACKEND}_gates_test_runner ${TEST_SOURCES})
+target_link_libraries(${PL_BACKEND}_gates_test_runner PRIVATE ${PL_BACKEND}_gates_tests)
+catch_discover_tests(${PL_BACKEND}_gates_test_runner)
 
-install(TARGETS ${PL_TENSOR}_gates_test_runner DESTINATION bin)
+install(TARGETS ${PL_BACKEND}_gates_test_runner DESTINATION bin)
