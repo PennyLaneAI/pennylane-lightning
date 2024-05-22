@@ -1472,12 +1472,12 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ONE<CFP_t>()};
 }
 
-template <class Precision> class DynamicGateDataAccess {
+template <class PrecisionT> class DynamicGateDataAccess {
   private:
     DynamicGateDataAccess() = default;
 
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     DynamicGateDataAccess(DynamicGateDataAccess &&) = delete;
     DynamicGateDataAccess(const DynamicGateDataAccess &) = delete;
     DynamicGateDataAccess &operator=(const DynamicGateDataAccess &) = delete;
@@ -1492,7 +1492,7 @@ template <class Precision> class DynamicGateDataAccess {
 
     auto
     getGateData(const std::string &gate_name,
-                [[maybe_unused]] const std::vector<Precision> &params) const
+                [[maybe_unused]] const std::vector<PrecisionT> &params) const
         -> std::vector<CFP_t> {
         if (nonparametric_gates_.find(gate_name) !=
             nonparametric_gates_.end()) {
@@ -1507,7 +1507,7 @@ template <class Precision> class DynamicGateDataAccess {
 
   private:
     using ParamGateFunc =
-        std::function<std::vector<CFP_t>(const std::vector<Precision> &)>;
+        std::function<std::vector<CFP_t>(const std::vector<PrecisionT> &)>;
     using NonParamGateFunc = std::function<std::vector<CFP_t>()>;
     using ParamGateFuncMap = std::unordered_map<std::string, ParamGateFunc>;
     using NonParamGateFuncMap =

@@ -47,13 +47,13 @@ namespace Pennylane::LightningTensor::TNCuda::Gates {
  * @brief Memory management for gate tensor data on device and its id in the
  * compute graph.
  *
- * @tparam Precision Floating point precision.
+ * @tparam PrecisionT Floating point precision.
  */
-template <class Precision> class TNCudaGateCache {
+template <class PrecisionT> class TNCudaGateCache {
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
-    using gate_key_info = std::pair<const std::string, std::vector<Precision>>;
-    using gate_info = std::pair<gate_key_info, TensorCuda<Precision>>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using gate_key_info = std::pair<const std::string, std::vector<PrecisionT>>;
+    using gate_info = std::pair<gate_key_info, TensorCuda<PrecisionT>>;
     TNCudaGateCache() = delete;
     TNCudaGateCache(const TNCudaGateCache &other) = delete;
     TNCudaGateCache(TNCudaGateCache &&other) = delete;
@@ -74,11 +74,11 @@ template <class Precision> class TNCudaGateCache {
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
-                  [[maybe_unused]] std::vector<Precision> gate_param) {
+                  [[maybe_unused]] std::vector<PrecisionT> gate_param) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         auto &gateMap =
-            cuGates::DynamicGateDataAccess<Precision>::getInstance();
+            cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
 
         add_gate(gate_id, gate_key, gateMap.getGateData(gate_name, gate_param));
     }
@@ -101,7 +101,7 @@ template <class Precision> class TNCudaGateCache {
         auto extents = std::vector<std::size_t>(rank, 2);
 
         auto &&tensor =
-            TensorCuda<Precision>(rank, modes, extents, device_tag_);
+            TensorCuda<PrecisionT>(rank, modes, extents, device_tag_);
 
         device_gates_.emplace(
             std::piecewise_construct, std::forward_as_tuple(gate_id),
