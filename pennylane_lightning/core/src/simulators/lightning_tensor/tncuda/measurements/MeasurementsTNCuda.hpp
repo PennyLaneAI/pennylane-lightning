@@ -15,30 +15,24 @@
 /**
  * @file
  * Defines a class for the measurement of observables in quantum states
- * represented by a Lightning Tensor MPS class.
+ * represented by a Lightning Tensor class.
  */
 
 #pragma once
 
 #include <complex>
-#include <cuda.h>
 #include <cutensornet.h>
-#include <type_traits>
 #include <vector>
 
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 #include "ObservablesTNCudaOperator.hpp"
-#include "TNCudaGateCache.hpp"
-#include "cuda_helpers.hpp"
-#include "tncudaError.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
-namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::Util;
 } // namespace
 /// @endcond
@@ -56,8 +50,6 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
 template <class StateTensorT> class Measurements {
   private:
     using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     StateTensorT &state_tensor_;
 
