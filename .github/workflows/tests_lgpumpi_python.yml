@@ -67,7 +67,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
 
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
