@@ -97,14 +97,14 @@ def test_unsupported_measurement():
 def test_qnode_mcm_method(mcm_method, mocker):
     """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
     spy = (
-        mocker.spy(qml, "dynamic_one_shot")
+        mocker.spy(qml.dynamic_one_shot, "_transform")
         if mcm_method == "one-shot"
-        else mocker.spy(qml, "defer_measurements")
+        else mocker.spy(qml.defer_measurements, "_transform")
     )
     other_spy = (
-        mocker.spy(qml, "defer_measurements")
+        mocker.spy(qml.defer_measurements, "_transform")
         if mcm_method == "one-shot"
-        else mocker.spy(qml, "dynamic_one_shot")
+        else mocker.spy(qml.dynamic_one_shot, "_transform")
     )
 
     shots = 10
