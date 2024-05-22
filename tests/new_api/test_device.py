@@ -350,31 +350,6 @@ class TestExecution:
         )
         assert qml.equal(new_tape, expected_tape)
 
-    @pytest.mark.parametrize("postselect_shots", [True, False])
-    def test_postselect_shots(self, postselect_shots):
-        """Test that results are as expected when a user requests to scale shots with postselection."""
-
-        shots = 10
-        device = LightningDevice(wires=3, shots=shots)
-
-        @qml.qnode(device, postselect_shots=postselect_shots)
-        def func(x):
-            qml.RX(x, 0)
-            qml.measure(0, postselect=1)
-            qml.CNOT([0, 1])
-            qml.sample(qml.PauliZ(1))
-
-        # Choosing small rotation angle ensures that the number of valid shots is less than the
-        # total number of shots. This will allow us to avoid stochastic failures where the number
-        # of valid samples happens to be the same as the number of shots.
-        x = np.pi / 5
-        res = func(x)
-
-        if postselect_shots:
-            assert len(res) < shots
-        else:
-            assert len(res) == shots
-
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
