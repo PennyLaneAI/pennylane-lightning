@@ -49,8 +49,11 @@
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
 
-* Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration;
+* Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration.
   [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
+
+* Remove the Autoray dependency from requirement files.
+  [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
 ### Contributors
 
