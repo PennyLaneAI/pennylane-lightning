@@ -52,7 +52,7 @@
 * Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration.
   [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
 
-* Remove Autoray dependence from requirement files.
+* Remove the Autoray dependency from requirement files.
   [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
 ### Contributors
