@@ -19,4 +19,3 @@ cmake
 custatevec-cu12
 pylint
 scipy
-autoray<0.6.10
