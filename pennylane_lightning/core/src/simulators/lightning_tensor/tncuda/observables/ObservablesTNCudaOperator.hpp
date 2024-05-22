@@ -105,22 +105,22 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
 
-        for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
-            // coeffs initialization
-            cuDoubleComplex coeff = obs.getCoeffs()[term_idx];
-            coeffs_.push_back(coeff);
+        coeffs_ = obs.getCoeffs();         // coeffs initialization
+        numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
-            // number of tensors in each term
-            auto numTensors = obs.getNumTensors()[term_idx];
-            numTensors_.push_back(numTensors);
+        for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
+            auto coeff = coeffs_[term_idx];
+            auto numTensors = numTensors_[term_idx];
 
             // number of state modes of each tensor in each term
             vector1D<int32_t> local_num_modes_int32(
                 obs.getNumStateModes()[term_idx].size());
+
             std::transform(obs.getNumStateModes()[term_idx].begin(),
                            obs.getNumStateModes()[term_idx].end(),
                            local_num_modes_int32.begin(),
                            [](size_t x) { return static_cast<int32_t>(x); });
+
             numModes_.push_back(local_num_modes_int32);
 
             // modes initialization

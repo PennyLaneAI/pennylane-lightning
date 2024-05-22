@@ -71,6 +71,7 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 
             CHECK(obs->getObsName() == "Hadamard[0] @ Hadamard[1]");
             CHECK(obs->getWires() == std::vector<std::size_t>{0, 1});
+            CHECK(obs->getNumTensors() == std::vector<size_t>{2});
 
             REQUIRE_THROWS_WITH(TensorProdObs<StateTensorT>::create({obs}),
                                 Catch::Matchers::Contains(
@@ -124,6 +125,8 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
 
             auto ham_obs = Hamiltonian<StateTensorT>::create(
                 {{1.0, 0.0}, {1.0, 0.0}}, {H0, H1});
+
+            CHECK(ham_obs->getNumTensors() == std::vector<size_t>{1, 1});
 
             REQUIRE_THROWS_WITH(
                 Hamiltonian<StateTensorT>::create({{1.0, 0.0}, {1.0, 0.0}},
