@@ -93,14 +93,6 @@ template <class StateTensorT> class Observable {
     [[nodiscard]] virtual auto getWires() const -> std::vector<std::size_t> = 0;
 
     /**
-     * @brief Get the observable data.
-     */
-    [[nodiscard]] virtual auto getObs() const
-        -> std::vector<std::shared_ptr<Observable<StateTensorT>>> {
-        return {};
-    };
-
-    /**
      * @brief Get the number of tensors in each term (For non-Hamiltonian
      * observables, the size of std::vector return is 1).
      */
@@ -363,16 +355,6 @@ class TensorProdObs : public Observable<StateTensorT> {
     }
 
     /**
-     * @brief Get the observables in the tensor product.
-     *
-     * @return std::vector<std::shared_ptr<Observable<StateTensorT>>>
-     */
-    [[nodiscard]] auto getObs() const
-        -> std::vector<std::shared_ptr<Observable<StateTensorT>>> override {
-        return obs_;
-    }
-
-    /**
      * @brief Get the name of the observable
      */
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -489,14 +471,6 @@ class Hamiltonian : public Observable<StateTensorT> {
         ss << "]}";
         return ss.str();
     }
-
-    /**
-     * @brief Get the observable.
-     */
-    [[nodiscard]] auto getObs() const
-        -> std::vector<std::shared_ptr<Observable<StateTensorT>>> override {
-        return obs_;
-    };
 
     /**
      * @brief Get the coefficients of the observable.
