@@ -49,15 +49,15 @@ namespace Pennylane::LightningTensor::TNCuda {
 /**
  * @brief CRTP-enabled base class for cuTensorNet backends.
  *
- * @tparam Precision Floating point precision.
+ * @tparam PrecisionT Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
  */
-template <class Precision, class Derived>
-class TNCudaBase : public TensornetBase<Precision, Derived> {
+template <class PrecisionT, class Derived>
+class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
   private:
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
-    using ComplexT = std::complex<Precision>;
-    using BaseType = TensornetBase<Precision, Derived>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = std::complex<PrecisionT>;
+    using BaseType = TensornetBase<PrecisionT, Derived>;
     SharedTNCudaHandle handle_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
@@ -67,10 +67,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
         CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
                                        // states as v24.03
 
-    std::shared_ptr<TNCudaGateCache<Precision>> gate_cache_;
+    std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
 
   public:
-    using PrecisionT = Precision;
+    using PrecisionT = PrecisionT;
 
   public:
     TNCudaBase() = delete;
@@ -79,10 +79,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           dev_tag_({device_id, stream_id}),
-          gate_cache_(std::make_shared<TNCudaGateCache<Precision>>(dev_tag_)) {
+          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
-        if constexpr (std::is_same_v<Precision, double>) {
+        if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
         } else {
@@ -104,10 +104,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           dev_tag_(dev_tag),
-          gate_cache_(std::make_shared<TNCudaGateCache<Precision>>(dev_tag_)) {
+          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
-        if constexpr (std::is_same_v<Precision, double>) {
+        if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
         } else {
@@ -237,10 +237,10 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
 
     void applyOperation(
         const std::string &opName, const std::vector<std::size_t> &wires,
-        bool adjoint = false, const std::vector<Precision> &params = {0.0},
+        bool adjoint = false, const std::vector<PrecisionT> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
-        auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
-        DataBuffer<Precision, int> dummy_device_data(
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+        DataBuffer<PrecisionT, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
         int64_t id;
         std::vector<int32_t> stateModes(wires.size());

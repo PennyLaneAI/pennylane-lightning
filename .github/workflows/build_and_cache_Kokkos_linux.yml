@@ -12,11 +12,15 @@ on:
       runs_on:
         description: |
           The runner that should run the jobs. If left blank, the value from inputs.os is used.
-          This is useful if you want the jobs to run in a specific runner group, while not using that group name as part 
+          This is useful if you want the jobs to run in a specific runner group, while not using that group name as part
           of the cache key.
         required: false
         type: string
         default: ''
+      kokkos_version:
+        required: false
+        type: string
+        default: 4.3.01
     outputs:
       exec_model:
         description: "The execution model for Kokkos."
@@ -37,7 +41,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.3.01\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"${{ inputs.kokkos_version }}\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}

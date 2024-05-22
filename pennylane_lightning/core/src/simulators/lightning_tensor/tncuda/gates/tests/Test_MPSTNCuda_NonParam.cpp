@@ -193,10 +193,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
                cuUtil::INVSQRT2<std::complex<TestType>>());
         cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<std::complex<TestType>>()));
 
-        if (inverse) {
-            i = conj(i);
-        }
-
         const std::vector<std::vector<cp_t>> expected_results = {
             {r, r, r, r, i, i, i, i},
             {r, r, i, i, r, r, i, i},
@@ -229,10 +225,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
 
         cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
         cp_t i(1.0 / 4, 1.0 / 4);
-
-        if (inverse) {
-            i = conj(i);
-        }
 
         const std::vector<std::vector<cp_t>> expected_results = {
             {r, r, r, r, i, i, i, i},
