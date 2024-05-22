@@ -23,7 +23,7 @@
 
 * Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
   [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
-  
+
 * Update C++ and Python GitHub actions names to include the matrix info.
   [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 
@@ -51,6 +51,9 @@
 
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
+
+* Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration;
+  [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
 
 ### Contributors
 
