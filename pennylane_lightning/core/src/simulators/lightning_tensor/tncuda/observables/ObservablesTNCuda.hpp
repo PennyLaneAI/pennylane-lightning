@@ -62,9 +62,7 @@ template <class StateTensorT> class Observable {
     using ComplexT = typename StateTensorT::ComplexT;
 
   protected:
-    vector1D<cuDoubleComplex>
-        coeffs_; // coefficients of each term, cuDoubleComplex is required by
-                 // the cutensornet backend
+    vector1D<PrecisionT> coeffs_;      // coefficients of each term
     vector1D<std::size_t> numTensors_; // number of tensors in each term
     vector2D<std::size_t>
         numStateModes_; // number of state modes of each tensor in each term
@@ -125,7 +123,8 @@ template <class StateTensorT> class Observable {
     /**
      * @brief Get the coefficients of a observable.
      */
-    [[nodiscard]] auto getCoeffs() const -> const vector1D<cuDoubleComplex> & {
+    [[nodiscard]] auto getCoeffsPerTerm() const
+        -> const vector1D<PrecisionT> & {
         return coeffs_;
     };
 };
@@ -156,7 +155,7 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
     NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
         : obs_name_{obs_name}, wires_{wires}, params_{params} {
-        this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
+        this->coeffs_.push_back(PrecisionT{1.0});
         this->numTensors_.push_back(std::size_t{1});
         this->numStateModes_.push_back(
             vector1D<std::size_t>(std::size_t{1}, wires.size()));
@@ -206,7 +205,7 @@ class HermitianObs : public Observable<StateTensorT> {
      */
     HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
-        this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
+        this->coeffs_.push_back(PrecisionT{1.0});
         this->numTensors_.push_back(std::size_t{1});
         this->numStateModes_.push_back(
             vector1D<std::size_t>(std::size_t{1}, wires_.size()));
@@ -274,7 +273,7 @@ class TensorProdObs : public Observable<StateTensorT> {
                         "Hamiltonian.");
         }
 
-        this->coeffs_.push_back(cuDoubleComplex{1.0, 0.0});
+        this->coeffs_.push_back(PrecisionT{1.0});
         this->numTensors_.push_back(obs_.size());
 
         vector1D<std::size_t> numStateModesLocal;
@@ -384,7 +383,7 @@ class Hamiltonian : public Observable<StateTensorT> {
     using ComplexT = typename StateTensorT::ComplexT;
 
   private:
-    std::vector<ComplexT> coeffs_ham_;
+    std::vector<PrecisionT> coeffs_ham_;
     std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
 
   public:
@@ -399,23 +398,32 @@ class Hamiltonian : public Observable<StateTensorT> {
         : coeffs_ham_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
         PL_ASSERT(coeffs_ham_.size() == obs_.size());
 
-        for (const auto &ob : obs_) {
-            PL_ABORT_IF(ob->getObsName().find("Hamiltonian") !=
-                            std::string::npos,
-                        "A Hamiltonian observable cannot be created from a "
-                        "Hamiltonian.");
-        }
-
-        for (const auto &coeff : coeffs_ham_) {
-            this->coeffs_.push_back(
-                {cuDoubleComplex{coeff.real(), coeff.imag()}});
-        }
-
-        for (const auto &ob : obs_) {
-            this->numTensors_.emplace_back(ob->getNumTensors().front());
-            this->numStateModes_.emplace_back(ob->getNumStateModes().front());
-            this->stateModes_.emplace_back(ob->getStateModes().front());
-            this->data_.emplace_back(ob->getData().front());
+        for (std::size_t term_idx = 0; term_idx < coeffs_ham_.size();
+             term_idx++) {
+            auto ob = obs_[term_idx];
+            if (ob->getObsName().find("Hamiltonian") != std::string::npos) {
+                for (std::size_t sub_term_idx = 0;
+                     sub_term_idx < ob->getNumTensors().size();
+                     sub_term_idx++) {
+                    PrecisionT coeff = ob->getCoeffsPerTerm()[sub_term_idx];
+                    coeff = coeff * coeffs_ham_[term_idx];
+                    this->coeffs_.push_back(coeff);
+                    this->numTensors_.emplace_back(
+                        ob->getNumTensors()[sub_term_idx]);
+                    this->numStateModes_.emplace_back(
+                        ob->getNumStateModes()[sub_term_idx]);
+                    this->stateModes_.emplace_back(
+                        ob->getStateModes()[sub_term_idx]);
+                    this->data_.emplace_back(ob->getData()[sub_term_idx]);
+                }
+            } else {
+                this->coeffs_.push_back(coeffs_ham_[term_idx]);
+                this->numTensors_.emplace_back(ob->getNumTensors().front());
+                this->numStateModes_.emplace_back(
+                    ob->getNumStateModes().front());
+                this->stateModes_.emplace_back(ob->getStateModes().front());
+                this->data_.emplace_back(ob->getData().front());
+            }
         }
     }
 
@@ -431,7 +439,7 @@ class Hamiltonian : public Observable<StateTensorT> {
      * @return std::shared_ptr<Hamiltonian<StateTensorT>>
      */
     static auto
-    create(std::initializer_list<ComplexT> coeffs,
+    create(std::initializer_list<PrecisionT> coeffs,
            std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
         -> std::shared_ptr<Hamiltonian<StateTensorT>> {
         return std::shared_ptr<Hamiltonian<StateTensorT>>(
@@ -452,15 +460,9 @@ class Hamiltonian : public Observable<StateTensorT> {
 
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
-        std::vector<PrecisionT> coeffs_real;
-        std::vector<PrecisionT> coeffs_imag;
-        for (const auto &coeff : coeffs_ham_) {
-            coeffs_real.push_back(coeff.real());
-            coeffs_imag.push_back(coeff.imag());
-        }
         std::ostringstream ss;
-        ss << "Hamiltonian: { 'coeffs' : real part " << coeffs_real
-           << ", imag part" << coeffs_imag << ", 'observables' : [";
+        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ham_
+           << ", 'observables' : [";
         const auto term_size = coeffs_ham_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
@@ -475,7 +477,7 @@ class Hamiltonian : public Observable<StateTensorT> {
     /**
      * @brief Get the coefficients of the observable.
      */
-    [[nodiscard]] auto getCoeffs() const -> std::vector<ComplexT> {
+    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
         return coeffs_ham_;
     };
 };

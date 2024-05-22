@@ -341,11 +341,42 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
             "PauliZ", std::vector<std::size_t>{1});
 
-        auto ob = Hamiltonian<StateTensorT>::create(
-            {std::complex<TestType>({1.0, 0.0}),
-             std::complex<TestType>({1.0, 0.0})},
-            {X0, Z1});
+        auto ob = Hamiltonian<StateTensorT>::create({TestType{1}, TestType{1}},
+                                                    {X0, Z1});
         auto res = m.expval(*ob);
         CHECK(res == Approx(ONE));
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "Test expectation value of HamiltonianObs created with HamiltonianObs",
+    "[MPSTNCuda_Expval]", float, double) {
+    using StateTensorT = MPSTNCuda<TestType>;
+    auto ONE = TestType(1);
+    SECTION("Using XZ") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+        auto m = Measurements<StateTensorT>(mps_state);
+
+        auto X0 = std::make_shared<NamedObs<StateTensorT>>(
+            "PauliX", std::vector<std::size_t>{0});
+        auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
+            "PauliZ", std::vector<std::size_t>{1});
+
+        auto ob0 = Hamiltonian<StateTensorT>::create({TestType(0.5)}, {X0});
+
+        auto ob1 = Hamiltonian<StateTensorT>::create({TestType(0.5)}, {Z1});
+
+        auto ob = Hamiltonian<StateTensorT>::create(
+            {TestType(0.5), TestType(0.5)}, {ob0, ob1});
+        auto res = m.expval(*ob);
+        CHECK(res == Approx(ONE / 4));
     }
 }

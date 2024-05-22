@@ -104,8 +104,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                 const_cast<size_t *>(state_tensor.getQubitDims().data())),
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
-
-        coeffs_ = obs.getCoeffs();         // coeffs initialization
+        for (auto &coeff : obs.getCoeffsPerTerm()) {
+            coeffs_.push_back(cuDoubleComplex{static_cast<double>(coeff),
+                                              0.0}); // coeffs initialization
+        }
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {

@@ -84,7 +84,7 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
                                           "be created from a TensorProdObs"));
 
             auto ham_obs = Hamiltonian<StateTensorT>::create(
-                {{1.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}}, {H0, H1, H2});
+                {{1.0}, {1.0}, {1.0}}, {H0, H1, H2});
 
             REQUIRE_THROWS_WITH(
                 TensorProdObs<StateTensorT>::create({ham_obs, H2}),
@@ -104,35 +104,14 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
             auto H1 = std::make_shared<NamedObs<StateTensorT>>(
                 "Hadamard", std::vector<std::size_t>{1});
 
-            auto ham_obs = Hamiltonian<StateTensorT>::create(
-                {{1.0, 0.0}, {1.0, 0.0}}, {H0, H1});
+            auto ham_obs =
+                Hamiltonian<StateTensorT>::create({{1.0}, {1.0}}, {H0, H1});
 
             CHECK(ham_obs->getWires() == std::vector<std::size_t>{0, 1});
 
-            REQUIRE(
-                ham_obs->getObsName() ==
-                "Hamiltonian: { 'coeffs' : real part [1, 1], imag part[0, 0], "
-                "'observables' : [Hadamard[0], Hadamard[1]]}");
-        }
-
-        SECTION("Throw error") {
-            auto H0 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{0});
-            auto H1 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{1});
-            auto H2 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{2});
-
-            auto ham_obs = Hamiltonian<StateTensorT>::create(
-                {{1.0, 0.0}, {1.0, 0.0}}, {H0, H1});
-
-            CHECK(ham_obs->getNumTensors() == std::vector<size_t>{1, 1});
-
-            REQUIRE_THROWS_WITH(
-                Hamiltonian<StateTensorT>::create({{1.0, 0.0}, {1.0, 0.0}},
-                                                  {ham_obs, H2}),
-                Catch::Matchers::Contains("A Hamiltonian observable cannot be "
-                                          "created from a Hamiltonian."));
+            REQUIRE(ham_obs->getObsName() ==
+                    "Hamiltonian: { 'coeffs' : [1, 1], "
+                    "'observables' : [Hadamard[0], Hadamard[1]]}");
         }
     }
 }
