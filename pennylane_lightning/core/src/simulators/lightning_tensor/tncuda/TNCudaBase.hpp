@@ -168,15 +168,6 @@ class TNCudaBase : public TensornetBase<Precision, Derived> {
     }
 
     /**
-     * @brief Return pointer to gate cache.
-     *
-     * @return  TNCudaGateCache<Precision>*
-     */
-    [[nodiscard]] auto getGateCache() const -> TNCudaGateCache<Precision> * {
-        return gate_cache_.get();
-    }
-
-    /**
      * @brief Append multiple gates to the compute graph.
      * NOTE: This function does not update the quantum state but only appends
      * gate tensor operator to the graph.
