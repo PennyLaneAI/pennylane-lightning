@@ -140,7 +140,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RY", "[MPSTNCuda_Nonparam]", float,
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
         // Results from default.qubit
-
         std::vector<std::vector<cp_t>> expected_results{{{0.29674901, 0},
                                                          {0.29674901, 0},
                                                          {0.29674901, 0},
@@ -192,8 +191,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RZ", "[MPSTNCuda_Param]", float, double) {
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
-        // Results from default.qubit
-
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             {{0.34958337, -0.05283436},
              {0.34958337, -0.05283436},
@@ -320,10 +318,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
 
         for (std::size_t i = 0; i < angles.size(); i++) {
             const auto rot_mat =
-                (inverse) ? Pennylane::Gates::getRot<std::complex, TestType>(
-                                -angles[i][0], -angles[i][1], -angles[i][2])
-                          : Pennylane::Gates::getRot<std::complex, TestType>(
-                                angles[i][0], angles[i][1], angles[i][2]);
+                Pennylane::Gates::getRot<std::complex, TestType>(
+                    angles[i][0], angles[i][1], angles[i][2]);
             expected_results[i][0] = rot_mat[0];
             expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
         }
@@ -389,6 +385,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles{0.3, 0.8};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits),
             std::vector<cp_t>(1 << num_qubits),
@@ -443,6 +440,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
@@ -498,6 +496,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingYY", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
@@ -553,6 +552,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingZZ", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
@@ -608,6 +608,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRX", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
@@ -664,6 +665,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRY", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
@@ -720,6 +722,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRZ", "[MPSTNCuda_param]", float,
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
@@ -775,6 +778,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitation", "[MPSTNCuda_param]",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
@@ -833,6 +837,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationMinus",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.34958337, -0.05283436}),
             std::vector<cp_t>(1 << num_qubits, {0.34958337, -0.05283436}),
@@ -891,6 +896,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
             std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
@@ -948,6 +954,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitation", "[MPSTNCuda_param]",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.1767767, 0.0}),
             std::vector<cp_t>(1 << num_qubits, {0.1767767, 0.0}),
@@ -1008,6 +1015,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationMinus",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641718}),
             std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641718}),
@@ -1068,6 +1076,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationPlus",
 
         const std::vector<TestType> angles = {0.3};
 
+        // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641718}),
             std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641718}),
