@@ -65,7 +65,8 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
      *
      * @param host_tensor Complex data pointer to receive data from device.
      * @param length Number of elements to copy.
-     * @param async If true, the copy is asynchronous.
+     * @param async If true, the copy is asynchronous. Only synchronous copy is
+     * supported now.
      */
     inline void CopyGpuDataToHost(std::complex<PrecisionT> *host_tensor,
                                   std::size_t length,

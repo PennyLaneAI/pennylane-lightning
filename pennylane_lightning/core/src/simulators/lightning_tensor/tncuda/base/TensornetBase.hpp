@@ -27,10 +27,10 @@ namespace Pennylane::LightningTensor::TNCuda {
 /**
  * @brief CRTP-enabled base class for cutensornet.
  *
- * @tparam Precision Floating point precision.
+ * @tparam PrecisionT Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
  */
-template <class Precision, class Derived> class TensornetBase {
+template <class PrecisionT, class Derived> class TensornetBase {
   private:
     std::size_t numQubits_;
     std::vector<std::size_t> qubitDims_;

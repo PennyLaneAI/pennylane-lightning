@@ -96,7 +96,7 @@ template <class PrecisionT> class TNCudaGateCache {
 
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
                   const std::vector<CFP_t> &gate_data_host) {
-        std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
+        const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
         auto extents = std::vector<std::size_t>(rank, 2);
 
