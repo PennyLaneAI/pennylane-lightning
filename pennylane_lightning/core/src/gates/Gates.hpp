@@ -482,7 +482,7 @@ row-major format.
  */
 template <template <typename...> class ComplexT, typename T>
 static auto getCRot(T phi, T theta, T omega) -> std::vector<ComplexT<T>> {
-    const auto rot{std::move(getRot<ComplexT, T>(phi, theta, omega))};
+    const auto rot{getRot<ComplexT, T>(phi, theta, omega)};
     return {ONE<ComplexT, T>(),
             ZERO<ComplexT, T>(),
             ZERO<ComplexT, T>(),
