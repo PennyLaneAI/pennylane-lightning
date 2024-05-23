@@ -87,7 +87,7 @@ jobs:
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo -y
-            dnf -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
+            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
