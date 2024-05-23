@@ -223,11 +223,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional gate matrix for custom gates.
      */
-
-    void applyOperation(
-        const std::string &opName, const std::vector<std::size_t> &wires,
-        bool adjoint = false, const std::vector<PrecisionT> &params = {0.0},
-        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false,
+                        const std::vector<PrecisionT> &params = {0.0},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
         DataBuffer<PrecisionT, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
