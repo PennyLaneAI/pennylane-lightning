@@ -173,6 +173,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * name.
      * @param ops_adjoint Indicates whether gate at matched index is to be
      * inverted.
+     * @param ops_params Vector of parameters for gates.
      */
     void
     applyOperations(const std::vector<std::string> &ops,
@@ -231,11 +232,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional gate matrix for custom gates.
      */
-
-    void applyOperation(
-        const std::string &opName, const std::vector<std::size_t> &wires,
-        bool adjoint = false, const std::vector<PrecisionT> &params = {0.0},
-        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false,
+                        const std::vector<PrecisionT> &params = {0.0},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
         DataBuffer<PrecisionT, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
@@ -421,7 +422,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         // TODO we assign half (magic number is) of free memory size to the
         // maximum memory usage.
-        std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -432,7 +433,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::size_t worksize = getWorkSpaceMemorySize(workDesc);
 
-        PL_ABORT_IF(std::size_t(worksize) > scratchSize,
+        PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
 
         const std::size_t d_scratch_length = worksize / sizeof(std::size_t);

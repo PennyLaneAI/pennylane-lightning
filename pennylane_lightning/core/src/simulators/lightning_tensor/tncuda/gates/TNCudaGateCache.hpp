@@ -71,10 +71,11 @@ template <class PrecisionT> class TNCudaGateCache {
      *
      * @param gate_id The id of gate tensor operator in the computate graph.
      * @param gate_name String representing the name of the given gate.
-     * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
+     * @param gate_param Vector of parameter values. `{}` if non-parametric
+     * gate.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
-                  [[maybe_unused]] std::vector<PrecisionT> gate_param) {
+                  [[maybe_unused]] std::vector<PrecisionT> gate_param = {}) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         auto &gateMap =
@@ -96,7 +97,7 @@ template <class PrecisionT> class TNCudaGateCache {
 
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
                   const std::vector<CFP_t> &gate_data_host) {
-        std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
+        const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
         auto extents = std::vector<std::size_t>(rank, 2);
 
@@ -134,6 +135,9 @@ template <class PrecisionT> class TNCudaGateCache {
         }
     };
 
+    // device_gates_ is a map of id of gate tensor operator in the graph to the
+    // gate_info and gate_info is a pair of gate_info_key, which contains both
+    // gate name and parameter value, and the tensor data on device.
     std::unordered_map<std::size_t, gate_info, gate_info_hash> device_gates_;
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Gates
