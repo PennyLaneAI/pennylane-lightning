@@ -262,7 +262,7 @@ class TestExecution:
         expected_program.add_transform(
             mid_circuit_measurements,
             device=device,
-            mcm_config={"postselect_shots": None, "mcm_method": None},
+            mcm_config={"postselect_mode": None, "mcm_method": None},
         )
         expected_program.add_transform(
             decompose,
