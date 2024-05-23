@@ -28,11 +28,14 @@
 #include "ObservablesTNCuda.hpp"
 #include "ObservablesTNCudaOperator.hpp"
 
+#include "tncuda_helpers.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 using namespace Pennylane::Util;
 } // namespace
 /// @endcond
@@ -50,6 +53,7 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
 template <class StateTensorT> class Measurements {
   private:
     using PrecisionT = typename StateTensorT::PrecisionT;
+    using ComplexT = typename StateTensorT::ComplexT;
 
     StateTensorT &state_tensor_;
 
@@ -58,16 +62,82 @@ template <class StateTensorT> class Measurements {
         : state_tensor_(state_tensor){};
 
     /**
-     * @brief Calculate expectation value for a general Observable represented
-     * by an ObservableTNCudaOperator object.
+     * @brief Calculate expectation value for a general Observable.
      *
-     * @param ob Observable operator.
+     * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
     auto expval(ObservableTNCuda<StateTensorT> &ob) -> PrecisionT {
         auto tnoperator =
             ObservableTNCudaOperator<StateTensorT>(state_tensor_, ob);
-        return state_tensor_.expval(tnoperator.getTNOperator()).real();
+
+        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
+
+        cutensornetStateExpectation_t expectation;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
+            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* cutensornetState_t */ state_tensor_.getQuantumState(),
+            /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
+            /* cutensornetStateExpectation_t * */ &expectation));
+
+        // Configure the computation of the specified quantum circuit
+        // expectation value
+        const int32_t numHyperSamples = 10;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
+            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetExpectationAttributes_t */
+            CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
+            /* const void * */ &numHyperSamples,
+            /* size_t */ sizeof(numHyperSamples)));
+
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
+
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        // Prepare the specified quantum circuit expectation value for
+        // computation
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
+            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cudaStream_t [unused] */ 0x0));
+
+        std::size_t worksize =
+            getWorkSpaceMemorySize(state_tensor_.getTNCudaHandle(), workDesc);
+
+        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+                    "Insufficient workspace size on Device.\n");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<size_t, int> d_scratch(d_scratch_length,
+                                          state_tensor_.getDevTag(), true);
+
+        setWorkSpaceMemory(state_tensor_.getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
+            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* cutensornetStateExpectation_t */ expectation,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* void* */ static_cast<void *>(&expectVal),
+            /* void* */ static_cast<void *>(&stateNorm2),
+            /* cudaStream_t unused */ 0x0));
+
+        expectVal /= stateNorm2;
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
+
+        return expectVal.real();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Measures

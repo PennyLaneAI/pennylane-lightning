@@ -339,7 +339,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
 
-        std::size_t worksize = getWorkSpaceMemorySize(workDesc);
+        std::size_t worksize =
+            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
 
         PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
                     "Insufficient workspace size on Device.\n");
@@ -347,8 +348,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
         DataBuffer<size_t, int> d_scratch(d_scratch_length, getDevTag(), true);
 
-        setWorkSpaceMemory(
-            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -368,48 +370,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
   protected:
-    /**
-     * @brief Returns the workspace size.
-     *
-     * @return std::size_t
-     */
-    std::size_t
-    getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
-        int64_t worksize{0};
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetWorksizePref_t */
-            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /*  int64_t * */ &worksize));
-
-        // Ensure data is aligned by 256 bytes
-        worksize += int64_t{256} - worksize % int64_t{256};
-
-        return static_cast<std::size_t>(worksize);
-    }
-
-    /**
-     * @brief Set memory for a workspace.
-     *
-     * @param workDesc cutensornet work space descriptor
-     * @param scratchPtr Pointer to scratch memory
-     * @param worksize Memory size of a work space
-     */
-    void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                            void *scratchPtr, std::size_t &worksize) {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* void *const */ scratchPtr,
-            /* int64_t */ static_cast<int64_t>(worksize)));
-    }
-
     /**
      * @brief Save quantumState information to data provided by a user
      *
@@ -431,7 +391,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
-        std::size_t worksize = getWorkSpaceMemorySize(workDesc);
+        std::size_t worksize =
+            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -440,8 +401,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
                                                true);
 
-        setWorkSpaceMemory(
-            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
