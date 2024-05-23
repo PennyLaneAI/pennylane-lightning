@@ -55,6 +55,9 @@
 * Remove the Autoray dependency from requirement files.
   [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
+* Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
+  [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
