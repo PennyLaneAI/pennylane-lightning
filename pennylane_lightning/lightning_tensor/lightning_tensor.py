@@ -66,9 +66,7 @@ class LightningTensor(Device):
             statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments. The following options are supported:
-
-            # TODO add when cuTensorNet MPS backend is available as a prototype
+        **kwargs: keyword arguments. TODO add when cuTensorNet MPS backend is available as a prototype.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -104,6 +102,8 @@ class LightningTensor(Device):
         self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
+
+        self._interface = None
 
         for arg in kwargs:
             if arg not in self._device_options:
