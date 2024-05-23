@@ -28,7 +28,7 @@ using Pennylane::Util::LightningException;
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
     using StateTensorT = TestType;
-    using NamedObsT = NamedObs<StateTensorT>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
     SECTION("Test get obs name") {
         auto obs = NamedObsT("PauliX", {0});
@@ -42,7 +42,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
         using ComplexT = typename StateTensorT::ComplexT;
-        using HermitianObsT = HermitianObs<StateTensorT>;
+        using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
 
         std::vector<ComplexT> mat = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
@@ -58,36 +58,39 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
 TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
+        using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
+        using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
 
         SECTION("Test get obs name") {
-            auto H0 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{0});
-            auto H1 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{1});
-            auto H2 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{2});
+            auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                                  std::vector<std::size_t>{0});
+            auto H1 = std::make_shared<NamedObsT>("Hadamard",
+                                                  std::vector<std::size_t>{1});
+            auto H2 = std::make_shared<NamedObsT>("Hadamard",
+                                                  std::vector<std::size_t>{2});
 
-            auto obs = TensorProdObs<StateTensorT>::create({H0, H1});
+            auto obs = TensorProdObsT::create({H0, H1});
 
             CHECK(obs->getObsName() == "Hadamard[0] @ Hadamard[1]");
             CHECK(obs->getWires() == std::vector<std::size_t>{0, 1});
             CHECK(obs->getNumTensors() == std::vector<size_t>{2});
 
-            REQUIRE_THROWS_WITH(TensorProdObs<StateTensorT>::create({obs}),
+            REQUIRE_THROWS_WITH(TensorProdObsT::create({obs}),
                                 Catch::Matchers::Contains(
                                     "A new TensorProdObs observable cannot be "
                                     "created from a single TensorProdObs."));
 
             REQUIRE_THROWS_WITH(
-                TensorProdObs<StateTensorT>::create({obs, H2}),
+                TensorProdObsT::create({obs, H2}),
                 Catch::Matchers::Contains("A TensorProdObs observable cannot "
                                           "be created from a TensorProdObs"));
 
-            auto ham_obs = Hamiltonian<StateTensorT>::create(
-                {{1.0}, {1.0}, {1.0}}, {H0, H1, H2});
+            auto ham_obs =
+                HamiltonianObsT::create({{1.0}, {1.0}, {1.0}}, {H0, H1, H2});
 
             REQUIRE_THROWS_WITH(
-                TensorProdObs<StateTensorT>::create({ham_obs, H2}),
+                TensorProdObsT::create({ham_obs, H2}),
                 Catch::Matchers::Contains("A TensorProdObs observable cannot "
                                           "be created from a Hamiltonian"));
         }
@@ -97,15 +100,16 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
+        using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
 
         SECTION("Test get obs name") {
-            auto H0 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{0});
-            auto H1 = std::make_shared<NamedObs<StateTensorT>>(
-                "Hadamard", std::vector<std::size_t>{1});
+            auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                                  std::vector<std::size_t>{0});
+            auto H1 = std::make_shared<NamedObsT>("Hadamard",
+                                                  std::vector<std::size_t>{1});
 
-            auto ham_obs =
-                Hamiltonian<StateTensorT>::create({{1.0}, {1.0}}, {H0, H1});
+            auto ham_obs = HamiltonianObsT::create({{1.0}, {1.0}}, {H0, H1});
 
             CHECK(ham_obs->getWires() == std::vector<std::size_t>{0, 1});
 

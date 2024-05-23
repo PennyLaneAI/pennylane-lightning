@@ -55,7 +55,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  *
  * @tparam StateTensorT State tensor class.
  */
-template <class StateTensorT> class Observable {
+template <class StateTensorT> class ObservableTNCuda {
   public:
     using CFP_t = typename StateTensorT::CFP_t;
     using PrecisionT = typename StateTensorT::PrecisionT;
@@ -71,14 +71,14 @@ template <class StateTensorT> class Observable {
     vector3D<CFP_t> data_; // data of each tensor in each term on host
 
   protected:
-    Observable() = default;
-    Observable(const Observable &) = default;
-    Observable(Observable &&) noexcept = default;
-    Observable &operator=(const Observable &) = default;
-    Observable &operator=(Observable &&) noexcept = default;
+    ObservableTNCuda() = default;
+    ObservableTNCuda(const ObservableTNCuda &) = default;
+    ObservableTNCuda(ObservableTNCuda &&) noexcept = default;
+    ObservableTNCuda &operator=(const ObservableTNCuda &) = default;
+    ObservableTNCuda &operator=(ObservableTNCuda &&) noexcept = default;
 
   public:
-    virtual ~Observable() = default;
+    virtual ~ObservableTNCuda() = default;
 
     /**
      * @brief Get the name of the observable
@@ -134,7 +134,8 @@ template <class StateTensorT> class Observable {
  *
  * @tparam StateTensorT State tensor class.
  */
-template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
+template <class StateTensorT>
+class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
@@ -146,14 +147,15 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
 
   public:
     /**
-     * @brief Construct a NamedObs object, representing a given observable.
+     * @brief Construct a NamedObsTNCuda object, representing a given
+     * observable.
      *
      * @param obs_name Name of the observable.
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObs(std::string obs_name, std::vector<std::size_t> wires,
-             std::vector<PrecisionT> params = {})
+    NamedObsTNCuda(std::string obs_name, std::vector<std::size_t> wires,
+                   std::vector<PrecisionT> params = {})
         : obs_name_{obs_name}, wires_{wires}, params_{params} {
         this->coeffs_.push_back(PrecisionT{1.0});
         this->numTensors_.push_back(std::size_t{1});
@@ -185,7 +187,7 @@ template <class StateTensorT> class NamedObs : public Observable<StateTensorT> {
  * @tparam StateTensorT State tensor class.
  */
 template <class StateTensorT>
-class HermitianObs : public Observable<StateTensorT> {
+class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
@@ -203,7 +205,7 @@ class HermitianObs : public Observable<StateTensorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
+    HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         this->coeffs_.push_back(PrecisionT{1.0});
         this->numTensors_.push_back(std::size_t{1});
@@ -234,14 +236,14 @@ class HermitianObs : public Observable<StateTensorT> {
  * @tparam StateTensorT State tensor class.
  */
 template <class StateTensorT>
-class TensorProdObs : public Observable<StateTensorT> {
+class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
 
   protected:
-    std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
+    std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
     std::vector<std::size_t> all_wires_;
 
   public:
@@ -251,7 +253,7 @@ class TensorProdObs : public Observable<StateTensorT> {
      * @param arg Arguments perfect forwarded to vector of observables.
      */
     template <typename... Ts>
-    explicit TensorProdObs(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
+    explicit TensorProdObsTNCuda(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
         if (obs_.size() == 1 &&
             obs_[0]->getObsName().find('@') != std::string::npos) {
             // This would prevent the misuse of this constructor for creating
@@ -313,11 +315,11 @@ class TensorProdObs : public Observable<StateTensorT> {
      * @param obs List of observables
      * @return std::shared_ptr<TensorProdObs<StateTensorT>>
      */
-    static auto
-    create(std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
-        -> std::shared_ptr<TensorProdObs<StateTensorT>> {
-        return std::shared_ptr<TensorProdObs<StateTensorT>>{
-            new TensorProdObs(std::move(obs))};
+    static auto create(
+        std::initializer_list<std::shared_ptr<ObservableTNCuda<StateTensorT>>>
+            obs) -> std::shared_ptr<TensorProdObsTNCuda<StateTensorT>> {
+        return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>{
+            new TensorProdObsTNCuda(std::move(obs))};
     }
 
     /**
@@ -328,13 +330,13 @@ class TensorProdObs : public Observable<StateTensorT> {
      * brace-enclosed initializer list correctly.
      *
      * @param obs List of observables
-     * @return std::shared_ptr<TensorProdObs<StateTensorT>>
+     * @return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>
      */
     static auto
-    create(std::vector<std::shared_ptr<Observable<StateTensorT>>> obs)
-        -> std::shared_ptr<TensorProdObs<StateTensorT>> {
-        return std::shared_ptr<TensorProdObs<StateTensorT>>{
-            new TensorProdObs(std::move(obs))};
+    create(std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs)
+        -> std::shared_ptr<TensorProdObsTNCuda<StateTensorT>> {
+        return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>{
+            new TensorProdObsTNCuda(std::move(obs))};
     }
 
     /**
@@ -376,7 +378,7 @@ class TensorProdObs : public Observable<StateTensorT> {
  * @tparam StateTensorT State tensor class.
  */
 template <class StateTensorT>
-class Hamiltonian : public Observable<StateTensorT> {
+class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
@@ -384,7 +386,7 @@ class Hamiltonian : public Observable<StateTensorT> {
 
   private:
     std::vector<PrecisionT> coeffs_ham_;
-    std::vector<std::shared_ptr<Observable<StateTensorT>>> obs_;
+    std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
 
   public:
     /**
@@ -394,7 +396,7 @@ class Hamiltonian : public Observable<StateTensorT> {
      * @param obs Arguments to construct observables
      */
     template <typename T1, typename T2>
-    Hamiltonian(T1 &&coeffs, T2 &&obs)
+    HamiltonianTNCuda(T1 &&coeffs, T2 &&obs)
         : coeffs_ham_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
         PL_ASSERT(coeffs_ham_.size() == obs_.size());
 
@@ -438,12 +440,13 @@ class Hamiltonian : public Observable<StateTensorT> {
      * @param obs Arguments to construct observables
      * @return std::shared_ptr<Hamiltonian<StateTensorT>>
      */
-    static auto
-    create(std::initializer_list<PrecisionT> coeffs,
-           std::initializer_list<std::shared_ptr<Observable<StateTensorT>>> obs)
-        -> std::shared_ptr<Hamiltonian<StateTensorT>> {
-        return std::shared_ptr<Hamiltonian<StateTensorT>>(
-            new Hamiltonian<StateTensorT>{std::move(coeffs), std::move(obs)});
+    static auto create(
+        std::initializer_list<PrecisionT> coeffs,
+        std::initializer_list<std::shared_ptr<ObservableTNCuda<StateTensorT>>>
+            obs) -> std::shared_ptr<HamiltonianTNCuda<StateTensorT>> {
+        return std::shared_ptr<HamiltonianTNCuda<StateTensorT>>(
+            new HamiltonianTNCuda<StateTensorT>{std::move(coeffs),
+                                                std::move(obs)});
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {

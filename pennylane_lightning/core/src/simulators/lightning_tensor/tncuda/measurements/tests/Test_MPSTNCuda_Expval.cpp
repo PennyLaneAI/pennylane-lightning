@@ -36,6 +36,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 
 TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
     using StateTensorT = MPSTNCuda<TestType>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
     auto ONE = TestType(1);
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
@@ -51,7 +52,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
         mps_state.get_final_state();
-        auto ob = NamedObs<StateTensorT>("Identity", {0});
+        auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
     }
@@ -60,6 +61,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
 TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
@@ -77,7 +79,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob = NamedObs<StateTensorT>("PauliX", {0});
+            auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
@@ -87,7 +89,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob = NamedObs<StateTensorT>("PauliX", {0});
+            auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
@@ -103,7 +105,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob = NamedObs<StateTensorT>("PauliX", {0});
+            auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
@@ -113,6 +115,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
 TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
@@ -130,7 +133,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            auto ob = NamedObs<StateTensorT>("PauliY", {0});
+            auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
@@ -139,7 +142,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                       {{false}, {false}, {false}},
                                       {{-PI / 2}, {-PI / 2}, {-PI / 2}});
-            auto ob = NamedObs<StateTensorT>("PauliY", {0});
+            auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
@@ -148,7 +151,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                       {{false}, {false}, {false}},
                                       {{PI / 2}, {PI / 2}, {PI / 2}});
-            auto ob = NamedObs<StateTensorT>("PauliY", {0});
+            auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
@@ -180,6 +183,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float,
 TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
@@ -199,11 +203,11 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperation("PauliX", {0});
             mps_state.get_final_state();
 
-            auto ob = NamedObs<StateTensorT>("Hadamard", {0});
+            auto ob = NamedObsT("Hadamard", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(-INVSQRT2).epsilon(1e-7));
 
-            auto ob1 = NamedObs<StateTensorT>("Identity", {0});
+            auto ob1 = NamedObsT("Identity", {0});
             auto res1 = measure.expval(ob1);
             CHECK(res1 == Approx(ONE));
         }
@@ -214,6 +218,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
         using ComplexT = typename StateTensorT::ComplexT;
+        using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
@@ -234,8 +239,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob =
-                HermitianObs<StateTensorT>(mat, std::vector<std::size_t>{0});
+            auto ob = HermitianObsT(mat, std::vector<std::size_t>{0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
@@ -245,7 +249,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob = HermitianObs<StateTensorT>(mat, {0});
+            auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
@@ -261,7 +265,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
             mps_state.get_final_state();
-            auto ob = HermitianObs<StateTensorT>(mat, {0});
+            auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
         }
@@ -271,6 +275,8 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
                    "[MPSTNCuda_Expval]", float, double) {
     using StateTensorT = MPSTNCuda<TestType>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
+    using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
     auto ZERO = TestType(0);
     auto INVSQRT2 = TestType(0.707106781186547524401);
     SECTION("Using XZ") {
@@ -285,12 +291,12 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 
         auto m = Measurements<StateTensorT>(mps_state);
 
-        auto X0 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliX", std::vector<std::size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliZ", std::vector<std::size_t>{1});
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
 
-        auto ob = TensorProdObs<StateTensorT>::create({X0, Z1});
+        auto ob = TensorProdObsT::create({X0, Z1});
         auto res = m.expval(*ob);
         CHECK(res == Approx(ZERO));
     }
@@ -307,14 +313,14 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 
         auto m = Measurements<StateTensorT>(mps_state);
 
-        auto H0 = std::make_shared<NamedObs<StateTensorT>>(
-            "Hadamard", std::vector<std::size_t>{0});
-        auto H1 = std::make_shared<NamedObs<StateTensorT>>(
-            "Hadamard", std::vector<std::size_t>{1});
-        auto H2 = std::make_shared<NamedObs<StateTensorT>>(
-            "Hadamard", std::vector<std::size_t>{2});
+        auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{0});
+        auto H1 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{1});
+        auto H2 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{2});
 
-        auto ob = TensorProdObs<StateTensorT>::create({H0, H1, H2});
+        auto ob = TensorProdObsT::create({H0, H1, H2});
         auto res = m.expval(*ob);
         CHECK(res == Approx(INVSQRT2 / 2));
     }
@@ -323,6 +329,8 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
                    "[MPSTNCuda_Expval]", float, double) {
     using StateTensorT = MPSTNCuda<TestType>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
+    using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
     auto ONE = TestType(1);
     SECTION("Using XZ") {
         std::size_t bondDim = GENERATE(2);
@@ -336,13 +344,12 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
 
         auto m = Measurements<StateTensorT>(mps_state);
 
-        auto X0 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliX", std::vector<std::size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliZ", std::vector<std::size_t>{1});
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
 
-        auto ob = Hamiltonian<StateTensorT>::create({TestType{1}, TestType{1}},
-                                                    {X0, Z1});
+        auto ob = HamiltonianObsT::create({TestType{1}, TestType{1}}, {X0, Z1});
         auto res = m.expval(*ob);
         CHECK(res == Approx(ONE));
     }
@@ -352,6 +359,8 @@ TEMPLATE_TEST_CASE(
     "Test expectation value of HamiltonianObs created with HamiltonianObs",
     "[MPSTNCuda_Expval]", float, double) {
     using StateTensorT = MPSTNCuda<TestType>;
+    using NamedObsT = NamedObsTNCuda<StateTensorT>;
+    using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
     auto ONE = TestType(1);
     SECTION("Using XZ") {
         std::size_t bondDim = GENERATE(2);
@@ -365,17 +374,17 @@ TEMPLATE_TEST_CASE(
 
         auto m = Measurements<StateTensorT>(mps_state);
 
-        auto X0 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliX", std::vector<std::size_t>{0});
-        auto Z1 = std::make_shared<NamedObs<StateTensorT>>(
-            "PauliZ", std::vector<std::size_t>{1});
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
 
-        auto ob0 = Hamiltonian<StateTensorT>::create({TestType(0.5)}, {X0});
+        auto ob0 = HamiltonianObsT::create({TestType(0.5)}, {X0});
 
-        auto ob1 = Hamiltonian<StateTensorT>::create({TestType(0.5)}, {Z1});
+        auto ob1 = HamiltonianObsT::create({TestType(0.5)}, {Z1});
 
-        auto ob = Hamiltonian<StateTensorT>::create(
-            {TestType(0.5), TestType(0.5)}, {ob0, ob1});
+        auto ob =
+            HamiltonianObsT::create({TestType(0.5), TestType(0.5)}, {ob0, ob1});
         auto res = m.expval(*ob);
         CHECK(res == Approx(ONE / 4));
     }

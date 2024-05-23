@@ -93,7 +93,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
   public:
     ObservableTNCudaOperator(const StateTensorT &state_tensor,
-                             Observable<StateTensorT> &obs)
+                             ObservableTNCuda<StateTensorT> &obs)
         : state_tensor_{state_tensor},
           numObsTerms_(obs.getNumTensors().size()) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
