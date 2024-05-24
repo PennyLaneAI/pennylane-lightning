@@ -46,7 +46,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         exec_model: ["CUDA"]
-        kokkos_version: ["${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.2.00' }}"] #To be updated next Release.
+        kokkos_version: ["'4.2.00'"] #To be updated next Release.
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -110,7 +110,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos", "all"]
         exec_model: ["CUDA"]
-        kokkos_version: ["${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.2.00' }}"] #To be updated next Release.
+        kokkos_version: ["'4.2.00'"] #To be updated next Release.
 
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
