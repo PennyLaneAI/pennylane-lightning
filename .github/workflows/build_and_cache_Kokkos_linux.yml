@@ -20,7 +20,7 @@ on:
       kokkos_version:
         required: false
         type: string
-        default: 4.3.01
+        default: 4.2.00
     outputs:
       exec_model:
         description: "The execution model for Kokkos."

@@ -5,7 +5,7 @@
 # Include this file only once
 include_guard()
 
-set(KOKKOS_VERSION 4.3.01)
+set(KOKKOS_VERSION 4.2.00)
 
 # Macro to aid in finding Kokkos with 3 potential install options:
 # 1. Fully integrated Kokkos packages and CMake module files

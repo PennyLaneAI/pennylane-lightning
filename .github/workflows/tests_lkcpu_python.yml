@@ -48,7 +48,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
-      kokkos_version: ${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.3.01' }} #To be updated next Release.
+      kokkos_version: ${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.2.00' }} #To be updated next Release.
 
   build_lightning_kokkos_wheels:
     needs: [determine_runner, build_and_cache_Kokkos]

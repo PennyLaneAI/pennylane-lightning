@@ -23,7 +23,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::kokkos_swap;
+using Kokkos::Experimental::swap;
 using Pennylane::Gates::GeneratorOperation;
 } // namespace
 /// @endcond
@@ -76,7 +76,7 @@ void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       const std::size_t i10, const std::size_t i11) {
             arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
             arr(i01) = ZERO<Kokkos::complex, PrecisionT>();
-            kokkos_swap(arr(i10), arr(i11));
+            Kokkos::Experimental::swap(arr(i10), arr(i11));
         });
 }
 
@@ -129,8 +129,8 @@ void applyGenIsingXX(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            kokkos_swap(arr(i00), arr(i11));
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i00), arr(i11));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
         });
 }
 
@@ -145,7 +145,7 @@ void applyGenIsingXY(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
             arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
             arr(i11) = ZERO<Kokkos::complex, PrecisionT>();
         });
@@ -165,7 +165,7 @@ void applyGenIsingYY(
             const auto v00 = arr(i00);
             arr(i00) = -arr(i11);
             arr(i11) = -v00;
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
         });
 }
 
@@ -201,7 +201,7 @@ void applyGenSingleExcitation(
             arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
             arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
             arr(i11) = ZERO<Kokkos::complex, PrecisionT>();
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
         });
 }
 
@@ -219,7 +219,7 @@ void applyGenSingleExcitationMinus(
                       [[maybe_unused]] const std::size_t i11) {
             arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
             arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
         });
 }
 
@@ -239,7 +239,7 @@ void applyGenSingleExcitationPlus(
             arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
             arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
             arr(i11) *= -1;
-            kokkos_swap(arr(i10), arr(i01));
+            Kokkos::Experimental::swap(arr(i10), arr(i01));
         });
 }
 
@@ -307,7 +307,7 @@ void applyGenDoubleExcitationMinus(
             [[maybe_unused]] const std::size_t i1111) {
             arr(i0011) *= IMAG<Kokkos::complex, PrecisionT>();
             arr(i1100) *= -IMAG<Kokkos::complex, PrecisionT>();
-            kokkos_swap(arr(i1100), arr(i0011));
+            Kokkos::Experimental::swap(arr(i1100), arr(i0011));
         });
 }
 
@@ -337,7 +337,7 @@ void applyGenDoubleExcitationPlus(
             [[maybe_unused]] const std::size_t i1111) {
             arr(i0011) *= -IMAG<Kokkos::complex, PrecisionT>();
             arr(i1100) *= IMAG<Kokkos::complex, PrecisionT>();
-            kokkos_swap(arr(i1100), arr(i0011));
+            Kokkos::Experimental::swap(arr(i1100), arr(i0011));
         });
 }
 
