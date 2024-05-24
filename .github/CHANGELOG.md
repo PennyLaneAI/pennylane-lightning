@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Removed the `QuimbMPS` class and the corresponding interface/backend from `lightning.tensor`.
+  [(#737)](https://github.com/PennyLaneAI/pennylane-lightning/pull/737)
+
 * Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
   [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
 
