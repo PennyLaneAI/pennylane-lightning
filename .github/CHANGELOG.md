@@ -39,6 +39,9 @@
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
 
+* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Documentation
 
 ### Bug fixes
@@ -50,7 +53,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Mudit Pandey, Shuli Shu
 
 ---
 
