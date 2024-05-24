@@ -248,11 +248,9 @@ template <typename PrecisionT, class GateImplementation> void testApplySX() {
     using ComplexT = std::complex<PrecisionT>;
     const size_t num_qubits = 3;
 
-    ComplexT z(0.0, 0.0);
-    // ComplexT p(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(0.5));
-    // ComplexT m(static_cast<PrecisionT>(0.5),static_cast<PrecisionT>(-0.5));
-    ComplexT p(0.5, 0.5);
-    ComplexT m(0.5, -0.5);
+    constexpr ComplexT z(0.0, 0.0);
+    constexpr ComplexT p(0.5, 0.5);
+    constexpr ComplexT m(0.5, -0.5);
 
     const std::vector<std::vector<ComplexT>> expected_results = {
         {p, z, z, z, m, z, z, z},
@@ -824,6 +822,28 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                                       std::vector<bool>{true},
                                       std::vector<std::size_t>{wire});
             sv1.applyOperation("T", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+    DYNAMIC_SECTION("N-controlled SX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            const std::vector<std::complex<PrecisionT>> matrix =
+                getSX<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(matrix, std::vector<std::size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<std::size_t>{wire});
+            sv1.applyOperation("SX", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==

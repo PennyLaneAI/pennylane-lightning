@@ -895,7 +895,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
               const std::vector<size_t> &wires, const bool inverse) {
         using ParamT = PrecisionT;
 
-        const PrecisionT half = 0.5;
+        constexpr PrecisionT half = 0.5;
         const std::complex<PrecisionT> z0{half, (inverse) ? -half : half};
         const std::complex<PrecisionT> z1 = std::conj(z0);
 

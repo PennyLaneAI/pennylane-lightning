@@ -104,14 +104,15 @@ static constexpr auto getHadamard() -> std::vector<ComplexT<T>> {
  * @brief Create a matrix representation of the SX gate data in row-major
  * format.
  *
- * @tparam ComplexT<T> Required precision of gate (`float` or `double`).
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
  * @return constexpr std::vector<ComplexT<T>> Return constant expression
  * of SX data.
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getSX() -> std::vector<ComplexT<T>> {
-    const ComplexT<T> z0{0.5, 0.5};
-    const ComplexT<T> z1{0.5, -0.5};
+    constexpr ComplexT<T> z0{0.5, 0.5};
+    constexpr ComplexT<T> z1{0.5, -0.5};
     return {z0, z1, z1, z0};
 }
 
