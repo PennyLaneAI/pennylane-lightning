@@ -53,8 +53,9 @@ using namespace Pennylane::Util;
     template <typename PrecisionT, class GateImplementation>                   \
     struct Apply##GATE_NAME##IsDefined<                                        \
         PrecisionT, GateImplementation,                                        \
-        std::enable_if_t<std::is_pointer_v<decltype(                           \
-            &GateImplementation::template apply##GATE_NAME<PrecisionT>)>>> {   \
+        std::enable_if_t<std::is_pointer_v<                                    \
+            decltype(&GateImplementation::template apply##GATE_NAME<           \
+                     PrecisionT>)>>> {                                         \
         constexpr static bool value = true;                                    \
     };                                                                         \
     template <typename PrecisionT, typename TypeList>                          \
