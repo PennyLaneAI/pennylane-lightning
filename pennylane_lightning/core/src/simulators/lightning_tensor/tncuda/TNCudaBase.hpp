@@ -190,8 +190,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
         for (std::size_t i = 0; i < numOperations; i++) {
-            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
-                                 ops_params[i]);
+            applyOperation(ops[i], ops_wires[i], ops_adjoint[i], ops_params[i]);
         }
     }
 
@@ -218,7 +217,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
         for (std::size_t i = 0; i < numOperations; i++) {
-            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
+            applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
         }
     }
 
@@ -265,11 +264,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
         if (!gate_matrix.empty()) {
-            std::vector<CFP_t> matrix_cu(gate_matrix.size());
-            std::transform(gate_matrix.begin(), gate_matrix.end(),
-                           matrix_cu.begin(), [](const ComplexT &x) {
-                               return cuUtil::complexToCu<ComplexT>(x);
-                           });
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
             auto gate_key = std::make_pair(opName, par);
             gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
                                   matrix_cu);
@@ -288,7 +284,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
     /**
      * @brief Get final state of the quantum circuit.
-     * NOTE: This function does not only work for the MPS approximation.
+     * NOTE: This function only works for the MPS approximation.
      */
     void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
 

@@ -81,10 +81,9 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
                                     "A new TensorProdObs observable cannot be "
                                     "created from a single TensorProdObs."));
 
-            REQUIRE_THROWS_WITH(
-                TensorProdObsT::create({obs, H2}),
-                Catch::Matchers::Contains("A TensorProdObs observable cannot "
-                                          "be created from a TensorProdObs"));
+            auto tnprodobs = TensorProdObsT::create({obs, H2});
+            CHECK(tnprodobs->getObsName() ==
+                  "Hadamard[0] @ Hadamard[1] @ Hadamard[2]");
 
             auto ham_obs =
                 HamiltonianObsT::create({{1.0}, {1.0}, {1.0}}, {H0, H1, H2});

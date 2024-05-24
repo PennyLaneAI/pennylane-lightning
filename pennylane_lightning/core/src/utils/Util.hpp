@@ -562,4 +562,12 @@ bool is_Hermitian(size_t n, std::size_t lda,
     return true;
 }
 
+template <typename T0, typename T1>
+std::vector<T1> cast_vector(const std::vector<T0> &vec) {
+    std::vector<T1> result(vec.size());
+    std::transform(vec.begin(), vec.end(), result.begin(),
+                   [&](T0 x) { return static_cast<T1>(x); });
+    return result;
+}
+
 } // namespace Pennylane::Util

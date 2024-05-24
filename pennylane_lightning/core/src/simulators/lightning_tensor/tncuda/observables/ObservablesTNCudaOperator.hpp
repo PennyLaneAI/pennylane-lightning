@@ -105,8 +105,8 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
         for (auto &coeff : obs.getCoeffsPerTerm()) {
-            coeffs_.push_back(cuDoubleComplex{static_cast<double>(coeff),
-                                              0.0}); // coeffs initialization
+            coeffs_.emplace_back(cuDoubleComplex{static_cast<double>(coeff),
+                                                 0.0}); // coeffs initialization
         }
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
@@ -115,15 +115,9 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             auto numTensors = numTensors_[term_idx];
 
             // number of state modes of each tensor in each term
-            vector1D<int32_t> local_num_modes_int32(
-                obs.getNumStateModes()[term_idx].size());
 
-            std::transform(obs.getNumStateModes()[term_idx].begin(),
-                           obs.getNumStateModes()[term_idx].end(),
-                           local_num_modes_int32.begin(),
-                           [](size_t x) { return static_cast<int32_t>(x); });
-
-            numModes_.push_back(local_num_modes_int32);
+            numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
+                obs.getNumStateModes()[term_idx]));
 
             // modes initialization
             vector2D<int32_t> modes_per_term;
@@ -138,17 +132,17 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                                    return static_cast<int32_t>(
                                        state_tensor.getNumQubits() - 1 - x);
                                });
-                modes_per_term.push_back(modes_per_tensor_int32);
+                modes_per_term.emplace_back(modes_per_tensor_int32);
             }
-            modes_.push_back(modes_per_term);
+            modes_.emplace_back(modes_per_term);
 
             // modes pointer initialization
             vector1D<const int32_t *> modesPtrPerTerm;
             for (size_t tensor_idx = 0; tensor_idx < modes_.back().size();
                  tensor_idx++) {
-                modesPtrPerTerm.push_back(modes_.back()[tensor_idx].data());
+                modesPtrPerTerm.emplace_back(modes_.back()[tensor_idx].data());
             }
-            modesPtr_.push_back(modesPtrPerTerm);
+            modesPtr_.emplace_back(modesPtrPerTerm);
 
             // tensor data initialization
             vector1D<TensorCuda<PrecisionT>> tensorDataPerTerm_;
@@ -163,16 +157,16 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                     state_tensor.getDevTag());
             }
 
-            tensorData_.push_back(tensorDataPerTerm_);
+            tensorData_.emplace_back(tensorDataPerTerm_);
 
             vector1D<const void *> tensorDataPtrPerTerm_;
             for (size_t tensor_idx = 0; tensor_idx < tensorData_.back().size();
                  tensor_idx++) {
-                tensorDataPtrPerTerm_.push_back(
+                tensorDataPtrPerTerm_.emplace_back(
                     tensorData_.back()[tensor_idx].getDataBuffer().getData());
             }
 
-            tensorDataPtr_.push_back(tensorDataPtrPerTerm_);
+            tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
 
             appendTNOperator_(coeff, numTensors, numModes_.back().data(),
                               modesPtr_.back().data(),

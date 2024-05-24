@@ -59,6 +59,9 @@ inline SharedTNCudaHandle make_shared_tncuda_handle() {
 /**
  * @brief Returns the workspace size.
  *
+ * @param tncuda_handle cutensornetHandle_t
+ * @param workDesc cutensornetWorkspaceDescriptor_t
+ *
  * @return std::size_t
  */
 inline std::size_t
@@ -84,6 +87,7 @@ getWorkSpaceMemorySize(const cutensornetHandle_t &tncuda_handle,
 /**
  * @brief Set memory for a workspace.
  *
+ * @param tncuda_handle cutensornetHandle_t
  * @param workDesc cutensornet work space descriptor
  * @param scratchPtr Pointer to scratch memory
  * @param worksize Memory size of a work space

@@ -157,16 +157,16 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     NamedObsTNCuda(std::string obs_name, std::vector<std::size_t> wires,
                    std::vector<PrecisionT> params = {})
         : obs_name_{obs_name}, wires_{wires}, params_{params} {
-        this->coeffs_.push_back(PrecisionT{1.0});
-        this->numTensors_.push_back(std::size_t{1});
-        this->numStateModes_.push_back(
+        this->coeffs_.emplace_back(PrecisionT{1.0});
+        this->numTensors_.emplace_back(std::size_t{1});
+        this->numStateModes_.emplace_back(
             vector1D<std::size_t>(std::size_t{1}, wires.size()));
-        this->stateModes_.push_back(
+        this->stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires));
         auto gateData =
             cuGates::DynamicGateDataAccess<PrecisionT>::getInstance()
                 .getGateData(obs_name, params);
-        this->data_.push_back(vector2D<CFP_t>(std::size_t{1}, gateData));
+        this->data_.emplace_back(vector2D<CFP_t>(std::size_t{1}, gateData));
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -207,18 +207,15 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
      */
     HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
-        this->coeffs_.push_back(PrecisionT{1.0});
-        this->numTensors_.push_back(std::size_t{1});
-        this->numStateModes_.push_back(
+        this->coeffs_.emplace_back(PrecisionT{1.0});
+        this->numTensors_.emplace_back(std::size_t{1});
+        this->numStateModes_.emplace_back(
             vector1D<std::size_t>(std::size_t{1}, wires_.size()));
-        this->stateModes_.push_back(
+        this->stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires_));
         // Convert matrix to vector of vector
-        std::vector<CFP_t> matrix_cu(matrix_.size());
-        std::transform(
-            matrix_.begin(), matrix_.end(), matrix_cu.begin(),
-            [](const ComplexT &x) { return cuUtil::complexToCu<ComplexT>(x); });
-        this->data_.push_back(vector2D<CFP_t>(std::size_t{1}, matrix_cu));
+        std::vector<CFP_t> matrix_cu = cuUtil::complexToCu<ComplexT>(matrix_);
+        this->data_.emplace_back(vector2D<CFP_t>(std::size_t{1}, matrix_cu));
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -263,12 +260,6 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
         }
 
         for (const auto &ob : obs_) {
-            PL_ABORT_IF(ob->getObsName().find('@') != std::string::npos,
-                        "A TensorProdObs observable cannot be created from a "
-                        "TensorProdObs.");
-        }
-
-        for (const auto &ob : obs_) {
             PL_ABORT_IF(ob->getObsName().find("Hamiltonian") !=
                             std::string::npos,
                         "A TensorProdObs observable cannot be created from a "
@@ -281,11 +272,18 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
         vector1D<std::size_t> numStateModesLocal;
         vector2D<std::size_t> stateModesLocal;
         vector2D<CFP_t> dataLocal;
+
         for (const auto &ob : obs_) {
-            const auto ob_wires = ob->getWires();
-            numStateModesLocal.emplace_back(ob_wires.size());
-            stateModesLocal.emplace_back(ob_wires);
-            dataLocal.emplace_back(ob->getData().front().front());
+            numStateModesLocal.insert(numStateModesLocal.end(),
+                                      ob->getNumStateModes().front().begin(),
+                                      ob->getNumStateModes().front().end());
+
+            stateModesLocal.insert(stateModesLocal.end(),
+                                   ob->getStateModes().front().begin(),
+                                   ob->getStateModes().front().end());
+
+            dataLocal.insert(dataLocal.end(), ob->getData().front().begin(),
+                             ob->getData().front().end());
         }
 
         this->numStateModes_.emplace_back(numStateModesLocal);
@@ -409,7 +407,7 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
                      sub_term_idx++) {
                     PrecisionT coeff = ob->getCoeffsPerTerm()[sub_term_idx];
                     coeff = coeff * coeffs_ham_[term_idx];
-                    this->coeffs_.push_back(coeff);
+                    this->coeffs_.emplace_back(coeff);
                     this->numTensors_.emplace_back(
                         ob->getNumTensors()[sub_term_idx]);
                     this->numStateModes_.emplace_back(

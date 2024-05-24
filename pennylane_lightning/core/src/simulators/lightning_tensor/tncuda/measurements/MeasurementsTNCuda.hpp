@@ -112,7 +112,7 @@ template <class StateTensorT> class Measurements {
         std::size_t worksize =
             getWorkSpaceMemorySize(state_tensor_.getTNCudaHandle(), workDesc);
 
-        PL_ABORT_IF(static_cast<std::size_t>(worksize) > scratchSize,
+        PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");
 
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;

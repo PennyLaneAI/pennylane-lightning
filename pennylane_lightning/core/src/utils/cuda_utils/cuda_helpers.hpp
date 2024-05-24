@@ -152,6 +152,22 @@ inline static constexpr auto complexToCu(CFP_t a) {
 }
 
 /**
+ * @brief Utility to convert a vector of std::complex types to cuComplex types
+ *
+ * @tparam CFP_t std::complex types.
+ * @param vec A std::vector<std::complex> type.
+ * @return a vector of cuComplex converted vec
+ */
+template <class CFP_t = std::complex<double>>
+inline auto complexToCu(const std::vector<CFP_t> &vec) {
+    using cuCFP_t = decltype(complexToCu(CFP_t{}));
+    std::vector<cuCFP_t> cast_vector(vec.size());
+    std::transform(vec.begin(), vec.end(), cast_vector.begin(),
+                   [&](CFP_t x) { return complexToCu<CFP_t>(x); });
+    return cast_vector;
+}
+
+/**
  * @brief Compile-time scalar complex times complex.
  *
  * @tparam U Precision of complex value `a`.

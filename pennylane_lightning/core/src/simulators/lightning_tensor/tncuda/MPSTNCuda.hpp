@@ -178,8 +178,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "Please ensure all elements of a basis state should be "
                         "either 0 or 1.");
 
-        CFP_t value_cu =
-            Pennylane::LightningGPU::Util::complexToCu<ComplexT>({1.0, 0.0});
+        CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
