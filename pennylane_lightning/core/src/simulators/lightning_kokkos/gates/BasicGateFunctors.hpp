@@ -73,6 +73,7 @@ void applyPauliX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       const std::size_t i0, const std::size_t i1) {
             Kokkos::Experimental::swap(arr(i0), arr(i1));
         });
+}
 
 template <class ExecutionSpace, class PrecisionT>
 void applyPauliY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
