@@ -14,27 +14,23 @@
 
 #pragma once
 
-#include <cuda.h>
 #include <unordered_set>
 #include <vector>
 
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
-#include "TensorCuda.hpp"
 #include "Util.hpp"
 
-#include "cuError.hpp"
 #include "cuGates_host.hpp"
-#include "tncudaError.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using namespace Pennylane::LightningTensor;
+using namespace Pennylane::LightningGPU;
 
 template <class T> using vector1D = std::vector<T>;
-template <class T> using vector2D = std::vector<std::vector<T>>;
-template <class T> using vector3D = std::vector<std::vector<std::vector<T>>>;
+template <class T> using vector2D = std::vector<vector1D<T>>;
+template <class T> using vector3D = std::vector<vector2D<T>>;
 
 } // namespace
 /// @endcond
@@ -213,9 +209,8 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
             vector1D<std::size_t>(std::size_t{1}, wires_.size()));
         this->stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires_));
-        // Convert matrix to vector of vector
-        std::vector<CFP_t> matrix_cu = cuUtil::complexToCu<ComplexT>(matrix_);
-        this->data_.emplace_back(vector2D<CFP_t>(std::size_t{1}, matrix_cu));
+        this->data_.emplace_back(vector2D<CFP_t>(
+            std::size_t{1}, cuUtil::complexToCu<ComplexT>(matrix_)));
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {

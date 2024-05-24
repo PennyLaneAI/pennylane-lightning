@@ -22,7 +22,7 @@ target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE     Catch2::Catch2
 
 ProcessTestOptions(${PL_BACKEND}_gates_tests)
 
-target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_lightning_tensor_gates.cpp)
+target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_${PL_BACKEND}_gates.cpp)
 
 ################################################################################
 # Define targets

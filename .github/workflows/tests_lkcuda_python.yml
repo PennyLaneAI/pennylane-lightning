@@ -10,15 +10,15 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  #pull_request:
-  #  paths-ignore:
-  #    - .github/**
-  #    - '!.github/workflows/tests_lkcuda_python.yml'
-  #    - pennylane_lightning/core/_version.py
-  #    - pennylane_lightning/core/src/simulators/lightning_gpu/**
-  #    - pennylane_lightning/core/src/simulators/lightning_qubit/**
-  #    - pennylane_lightning/lightning_gpu/**
-  #    - pennylane_lightning/lightning_qubit/**
+  pull_request:
+    paths-ignore:
+      - .github/**
+      - '!.github/workflows/tests_lkcuda_python.yml'
+      - pennylane_lightning/core/_version.py
+      - pennylane_lightning/core/src/simulators/lightning_gpu/**
+      - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/lightning_gpu/**
+      - pennylane_lightning/lightning_qubit/**
   push:
     branches:
       - master

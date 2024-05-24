@@ -15,28 +15,22 @@
 #pragma once
 
 #include <cutensornet.h>
-#include <functional>
 #include <vector>
 
 #include "ObservablesTNCuda.hpp"
 
-#include "Constant.hpp"
-#include "ConstantUtil.hpp" // lookup
-#include "Observables.hpp"
 #include "TensorCuda.hpp"
 #include "Util.hpp"
-#include "cuError.hpp"
 #include "tncudaError.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningTensor;
-using namespace Pennylane::Observables;
-
+using namespace Pennylane::LightningTensor::TNCuda;
 template <class T> using vector1D = std::vector<T>;
-template <class T> using vector2D = std::vector<std::vector<T>>;
-template <class T> using vector3D = std::vector<std::vector<std::vector<T>>>;
+template <class T> using vector2D = std::vector<vector1D<T>>;
+template <class T> using vector3D = std::vector<vector2D<T>>;
 
 } // namespace
 /// @endcond
@@ -122,11 +116,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             vector2D<int32_t> modes_per_term;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
-                vector1D<int32_t> modes_per_tensor_int32 =
+                modes_per_term.emplace_back(
                     cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                         obs.getStateModes()[term_idx][tensor_idx],
-                        state_tensor.getNumQubits());
-                modes_per_term.emplace_back(modes_per_tensor_int32);
+                        state_tensor.getNumQubits()));
             }
             modes_.emplace_back(modes_per_term);
 
