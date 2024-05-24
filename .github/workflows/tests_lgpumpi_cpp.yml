@@ -58,7 +58,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
@@ -191,4 +191,3 @@ jobs:
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
           rm -rf * .git .gitignore .github
           pip cache purge
-
