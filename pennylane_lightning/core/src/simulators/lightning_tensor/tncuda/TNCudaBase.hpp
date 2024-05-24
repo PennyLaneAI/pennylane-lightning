@@ -240,11 +240,10 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         DataBuffer<PrecisionT, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
         int64_t id;
-        std::vector<int32_t> stateModes(wires.size());
-        std::transform(
-            wires.begin(), wires.end(), stateModes.begin(), [&](std::size_t x) {
-                return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
-            });
+
+        std::vector<int32_t> stateModes =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                wires, BaseType::getNumQubits());
 
         // TODO: Need changes to support to the controlled gate tensor API once
         // the API is finalized in cutensornet lib.
@@ -264,9 +263,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
         if (!gate_matrix.empty()) {
+            auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
-            auto gate_key = std::make_pair(opName, par);
             gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
                                   matrix_cu);
         } else {

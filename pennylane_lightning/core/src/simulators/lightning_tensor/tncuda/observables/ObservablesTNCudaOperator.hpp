@@ -104,18 +104,17 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                 const_cast<size_t *>(state_tensor.getQubitDims().data())),
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
-        for (auto &coeff : obs.getCoeffsPerTerm()) {
-            coeffs_.emplace_back(cuDoubleComplex{static_cast<double>(coeff),
-                                                 0.0}); // coeffs initialization
-        }
+
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
-            auto coeff = coeffs_[term_idx];
+            auto coeff = cuDoubleComplex{
+                static_cast<double>(obs.getCoeffsPerTerm()[term_idx]), 0.0};
             auto numTensors = numTensors_[term_idx];
 
-            // number of state modes of each tensor in each term
+            coeffs_.emplace_back(coeff);
 
+            // number of state modes of each tensor in each term
             numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
                 obs.getNumStateModes()[term_idx]));
 
@@ -123,15 +122,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             vector2D<int32_t> modes_per_term;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
-                auto modes_per_tensor =
-                    obs.getStateModes()[term_idx][tensor_idx];
-                vector1D<int32_t> modes_per_tensor_int32;
-                std::transform(modes_per_tensor.begin(), modes_per_tensor.end(),
-                               std::back_inserter(modes_per_tensor_int32),
-                               [&](size_t x) {
-                                   return static_cast<int32_t>(
-                                       state_tensor.getNumQubits() - 1 - x);
-                               });
+                vector1D<int32_t> modes_per_tensor_int32 =
+                    cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                        obs.getStateModes()[term_idx][tensor_idx],
+                        state_tensor.getNumQubits());
                 modes_per_term.emplace_back(modes_per_tensor_int32);
             }
             modes_.emplace_back(modes_per_term);
@@ -148,11 +142,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             vector1D<TensorCuda<PrecisionT>> tensorDataPerTerm_;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
+                auto rank = Pennylane::Util::log2(
+                    obs.getData()[term_idx][tensor_idx].size());
                 tensorDataPerTerm_.emplace_back(
-                    std::vector<std::size_t>(
-                        Pennylane::Util::log2(
-                            obs.getData()[term_idx][tensor_idx].size()),
-                        2),
+                    std::vector<std::size_t>(rank, 2),
                     obs.getData()[term_idx][tensor_idx],
                     state_tensor.getDevTag());
             }

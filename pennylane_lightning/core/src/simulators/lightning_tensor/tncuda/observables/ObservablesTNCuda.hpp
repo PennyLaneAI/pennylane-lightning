@@ -406,7 +406,7 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
                      sub_term_idx < ob->getNumTensors().size();
                      sub_term_idx++) {
                     PrecisionT coeff = ob->getCoeffsPerTerm()[sub_term_idx];
-                    coeff = coeff * coeffs_ham_[term_idx];
+                    coeff *= coeffs_ham_[term_idx];
                     this->coeffs_.emplace_back(coeff);
                     this->numTensors_.emplace_back(
                         ob->getNumTensors()[sub_term_idx]);

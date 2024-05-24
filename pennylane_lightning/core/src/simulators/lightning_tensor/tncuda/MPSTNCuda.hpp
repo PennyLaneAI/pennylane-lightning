@@ -32,6 +32,7 @@
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
+#include "Util.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"
 #include "tncuda_helpers.hpp"
@@ -328,16 +329,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
         std::vector<std::vector<int64_t>> localSitesExtents_int64;
 
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            // Convert datatype of sitesExtents to int64 as required by
-            // cutensornet backend
-            std::vector<int64_t> siteExtents_int64(sitesExtents_[i].size());
-            std::transform(sitesExtents_[i].begin(), sitesExtents_[i].end(),
-                           siteExtents_int64.begin(), [](std::size_t x) {
-                               return static_cast<int64_t>(x);
-                           });
-
-            localSitesExtents_int64.push_back(std::move(siteExtents_int64));
+        for (const auto &siteExtents : sitesExtents_) {
+            localSitesExtents_int64.push_back(
+                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    siteExtents)));
         }
         return localSitesExtents_int64;
     }

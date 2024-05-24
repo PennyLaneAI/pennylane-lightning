@@ -381,4 +381,24 @@ struct MatrixHasher {
     }
 };
 
+/**
+ * @brief Normalize/Cast the index ordering to match PennyLane.
+ *
+ * @tparam IndexTypeIn Integer value type.
+ * @tparam IndexTypeOut Integer value type.
+ * @param indices Given indices to transform.
+ * @param num_qubits Number of qubits.
+ */
+template <typename IndexTypeIn, typename IndexTypeOut>
+inline auto NormalizeCastIndices(const std::vector<IndexTypeIn> &indices,
+                                 const std::size_t &num_qubits)
+    -> std::vector<IndexTypeOut> {
+    std::vector<IndexTypeOut> t_indices(indices.size());
+    std::transform(indices.begin(), indices.end(), t_indices.begin(),
+                   [&](IndexTypeIn i) {
+                       return static_cast<IndexTypeOut>(num_qubits - 1 - i);
+                   });
+    return t_indices;
+}
+
 } // namespace Pennylane::LightningGPU::Util
