@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
-It is a device to perform tensor network simulation of a quantum circuit. 
+It is a device to perform tensor network simulation of a quantum circuit.
 """
 from dataclasses import replace
 from numbers import Number
