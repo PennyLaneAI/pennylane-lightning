@@ -49,6 +49,9 @@
 
 ### Bug fixes
 
+* Revert changes calling `IMAG`, `ONE`, `ZERO` templated functions in Kokkos kernels since they are incompatible with device execution.
+  [(#733)](https://github.com/PennyLaneAI/pennylane-lightning/pull/733)
+
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
 
