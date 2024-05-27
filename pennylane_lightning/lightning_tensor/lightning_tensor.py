@@ -26,15 +26,13 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumTape
 from pennylane.typing import Result, ResultBatch
 
-from .backends.quimb._mps import QuimbMPS
-
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-_backends = frozenset({"quimb"})
+_backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
 _methods = frozenset({"mps"})
@@ -61,34 +59,20 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
-        backend (str): Supported backend. Currently, only ``quimb`` is supported.
+        backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Currently, it can only be ``None``, so that computation of
             statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments. The following options are currently supported:
-
-            ``max_bond_dim`` (int): Maximum bond dimension for the MPS simulator.
-                It corresponds to the number of Schmidt coefficients retained at the end of the SVD algorithm when applying gates. Default is ``None``.
-            ``cutoff`` (float): Truncation threshold for the Schmidt coefficients in a MPS simulator. Default is ``np.finfo(c_dtype).eps``.
-            ``contract`` (str): The contraction method for applying gates. It can be either ``auto-mps`` or ``nonlocal``.
-                ``nonlocal`` turns each gate into a MPO and applies it directly to the MPS, while ``auto-mps`` swaps nonlocal qubits in 2-qubit gates to be next
-                    to each other before applying the gate, then swaps them back. Default is ``auto-mps``.
+        **kwargs: keyword arguments. TODO add when cuTensorNet MPS backend is available as a prototype.
     """
 
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = (
-        "backend",
-        "c_dtype",
-        "contract",
-        "cutoff",
-        "method",
-        "max_bond_dim",
-    )
+    _device_options = ("backend", "c_dtype")
 
     _new_API = True
 
@@ -97,7 +81,7 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        backend="quimb",
+        backend="cutensornet",
         method="mps",
         shots=None,
         c_dtype=np.complex128,
@@ -119,25 +103,7 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
-        # options for MPS
-        self._max_bond_dim = kwargs.get("max_bond_dim", None)
-        self._cutoff = kwargs.get("cutoff", np.finfo(self._c_dtype).eps)
-        self._contract = kwargs.get("contract", "auto-mps")
-
         self._interface = None
-        interface_opts = self._setup_execution_config().device_options
-
-        if self.backend == "quimb" and self.method == "mps":
-            self._interface = QuimbMPS(
-                self._num_wires,
-                interface_opts,
-                self._c_dtype,
-            )
-
-        else:
-            raise ValueError(
-                f"Unsupported backend: {self.backend} or method: {self.method}"
-            )  # pragma: no cover
 
         for arg in kwargs:
             if arg not in self._device_options:
@@ -211,9 +177,10 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
 
-        config = self._setup_execution_config(execution_config)
-        program = self._interface.preprocess()
-        return program, config
+        # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
+        # config = self._setup_execution_config(execution_config)
+        # program = self._interface.preprocess()
+        # return program, config
 
     def execute(
         self,
@@ -230,7 +197,8 @@ class LightningTensor(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-        return self._interface.execute(circuits, execution_config)
+        # TODO: remove comment when cuTensorNet MPS backend is available as a prototype
+        # return self._interface.execute(circuits, execution_config)
 
     # pylint: disable=unused-argument
     def supports_derivatives(

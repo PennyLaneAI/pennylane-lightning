@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Removed the `QuimbMPS` class and the corresponding interface/backend from `lightning.tensor`.
+  [(#737)](https://github.com/PennyLaneAI/pennylane-lightning/pull/737)
+
 * Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
   [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
 
@@ -57,6 +60,9 @@
 
 * Remove the Autoray dependency from requirement files.
   [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
+
+* Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
+  [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
 
 ### Contributors
 
