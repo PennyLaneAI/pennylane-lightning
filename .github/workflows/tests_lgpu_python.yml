@@ -101,7 +101,7 @@ jobs:
         run: |
           cd main
           git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
 
       - uses: actions/setup-python@v5
         name: Install Python

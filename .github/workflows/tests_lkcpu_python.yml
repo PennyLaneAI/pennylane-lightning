@@ -48,6 +48,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
+      kokkos_version: ${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.3.01' }} #To be updated next Release.
 
   build_lightning_kokkos_wheels:
     needs: [determine_runner, build_and_cache_Kokkos]
@@ -80,7 +81,7 @@ jobs:
         run: |
           cd main
           git fetch --tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
           git log -1 --format='%H'
           git status
 
@@ -168,7 +169,7 @@ jobs:
           fetch-tags: true
           path: main
 
-      - name: Switch to release build of Lightning
+      - name: Switch to release tag of Lightning
         if: inputs.lightning-version == 'release'
         run: |
           cd main
@@ -179,6 +180,16 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           python -m pip install -U pennylane-lightning --no-deps
+
+      - name: Switch to stable tag of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git fetch --tags --force
+          git checkout latest_release
+          git log -1 --format='%H'
+          git status
+
 
       - uses: actions/download-artifact@v4
         with:
@@ -235,7 +246,7 @@ jobs:
           python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/ --exitfirst $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
             mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append

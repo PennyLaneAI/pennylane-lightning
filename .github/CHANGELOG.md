@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Removed the `QuimbMPS` class and the corresponding interface/backend from `lightning.tensor`.
+  [(#737)](https://github.com/PennyLaneAI/pennylane-lightning/pull/737)
+
 * Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
   [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
 
@@ -23,7 +26,7 @@
 
 * Lightning-Kokkos' functors are rewritten as functions wrapping around generic gate and generator functors templated over a coefficient interaction function. This reduces boilerplate while clarifying how the various kernels differ from one another.
   [(#640)](https://github.com/PennyLaneAI/pennylane-lightning/pull/640)
-  
+
 * Update C++ and Python GitHub actions names to include the matrix info.
   [(#717)](https://github.com/PennyLaneAI/pennylane-lightning/pull/717)
 
@@ -46,8 +49,20 @@
 
 ### Bug fixes
 
+* Revert changes calling `IMAG`, `ONE`, `ZERO` templated functions in Kokkos kernels since they are incompatible with device execution.
+  [(#733)](https://github.com/PennyLaneAI/pennylane-lightning/pull/733)
+
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
+
+* Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration.
+  [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
+
+* Remove the Autoray dependency from requirement files.
+  [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
+
+* Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
+  [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
 
 ### Contributors
 
