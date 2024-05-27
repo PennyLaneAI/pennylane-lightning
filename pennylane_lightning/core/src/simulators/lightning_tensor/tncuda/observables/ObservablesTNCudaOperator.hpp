@@ -15,9 +15,11 @@
 #pragma once
 
 #include <cutensornet.h>
+#include <tuple>
 #include <vector>
 
 #include "ObservablesTNCuda.hpp"
+#include "cuGates_host.hpp"
 
 #include "TensorCuda.hpp"
 #include "Util.hpp"
@@ -38,15 +40,15 @@ template <class T> using vector3D = std::vector<vector2D<T>>;
 namespace Pennylane::LightningTensor::TNCuda::Observables {
 
 // Current design allows multiple measurements to be performed for a
-// circuit.
+// given circuit.
 /**
  * @brief ObservableTNCudaOperator Class.
  *
- * This class creates custatenetTensorNetwork Operator from ObservablesTNCuda
- * objects for measurement purpose. Since the NamedObs, HermitianObs,
- * TensorProdObs and Hamiltionain objects can be encapsulated in a
- * cutensornetNetworkOperator_t instance, only one ObservableTNCudaOperator
- * class is designed here. Note that a cutensornetNetworkOperator_t object can
+ * This class creates `custatenetTensorNetwork` Operator from
+ * `ObservablesTNCuda` objects for measurement purpose. Since the NamedObs,
+ * HermitianObs, TensorProdObs and Hamiltionain objects can be encapsulated in a
+ * `cutensornetNetworkOperator_t` instance, only one ObservableTNCudaOperator
+ * class is designed here. Note that a `cutensornetNetworkOperator_t object can
  * only be created and destroyed by creating a new ObservableTNCudaOperator
  * object, which ensures its lifetime is aligned with that of data associated to
  * it.
@@ -56,6 +58,13 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 template <class StateTensorT> class ObservableTNCudaOperator {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
+
+    using CFP_t = typename StateTensorT::CFP_t;
+
+    using ComplexT = typename StateTensorT::ComplexT;
+
+    using obs_key =
+        std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
   private:
     // cutensornetNetworkOperator operator
@@ -83,7 +92,80 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
     vector2D<const void *> tensorDataPtr_;
 
-    vector2D<TensorCuda<PrecisionT>> tensorData_;
+    struct ObsKeyHaser {
+        std::size_t operator()(
+            const std::tuple<std::string, std::vector<PrecisionT>, std::size_t>
+                &obsKey) const {
+            std::size_t hash_val = 0;
+            hash_val ^= std::hash<std::string>{}(std::get<0>(obsKey));
+            for (const auto &param : std::get<1>(obsKey)) {
+                hash_val ^= std::hash<PrecisionT>{}(param);
+            }
+            hash_val ^= std::hash<std::size_t>{}(std::get<2>(obsKey));
+            return hash_val;
+        }
+    };
+
+    std::unordered_map<obs_key, TensorCuda<PrecisionT>, ObsKeyHaser>
+        device_obs_cache_;
+
+    /**
+     * @brief Add gate numerical value to the cache, indexed by the id of gate
+     * tensor operator in the graph and its name and parameter value are
+     * recorded as well.
+     *
+     * @param obs_name String representing the name of the given gate.
+     * @param obs_param Vector of parameter values. `{}` if non-parametric
+     * gate.
+     */
+    void add_obs_(const std::string &obs_name,
+                  [[maybe_unused]] std::vector<PrecisionT> obs_param = {}) {
+        auto obsKey = std::make_tuple(obs_name, obs_param, std::size_t{0});
+
+        auto &gateMap =
+            cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
+
+        add_obs_(obsKey, gateMap.getGateData(obs_name, obs_param));
+    }
+    /**
+     * @brief Add gate numerical value to the cache, indexed by the id of gate
+     * tensor operator in the graph and its name and parameter value as well as
+     * the gate data on host.
+     *
+     * @param gate_id The id of gate tensor operator in the computate graph.
+     * @param gate_key String representing the name of the given gate as well as
+     * its associated parameter value.
+     * @param gate_data_host Vector of complex floating point values
+     * representing the gate data on host.
+     */
+
+    void add_obs_(const obs_key &obsKey,
+                  const std::vector<CFP_t> &gate_data_host) {
+        const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
+        auto modes = std::vector<std::size_t>(rank, 0);
+        auto extents = std::vector<std::size_t>(rank, 2);
+
+        auto &&tensor = TensorCuda<PrecisionT>(rank, modes, extents,
+                                               state_tensor_.getDevTag());
+
+        device_obs_cache_.emplace(std::piecewise_construct,
+                                  std::forward_as_tuple(obsKey),
+                                  std::forward_as_tuple(std::move(tensor)));
+
+        device_obs_cache_.at(obsKey).getDataBuffer().CopyHostDataToGpu(
+            gate_data_host.data(), gate_data_host.size());
+    }
+
+    /**
+     * @brief Returns a pointer to the GPU device memory where the gate is
+     * stored.
+     *
+     * @param gate_id The id of gate tensor operator in the computate graph.
+     * @return const CFP_t* Pointer to gate values on device.
+     */
+    CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
+        return device_obs_cache_.at(obsKey).getDataBuffer().getData();
+    }
 
   public:
     ObservableTNCudaOperator(const StateTensorT &state_tensor,
@@ -132,24 +214,37 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             modesPtr_.emplace_back(modesPtrPerTerm);
 
             // tensor data initialization
-            vector1D<TensorCuda<PrecisionT>> tensorDataPerTerm_;
+            vector1D<const void *> tensorDataPtrPerTerm_;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
-                auto rank = Pennylane::Util::log2(
-                    obs.getData()[term_idx][tensor_idx].size());
-                tensorDataPerTerm_.emplace_back(
-                    std::vector<std::size_t>(rank, 2),
-                    obs.getData()[term_idx][tensor_idx],
-                    state_tensor.getDevTag());
-            }
+                auto metaData = obs.getMetaData()[term_idx][tensor_idx];
 
-            tensorData_.emplace_back(tensorDataPerTerm_);
-
-            vector1D<const void *> tensorDataPtrPerTerm_;
-            for (size_t tensor_idx = 0; tensor_idx < tensorData_.back().size();
-                 tensor_idx++) {
-                tensorDataPtrPerTerm_.emplace_back(
-                    tensorData_.back()[tensor_idx].getDataBuffer().getData());
+                auto obsName = std::get<0>(metaData);
+                auto param = std::get<1>(metaData);
+                auto hermitianMatrix = std::get<2>(metaData);
+                if (hermitianMatrix.empty()) {
+                    auto obsKey =
+                        std::make_tuple(obsName, param, std::size_t{0});
+                    if (device_obs_cache_.find(obsKey) ==
+                        device_obs_cache_.end()) {
+                        add_obs_(obsName, param);
+                    }
+                    tensorDataPtrPerTerm_.emplace_back(
+                        get_obs_device_ptr_(obsKey));
+                } else {
+                    auto hermitianHash = MatrixHasher()(hermitianMatrix);
+                    std::vector<PrecisionT> emptyParam;
+                    auto obsKey =
+                        std::make_tuple(obsName, param, hermitianHash);
+                    if (device_obs_cache_.find(obsKey) ==
+                        device_obs_cache_.end()) {
+                        auto hermitianMatrix_cu =
+                            cuUtil::complexToCu<ComplexT>(hermitianMatrix);
+                        add_obs_(obsKey, hermitianMatrix_cu);
+                    }
+                    tensorDataPtrPerTerm_.emplace_back(
+                        get_obs_device_ptr_(obsKey));
+                }
             }
 
             tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
