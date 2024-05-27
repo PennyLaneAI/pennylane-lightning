@@ -1472,6 +1472,11 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ONE<CFP_t>()};
 }
 
+/*
+ * @brief Dyanmical access the gate data based on the gate name and parameters.
+ *
+ * @tparam PrecisionT Required precision of gate (`float` or `double`).
+ */
 template <class PrecisionT> class DynamicGateDataAccess {
   private:
     DynamicGateDataAccess() = default;
