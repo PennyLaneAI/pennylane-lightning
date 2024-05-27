@@ -23,7 +23,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::Experimental::swap;
+using Kokkos::kokkos_swap;
 using Pennylane::Gates::GateOperation;
 } // namespace
 /// @endcond
@@ -70,9 +70,8 @@ void applyPauliX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     applyNC1Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0, const std::size_t i1) {
-            Kokkos::Experimental::swap(arr(i0), arr(i1));
-        });
+                      const std::size_t i0,
+                      const std::size_t i1) { kokkos_swap(arr(i0), arr(i1)); });
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -131,8 +130,8 @@ void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             const bool inverse = false,
             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
     const Kokkos::complex<PrecisionT> shift =
-        (inverse) ? -IMAG<Kokkos::complex, PrecisionT>()
-                  : IMAG<Kokkos::complex, PrecisionT>();
+        (inverse) ? Kokkos::complex<PrecisionT>{0.0, -1.0}
+                  : Kokkos::complex<PrecisionT>{0.0, 1.0};
     applyNC1Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -319,7 +318,7 @@ void applyCNOT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       [[maybe_unused]] const std::size_t i00,
                       [[maybe_unused]] const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            Kokkos::Experimental::swap(arr(i10), arr(i11));
+            kokkos_swap(arr(i10), arr(i11));
         });
 }
 
@@ -369,7 +368,7 @@ void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       [[maybe_unused]] const std::size_t i00,
                       const std::size_t i01, const std::size_t i10,
                       [[maybe_unused]] const std::size_t i11) {
-            swap(arr(i10), arr(i01));
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -766,7 +765,7 @@ void applyCSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       [[maybe_unused]] const std::size_t i100,
                       const std::size_t i101, const std::size_t i110,
                       [[maybe_unused]] const std::size_t i111) {
-            swap(arr(i101), arr(i110));
+            kokkos_swap(arr(i101), arr(i110));
         });
 }
 
@@ -785,8 +784,9 @@ void applyToffoli(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       [[maybe_unused]] const std::size_t i011,
                       [[maybe_unused]] const std::size_t i100,
                       [[maybe_unused]] const std::size_t i101,
-                      const std::size_t i110,
-                      const std::size_t i111) { swap(arr(i111), arr(i110)); });
+                      const std::size_t i110, const std::size_t i111) {
+            kokkos_swap(arr(i111), arr(i110));
+        });
 }
 
 template <class PrecisionT, class FuncT> class applyNC4Functor {

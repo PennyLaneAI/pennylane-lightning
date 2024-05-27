@@ -23,7 +23,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using Kokkos::Experimental::swap;
+using Kokkos::kokkos_swap;
 using Pennylane::Gates::GeneratorOperation;
 } // namespace
 /// @endcond
@@ -41,7 +41,7 @@ void applyGenPhaseShift(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0,
                       [[maybe_unused]] const std::size_t i1) {
-            arr(i0) = ZERO<Kokkos::complex, PrecisionT>();
+            arr(i0) = 0.0;
         });
 }
 
@@ -57,9 +57,9 @@ void applyGenControlledPhaseShift(
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10,
                       [[maybe_unused]] const std::size_t i11) {
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i01) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i10) = ZERO<Kokkos::complex, PrecisionT>();
+            arr(i00) = 0.0;
+            arr(i01) = 0.0;
+            arr(i10) = 0.0;
         });
 }
 
@@ -74,9 +74,9 @@ void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i01) = ZERO<Kokkos::complex, PrecisionT>();
-            swap(arr(i10), arr(i11));
+            arr(i00) = 0.0;
+            arr(i01) = 0.0;
+            kokkos_swap(arr(i10), arr(i11));
         });
 }
 
@@ -91,8 +91,8 @@ void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i01) = ZERO<Kokkos::complex, PrecisionT>();
+            arr(i00) = 0.0;
+            arr(i01) = 0.0;
             const auto v0 = arr(i10);
             arr(i10) =
                 Kokkos::complex<PrecisionT>{imag(arr(i11)), -real(arr(i11))};
@@ -112,8 +112,8 @@ void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       const std::size_t i00, const std::size_t i01,
                       [[maybe_unused]] const std::size_t i10,
                       const std::size_t i11) {
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i01) = ZERO<Kokkos::complex, PrecisionT>();
+            arr(i00) = 0.0;
+            arr(i01) = 0.0;
             arr(i11) *= -1;
         });
 }
@@ -129,8 +129,8 @@ void applyGenIsingXX(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            swap(arr(i00), arr(i11));
-            swap(arr(i10), arr(i01));
+            kokkos_swap(arr(i00), arr(i11));
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -145,9 +145,9 @@ void applyGenIsingXY(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            swap(arr(i10), arr(i01));
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i11) = ZERO<Kokkos::complex, PrecisionT>();
+            kokkos_swap(arr(i10), arr(i01));
+            arr(i00) = 0.0;
+            arr(i11) = 0.0;
         });
 }
 
@@ -165,7 +165,7 @@ void applyGenIsingYY(
             const auto v00 = arr(i00);
             arr(i00) = -arr(i11);
             arr(i11) = -v00;
-            swap(arr(i10), arr(i01));
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -197,11 +197,11 @@ void applyGenSingleExcitation(
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
-            arr(i00) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
-            arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
-            arr(i11) = ZERO<Kokkos::complex, PrecisionT>();
-            swap(arr(i10), arr(i01));
+            arr(i00) = 0.0;
+            arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
+            arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
+            arr(i11) = 0.0;
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -217,9 +217,9 @@ void applyGenSingleExcitationMinus(
                       [[maybe_unused]] const std::size_t i00,
                       const std::size_t i01, const std::size_t i10,
                       [[maybe_unused]] const std::size_t i11) {
-            arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
-            arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
-            swap(arr(i10), arr(i01));
+            arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
+            arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -236,10 +236,10 @@ void applyGenSingleExcitationPlus(
                       const std::size_t i01, const std::size_t i10,
                       [[maybe_unused]] const std::size_t i11) {
             arr(i00) *= -1;
-            arr(i01) *= IMAG<Kokkos::complex, PrecisionT>();
-            arr(i10) *= -IMAG<Kokkos::complex, PrecisionT>();
+            arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
+            arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
             arr(i11) *= -1;
-            swap(arr(i10), arr(i01));
+            kokkos_swap(arr(i10), arr(i01));
         });
 }
 
@@ -262,22 +262,22 @@ void applyGenDoubleExcitation(
                       const std::size_t i1110, const std::size_t i1111) {
             const Kokkos::complex<PrecisionT> v3 = arr(i0011);
             const Kokkos::complex<PrecisionT> v12 = arr(i1100);
-            arr(i0000) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0001) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0010) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0011) = v12 * -IMAG<Kokkos::complex, PrecisionT>();
-            arr(i0100) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0101) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0110) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i0111) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1000) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1001) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1010) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1011) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1100) = v3 * IMAG<Kokkos::complex, PrecisionT>();
-            arr(i1101) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1110) = ZERO<Kokkos::complex, PrecisionT>();
-            arr(i1111) = ZERO<Kokkos::complex, PrecisionT>();
+            arr(i0000) = 0.0;
+            arr(i0001) = 0.0;
+            arr(i0010) = 0.0;
+            arr(i0011) = v12 * Kokkos::complex<PrecisionT>{0.0, -1.0};
+            arr(i0100) = 0.0;
+            arr(i0101) = 0.0;
+            arr(i0110) = 0.0;
+            arr(i0111) = 0.0;
+            arr(i1000) = 0.0;
+            arr(i1001) = 0.0;
+            arr(i1010) = 0.0;
+            arr(i1011) = 0.0;
+            arr(i1100) = v3 * Kokkos::complex<PrecisionT>{0.0, 1.0};
+            arr(i1101) = 0.0;
+            arr(i1110) = 0.0;
+            arr(i1111) = 0.0;
         });
 }
 
@@ -305,9 +305,9 @@ void applyGenDoubleExcitationMinus(
             [[maybe_unused]] const std::size_t i1101,
             [[maybe_unused]] const std::size_t i1110,
             [[maybe_unused]] const std::size_t i1111) {
-            arr(i0011) *= IMAG<Kokkos::complex, PrecisionT>();
-            arr(i1100) *= -IMAG<Kokkos::complex, PrecisionT>();
-            swap(arr(i1100), arr(i0011));
+            arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
+            arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
+            kokkos_swap(arr(i1100), arr(i0011));
         });
 }
 
@@ -335,9 +335,9 @@ void applyGenDoubleExcitationPlus(
             [[maybe_unused]] const std::size_t i1101,
             [[maybe_unused]] const std::size_t i1110,
             [[maybe_unused]] const std::size_t i1111) {
-            arr(i0011) *= -IMAG<Kokkos::complex, PrecisionT>();
-            arr(i1100) *= IMAG<Kokkos::complex, PrecisionT>();
-            swap(arr(i1100), arr(i0011));
+            arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
+            arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
+            kokkos_swap(arr(i1100), arr(i0011));
         });
 }
 
