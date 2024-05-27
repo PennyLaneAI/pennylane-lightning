@@ -230,18 +230,16 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
                 auto obsKey = std::make_tuple(obsName, param, hash_val);
 
-                if (device_obs_cache_.find(obsKey) ==
-                        device_obs_cache_.end()) {
-                     if(hermitianMatrix.empty()){
+                if (device_obs_cache_.find(obsKey) == device_obs_cache_.end()) {
+                    if (hermitianMatrix.empty()) {
                         add_obs_(obsName, param);
-                     }else{
+                    } else {
                         auto hermitianMatrix_cu =
                             cuUtil::complexToCu<ComplexT>(hermitianMatrix);
                         add_obs_(obsKey, hermitianMatrix_cu);
-                     }
+                    }
                 }
-                tensorDataPtrPerTerm_.emplace_back(
-                        get_obs_device_ptr_(obsKey));
+                tensorDataPtrPerTerm_.emplace_back(get_obs_device_ptr_(obsKey));
             }
 
             tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
