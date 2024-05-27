@@ -229,7 +229,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const void * */ &algo,
             /* size_t */ sizeof(algo)));
 
-        this->computeState(
+        BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
     }
@@ -256,7 +256,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         void *output_tensorPtr[] = {
             static_cast<void *>(output_tensor.getDataBuffer().getData())};
 
-        this->computeState(nullptr, output_tensorPtr);
+        BaseType::computeState(nullptr, output_tensorPtr);
 
         std::vector<ComplexT> results(output_extent.front());
         output_tensor.CopyGpuDataToHost(results.data(), results.size());

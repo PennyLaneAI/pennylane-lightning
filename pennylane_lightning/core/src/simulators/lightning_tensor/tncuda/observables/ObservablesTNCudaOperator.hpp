@@ -222,29 +222,26 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                 auto obsName = std::get<0>(metaData);
                 auto param = std::get<1>(metaData);
                 auto hermitianMatrix = std::get<2>(metaData);
-                if (hermitianMatrix.empty()) {
-                    auto obsKey =
-                        std::make_tuple(obsName, param, std::size_t{0});
-                    if (device_obs_cache_.find(obsKey) ==
+                std::size_t hash_val = 0;
+
+                if (!hermitianMatrix.empty()) {
+                    hash_val = MatrixHasher()(hermitianMatrix);
+                }
+
+                auto obsKey = std::make_tuple(obsName, param, hash_val);
+
+                if (device_obs_cache_.find(obsKey) ==
                         device_obs_cache_.end()) {
+                     if(hermitianMatrix.empty()){
                         add_obs_(obsName, param);
-                    }
-                    tensorDataPtrPerTerm_.emplace_back(
-                        get_obs_device_ptr_(obsKey));
-                } else {
-                    auto hermitianHash = MatrixHasher()(hermitianMatrix);
-                    std::vector<PrecisionT> emptyParam;
-                    auto obsKey =
-                        std::make_tuple(obsName, param, hermitianHash);
-                    if (device_obs_cache_.find(obsKey) ==
-                        device_obs_cache_.end()) {
+                     }else{
                         auto hermitianMatrix_cu =
                             cuUtil::complexToCu<ComplexT>(hermitianMatrix);
                         add_obs_(obsKey, hermitianMatrix_cu);
-                    }
-                    tensorDataPtrPerTerm_.emplace_back(
-                        get_obs_device_ptr_(obsKey));
+                     }
                 }
+                tensorDataPtrPerTerm_.emplace_back(
+                        get_obs_device_ptr_(obsKey));
             }
 
             tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
