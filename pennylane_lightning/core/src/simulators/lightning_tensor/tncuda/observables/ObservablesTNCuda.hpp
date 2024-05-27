@@ -136,11 +136,11 @@ template <class StateTensorT> class ObservableTNCuda {
 template <class StateTensorT>
 class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
+    using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
-    using metaT =
-        std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
+    using metaT = BaseType::metaT;
 
   private:
     std::string obs_name_;
@@ -159,17 +159,17 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     NamedObsTNCuda(std::string obs_name, std::vector<std::size_t> wires,
                    std::vector<PrecisionT> params = {})
         : obs_name_{obs_name}, wires_{wires}, params_{params} {
-        this->coeffs_.emplace_back(PrecisionT{1.0});
-        this->numTensors_.emplace_back(std::size_t{1});
-        this->numStateModes_.emplace_back(
+        BaseType::coeffs_.emplace_back(PrecisionT{1.0});
+        BaseType::numTensors_.emplace_back(std::size_t{1});
+        BaseType::numStateModes_.emplace_back(
             vector1D<std::size_t>(std::size_t{1}, wires.size()));
-        this->stateModes_.emplace_back(
+        BaseType::stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires));
         std::vector<ComplexT> matrix_data;
         vector1D<metaT> local_MetaData;
         local_MetaData.push_back(
             std::make_tuple(obs_name, params, matrix_data));
-        this->metaData_.push_back(local_MetaData);
+        BaseType::metaData_.push_back(local_MetaData);
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -192,12 +192,12 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
 template <class StateTensorT>
 class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
+    using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
-    using metaT =
-        std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
+    using metaT = BaseType::metaT;
 
   private:
     MatrixT matrix_;
@@ -212,18 +212,18 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
      */
     HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
-        this->coeffs_.emplace_back(PrecisionT{1.0});
-        this->numTensors_.emplace_back(std::size_t{1});
-        this->numStateModes_.emplace_back(
+        BaseType::coeffs_.emplace_back(PrecisionT{1.0});
+        BaseType::numTensors_.emplace_back(std::size_t{1});
+        BaseType::numStateModes_.emplace_back(
             vector1D<std::size_t>(std::size_t{1}, wires_.size()));
-        this->stateModes_.emplace_back(
+        BaseType::stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires_));
 
         std::vector<PrecisionT> params = {};
 
         vector1D<metaT> local_MetaData;
         local_MetaData.push_back(std::make_tuple("Hermitian", params, matrix_));
-        this->metaData_.push_back(local_MetaData);
+        BaseType::metaData_.push_back(local_MetaData);
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -243,11 +243,11 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
 template <class StateTensorT>
 class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
+    using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
-    using metaT =
-        std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
+    using metaT = BaseType::metaT;
 
   protected:
     std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
@@ -276,8 +276,8 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
                         "Hamiltonian.");
         }
 
-        this->coeffs_.push_back(PrecisionT{1.0});
-        this->numTensors_.push_back(obs_.size());
+        BaseType::coeffs_.push_back(PrecisionT{1.0});
+        BaseType::numTensors_.push_back(obs_.size());
 
         vector1D<std::size_t> numStateModesLocal;
         vector2D<std::size_t> stateModesLocal;
@@ -296,9 +296,9 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
                              ob->getMetaData().front().end());
         }
 
-        this->numStateModes_.emplace_back(numStateModesLocal);
-        this->stateModes_.emplace_back(stateModesLocal);
-        this->metaData_.emplace_back(dataLocal);
+        BaseType::numStateModes_.emplace_back(numStateModesLocal);
+        BaseType::stateModes_.emplace_back(stateModesLocal);
+        BaseType::metaData_.emplace_back(dataLocal);
 
         std::unordered_set<std::size_t> wires;
         for (const auto &ob : obs_) {
@@ -388,11 +388,11 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
 template <class StateTensorT>
 class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
+    using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
-    using metaT =
-        std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
+    using metaT = BaseType::metaT;
 
   private:
     std::vector<PrecisionT> coeffs_ham_;
@@ -419,23 +419,23 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
                      sub_term_idx++) {
                     PrecisionT coeff = ob->getCoeffsPerTerm()[sub_term_idx];
                     coeff *= coeffs_ham_[term_idx];
-                    this->coeffs_.emplace_back(coeff);
-                    this->numTensors_.emplace_back(
+                    BaseType::coeffs_.emplace_back(coeff);
+                    BaseType::numTensors_.emplace_back(
                         ob->getNumTensors()[sub_term_idx]);
-                    this->numStateModes_.emplace_back(
+                    BaseType::numStateModes_.emplace_back(
                         ob->getNumStateModes()[sub_term_idx]);
-                    this->stateModes_.emplace_back(
+                    BaseType::stateModes_.emplace_back(
                         ob->getStateModes()[sub_term_idx]);
-                    this->metaData_.emplace_back(
+                    BaseType::metaData_.emplace_back(
                         ob->getMetaData()[sub_term_idx]);
                 }
             } else {
-                this->coeffs_.push_back(coeffs_ham_[term_idx]);
-                this->numTensors_.emplace_back(ob->getNumTensors().front());
-                this->numStateModes_.emplace_back(
+                BaseType::coeffs_.push_back(coeffs_ham_[term_idx]);
+                BaseType::numTensors_.emplace_back(ob->getNumTensors().front());
+                BaseType::numStateModes_.emplace_back(
                     ob->getNumStateModes().front());
-                this->stateModes_.emplace_back(ob->getStateModes().front());
-                this->metaData_.emplace_back(ob->getMetaData().front());
+                BaseType::stateModes_.emplace_back(ob->getStateModes().front());
+                BaseType::metaData_.emplace_back(ob->getMetaData().front());
             }
         }
     }
