@@ -164,7 +164,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * name.
      * @param ops_adjoint Indicates whether gate at matched index is to be
      * inverted.
-     * @param ops_params Vector of parameters for gates.
+     * @param ops_params Vector of gate parameters.
      */
     void
     applyOperations(const std::vector<std::string> &ops,
