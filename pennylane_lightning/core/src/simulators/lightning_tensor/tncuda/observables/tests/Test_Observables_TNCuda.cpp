@@ -32,66 +32,178 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
 
     SECTION("Test get obs name") {
         auto obs = NamedObsT("PauliX", {0});
-
         CHECK(obs.getObsName() == "PauliX[0]");
         CHECK(obs.getWires() == std::vector<std::size_t>{0});
+    }
+
+    SECTION("Comparing objects names") {
+        auto ob1 = NamedObsT("PauliX", {0});
+        auto ob2 = NamedObsT("PauliX", {0});
+        auto ob3 = NamedObsT("PauliZ", {0});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
+    }
+
+    SECTION("Comparing objects wires") {
+        auto ob1 = NamedObsT("PauliY", {0});
+        auto ob2 = NamedObsT("PauliY", {0});
+        auto ob3 = NamedObsT("PauliY", {1});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
+    }
+
+    SECTION("Comparing objects parameters") {
+        auto ob1 = NamedObsT("RZ", {0}, {0.4});
+        auto ob2 = NamedObsT("RZ", {0}, {0.4});
+        auto ob3 = NamedObsT("RZ", {0}, {0.1});
+
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob2 != ob3);
+        REQUIRE(ob1 != ob3);
     }
 }
 
 TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
-    {
-        using StateTensorT = MPSTNCuda<TestType>;
-        using ComplexT = typename StateTensorT::ComplexT;
-        using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
+    using StateTensorT = MPSTNCuda<TestType>;
+    using ComplexT = typename StateTensorT::ComplexT;
+    using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
 
+    SECTION("HermitianObs only accepts correct arguments") {
+        auto ob1 =
+            HermitianObsT{std::vector<ComplexT>{0.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob2 = HermitianObsT{std::vector<ComplexT>(16, ComplexT{}), {0, 1}};
+        REQUIRE_THROWS_AS(
+            HermitianObsT(std::vector<ComplexT>{0.0, 0.0, 0.0}, {0}),
+            LightningException);
+        REQUIRE_THROWS_AS(
+            HermitianObsT(std::vector<ComplexT>{0.0, 0.0, 0.0, 0.0, 0.0},
+                          {0, 1}),
+            LightningException);
+    }
+
+    SECTION("Test get obs name") {
         std::vector<ComplexT> mat = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+        auto obs = HermitianObsT(mat, std::vector<std::size_t>{0});
+        std::ostringstream res;
+        res << "Hermitian" << MatrixHasher()(mat);
+        CHECK(obs.getObsName() == res.str());
+        CHECK(obs.getWires() == std::vector<std::size_t>{0});
+    }
 
-        SECTION("Test get obs name") {
-            auto obs = HermitianObsT(mat, std::vector<std::size_t>{0});
-            CHECK(obs.getObsName() == "Hermitian");
-            CHECK(obs.getWires() == std::vector<std::size_t>{0});
-        }
+    SECTION("Comparing objects matrices") {
+        auto ob1 =
+            HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob2 =
+            HermitianObsT{std::vector<ComplexT>{1.0, 0.0, 0.0, 0.0}, {0}};
+        auto ob3 =
+            HermitianObsT{std::vector<ComplexT>{0.0, 1.0, 0.0, 0.0}, {0}};
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob1 != ob3);
+        REQUIRE(ob2 != ob3);
+    }
+
+    SECTION("Comparing objects wires") {
+        auto ob1 =
+            HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+        auto ob2 =
+            HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {0}};
+        auto ob3 =
+            HermitianObsT{std::vector<ComplexT>{1.0, 0.0, -1.0, 0.0}, {1}};
+        REQUIRE(ob1 == ob2);
+        REQUIRE(ob1 != ob3);
+        REQUIRE(ob2 != ob3);
     }
 }
 
 TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using ComplexT = typename StateTensorT::ComplexT;
         using NamedObsT = NamedObsTNCuda<StateTensorT>;
         using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
-        using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
+        using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
 
-        SECTION("Test get obs name") {
-            auto H0 = std::make_shared<NamedObsT>("Hadamard",
-                                                  std::vector<std::size_t>{0});
-            auto H1 = std::make_shared<NamedObsT>("Hadamard",
-                                                  std::vector<std::size_t>{1});
-            auto H2 = std::make_shared<NamedObsT>("Hadamard",
-                                                  std::vector<std::size_t>{2});
+        SECTION("Overlapping wires throw an exception") {
+            auto ob1 = std::make_shared<HermitianObsT>(
+                std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{1});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{2});
+            auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
-            auto obs = TensorProdObsT::create({H0, H1});
+            REQUIRE_THROWS_AS(TensorProdObsT::create({ob1, ob2}),
+                              LightningException);
+        }
 
-            CHECK(obs->getObsName() == "Hadamard[0] @ Hadamard[1]");
-            CHECK(obs->getWires() == std::vector<std::size_t>{0, 1});
-            CHECK(obs->getNumTensors() == std::vector<size_t>{2});
+        SECTION("Constructing an observable with non-overlapping wires ") {
+            auto ob1 = std::make_shared<HermitianObsT>(
+                std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
+                std::vector<std::size_t>{0, 1});
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{2});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{3});
+            auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
-            REQUIRE_THROWS_WITH(TensorProdObsT::create({obs}),
-                                Catch::Matchers::Contains(
-                                    "A new TensorProdObs observable cannot be "
-                                    "created from a single TensorProdObs."));
+            REQUIRE_NOTHROW(TensorProdObsT::create({ob1, ob2}));
+        }
 
-            auto tnprodobs = TensorProdObsT::create({obs, H2});
-            CHECK(tnprodobs->getObsName() ==
-                  "Hadamard[0] @ Hadamard[1] @ Hadamard[2]");
+        SECTION("Constructing an invalid TensorProd(TensorProd)") {
+            auto ob2_1 = std::make_shared<NamedObsT>(
+                "PauliX", std::vector<std::size_t>{2});
+            auto ob2_2 = std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{3});
+            auto ob2 = TensorProdObsT::create({ob2_1, ob2_2});
 
-            auto ham_obs =
-                HamiltonianObsT::create({{1.0}, {1.0}, {1.0}}, {H0, H1, H2});
+            REQUIRE_THROWS_AS(TensorProdObsT::create({ob2}),
+                              LightningException);
+        }
 
-            REQUIRE_THROWS_WITH(
-                TensorProdObsT::create({ham_obs, H2}),
-                Catch::Matchers::Contains("A TensorProdObs observable cannot "
-                                          "be created from a Hamiltonian"));
+        SECTION("getObsName") {
+            auto ob =
+                TensorProdObsT(std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1}));
+            REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
+        }
+
+        SECTION("Compare tensor product observables") {
+            auto ob1 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob2 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+            auto ob3 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliX", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{2})};
+            auto ob4 =
+                TensorProdObsT{std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{0}),
+                               std::make_shared<NamedObsT>(
+                                   "PauliZ", std::vector<std::size_t>{1})};
+
+            auto ob5 = TensorProdObsT{std::make_shared<NamedObsT>(
+                "PauliZ", std::vector<std::size_t>{0})};
+
+            REQUIRE(ob1 == ob2);
+            REQUIRE(ob1 != ob3);
+            REQUIRE(ob1 != ob4);
+            REQUIRE(ob1 != ob5);
         }
     }
 }
@@ -99,22 +211,122 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using PrecisionT = typename StateTensorT::PrecisionT;
         using NamedObsT = NamedObsTNCuda<StateTensorT>;
-        using HamiltonianObsT = HamiltonianTNCuda<StateTensorT>;
+        using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
+        using HamiltonianT = HamiltonianTNCuda<StateTensorT>;
 
-        SECTION("Test get obs name") {
-            auto H0 = std::make_shared<NamedObsT>("Hadamard",
-                                                  std::vector<std::size_t>{0});
-            auto H1 = std::make_shared<NamedObsT>("Hadamard",
-                                                  std::vector<std::size_t>{1});
+        const auto h = PrecisionT{0.809}; // half of the golden ratio
 
-            auto ham_obs = HamiltonianObsT::create({{1.0}, {1.0}}, {H0, H1});
+        auto zz = std::make_shared<TensorProdObsT>(
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1}));
 
-            CHECK(ham_obs->getWires() == std::vector<std::size_t>{0, 1});
+        auto x1 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto x2 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
 
-            REQUIRE(ham_obs->getObsName() ==
-                    "Hamiltonian: { 'coeffs' : [1, 1], "
-                    "'observables' : [Hadamard[0], Hadamard[1]]}");
+        SECTION("Hamiltonian constructor only accepts valid arguments") {
+            REQUIRE_NOTHROW(
+                HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2}));
+
+            REQUIRE_THROWS_AS(
+                HamiltonianT::create({PrecisionT{1.0}, h}, {zz, x1, x2}),
+                LightningException);
+
+            DYNAMIC_SECTION("getObsName") {
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
+
+                REQUIRE(
+                    HamiltonianT::create({0.3, 0.5}, {X0, Z2})->getObsName() ==
+                    "Hamiltonian: { 'coeffs' : [0.3, 0.5], "
+                    "'observables' : [PauliX[0], PauliZ[2]]}");
+            }
+
+            DYNAMIC_SECTION("Compare Hamiltonians") {
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto X1 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{1});
+                auto X2 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{2});
+
+                auto Y0 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{0});
+                auto Y1 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{1});
+                auto Y2 = std::make_shared<NamedObsT>(
+                    "PauliY", std::vector<std::size_t>{2});
+
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z1 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{1});
+                auto Z2 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{2});
+
+                auto ham1 = HamiltonianT::create(
+                    {0.8, 0.5, 0.7},
+                    {
+                        std::make_shared<TensorProdObsT>(X0, Y1, Z2),
+                        std::make_shared<TensorProdObsT>(Z0, X1, Y2),
+                        std::make_shared<TensorProdObsT>(Y0, Z1, X2),
+                    });
+
+                auto ham2 = HamiltonianT::create(
+                    {0.8, 0.5, 0.7},
+                    {
+                        std::make_shared<TensorProdObsT>(X0, Y1, Z2),
+                        std::make_shared<TensorProdObsT>(Z0, X1, Y2),
+                        std::make_shared<TensorProdObsT>(Y0, Z1, X2),
+                    });
+
+                auto ham3 = HamiltonianT::create(
+                    {0.8, 0.5, 0.642},
+                    {
+                        std::make_shared<TensorProdObsT>(X0, Y1, Z2),
+                        std::make_shared<TensorProdObsT>(Z0, X1, Y2),
+                        std::make_shared<TensorProdObsT>(Y0, Z1, X2),
+                    });
+
+                auto ham4 = HamiltonianT::create(
+                    {0.8, 0.5},
+                    {
+                        std::make_shared<TensorProdObsT>(X0, Y1, Z2),
+                        std::make_shared<TensorProdObsT>(Z0, X1, Y2),
+                    });
+
+                auto ham5 = HamiltonianT::create(
+                    {0.8, 0.5, 0.7},
+                    {
+                        std::make_shared<TensorProdObsT>(X0, Y1, Z2),
+                        std::make_shared<TensorProdObsT>(Z0, X1, Y2),
+                        std::make_shared<TensorProdObsT>(Y0, Z1, Y2),
+                    });
+
+                REQUIRE(*ham1 == *ham2);
+                REQUIRE(*ham1 != *ham3);
+                REQUIRE(*ham2 != *ham3);
+                REQUIRE(*ham2 != *ham4);
+                REQUIRE(*ham1 != *ham5);
+            }
+
+            DYNAMIC_SECTION("getWires") {
+                auto Z0 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{0});
+                auto Z5 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{5});
+                auto Z9 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{9});
+
+                auto ham1 = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
+
+                REQUIRE(ham1->getWires() == std::vector<std::size_t>{0, 5, 9});
+            }
         }
     }
 }

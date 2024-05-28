@@ -54,10 +54,9 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  */
 template <class StateTensorT> class ObservableTNCuda {
   public:
-    using CFP_t = typename StateTensorT::CFP_t;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
-    using metaT =
+    using MetaDataT =
         std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
 
   protected:
@@ -67,7 +66,7 @@ template <class StateTensorT> class ObservableTNCuda {
         numStateModes_; // number of state modes of each tensor in each term
     vector3D<std::size_t>
         stateModes_; // state modes of each tensor in each term
-    vector2D<metaT> metaData_;
+    vector2D<MetaDataT> metaData_;
 
   protected:
     ObservableTNCuda() = default;
@@ -75,6 +74,17 @@ template <class StateTensorT> class ObservableTNCuda {
     ObservableTNCuda(ObservableTNCuda &&) noexcept = default;
     ObservableTNCuda &operator=(const ObservableTNCuda &) = default;
     ObservableTNCuda &operator=(ObservableTNCuda &&) noexcept = default;
+
+  private:
+    /**
+     * @brief Polymorphic function comparing this to another Observable
+     * object.
+     *
+     * @param Another instance of subclass of ObservableTNCuda<StateTensorT> to
+     * compare.
+     */
+    [[nodiscard]] virtual bool
+    isEqual(const ObservableTNCuda<StateTensorT> &other) const = 0;
 
   public:
     virtual ~ObservableTNCuda() = default;
@@ -115,7 +125,7 @@ template <class StateTensorT> class ObservableTNCuda {
     /**
      * @brief Get the data of each tensor in each term on host.
      */
-    [[nodiscard]] auto getMetaData() const -> const vector2D<metaT> & {
+    [[nodiscard]] auto getMetaData() const -> const vector2D<MetaDataT> & {
         return metaData_;
     }
 
@@ -126,6 +136,22 @@ template <class StateTensorT> class ObservableTNCuda {
         -> const vector1D<PrecisionT> & {
         return coeffs_;
     };
+
+    /**
+     * @brief Test whether this object is equal to another object
+     */
+    [[nodiscard]] auto
+    operator==(const ObservableTNCuda<StateTensorT> &other) const -> bool {
+        return typeid(*this) == typeid(other) && isEqual(other);
+    }
+
+    /**
+     * @brief Test whether this object is different from another object.
+     */
+    [[nodiscard]] auto
+    operator!=(const ObservableTNCuda<StateTensorT> &other) const -> bool {
+        return !(*this == other);
+    }
 };
 
 /**
@@ -138,14 +164,24 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
-    using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
-    using metaT = BaseType::metaT;
+    using MetaDataT = BaseType::MetaDataT;
 
   private:
     std::string obs_name_;
     std::vector<std::size_t> wires_;
     std::vector<PrecisionT> params_;
+
+  private:
+    [[nodiscard]] auto
+    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+        -> bool override {
+        const auto &other_cast =
+            static_cast<const NamedObsTNCuda<StateTensorT> &>(other);
+
+        return (obs_name_ == other_cast.obs_name_) &&
+               (wires_ == other_cast.wires_) && (params_ == other_cast.params_);
+    }
 
   public:
     /**
@@ -166,7 +202,7 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
         BaseType::stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires));
         std::vector<ComplexT> matrix_data;
-        vector1D<metaT> local_MetaData;
+        vector1D<MetaDataT> local_MetaData;
         local_MetaData.push_back(
             std::make_tuple(obs_name, params, matrix_data));
         BaseType::metaData_.push_back(local_MetaData);
@@ -194,14 +230,24 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
-    using CFP_t = typename StateTensorT::CFP_t;
     using ComplexT = typename StateTensorT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
-    using metaT = BaseType::metaT;
+    using MetaDataT = BaseType::MetaDataT;
 
   private:
+    inline static const MatrixHasher mh;
     MatrixT matrix_;
     std::vector<std::size_t> wires_;
+
+  private:
+    [[nodiscard]] auto
+    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+        -> bool override {
+        const auto &other_cast =
+            static_cast<const HermitianObsTNCuda<StateTensorT> &>(other);
+
+        return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
+    }
 
   public:
     /**
@@ -212,6 +258,7 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
      */
     HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
+        PL_ASSERT(matrix_.size() == Pennylane::Util::exp2(2 * wires_.size()));
         BaseType::coeffs_.emplace_back(PrecisionT{1.0});
         BaseType::numTensors_.emplace_back(std::size_t{1});
         BaseType::numStateModes_.emplace_back(
@@ -221,13 +268,18 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
 
         std::vector<PrecisionT> params = {};
 
-        vector1D<metaT> local_MetaData;
+        vector1D<MetaDataT> local_MetaData;
         local_MetaData.push_back(std::make_tuple("Hermitian", params, matrix_));
         BaseType::metaData_.push_back(local_MetaData);
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
-        return "Hermitian";
+        // To avoid collisions on cached GPU data, use matrix elements to
+        // uniquely identify Hermitian
+        // TODO: Replace with a performant hash function
+        std::ostringstream obs_stream;
+        obs_stream << "Hermitian" << mh(matrix_);
+        return obs_stream.str();
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
@@ -245,13 +297,30 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
-    using CFP_t = typename StateTensorT::CFP_t;
-    using ComplexT = typename StateTensorT::ComplexT;
-    using metaT = BaseType::metaT;
+    using MetaDataT = BaseType::MetaDataT;
 
   protected:
     std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
     std::vector<std::size_t> all_wires_;
+
+  private:
+    [[nodiscard]] auto
+    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+        -> bool override {
+        const auto &other_cast =
+            static_cast<const TensorProdObsTNCuda<StateTensorT> &>(other);
+
+        if (obs_.size() != other_cast.obs_.size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < obs_.size(); i++) {
+            if (*obs_[i] != *other_cast.obs_[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
   public:
     /**
@@ -281,7 +350,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
 
         vector1D<std::size_t> numStateModesLocal;
         vector2D<std::size_t> stateModesLocal;
-        vector1D<metaT> dataLocal;
+        vector1D<MetaDataT> dataLocal;
 
         for (const auto &ob : obs_) {
             numStateModesLocal.insert(numStateModesLocal.end(),
@@ -321,7 +390,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
      * brace-enclosed initializer list correctly.
      *
      * @param obs List of observables
-     * @return std::shared_ptr<TensorProdObs<StateTensorT>>
+     * @return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>
      */
     static auto create(
         std::initializer_list<std::shared_ptr<ObservableTNCuda<StateTensorT>>>
@@ -390,13 +459,28 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
   public:
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
-    using CFP_t = typename StateTensorT::CFP_t;
-    using ComplexT = typename StateTensorT::ComplexT;
-    using metaT = BaseType::metaT;
 
   private:
     std::vector<PrecisionT> coeffs_ham_;
     std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
+
+  private:
+    [[nodiscard]] bool
+    isEqual(const ObservableTNCuda<StateTensorT> &other) const override {
+        const auto &other_cast =
+            static_cast<const HamiltonianTNCuda<StateTensorT> &>(other);
+
+        if (coeffs_ham_ != other_cast.coeffs_ham_) {
+            return false;
+        }
+
+        for (size_t i = 0; i < obs_.size(); i++) {
+            if (*obs_[i] != *other_cast.obs_[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
   public:
     /**
@@ -449,7 +533,7 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
      *
      * @param coeffs Arguments to construct coefficients
      * @param obs Arguments to construct observables
-     * @return std::shared_ptr<Hamiltonian<StateTensorT>>
+     * @return std::shared_ptr<HamiltonianTNCuda<StateTensorT>>
      */
     static auto create(
         std::initializer_list<PrecisionT> coeffs,
