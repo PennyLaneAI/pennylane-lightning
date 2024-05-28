@@ -158,27 +158,31 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-/*
-TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float,
-                   double) {
+TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
-        using PrecisionT = StateVectorT::PrecisionT;
+        using PrecisionT = StateTensorT::PrecisionT;
+        using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
-        // Defining the statevector that will be measured.
-        auto statevector_data = createNonTrivialState<StateVectorT>();
-        StateVectorT sv(statevector_data.data(), statevector_data.size());
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
 
         SECTION("Using expval") {
-            auto m = Measurements(sv);
-            auto ob = NamedObs<StateVectorT>("PauliZ", {1});
+            mps_state.applyOperations(
+                {{"RX"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
+                {{false}, {false}, {false}}, {{0.5}, {}, {}});
+            auto m = Measurements<StateTensorT>(mps_state);
+            auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);
-            PrecisionT ref = 0.77015115;
+            PrecisionT ref = 0.8775825618903724;
             REQUIRE(res == Approx(ref).margin(1e-6));
         }
     }
 }
-*/
 
 TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
     {
