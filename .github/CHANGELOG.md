@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add gate support to `cutensornet` backed `lightning.tensor` C++ layer.
+  [(#718)](https://github.com/PennyLaneAI/pennylane-lightning/pull/718)
+
 * Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
   [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
