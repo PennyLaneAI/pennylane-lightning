@@ -494,30 +494,17 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
         for (std::size_t term_idx = 0; term_idx < coeffs_ham_.size();
              term_idx++) {
             auto ob = obs_[term_idx];
-            if (ob->getObsName().find("Hamiltonian") != std::string::npos) {
-                for (std::size_t sub_term_idx = 0;
-                     sub_term_idx < ob->getNumTensors().size();
-                     sub_term_idx++) {
-                    PrecisionT coeff = ob->getCoeffsPerTerm()[sub_term_idx];
-                    coeff *= coeffs_ham_[term_idx];
-                    BaseType::coeffs_.emplace_back(coeff);
-                    BaseType::numTensors_.emplace_back(
-                        ob->getNumTensors()[sub_term_idx]);
-                    BaseType::numStateModes_.emplace_back(
-                        ob->getNumStateModes()[sub_term_idx]);
-                    BaseType::stateModes_.emplace_back(
-                        ob->getStateModes()[sub_term_idx]);
-                    BaseType::metaData_.emplace_back(
-                        ob->getMetaData()[sub_term_idx]);
-                }
-            } else {
-                BaseType::coeffs_.push_back(coeffs_ham_[term_idx]);
-                BaseType::numTensors_.emplace_back(ob->getNumTensors().front());
-                BaseType::numStateModes_.emplace_back(
-                    ob->getNumStateModes().front());
-                BaseType::stateModes_.emplace_back(ob->getStateModes().front());
-                BaseType::metaData_.emplace_back(ob->getMetaData().front());
-            }
+            // This is aligned with statevector backends
+            PL_ABORT_IF(ob->getObsName().find("Hamiltonian") !=
+                            std::string::npos,
+                        "A Hamiltonian observable cannot be created from "
+                        "another Hamiltonian.");
+            BaseType::coeffs_.push_back(coeffs_ham_[term_idx]);
+            BaseType::numTensors_.emplace_back(ob->getNumTensors().front());
+            BaseType::numStateModes_.emplace_back(
+                ob->getNumStateModes().front());
+            BaseType::stateModes_.emplace_back(ob->getStateModes().front());
+            BaseType::metaData_.emplace_back(ob->getMetaData().front());
         }
     }
 
@@ -568,12 +555,5 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
         ss << "]}";
         return ss.str();
     }
-
-    /**
-     * @brief Get the coefficients of the observable.
-     */
-    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
-        return coeffs_ham_;
-    };
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Observables
