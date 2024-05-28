@@ -143,10 +143,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      *
      * @return std::vector<uint64_t *>
      */
-    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<int64_t *> {
-        std::vector<int64_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<uint64_t *> {
+        std::vector<uint64_t *> tensorsOutDataPtr(BaseType::getNumQubits());
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsOutDataPtr[i] = reinterpret_cast<int64_t *>(
+            tensorsOutDataPtr[i] = reinterpret_cast<uint64_t *>(
                 tensors_out_[i].getDataBuffer().getData());
         }
         return tensorsOutDataPtr;

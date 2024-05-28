@@ -47,7 +47,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  *
  * This class creates `custatenetTensorNetwork` Operator from
  * `ObservablesTNCuda` objects for measurement purpose. Since the NamedObs,
- * HermitianObs, TensorProdObs and Hamiltionain objects can be encapsulated in a
+ * HermitianObs, TensorProdObs and Hamiltionian objects can be encapsulated in a
  * `cutensornetNetworkOperator_t` instance, only one ObservableTNCudaOperator
  * class is designed here. Note that a `cutensornetNetworkOperator_t` object can
  * only be created and destroyed by creating a new ObservableTNCudaOperator
@@ -68,11 +68,11 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     cutensornetNetworkOperator_t obsOperator_{
         nullptr}; // cutensornetNetworkOperator operator
 
-    const StateTensorT &state_tensor_; // Quatum state to be measured
+    const StateTensorT &state_tensor_; // Quantum state to be measured
 
-    const size_t numObsTerms_;         // Number of observable terms
+    const std::size_t numObsTerms_;    // Number of observable terms
     vector1D<cuDoubleComplex> coeffs_; // coefficients for each term
-    vector1D<size_t> numTensors_;      // number of tensors in each term
+    vector1D<std::size_t> numTensors_; // number of tensors in each term
 
     vector2D<int32_t>
         numModes_; // number of state modes of each tensor in each term
@@ -91,7 +91,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     /**
      * @brief Hasher for observable key.
      */
-    struct ObsKeyHaser {
+    struct ObsKeyHasher {
         std::size_t operator()(
             const std::tuple<std::string, std::vector<PrecisionT>, std::size_t>
                 &obsKey) const {
@@ -108,11 +108,11 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     /**
      * @brief Cache for observable data on device.
      */
-    std::unordered_map<obs_key, TensorCuda<PrecisionT>, ObsKeyHaser>
+    std::unordered_map<obs_key, TensorCuda<PrecisionT>, ObsKeyHasher>
         device_obs_cache_;
 
     /**
-     * @brief Add an obsverable numerical value to the cached map, indexed by
+     * @brief Add an observable numerical value to the cached map, indexed by
      * the name, parameters and hash value(default as 0 for named observables).
      *
      * @param obs_name String representing the name of the given observable.
@@ -130,7 +130,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     }
 
     /**
-     * @brief Add obsverable numerical value to the cache map, the name,
+     * @brief Add observable numerical value to the cache map, the name,
      * parameters and hash value(default as 0 for named observables).
      *
      * @param obsKey obs_key tuple representing the name, parameters and hash
@@ -176,7 +176,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
             /* const int64_t stateModeExtents */
             reinterpret_cast<int64_t *>(
-                const_cast<size_t *>(state_tensor.getQubitDims().data())),
+                const_cast<std::size_t *>(state_tensor.getQubitDims().data())),
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
 
@@ -206,7 +206,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
             // modes pointer initialization
             vector1D<const int32_t *> modesPtrPerTerm;
-            for (size_t tensor_idx = 0; tensor_idx < modes_.back().size();
+            for (std::size_t tensor_idx = 0; tensor_idx < modes_.back().size();
                  tensor_idx++) {
                 modesPtrPerTerm.emplace_back(modes_.back()[tensor_idx].data());
             }

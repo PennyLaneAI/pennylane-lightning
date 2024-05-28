@@ -189,13 +189,11 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
         BaseType::coeffs_.emplace_back(PrecisionT{1.0});
         BaseType::numTensors_.emplace_back(std::size_t{1});
         BaseType::numStateModes_.emplace_back(
-            vector1D<std::size_t>(std::size_t{1}, wires.size()));
-        BaseType::stateModes_.emplace_back(
-            vector2D<std::size_t>(std::size_t{1}, wires));
+            vector1D<std::size_t>{wires_.size()});
+        BaseType::stateModes_.emplace_back(vector2D<std::size_t>{wires_});
 
-        std::vector<ComplexT> matrix_data = {};
         BaseType::metaData_.push_back(
-            {std::make_tuple(obs_name, params, matrix_data)});
+            {std::make_tuple(obs_name, params_, std::vector<ComplexT>{})});
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -251,13 +249,11 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
         BaseType::coeffs_.emplace_back(PrecisionT{1.0});
         BaseType::numTensors_.emplace_back(std::size_t{1});
         BaseType::numStateModes_.emplace_back(
-            vector1D<std::size_t>(std::size_t{1}, wires_.size()));
-        BaseType::stateModes_.emplace_back(
-            vector2D<std::size_t>(std::size_t{1}, wires_));
+            vector1D<std::size_t>{wires_.size()});
+        BaseType::stateModes_.emplace_back(vector2D<std::size_t>{wires_});
 
-        std::vector<PrecisionT> params = {};
         BaseType::metaData_.push_back(
-            {std::make_tuple("Hermitian", params, matrix_)});
+            {std::make_tuple("Hermitian", std::vector<PrecisionT>{}, matrix_)});
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
