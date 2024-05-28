@@ -71,7 +71,7 @@ template <class StateTensorT> class Measurements {
         auto tnoperator =
             ObservableTNCudaOperator<StateTensorT>(state_tensor_, ob);
 
-        ComplexT expectVal{0.0, 0.0}, stateNorm2{0.0, 0.0};
+        ComplexT expectation_val{0.0, 0.0}, state_norm2{0.0, 0.0};
 
         cutensornetStateExpectation_t expectation;
 
@@ -127,17 +127,17 @@ template <class StateTensorT> class Measurements {
             /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
             /* cutensornetStateExpectation_t */ expectation,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* void* */ static_cast<void *>(&expectVal),
-            /* void* */ static_cast<void *>(&stateNorm2),
+            /* void* */ static_cast<void *>(&expectation_val),
+            /* void* */ static_cast<void *>(&state_norm2),
             /* cudaStream_t unused */ 0x0));
 
-        expectVal /= stateNorm2;
+        expectation_val /= state_norm2;
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyExpectation(expectation));
 
-        return expectVal.real();
+        return expectation_val.real();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Measures

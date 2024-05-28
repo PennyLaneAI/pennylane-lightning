@@ -11,6 +11,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+#include <tuple>
+
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 
@@ -28,12 +30,21 @@ using Pennylane::Util::LightningException;
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
     using StateTensorT = TestType;
+    using PrecisionT = typename StateTensorT::PrecisionT;
+    using ComplexT = typename StateTensorT::ComplexT;
     using NamedObsT = NamedObsTNCuda<StateTensorT>;
 
     SECTION("Test get obs name") {
         auto obs = NamedObsT("PauliX", {0});
+        auto obs_metaData = obs.getMetaData()[0][0];
         CHECK(obs.getObsName() == "PauliX[0]");
         CHECK(obs.getWires() == std::vector<std::size_t>{0});
+        CHECK(obs.getNumTensors() == std::vector<std::size_t>{1});
+        CHECK(obs.getNumStateModes()[0] == std::vector<std::size_t>{1});
+        CHECK(obs.getStateModes()[0][0] == std::vector<std::size_t>{0});
+        CHECK(std::get<0>(obs_metaData) == "PauliX");
+        CHECK(std::get<1>(obs_metaData) == std::vector<PrecisionT>{});
+        CHECK(std::get<2>(obs_metaData) == std::vector<ComplexT>{});
     }
 
     SECTION("Comparing objects names") {
@@ -69,6 +80,7 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
 
 TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
     using StateTensorT = MPSTNCuda<TestType>;
+    using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
     using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
 
@@ -89,10 +101,18 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
         std::vector<ComplexT> mat = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
         auto obs = HermitianObsT(mat, std::vector<std::size_t>{0});
+        auto obs_metaData = obs.getMetaData()[0][0];
         std::ostringstream res;
         res << "Hermitian" << MatrixHasher()(mat);
         CHECK(obs.getObsName() == res.str());
         CHECK(obs.getWires() == std::vector<std::size_t>{0});
+
+        CHECK(obs.getNumTensors() == std::vector<std::size_t>{1});
+        CHECK(obs.getNumStateModes()[0] == std::vector<std::size_t>{1});
+        CHECK(obs.getStateModes()[0][0] == std::vector<std::size_t>{0});
+        CHECK(std::get<0>(obs_metaData) == "Hermitian");
+        CHECK(std::get<1>(obs_metaData) == std::vector<PrecisionT>{});
+        CHECK(std::get<2>(obs_metaData) == mat);
     }
 
     SECTION("Comparing objects matrices") {
@@ -123,6 +143,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
 TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
+        using PrecisionT = typename StateTensorT::PrecisionT;
         using ComplexT = typename StateTensorT::ComplexT;
         using NamedObsT = NamedObsTNCuda<StateTensorT>;
         using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
@@ -173,6 +194,21 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
                                std::make_shared<NamedObsT>(
                                    "PauliZ", std::vector<std::size_t>{1}));
             REQUIRE(ob.getObsName() == "PauliX[0] @ PauliZ[1]");
+            CHECK(ob.getNumTensors() == std::vector<std::size_t>{2});
+            CHECK(ob.getNumStateModes()[0] == std::vector<std::size_t>{1, 1});
+            CHECK(ob.getStateModes()[0][0] == std::vector<std::size_t>{0});
+            CHECK(ob.getStateModes()[0][1] == std::vector<std::size_t>{1});
+
+            CHECK(std::get<0>(ob.getMetaData()[0][0]) == "PauliX");
+            CHECK(std::get<0>(ob.getMetaData()[0][1]) == "PauliZ");
+            CHECK(std::get<1>(ob.getMetaData()[0][0]) ==
+                  std::vector<PrecisionT>{});
+            CHECK(std::get<1>(ob.getMetaData()[0][1]) ==
+                  std::vector<PrecisionT>{});
+            CHECK(std::get<2>(ob.getMetaData()[0][0]) ==
+                  std::vector<ComplexT>{});
+            CHECK(std::get<2>(ob.getMetaData()[0][1]) ==
+                  std::vector<ComplexT>{});
         }
 
         SECTION("Compare tensor product observables") {
@@ -212,6 +248,7 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
         using PrecisionT = typename StateTensorT::PrecisionT;
+        using ComplexT = typename StateTensorT::ComplexT;
         using NamedObsT = NamedObsTNCuda<StateTensorT>;
         using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
         using HamiltonianT = HamiltonianTNCuda<StateTensorT>;
@@ -235,7 +272,7 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
                 HamiltonianT::create({PrecisionT{1.0}, h}, {zz, x1, x2}),
                 LightningException);
 
-            DYNAMIC_SECTION("getObsName") {
+            SECTION("getObsName") {
                 auto X0 = std::make_shared<NamedObsT>(
                     "PauliX", std::vector<std::size_t>{0});
                 auto Z2 = std::make_shared<NamedObsT>(
@@ -247,7 +284,7 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
                     "'observables' : [PauliX[0], PauliZ[2]]}");
             }
 
-            DYNAMIC_SECTION("Compare Hamiltonians") {
+            SECTION("Compare Hamiltonians") {
                 auto X0 = std::make_shared<NamedObsT>(
                     "PauliX", std::vector<std::size_t>{0});
                 auto X1 = std::make_shared<NamedObsT>(
@@ -315,7 +352,7 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
                 REQUIRE(*ham1 != *ham5);
             }
 
-            DYNAMIC_SECTION("getWires") {
+            SECTION("getWires") {
                 auto Z0 = std::make_shared<NamedObsT>(
                     "PauliZ", std::vector<std::size_t>{0});
                 auto Z5 = std::make_shared<NamedObsT>(
@@ -323,9 +360,59 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
                 auto Z9 = std::make_shared<NamedObsT>(
                     "PauliZ", std::vector<std::size_t>{9});
 
-                auto ham1 = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
+                auto ham = HamiltonianT::create({0.8, 0.5, 0.7}, {Z0, Z5, Z9});
 
-                REQUIRE(ham1->getWires() == std::vector<std::size_t>{0, 5, 9});
+                REQUIRE(ham->getWires() == std::vector<std::size_t>{0, 5, 9});
+
+                CHECK(ham->getCoeffsPerTerm() ==
+                      std::vector<PrecisionT>{0.8, 0.5, 0.7});
+
+                CHECK(ham->getNumTensors() ==
+                      std::vector<std::size_t>{1, 1, 1});
+                CHECK(ham->getNumStateModes()[0] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham->getNumStateModes()[1] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham->getNumStateModes()[2] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham->getStateModes()[0][0] ==
+                      std::vector<std::size_t>{0});
+                CHECK(ham->getStateModes()[1][0] ==
+                      std::vector<std::size_t>{5});
+                CHECK(ham->getStateModes()[2][0] ==
+                      std::vector<std::size_t>{9});
+
+                CHECK(std::get<0>(ham->getMetaData()[0][0]) == "PauliZ");
+                CHECK(std::get<0>(ham->getMetaData()[1][0]) == "PauliZ");
+                CHECK(std::get<0>(ham->getMetaData()[2][0]) == "PauliZ");
+                CHECK(std::get<1>(ham->getMetaData()[0][0]) ==
+                      std::vector<PrecisionT>{});
+                CHECK(std::get<1>(ham->getMetaData()[1][0]) ==
+                      std::vector<PrecisionT>{});
+                CHECK(std::get<1>(ham->getMetaData()[2][0]) ==
+                      std::vector<PrecisionT>{});
+                CHECK(std::get<2>(ham->getMetaData()[0][0]) ==
+                      std::vector<ComplexT>{});
+                CHECK(std::get<2>(ham->getMetaData()[1][0]) ==
+                      std::vector<ComplexT>{});
+                CHECK(std::get<2>(ham->getMetaData()[2][0]) ==
+                      std::vector<ComplexT>{});
+            }
+
+            SECTION("Throw Errors") {
+                auto X0 = std::make_shared<NamedObsT>(
+                    "PauliX", std::vector<std::size_t>{0});
+                auto Z1 = std::make_shared<NamedObsT>(
+                    "PauliZ", std::vector<std::size_t>{1});
+
+                auto ob0 = HamiltonianT::create({TestType(0.5)}, {X0});
+
+                auto ob1 = HamiltonianT::create({TestType(0.5)}, {Z1});
+
+                REQUIRE_THROWS_AS(
+                    HamiltonianT::create({TestType(0.5), TestType(0.5)},
+                                         {ob0, ob1}),
+                    LightningException);
             }
         }
     }
