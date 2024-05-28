@@ -204,6 +204,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         }
     };
 
+    /**
+     * @brief Get final state of the quantum circuit.
+     */
     void get_final_state() {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
             MPSFinalized_ = MPSStatus::MPSFinalizedSet;

@@ -32,7 +32,6 @@ using namespace Pennylane::LightningGPU::Util;
 template <class T> using vector1D = std::vector<T>;
 template <class T> using vector2D = std::vector<vector1D<T>>;
 template <class T> using vector3D = std::vector<vector2D<T>>;
-
 } // namespace
 /// @endcond
 
@@ -165,7 +164,6 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     std::vector<std::size_t> wires_;
     std::vector<PrecisionT> params_;
 
-  private:
     [[nodiscard]] auto
     isEqual(const ObservableTNCuda<StateTensorT> &other) const
         -> bool override {
@@ -231,7 +229,6 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     MatrixT matrix_;
     std::vector<std::size_t> wires_;
 
-  private:
     [[nodiscard]] auto
     isEqual(const ObservableTNCuda<StateTensorT> &other) const
         -> bool override {
@@ -289,11 +286,10 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using PrecisionT = typename StateTensorT::PrecisionT;
     using MetaDataT = BaseType::MetaDataT;
 
-  protected:
+  private:
     std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
     std::vector<std::size_t> all_wires_;
 
-  private:
     [[nodiscard]] auto
     isEqual(const ObservableTNCuda<StateTensorT> &other) const
         -> bool override {
@@ -454,7 +450,6 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
     std::vector<PrecisionT> coeffs_ham_;
     std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
 
-  private:
     [[nodiscard]] bool
     isEqual(const ObservableTNCuda<StateTensorT> &other) const override {
         const auto &other_cast =

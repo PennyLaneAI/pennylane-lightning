@@ -281,12 +281,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
-    /**
-     * @brief Get final state of the quantum circuit.
-     * NOTE: This function only works for the MPS approximation.
-     */
-    void get_final_state() { staic_cast<Derived *>(this)->get_final_state(); }
-
   protected:
     /**
      * @brief Save quantumState information to data provided by a user

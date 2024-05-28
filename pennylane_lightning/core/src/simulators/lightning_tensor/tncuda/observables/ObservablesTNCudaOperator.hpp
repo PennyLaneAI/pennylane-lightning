@@ -21,7 +21,6 @@
 #include "ObservablesTNCuda.hpp"
 #include "TensorCuda.hpp"
 #include "Util.hpp"
-
 #include "cuGates_host.hpp"
 #include "tncudaError.hpp"
 
@@ -30,10 +29,12 @@ namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningTensor::TNCuda;
-template <class T> using vector1D = std::vector<T>;
-template <class T> using vector2D = std::vector<vector1D<T>>;
-template <class T> using vector3D = std::vector<vector2D<T>>;
 
+template <class T> using vector1D = std::vector<T>;
+
+template <class T> using vector2D = std::vector<vector1D<T>>;
+
+template <class T> using vector3D = std::vector<vector2D<T>>;
 } // namespace
 /// @endcond
 
@@ -112,8 +113,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
     /**
      * @brief Add an obsverable numerical value to the cached map, indexed by
-     * the name, parameters and tensor data of observable tensor operator and
-     * the its associated data on device.
+     * the name, parameters and hash value(default as 0 for named observables).
      *
      * @param obs_name String representing the name of the given observable.
      * @param obs_param Vector of parameter values. `{}` if non-parametric
@@ -131,11 +131,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
     /**
      * @brief Add obsverable numerical value to the cache map, the name,
-     * parameters and tensor data of observable tensor operator and the its
-     * associated data on device.
+     * parameters and hash value(default as 0 for named observables).
      *
-     * @param obsKey obs_key tuple representing the name, parameters and tensor
-     * data of observable tensor operator.
+     * @param obsKey obs_key tuple representing the name, parameters and hash
+     * value(default as 0 for named observables).
      * @param obs_data_host Vector of complex floating point values
      * representing the observable data on host.
      */
@@ -250,7 +249,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         }
     }
 
-    virtual ~ObservableTNCudaOperator() {
+    ~ObservableTNCudaOperator() {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyNetworkOperator(obsOperator_));
     }
@@ -260,7 +259,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
      *
      * @return cutensornetNetworkOperator_t
      */
-    [[nodiscard]] auto getTNOperator() -> cutensornetNetworkOperator_t {
+    [[nodiscard]] auto getTNOperator() const -> cutensornetNetworkOperator_t {
         return obsOperator_;
     }
 
