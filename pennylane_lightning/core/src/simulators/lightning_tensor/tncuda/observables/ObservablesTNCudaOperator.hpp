@@ -19,10 +19,10 @@
 #include <vector>
 
 #include "ObservablesTNCuda.hpp"
-#include "cuGates_host.hpp"
-
 #include "TensorCuda.hpp"
 #include "Util.hpp"
+
+#include "cuGates_host.hpp"
 #include "tncudaError.hpp"
 
 /// @cond DEV
@@ -58,39 +58,33 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 template <class StateTensorT> class ObservableTNCudaOperator {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
-
     using CFP_t = typename StateTensorT::CFP_t;
-
     using ComplexT = typename StateTensorT::ComplexT;
-
     using obs_key =
         std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
   private:
-    // cutensornetNetworkOperator operator
-    cutensornetNetworkOperator_t obsOperator_{nullptr};
+    cutensornetNetworkOperator_t obsOperator_{
+        nullptr}; // cutensornetNetworkOperator operator
 
-    // Quatum state to be measured
-    const StateTensorT &state_tensor_;
-    const size_t numObsTerms_;
+    const StateTensorT &state_tensor_; // Quatum state to be measured
 
-    // ids for each term in the graph
-    std::vector<int64_t> ids_;
+    const size_t numObsTerms_;         // Number of observable terms
+    vector1D<cuDoubleComplex> coeffs_; // coefficients for each term
+    vector1D<size_t> numTensors_;      // number of tensors in each term
 
-    // coefficients for each term
-    vector1D<cuDoubleComplex> coeffs_;
+    vector2D<int32_t>
+        numModes_; // number of state modes of each tensor in each term
 
-    // number of tensors in each term
-    vector1D<size_t> numTensors_;
+    vector3D<int32_t> modes_; // modes for each tensor in each term
 
-    // number of state modes of each tensor in each term
-    vector2D<int32_t> numModes_;
+    vector2D<const int32_t *>
+        modesPtr_; // pointers for modes of each tensor in each term
 
-    vector3D<int32_t> modes_;
+    vector2D<const void *>
+        tensorDataPtr_; // pointers for each tensor data in each term
 
-    vector2D<const int32_t *> modesPtr_;
-
-    vector2D<const void *> tensorDataPtr_;
+    std::vector<int64_t> ids_; // ids for each term in the graph
 
     struct ObsKeyHaser {
         std::size_t operator()(
@@ -127,6 +121,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
         add_obs_(obsKey, gateMap.getGateData(obs_name, obs_param));
     }
+
     /**
      * @brief Add obsverable numerical value to the cache map, the name,
      * parameters and tensor data of observable tensor operator and the its
@@ -137,7 +132,6 @@ template <class StateTensorT> class ObservableTNCudaOperator {
      * @param obs_data_host Vector of complex floating point values
      * representing the observable data on host.
      */
-
     void add_obs_(const obs_key &obsKey,
                   const std::vector<CFP_t> &obs_data_host) {
         const std::size_t rank = Pennylane::Util::log2(obs_data_host.size());
@@ -184,7 +178,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
             auto coeff = cuDoubleComplex{
-                static_cast<double>(obs.getCoeffsPerTerm()[term_idx]), 0.0};
+                static_cast<double>(obs.getCoeffs()[term_idx]), 0.0};
             auto numTensors = numTensors_[term_idx];
 
             coeffs_.emplace_back(coeff);

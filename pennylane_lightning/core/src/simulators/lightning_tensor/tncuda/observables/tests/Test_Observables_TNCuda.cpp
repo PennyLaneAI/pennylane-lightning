@@ -42,6 +42,7 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
         CHECK(obs.getNumTensors() == std::vector<std::size_t>{1});
         CHECK(obs.getNumStateModes()[0] == std::vector<std::size_t>{1});
         CHECK(obs.getStateModes()[0][0] == std::vector<std::size_t>{0});
+        CHECK(obs.getCoeffs() == std::vector<PrecisionT>{1.0});
         CHECK(std::get<0>(obs_metaData) == "PauliX");
         CHECK(std::get<1>(obs_metaData) == std::vector<PrecisionT>{});
         CHECK(std::get<2>(obs_metaData) == std::vector<ComplexT>{});
@@ -110,6 +111,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
         CHECK(obs.getNumTensors() == std::vector<std::size_t>{1});
         CHECK(obs.getNumStateModes()[0] == std::vector<std::size_t>{1});
         CHECK(obs.getStateModes()[0][0] == std::vector<std::size_t>{0});
+        CHECK(obs.getCoeffs() == std::vector<PrecisionT>{1.0});
         CHECK(std::get<0>(obs_metaData) == "Hermitian");
         CHECK(std::get<1>(obs_metaData) == std::vector<PrecisionT>{});
         CHECK(std::get<2>(obs_metaData) == mat);
@@ -198,6 +200,7 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
             CHECK(ob.getNumStateModes()[0] == std::vector<std::size_t>{1, 1});
             CHECK(ob.getStateModes()[0][0] == std::vector<std::size_t>{0});
             CHECK(ob.getStateModes()[0][1] == std::vector<std::size_t>{1});
+            CHECK(ob.getCoeffs() == std::vector<PrecisionT>{1.0});
 
             CHECK(std::get<0>(ob.getMetaData()[0][0]) == "PauliX");
             CHECK(std::get<0>(ob.getMetaData()[0][1]) == "PauliZ");
@@ -364,7 +367,7 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
 
                 REQUIRE(ham->getWires() == std::vector<std::size_t>{0, 5, 9});
 
-                CHECK(ham->getCoeffsPerTerm() ==
+                CHECK(ham->getCoeffs() ==
                       std::vector<PrecisionT>{0.8, 0.5, 0.7});
 
                 CHECK(ham->getNumTensors() ==

@@ -22,12 +22,12 @@
 #include "ConstantUtil.hpp" // lookup
 #include "Util.hpp"
 
-#include "cuGates_host.hpp"
+#include "cuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-using namespace Pennylane::LightningGPU;
+using namespace Pennylane::LightningGPU::Util;
 
 template <class T> using vector1D = std::vector<T>;
 template <class T> using vector2D = std::vector<vector1D<T>>;
@@ -42,13 +42,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  *
  * We note that the observable classes for cutensornet backends are designed to
  * be created in the same way as the observable classes for the statevector
- * backends across the lightning ecosystem. However, the main difference between
- * the observable objects for cutensornet backends and those for statevector
- * backends is that the former store the tensor data in the observable base
- * class. This is achieved by treating different types of observables as a
- * subset of a Hamiltonian observables. This design is to ensure that the easy
- * construction of an observable from the Python layer and its corresponding
- * cutensornet network operator object.
+ * backends across the lightning ecosystem.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -132,8 +126,7 @@ template <class StateTensorT> class ObservableTNCuda {
     /**
      * @brief Get the coefficients of a observable.
      */
-    [[nodiscard]] auto getCoeffsPerTerm() const
-        -> const vector1D<PrecisionT> & {
+    [[nodiscard]] auto getCoeffs() const -> const vector1D<PrecisionT> & {
         return coeffs_;
     };
 
@@ -489,9 +482,10 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
     template <typename T1, typename T2>
     HamiltonianTNCuda(T1 &&coeffs, T2 &&obs)
         : coeffs_ham_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
-        PL_ASSERT(coeffs_ham_.size() == obs_.size());
+        BaseType::coeffs_ = coeffs_ham_;
+        PL_ASSERT(BaseType::coeffs_.size() == obs_.size());
 
-        for (std::size_t term_idx = 0; term_idx < coeffs_ham_.size();
+        for (std::size_t term_idx = 0; term_idx < BaseType::coeffs_.size();
              term_idx++) {
             auto ob = obs_[term_idx];
             // This is aligned with statevector backends
@@ -499,7 +493,6 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
                             std::string::npos,
                         "A Hamiltonian observable cannot be created from "
                         "another Hamiltonian.");
-            BaseType::coeffs_.push_back(coeffs_ham_[term_idx]);
             BaseType::numTensors_.emplace_back(ob->getNumTensors().front());
             BaseType::numStateModes_.emplace_back(
                 ob->getNumStateModes().front());
@@ -543,9 +536,9 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
-        ss << "Hamiltonian: { 'coeffs' : " << coeffs_ham_
+        ss << "Hamiltonian: { 'coeffs' : " << BaseType::coeffs_
            << ", 'observables' : [";
-        const auto term_size = coeffs_ham_.size();
+        const auto term_size = BaseType::coeffs_.size();
         for (size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
             if (t != term_size - 1) {
