@@ -56,8 +56,8 @@ template <class StateTensorT> class ObservableTNCuda {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
-    using MetaDataT =
-        std::tuple<std::string, std::vector<PrecisionT>, std::vector<ComplexT>>;
+    using MetaDataT = std::tuple<std::string, std::vector<PrecisionT>,
+                                 std::vector<ComplexT>>; // name, params, matrix
 
   protected:
     vector1D<PrecisionT> coeffs_;      // coefficients of each term
@@ -65,8 +65,8 @@ template <class StateTensorT> class ObservableTNCuda {
     vector2D<std::size_t>
         numStateModes_; // number of state modes of each tensor in each term
     vector3D<std::size_t>
-        stateModes_; // state modes of each tensor in each term
-    vector2D<MetaDataT> metaData_;
+        stateModes_;               // state modes of each tensor in each term
+    vector2D<MetaDataT> metaData_; // meta data of each tensor in each term
 
   protected:
     ObservableTNCuda() = default;
@@ -80,7 +80,7 @@ template <class StateTensorT> class ObservableTNCuda {
      * @brief Polymorphic function comparing this to another Observable
      * object.
      *
-     * @param Another instance of subclass of ObservableTNCuda<StateTensorT> to
+     * @param other Instance of subclass of ObservableTNCuda<StateTensorT> to
      * compare.
      */
     [[nodiscard]] virtual bool
@@ -123,7 +123,7 @@ template <class StateTensorT> class ObservableTNCuda {
     }
 
     /**
-     * @brief Get the data of each tensor in each term on host.
+     * @brief Get the meta data of each tensor in each term on host.
      */
     [[nodiscard]] auto getMetaData() const -> const vector2D<MetaDataT> & {
         return metaData_;
@@ -165,7 +165,7 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
-    using MetaDataT = BaseType::MetaDataT;
+    using MetaDataT = typename BaseType::MetaDataT;
 
   private:
     std::string obs_name_;
@@ -201,11 +201,10 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
             vector1D<std::size_t>(std::size_t{1}, wires.size()));
         BaseType::stateModes_.emplace_back(
             vector2D<std::size_t>(std::size_t{1}, wires));
-        std::vector<ComplexT> matrix_data;
-        vector1D<MetaDataT> local_MetaData;
-        local_MetaData.push_back(
-            std::make_tuple(obs_name, params, matrix_data));
-        BaseType::metaData_.push_back(local_MetaData);
+
+        std::vector<ComplexT> matrix_data = {};
+        BaseType::metaData_.push_back(
+            {std::make_tuple(obs_name, params, matrix_data)});
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
@@ -267,10 +266,8 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
             vector2D<std::size_t>(std::size_t{1}, wires_));
 
         std::vector<PrecisionT> params = {};
-
-        vector1D<MetaDataT> local_MetaData;
-        local_MetaData.push_back(std::make_tuple("Hermitian", params, matrix_));
-        BaseType::metaData_.push_back(local_MetaData);
+        BaseType::metaData_.push_back(
+            {std::make_tuple("Hermitian", params, matrix_)});
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {

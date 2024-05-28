@@ -48,7 +48,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  * `ObservablesTNCuda` objects for measurement purpose. Since the NamedObs,
  * HermitianObs, TensorProdObs and Hamiltionain objects can be encapsulated in a
  * `cutensornetNetworkOperator_t` instance, only one ObservableTNCudaOperator
- * class is designed here. Note that a `cutensornetNetworkOperator_t object can
+ * class is designed here. Note that a `cutensornetNetworkOperator_t` object can
  * only be created and destroyed by creating a new ObservableTNCudaOperator
  * object, which ensures its lifetime is aligned with that of data associated to
  * it.
@@ -110,16 +110,16 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         device_obs_cache_;
 
     /**
-     * @brief Add gate numerical value to the cache, indexed by the id of gate
-     * tensor operator in the graph and its name and parameter value are
-     * recorded as well.
+     * @brief Add an obsverable numerical value to the cached map, indexed by
+     * the name, parameters and tensor data of observable tensor operator and
+     * the its associated data on device.
      *
-     * @param obs_name String representing the name of the given gate.
+     * @param obs_name String representing the name of the given observable.
      * @param obs_param Vector of parameter values. `{}` if non-parametric
      * gate.
      */
     void add_obs_(const std::string &obs_name,
-                  [[maybe_unused]] std::vector<PrecisionT> obs_param = {}) {
+                  [[maybe_unused]] std::vector<PrecisionT> &obs_param = {}) {
         auto obsKey = std::make_tuple(obs_name, obs_param, std::size_t{0});
 
         auto &gateMap =
@@ -128,20 +128,19 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         add_obs_(obsKey, gateMap.getGateData(obs_name, obs_param));
     }
     /**
-     * @brief Add gate numerical value to the cache, indexed by the id of gate
-     * tensor operator in the graph and its name and parameter value as well as
-     * the gate data on host.
+     * @brief Add obsverable numerical value to the cache map, the name,
+     * parameters and tensor data of observable tensor operator and the its
+     * associated data on device.
      *
-     * @param gate_id The id of gate tensor operator in the computate graph.
-     * @param gate_key String representing the name of the given gate as well as
-     * its associated parameter value.
-     * @param gate_data_host Vector of complex floating point values
-     * representing the gate data on host.
+     * @param obsKey obs_key tuple representing the name, parameters and tensor
+     * data of observable tensor operator.
+     * @param obs_data_host Vector of complex floating point values
+     * representing the observable data on host.
      */
 
     void add_obs_(const obs_key &obsKey,
-                  const std::vector<CFP_t> &gate_data_host) {
-        const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
+                  const std::vector<CFP_t> &obs_data_host) {
+        const std::size_t rank = Pennylane::Util::log2(obs_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
         auto extents = std::vector<std::size_t>(rank, 2);
 
@@ -153,14 +152,14 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                                   std::forward_as_tuple(std::move(tensor)));
 
         device_obs_cache_.at(obsKey).getDataBuffer().CopyHostDataToGpu(
-            gate_data_host.data(), gate_data_host.size());
+            obs_data_host.data(), obs_data_host.size());
     }
 
     /**
-     * @brief Returns a pointer to the GPU device memory where the gate is
+     * @brief Returns a pointer to the GPU device memory where the observable is
      * stored.
      *
-     * @param gate_id The id of gate tensor operator in the computate graph.
+     * @param obsKey The key of observable tensor operator.
      * @return const CFP_t* Pointer to gate values on device.
      */
     CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
