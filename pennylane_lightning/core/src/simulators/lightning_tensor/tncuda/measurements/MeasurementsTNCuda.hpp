@@ -32,11 +32,9 @@
 
 /// @cond DEV
 namespace {
-using namespace Pennylane;
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
-using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 

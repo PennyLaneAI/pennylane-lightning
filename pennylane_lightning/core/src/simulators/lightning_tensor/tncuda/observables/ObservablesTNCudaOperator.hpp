@@ -86,6 +86,10 @@ template <class StateTensorT> class ObservableTNCudaOperator {
 
     std::vector<int64_t> ids_; // ids for each term in the graph
 
+  private:
+    /**
+     * @brief Hasher for observable key.
+     */
     struct ObsKeyHaser {
         std::size_t operator()(
             const std::tuple<std::string, std::vector<PrecisionT>, std::size_t>
@@ -100,6 +104,9 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         }
     };
 
+    /**
+     * @brief Cache for observable data on device.
+     */
     std::unordered_map<obs_key, TensorCuda<PrecisionT>, ObsKeyHaser>
         device_obs_cache_;
 
@@ -156,7 +163,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
      * @param obsKey The key of observable tensor operator.
      * @return const CFP_t* Pointer to gate values on device.
      */
-    CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
+    const CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
         return device_obs_cache_.at(obsKey).getDataBuffer().getData();
     }
 
@@ -248,11 +255,25 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             cutensornetDestroyNetworkOperator(obsOperator_));
     }
 
+    /**
+     * @brief Get the `cutensornetNetworkOperator_t` object.
+     *
+     * @return cutensornetNetworkOperator_t
+     */
     [[nodiscard]] auto getTNOperator() -> cutensornetNetworkOperator_t {
         return obsOperator_;
     }
 
   private:
+    /**
+     * @brief Append a product of tensors to the `cutensornetNetworkOperator_t`
+     *
+     * @param coeff Coefficient of the product.
+     * @param numTensors Number of tensors in the product.
+     * @param numStateModes Number of state modes of each tensor in the product.
+     * @param stateModes State modes of each tensor in the product.
+     * @param tensorDataPtr Pointer to the data of each tensor in the product.
+     */
     void appendTNOperator_(const cuDoubleComplex &coeff,
                            const std::size_t numTensors,
                            const int32_t *numStateModes,
