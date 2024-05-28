@@ -1262,6 +1262,33 @@ class TestLightningDeviceIntegration:
         assert np.allclose(res_sv, expected_sv, atol=tol, rtol=0)
         assert np.allclose(res_probs, expected_prob, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "op",
+        [
+            qml.BlockEncode,
+            qml.ctrl(qml.BlockEncode, control=(1)),
+        ],
+    )
+    def test_apply_BlockEncode(self, op, qubit_device, tol):
+        """Test apply BlockEncode and C(BlockEncode)"""
+
+        dev = qubit_device(wires=3)
+        dev_default = qml.device("default.qubit", wires=3)
+
+        def circuit1(A):
+            qml.Hadamard(0)
+            qml.Hadamard(1)
+            qml.BlockEncode(A, wires=[0, 2])
+            op(A, wires=[0, 2])
+            return qml.state()
+
+        A = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+
+        results = qml.qnode(dev)(circuit1)(A)
+        expected = qml.qnode(dev_default)(circuit1)(A)
+
+        assert np.allclose(results, expected, atol=tol, rtol=0)
+
 
 class TestApplyLightningMethod:
     """Unit tests for the apply_lightning method."""

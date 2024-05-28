@@ -58,7 +58,8 @@ StatePrep              = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
-BlockEncode            = {}
+BlockEncode            = {properties = [ "controllable" ]}
+'C(GlobalPhase)'       = {}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
