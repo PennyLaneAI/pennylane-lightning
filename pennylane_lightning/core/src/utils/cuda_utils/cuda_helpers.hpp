@@ -138,13 +138,13 @@ inline static constexpr auto cuToComplex(CFP_t a)
 /**
  * @brief Utility to convert std::complex types to cuComplex types
  *
- * @tparam CFP_t std::complex types.
+ * @tparam ComplexT std::complex types.
  * @param a A std::complex type.
  * @return cuComplex converted a
  */
-template <class CFP_t = std::complex<double>>
-inline static constexpr auto complexToCu(CFP_t a) {
-    if constexpr (std::is_same_v<CFP_t, std::complex<double>>) {
+template <class ComplexT = std::complex<double>>
+inline static constexpr auto complexToCu(ComplexT a) {
+    if constexpr (std::is_same_v<ComplexT, std::complex<double>>) {
         return make_cuDoubleComplex(a.real(), a.imag());
     } else {
         return make_cuFloatComplex(a.real(), a.imag());
@@ -154,16 +154,16 @@ inline static constexpr auto complexToCu(CFP_t a) {
 /**
  * @brief Utility to convert a vector of std::complex types to cuComplex types
  *
- * @tparam CFP_t std::complex types.
+ * @tparam ComplexT std::complex types.
  * @param vec A std::vector<std::complex> type.
  * @return a vector of cuComplex converted vec
  */
-template <class CFP_t = std::complex<double>>
-inline auto complexToCu(const std::vector<CFP_t> &vec) {
-    using cuCFP_t = decltype(complexToCu(CFP_t{}));
+template <class ComplexT = std::complex<double>>
+inline auto complexToCu(const std::vector<ComplexT> &vec) {
+    using cuCFP_t = decltype(complexToCu(ComplexT{}));
     std::vector<cuCFP_t> cast_vector(vec.size());
     std::transform(vec.begin(), vec.end(), cast_vector.begin(),
-                   [&](CFP_t x) { return complexToCu<CFP_t>(x); });
+                   [&](ComplexT x) { return complexToCu<ComplexT>(x); });
     return cast_vector;
 }
 
