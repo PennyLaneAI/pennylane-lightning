@@ -1,6 +1,8 @@
 # Release 0.37.0-dev
 
 ### New features since last release
+* Add `observable` and `measurement` support to `cutensornet` backed `lightning.tensor` C++ layer.
+  [(#728)](https://github.com/PennyLaneAI/pennylane-lightning/pull/728)
 
 * Add gate support to `cutensornet` backed `lightning.tensor` C++ layer.
   [(#718)](https://github.com/PennyLaneAI/pennylane-lightning/pull/718)
