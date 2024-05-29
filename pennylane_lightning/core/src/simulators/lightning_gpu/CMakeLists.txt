@@ -27,7 +27,7 @@ if(ENABLE_MPI)
     list(APPEND LGPU_FILES StateVectorCudaMPI.cpp)
 endif()
 
-add_library(${PL_BACKEND} STATIC ${LGPU_FILES})
+add_library(${PL_BACKEND} SHARED ${LGPU_FILES})
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU=1")
 
@@ -57,7 +57,7 @@ target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             ${PL_BACKEND}_utils
                                             ${PL_BACKEND}_gates
                                             )
-    
+
 target_include_directories(${PL_BACKEND} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

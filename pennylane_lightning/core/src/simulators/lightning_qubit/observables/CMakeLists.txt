@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 project(lightning_qubit_observables LANGUAGES CXX)
 
 set(OBSERVABLES_FILES ObservablesLQubit.cpp CACHE INTERNAL "" FORCE)
-add_library(lightning_qubit_observables STATIC ${OBSERVABLES_FILES})
+add_library(lightning_qubit_observables SHARED ${OBSERVABLES_FILES})
 
 target_include_directories(lightning_qubit_observables INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_qubit_observables PRIVATE   lightning_compile_options

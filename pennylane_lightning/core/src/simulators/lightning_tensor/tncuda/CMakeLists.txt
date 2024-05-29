@@ -19,7 +19,7 @@ findCutensornet(lightning_external_libs)
 
 set(LTENSOR_MPS_FILES  MPSTNCuda.cpp CACHE INTERNAL "" FORCE)
 
-add_library(${PL_TENSOR} STATIC ${LTENSOR_MPS_FILES})
+add_library(${PL_TENSOR} SHARED ${LTENSOR_MPS_FILES})
 
 ##########################
 ## Enforce C++ Standard ##
@@ -42,7 +42,7 @@ target_link_libraries(${PL_TENSOR} PUBLIC  lightning_compile_options
                                             ${PL_BACKEND}_tensornetBase
                                             ${PL_BACKEND}_utils
                                             )
-    
+
 target_include_directories(${PL_TENSOR} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_property(TARGET ${PL_TENSOR} PROPERTY POSITION_INDEPENDENT_CODE ON)
 

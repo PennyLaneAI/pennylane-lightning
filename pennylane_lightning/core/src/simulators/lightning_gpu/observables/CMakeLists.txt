@@ -8,7 +8,7 @@ if(ENABLE_MPI)
     list(APPEND OBSERVABLES_FILES ObservablesGPUMPI.cpp)
 endif()
 
-add_library(${PL_BACKEND}_observables STATIC ${OBSERVABLES_FILES})
+add_library(${PL_BACKEND}_observables SHARED ${OBSERVABLES_FILES})
 
 target_include_directories(${PL_BACKEND}_observables INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PL_BACKEND}_observables PRIVATE   lightning_compile_options
