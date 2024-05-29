@@ -141,13 +141,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     /**
      * @brief Get a vector of pointers to tensor data of each site.
      *
-     * @return std::vector<uint64_t *>
+     * @return std::vector<CFP_t *>
      */
-    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<uint64_t *> {
-        std::vector<uint64_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
+        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsOutDataPtr[i] = reinterpret_cast<uint64_t *>(
-                tensors_out_[i].getDataBuffer().getData());
+            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
         }
         return tensorsOutDataPtr;
     }
