@@ -8,8 +8,8 @@
 * Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
   [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
-* Add support for `C(BlockEncode)` in Lightning devices.
-  [(#)]()
+* Add support for `C(BlockEncode)` to Lightning devices.
+  [(#743)](https://github.com/PennyLaneAI/pennylane-lightning/pull/743)
 
 ### Breaking changes
 
