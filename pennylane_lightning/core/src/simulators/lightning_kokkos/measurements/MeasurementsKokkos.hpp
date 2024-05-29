@@ -515,7 +515,7 @@ class Measurements final
             "indices with probability calculations");
 
         // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits()) {
+        if (wires.empty() || wires.size() == this->_statevector.getNumQubits()) {
             return this->probs();
         }
 
