@@ -15,44 +15,41 @@
 #pragma once
 
 #include <cutensornet.h>
-#include <functional>
+#include <tuple>
 #include <vector>
 
 #include "ObservablesTNCuda.hpp"
-
-#include "Constant.hpp"
-#include "ConstantUtil.hpp" // lookup
-#include "Observables.hpp"
 #include "TensorCuda.hpp"
 #include "Util.hpp"
-#include "cuError.hpp"
+#include "cuGates_host.hpp"
 #include "tncudaError.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningTensor;
-using namespace Pennylane::Observables;
+using namespace Pennylane::LightningTensor::TNCuda;
 
 template <class T> using vector1D = std::vector<T>;
-template <class T> using vector2D = std::vector<std::vector<T>>;
-template <class T> using vector3D = std::vector<std::vector<std::vector<T>>>;
 
+template <class T> using vector2D = std::vector<vector1D<T>>;
+
+template <class T> using vector3D = std::vector<vector2D<T>>;
 } // namespace
 /// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::Observables {
 
 // Current design allows multiple measurements to be performed for a
-// circuit.
+// given circuit.
 /**
  * @brief ObservableTNCudaOperator Class.
  *
- * This class creates custatenetTensorNetwork Operator from ObservablesTNCuda
- * objects for measurement purpose. Since the NamedObs, HermitianObs,
- * TensorProdObs and Hamiltionain objects can be encapsulated in a
- * cutensornetNetworkOperator_t instance, only one ObservableTNCudaOperator
- * class is designed here. Note that a cutensornetNetworkOperator_t object can
+ * This class creates `custatenetTensorNetwork` Operator from
+ * `ObservablesTNCuda` objects for measurement purpose. Since the NamedObs,
+ * HermitianObs, TensorProdObs and Hamiltionian objects can be encapsulated in a
+ * `cutensornetNetworkOperator_t` instance, only one ObservableTNCudaOperator
+ * class is designed here. Note that a `cutensornetNetworkOperator_t` object can
  * only be created and destroyed by creating a new ObservableTNCudaOperator
  * object, which ensures its lifetime is aligned with that of data associated to
  * it.
@@ -62,34 +59,112 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 template <class StateTensorT> class ObservableTNCudaOperator {
   public:
     using PrecisionT = typename StateTensorT::PrecisionT;
+    using CFP_t = typename StateTensorT::CFP_t;
+    using ComplexT = typename StateTensorT::ComplexT;
+    using obs_key =
+        std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
   private:
-    // cutensornetNetworkOperator operator
-    cutensornetNetworkOperator_t obsOperator_{nullptr};
+    cutensornetNetworkOperator_t obsOperator_{
+        nullptr}; // cutensornetNetworkOperator operator
 
-    // Quatum state to be measured
-    const StateTensorT &state_tensor_;
-    const size_t numObsTerms_;
+    const StateTensorT &state_tensor_; // Quantum state to be measured
 
-    // ids for each term in the graph
-    std::vector<int64_t> ids_;
+    const std::size_t numObsTerms_;    // Number of observable terms
+    vector1D<cuDoubleComplex> coeffs_; // coefficients for each term
+    vector1D<std::size_t> numTensors_; // number of tensors in each term
 
-    // coefficients for each term
-    vector1D<cuDoubleComplex> coeffs_;
+    vector2D<int32_t>
+        numModes_; // number of state modes of each tensor in each term
 
-    // number of tensors in each term
-    vector1D<size_t> numTensors_;
+    vector3D<int32_t> modes_; // modes for each tensor in each term
 
-    // number of state modes of each tensor in each term
-    vector2D<int32_t> numModes_;
+    vector2D<const int32_t *>
+        modesPtr_; // pointers for modes of each tensor in each term
 
-    vector3D<int32_t> modes_;
+    vector2D<const void *>
+        tensorDataPtr_; // pointers for each tensor data in each term
 
-    vector2D<const int32_t *> modesPtr_;
+    std::vector<int64_t> ids_; // ids for each term in the graph
 
-    vector2D<const void *> tensorDataPtr_;
+  private:
+    /**
+     * @brief Hasher for observable key.
+     */
+    struct ObsKeyHasher {
+        std::size_t operator()(
+            const std::tuple<std::string, std::vector<PrecisionT>, std::size_t>
+                &obsKey) const {
+            std::size_t hash_val = 0;
+            hash_val ^= std::hash<std::string>{}(std::get<0>(obsKey));
+            for (const auto &param : std::get<1>(obsKey)) {
+                hash_val ^= std::hash<PrecisionT>{}(param);
+            }
+            hash_val ^= std::hash<std::size_t>{}(std::get<2>(obsKey));
+            return hash_val;
+        }
+    };
 
-    vector2D<TensorCuda<PrecisionT>> tensorData_;
+    /**
+     * @brief Cache for observable data on device.
+     */
+    std::unordered_map<obs_key, TensorCuda<PrecisionT>, ObsKeyHasher>
+        device_obs_cache_;
+
+    /**
+     * @brief Add an observable numerical value to the cached map, indexed by
+     * the name, parameters and hash value(default as 0 for named observables).
+     *
+     * @param obs_name String representing the name of the given observable.
+     * @param obs_param Vector of parameter values. `{}` if non-parametric
+     * gate.
+     */
+    void add_obs_(const std::string &obs_name,
+                  [[maybe_unused]] std::vector<PrecisionT> &obs_param = {}) {
+        auto obsKey = std::make_tuple(obs_name, obs_param, std::size_t{0});
+
+        auto &gateMap =
+            cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
+
+        add_obs_(obsKey, gateMap.getGateData(obs_name, obs_param));
+    }
+
+    /**
+     * @brief Add observable numerical value to the cache map, the name,
+     * parameters and hash value(default as 0 for named observables).
+     *
+     * @param obsKey obs_key tuple representing the name, parameters and hash
+     * value(default as 0 for named observables).
+     * @param obs_data_host Vector of complex floating point values
+     * representing the observable data on host.
+     */
+    void add_obs_(const obs_key &obsKey,
+                  const std::vector<CFP_t> &obs_data_host) {
+        const std::size_t rank = Pennylane::Util::log2(obs_data_host.size());
+        auto modes = std::vector<std::size_t>(rank, 0);
+        auto extents = std::vector<std::size_t>(rank, 2);
+
+        auto &&tensor = TensorCuda<PrecisionT>(rank, modes, extents,
+                                               state_tensor_.getDevTag());
+
+        device_obs_cache_.emplace(std::piecewise_construct,
+                                  std::forward_as_tuple(obsKey),
+                                  std::forward_as_tuple(std::move(tensor)));
+
+        device_obs_cache_.at(obsKey).getDataBuffer().CopyHostDataToGpu(
+            obs_data_host.data(), obs_data_host.size());
+    }
+
+    /**
+     * @brief Returns a pointer to the GPU device memory where the observable is
+     * stored.
+     *
+     * @param obsKey The key of observable tensor operator.
+     * @return const CFP_t* Pointer to gate values on device.
+     */
+    const CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
+        return device_obs_cache_.at(obsKey).getDataBuffer().getData();
+    }
 
   public:
     ObservableTNCudaOperator(const StateTensorT &state_tensor,
@@ -101,78 +176,72 @@ template <class StateTensorT> class ObservableTNCudaOperator {
             /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
             /* const int64_t stateModeExtents */
             reinterpret_cast<int64_t *>(
-                const_cast<size_t *>(state_tensor.getQubitDims().data())),
+                const_cast<std::size_t *>(state_tensor.getQubitDims().data())),
             /* cudaDataType_t */ state_tensor.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
-        for (auto &coeff : obs.getCoeffsPerTerm()) {
-            coeffs_.push_back(cuDoubleComplex{static_cast<double>(coeff),
-                                              0.0}); // coeffs initialization
-        }
+
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
-            auto coeff = coeffs_[term_idx];
+            auto coeff = cuDoubleComplex{
+                static_cast<double>(obs.getCoeffs()[term_idx]), 0.0};
             auto numTensors = numTensors_[term_idx];
 
+            coeffs_.emplace_back(coeff);
+
             // number of state modes of each tensor in each term
-            vector1D<int32_t> local_num_modes_int32(
-                obs.getNumStateModes()[term_idx].size());
-
-            std::transform(obs.getNumStateModes()[term_idx].begin(),
-                           obs.getNumStateModes()[term_idx].end(),
-                           local_num_modes_int32.begin(),
-                           [](size_t x) { return static_cast<int32_t>(x); });
-
-            numModes_.push_back(local_num_modes_int32);
+            numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
+                obs.getNumStateModes()[term_idx]));
 
             // modes initialization
             vector2D<int32_t> modes_per_term;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
-                auto modes_per_tensor =
-                    obs.getStateModes()[term_idx][tensor_idx];
-                vector1D<int32_t> modes_per_tensor_int32;
-                std::transform(modes_per_tensor.begin(), modes_per_tensor.end(),
-                               std::back_inserter(modes_per_tensor_int32),
-                               [&](size_t x) {
-                                   return static_cast<int32_t>(
-                                       state_tensor.getNumQubits() - 1 - x);
-                               });
-                modes_per_term.push_back(modes_per_tensor_int32);
+                modes_per_term.emplace_back(
+                    cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                        obs.getStateModes()[term_idx][tensor_idx],
+                        state_tensor.getNumQubits()));
             }
-            modes_.push_back(modes_per_term);
+            modes_.emplace_back(modes_per_term);
 
             // modes pointer initialization
             vector1D<const int32_t *> modesPtrPerTerm;
-            for (size_t tensor_idx = 0; tensor_idx < modes_.back().size();
+            for (std::size_t tensor_idx = 0; tensor_idx < modes_.back().size();
                  tensor_idx++) {
-                modesPtrPerTerm.push_back(modes_.back()[tensor_idx].data());
+                modesPtrPerTerm.emplace_back(modes_.back()[tensor_idx].data());
             }
-            modesPtr_.push_back(modesPtrPerTerm);
+            modesPtr_.emplace_back(modesPtrPerTerm);
 
             // tensor data initialization
-            vector1D<TensorCuda<PrecisionT>> tensorDataPerTerm_;
+            vector1D<const void *> tensorDataPtrPerTerm_;
             for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
                  tensor_idx++) {
-                tensorDataPerTerm_.emplace_back(
-                    std::vector<std::size_t>(
-                        Pennylane::Util::log2(
-                            obs.getData()[term_idx][tensor_idx].size()),
-                        2),
-                    obs.getData()[term_idx][tensor_idx],
-                    state_tensor.getDevTag());
+                auto metaData = obs.getMetaData()[term_idx][tensor_idx];
+
+                auto obsName = std::get<0>(metaData);
+                auto param = std::get<1>(metaData);
+                auto hermitianMatrix = std::get<2>(metaData);
+                std::size_t hash_val = 0;
+
+                if (!hermitianMatrix.empty()) {
+                    hash_val = MatrixHasher()(hermitianMatrix);
+                }
+
+                auto obsKey = std::make_tuple(obsName, param, hash_val);
+
+                if (device_obs_cache_.find(obsKey) == device_obs_cache_.end()) {
+                    if (hermitianMatrix.empty()) {
+                        add_obs_(obsName, param);
+                    } else {
+                        auto hermitianMatrix_cu =
+                            cuUtil::complexToCu<ComplexT>(hermitianMatrix);
+                        add_obs_(obsKey, hermitianMatrix_cu);
+                    }
+                }
+                tensorDataPtrPerTerm_.emplace_back(get_obs_device_ptr_(obsKey));
             }
 
-            tensorData_.push_back(tensorDataPerTerm_);
-
-            vector1D<const void *> tensorDataPtrPerTerm_;
-            for (size_t tensor_idx = 0; tensor_idx < tensorData_.back().size();
-                 tensor_idx++) {
-                tensorDataPtrPerTerm_.push_back(
-                    tensorData_.back()[tensor_idx].getDataBuffer().getData());
-            }
-
-            tensorDataPtr_.push_back(tensorDataPtrPerTerm_);
+            tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
 
             appendTNOperator_(coeff, numTensors, numModes_.back().data(),
                               modesPtr_.back().data(),
@@ -180,16 +249,30 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         }
     }
 
-    virtual ~ObservableTNCudaOperator() {
+    ~ObservableTNCudaOperator() {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyNetworkOperator(obsOperator_));
     }
 
-    [[nodiscard]] auto getTNOperator() -> cutensornetNetworkOperator_t {
+    /**
+     * @brief Get the `cutensornetNetworkOperator_t` object.
+     *
+     * @return cutensornetNetworkOperator_t
+     */
+    [[nodiscard]] auto getTNOperator() const -> cutensornetNetworkOperator_t {
         return obsOperator_;
     }
 
   private:
+    /**
+     * @brief Append a product of tensors to the `cutensornetNetworkOperator_t`
+     *
+     * @param coeff Coefficient of the product.
+     * @param numTensors Number of tensors in the product.
+     * @param numStateModes Number of state modes of each tensor in the product.
+     * @param stateModes State modes of each tensor in the product.
+     * @param tensorDataPtr Pointer to the data of each tensor in the product.
+     */
     void appendTNOperator_(const cuDoubleComplex &coeff,
                            const std::size_t numTensors,
                            const int32_t *numStateModes,

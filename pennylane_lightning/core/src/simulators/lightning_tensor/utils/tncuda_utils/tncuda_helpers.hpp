@@ -55,4 +55,53 @@ inline SharedTNCudaHandle make_shared_tncuda_handle() {
     PL_CUTENSORNET_IS_SUCCESS(cutensornetCreate(&h));
     return {h, TNCudaHandleDeleter()};
 }
+
+/**
+ * @brief Returns the workspace size.
+ *
+ * @param tncuda_handle cutensornetHandle_t
+ * @param workDesc cutensornetWorkspaceDescriptor_t
+ *
+ * @return std::size_t
+ */
+inline std::size_t
+getWorkSpaceMemorySize(const cutensornetHandle_t &tncuda_handle,
+                       cutensornetWorkspaceDescriptor_t &workDesc) {
+    int64_t worksize{0};
+
+    PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
+        /* const cutensornetHandle_t */ tncuda_handle,
+        /* cutensornetWorkspaceDescriptor_t */ workDesc,
+        /* cutensornetWorksizePref_t */
+        CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
+        /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+        /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+        /*  int64_t * */ &worksize));
+
+    // Ensure data is aligned by 256 bytes
+    worksize += int64_t{256} - worksize % int64_t{256};
+
+    return static_cast<std::size_t>(worksize);
+}
+
+/**
+ * @brief Set memory for a workspace.
+ *
+ * @param tncuda_handle cutensornetHandle_t
+ * @param workDesc cutensornet work space descriptor
+ * @param scratchPtr Pointer to scratch memory
+ * @param worksize Memory size of a work space
+ */
+inline void setWorkSpaceMemory(const cutensornetHandle_t &tncuda_handle,
+                               cutensornetWorkspaceDescriptor_t &workDesc,
+                               void *scratchPtr, std::size_t &worksize) {
+    PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
+        /* const cutensornetHandle_t */ tncuda_handle,
+        /* cutensornetWorkspaceDescriptor_t */ workDesc,
+        /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
+        /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
+        /* void *const */ scratchPtr,
+        /* int64_t */ static_cast<int64_t>(worksize)));
+}
+
 } // namespace Pennylane::LightningTensor::TNCuda::Util

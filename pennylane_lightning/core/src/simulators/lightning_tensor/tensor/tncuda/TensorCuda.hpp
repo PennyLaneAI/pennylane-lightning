@@ -56,6 +56,7 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
+    // Construct a tensor with given extents and host data
     explicit TensorCuda(const std::vector<std::size_t> &extents,
                         const std::vector<CFP_t> &host_tensor,
                         const DevTag<int> &dev_tag, bool device_alloc = true)
