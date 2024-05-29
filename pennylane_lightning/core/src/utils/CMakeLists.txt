@@ -5,7 +5,7 @@ project(lightning_utils LANGUAGES CXX)
 set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
 
-add_library(lightning_utils SHARED ${LQUBIT_UTILS_FILES})
+add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
 if(ENABLE_LAPACK)
     list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
