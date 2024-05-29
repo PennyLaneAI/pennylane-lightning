@@ -27,7 +27,7 @@ if(ENABLE_MPI)
     list(APPEND LGPU_FILES StateVectorCudaMPI.cpp)
 endif()
 
-add_library(${PL_BACKEND} SHARED ${LGPU_FILES})
+add_library(${PL_BACKEND} STATIC ${LGPU_FILES})
 
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLGPU=1")
 

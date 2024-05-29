@@ -16,7 +16,7 @@ set(LQUBIT_FILES    StateVectorLQubitManaged.cpp
                     StateVectorLQubitRaw.cpp
                     CACHE INTERNAL "" FORCE)
 
-add_library(lightning_qubit SHARED ${LQUBIT_FILES})
+add_library(lightning_qubit STATIC ${LQUBIT_FILES})
 
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
