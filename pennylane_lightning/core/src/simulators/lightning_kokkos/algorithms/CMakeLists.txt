@@ -16,10 +16,6 @@ target_link_libraries(lightning_kokkos_algorithms PUBLIC    lightning_kokkos_uti
                                                             lightning_kokkos_observables
                                                             )
 
-set(PLL_install_lib_dir "${CMAKE_SOURCE_DIR}/pennylane_lightning/core/lib")
-install(TARGETS lightning_kokkos_algorithms EXPORT lightning_kokkos_algorithms LIBRARY DESTINATION ${PLL_install_lib_dir})
-
-
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
