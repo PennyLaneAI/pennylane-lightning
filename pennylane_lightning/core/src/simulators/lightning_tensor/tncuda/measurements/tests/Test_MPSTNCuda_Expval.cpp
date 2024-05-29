@@ -218,6 +218,31 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
+TEMPLATE_TEST_CASE("[Parametric_obs]", "[MPSTNCuda_Expval]", float, double) {
+    {
+        using StateTensorT = MPSTNCuda<TestType>;
+        using NamedObsT = NamedObsTNCuda<StateTensorT>;
+
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        StateTensorT mps_state{num_qubits, maxBondDim};
+
+        auto measure = Measurements<StateTensorT>(mps_state);
+        auto ONE = TestType(1);
+
+        SECTION("Using expval") {
+            mps_state.applyOperation("PauliX", {0});
+            mps_state.get_final_state();
+
+            auto ob = NamedObsT("RX", {0}, {0});
+            auto res = measure.expval(ob);
+            CHECK(res == Approx(ONE).epsilon(1e-7));
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
     {
         using StateTensorT = MPSTNCuda<TestType>;
