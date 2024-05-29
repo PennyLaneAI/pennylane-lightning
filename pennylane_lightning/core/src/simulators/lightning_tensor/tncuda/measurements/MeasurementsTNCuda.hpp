@@ -40,15 +40,14 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 
 namespace Pennylane::LightningTensor::TNCuda::Measures {
 /**
- * @brief Observable's Measurement Class.
+ * @brief ObservablesTNCuda's Measurement Class.
  *
  * This class couples with a state tensor to performs measurements.
- * Observables are defined by its operator(matrix), the observable class,
- * or through a string-based function dispatch.
+ * Observables are defined the observable class.
  *
  * @tparam StateTensorT type of the state tensor to be measured.
  */
-template <class StateTensorT> class Measurements {
+template <class StateTensorT> class MeasurementsTNCuda {
   private:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
@@ -56,7 +55,7 @@ template <class StateTensorT> class Measurements {
     StateTensorT &state_tensor_;
 
   public:
-    explicit Measurements(StateTensorT &state_tensor)
+    explicit MeasurementsTNCuda(StateTensorT &state_tensor)
         : state_tensor_(state_tensor){};
 
     /**
