@@ -48,6 +48,9 @@
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
 
+* Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
+  [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
+
 ### Documentation
 
 ### Bug fixes
