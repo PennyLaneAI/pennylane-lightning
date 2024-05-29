@@ -95,8 +95,8 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         std::size_t operator()(
             const std::tuple<std::string, std::vector<PrecisionT>, std::size_t>
                 &obsKey) const {
-            std::size_t hash_val = 0;
-            hash_val ^= std::hash<std::string>{}(std::get<0>(obsKey));
+            std::size_t hash_val =
+                std::hash<std::string>{}(std::get<0>(obsKey));
             for (const auto &param : std::get<1>(obsKey)) {
                 hash_val ^= std::hash<PrecisionT>{}(param);
             }
