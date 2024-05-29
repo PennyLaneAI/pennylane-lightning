@@ -48,9 +48,14 @@
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
 
+<<<<<<< maa/probs-py-cpp-dispatch
 * Patch the C++ `Measurements.probs(wires)` method in Lightning-Qubit and Lighnting-Kokkos to `Measurements.probs()` when called with all wires.
   This will trigger a more optimized implementation for calculating the probabilities of the entire system.
   [(#744)](https://github.com/PennyLaneAI/pennylane-lightning/pull/744)
+=======
+* Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
+  [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
+>>>>>>> master
 
 ### Documentation
 
