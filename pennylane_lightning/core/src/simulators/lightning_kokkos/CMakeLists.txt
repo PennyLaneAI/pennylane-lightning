@@ -14,7 +14,7 @@ project(lightning_kokkos
 set(LKOKKOS_FILES   StateVectorKokkos.cpp
                     CACHE INTERNAL "" FORCE)
 
-add_library(lightning_kokkos SHARED ${LKOKKOS_FILES})
+add_library(lightning_kokkos STATIC ${LKOKKOS_FILES})
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
 
 ##########################
