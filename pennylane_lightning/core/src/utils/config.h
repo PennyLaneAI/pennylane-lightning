@@ -20,5 +20,5 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
-#define SCIPY_LIBS_PATH "/home/amintor/Projects/pennylane-lightning/venv/lightning_310/lib/python3.10/site-packages/scipy.libs"
+#define SCIPY_LIBS_PATH ""
 #endif
