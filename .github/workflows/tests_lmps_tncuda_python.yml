@@ -177,47 +177,12 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_tensor $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-  
-      - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-        run: |
-          cd main
-          rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
-          rm -rf build
-  
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
-  
-      - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
-        if: ${{ matrix.pl_backend == 'all' }}
-        env:
-          OMP_NUM_THREADS: 1
-          OMP_PROC_BIND: false
-        run: |
-          cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.tesnor python -m pytest tests/lightning_tensor $COVERAGE_FLAGS
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
-          
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
-          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          if-no-files-found: error
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: ubuntu-codecov-results-cpp
-          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          name: ubuntu-codecov-results-python
+          path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
 
 
