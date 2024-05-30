@@ -58,7 +58,7 @@ class QuantumScriptSerializer:
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements
     def __init__(
         self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
     ):
