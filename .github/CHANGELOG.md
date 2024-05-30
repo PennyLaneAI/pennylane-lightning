@@ -51,9 +51,20 @@
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
 
+* Patch the C++ `Measurements.probs(wires)` method in Lightning-Qubit and Lighnting-Kokkos to `Measurements.probs()` when called with all wires.
+  This will trigger a more optimized implementation for calculating the probabilities of the entire system.
+  [(#744)](https://github.com/PennyLaneAI/pennylane-lightning/pull/744)
+
+* Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
+  [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
+
+
 ### Documentation
 
 ### Bug fixes
+
+* Fix AVX streaming operation support with newer GCC.
+  [(#729)](https://github.com/PennyLaneAI/pennylane-lightning/pull/729)
 
 * Revert changes calling `IMAG`, `ONE`, `ZERO` templated functions in Kokkos kernels since they are incompatible with device execution.
   [(#733)](https://github.com/PennyLaneAI/pennylane-lightning/pull/733)
@@ -74,7 +85,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
