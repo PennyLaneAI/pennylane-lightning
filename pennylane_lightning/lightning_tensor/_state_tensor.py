@@ -20,18 +20,13 @@ try:
 except ImportError:
     pass
 
-from itertools import product
 
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
-
-from ._measurements import LightningMeasurements
 
 
 class LightningStateTensor:
@@ -141,10 +136,8 @@ class LightningStateTensor:
                 continue
             if isinstance(operation, Adjoint):
                 name = operation.base.name
-                invert_param = True
             else:
                 name = operation.name
-                invert_param = False
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -167,8 +160,10 @@ class LightningStateTensor:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                raise DeviceError(f"lightning.tensor does not support state vector.")
-            elif isinstance(operations[0], BasisState):
+                raise DeviceError(
+                    "lightning.tensor does not support initialization with a state vector."
+                )
+            if isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 

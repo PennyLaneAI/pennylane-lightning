@@ -14,7 +14,6 @@
 """
 Tests for the expectation value calculations on the LightningTensor device.
 """
-# TODO add tests for BasisState
 
 import numpy as np
 import pennylane as qml
@@ -22,19 +21,23 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane.devices import DefaultQubit
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
-
-
 from pennylane_lightning.lightning_tensor import LightningTensor
 
+if not LightningDevice._new_API:  # pylint: disable=protected-access
+    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-@pytest.fixture(params=[np.complex64, np.complex128])
-def dev(request):
-    return LightningTensor(wires=3, c_dtype=request.param)
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+
+# @pytest.fixture(params=[np.complex64, np.complex128])
+# def dev(request):
+#    '''Fixture for the LightningTensor device'''
+#    return LightningTensor(wires=3, c_dtype=request.param)
 
 
 def calculate_reference(tape):
+    """Calculates the reference value for the given tape."""
     dev = DefaultQubit(max_workers=1)
     program, _ = dev.preprocess()
     tapes, transf_fn = program([tape])
@@ -43,6 +46,7 @@ def calculate_reference(tape):
 
 
 def execute(dev, tape):
+    """Executes the tape on the device and returns the result."""
     results = dev.execute(tape)
     return results
 
@@ -51,8 +55,9 @@ def execute(dev, tape):
 class TestExpval:
     """Test expectation value calculations"""
 
-    def test_Identity(self, theta, phi, dev, tol):
+    def test_Identity(self, theta, phi, qubit_device, tol):
         """Tests applying identities."""
+        dev = qubit_device(wires=3)
 
         ops = [
             qml.Identity(0),
@@ -70,8 +75,9 @@ class TestExpval:
 
         assert np.allclose(result, expected, tol)
 
-    def test_identity_expectation(self, theta, phi, dev, tol):
+    def test_identity_expectation(self, theta, phi, qubit_device, tol):
         """Tests identity expectations."""
+        dev = qubit_device(wires=3)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
@@ -83,21 +89,9 @@ class TestExpval:
 
         assert np.allclose(1.0, result, tol)
 
-    def test_identity_expectation(self, theta, phi, dev, tol):
-        """Tests identity expectations."""
-
-        tape = qml.tape.QuantumScript(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            [qml.expval(qml.Identity(wires=[0])), qml.expval(qml.Identity(wires=[1]))],
-        )
-        result = dev.execute(tape)
-
-        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
-
-        assert np.allclose(1.0, result, tol)
-
-    def test_multi_wire_identity_expectation(self, theta, phi, dev, tol):
+    def test_multi_wire_identity_expectation(self, theta, phi, qubit_device, tol):
         """Tests multi-wire identity."""
+        dev = qubit_device(wires=3)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
@@ -166,8 +160,11 @@ class TestExpval:
             ),
         ],
     )
-    def test_single_wire_observables_expectation(self, Obs, Op, expected_fn, theta, phi, tol, dev):
+    def test_single_wire_observables_expectation(
+        self, Obs, Op, expected_fn, theta, phi, tol, qubit_device
+    ):  # pylint: disable=too-many-arguments
         """Test that expectation values for single wire observables are correct"""
+        dev = qubit_device(wires=3)
 
         tape = qml.tape.QuantumScript(
             [Op(theta, wires=[0]), Op(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
@@ -178,8 +175,9 @@ class TestExpval:
 
         assert np.allclose(result, expected, tol)
 
-    def test_hermitian_expectation(self, theta, phi, tol, dev):
+    def test_hermitian_expectation(self, theta, phi, tol, qubit_device):
         """Tests an Hermitian operator."""
+        dev = qubit_device(wires=3)
 
         with qml.tape.QuantumTape() as tape:
             qml.RX(theta, wires=0)
@@ -194,20 +192,9 @@ class TestExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    def test_hermitian_expectation_qnode(self, theta, phi, tol, dev):
+    def test_hermitian_expectation_qnode(self, theta, phi, tol, qubit_device):
         """Tests an Hermitian operator."""
-        """
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(theta, wires=0)
-            qml.RX(phi, wires=1)
-            qml.RX(theta + phi, wires=2)
-
-            for idx in range(3):
-                qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx]))
-
-        calculated_val = execute(dev, tape)
-        reference_val = calculate_reference(tape)
-        """
+        dev = qubit_device(wires=3)
         dev_def = qml.device("default.qubit", wires=3)
         obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
 
@@ -221,10 +208,9 @@ class TestExpval:
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
-        # assert np.allclose(calculated_val, reference_val, tol)
-
-    def test_hamiltonian_expectation(self, theta, phi, tol, dev):
+    def test_hamiltonian_expectation(self, theta, phi, tol, qubit_device):
         """Tests a Hamiltonian."""
+        dev = qubit_device(wires=3)
 
         ham = qml.Hamiltonian(
             [1.0, 0.3, 0.3, 0.4],
@@ -261,8 +247,9 @@ class TestOperatorArithmetic:
             qml.sum(qml.PauliZ(0), qml.PauliX(1)),
         ],
     )
-    def test_op_math(self, phi, dev, obs, tol):
+    def test_op_math(self, phi, qubit_device, obs, tol):
         """Tests the `SProd`, `Prod`, and `Sum` classes."""
+        dev = qubit_device(wires=3)
 
         tape = qml.tape.QuantumScript(
             [
@@ -281,8 +268,9 @@ class TestOperatorArithmetic:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    def test_integration(self, phi, dev, tol):
+    def test_integration(self, phi, qubit_device, tol):
         """Test a Combination of `Sum`, `SProd`, and `Prod`."""
+        dev = qubit_device(wires=3)
 
         obs = qml.sum(
             qml.s_prod(2.3, qml.PauliZ(0)),
@@ -306,8 +294,11 @@ class TestOperatorArithmetic:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-    def test_PauliX_PauliY(self, theta, phi, varphi, dev, tol):
+    def test_PauliX_PauliY(
+        self, theta, phi, varphi, qubit_device, tol
+    ):  # pylint: disable=too-many-arguments
         """Tests a tensor product involving PauliX and PauliY."""
+        dev = qubit_device(wires=3)
 
         with qml.tape.QuantumTape() as tape:
             qml.RX(theta, wires=[0])
@@ -324,8 +315,11 @@ class TestTensorExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    def test_PauliZ_identity(self, theta, phi, varphi, dev, tol):
+    def test_PauliZ_identity(
+        self, theta, phi, varphi, qubit_device, tol
+    ):  # pylint: disable=too-many-arguments
         """Tests a tensor product involving PauliZ and Identity."""
+        dev = qubit_device(wires=3)
 
         with qml.tape.QuantumTape() as tape:
             qml.Identity(wires=[0])
@@ -343,8 +337,11 @@ class TestTensorExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
-    def test_PauliZ_hadamard_PauliY(self, theta, phi, varphi, dev, tol):
+    def test_PauliZ_hadamard_PauliY(
+        self, theta, phi, varphi, qubit_device, tol
+    ):  # pylint: disable=too-many-arguments
         """Tests a tensor product involving PauliY, PauliZ and Hadamard."""
+        dev = qubit_device(wires=3)
 
         with qml.tape.QuantumTape() as tape:
             qml.RX(theta, wires=[0])
@@ -368,9 +365,10 @@ PHI = np.linspace(0.32, 1, 3)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-def test_multi_qubit_gates(theta, phi, dev, tol):
+def test_multi_qubit_gates(theta, phi, qubit_device, tol):  # pylint: disable=too-many-arguments
     """Tests a simple circuit with multi-qubit gates."""
-    # TODO: 2+ qubit gates are not supported yet
+    dev = qubit_device(wires=8)
+
     ops = [
         qml.PauliX(wires=[0]),
         qml.RX(theta, wires=[0]),
@@ -409,7 +407,7 @@ def test_multi_qubit_gates(theta, phi, dev, tol):
     dev = LightningTensor(wires=tape.wires, c_dtype=np.complex128)
     calculated_val = dev.execute(tape)
 
-    assert np.allclose(calculated_val, reference_val)
+    assert np.allclose(calculated_val, reference_val, tol)
 
 
 def circuit_ansatz(params, wires):

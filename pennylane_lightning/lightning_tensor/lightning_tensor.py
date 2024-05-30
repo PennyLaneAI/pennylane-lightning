@@ -25,14 +25,11 @@ from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
     validate_device_wires,
     validate_measurements,
     validate_observables,
 )
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
@@ -41,6 +38,7 @@ from ._measurements import LightningMeasurements
 from ._state_tensor import LightningStateTensor
 
 try:
+    # pylint: disable=import-error, unused-import
     from pennylane_lightning.lightning_tensor_ops import backend_info
 
     LT_CPP_BINARY_AVAILABLE = True
@@ -261,7 +259,7 @@ class LightningTensor(Device):
         if wires is None:
             raise ValueError("The number of wires must be specified.")
 
-        if type(maxBondDim) != int or maxBondDim < 1:
+        if not isinstance(maxBondDim, int) or maxBondDim < 1:
             raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
         for arg in kwargs:

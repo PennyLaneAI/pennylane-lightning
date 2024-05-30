@@ -21,27 +21,13 @@ try:
 except ImportError:
     pass
 
-from typing import Callable, List, Union
+from typing import Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices.qubit.sampling import _group_measurements
-from pennylane.measurements import (
-    ClassicalShadowMP,
-    CountsMP,
-    ExpectationMP,
-    MeasurementProcess,
-    ProbabilityMP,
-    SampleMeasurement,
-    ShadowExpvalMP,
-    StateMeasurement,
-    VarianceMP,
-)
-
-# from pennylane.ops import Hamiltonian, SparseHamiltonian, Sum
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
-from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
@@ -141,9 +127,8 @@ class LightningMeasurements:
 
         if circuit.shots:
             raise NotImplementedError
-        else:
-            # analytic case
-            if len(circuit.measurements) == 1:
-                return self.measurement(circuit.measurements[0])
+        # analytic case
+        if len(circuit.measurements) == 1:
+            return self.measurement(circuit.measurements[0])
 
-            return tuple(self.measurement(mp) for mp in circuit.measurements)
+        return tuple(self.measurement(mp) for mp in circuit.measurements)
