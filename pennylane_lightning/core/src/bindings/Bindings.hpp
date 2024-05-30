@@ -59,8 +59,12 @@ using namespace Pennylane::LightningQubit::Measures;
 
 #include "AdjointJacobianKokkos.hpp"
 #include "LKokkosBindings.hpp" // StateVectorBackends, registerBackendClassSpecificBindings, registerBackendSpecificMeasurements, registerBackendSpecificAlgorithms
-#include "MeasurementsKokkos.hpp"
 #include "ObservablesKokkos.hpp"
+#if _ENABLE_MPI == 1
+#include "MeasurementsKokkosMPI.hpp"
+#else
+#include "MeasurementsKokkos.hpp"
+#endif
 
 /// @cond DEV
 namespace {
@@ -97,6 +101,11 @@ namespace {
 using Pennylane::Util::bestCPUMemoryModel;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::getMemoryModel;
+#if _ENABLE_PLKOKKOS == 1 && _ENABLE_MPI == 1
+template <class T> using measure = MeasurementsMPI<T>;
+#else
+template <class T> using measure = Measurements<T>;
+#endif
 } // namespace
 /// @endcond
 
@@ -426,48 +435,50 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     using PrecisionT =
         typename StateVectorT::PrecisionT; // Statevector's precision.
     using ParamT = PrecisionT;             // Parameter's data precision
-
+    using measureT = measure<StateVectorT>;
     pyclass
-        .def("probs",
-             [](Measurements<StateVectorT> &M,
-                const std::vector<size_t> &wires) {
-                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
-             })
-        .def("probs",
-             [](Measurements<StateVectorT> &M) {
-                 return py::array_t<ParamT>(py::cast(M.probs()));
-             })
         .def(
             "expval",
-            [](Measurements<StateVectorT> &M,
+            [](measureT &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.expval(*ob);
             },
             "Expected value of an observable object.")
         .def(
             "var",
-            [](Measurements<StateVectorT> &M,
+            [](measureT &M,
                const std::shared_ptr<Observable<StateVectorT>> &ob) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
-        .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    size_t num_wires, size_t num_shots) {
-            auto &&result = M.generate_samples(num_shots);
-            const size_t ndim = 2;
-            const std::vector<size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
-            const std::vector<size_t> strides{sz * num_wires, sz};
-            // return 2-D NumPy array
-            return py::array(py::buffer_info(
-                result.data(), /* data as contiguous array  */
-                sz,            /* size of one scalar        */
-                py::format_descriptor<size_t>::format(), /* data type */
-                ndim,   /* number of dimensions      */
-                shape,  /* shape of the matrix       */
-                strides /* strides for each axis     */
-                ));
-        });
+#if _ENABLE_MPI != 1 || _ENABLE_PLKOKKOS != 1
+        .def("probs",
+             [](measureT &M, const std::vector<size_t> &wires) {
+                 return py::array_t<ParamT>(py::cast(M.probs(wires)));
+             })
+        .def("probs",
+             [](measureT &M) {
+                 return py::array_t<ParamT>(py::cast(M.probs()));
+             })
+        .def("generate_samples",
+             [](measureT &M, size_t num_wires, size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const size_t ndim = 2;
+                 const std::vector<size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(size_t);
+                 const std::vector<size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<size_t>::format(), /* data type */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
+#endif
+        ;
 }
 
 /**
@@ -659,7 +670,7 @@ template <class StateVectorT> void lightningClassBindings(py::module_ &m) {
     //                             Measurements
     //***********************************************************************//
     class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<Measurements<StateVectorT>>(
+    auto pyclass_measurements = py::class_<measure<StateVectorT>>(
         m, class_name.c_str(), py::module_local());
 
 #ifdef _ENABLE_PLGPU

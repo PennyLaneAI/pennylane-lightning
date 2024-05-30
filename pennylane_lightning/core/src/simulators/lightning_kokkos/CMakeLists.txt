@@ -11,11 +11,21 @@ project(lightning_kokkos
     LANGUAGES CXX C
 )
 
+
 set(LKOKKOS_FILES   StateVectorKokkos.cpp
                     CACHE INTERNAL "" FORCE)
+if(ENABLE_MPI)
+    list(APPEND LKOKKOS_FILES StateVectorKokkosMPI.cpp)
+endif()
 
 add_library(lightning_kokkos STATIC ${LKOKKOS_FILES})
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
+
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
+if(ENABLE_MPI)
+    findMPI(lightning_external_libs)
+    target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS_MPI=1")
+endif()
 
 ##########################
 ## Enforce C++ Standard ##

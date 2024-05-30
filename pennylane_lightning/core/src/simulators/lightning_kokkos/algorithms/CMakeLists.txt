@@ -11,9 +11,10 @@ target_link_libraries(lightning_kokkos_algorithms PRIVATE   lightning_compile_op
                                                             )
 
 target_link_libraries(lightning_kokkos_algorithms PUBLIC    lightning_kokkos_utils
-                                                            lightning_algorithms
                                                             lightning_kokkos
                                                             lightning_kokkos_observables
+                                                            lightning_algorithms
+                                                            lightning_utils
                                                             )
 
 if (BUILD_TESTS)

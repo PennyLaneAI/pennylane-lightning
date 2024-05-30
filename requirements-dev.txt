@@ -9,7 +9,7 @@ pytest-cov
 pytest-mock
 pytest-xdist
 pre-commit>=2.19.0
-black==23.7.0
+black==24.3.0
 clang-tidy~=16.0
 clang-format~=16.0
 isort==5.13.2

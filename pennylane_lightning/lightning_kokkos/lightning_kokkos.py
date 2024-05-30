@@ -64,6 +64,20 @@ if LK_CPP_BINARY_AVAILABLE:
     from pennylane.ops.op_math import Adjoint
     from pennylane.wires import Wires
 
+    try:
+        # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+        from pennylane_lightning.lightning_kokkos_ops.algorithms import (
+            AdjointJacobianC64,
+            AdjointJacobianC128,
+            create_ops_listC64,
+            create_ops_listC128,
+        )
+
+        MPI_SUPPORT = False
+
+    except ImportError:
+        MPI_SUPPORT = True
+
     # pylint: disable=import-error, no-name-in-module, ungrouped-imports
     from pennylane_lightning.core._serialize import (
         QuantumScriptSerializer,
@@ -71,15 +85,7 @@ if LK_CPP_BINARY_AVAILABLE:
     )
     from pennylane_lightning.core._version import __version__
 
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-
-    def _kokkos_dtype(dtype):
+    def _kokkos_dtype(dtype, mpi: bool = False):
         if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
             raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
         return StateVectorC128 if dtype == np.complex128 else StateVectorC64

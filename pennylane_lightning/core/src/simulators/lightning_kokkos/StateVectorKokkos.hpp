@@ -43,13 +43,14 @@
 namespace {
 using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::Util;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
-using Pennylane::Util::array_contains;
-using Pennylane::Util::exp2;
-using Pennylane::Util::isPerfectPowerOf2;
-using Pennylane::Util::log2;
-using Pennylane::Util::reverse_lookup;
+// using Pennylane::Util::array_contains;
+// using Pennylane::Util::exp2;
+// using Pennylane::Util::isPerfectPowerOf2;
+// using Pennylane::Util::log2;
+// using Pennylane::Util::reverse_lookup;
 using std::size_t;
 } // namespace
 /// @endcond
@@ -104,7 +105,6 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : BaseType{num_qubits} {
         num_qubits_ = num_qubits;
-
         {
             const std::lock_guard<std::mutex> lock(init_mutex_);
             if (!Kokkos::is_initialized()) {
@@ -145,18 +145,29 @@ class StateVectorKokkos final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
-        initZeros();
         KokkosSizeTVector d_indices("d_indices", indices.size());
         KokkosVector d_values("d_values", values.size());
         Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
                                          indices.data(), indices.size()));
         Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
                                         values.data(), values.size()));
+        setStateVector(d_indices, d_values);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const KokkosSizeTVector d_indices,
+                        const KokkosVector d_values) {
+        initZeros();
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(d_indices[i]) = d_values[i];
+            d_indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(d_indices(i)) = d_values(i);
             });
     }
 
@@ -211,9 +222,11 @@ class StateVectorKokkos final
      *
      * @param num_qubits Number of qubits
      */
-    StateVectorKokkos(std::vector<ComplexT> hostdata_,
+    template <class complex>
+    StateVectorKokkos(std::vector<complex> hostdata_,
                       const Kokkos::InitializationSettings &kokkos_args = {})
-        : StateVectorKokkos(hostdata_.data(), hostdata_.size(), kokkos_args) {}
+        : StateVectorKokkos(reinterpret_cast<ComplexT *>(hostdata_.data()),
+                            hostdata_.size(), kokkos_args) {}
 
     /**
      * @brief Copy constructor
@@ -468,6 +481,32 @@ class StateVectorKokkos final
             reverse_lookup(generator_names, std::string_view{opName});
         return applyNamedGenerator<KokkosExecSpace>(
             generator_op, *data_, num_qubits, wires, inverse, params);
+    }
+
+    template <typename T> void rescale(const T scale) {
+        if (scale == ONE<Kokkos::complex, PrecisionT>()) {
+            return;
+        }
+        if (scale == ZERO<Kokkos::complex, PrecisionT>()) {
+            initZeros();
+            return;
+        }
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        Kokkos::parallel_for(
+            sv_view.size(),
+            KOKKOS_LAMBDA(const std::size_t i) { sv_view(i) *= scale; });
+    }
+
+    template <typename T> void axpby(const T alpha, KokkosVector vec) {
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        PL_ABORT_IF_NOT(sv_view.size() == vec.size(),
+                        "Input vector must of the same size.");
+        Kokkos::parallel_for(
+            sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(i) += alpha * vec(i);
+            });
     }
 
     /**
