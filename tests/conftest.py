@@ -89,7 +89,7 @@ def n_subsystems(request):
 
 # Looking for the device for testing.
 default_device = "lightning.qubit"
-supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu"}
+supported_devices = {"lightning.kokkos", "lightning.qubit", "lightning.gpu", "lightning.tensor"}
 supported_devices.update({sb.replace(".", "_") for sb in supported_devices})
 
 
@@ -137,6 +137,12 @@ elif device_name == "lightning.gpu":
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
         from pennylane_lightning.lightning_gpu_ops import LightningException
+elif device_name == "lightning.tensor":
+    from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
+
+    if hasattr(pennylane_lightning, "lightning_tensor_ops"):
+        import pennylane_lightning.lightning_tensor_ops as lightning_ops
+        from pennylane_lightning.lightning_tensor_ops import LightningException
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
 
