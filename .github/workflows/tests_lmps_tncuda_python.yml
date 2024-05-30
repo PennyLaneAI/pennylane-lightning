@@ -182,7 +182,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
 
 
