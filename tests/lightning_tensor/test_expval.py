@@ -468,6 +468,7 @@ def test_integration(returns):
     dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128)
 
     def circuit(params):
+        qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
         circuit_ansatz(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
