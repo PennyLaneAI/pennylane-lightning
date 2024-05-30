@@ -14,13 +14,13 @@ FetchAndIncludeCatch()
 # Define library
 ################################################################################
 
-add_library(${PL_TENSOR}_tests INTERFACE)
-target_link_libraries(${PL_TENSOR}_tests INTERFACE     Catch2::Catch2
-                                                       ${PL_TENSOR})
+add_library(${PL_BACKEND}_tests INTERFACE)
+target_link_libraries(${PL_BACKEND}_tests INTERFACE     Catch2::Catch2
+                                                       ${PL_BACKEND})
 
-ProcessTestOptions(${PL_TENSOR}_tests)
+ProcessTestOptions(${PL_BACKEND}_tests)
 
-target_sources(${PL_TENSOR}_tests INTERFACE runner_lightning_tensor_MPSTNCuda.cpp)
+target_sources(${PL_BACKEND}_tests INTERFACE runner_lightning_tensor_MPSTNCuda.cpp)
 
 ################################################################################
 # Define targets
@@ -28,8 +28,8 @@ target_sources(${PL_TENSOR}_tests INTERFACE runner_lightning_tensor_MPSTNCuda.cp
 set(TEST_SOURCES    Tests_MPSTNCuda.cpp
 )
 
-add_executable(${PL_TENSOR}_test_runner ${TEST_SOURCES})
-target_link_libraries(${PL_TENSOR}_test_runner PRIVATE ${PL_TENSOR}_tests)
-catch_discover_tests(${PL_TENSOR}_test_runner)
+add_executable(${PL_BACKEND}_test_runner ${TEST_SOURCES})
+target_link_libraries(${PL_BACKEND}_test_runner PRIVATE ${PL_BACKEND}_tests)
+catch_discover_tests(${PL_BACKEND}_test_runner)
 
-install(TARGETS ${PL_TENSOR}_test_runner DESTINATION bin)
+install(TARGETS ${PL_BACKEND}_test_runner DESTINATION bin)

@@ -19,7 +19,9 @@ findCutensornet(lightning_external_libs)
 
 set(LTENSOR_MPS_FILES  MPSTNCuda.cpp CACHE INTERNAL "" FORCE)
 
-add_library(${PL_TENSOR} STATIC ${LTENSOR_MPS_FILES})
+add_library(${PL_BACKEND} STATIC ${LTENSOR_MPS_FILES})
+
+target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLTENSOR=1")
 
 ##########################
 ## Enforce C++ Standard ##
@@ -35,29 +37,32 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #########################
 option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
-target_link_libraries(${PL_TENSOR} PUBLIC  lightning_compile_options
+target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs
+                                            lightning_gates
+                                            lightning_utils
                                             ${PL_BACKEND}_gates
                                             ${PL_BACKEND}_tensor
                                             ${PL_BACKEND}_tensornetBase
                                             ${PL_BACKEND}_utils
                                             )
     
-target_include_directories(${PL_TENSOR} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_property(TARGET ${PL_TENSOR} PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(${PL_BACKEND} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # To avoid DSO errors on platforms preferring static linkage, uncomment the following line:
 # string(REPLACE "libcudart_static.a" "libcudart.so" CUDA_SHARED_RT "${CUDA_LIBRARIES}")
-set_target_properties(${PL_TENSOR} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
+set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
 
 if(PL_DISABLE_CUDA_SAFETY)
-    target_compile_options(${PL_TENSOR} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
+    target_compile_options(${PL_BACKEND} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
 endif()
 
 ###############################################################################
 # Include all nested sources directories
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
+                           bindings
                            gates
                            measurements
                            observables

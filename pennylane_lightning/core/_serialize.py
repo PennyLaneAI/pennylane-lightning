@@ -86,10 +86,22 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
+        elif device_name == "lightning.tensor":
+            try:
+                import pennylane_lightning.lightning_tensor_ops as lightning_ops
+            except ImportError as exception:
+                raise ImportError(
+                    f"Pre-compiled binaries for {device_name} are not available."
+                ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
-        self.statevector_c64 = lightning_ops.StateVectorC64
-        self.statevector_c128 = lightning_ops.StateVectorC128
+
+        if device_name != "lightning.tensor":
+            self.statevector_c64 = lightning_ops.StateVectorC64
+            self.statevector_c128 = lightning_ops.StateVectorC128
+        else:
+            self.statevector_c64 = lightning_ops.StateTensorC64
+            self.statevector_c128 = lightning_ops.StateTensorC128
         self.named_obs_c64 = lightning_ops.observables.NamedObsC64
         self.named_obs_c128 = lightning_ops.observables.NamedObsC128
         self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
@@ -98,8 +110,10 @@ class QuantumScriptSerializer:
         self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
-        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
-        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
+
+        if device_name != "lightning.tensor":
+            self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+            self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
         self._use_mpi = use_mpi
 
@@ -286,6 +300,10 @@ class QuantumScriptSerializer:
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
+            if self.device_name == "lightning.tensor":
+                raise NotImplementedError(
+                    "SparseHamiltonian is not supported on the lightning.tensor device."
+                )
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
 

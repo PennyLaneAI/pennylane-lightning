@@ -156,7 +156,7 @@ if(ENABLE_PYTHON)
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
     # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
-    if("${PL_BACKEND}" STREQUAL "lightning_gpu")
+    if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN")
     endif()
@@ -166,16 +166,25 @@ if(ENABLE_PYTHON)
                                                         )
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
+                                                        lightning_gates
                                                         lightning_utils
                                                         lightning_algorithms
                                                         )
 
-    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                        "${PL_BACKEND}_algorithms"
-                                                        "${PL_BACKEND}_observables"
-                                                        "${PL_BACKEND}_bindings"
-                                                        "${PL_BACKEND}_measurements"
-                                                        )
+    if(NOT DEFINED PL_TENSOR)
+        target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
+                                                            "${PL_BACKEND}_algorithms"
+                                                            "${PL_BACKEND}_observables"
+                                                            "${PL_BACKEND}_bindings"
+                                                            "${PL_BACKEND}_measurements"
+                                                            )
+    else()
+        target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
+                                                            "${PL_BACKEND}_observables"
+                                                            "${PL_BACKEND}_bindings"
+                                                            "${PL_BACKEND}_measurements"
+                                                            )
+    endif()
 
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
     target_compile_definitions("${PL_BACKEND}_ops" PRIVATE VERSION_INFO=${VERSION_STRING})

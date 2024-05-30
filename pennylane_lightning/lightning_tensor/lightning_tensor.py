@@ -23,8 +23,29 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.tape import QuantumTape
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
+
+from ._measurements import LightningMeasurements
+from ._state_tensor import LightningStateTensor
+
+try:
+    from pennylane_lightning.lightning_tensor_ops import backend_info
+
+    LT_CPP_BINARY_AVAILABLE = True
+except ImportError:
+    LT_CPP_BINARY_AVAILABLE = False
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
@@ -37,6 +58,143 @@ _backends = frozenset({"cutensornet"})
 
 _methods = frozenset({"mps"})
 # The set of supported methods.
+
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "QFT",
+        "ECR",
+        "BlockEncode",
+    }
+)
+
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "Hamiltonian",
+        "LinearCombination",
+        "Sum",
+        "SProd",
+        "Prod",
+        "Exp",
+    }
+)
+# The set of supported observables.
+
+
+def stopping_condition(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+    # These thresholds are adapted from `lightning_base.py`
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+    return op.name in _operations
+
+
+def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:
+    """Simulate a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateTensor): handle to Lightning state tensor
+
+    Returns:
+        Tuple[TensorLike]: The results of the simulation
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+    """
+    state.reset_state()
+    state.get_final_state(circuit)
+    return LightningMeasurements(state).measure_final_state(circuit)
+
+
+def accepted_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
+    return obs.name in _observables
 
 
 def accepted_backends(backend: str) -> bool:
@@ -73,7 +231,7 @@ class LightningTensor(Device):
 
     # So far we just consider the options for MPS simulator
     _device_options = ("backend", "c_dtype")
-
+    _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
     # pylint: disable=too-many-arguments
@@ -81,12 +239,16 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
+        maxBondDim=10,
         backend="cutensornet",
         method="mps",
         shots=None,
         c_dtype=np.complex128,
         **kwargs,
     ):
+        if not self._CPP_BINARY_AVAILABLE:
+            raise ImportError("Pre-compiled binaries for lightning.tensor are not available. ")
+
         if not accepted_backends(backend):
             raise ValueError(f"Unsupported backend: {backend}")
 
@@ -96,20 +258,34 @@ class LightningTensor(Device):
         if shots is not None:
             raise ValueError("lightning.tensor does not support finite shots.")
 
-        super().__init__(wires=wires, shots=shots)
+        if wires is None:
+            raise ValueError("The number of wires must be specified.")
 
-        self._num_wires = len(self.wires) if self.wires else 0
-        self._backend = backend
-        self._method = method
-        self._c_dtype = c_dtype
-
-        self._interface = None
+        if type(maxBondDim) != int or maxBondDim < 1:
+            raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
         for arg in kwargs:
             if arg not in self._device_options:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
+
+        super().__init__(wires=wires, shots=shots)
+
+        if isinstance(wires, int):
+            self._wire_map = None  # should just use wires as is
+        else:
+            self._wire_map = {w: i for i, w in enumerate(self.wires)}
+
+        self._num_wires = len(self.wires) if self.wires else 0
+        self._maxBondDim = maxBondDim
+        self._backend = backend
+        self._method = method
+        self._c_dtype = c_dtype
+
+        # TODO
+        # LightningStateTensor is a class that handles the state tensor should accept method and backend
+        self._statetensor = LightningStateTensor(self._num_wires, self._maxBondDim, self._c_dtype)
 
     @property
     def name(self):
@@ -178,9 +354,22 @@ class LightningTensor(Device):
         """
 
         # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
-        # config = self._setup_execution_config(execution_config)
-        # program = self._interface.preprocess()
-        # return program, config
+        config = self._setup_execution_config(execution_config)
+
+        program = TransformProgram()
+
+        program.add_transform(validate_measurements, name=self.name)
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(validate_device_wires, self._wires, name=self.name)
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
+
+        return program, config
 
     def execute(
         self,
@@ -197,8 +386,16 @@ class LightningTensor(Device):
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
 
-        # TODO: remove comment when cuTensorNet MPS backend is available as a prototype
-        # return self._interface.execute(circuits, execution_config)
+        results = []
+        if isinstance(circuits, Sequence) and len(circuits) != 1:
+            raise ValueError("lightning.tensor does not support batch processing.")
+
+        for circuit in circuits:
+            if self._wire_map is not None:
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+            results.append(simulate(circuit, self._statetensor))
+
+        return tuple(results)
 
     # pylint: disable=unused-argument
     def supports_derivatives(
