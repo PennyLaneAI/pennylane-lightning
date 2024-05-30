@@ -2,10 +2,16 @@
 
 ### New features since last release
 
+* Add gate support to `cutensornet` backed `lightning.tensor` C++ layer.
+  [(#718)](https://github.com/PennyLaneAI/pennylane-lightning/pull/718)
+
 * Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
   [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
 ### Breaking changes
+
+* Removed the `QuimbMPS` class and the corresponding interface/backend from `lightning.tensor`.
+  [(#737)](https://github.com/PennyLaneAI/pennylane-lightning/pull/737)
 
 * Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
   [(#730)](https://github.com/PennyLaneAI/pennylane-lightning/pull/730)
@@ -42,12 +48,23 @@
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
 
+* Patch the C++ `Measurements.probs(wires)` method in Lightning-Qubit and Lighnting-Kokkos to `Measurements.probs()` when called with all wires.
+  This will trigger a more optimized implementation for calculating the probabilities of the entire system.
+  [(#744)](https://github.com/PennyLaneAI/pennylane-lightning/pull/744)
+
+* Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
+  [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
+
+
 ### Documentation
 
 ### Bug fixes
 
 * Fix AVX streaming operation support with newer GCC.
   [(#729)](https://github.com/PennyLaneAI/pennylane-lightning/pull/729)
+
+* Revert changes calling `IMAG`, `ONE`, `ZERO` templated functions in Kokkos kernels since they are incompatible with device execution.
+  [(#733)](https://github.com/PennyLaneAI/pennylane-lightning/pull/733)
 
 * The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
@@ -65,7 +82,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
