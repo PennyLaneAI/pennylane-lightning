@@ -142,18 +142,18 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static void store(std::complex<PrecisionT> *p, IntrinsicType value) {
 #ifdef PL_LQ_KERNEL_AVX_STREAMING
-        store_(reinterpret_cast<PrecisionT *>(p), value);
-#else
         stream_(reinterpret_cast<PrecisionT *>(p), value);
+#else
+        store_(reinterpret_cast<PrecisionT *>(p), value);
 #endif
     }
 
     PL_FORCE_INLINE
     static void store(PrecisionT *p, IntrinsicType value) {
 #ifdef PL_LQ_KERNEL_AVX_STREAMING
-        store_(p, value);
-#else
         stream_(p, value);
+#else
+        store_(p, value);
 #endif
     }
 
