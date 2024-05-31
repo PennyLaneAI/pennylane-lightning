@@ -14,9 +14,6 @@ project(lightning_kokkos
 set(LKOKKOS_FILES   StateVectorKokkos.cpp
                     CACHE INTERNAL "" FORCE)
 
-add_library(lightning_kokkos SHARED ${LKOKKOS_FILES})
-target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
-
 ##########################
 ## Enforce C++ Standard ##
 ##########################
@@ -51,19 +48,43 @@ if(PLKOKKOS_ENABLE_SANITIZER)
     set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
 ENDIF()
 
-target_link_libraries(lightning_kokkos PUBLIC  lightning_compile_options
-                                            lightning_external_libs
+target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
+
+# Compile the sources files to a target object:
+add_library(obj_file OBJECT ${LKOKKOS_FILES})
+set_property(TARGET obj_file PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(obj_file PUBLIC   lightning_compile_options
+                                        lightning_external_libs
+                                        lightning_base
+                                        lightning_gates
+                                        lightning_utils
+                                        lightning_kokkos_utils
+                                        lightning_kokkos_gates
+)
+
+if(PLKOKKOS_ENABLE_NATIVE)
+    target_compile_options(obj_file  PRIVATE -march=native)
+endif()
+
+# Build THE SHARED and STATIC libraries from the target object:
+add_library(lightning_kokkos_shared SHARED $<TARGET_OBJECTS:obj_file>)
+add_library(lightning_kokkos STATIC $<TARGET_OBJECTS:obj_file>)
+
+set(LKOKKOS_LIBS    lightning_kokkos
+                    lightning_kokkos_shared
+)
+
+foreach(LK_LIB ${LKOKKOS_LIBS})
+    target_link_libraries(${LK_LIB} PUBLIC  lightning_external_libs
                                             lightning_base
                                             lightning_gates
                                             lightning_utils
                                             lightning_kokkos_utils
                                             lightning_kokkos_gates
-                                            )
-target_include_directories(lightning_kokkos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-set_property(TARGET lightning_kokkos PROPERTY POSITION_INDEPENDENT_CODE ON)
-if(PLKOKKOS_ENABLE_NATIVE)
-    target_compile_options(lightning_kokkos PRIVATE -march=native)
-endif()
+    )
+    target_include_directories(${LK_LIB}  PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    set_property(TARGET ${LK_LIB}  PROPERTY POSITION_INDEPENDENT_CODE ON)
+endforeach()
 
 ###############################################################################
 # Include subdirectories
@@ -74,7 +95,7 @@ set(COMPONENT_SUBDIRS   algorithms
                         measurements
                         observables
                         utils
-                        )
+)
 
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
