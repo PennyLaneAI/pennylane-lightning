@@ -87,6 +87,7 @@ jobs:
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
+
       - name: Checkout PennyLane-Lightning-Tensor-MPS-TNCuda
         uses: actions/checkout@v4
         with:
@@ -127,8 +128,10 @@ jobs:
           pip_path=$(which python)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
+
       - name: Install required packages
         run: |
+          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }} openfermionpyscf
 
