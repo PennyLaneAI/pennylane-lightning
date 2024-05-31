@@ -67,7 +67,7 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
 
     /**
      * @brief Construct a new TensorCuda object from a host data.
-     * 
+     *
      * @param extents Tensor extents.
      * @param host_tensor Host tensor data.
      * @param dev_tag Device tag.
