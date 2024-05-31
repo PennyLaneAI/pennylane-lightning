@@ -176,7 +176,10 @@ requirements = [
 
 packages_list = ["pennylane_lightning." + backend]
 
-requirements += ["pennylane_lightning==" + version]
+if backend == "lightning_qubit":
+    packages_list += ["pennylane_lightning.core"]
+else:
+    requirements += ["pennylane_lightning==" + version]
 
 suffix = backend.replace("lightning_", "")
 if suffix == "gpu":
@@ -219,11 +222,7 @@ if backend == "lightning_qubit":
                 "pennylane_lightning.core": [
                     os.path.join("src", "*"),
                     os.path.join("src", "**", "*"),
-                ],
-                "pennylane_lightning.lightning_tensor": [
-                    os.path.join("backends", "*"),
-                    os.path.join("backends", "**", "*"),
-                ],
+                ]
             },
         }
     )
