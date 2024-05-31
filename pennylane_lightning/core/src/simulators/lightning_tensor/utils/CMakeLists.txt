@@ -11,7 +11,7 @@ foreach(BACKEND ${PL_BACKEND})
         add_subdirectory(tncuda_utils)
         target_include_directories(${PL_BACKEND}_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tncuda_utils)
         target_link_libraries(${PL_BACKEND}_utils INTERFACE tncuda_utils)
-        set(CUDA_UTILS_ADDED TRUE)
+        set(TNCUDA_UTILS_ADDED TRUE)
     endif()
 endforeach()
 

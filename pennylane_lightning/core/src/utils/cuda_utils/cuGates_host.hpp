@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <complex>
+#include <functional>
 #include <vector>
 
 #include "cuda_helpers.hpp"
@@ -115,11 +116,10 @@ template <class CFP_t> static constexpr auto getS() -> std::vector<CFP_t> {
  * of T gate data.
  */
 template <class CFP_t> static constexpr auto getT() -> std::vector<CFP_t> {
-    return {
-        cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ConstMultSC(
-            cuUtil::SQRT2<decltype(cuUtil::ONE<CFP_t>().x)>() / 2,
-            cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>()))};
+    return {cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+            cuUtil::ConstMultSC(
+                cuUtil::SQRT2<decltype(cuUtil::ONE<CFP_t>().x)>() / 2,
+                cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>()))};
 }
 
 /**
@@ -554,6 +554,7 @@ static auto getCRZ(U angle) -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
             second};
 }
 
@@ -653,17 +654,25 @@ template <class CFP_t, class U = double>
 static auto getSingleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
     return {cuUtil::ONE<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -730,17 +739,25 @@ static auto getSingleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+// TODO: To remove conditional compilation here in the future, current
+// implementation will block the simultaneous installation of LGPU and
+// cutensornet backends
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
+
     return {e,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -809,17 +826,25 @@ static auto getSingleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
     return {e,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             c,
-            s,
-            cuUtil::ZERO<CFP_t>(),
-            cuUtil::ZERO<CFP_t>(),
             -s,
+            cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(),
+            s,
             c,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -884,13 +909,21 @@ template <class CFP_t, class U = double>
 static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = cuUtil::ONE<CFP_t>();
     mat[17] = cuUtil::ONE<CFP_t>();
     mat[34] = cuUtil::ONE<CFP_t>();
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = cuUtil::ONE<CFP_t>();
     mat[85] = cuUtil::ONE<CFP_t>();
     mat[102] = cuUtil::ONE<CFP_t>();
@@ -899,7 +932,7 @@ static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     mat[153] = cuUtil::ONE<CFP_t>();
     mat[170] = cuUtil::ONE<CFP_t>();
     mat[187] = cuUtil::ONE<CFP_t>();
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = cuUtil::ONE<CFP_t>();
     mat[238] = cuUtil::ONE<CFP_t>();
@@ -956,13 +989,21 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = e;
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -971,7 +1012,7 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -1044,13 +1085,20 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
-    const CFP_t s{std::sin(p2), 0};
+    // TODO: To remove conditional compilation here in the future, current
+    // implementation will block the simultaneous installation of LGPU and
+    // cutensornet backends
+#ifdef _ENABLE_PLGPU
+    const CFP_t s{-std::sin(p2), 0}; // column-major
+#else
+    const CFP_t s{std::sin(p2), 0}; // row-major
+#endif
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = e;
     mat[17] = e;
     mat[34] = e;
     mat[51] = c;
-    mat[60] = s;
+    mat[60] = -s;
     mat[68] = e;
     mat[85] = e;
     mat[102] = e;
@@ -1059,7 +1107,7 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     mat[153] = e;
     mat[170] = e;
     mat[187] = e;
-    mat[195] = -s;
+    mat[195] = s;
     mat[204] = c;
     mat[221] = e;
     mat[238] = e;
@@ -1423,5 +1471,185 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
             cuUtil::ONE<CFP_t>()};
 }
+
+/*
+ * @brief Dyanmical access the gate data based on the gate name and parameters.
+ *
+ * @tparam PrecisionT Required precision of gate (`float` or `double`).
+ */
+template <class PrecisionT> class DynamicGateDataAccess {
+  private:
+    DynamicGateDataAccess() = default;
+
+  public:
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    DynamicGateDataAccess(DynamicGateDataAccess &&) = delete;
+    DynamicGateDataAccess(const DynamicGateDataAccess &) = delete;
+    DynamicGateDataAccess &operator=(const DynamicGateDataAccess &) = delete;
+
+    ~DynamicGateDataAccess() = default;
+
+  public:
+    static DynamicGateDataAccess &getInstance() {
+        static DynamicGateDataAccess instance;
+        return instance;
+    }
+
+    auto
+    getGateData(const std::string &gate_name,
+                [[maybe_unused]] const std::vector<PrecisionT> &params) const
+        -> std::vector<CFP_t> {
+        if (nonparametric_gates_.find(gate_name) !=
+            nonparametric_gates_.end()) {
+            return nonparametric_gates_.at(gate_name)();
+        } else if (parametric_gates_.find(gate_name) !=
+                   parametric_gates_.end()) {
+            return parametric_gates_.at(gate_name)(params);
+        } else {
+            throw std::invalid_argument("Unsupported gate: " + gate_name + ".");
+        }
+    }
+
+  private:
+    using ParamGateFunc =
+        std::function<std::vector<CFP_t>(const std::vector<PrecisionT> &)>;
+    using NonParamGateFunc = std::function<std::vector<CFP_t>()>;
+    using ParamGateFuncMap = std::unordered_map<std::string, ParamGateFunc>;
+    using NonParamGateFuncMap =
+        std::unordered_map<std::string, NonParamGateFunc>;
+
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
+    NonParamGateFuncMap nonparametric_gates_{
+        {"Identity",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"PauliX",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"PauliY",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"PauliZ",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"S", []() -> std::vector<CFP_t> { return cuGates::getS<CFP_t>(); }},
+        {"Hadamard",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"T", []() -> std::vector<CFP_t> { return cuGates::getT<CFP_t>(); }},
+        {"SWAP",
+         []() -> std::vector<CFP_t> { return cuGates::getSWAP<CFP_t>(); }},
+        {"CNOT",
+         []() -> std::vector<CFP_t> { return cuGates::getCNOT<CFP_t>(); }},
+        {"Toffoli",
+         []() -> std::vector<CFP_t> { return cuGates::getToffoli<CFP_t>(); }},
+        {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
+        {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
+        {"CSWAP",
+         []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
+
+    // TODO: Need changes to support to the controlled gate tensor API once the
+    // API is finalized in cutensornet lib.
+    ParamGateFuncMap parametric_gates_{
+        {"PhaseShift",
+         [](auto &&params) {
+             return cuGates::getPhaseShift<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RX",
+         [](auto &&params) {
+             return cuGates::getRX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RY",
+         [](auto &&params) {
+             return cuGates::getRY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"RZ",
+         [](auto &&params) {
+             return cuGates::getRZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"Rot",
+         [](auto &&params) {
+             return cuGates::getRot<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
+         }},
+        {"CRX",
+         [](auto &&params) {
+             return cuGates::getCRX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRY",
+         [](auto &&params) {
+             return cuGates::getCRY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRZ",
+         [](auto &&params) {
+             return cuGates::getCRZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"CRot",
+         [](auto &&params) {
+             return cuGates::getCRot<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]),
+                 std::forward<decltype(params[1])>(params[1]),
+                 std::forward<decltype(params[2])>(params[2]));
+         }},
+        {"ControlledPhaseShift",
+         [](auto &&params) {
+             return cuGates::getControlledPhaseShift<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingXX",
+         [](auto &&params) {
+             return cuGates::getIsingXX<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingYY",
+         [](auto &&params) {
+             return cuGates::getIsingYY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingZZ",
+         [](auto &&params) {
+             return cuGates::getIsingZZ<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"IsingXY",
+         [](auto &&params) {
+             return cuGates::getIsingXY<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitation",
+         [](auto &&params) {
+             return cuGates::getSingleExcitation<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitationMinus",
+         [](auto &&params) {
+             return cuGates::getSingleExcitationMinus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"SingleExcitationPlus",
+         [](auto &&params) {
+             return cuGates::getSingleExcitationPlus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitation",
+         [](auto &&params) {
+             return cuGates::getDoubleExcitation<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitationMinus",
+         [](auto &&params) {
+             return cuGates::getDoubleExcitationMinus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"DoubleExcitationPlus", [](auto &&params) {
+             return cuGates::getDoubleExcitationPlus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }}};
+};
 
 } // namespace Pennylane::LightningGPU::cuGates
