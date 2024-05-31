@@ -1262,29 +1262,38 @@ class TestLightningDeviceIntegration:
         assert np.allclose(res_sv, expected_sv, atol=tol, rtol=0)
         assert np.allclose(res_probs, expected_prob, atol=tol, rtol=0)
 
+    # Check the BlockEncode PennyLane page for details:
+    # https://docs.pennylane.ai/en/stable/code/api/pennylane.BlockEncode.html
     @pytest.mark.parametrize(
-        "op",
+        "op, op_wires",
         [
-            qml.BlockEncode,
-            qml.ctrl(qml.BlockEncode, control=(1)),
+            [qml.BlockEncode, [0, 2]],
+            [qml.ctrl(qml.BlockEncode, control=(1)), [0, 2]],
+            [qml.ctrl(qml.BlockEncode, control=(2)), [0, 1]],
         ],
     )
-    def test_apply_BlockEncode(self, op, qubit_device, tol):
+    @pytest.mark.parametrize(
+        "A",
+        [
+            np.array([[1, 1], [1, -1]]) / np.sqrt(2),
+            np.array([[1, 1], [1, -1]]),
+        ],
+    )
+    def test_apply_BlockEncode(self, op, op_wires, A, qubit_device, tol):
         """Test apply BlockEncode and C(BlockEncode)"""
 
-        dev = qubit_device(wires=3)
-        dev_default = qml.device("default.qubit", wires=3)
+        num_wires = 3
+        dev = qubit_device(wires=num_wires)
 
         def circuit1(A):
             qml.Hadamard(0)
             qml.Hadamard(1)
-            qml.BlockEncode(A, wires=[0, 2])
-            op(A, wires=[0, 2])
+            op(A, wires=op_wires)
             return qml.state()
 
-        A = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
-
         results = qml.qnode(dev)(circuit1)(A)
+
+        dev_default = qml.device("default.qubit", wires=num_wires)
         expected = qml.qnode(dev_default)(circuit1)(A)
 
         assert np.allclose(results, expected, atol=tol, rtol=0)

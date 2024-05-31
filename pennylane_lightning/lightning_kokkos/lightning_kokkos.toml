@@ -59,7 +59,7 @@ StatePrep              = {}
 [operators.gates.matrix]
 
 BlockEncode            = {properties = [ "controllable" ]}
-'C(GlobalPhase)'       = {}
+GlobalPhase            = {properties = [ "controllable" ]}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
