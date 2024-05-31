@@ -62,9 +62,13 @@ template <class StateTensorT> class MeasurementsTNCuda {
      * @brief Calculate expectation value for a general Observable.
      *
      * @param obs An Observable object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 10.
+     *
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCuda<StateTensorT> &obs) -> PrecisionT {
+    auto expval(ObservableTNCuda<StateTensorT> &obs,
+                const int32_t numHyperSamples = 10) -> PrecisionT {
         auto tnoperator =
             ObservableTNCudaOperator<StateTensorT>(state_tensor_, obs);
 
@@ -78,10 +82,6 @@ template <class StateTensorT> class MeasurementsTNCuda {
             /* cutensornetState_t */ state_tensor_.getQuantumState(),
             /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
             /* cutensornetStateExpectation_t * */ &expectation));
-
-        // Configure the computation of the specified quantum circuit
-        // expectation value
-        const int32_t numHyperSamples = 10;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
             /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
