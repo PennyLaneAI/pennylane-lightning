@@ -48,12 +48,16 @@ template <class PrecisionT, class Derived> class TensorBase {
         length_ = std::accumulate(extents.begin(), extents.end(),
                                   std::size_t{1}, std::multiplies<>());
     }
-    // Construct a tensor with given extents
+    /**
+     * @brief Construct a tensor object with given extents.
+     *
+     * @param extents Extents of a tensor object.
+     */
     explicit TensorBase(const std::vector<std::size_t> &extents)
         : rank_(extents.size()),
           modes_(std::move(std::vector(rank_, std::size_t{0}))),
-          extents_(extents) {
-        length_ = std::accumulate(extents.begin(), extents.end(),
+          extents_(std::move(extents)) {
+        length_ = std::accumulate(extents_.begin(), extents_.end(),
                                   std::size_t{1}, std::multiplies<>());
     }
 

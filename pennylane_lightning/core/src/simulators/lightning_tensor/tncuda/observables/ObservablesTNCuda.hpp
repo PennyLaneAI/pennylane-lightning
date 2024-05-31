@@ -157,7 +157,6 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
-    using MetaDataT = typename BaseType::MetaDataT;
 
   private:
     std::string obs_name_;
@@ -220,7 +219,6 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
-    using MetaDataT = BaseType::MetaDataT;
 
   private:
     inline static const MatrixHasher mh;
@@ -408,7 +406,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     /**
      * @brief Get the wires for each observable operation.
      *
-     * @return const std::vector<std::size_t>&
+     * @return const std::vector<std::size_t>
      */
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return all_wires_;

@@ -43,7 +43,7 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
  * @brief ObservablesTNCuda's Measurement Class.
  *
  * This class couples with a state tensor to performs measurements.
- * Observables are defined the observable class.
+ * Observables are defined in the observable class.
  *
  * @tparam StateTensorT type of the state tensor to be measured.
  */
@@ -61,14 +61,15 @@ template <class StateTensorT> class MeasurementsTNCuda {
     /**
      * @brief Calculate expectation value for a general Observable.
      *
-     * @param ob Observable.
+     * @param obs An Observable object.
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCuda<StateTensorT> &ob) -> PrecisionT {
+    auto expval(ObservableTNCuda<StateTensorT> &obs) -> PrecisionT {
         auto tnoperator =
-            ObservableTNCudaOperator<StateTensorT>(state_tensor_, ob);
+            ObservableTNCudaOperator<StateTensorT>(state_tensor_, obs);
 
-        ComplexT expectation_val{0.0, 0.0}, state_norm2{0.0, 0.0};
+        ComplexT expectation_val{0.0, 0.0};
+        ComplexT state_norm2{0.0, 0.0};
 
         cutensornetStateExpectation_t expectation;
 
