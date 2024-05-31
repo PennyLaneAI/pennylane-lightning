@@ -353,6 +353,51 @@ TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
                 REQUIRE(*ham2 != *ham3);
                 REQUIRE(*ham2 != *ham4);
                 REQUIRE(*ham1 != *ham5);
+
+                REQUIRE(ham5->getWires() == std::vector<std::size_t>{0, 1, 2});
+                REQUIRE(ham5->getCoeffs() ==
+                        std::vector<PrecisionT>{0.8, 0.5, 0.7});
+                CHECK(ham5->getNumTensors() ==
+                      std::vector<std::size_t>{3, 3, 3});
+                CHECK(ham5->getNumStateModes()[0] ==
+                      std::vector<std::size_t>{1, 1, 1});
+                CHECK(ham5->getNumStateModes()[1] ==
+                      std::vector<std::size_t>{1, 1, 1});
+                CHECK(ham5->getNumStateModes()[2] ==
+                      std::vector<std::size_t>{1, 1, 1});
+
+                CHECK(ham5->getStateModes()[0][0] ==
+                      std::vector<std::size_t>{0});
+                CHECK(ham5->getStateModes()[0][1] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham5->getStateModes()[0][2] ==
+                      std::vector<std::size_t>{2});
+
+                CHECK(ham5->getStateModes()[1][0] ==
+                      std::vector<std::size_t>{0});
+                CHECK(ham5->getStateModes()[1][1] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham5->getStateModes()[1][2] ==
+                      std::vector<std::size_t>{2});
+
+                CHECK(ham5->getStateModes()[2][0] ==
+                      std::vector<std::size_t>{0});
+                CHECK(ham5->getStateModes()[2][1] ==
+                      std::vector<std::size_t>{1});
+                CHECK(ham5->getStateModes()[2][2] ==
+                      std::vector<std::size_t>{2});
+
+                CHECK(std::get<0>(ham5->getMetaData()[0][0]) == "PauliX");
+                CHECK(std::get<0>(ham5->getMetaData()[1][0]) == "PauliZ");
+                CHECK(std::get<0>(ham5->getMetaData()[2][0]) == "PauliY");
+
+                CHECK(std::get<0>(ham5->getMetaData()[0][1]) == "PauliY");
+                CHECK(std::get<0>(ham5->getMetaData()[1][1]) == "PauliX");
+                CHECK(std::get<0>(ham5->getMetaData()[2][1]) == "PauliZ");
+
+                CHECK(std::get<0>(ham5->getMetaData()[0][2]) == "PauliZ");
+                CHECK(std::get<0>(ham5->getMetaData()[1][2]) == "PauliY");
+                CHECK(std::get<0>(ham5->getMetaData()[2][2]) == "PauliY");
             }
 
             SECTION("getWires") {
