@@ -84,3 +84,7 @@ if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
 endif()
+
+add_executable(lkbin lkbin.cpp)
+target_link_libraries(lkbin lightning_kokkos lightning_kokkos_measurements)
+set_property(TARGET lkbin PROPERTY CXX_STANDARD 20)
