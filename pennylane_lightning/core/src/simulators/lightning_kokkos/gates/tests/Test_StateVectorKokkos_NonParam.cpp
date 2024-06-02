@@ -28,6 +28,7 @@
 #include "TestHelpers.hpp"
 #include "TestHelpersWires.hpp"
 #include "Util.hpp"
+#include "iostream"
 
 /**
  * @file
@@ -100,7 +101,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Param-Operation",
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T",
-                 "CNOT", "SWAP", "CY", "CZ", "CSWAP", "Toffoli");
+                 "CNOT", "SWAP", "ISWAP","CY", "CZ", "CSWAP", "Toffoli");
     {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
             str_to_gates_.at(gate_name), {}, inverse);
@@ -520,6 +521,103 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applySWAP",
         }
     }
 }
+
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyISWAP",
+                   "[StateVectorKokkos_Nonparam]", float, double) {
+    {
+        using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+        const std::size_t num_qubits = 3;
+
+        StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+        kokkos_sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                                  {{false}, {false}});
+
+        auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                          kokkos_sv.getView());
+
+        auto z = ComplexT{ZERO<TestType>()};
+        auto i = ComplexT{INVSQRT2<TestType>()};
+        auto j = ComplexT{IMAG<TestType>()} * i;
+
+        SECTION("Apply using dispatcher") {
+            SECTION("ISWAP 0,1 |+10>") {
+                const std::vector<ComplexT> expected_results = {z, z, z, z,
+                                                                j, z, i, z};
+
+                StateVectorKokkos<TestType> svdat01{num_qubits};
+                StateVectorKokkos<TestType> svdat10{num_qubits};
+                Kokkos::deep_copy(svdat01.getView(), ini_sv);
+                Kokkos::deep_copy(svdat10.getView(), ini_sv);
+
+                svdat01.applyOperation("ISWAP", {0, 1}, false);
+                svdat10.applyOperation("ISWAP", {1, 0}, false);
+
+                auto sv01 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat01.getView());
+                auto sv10 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat10.getView());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv01[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv01[j])));
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv10[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv10[j])));
+                }
+            }
+            SECTION("ISWAP 0,2 |+10>") {
+                const std::vector<ComplexT> expected_results = {z, z, i, j,
+                                                                z, z, z, z};
+
+                StateVectorKokkos<TestType> svdat02{num_qubits};
+                StateVectorKokkos<TestType> svdat20{num_qubits};
+                Kokkos::deep_copy(svdat02.getView(), ini_sv);
+                Kokkos::deep_copy(svdat20.getView(), ini_sv);
+
+                svdat02.applyOperation("ISWAP", {0, 2}, false);
+                svdat20.applyOperation("ISWAP", {2, 0}, false);
+
+                auto sv02 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat02.getView());
+                auto sv20 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat20.getView());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv02[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv02[j])));
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv20[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv20[j])));
+                }
+            }
+            SECTION("ISWAP 1,2 |+10>") {
+                const std::vector<ComplexT> expected_results = {z, j, z, z,
+                                                                z, j, z, z};
+
+                StateVectorKokkos<TestType> svdat12{num_qubits};
+                StateVectorKokkos<TestType> svdat21{num_qubits};
+                Kokkos::deep_copy(svdat12.getView(), ini_sv);
+                Kokkos::deep_copy(svdat21.getView(), ini_sv);
+
+                svdat12.applyOperation("ISWAP", {1, 2}, false);
+                svdat21.applyOperation("ISWAP", {2, 1}, false);
+
+                auto sv12 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat12.getView());
+                auto sv21 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat21.getView());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv12[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv12[j])));
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv21[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv21[j])));
+                }
+            }
+        }
+    }
+}
+
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyCZ", "[StateVectorKokkos_Nonparam]",
                    float, double) {

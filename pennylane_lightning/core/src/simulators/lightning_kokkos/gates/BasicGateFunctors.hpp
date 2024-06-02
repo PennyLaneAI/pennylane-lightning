@@ -373,6 +373,25 @@ void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyISWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+               const std::size_t num_qubits,
+               const std::vector<std::size_t> &wires,
+               [[maybe_unused]] const bool inverse = false,
+               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNC2Functor(
+        ExecutionSpace{}, arr_, num_qubits, wires,
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      [[maybe_unused]] const std::size_t i00,
+                      const std::size_t i01, const std::size_t i10,
+                      [[maybe_unused]] const std::size_t i11) {
+            const auto v0 = arr(i01);
+            const auto v1 = arr(i10);
+            arr(i01) = Kokkos::complex<PrecisionT>{-imag(v1), real(v1)};
+            arr(i10) = Kokkos::complex<PrecisionT>{-imag(v0), real(v0)};
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
 void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::size_t num_qubits,
                                const std::vector<std::size_t> &wires,
@@ -1115,6 +1134,9 @@ void applyNamedOperation(const GateOperation gateop,
         return;
     case GateOperation::SWAP:
         applySWAP<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        return;
+    case GateOperation::ISWAP:
+        applyISWAP<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
     case GateOperation::ControlledPhaseShift:
         applyControlledPhaseShift<ExecutionSpace>(arr_, num_qubits, wires,

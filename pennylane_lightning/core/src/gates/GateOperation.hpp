@@ -44,6 +44,7 @@ enum class GateOperation : uint32_t {
     CY,
     CZ,
     SWAP,
+    ISWAP,
     IsingXX,
     IsingXY,
     IsingYY,

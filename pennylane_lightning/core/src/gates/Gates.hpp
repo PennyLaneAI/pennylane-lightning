@@ -171,6 +171,25 @@ static constexpr auto getSWAP() -> std::vector<ComplexT<T>> {
 }
 
 /**
+ * @brief Create a matrix representation of the ISWAP gate data in row-major
+ * format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<ComplexT<T>> Return constant expression
+ * of ISWAP gate data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getISWAP() -> std::vector<ComplexT<T>> {
+    return {ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            ONE<ComplexT, T>()};
+}
+
+/**
  * @brief Create a matrix representation of the CY gate data in row-major
  * format.
  *
@@ -1238,6 +1257,8 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getCZ<ComplexT, T>();
     case GateOperation::SWAP:
         return getSWAP<ComplexT, T>();
+    case GateOperation::ISWAP:
+        return getISWAP<ComplexT, T>();
     case GateOperation::ControlledPhaseShift:
         return getControlledPhaseShift<ComplexT, T>((inverse) ? -params[0]
                                                               : params[0]);
