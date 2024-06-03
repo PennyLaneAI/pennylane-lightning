@@ -19,9 +19,12 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
+from pennylane import DeviceError
 from pennylane.devices import DefaultQubit
 
 from pennylane_lightning.lightning_tensor import LightningTensor
+from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
+from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
@@ -505,3 +508,48 @@ def test_integration(returns):
     j_default = qml.jacobian(convert_to_array_default)(params)
 
     assert np.allclose(j_gpu, j_default, atol=1e-7)
+
+
+class TestSparseHExpval:
+    """Test sparseH expectation values"""
+
+    @pytest.mark.parametrize(
+        "cases",
+        [
+            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000, 1.000000000000000000],
+            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122, 0.960530638694763184],
+            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050, 0.848353326320648193],
+            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000, 1.000000119209289551],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520, 0.151646673679351807],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
+        ],
+    )
+    def test_sparse_Pauli_words(self, cases, tol, qubit_device):
+        """Test expval of some simple sparse Hamiltonian"""
+        dev = qubit_device(wires=4)
+
+        @qml.qnode(dev, diff_method="parameter-shift")
+        def circuit_expval():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.expval(
+                qml.SparseHamiltonian(
+                    qml.Hamiltonian([1], [cases[0]]).sparse_matrix(), wires=[0, 1]
+                )
+            )
+
+        with pytest.raises(DeviceError):
+            circuit_expval()
+
+    def test_expval_sparseH(self):
+        """Test that expval is chosen for a variety of different expectation values."""
+        obs = [
+            qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0)),
+        ]
+
+        state_tensor = LightningStateTensor(4, 10)
+        tape = qml.tape.QuantumScript(measurements=obs)
+        m = LightningMeasurements(state_tensor)
+
+        with pytest.raises(NotImplementedError):
+            m.expval(tape.measurements[0])
