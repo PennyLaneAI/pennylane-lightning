@@ -306,7 +306,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     /**
      * @brief Create a tensor product of observables
      *
-     * @param arg Arguments perfect forwarded to vector of observables.
+     * @param arg Arguments perfect-forwarded to vector of observables.
      */
     template <typename... Ts>
     explicit TensorProdObsTNCuda(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
