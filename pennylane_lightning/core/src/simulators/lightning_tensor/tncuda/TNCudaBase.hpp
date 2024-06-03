@@ -236,7 +236,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                         bool adjoint = false,
                         const std::vector<PrecisionT> &params = {0.0},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-
         // TODO: Need to revisit this line of code for the exact TN backend.
         //  We should be able to turn on/ skip this check based on the backend,
         //  if(getMethod() == "mps") { ... }

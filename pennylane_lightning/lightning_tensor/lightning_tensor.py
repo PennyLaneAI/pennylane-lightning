@@ -364,7 +364,7 @@ class LightningTensor(Device):
         )
         return program, config
 
-    # pyline: disable=unused-argument
+    # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
