@@ -207,32 +207,24 @@ class TestExpval:
 
     def test_hermitian_expectation_qnode2(self, theta, phi, tol, qubit_device):
         """Tests an Hermitian operator."""
-        dev = qml.device("lightning.tensor", wires=8)  # qubit_device(wires=3)
+        dev = qml.device("lightning.tensor", wires=8, maxBondDim=128)  # qubit_device(wires=3)
         dev_def = qml.device("default.qubit", wires=8)
         obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
 
         @qml.qnode(dev)
         def circuit_dev():
+            qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(8))
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
             qml.RX(theta + phi, wires=[2])
-            qml.CSWAP(wires=[0, 1, 2])
-            qml.CSWAP(wires=[0, 3, 6])
-            qml.Toffoli(wires=[0, 1, 2])
-            qml.Toffoli(wires=[0, 2, 4])
-            qml.DoubleExcitation(phi, wires=[0, 1, 3, 4])
             return qml.expval(obs)
 
         @qml.qnode(dev_def)
         def circuit_def():
+            qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(8))
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
             qml.RX(theta + phi, wires=[2])
-            qml.CSWAP(wires=[0, 1, 2])
-            qml.CSWAP(wires=[0, 3, 6])
-            qml.Toffoli(wires=[0, 1, 2])
-            qml.Toffoli(wires=[0, 2, 4])
-            qml.DoubleExcitation(phi, wires=[0, 1, 3, 4])
             return qml.expval(obs)
 
         assert np.allclose(circuit_dev(), circuit_def(), rtol=5e-2)

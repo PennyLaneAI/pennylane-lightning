@@ -62,15 +62,18 @@ def test_invalid_method(method):
     with pytest.raises(ValueError, match=f"Unsupported method: {method}"):
         LightningTensor(method=method)
 
+
 def test_invalid_bonddims():
-    """Test that an error is raised if wires are none."""
+    """Test that an error is raised if bonddims are less than 1."""
     with pytest.raises(ValueError):
         LightningTensor(wires=5, maxBondDim=0)
+
 
 def test_invalid_wires_none():
     """Test that an error is raised if wires are none."""
     with pytest.raises(ValueError):
         LightningTensor(wires=None)
+
 
 def test_invalid_shots():
     """Test that an error is raised if finite number of shots are requestd."""
