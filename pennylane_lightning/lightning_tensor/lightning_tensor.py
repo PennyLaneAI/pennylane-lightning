@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -161,16 +161,12 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
+def stopping_condition_mps(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    if isinstance(op, qml.QFT):
-        return len(op.wires) < 10
-    if isinstance(op, qml.GroverOperator):
-        return len(op.wires) < 13
-    return op.name in _operations
+    return op.has_matrix and len(op.wires) <= 2
 
 
 def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:
@@ -191,7 +187,7 @@ def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:
 
 
 def accepted_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
+    """A function that determines whether or not an observable is supported by ``lightning.tensor``."""
     return obs.name in _observables
 
 
@@ -349,6 +345,7 @@ class LightningTensor(Device):
         * Does not support finite shots.
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
+        * Does not support batch processing.
         """
 
         # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
@@ -361,12 +358,10 @@ class LightningTensor(Device):
         program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition,
+            stopping_condition=stopping_condition_mps,
             skip_initial_state_prep=True,
             name=self.name,
         )
-        program.add_transform(qml.transforms.broadcast_expand)
-
         return program, config
 
     # pyline: disable=unused-argument

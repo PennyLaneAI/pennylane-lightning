@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,12 +28,6 @@ if not LightningDevice._new_API:  # pylint: disable=protected-access
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-# @pytest.fixture(params=[np.complex64, np.complex128])
-# def dev(request):
-#    '''Fixture for the LightningTensor device'''
-#    return LightningTensor(wires=3, c_dtype=request.param)
 
 
 def calculate_reference(tape):
@@ -208,6 +202,38 @@ class TestExpval:
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
+    def test_hermitian_expectation_qnode2(self, theta, phi, tol, qubit_device):
+        """Tests an Hermitian operator."""
+        dev = qml.device("lightning.tensor", wires=8)  # qubit_device(wires=3)
+        dev_def = qml.device("default.qubit", wires=8)
+        obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
+
+        @qml.qnode(dev)
+        def circuit_dev():
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(theta + phi, wires=[2])
+            qml.CSWAP(wires=[0, 1, 2])
+            qml.CSWAP(wires=[0, 3, 6])
+            qml.Toffoli(wires=[0, 1, 2])
+            qml.Toffoli(wires=[0, 2, 4])
+            qml.DoubleExcitation(phi, wires=[0, 1, 3, 4])
+            return qml.expval(obs)
+
+        @qml.qnode(dev_def)
+        def circuit_def():
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(theta + phi, wires=[2])
+            qml.CSWAP(wires=[0, 1, 2])
+            qml.CSWAP(wires=[0, 3, 6])
+            qml.Toffoli(wires=[0, 1, 2])
+            qml.Toffoli(wires=[0, 2, 4])
+            qml.DoubleExcitation(phi, wires=[0, 1, 3, 4])
+            return qml.expval(obs)
+
+        assert np.allclose(circuit_dev(), circuit_def(), rtol=5e-2)
+
     def test_hamiltonian_expectation(self, theta, phi, tol, qubit_device):
         """Tests a Hamiltonian."""
         dev = qubit_device(wires=3)
@@ -367,23 +393,15 @@ PHI = np.linspace(0.32, 1, 3)
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 def test_multi_qubit_gates(theta, phi, qubit_device, tol):  # pylint: disable=too-many-arguments
     """Tests a simple circuit with multi-qubit gates."""
-    dev = qubit_device(wires=8)
 
     ops = [
         qml.PauliX(wires=[0]),
         qml.RX(theta, wires=[0]),
-        # qml.CSWAP(wires=[7, 0, 5]),
         qml.RX(phi, wires=[1]),
         qml.CNOT(wires=[3, 4]),
-        # qml.DoubleExcitation(phi, wires=[1, 2, 3, 4]),
         qml.CZ(wires=[3, 5]),
         qml.Hadamard(wires=[4]),
-        # qml.CCZ(wires=[0, 1, 2]),
-        # qml.CSWAP(wires=[0, 3, 4]),
-        # qml.QFT(wires=[0, 1, 2]),
         qml.CNOT(wires=[2, 4]),
-        # qml.Toffoli(wires=[0, 1, 2]),
-        # qml.DoubleExcitation(phi, wires=[0, 1, 3, 4]),
     ]
 
     meas = [

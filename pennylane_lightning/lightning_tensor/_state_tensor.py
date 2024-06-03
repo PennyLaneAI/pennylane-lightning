@@ -127,8 +127,6 @@ class LightningStateTensor:
         """
         state = self.state_tensor
 
-        print(state.numQubits())
-
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
@@ -143,7 +141,6 @@ class LightningStateTensor:
 
             if method is not None:  # apply specialized gate
                 param = operation.parameters
-                print(wires)
                 method(wires, False, param)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
