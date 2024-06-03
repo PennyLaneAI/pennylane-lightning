@@ -942,186 +942,39 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitation", "[MPSTNCuda_param]",
+TEMPLATE_TEST_CASE("MPSTNCuda::Param_Gates::2+_wires", "[MPSTNCuda_Param]",
                    float, double) {
-    // TODO only support inverse = false now
     const bool inverse = GENERATE(false);
     {
-        using cp_t = std::complex<TestType>;
-        std::size_t num_qubits = 5;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        const std::vector<TestType> angles = {0.3};
+        SECTION("DoubleExcitation gate") {
+            std::size_t num_qubits = 5;
 
-        // Results collected from `default.qubit`
-        std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.1767767, 0.0}),
-            std::vector<cp_t>(1 << num_qubits, {0.1767767, 0.0}),
-        };
-
-        expected_results[0][6] = {0.1483745, 0.0};
-        expected_results[0][7] = {0.1483745, 0.0};
-        expected_results[0][24] = {0.20120886, 0.0};
-        expected_results[0][25] = {0.20120886, 0.0};
-
-        expected_results[1][5] = {0.1483745, 0.0};
-        expected_results[1][7] = {0.1483745, 0.0};
-        expected_results[1][24] = {0.20120886, 0.0};
-        expected_results[1][26] = {0.20120886, 0.0};
-
-        SECTION("Apply adjacent wires") {
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-            mps_state.reset();
 
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
-
-            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse,
-                                     angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[0]));
+            REQUIRE_THROWS_AS(mps_state.applyOperation("DoubleExcitation",
+                                                       {0, 1, 2, 3}, inverse),
+                              LightningException);
         }
 
-        SECTION("Apply non-adjacent wires") {
+        SECTION("DoubleExcitationMinus gate") {
+            std::size_t num_qubits = 5;
+
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
-
-            mps_state.applyOperation("DoubleExcitation", {0, 1, 2, 4}, inverse,
-                                     angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[1]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationMinus",
-                   "[MPSTNCuda_param]", float, double) {
-    // TODO only support inverse = false now
-    const bool inverse = GENERATE(false);
-    {
-        using cp_t = std::complex<TestType>;
-        std::size_t num_qubits = 5;
-        std::size_t maxExtent = 2;
-        DevTag<int> dev_tag{0, 0};
-
-        const std::vector<TestType> angles = {0.3};
-
-        // Results collected from `default.qubit`
-        std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641718}),
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641718}),
-        };
-
-        expected_results[0][6] = {0.1483745, 0.0};
-        expected_results[0][7] = {0.1483745, 0.0};
-        expected_results[0][24] = {0.20120886, 0.0};
-        expected_results[0][25] = {0.20120886, 0.0};
-
-        expected_results[1][5] = {0.1483745, 0.0};
-        expected_results[1][7] = {0.1483745, 0.0};
-        expected_results[1][24] = {0.20120886, 0.0};
-        expected_results[1][26] = {0.20120886, 0.0};
-
-        SECTION("Apply adjacent wires") {
-            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-            mps_state.reset();
-
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
-
-            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
-                                     inverse, angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[0]));
+            REQUIRE_THROWS_AS(mps_state.applyOperation("DoubleExcitationMinus",
+                                                       {0, 1, 2, 3}, inverse),
+                              LightningException);
         }
 
-        SECTION("Apply non-adjacent wires") {
+        SECTION("DoubleExcitationPlus gate") {
+            std::size_t num_qubits = 5;
+
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
-
-            mps_state.applyOperation("DoubleExcitationMinus", {0, 1, 2, 4},
-                                     inverse, angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[1]));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("MPSTNCuda::Gates::DoubleExcitationPlus",
-                   "[MPSTNCuda_param]", float, double) {
-    // TODO only support inverse = false now
-    const bool inverse = GENERATE(false);
-    {
-        using cp_t = std::complex<TestType>;
-        std::size_t num_qubits = 5;
-        std::size_t maxExtent = 2;
-        DevTag<int> dev_tag{0, 0};
-
-        const std::vector<TestType> angles = {0.3};
-
-        // Results collected from `default.qubit`
-        std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641718}),
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641718}),
-        };
-
-        expected_results[0][6] = {0.1483745, 0.0};
-        expected_results[0][7] = {0.1483745, 0.0};
-        expected_results[0][24] = {0.20120886, 0.0};
-        expected_results[0][25] = {0.20120886, 0.0};
-
-        expected_results[1][5] = {0.1483745, 0.0};
-        expected_results[1][7] = {0.1483745, 0.0};
-        expected_results[1][24] = {0.20120886, 0.0};
-        expected_results[1][26] = {0.20120886, 0.0};
-
-        SECTION("Apply adjacent wires") {
-            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-            mps_state.reset();
-
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
-
-            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
-                                     inverse, angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[0]));
-        }
-
-        SECTION("Apply non-adjacent wires") {
-            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations(
-                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false},
-                {{0.0}, {0.0}, {0.0}, {0.0}, {0.0}});
-
-            mps_state.applyOperation("DoubleExcitationPlus", {0, 1, 2, 4},
-                                     inverse, angles);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results[1]));
+            REQUIRE_THROWS_AS(mps_state.applyOperation("DoubleExcitationPlus",
+                                                       {0, 1, 2, 3}, inverse),
+                              LightningException);
         }
     }
 }

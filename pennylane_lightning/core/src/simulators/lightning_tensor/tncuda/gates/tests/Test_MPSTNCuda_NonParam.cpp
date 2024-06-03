@@ -452,142 +452,30 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Toffoli", "[MPSTNCuda_Nonparam]", float,
-                   double) {
+TEMPLATE_TEST_CASE("MPSTNCuda::Non_Param_Gates::2+_wires",
+                   "[MPSTNCuda_Nonparam]", float, double) {
     const bool inverse = GENERATE(false);
     {
-        using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices") {
-            std::vector<cp_t> expected_results{
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0)};
-
+        SECTION("Toffoli gate") {
             std::size_t num_qubits = 3;
 
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
-            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
-
-            mps_state.applyOperation("Toffoli", {0, 1, 2}, inverse);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results));
+            REQUIRE_THROWS_AS(
+                mps_state.applyOperation("Toffoli", {0, 1, 2}, inverse),
+                LightningException);
         }
 
-        SECTION("Apply non-adjacent wire indices") {
-            std::vector<cp_t> expected_results{
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>()};
-
+        SECTION("CSWAP gate") {
             std::size_t num_qubits = 4;
 
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
-
-            mps_state.applyOperation("Toffoli", {0, 2, 3}, inverse);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results));
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CSWAP", "[MPSTNCuda_Nonparam]", float,
-                   double) {
-    const bool inverse = GENERATE(false);
-    {
-        using cp_t = std::complex<TestType>;
-        std::size_t maxExtent = 2;
-        DevTag<int> dev_tag{0, 0};
-
-        SECTION("Apply adjacent wire indices") {
-            std::vector<cp_t> expected_results{
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>()};
-
-            std::size_t num_qubits = 3;
-
-            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
-
-            mps_state.applyOperation("CSWAP", {0, 1, 2}, inverse);
-
-            auto results = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results));
-        }
-
-        SECTION("Apply non-adjacent wire indices") {
-            std::vector<cp_t> expected_results{
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                std::complex<TestType>(1.0 / sqrt(2), 0),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>(),
-                cuUtil::ZERO<std::complex<TestType>>()};
-
-            std::size_t num_qubits = 4;
-
-            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
-
-            mps_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
-
-            mps_state.applyOperation("CSWAP", {0, 2, 3}, inverse);
-
-            auto results = mps_state.getDataVector();
-            // TODO remove the following line later. This is a test if we can
-            // call getDataVector() multiple times
-            auto results_test = mps_state.getDataVector();
-
-            CHECK(results == Pennylane::Util::approx(expected_results));
-            CHECK(results_test == Pennylane::Util::approx(expected_results));
+            REQUIRE_THROWS_AS(
+                mps_state.applyOperation("CSWAP", {0, 1, 2}, inverse),
+                LightningException);
         }
     }
 }

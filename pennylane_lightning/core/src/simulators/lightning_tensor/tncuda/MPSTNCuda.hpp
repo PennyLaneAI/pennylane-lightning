@@ -72,7 +72,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     std::vector<TensorCuda<Precision>> tensors_;
 
-    std::vector<TensorCuda<Precision>> tensors_out_;
+    std::vector<TensorCuda<Precision>> tensors_out_; // MPS backend only
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -81,7 +81,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
   public:
     MPSTNCuda() = delete;
-
+    // TODO: Add method to the constructor to all user to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
@@ -90,6 +91,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
     }
 
+    // TODO: Add method to the constructor to all user to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
