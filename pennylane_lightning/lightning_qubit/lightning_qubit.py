@@ -299,6 +299,7 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 # The set of supported operations.
