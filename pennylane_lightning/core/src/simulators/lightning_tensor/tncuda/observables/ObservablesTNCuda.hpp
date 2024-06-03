@@ -39,9 +39,9 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 /**
  * @brief A base class for observable classes of cutensornet backends.
  *
- * We note that the observable classes for cutensornet backends are designed to
- * be created in the same way as the observable classes for the statevector
- * backends across the lightning ecosystem.
+ * We note that the observable classes for cutensornet backends have the same
+ * user interface as the observable classes for the statevector backends across
+ * the lightning ecosystem.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -397,7 +397,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     }
 
     /**
-     * @brief Get the number of operations in observable.
+     * @brief Get the number of operations in the observable.
      *
      * @return std::size_t
      */

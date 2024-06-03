@@ -45,7 +45,7 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 /**
  * @brief ObservableTNCudaOperator Class.
  *
- * This class creates `custatenetTensorNetwork` Operator from
+ * This class creates `custatenetTensorNetwork`  from
  * `ObservablesTNCuda` objects for measurement purpose. Since the NamedObs,
  * HermitianObs, TensorProdObs and Hamiltionian objects can be encapsulated in a
  * `cutensornetNetworkOperator_t` instance, only one ObservableTNCudaOperator
@@ -68,9 +68,9 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     cutensornetNetworkOperator_t obsOperator_{
         nullptr}; // cutensornetNetworkOperator operator
 
-    const StateTensorT &state_tensor_; // Quantum state to be measured
+    const StateTensorT &state_tensor_; // quantum state to be measured
 
-    const std::size_t numObsTerms_;    // Number of observable terms
+    const std::size_t numObsTerms_;    // number of observable terms
     vector1D<cuDoubleComplex> coeffs_; // coefficients for each term
     vector1D<std::size_t> numTensors_; // number of tensors in each term
 

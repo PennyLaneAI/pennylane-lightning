@@ -13,12 +13,12 @@
 // limitations under the License.
 #include <tuple>
 
+#include <catch2/catch.hpp>
+
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 
 #include "TestHelpers.hpp"
-
-#include <catch2/catch.hpp>
 
 /// @cond DEV
 namespace {

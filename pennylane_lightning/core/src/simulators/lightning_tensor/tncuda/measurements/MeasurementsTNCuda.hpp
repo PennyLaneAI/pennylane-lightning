@@ -42,7 +42,7 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
 /**
  * @brief ObservablesTNCuda's Measurement Class.
  *
- * This class couples with a state tensor to performs measurements.
+ * This class couples with a state tensor to perform measurements.
  * Observables are defined in the observable class.
  *
  * @tparam StateTensorT type of the state tensor to be measured.
@@ -63,12 +63,12 @@ template <class StateTensorT> class MeasurementsTNCuda {
      *
      * @param obs An Observable object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 10.
+     * and is default as 1.
      *
      * @return Expectation value with respect to the given observable.
      */
     auto expval(ObservableTNCuda<StateTensorT> &obs,
-                const int32_t numHyperSamples = 10) -> PrecisionT {
+                const int32_t numHyperSamples = 1) -> PrecisionT {
         auto tnoperator =
             ObservableTNCudaOperator<StateTensorT>(state_tensor_, obs);
 
