@@ -40,15 +40,14 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 
 namespace Pennylane::LightningTensor::TNCuda::Measures {
 /**
- * @brief Observable's Measurement Class.
+ * @brief ObservablesTNCuda's Measurement Class.
  *
- * This class couples with a state tensor to performs measurements.
- * Observables are defined by its operator(matrix), the observable class,
- * or through a string-based function dispatch.
+ * This class couples with a state tensor to perform measurements.
+ * Observables are defined in the observable class.
  *
  * @tparam StateTensorT type of the state tensor to be measured.
  */
-template <class StateTensorT> class Measurements {
+template <class StateTensorT> class MeasurementsTNCuda {
   private:
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
@@ -56,20 +55,25 @@ template <class StateTensorT> class Measurements {
     const StateTensorT &state_tensor_;
 
   public:
-    explicit Measurements(const StateTensorT &state_tensor)
+    explicit MeasurementsTNCuda(StateTensorT &state_tensor)
         : state_tensor_(state_tensor){};
 
     /**
      * @brief Calculate expectation value for a general Observable.
      *
-     * @param ob Observable.
+     * @param obs An Observable object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCuda<StateTensorT> &ob) -> PrecisionT {
+    auto expval(ObservableTNCuda<StateTensorT> &obs,
+                const int32_t numHyperSamples = 1) -> PrecisionT {
         auto tnoperator =
-            ObservableTNCudaOperator<StateTensorT>(state_tensor_, ob);
+            ObservableTNCudaOperator<StateTensorT>(state_tensor_, obs);
 
-        ComplexT expectation_val{0.0, 0.0}, state_norm2{0.0, 0.0};
+        ComplexT expectation_val{0.0, 0.0};
+        ComplexT state_norm2{0.0, 0.0};
 
         cutensornetStateExpectation_t expectation;
 
@@ -78,10 +82,6 @@ template <class StateTensorT> class Measurements {
             /* cutensornetState_t */ state_tensor_.getQuantumState(),
             /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
             /* cutensornetStateExpectation_t * */ &expectation));
-
-        // Configure the computation of the specified quantum circuit
-        // expectation value
-        const int32_t numHyperSamples = 10;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
             /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),

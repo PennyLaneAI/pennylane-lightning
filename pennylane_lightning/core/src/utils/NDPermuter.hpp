@@ -27,6 +27,7 @@
 
 #include "Error.hpp"
 
+// NOLINTBEGIN
 // LCOV_EXCL_START
 namespace Pennylane::Util {
 
@@ -295,3 +296,4 @@ template <size_t BLOCKSIZE = 1024> class DefaultPermuter {
 
 } // namespace Pennylane::Util
 // LCOV_EXCL_END
+// NOLINTEND

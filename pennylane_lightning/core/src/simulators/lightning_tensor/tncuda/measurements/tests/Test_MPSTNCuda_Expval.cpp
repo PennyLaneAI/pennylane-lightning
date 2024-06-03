@@ -45,7 +45,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
 
     StateTensorT mps_state{num_qubits, maxBondDim};
 
-    auto measure = Measurements<StateTensorT>(mps_state);
+    auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
 
     SECTION("Using expval") {
         mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
@@ -69,7 +69,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
 
         StateTensorT mps_state{num_qubits, maxBondDim};
 
-        auto measure = Measurements<StateTensorT>(mps_state);
+        auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -123,7 +123,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
 
         StateTensorT mps_state{num_qubits, maxBondDim};
 
-        auto measure = Measurements<StateTensorT>(mps_state);
+        auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -175,7 +175,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations(
                 {{"RX"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}}, {{0.5}, {}, {}});
-            auto m = Measurements<StateTensorT>(mps_state);
+            auto m = MeasurementsTNCuda<StateTensorT>(mps_state);
             auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);
             PrecisionT ref = 0.8775825618903724;
@@ -195,7 +195,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
 
         StateTensorT mps_state{num_qubits, maxBondDim};
 
-        auto measure = Measurements<StateTensorT>(mps_state);
+        auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto INVSQRT2 = TestType(0.707106781186547524401);
 
@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("[Parametric_obs]", "[MPSTNCuda_Expval]", float, double) {
 
         StateTensorT mps_state{num_qubits, maxBondDim};
 
-        auto measure = Measurements<StateTensorT>(mps_state);
+        auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
         auto ONE = TestType(1);
 
         SECTION("Using expval") {
@@ -255,7 +255,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
 
         StateTensorT mps_state{num_qubits, maxBondDim};
 
-        auto measure = Measurements<StateTensorT>(mps_state);
+        auto measure = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto ZERO = TestType(0);
         auto ONE = TestType(1);
@@ -318,7 +318,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = Measurements<StateTensorT>(mps_state);
+        auto m = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
@@ -340,7 +340,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = Measurements<StateTensorT>(mps_state);
+        auto m = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto H0 = std::make_shared<NamedObsT>("Hadamard",
                                               std::vector<std::size_t>{0});
@@ -371,7 +371,7 @@ TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
         mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = Measurements<StateTensorT>(mps_state);
+        auto m = MeasurementsTNCuda<StateTensorT>(mps_state);
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});

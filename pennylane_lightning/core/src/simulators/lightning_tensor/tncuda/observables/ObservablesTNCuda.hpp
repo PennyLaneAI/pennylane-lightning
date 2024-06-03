@@ -39,9 +39,9 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 /**
  * @brief A base class for observable classes of cutensornet backends.
  *
- * We note that the observable classes for cutensornet backends are designed to
- * be created in the same way as the observable classes for the statevector
- * backends across the lightning ecosystem.
+ * We note that the observable classes for cutensornet backends have the same
+ * user interface as the observable classes for the statevector backends across
+ * the lightning ecosystem.
  *
  * @tparam StateTensorT State tensor class.
  */
@@ -157,7 +157,6 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using BaseType = ObservableTNCuda<StateTensorT>;
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
-    using MetaDataT = typename BaseType::MetaDataT;
 
   private:
     std::string obs_name_;
@@ -220,7 +219,6 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
-    using MetaDataT = BaseType::MetaDataT;
 
   private:
     inline static const MatrixHasher mh;
@@ -310,7 +308,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     /**
      * @brief Create a tensor product of observables
      *
-     * @param arg Arguments perfect forwarded to vector of observables.
+     * @param arg Arguments perfect-forwarded to vector of observables.
      */
     template <typename... Ts>
     explicit TensorProdObsTNCuda(Ts &&...arg) : obs_{std::forward<Ts>(arg)...} {
@@ -401,7 +399,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     }
 
     /**
-     * @brief Get the number of operations in observable.
+     * @brief Get the number of operations in the observable.
      *
      * @return std::size_t
      */
@@ -410,7 +408,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
     /**
      * @brief Get the wires for each observable operation.
      *
-     * @return const std::vector<std::size_t>&
+     * @return const std::vector<std::size_t>
      */
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return all_wires_;
