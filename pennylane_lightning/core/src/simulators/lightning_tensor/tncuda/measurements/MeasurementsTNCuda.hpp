@@ -55,7 +55,7 @@ template <class StateTensorT> class MeasurementsTNCuda {
     const StateTensorT &state_tensor_;
 
   public:
-    explicit MeasurementsTNCuda(StateTensorT &state_tensor)
+    explicit MeasurementsTNCuda(const StateTensorT &state_tensor)
         : state_tensor_(state_tensor){};
 
     /**

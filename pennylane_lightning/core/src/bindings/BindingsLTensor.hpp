@@ -260,7 +260,7 @@ template <class StateTensorT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     pyclass.def(
         "expval",
-        [](Measurements<StateTensorT> &M,
+        [](MeasurementsTNCuda<StateTensorT> &M,
            const std::shared_ptr<ObservableTNCuda<StateTensorT>> &ob) {
             return M.expval(*ob);
         },
@@ -301,7 +301,7 @@ template <class StateTensorT> void lightningClassBindings(py::module_ &m) {
     //                             Measurements
     //***********************************************************************//
     class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<Measurements<StateTensorT>>(
+    auto pyclass_measurements = py::class_<MeasurementsTNCuda<StateTensorT>>(
         m, class_name.c_str(), py::module_local());
 
     pyclass_measurements.def(py::init<const StateTensorT &>());
