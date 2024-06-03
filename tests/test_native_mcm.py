@@ -128,13 +128,14 @@ def test_qnode_postselect_mode(postselect_mode):
     """Test that user specified qnode arg for discarding invalid shots is used correctly"""
     shots = 100
     device = qml.device(device_name, wires=3, shots=shots)
+    postselect = 1
 
     @qml.qnode(device, postselect_mode=postselect_mode)
     def f(x):
         qml.RX(x, 0)
-        _ = qml.measure(0, postselect=1)
+        _ = qml.measure(0, postselect=postselect)
         qml.CNOT([0, 1])
-        return qml.sample(wires=[0, 1])
+        return qml.sample(wires=[1])
 
     # Using small-ish rotation angle ensures the number of valid shots will be less than the
     # original number of shots. This helps avoid stochastic failures for the assertion below
@@ -144,6 +145,7 @@ def test_qnode_postselect_mode(postselect_mode):
         assert len(res) < shots
     else:
         assert len(res) == shots
+    assert np.allclose(res, postselect)
 
 
 @flaky(max_runs=5)

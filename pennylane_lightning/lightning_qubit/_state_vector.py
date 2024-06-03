@@ -280,7 +280,7 @@ class LightningStateVector:
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = "hw-like"
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
         """Apply a list of operations to the state tensor.
 
@@ -289,7 +289,7 @@ class LightningStateVector:
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``"hw-like"``.
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             None
@@ -333,7 +333,7 @@ class LightningStateVector:
                     method(operation.matrix, wires, False)
 
     def apply_operations(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = "hw-like"
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
         """Applies operations to the state vector."""
         # State preparation is currently done in Python
@@ -353,7 +353,7 @@ class LightningStateVector:
         self,
         circuit: QuantumScript,
         mid_measurements: dict = None,
-        postselect_mode: str = "hw-like",
+        postselect_mode: str = None,
     ):
         """
         Get the final state that results from executing the given quantum script.
@@ -365,7 +365,7 @@ class LightningStateVector:
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``"hw-like"``.
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             LightningStateVector: Lightning final state class.

@@ -402,7 +402,7 @@ class LightningKokkos(LightningBase):
         if operation.reset and bool(sample):
             self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    def apply_lightning(self, operations, mid_measurements=None, postselect_mode="hw-like"):
+    def apply_lightning(self, operations, mid_measurements=None, postselect_mode=None):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -475,7 +475,7 @@ class LightningKokkos(LightningBase):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        postselect_mode = kwargs.get("postselect_mode", "hw-like")
+        postselect_mode = kwargs.get("postselect_mode", None)
 
         for operation in operations:
             if isinstance(operation, (StatePrep, BasisState)):

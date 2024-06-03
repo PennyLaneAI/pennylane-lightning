@@ -62,7 +62,7 @@ def simulate(
     circuit: QuantumScript,
     state: LightningStateVector,
     mcmc: dict = None,
-    postselect_mode: str = "hw-like",
+    postselect_mode: str = None,
 ) -> Result:
     """Simulate a single quantum script.
 
@@ -74,7 +74,7 @@ def simulate(
             these fields are found in :class:`~.LightningQubit`.
         postselect_mode (str): Configuration for handling shots with mid-circuit measurement
             postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-            keep the same number of shots. Default is ``"hw-like"``.
+            keep the same number of shots. Default is ``None``.
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
