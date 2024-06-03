@@ -48,6 +48,15 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
     using BaseType = TensorBase<PrecisionT, TensorCuda>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
+    /**
+     * @brief Construct a new TensorCuda object.
+     *
+     * @param rank Tensor rank.
+     * @param modes Tensor modes.
+     * @param extents Tensor extents.
+     * @param dev_tag Device tag.
+     * @param device_alloc If true, allocate memory on device.
+     */
     explicit TensorCuda(const std::size_t rank,
                         const std::vector<std::size_t> &modes,
                         const std::vector<std::size_t> &extents,
@@ -55,6 +64,24 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
         : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(rank, modes, extents),
           data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
+
+    /**
+     * @brief Construct a new TensorCuda object from a host data.
+     *
+     * @param extents Tensor extents.
+     * @param host_tensor Host tensor data.
+     * @param dev_tag Device tag.
+     * @param device_alloc If true, allocate memory on device.
+     */
+    explicit TensorCuda(const std::vector<std::size_t> &extents,
+                        const std::vector<CFP_t> &host_tensor,
+                        const DevTag<int> &dev_tag, bool device_alloc = true)
+        : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(extents),
+          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+              BaseType::getLength(), dev_tag, device_alloc)} {
+        data_buffer_->CopyHostDataToGpu(host_tensor.data(),
+                                        BaseType::getLength());
+    }
 
     TensorCuda() = delete;
 
