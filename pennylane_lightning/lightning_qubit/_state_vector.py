@@ -29,7 +29,6 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.devices import MCMConfig
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint

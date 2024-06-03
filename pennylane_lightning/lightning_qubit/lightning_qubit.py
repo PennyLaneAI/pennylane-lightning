@@ -21,7 +21,7 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig, MCMConfig
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
