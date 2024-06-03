@@ -72,7 +72,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     std::vector<TensorCuda<Precision>> tensors_;
 
-    std::vector<TensorCuda<Precision>> tensors_out_; // MPS backend only
+    std::vector<TensorCuda<Precision>> tensors_out_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
