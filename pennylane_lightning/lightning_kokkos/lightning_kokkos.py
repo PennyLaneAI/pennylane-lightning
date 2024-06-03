@@ -223,9 +223,7 @@ class LightningKokkos(LightningBase):
     @classmethod
     def capabilities(cls):
         capabilities = super().capabilities().copy()
-        capabilities.update(
-            supports_mid_measure=True,
-        )
+        capabilities.update(supports_mid_measure=True)
         return capabilities
 
     @staticmethod
@@ -382,22 +380,29 @@ class LightningKokkos(LightningBase):
         num = self._get_basis_state_index(state, wires)
         self._create_basis_state(num)
 
-    def _apply_lightning_midmeasure(self, operation: MidMeasureMP, mid_measurements: dict):
+    def _apply_lightning_midmeasure(
+        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
+    ):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+
         Args:
             operation (~pennylane.operation.Operation): mid-circuit measurement
+
         Returns:
             None
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
-        sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
+        if postselect_mode == "fill-shots" and operation.postselect is not None:
+            sample = operation.postselect
+        else:
+            sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
         if operation.reset and bool(sample):
             self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    def apply_lightning(self, operations, mid_measurements=None):
+    def apply_lightning(self, operations, mid_measurements=None, postselect_mode="hw-like"):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -428,7 +433,7 @@ class LightningKokkos(LightningBase):
                 if ops.meas_val.concretize(mid_measurements):
                     self.apply_lightning([ops.then_op])
             elif isinstance(ops, MidMeasureMP):
-                self._apply_lightning_midmeasure(ops, mid_measurements)
+                self._apply_lightning_midmeasure(ops, mid_measurements, postselect_mode)
             elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
                 ops.base, qml.GlobalPhase
             ):
@@ -470,6 +475,8 @@ class LightningKokkos(LightningBase):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
+        postselect_mode = kwargs.get("postselect_mode", "hw-like")
+
         for operation in operations:
             if isinstance(operation, (StatePrep, BasisState)):
                 raise DeviceError(
@@ -477,7 +484,9 @@ class LightningKokkos(LightningBase):
                     + f"Operations have already been applied on a {self.short_name} device."
                 )
 
-        self.apply_lightning(operations, mid_measurements=mid_measurements)
+        self.apply_lightning(
+            operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+        )
 
     # pylint: disable=protected-access
     def expval(self, observable, shot_range=None, bin_size=None):

@@ -21,7 +21,7 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -58,7 +58,12 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
+def simulate(
+    circuit: QuantumScript,
+    state: LightningStateVector,
+    mcmc: dict = None,
+    postselect_mode: str = "hw-like",
+) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -67,6 +72,9 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
         mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
             parameters: mcmc, kernel_name, num_burnin. Descriptions of
             these fields are found in :class:`~.LightningQubit`.
+        postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+            postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+            keep the same number of shots. Default is ``"hw-like"``.
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
@@ -88,7 +96,9 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
         for _ in range(circuit.shots.total_shots):
             state.reset_state()
             mid_measurements = {}
-            final_state = state.get_final_state(aux_circ, mid_measurements=mid_measurements)
+            final_state = state.get_final_state(
+                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+            )
             results.append(
                 LightningMeasurements(final_state, **mcmc).measure_final_state(
                     aux_circ, mid_measurements=mid_measurements
@@ -610,7 +620,14 @@ class LightningQubit(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
+            results.append(
+                simulate(
+                    circuit,
+                    self._statevector,
+                    mcmc=mcmc,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
+                )
+            )
 
         return tuple(results)
 
