@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     strategy:
       matrix:
-        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu", "lightning_tensor"]
 
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
@@ -97,7 +97,7 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning package
-        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
+        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu' || matrix.pl_backend == 'lightning_tensor'}}
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
@@ -110,11 +110,19 @@ jobs:
           cd main
           python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane-Lightning unit tests for state vector backends
+        if: ${{ matrix.pl_backend != 'lightning_tensor' }}
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ --ignore=tests/lightning_tensor/  $COVERAGE_FLAGS
+
+      - name: Run PennyLane-Lightning unit tests for state vector backends
+        if: ${{ matrix.pl_backend == 'lightning_tensor' }}
+        run: |
+          cd main/
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_tensor/  $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
