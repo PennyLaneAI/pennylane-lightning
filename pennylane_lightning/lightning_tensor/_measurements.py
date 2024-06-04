@@ -50,11 +50,6 @@ class LightningMeasurements:
         self._measurement_lightning = self._measurement_dtype()(tensor_state.state_tensor)
 
     @property
-    def tensor_state(self):
-        """Returns a handle to the LightningStateTensor class."""
-        return self._tensor_state
-
-    @property
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
