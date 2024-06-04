@@ -40,7 +40,7 @@ PHI = np.linspace(0.32, 1, 3)
 )
 def lightning_st(request):
     def _statetensor(num_wires):
-        return LightningStateTensor(num_wires=num_wires, maxBondDim = 128, dtype=request.param)
+        return LightningStateTensor(num_wires=num_wires, maxBondDim=128, dtype=request.param)
 
     return _statetensor
 
@@ -58,6 +58,7 @@ def get_sparse_hermitian_matrix(n):
 
 class CustomStateMeasurement(qml.measurements.StateMeasurement):
     """Custom state measurement class for testing."""
+
     def process_state(self, state, wire_order):
         return 1
 
@@ -68,6 +69,7 @@ def test_initialization(lightning_st):
     m = LightningMeasurements(statetensor)
 
     assert m.dtype == statetensor.dtype
+
 
 class TestGetMeasurementFunction:
     """Tests for the get_measurement_function method."""
@@ -95,7 +97,7 @@ class TestMeasurement:
         tape = qml.tape.QuantumScript(
             [qml.RX(0.1, wires=0), qml.Hadamard(1), qml.PauliZ(1)],
             [qml.expval(qml.prod(qml.PauliZ(0), qml.PauliX(1)))],
-            shots=1000
+            shots=1000,
         )
 
         with pytest.raises(NotImplementedError):
