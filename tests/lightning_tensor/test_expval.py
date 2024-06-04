@@ -208,7 +208,7 @@ class TestExpval:
 
     def test_hermitian_expectation_qnode2(self, theta, phi, tol, qubit_device):
         """Tests an Hermitian operator."""
-        dev = qml.device("lightning.tensor", wires=8, maxBondDim=128)  # qubit_device(wires=3)
+        dev = qubit_device(wires=8)
         dev_def = qml.device("default.qubit", wires=8)
         obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
 
