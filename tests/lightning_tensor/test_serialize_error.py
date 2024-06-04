@@ -97,7 +97,6 @@ def test_obs_returns_expected_type(obs, obs_type):
     assert isinstance(serializer._ob(obs), obs_type)
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.parametrize(
     "obs",
     [qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0])],
