@@ -128,6 +128,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get the CUDA data type.
+     *
+     * @return cudaDataType_t
+     */
+    [[nodiscard]] auto getCudaDataType() const -> cudaDataType_t {
+        return typeData_;
+    }
+
+    /**
      * @brief Get the cutensornet handle that the object is using.
      *
      * @return cutensornetHandle_t
@@ -181,8 +190,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
         for (std::size_t i = 0; i < numOperations; i++) {
-            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
-                                 ops_params[i]);
+            applyOperation(ops[i], ops_wires[i], ops_adjoint[i], ops_params[i]);
         }
     }
 
@@ -209,7 +217,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
         for (std::size_t i = 0; i < numOperations; i++) {
-            this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
+            applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
         }
     }
 
@@ -232,11 +240,10 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         DataBuffer<PrecisionT, int> dummy_device_data(
             Pennylane::Util::exp2(wires.size()), getDevTag());
         int64_t id;
-        std::vector<int32_t> stateModes(wires.size());
-        std::transform(
-            wires.begin(), wires.end(), stateModes.begin(), [&](std::size_t x) {
-                return static_cast<int32_t>(BaseType::getNumQubits() - 1 - x);
-            });
+
+        std::vector<int32_t> stateModes =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                wires, BaseType::getNumQubits());
 
         // TODO: Need changes to support to the controlled gate tensor API once
         // the API is finalized in cutensornet lib.
@@ -256,12 +263,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
         if (!gate_matrix.empty()) {
-            std::vector<CFP_t> matrix_cu(gate_matrix.size());
-            std::transform(gate_matrix.begin(), gate_matrix.end(),
-                           matrix_cu.begin(), [](const ComplexT &x) {
-                               return cuUtil::complexToCu<ComplexT>(x);
-                           });
             auto gate_key = std::make_pair(opName, par);
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
                                   matrix_cu);
         } else {
@@ -279,53 +283,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
   protected:
     /**
-     * @brief Returns the workspace size.
-     *
-     * @return std::size_t
-     */
-    std::size_t
-    getWorkSpaceMemorySize(cutensornetWorkspaceDescriptor_t &workDesc) {
-        int64_t worksize{0};
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceGetMemorySize(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetWorksizePref_t */
-            CUTENSORNET_WORKSIZE_PREF_RECOMMENDED,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /*  int64_t * */ &worksize));
-
-        // Ensure data is aligned by 256 bytes
-        worksize += int64_t{256} - worksize % int64_t{256};
-
-        return static_cast<std::size_t>(worksize);
-    }
-
-    /**
-     * @brief Set memory for a workspace.
-     *
-     * @param workDesc cutensornet work space descriptor
-     * @param scratchPtr Pointer to scratch memory
-     * @param worksize Memory size of a work space
-     */
-    void setWorkSpaceMemory(cutensornetWorkspaceDescriptor_t &workDesc,
-                            void *scratchPtr, std::size_t &worksize) {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetWorkspaceSetMemory(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cutensornetMemspace_t*/ CUTENSORNET_MEMSPACE_DEVICE,
-            /* cutensornetWorkspaceKind_t */ CUTENSORNET_WORKSPACE_SCRATCH,
-            /* void *const */ scratchPtr,
-            /* int64_t */ static_cast<int64_t>(worksize)));
-    }
-
-    /**
      * @brief Save quantumState information to data provided by a user
      *
      * @param tensorPtr Pointer to tensors provided by a user
      */
-    void computeState(void **tensorPtr) {
+    void computeState(int64_t **extentsPtr, void **tensorPtr) {
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
@@ -341,7 +303,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused in v24.03*/ 0x0));
 
-        std::size_t worksize = getWorkSpaceMemorySize(workDesc);
+        std::size_t worksize =
+            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device!");
@@ -350,14 +313,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
                                                true);
 
-        setWorkSpaceMemory(
-            workDesc, reinterpret_cast<void *>(d_scratch.getData()), worksize);
+        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ nullptr,
+            /* int64_t * */ extentsPtr,
             /* int64_t *stridesOut */ nullptr,
             /* void * */ tensorPtr,
             /* cudaStream_t */ getDevTag().getStreamID()));

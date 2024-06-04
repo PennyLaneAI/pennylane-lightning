@@ -59,6 +59,8 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
                            gates
+                           measurements
+                           observables
                            utils
 )
 foreach(COMP ${COMPONENT_SUBDIRS})
