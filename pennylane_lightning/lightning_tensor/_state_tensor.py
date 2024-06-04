@@ -15,6 +15,7 @@
 Class implementation for state-tensor manipulation.
 """
 
+# pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
     from pennylane_lightning.lightning_tensor_ops import StateTensorC64, StateTensorC128
 except ImportError:
