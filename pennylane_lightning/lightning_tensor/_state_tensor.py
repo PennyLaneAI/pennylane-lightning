@@ -134,7 +134,9 @@ class LightningStateTensor:
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                raise DeviceError("Adjoint operations are not supported.")
+                raise DeviceError(
+                    "Adjoint operations are not supported."
+                )  # inverse=False is not supported
             name = operation.name
             method = getattr(state, name, None)
             wires = list(operation.wires)

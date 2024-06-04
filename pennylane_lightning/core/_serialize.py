@@ -96,12 +96,17 @@ class QuantumScriptSerializer:
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
-        if device_name != "lightning.tensor":
-            self.statevector_c64 = lightning_ops.StateVectorC64
-            self.statevector_c128 = lightning_ops.StateVectorC128
-        else:
-            self.statevector_c64 = lightning_ops.StateTensorC64
-            self.statevector_c128 = lightning_ops.StateTensorC128
+        self.statevector_c64 = (
+            lightning_ops.StateTensorC64
+            if device_name == "lightning.tensor"
+            else lightning_ops.StateVectorC64
+        )
+        self.statevector_c128 = (
+            lightning_ops.StateTensorC128
+            if device_name == "lightning.tensor"
+            else lightning_ops.StateVectorC128
+        )
+
         self.named_obs_c64 = lightning_ops.observables.NamedObsC64
         self.named_obs_c128 = lightning_ops.observables.NamedObsC128
         self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
