@@ -21,6 +21,7 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
 from pennylane import DeviceError
 from pennylane.devices import DefaultQubit
+from pennylane.ops.op_math import Adjoint
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
@@ -562,7 +563,7 @@ def test_state_prep_not_support():
 
     @qml.qnode(dev)
     def circuit_dev():
-        qml.adjoint(qml.PauliY)(wires=[0])
+        Adjoint(qml.PauliY(0))
         return qml.expval(obs)
 
     with pytest.raises(DeviceError):
