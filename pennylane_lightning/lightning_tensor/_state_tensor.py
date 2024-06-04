@@ -133,7 +133,7 @@ class LightningStateTensor:
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                raise DeviceError("Adjoint is not supported in lightning.tensor.")
             else:
                 name = operation.name
             method = getattr(state, name, None)

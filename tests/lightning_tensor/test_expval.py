@@ -426,6 +426,17 @@ def test_multi_qubit_gates(theta, phi, qubit_device, tol):  # pylint: disable=to
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
+    qml.Identity(wires=wires[0])
+    qml.PauliX(wires=wires[1])
+    qml.PauliY(wires=wires[2])
+    qml.PauliZ(wires=wires[3])
+    qml.Hadamard(wires=wires[4])
+    qml.S(wires=wires[5])
+    qml.CNOT(wires=[wires[6], wires[7]])
+    qml.T(wires=wires[0])
+    qml.SX(wires=wires[1])
+    qml.SWAP(wires=[wires[2], wires[3]])
+    qml.ISWAP(wires=[wires[4], wires[5]])
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.RZ(params[2], wires=wires[3])
@@ -435,6 +446,10 @@ def circuit_ansatz(params, wires):
     qml.IsingYY(params[8], wires=[wires[3], wires[2]])
     qml.IsingZZ(params[9], wires=[wires[2], wires[1]])
     qml.SingleExcitation(params[10], wires=[wires[2], wires[0]])
+    qml.PSWAP(params[11], wires=[wires[6], wires[7]])
+    qml.SISWAP(params[12], wires=[wires[4], wires[5]])
+    #qml.SQISWAP(params[13], wires=[wires[1], wires[0]])
+
 
 
 @pytest.mark.parametrize(
@@ -484,7 +499,7 @@ def test_integration(returns):
         circuit_ansatz(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
-    n_params = 11
+    n_params = 13
     np.random.seed(1337)
     params = np.random.rand(n_params)
 
@@ -501,6 +516,7 @@ def test_integration(returns):
     j_default = qml.jacobian(convert_to_array_default)(params)
 
     assert np.allclose(j_gpu, j_default, atol=1e-7)
+
 
 def test_execute_multiple_qscript(qubit_device):
     dev = qubit_device(wires=4)
@@ -524,7 +540,8 @@ def test_execute_multiple_qscript(qubit_device):
     with pytest.raises(ValueError):
         dev.execute((qs1, qs2))
 
-def test_state_prep():
+
+def test_state_prep_not_support():
     dev = qml.device("lightning.tensor", wires=3, maxBondDim=128)  # qubit_device(wires=3)
     obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
 
@@ -539,6 +556,17 @@ def test_state_prep():
     with pytest.raises(ValueError):
         circuit_dev()
 
+def test_state_prep_not_support():
+    dev = qml.device("lightning.tensor", wires=3, maxBondDim=128)  # qubit_device(wires=3)
+    obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
+
+    @qml.qnode(dev)
+    def circuit_dev():
+        qml.adjoint(qml.PauliY)(wires=[0])
+        return qml.expval(obs)
+
+    with pytest.raises(DeviceError):
+        circuit_dev()
 
 class TestSparseHExpval:
     """Test sparseH expectation values"""
