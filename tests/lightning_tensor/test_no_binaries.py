@@ -1,4 +1,4 @@
-# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+# Copyright 2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,9 +28,3 @@ def test_no_binaries():
 
     with pytest.raises(ImportError, match="Pre-compiled binaries for "):
         LightningDevice(wires=2)
-
-def test_no_binaries_state_tensor():
-    """Test no binaries were found for the state tensor"""
-
-    with pytest.raises(ImportError, does_not_raise()):
-        LightningStateTensor(2, 2)
