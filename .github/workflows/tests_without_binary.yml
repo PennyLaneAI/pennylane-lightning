@@ -117,7 +117,7 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ --ignore=tests/lightning_tensor/  $COVERAGE_FLAGS
 
-      - name: Run PennyLane-Lightning unit tests for state vector backends
+      - name: Run PennyLane-Lightning unit tests for state tensor backends
         if: ${{ matrix.pl_backend == 'lightning_tensor' }}
         run: |
           cd main/
