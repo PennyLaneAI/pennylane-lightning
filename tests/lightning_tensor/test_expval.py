@@ -365,6 +365,7 @@ class TestTensorExpval:
         dev = qubit_device(wires=3)
 
         with qml.tape.QuantumTape() as tape:
+            qml.QubitUnitary(np.eye(4), wires=[0, 1])
             qml.RX(theta, wires=[0])
             qml.RX(phi, wires=[1])
             qml.RX(varphi, wires=[2])
@@ -500,6 +501,43 @@ def test_integration(returns):
     j_default = qml.jacobian(convert_to_array_default)(params)
 
     assert np.allclose(j_gpu, j_default, atol=1e-7)
+
+def test_execute_multiple_qscript(qubit_device):
+    dev = qubit_device(wires=4)
+
+    ops = [
+        qml.X(0),
+        qml.X(1),
+    ]
+
+    qs1 = qml.tape.QuantumScript(
+        ops,
+        [
+            qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
+            qml.expval(qml.s_prod(3, qml.Z(2))),
+        ],
+    )
+
+    ops = [qml.Hadamard(0), qml.CNOT(wires=(0, 1))]
+    qs2 = qml.tape.QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))])
+
+    with pytest.raises(ValueError):
+        dev.execute((qs1, qs2))
+
+def test_state_prep():
+    dev = qml.device("lightning.tensor", wires=3, maxBondDim=128)  # qubit_device(wires=3)
+    obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
+
+    @qml.qnode(dev)
+    def circuit_dev():
+        qml.StatePrep(np.array([0, 0, 0, 1, 1, 0, 1, 0]), wires=range(3))
+        qml.RX(theta, wires=[0])
+        qml.RX(phi, wires=[1])
+        qml.RX(theta + phi, wires=[2])
+        return qml.expval(obs)
+
+    with pytest.raises(ValueError):
+        circuit_dev()
 
 
 class TestSparseHExpval:
