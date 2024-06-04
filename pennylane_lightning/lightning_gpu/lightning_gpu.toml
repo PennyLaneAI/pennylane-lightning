@@ -58,7 +58,8 @@ MultiControlledX       = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
-
+BlockEncode            = {properties = [ "controllable" ]}
+GlobalPhase            = {properties = [ "controllable" ]}
 ControlledQubitUnitary = {}
 ECR                    = {}
 SX                     = {}
@@ -70,7 +71,6 @@ OrbitalRotation        = {}
 QubitCarry             = {}
 QubitSum               = {}
 DiagonalQubitUnitary   = {}
-BlockEncode            = {}
 
 # Observables supported by the device
 [operators.observables]
