@@ -24,10 +24,10 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_tensor import LightningTensor
 
-if not LightningDevice._new_API: # pylint: disable=protected-access
+if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
-if LightningDevice._CPP_BINARY_AVAILABLE: # pylint: disable=protected-access
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
