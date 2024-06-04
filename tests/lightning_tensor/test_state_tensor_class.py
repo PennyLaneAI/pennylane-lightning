@@ -39,6 +39,7 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name):
     state_tensor = LightningStateTensor(num_wires, bondDims, dtype=dtype, device_name=device_name)
     assert state_tensor.dtype == dtype
     assert state_tensor.device_name == device_name
+    assert state_tensor.num_wires == num_wires
     assert state_tensor.wires == Wires(range(num_wires))
 
 
