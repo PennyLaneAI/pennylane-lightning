@@ -448,8 +448,7 @@ def circuit_ansatz(params, wires):
     qml.SingleExcitation(params[10], wires=[wires[2], wires[0]])
     qml.PSWAP(params[11], wires=[wires[6], wires[7]])
     qml.SISWAP(params[12], wires=[wires[4], wires[5]])
-    #qml.SQISWAP(params[13], wires=[wires[1], wires[0]])
-
+    # qml.SQISWAP(params[13], wires=[wires[1], wires[0]])
 
 
 @pytest.mark.parametrize(
@@ -556,6 +555,7 @@ def test_state_prep_not_support():
     with pytest.raises(ValueError):
         circuit_dev()
 
+
 def test_state_prep_not_support():
     dev = qml.device("lightning.tensor", wires=3, maxBondDim=128)  # qubit_device(wires=3)
     obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
@@ -567,6 +567,7 @@ def test_state_prep_not_support():
 
     with pytest.raises(DeviceError):
         circuit_dev()
+
 
 class TestSparseHExpval:
     """Test sparseH expectation values"""

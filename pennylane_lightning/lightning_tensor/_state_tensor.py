@@ -134,8 +134,8 @@ class LightningStateTensor:
                 continue
             if isinstance(operation, Adjoint):
                 raise DeviceError("Adjoint is not supported in lightning.tensor.")
-            else:
-                name = operation.name
+
+            name = operation.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
