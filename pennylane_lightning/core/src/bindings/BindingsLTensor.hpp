@@ -74,121 +74,127 @@ void registerBackendAgnosticObservables(py::module_ &m) {
 
     std::string class_name;
 
+    using Observable = ObservableTNCuda<StateTensorT>;
+    using NamedObs = NamedObsTNCuda<StateTensorT>;
+    using HermitianObs = HermitianObsTNCuda<StateTensorT>;
+    using TensorProdObs = TensorProdObsTNCuda<StateTensorT>;
+    using Hamiltonian = HamiltonianTNCuda<StateTensorT>;
+
     class_name = "ObservableC" + bitsize;
-    py::class_<ObservableTNCuda<StateTensorT>,
-               std::shared_ptr<ObservableTNCuda<StateTensorT>>>(
+    py::class_<Observable,
+               std::shared_ptr<Observable>>(
         m, class_name.c_str(), py::module_local());
 
     class_name = "NamedObsC" + bitsize;
-    py::class_<NamedObsTNCuda<StateTensorT>,
-               std::shared_ptr<NamedObsTNCuda<StateTensorT>>,
-               ObservableTNCuda<StateTensorT>>(m, class_name.c_str(),
+    py::class_<NamedObs,
+               std::shared_ptr<NamedObs>,
+               Observable>(m, class_name.c_str(),
                                                py::module_local())
         .def(py::init(
             [](const std::string &name, const std::vector<std::size_t> &wires) {
-                return NamedObsTNCuda<StateTensorT>(name, wires);
+                return NamedObs(name, wires);
             }))
-        .def("__repr__", &NamedObsTNCuda<StateTensorT>::getObsName)
-        .def("get_wires", &NamedObsTNCuda<StateTensorT>::getWires,
+        .def("__repr__", &NamedObs::getObsName)
+        .def("get_wires", &NamedObs::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const NamedObsTNCuda<StateTensorT> &self,
+            [](const NamedObs &self,
                py::handle other) -> bool {
-                if (!py::isinstance<NamedObsTNCuda<StateTensorT>>(other)) {
+                if (!py::isinstance<NamedObs>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<NamedObsTNCuda<StateTensorT>>();
+                auto other_cast = other.cast<NamedObs>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HermitianObsC" + bitsize;
-    py::class_<HermitianObsTNCuda<StateTensorT>,
-               std::shared_ptr<HermitianObsTNCuda<StateTensorT>>,
-               ObservableTNCuda<StateTensorT>>(m, class_name.c_str(),
+    py::class_<HermitianObs,
+               std::shared_ptr<HermitianObs>,
+               Observable>(m, class_name.c_str(),
                                                py::module_local())
         .def(py::init(
             [](const np_arr_c &matrix, const std::vector<std::size_t> &wires) {
                 auto buffer = matrix.request();
                 const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
-                return HermitianObsTNCuda<StateTensorT>(
+                return HermitianObs(
                     std::vector<ComplexT>(ptr, ptr + buffer.size), wires);
             }))
-        .def("__repr__", &HermitianObsTNCuda<StateTensorT>::getObsName)
-        .def("get_wires", &HermitianObsTNCuda<StateTensorT>::getWires,
+        .def("__repr__", &HermitianObs::getObsName)
+        .def("get_wires", &HermitianObs::getWires,
              "Get wires of observables")
-        .def("get_matrix", &HermitianObsTNCuda<StateTensorT>::getMatrix,
+        .def("get_matrix", &HermitianObs::getMatrix,
              "Get matrix representation of Hermitian operator")
         .def(
             "__eq__",
-            [](const HermitianObsTNCuda<StateTensorT> &self,
+            [](const HermitianObs &self,
                py::handle other) -> bool {
-                if (!py::isinstance<HermitianObsTNCuda<StateTensorT>>(other)) {
+                if (!py::isinstance<HermitianObs>(other)) {
                     return false;
                 }
                 auto other_cast =
-                    other.cast<HermitianObsTNCuda<StateTensorT>>();
+                    other.cast<HermitianObs>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "TensorProdObsC" + bitsize;
-    py::class_<TensorProdObsTNCuda<StateTensorT>,
-               std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>,
-               ObservableTNCuda<StateTensorT>>(m, class_name.c_str(),
+    py::class_<TensorProdObs,
+               std::shared_ptr<TensorProdObs>,
+               Observable>(m, class_name.c_str(),
                                                py::module_local())
         .def(py::init(
             [](const std::vector<
-                std::shared_ptr<ObservableTNCuda<StateTensorT>>> &obs) {
-                return TensorProdObsTNCuda<StateTensorT>(obs);
+                std::shared_ptr<Observable>> &obs) {
+                return TensorProdObs(obs);
             }))
-        .def("__repr__", &TensorProdObsTNCuda<StateTensorT>::getObsName)
-        .def("get_wires", &TensorProdObsTNCuda<StateTensorT>::getWires,
+        .def("__repr__", &TensorProdObs::getObsName)
+        .def("get_wires", &TensorProdObs::getWires,
              "Get wires of observables")
-        .def("get_ops", &TensorProdObsTNCuda<StateTensorT>::getObs,
+        .def("get_ops", &TensorProdObs::getObs,
              "Get operations list")
         .def(
             "__eq__",
-            [](const TensorProdObsTNCuda<StateTensorT> &self,
+            [](const TensorProdObs &self,
                py::handle other) -> bool {
-                if (!py::isinstance<TensorProdObsTNCuda<StateTensorT>>(other)) {
+                if (!py::isinstance<TensorProdObs>(other)) {
                     return false;
                 }
                 auto other_cast =
-                    other.cast<TensorProdObsTNCuda<StateTensorT>>();
+                    other.cast<TensorProdObs>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HamiltonianC" + bitsize;
-    using ObsPtr = std::shared_ptr<ObservableTNCuda<StateTensorT>>;
-    py::class_<HamiltonianTNCuda<StateTensorT>,
-               std::shared_ptr<HamiltonianTNCuda<StateTensorT>>,
-               ObservableTNCuda<StateTensorT>>(m, class_name.c_str(),
+    using ObsPtr = std::shared_ptr<Observable>;
+    py::class_<Hamiltonian,
+               std::shared_ptr<Hamiltonian>,
+               Observable>(m, class_name.c_str(),
                                                py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
                 auto buffer = coeffs.request();
                 const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return HamiltonianTNCuda<StateTensorT>{
+                return Hamiltonian{
                     std::vector(ptr, ptr + buffer.size), obs};
             }))
-        .def("__repr__", &HamiltonianTNCuda<StateTensorT>::getObsName)
-        .def("get_wires", &HamiltonianTNCuda<StateTensorT>::getWires,
+        .def("__repr__", &Hamiltonian::getObsName)
+        .def("get_wires", &Hamiltonian::getWires,
              "Get wires of observables")
-        .def("get_ops", &HamiltonianTNCuda<StateTensorT>::getObs,
+        .def("get_ops", &Hamiltonian::getObs,
              "Get operations contained by Hamiltonian")
-        .def("get_coeffs", &HamiltonianTNCuda<StateTensorT>::getCoeffs,
+        .def("get_coeffs", &Hamiltonian::getCoeffs,
              "Get Hamiltonian coefficients")
         .def(
             "__eq__",
-            [](const HamiltonianTNCuda<StateTensorT> &self,
+            [](const Hamiltonian &self,
                py::handle other) -> bool {
-                if (!py::isinstance<HamiltonianTNCuda<StateTensorT>>(other)) {
+                if (!py::isinstance<Hamiltonian>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HamiltonianTNCuda<StateTensorT>>();
+                auto other_cast = other.cast<Hamiltonian>();
                 return self == other_cast;
             },
             "Compare two observables");
@@ -203,10 +209,12 @@ void registerBackendAgnosticObservables(py::module_ &m) {
  */
 template <class StateTensorT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
+    using Measurements = MeasurementsTNCuda<StateTensorT>;
+    using Observable = ObservableTNCuda<StateTensorT>;
     pyclass.def(
         "expval",
-        [](MeasurementsTNCuda<StateTensorT> &M,
-           const std::shared_ptr<ObservableTNCuda<StateTensorT>> &ob) {
+        [](Measurements &M,
+           const std::shared_ptr<Observable> &ob) {
             return M.expval(*ob);
         },
         "Expected value of an observable object.");
