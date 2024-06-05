@@ -20,7 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
@@ -259,7 +259,9 @@ class TestExecution:
         expected_program.add_transform(validate_measurements, name=device.name)
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
-        expected_program.add_transform(mid_circuit_measurements, device=device)
+        expected_program.add_transform(
+            mid_circuit_measurements, device=device, mcm_config=MCMConfig()
+        )
         expected_program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
