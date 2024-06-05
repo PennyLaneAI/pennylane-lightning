@@ -18,13 +18,16 @@ Tests for the expectation value calculations on the LightningTensor device.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane import DeviceError
 from pennylane.devices import DefaultQubit
 
-from pennylane_lightning.lightning_tensor import LightningTensor
-from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
-from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+if device_name != "lightning.tensor":
+    pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
+else:
+    from pennylane_lightning.lightning_tensor import LightningTensor
+    from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)

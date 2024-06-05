@@ -17,10 +17,13 @@ Unit tests for measurements class.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 
-from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
-from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+if device_name != "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningMeasurements class.", allow_module_level=True)
+else:
+    from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

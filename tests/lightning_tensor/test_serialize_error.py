@@ -19,7 +19,10 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
+if device_name != "lightning.tensor":
+    pytest.skip("Skipping tests for the serialization helper functions.", allow_module_level=True)
+else:
+    from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

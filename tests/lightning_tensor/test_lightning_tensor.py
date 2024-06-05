@@ -15,14 +15,16 @@
 Unit tests for the LightningTensor class.
 """
 
-
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_tensor import LightningTensor
+if device_name != "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+else:
+    from pennylane_lightning.lightning_tensor import LightningTensor
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
