@@ -11,22 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Unit tests for measurements class.
+"""
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
-from scipy.sparse import csr_matrix, random_array
-
-try:
-    from pennylane_lightning.lightning_tensor_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
+from conftest import LightningDevice  # tested device
 
 from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
 from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
 
-if not LightningDevice._CPP_BINARY_AVAILABLE:
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 THETA = np.linspace(0.11, 1, 3)
@@ -35,63 +31,37 @@ PHI = np.linspace(0.32, 1, 3)
 
 # General LightningStateTensor fixture, for any number of wires.
 @pytest.fixture(
-    scope="function",
     params=[np.complex64, np.complex128],
 )
 def lightning_st(request):
-    def _statetensor(num_wires):
-        return LightningStateTensor(num_wires=num_wires, maxBondDim=128, dtype=request.param)
-
-    return _statetensor
+    """Fixture for creating a LightningStateTensor object."""
+    return LightningStateTensor(num_wires=5, maxBondDim=128, dtype=request.param)
 
 
-def get_hermitian_matrix(n):
-    H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
-    return H + np.conj(H).T
+class TestMeasurementFunction:
+    """Tests for the measurement method."""
 
+    def test_initialization(self, lightning_st):
+        """Tests for the initialization of the LightningMeasurements class."""
+        statetensor = lightning_st
+        m = LightningMeasurements(statetensor)
 
-def get_sparse_hermitian_matrix(n):
-    H = random_array((n, n), density=0.15)
-    H = H + 1.0j * random_array((n, n), density=0.15)
-    return csr_matrix(H + H.conj().T)
-
-
-class CustomStateMeasurement(qml.measurements.StateMeasurement):
-    """Custom state measurement class for testing."""
-
-    def process_state(self, state, wire_order):
-        return 1
-
-
-def test_initialization(lightning_st):
-    """Tests for the initialization of the LightningMeasurements class."""
-    statetensor = lightning_st(num_wires=5)
-    m = LightningMeasurements(statetensor)
-
-    assert m.dtype == statetensor.dtype
-
-
-class TestGetMeasurementFunction:
-    """Tests for the get_measurement_function method."""
+        assert m.dtype == statetensor.dtype
 
     def test_not_implemented_state_measurements(self, lightning_st):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        statetensor = lightning_st(num_wires=5)
+        statetensor = lightning_st
         m = LightningMeasurements(statetensor)
 
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-
-class TestMeasurement:
-    """Tests for the measurement method."""
-
     def test_not_measure_final_state(self, lightning_st):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        statetensor = lightning_st(num_wires=5)
+        statetensor = lightning_st
         m = LightningMeasurements(statetensor)
 
         tape = qml.tape.QuantumScript(

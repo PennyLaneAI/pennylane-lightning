@@ -19,9 +19,9 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-if not LightningDevice._CPP_BINARY_AVAILABLE:
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name == "lightning.tensor":
@@ -93,8 +93,10 @@ def test_wrong_device_name():
 def test_obs_returns_expected_type(obs, obs_type):
     """Tests that observables get serialized to the expected type, with and without wires map"""
     serializer = QuantumScriptSerializer(device_name)
-    assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type)
-    assert isinstance(serializer._ob(obs), obs_type)
+    assert isinstance(
+        serializer._ob(obs, dict(enumerate(obs.wires))), obs_type
+    )  # pylint: disable=protected-access
+    assert isinstance(serializer._ob(obs), obs_type)  # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(

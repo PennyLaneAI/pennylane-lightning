@@ -17,8 +17,6 @@ Unit tests for checking binaries.
 import pytest
 from conftest import LightningDevice
 
-from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
-
 if LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Binary module found. Skipping.", allow_module_level=True)
 
