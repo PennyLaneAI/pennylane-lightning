@@ -19,7 +19,7 @@
 
 #include "cuda.h"
 
-#include "BindingsLTensorBase.hpp"
+#include "BindingsBase.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "DevTag.hpp"

@@ -36,7 +36,7 @@
 #include "Macros.hpp" // CPUArch
 #include "Util.hpp"   // for_each_enum
 
-#include "BindingsLTensorBase.hpp"
+#include "BindingsBase.hpp"
 #include "LTensorTNCudaBindings.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
