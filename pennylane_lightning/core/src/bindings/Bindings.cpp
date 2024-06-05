@@ -93,9 +93,6 @@ PYBIND11_MODULE(
     pybind11::options options;
     options.disable_function_signatures();
 
-    // Register bindings for general info:
-    registerInfo(m);
-
     // Register bindings for backend-specific info:
     registerBackendSpecificInfo(m);
 

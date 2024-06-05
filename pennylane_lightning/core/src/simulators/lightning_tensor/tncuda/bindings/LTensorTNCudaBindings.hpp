@@ -71,13 +71,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "getFinalState",
             [](StateTensorT &state_tensor) { state_tensor.get_final_state(); },
             "Get the final state.")
-        .def("GetNumGPUs", &getGPUCount, "Get the number of available GPUs.")
-        .def("getCurrentGPU", &getGPUIdx,
-             "Get the GPU index for the statevector data.")
-        .def("numQubits", &StateTensorT::getNumQubits)
-        .def("reset", &StateTensorT::reset, "Reset the statevector.")
-        .def("maxBondDim", &StateTensorT::getMaxBondDim,
-             "Get the the max bond dimension.");
+        .def("reset", &StateTensorT::reset, "Reset the statevector.");
 }
 
 /**

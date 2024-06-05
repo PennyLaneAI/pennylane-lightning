@@ -53,61 +53,6 @@ using namespace Pennylane::LightningTensor::TNCuda::Measures;
 
 namespace Pennylane {
 /**
- * @brief Return basic information of the compiled binary.
- */
-auto getCompileInfo() -> py::dict {
-    using namespace Pennylane::Util;
-    using namespace py::literals;
-
-    const std::string_view cpu_arch_str = [] {
-        switch (cpu_arch) {
-        case CPUArch::X86_64:
-            return "x86_64";
-        case CPUArch::PPC64:
-            return "PPC64";
-        case CPUArch::ARM:
-            return "ARM";
-        default:
-            return "Unknown";
-        }
-    }();
-
-    const std::string_view compiler_name_str = [] {
-        switch (compiler) {
-        case Compiler::GCC:
-            return "GCC";
-        case Compiler::Clang:
-            return "Clang";
-        case Compiler::MSVC:
-            return "MSVC";
-        case Compiler::NVCC:
-            return "NVCC";
-        case Compiler::NVHPC:
-            return "NVHPC";
-        default:
-            return "Unknown";
-        }
-    }();
-
-    const auto compiler_version_str = getCompilerVersion<compiler>();
-
-    return py::dict("cpu.arch"_a = cpu_arch_str,
-                    "compiler.name"_a = compiler_name_str,
-                    "compiler.version"_a = compiler_version_str,
-                    "AVX2"_a = use_avx2, "AVX512F"_a = use_avx512f);
-}
-
-/**
- * @brief Register bindings for general info.
- *
- * @param m Pybind11 module.
- */
-void registerInfo(py::module_ &m) {
-    /* Add compile info */
-    m.def("compile_info", &getCompileInfo, "Compiled binary information.");
-}
-
-/**
  * @brief Register observable classes.
  *
  * @tparam StateTensorT
