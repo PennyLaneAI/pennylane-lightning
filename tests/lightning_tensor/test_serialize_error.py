@@ -26,13 +26,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 
 if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor_ops.observables import (
-        HamiltonianC64,
         HamiltonianC128,
-        HermitianObsC64,
         HermitianObsC128,
-        NamedObsC64,
         NamedObsC128,
-        TensorProdObsC64,
         TensorProdObsC128,
     )
 
@@ -52,18 +48,10 @@ def test_wrong_device_name():
         (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
         (qml.Hadamard(0), NamedObsC128),
         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
-        # (
-        #    qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-        #    TensorProdObsC128,
-        # ),
         (
             qml.PauliZ(0) @ qml.PauliY(1) @ qml.PauliX(2),
             TensorProdObsC128,
         ),
-        # (
-        #    qml.PauliZ(0) @ qml.PauliY(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-        #    HamiltonianC128,
-        # ),
         (
             (
                 qml.Hermitian(np.eye(2), wires=0)
