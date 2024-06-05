@@ -58,7 +58,12 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = None) -> Result:
+def simulate(
+    circuit: QuantumScript,
+    state: LightningStateVector,
+    mcmc: dict = None,
+    postselect_mode: str = None,
+) -> Result:
     """Simulate a single quantum script.
 
     Args:
@@ -67,6 +72,9 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
         mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
             parameters: mcmc, kernel_name, num_burnin. Descriptions of
             these fields are found in :class:`~.LightningQubit`.
+        postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+            postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+            keep the same number of shots. Default is ``None``.
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
@@ -88,7 +96,9 @@ def simulate(circuit: QuantumScript, state: LightningStateVector, mcmc: dict = N
         for _ in range(circuit.shots.total_shots):
             state.reset_state()
             mid_measurements = {}
-            final_state = state.get_final_state(aux_circ, mid_measurements=mid_measurements)
+            final_state = state.get_final_state(
+                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+            )
             results.append(
                 LightningMeasurements(final_state, **mcmc).measure_final_state(
                     aux_circ, mid_measurements=mid_measurements
@@ -571,7 +581,9 @@ class LightningQubit(Device):
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
-        program.add_transform(mid_circuit_measurements, device=self)
+        program.add_transform(
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
+        )
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -609,7 +621,14 @@ class LightningQubit(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._statevector, mcmc=mcmc))
+            results.append(
+                simulate(
+                    circuit,
+                    self._statevector,
+                    mcmc=mcmc,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
+                )
+            )
 
         return tuple(results)
 

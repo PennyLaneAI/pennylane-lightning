@@ -93,6 +93,61 @@ def test_unsupported_measurement():
             func(*params)
 
 
+@pytest.mark.parametrize("mcm_method", ["deferred", "one-shot"])
+def test_qnode_mcm_method(mcm_method, mocker):
+    """Test that user specified qnode arg for mid-circuit measurements transform are used correctly"""
+    spy = (
+        mocker.spy(qml.dynamic_one_shot, "_transform")
+        if mcm_method == "one-shot"
+        else mocker.spy(qml.defer_measurements, "_transform")
+    )
+    other_spy = (
+        mocker.spy(qml.defer_measurements, "_transform")
+        if mcm_method == "one-shot"
+        else mocker.spy(qml.dynamic_one_shot, "_transform")
+    )
+
+    shots = 10
+    device = qml.device(device_name, wires=3, shots=shots)
+
+    @qml.qnode(device, mcm_method=mcm_method)
+    def f(x):
+        qml.RX(x, 0)
+        _ = qml.measure(0)
+        qml.CNOT([0, 1])
+        return qml.sample(wires=[0, 1])
+
+    _ = f(np.pi / 8)
+
+    spy.assert_called_once()
+    other_spy.assert_not_called()
+
+
+@pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+def test_qnode_postselect_mode(postselect_mode):
+    """Test that user specified qnode arg for discarding invalid shots is used correctly"""
+    shots = 100
+    device = qml.device(device_name, wires=3, shots=shots)
+    postselect = 1
+
+    @qml.qnode(device, postselect_mode=postselect_mode)
+    def f(x):
+        qml.RX(x, 0)
+        _ = qml.measure(0, postselect=postselect)
+        qml.CNOT([0, 1])
+        return qml.sample(wires=[1])
+
+    # Using small-ish rotation angle ensures the number of valid shots will be less than the
+    # original number of shots. This helps avoid stochastic failures for the assertion below
+    res = f(np.pi / 2)
+
+    if postselect_mode == "hw-like":
+        assert len(res) < shots
+    else:
+        assert len(res) == shots
+    assert np.allclose(res, postselect)
+
+
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
