@@ -103,13 +103,6 @@ class StateVectorKokkos final
                       const Kokkos::InitializationSettings &kokkos_args = {});
 
     /**
-     * @brief Destructor for StateVectorKokkos class
-     *
-     * @param other Another state vector
-     */
-    ~StateVectorKokkos();
-
-    /**
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
