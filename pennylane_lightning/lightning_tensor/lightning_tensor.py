@@ -244,9 +244,6 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
-        # TODO
-        # LightningStateTensor is a class that handles the state tensor should accept method and backend
-
     @property
     def name(self):
         """The name of the device."""
@@ -315,7 +312,6 @@ class LightningTensor(Device):
         * Does not support finite shots.
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
-        * Does not support batch processing.
         """
 
         # TODO: remove comments when cuTensorNet MPS backend is available as a prototype

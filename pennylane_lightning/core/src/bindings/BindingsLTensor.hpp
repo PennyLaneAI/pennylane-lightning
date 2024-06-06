@@ -33,7 +33,7 @@
 #include "LTensorTNCudaBindings.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
-#include "Util.hpp" 
+#include "Util.hpp"
 
 namespace py = pybind11;
 
