@@ -19,5 +19,5 @@
 
 #include "StateVectorKokkos.hpp"
 
-extern template class Pennylane::LightningKokkos::StateVectorKokkos<float>;
-extern template class Pennylane::LightningKokkos::StateVectorKokkos<double>;
+template class Pennylane::LightningKokkos::StateVectorKokkos<float>;
+template class Pennylane::LightningKokkos::StateVectorKokkos<double>;

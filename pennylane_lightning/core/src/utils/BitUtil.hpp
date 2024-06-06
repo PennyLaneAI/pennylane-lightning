@@ -31,7 +31,7 @@ namespace Pennylane::Util {
  * @param val Size of the state vector. Expected to be a power of 2.
  * @return std::size_t Log2(val), or the state vector's number of qubits.
  */
-extern inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
+inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
     return static_cast<std::size_t>(std::countr_zero(val));
 }
 
@@ -42,7 +42,7 @@ extern inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
  * @return true
  * @return false
  */
-extern inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
+inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
     return std::has_single_bit(value);
 }
 
@@ -80,8 +80,8 @@ inline auto constexpr fillLeadingOnes(size_t pos) -> std::size_t {
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-extern inline auto constexpr bitswap(size_t bits, const std::size_t i,
-                                     const std::size_t j) -> std::size_t {
+inline auto constexpr bitswap(size_t bits, const std::size_t i,
+                              const std::size_t j) -> std::size_t {
     std::size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
     return bits ^ ((x << i) | (x << j));
 }
@@ -92,7 +92,7 @@ extern inline auto constexpr bitswap(size_t bits, const std::size_t i,
  *
  * @param wire_list Target wires.
  */
-extern inline auto revWireParity(const std::vector<std::size_t> &wire_list)
+inline auto revWireParity(const std::vector<std::size_t> &wire_list)
     -> std::vector<std::size_t> {
     const std::size_t wire_size = wire_list.size();
     auto rev_wire = wire_list;
