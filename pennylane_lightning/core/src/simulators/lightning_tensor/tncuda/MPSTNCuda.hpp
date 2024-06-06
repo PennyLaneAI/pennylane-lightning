@@ -81,6 +81,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
   public:
     MPSTNCuda() = delete;
+
     // TODO: Add method to the constructor to all user to select methods at
     // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,

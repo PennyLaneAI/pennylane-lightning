@@ -273,7 +273,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
-
         if (!gate_matrix.empty()) {
             auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
