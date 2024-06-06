@@ -117,10 +117,12 @@ template <class PrecisionT> class TNCudaGateCache {
             // TODO: This is a temporary solution for gates data transpose.
             // There should be a better way to handle this, but there is not
             // a big performance issue for now since the size of gates is small.
+            // TODO: The implementation here can be optimized by generating the
+            // data buffer directly instead of performing the transpose operation here
             std::vector<CFP_t> data_host_transpose(gate_data_host.size());
 
-            std::size_t col_size = 1 << (rank / 2);
-            std::size_t row_size = 1 << (rank / 2);
+            const std::size_t col_size = 1 << (rank / 2);
+            const std::size_t row_size = 1 << (rank / 2);
 
             for (std::size_t idx = 0; idx < gate_data_host.size(); idx++) {
                 std::size_t col = idx / row_size;

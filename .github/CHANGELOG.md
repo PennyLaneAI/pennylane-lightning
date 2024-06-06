@@ -1,7 +1,7 @@
 # Release 0.37.0-dev
 
 ### New features since last release
-* Add `inverse` suport for gate operations in `lightning.tensor` in the C++ layer.
+* Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
   [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
 * Add `observable` and `expval` support to `cutensornet` backed `lightning.tensor` C++ layer.
