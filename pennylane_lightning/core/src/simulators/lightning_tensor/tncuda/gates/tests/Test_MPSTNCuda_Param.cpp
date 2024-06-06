@@ -971,7 +971,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationMinus",
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
                    "[MPSTNCuda_param]", float, double) {
-    // TODO only support inverse = false now
     const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
