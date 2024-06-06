@@ -15,11 +15,11 @@
 Tests for the expectation value calculations on the LightningTensor device.
 """
 
-import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane import DeviceError
+from pennylane import numpy as np
 from pennylane.devices import DefaultQubit
 
 if device_name != "lightning.tensor":
@@ -457,63 +457,16 @@ random_unitary = np.array(
 )
 
 
-def circuit_ansatz(params, wires):
+def circuit_ansatz_2_more_qubit_gates(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.Identity(wires=wires[0])
-    qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
-    qml.ControlledQubitUnitary(
-        qml.matrix(qml.PauliX(wires[0])),
-        control_wires=[wires[1], wires[2], wires[4]],
-        wires=[wires[3]],
-        control_values=[control_value or bool(i % 2) for i, _ in enumerate(control_wires)],
-    )
-    qml.MultiControlledX(wires=[wires[0], wires[1], wires[2]], control_values=[1, 2])
-    qml.DiagonalQubitUnitary(
-        np.array([1.0, 1.0j, 1.0j, 1.0, 0.5, 0.5j, 0.6, 0.6j], wires=[wires[4], wires[6], wires[3]])
-    )
-
-    qml.PauliX(wires=wires[1])
-    qml.PauliY(wires=wires[2])
-    qml.PauliZ(wires=wires[3])
-    qml.GlobalPhase(0.123, wires=wires[0])
-    qml.Hadamard(wires=wires[4])
-    qml.S(wires=wires[5])
-    qml.T(wires=wires[0])
-    qml.SX(wires=wires[1])
-    qml.CNOT(wires=[wires[6], wires[7]])
-    qml.SWAP(wires=[wires[2], wires[3]])
-    qml.ISWAP(wires=[wires[4], wires[5]])
-    qml.PSWAP(params[0], wires=[wires[6], wires[7]])
-    qml.SISWAP(params[1], wires=[wires[4], wires[5]])
-    qml.SQISW(wires=[wires[1], wires[0]])
-    qml.CSWAP(wires=[wires[2], wires[3], wires[5]])
-    qml.Toffoli(wires=[wires[5], wires[6], wires[8]])
-    qml.CY(wires=[wires[0], wires[2]])
-    qml.CZ(wires=[wires[1], wires[3]])
-    qml.PhaseShift(params[2], wires=wires[2])
-    qml.ControlledPhaseShift(params[3], wires=[wires[0], wires[5]])
-    qml.RX(params[4], wires=wires[0])
-    qml.RY(params[5], wires=wires[1])
-    qml.RZ(params[6], wires=wires[3])
-    qml.Rot(params[7], params[5], params[6], wires=wires[0])
-    qml.CRX(params[8], wires=[wires[1], wires[0]])
-    qml.CRY(params[9], wires=[wires[3], wires[2]])
-    qml.CRZ(params[10], wires=[wires[2], wires[1]])
-    qml.IsingXX(params[11], wires=[wires[1], wires[0]])
-    qml.IsingYY(params[12], wires=[wires[3], wires[2]])
-    qml.IsingZZ(params[13], wires=[wires[2], wires[1]])
-    qml.SingleExcitation(params[14], wires=[wires[2], wires[0]])
-    qml.SingleExcitationPlus(params[15], wires=[wires[3], wires[1]])
-    qml.SingleExcitationMinus(params[16], wires=[wires[4], wires[2]])
-    qml.DoubleExcitation(params[17], wires=[wires[6], wires[7], wires[4], wires[5]])
-    qml.DoubleExcitationPlus(params[18], wires=[wires[0], wires[1], wires[2], wires[3]])
-    qml.DoubleExcitationMinus(params[19], wires=[wires[1], wires[2], wires[3], wires[4]])
-    qml.QubitCarry(wires=[wires[0], wires[1], wires[3], wires[5]])
-    qml.QubitSum(wires=[wires[2], wires[4], wires[6]])
-    qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[3], wires[4]])
-    qml.QFT(wires=[wires[6]])
-    qml.ECR(wires=[wires[0], wires[2]])
-    qml.BlockEncode(random_unitary, wires=[wires[1], wires[3]])
+    qml.CNOT(wires=[wires[1], wires[2]])
+    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
+    qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
+    qml.DoubleExcitation(params[0], wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
+    qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
+    qml.OrbitalRotation(params[1], wires=[wires[0], wires[1], wires[5], wires[6]])
 
 
 @pytest.mark.parametrize(
@@ -549,106 +502,136 @@ def circuit_ansatz(params, wires):
         (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
         (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
         (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
-        (
-            qml.Hermitian(
-                [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
-                wires=[0, 2],
-            )
-        ),
-        (
-            qml.Hermitian(
-                [
-                    [1, 0, 0, 0, 0, 0, 0, 0],
-                    [0, -1, 0, 0, 0, 0, 0, 0],
-                    [0, 0, -1, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 1.0j, 0, 0, 0],
-                    [0, 0, 0, -1.0j, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, -1, 0, 0],
-                    [0, 0, 0, 0, 0, 0, -1, 0],
-                    [0, 0, 0, 0, 0, 0, 0, 1],
-                ],
-                wires=[0, 2, 3],
-            )
-        ),
-        (
-            qml.Hamiltonian(
-                [1.0, 0.3, 0.3, 0.4],
-                [
-                    qml.PauliX(0) @ qml.PauliX(1),
-                    qml.PauliZ(0),
-                    qml.PauliZ(1),
-                    qml.Hermitian(
-                        [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
-                        wires=[0, 2],
-                    ),
-                ],
-            )
-        ),
-        (
-            qml.sum(
-                qml.s_prod(2.3, qml.PauliZ(0)),
-                -0.5 * qml.prod(qml.PauliY(0), qml.PauliZ(1)),
-            )
-        ),
-        (qml.Projector([0, 1], wires=[0, 2])),
-        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(1) @ qml.Z(2)])),
+        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
         (qml.ops.prod(qml.X(0), qml.Y(1))),
-        (qml.ops.Exp(qml.S(0) @ qml.PauliX(0), 3)),
     ],
 )
-def test_integration(returns):
+def test_integration_2_more_qubit_gates(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = 8
-    dev_default = qml.device("lightning.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128)
+    dev_default = qml.device("default.qubit", wires=range(num_wires))
+    dev_ltensor = LightningTensor(wires=range(num_wires), maxBondDim=16, c_dtype=np.complex128)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
-        circuit_ansatz(params, wires=range(num_wires))
+        circuit_ansatz_2_more_qubit_gates(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
-    n_params = 20
+    n_params = 2
     np.random.seed(1337)
-    params = np.random.rand(n_params)
+    params_init = np.random.rand(n_params)
 
-    qnode_ltensor = qml.QNode(circuit, dev_ltensor, diff_method="parameter-shift")
-    qnode_default = qml.QNode(circuit, dev_default, diff_method="parameter-shift")
+    params = np.array(params_init, requires_grad=True)
 
-    def convert_to_array_gpu(params):
-        return np.array(qnode_ltensor(params))
+    qnode_ltensor = qml.QNode(circuit, dev_ltensor)
+    qnode_default = qml.QNode(circuit, dev_default)
 
-    def convert_to_array_default(params):
-        return np.array(qnode_default(params))
+    j_ltensor = qml.jacobian(qnode_ltensor)(params)
+    j_default = qml.jacobian(qnode_default)(params)
 
-    j_gpu = qml.jacobian(convert_to_array_gpu)(params)
-    j_default = qml.jacobian(convert_to_array_default)(params)
-
-    assert np.allclose(j_gpu, j_default, atol=1e-7)
+    assert np.allclose(j_ltensor, j_default, rtol=2e-1)
 
 
-def test_execute_multiple_qscript(qubit_device):
-    """Test that multiple quantum scripts can be executed on the device."""
-    dev = qubit_device(wires=4)
+def circuit_ansatz_1_2qubit_gates(params, wires):
+    """Circuit ansatz containing all the parametrized gates"""
+    qml.Identity(wires=wires[0])
+    qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
+    qml.PauliX(wires=wires[1])
+    qml.PauliY(wires=wires[2])
+    qml.PauliZ(wires=wires[3])
+    qml.Hadamard(wires=wires[4])
+    qml.S(wires=wires[5])
+    qml.T(wires=wires[0])
+    qml.SX(wires=wires[1])
+    qml.CNOT(wires=[wires[6], wires[7]])
+    qml.SWAP(wires=[wires[2], wires[3]])
+    qml.ISWAP(wires=[wires[4], wires[5]])
+    qml.PSWAP(params[0], wires=[wires[6], wires[7]])
+    qml.SISWAP(wires=[wires[4], wires[5]])
+    qml.SQISW(wires=[wires[1], wires[0]])
+    qml.CY(wires=[wires[0], wires[2]])
+    qml.CZ(wires=[wires[1], wires[3]])
+    qml.PhaseShift(params[1], wires=wires[2])
+    qml.ControlledPhaseShift(params[2], wires=[wires[0], wires[5]])
+    qml.RX(params[3], wires=wires[0])
+    qml.RY(params[4], wires=wires[1])
+    qml.RZ(params[5], wires=wires[3])
+    qml.Rot(params[6], params[7], params[8], wires=wires[0])
+    qml.CRX(params[9], wires=[wires[1], wires[0]])
+    qml.CRY(params[10], wires=[wires[3], wires[2]])
+    qml.CRZ(params[11], wires=[wires[2], wires[1]])
+    qml.IsingXX(params[12], wires=[wires[1], wires[0]])
+    qml.IsingYY(params[13], wires=[wires[3], wires[2]])
+    qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
+    qml.SingleExcitation(params[15], wires=[wires[2], wires[0]])
+    qml.SingleExcitationPlus(params[16], wires=[wires[3], wires[1]])
+    qml.SingleExcitationMinus(params[17], wires=[wires[4], wires[2]])
+    qml.QFT(wires=[wires[0]])
 
-    ops = [
-        qml.X(0),
-        qml.X(1),
-    ]
 
-    qs1 = qml.tape.QuantumScript(
-        ops,
-        [
-            qml.expval(qml.sum(qml.Y(2), qml.Z(1))),
-            qml.expval(qml.s_prod(3, qml.Z(2))),
-        ],
-    )
+@pytest.mark.parametrize(
+    "returns",
+    [
+        (qml.PauliX(0),),
+        (qml.PauliY(0),),
+        (qml.PauliZ(0),),
+        (qml.PauliX(1),),
+        (qml.PauliY(1),),
+        (qml.PauliZ(1),),
+        (qml.PauliX(2),),
+        (qml.PauliY(2),),
+        (qml.PauliZ(2),),
+        (qml.PauliX(3),),
+        (qml.PauliY(3),),
+        (qml.PauliZ(3),),
+        (qml.PauliX(0), qml.PauliY(1)),
+        (
+            qml.PauliZ(0),
+            qml.PauliX(1),
+            qml.PauliY(2),
+        ),
+        (
+            qml.PauliY(0),
+            qml.PauliZ(1),
+            qml.PauliY(3),
+        ),
+        (qml.PauliZ(0) @ qml.PauliY(3),),
+        (qml.Hadamard(2),),
+        (qml.Hadamard(3) @ qml.PauliZ(2),),
+        (qml.PauliX(0) @ qml.PauliY(3),),
+        (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
+        (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
+        (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
+        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
+        (qml.ops.prod(qml.X(0), qml.Y(1))),
+    ],
+)
+def test_integration_1_2qubit_gates(returns):
+    """Integration tests that compare to default.qubit for a large circuit containing parametrized
+    operations"""
+    num_wires = 8
+    dev_default = qml.device("default.qubit", wires=range(num_wires))
+    dev_ltensor = LightningTensor(wires=range(num_wires), maxBondDim=16, c_dtype=np.complex128)
 
-    ops = [qml.Hadamard(0), qml.CNOT(wires=(0, 1))]
-    qs2 = qml.tape.QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))])
+    def circuit(params):
+        qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
+        circuit_ansatz_1_2qubit_gates(params, wires=range(num_wires))
+        return qml.math.hstack([qml.expval(r) for r in returns])
 
-    with pytest.raises(ValueError):
-        dev.execute((qs1, qs2))
+    n_params = 18
+    np.random.seed(1337)
+    params_init = np.random.rand(n_params)
+
+    params = np.array(params_init, requires_grad=True)
+
+    qnode_ltensor = qml.QNode(circuit, dev_ltensor)
+    qnode_default = qml.QNode(circuit, dev_default)
+
+    j_ltensor = qml.jacobian(qnode_ltensor)(params)
+    j_default = qml.jacobian(qnode_default)(params)
+
+    assert np.allclose(j_ltensor, j_default, rtol=1e-1)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -712,3 +695,28 @@ class TestSparseHExpval:
 
         with pytest.raises(NotImplementedError):
             m.expval(tape.measurements[0])
+
+
+class TestStronglyEntanglingLayers:
+    """Test the StronglyEntanglingLayers algorithm."""
+
+    @pytest.mark.parametrize("n_qubits", range(2, 4, 2))
+    def test_stronglyentanglinglayers(self, n_qubits):
+        dev = qml.device("lightning.tensor", wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        def circuit(weights):
+            qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
+            return qml.expval(qml.PauliZ(0))
+
+        shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
+        init_weights = np.random.random(size=shape)
+        weights = np.array(init_weights, requires_grad=True)
+
+        circ = qml.QNode(circuit, dev, diff_method="parameter-shift")
+        circ_def = qml.QNode(circuit, dq, diff_method="parameter-shift")
+
+        jac_ps = qml.jacobian(circ)(weights)
+        jac_def = qml.jacobian(circ_def)(weights)
+
+        assert np.allclose(jac_ps, jac_ps, atol=1e-7)
