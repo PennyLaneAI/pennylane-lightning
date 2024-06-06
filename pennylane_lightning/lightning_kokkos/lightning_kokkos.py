@@ -432,7 +432,7 @@ class LightningKokkos(LightningBase):
 
             if isinstance(ops, Conditional):
                 if ops.meas_val.concretize(mid_measurements):
-                    self.apply_lightning([ops.then_op])
+                    self.apply_lightning([ops.base])
             elif isinstance(ops, MidMeasureMP):
                 self._apply_lightning_midmeasure(ops, mid_measurements, postselect_mode)
             elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
