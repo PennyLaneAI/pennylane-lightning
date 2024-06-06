@@ -37,7 +37,7 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
                    double) {
     // TODO only support inverse = false now
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -45,6 +45,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
+        const TestType sign = (inverse) ? -1.0 : 1.0;
         const cp_t coef(1.0 / (2 * std::sqrt(2)), 0);
 
         std::vector<std::vector<cp_t>> ps_data;
@@ -82,7 +83,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
                                       {{0}, {1}, {2}}, {false, false, false});
 
             mps_state.applyOperation("PhaseShift", {index}, inverse,
-                                     {angles[index]});
+                                     {sign * angles[index]});
 
             auto results = mps_state.getDataVector();
 

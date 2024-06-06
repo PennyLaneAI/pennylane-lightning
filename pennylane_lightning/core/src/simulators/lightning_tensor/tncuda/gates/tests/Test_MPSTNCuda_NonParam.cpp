@@ -35,7 +35,7 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Identity", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -63,7 +63,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Identity", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -89,7 +89,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
@@ -112,7 +112,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -148,7 +148,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliZ", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -182,7 +182,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliZ", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -192,6 +192,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
         cp_t r(std::complex<TestType>(0.5, 0.0) *
                cuUtil::INVSQRT2<std::complex<TestType>>());
         cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<std::complex<TestType>>()));
+
+        if (inverse) {
+            i = conj(i);
+        }
 
         const std::vector<std::vector<cp_t>> expected_results = {
             {r, r, r, r, i, i, i, i},
@@ -216,7 +220,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -225,6 +229,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
 
         cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
         cp_t i(1.0 / 4, 1.0 / 4);
+
+        if (inverse) {
+            i = conj(i);
+        }
 
         const std::vector<std::vector<cp_t>> expected_results = {
             {r, r, r, r, i, i, i, i},
@@ -249,7 +257,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
@@ -285,7 +293,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SWAP", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -340,7 +348,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SWAP", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CY", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -397,7 +405,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CY", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
@@ -454,7 +462,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Non_Param_Gates::2+_wires",
                    "[MPSTNCuda_Nonparam]", float, double) {
-    const bool inverse = GENERATE(false);
+    const bool inverse = GENERATE(false, true);
     {
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};

@@ -459,14 +459,14 @@ random_unitary = np.array(
 
 def circuit_ansatz_2_more_qubit_gates(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    #qml.Identity(wires=wires[0])
-    #qml.CNOT(wires=[wires[1], wires[2]])
+    # qml.Identity(wires=wires[0])
+    # qml.CNOT(wires=[wires[1], wires[2]])
     qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
     qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
-    #qml.DoubleExcitation(params[0], wires=[wires[0], wires[1], wires[2], wires[3]])
-    #qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
-    #qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
-    #qml.OrbitalRotation(params[1], wires=[wires[0], wires[1], wires[5], wires[6]])
+    # qml.DoubleExcitation(params[0], wires=[wires[0], wires[1], wires[2], wires[3]])
+    # qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
+    # qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
+    # qml.OrbitalRotation(params[1], wires=[wires[0], wires[1], wires[5], wires[6]])
 
 
 @pytest.mark.parametrize(
@@ -527,8 +527,8 @@ def test_integration_2_more_qubit_gates(returns):
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
     qnode_default = qml.QNode(circuit, dev_default)
 
-    #j_ltensor = qml.jacobian(qnode_ltensor)(params)
-    #j_default = qml.jacobian(qnode_default)(params)
+    # j_ltensor = qml.jacobian(qnode_ltensor)(params)
+    # j_default = qml.jacobian(qnode_default)(params)
 
     j_ltensor = qnode_ltensor(params)
     j_default = qnode_default(params)
