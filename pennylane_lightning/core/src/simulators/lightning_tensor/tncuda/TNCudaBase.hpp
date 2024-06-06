@@ -72,6 +72,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
   public:
     TNCudaBase() = delete;
 
+    // TODO: Add method to the constructor to all user to select methods at
+    // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
@@ -98,6 +100,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /*  cutensornetState_t * */ &quantumState_));
     }
 
+    // TODO: Add method to the constructor to all user to select methods at
+    // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           dev_tag_(dev_tag),
