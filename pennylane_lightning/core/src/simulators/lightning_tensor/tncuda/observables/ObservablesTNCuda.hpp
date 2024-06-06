@@ -266,8 +266,6 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
-
-    [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 };
 
 /**
@@ -429,14 +427,6 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
         }
         return obs_stream.str();
     }
-
-    /**
-     * @brief Get the observable.
-     */
-    [[nodiscard]] auto getObs() const
-        -> std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> {
-        return obs_;
-    };
 };
 
 /**
@@ -547,13 +537,5 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
         ss << "]}";
         return ss.str();
     }
-
-    /**
-     * @brief Get the observable.
-     */
-    [[nodiscard]] auto getObs() const
-        -> std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> {
-        return obs_;
-    };
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Observables

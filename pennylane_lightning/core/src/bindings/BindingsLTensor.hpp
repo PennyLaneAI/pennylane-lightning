@@ -110,8 +110,6 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         }))
         .def("__repr__", &HermitianObs::getObsName)
         .def("get_wires", &HermitianObs::getWires, "Get wires of observables")
-        .def("get_matrix", &HermitianObs::getMatrix,
-             "Get matrix representation of Hermitian operator")
         .def(
             "__eq__",
             [](const HermitianObs &self, py::handle other) -> bool {
@@ -131,7 +129,6 @@ void registerBackendAgnosticObservables(py::module_ &m) {
         }))
         .def("__repr__", &TensorProdObs::getObsName)
         .def("get_wires", &TensorProdObs::getWires, "Get wires of observables")
-        .def("get_ops", &TensorProdObs::getObs, "Get operations list")
         .def(
             "__eq__",
             [](const TensorProdObs &self, py::handle other) -> bool {
@@ -155,8 +152,6 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             }))
         .def("__repr__", &Hamiltonian::getObsName)
         .def("get_wires", &Hamiltonian::getWires, "Get wires of observables")
-        .def("get_ops", &Hamiltonian::getObs,
-             "Get operations contained by Hamiltonian")
         .def("get_coeffs", &Hamiltonian::getCoeffs,
              "Get Hamiltonian coefficients")
         .def(
