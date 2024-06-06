@@ -32,6 +32,9 @@
 
 ### Improvements
 
+* Refactor C++ library names for `lightning.tensor`.
+  [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755) 
+
 * Set `state_tensor` as `const` for the `MeasurementTNCuda` class.
   [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
