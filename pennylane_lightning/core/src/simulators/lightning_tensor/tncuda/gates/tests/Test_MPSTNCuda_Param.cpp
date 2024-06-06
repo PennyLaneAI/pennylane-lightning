@@ -167,19 +167,23 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RY", "[MPSTNCuda_Nonparam]", float,
                                                          {0.45763839, 0},
                                                          {-0.20141277, 0},
                                                          {0.45763839, 0}}};
-        std::vector<std::vector<cp_t>> expected_results_adj = {
-            {expected_results[0][4], expected_results[0][5],
-             expected_results[0][6], expected_results[0][7],
-             expected_results[0][0], expected_results[0][1],
-             expected_results[0][2], expected_results[0][3]},
-            {expected_results[1][2], expected_results[1][3],
-             expected_results[1][0], expected_results[1][1],
-             expected_results[1][6], expected_results[1][7],
-             expected_results[1][4], expected_results[1][5]},
-            {expected_results[2][1], expected_results[2][0],
-             expected_results[2][3], expected_results[2][2],
-             expected_results[2][5], expected_results[2][4],
-             expected_results[2][7], expected_results[2][6]}};
+
+        if (inverse) {
+            std::swap(expected_results[0][4], expected_results[0][0]);
+            std::swap(expected_results[0][5], expected_results[0][1]);
+            std::swap(expected_results[0][6], expected_results[0][2]);
+            std::swap(expected_results[0][7], expected_results[0][3]);
+
+            std::swap(expected_results[1][2], expected_results[1][0]);
+            std::swap(expected_results[1][3], expected_results[1][1]);
+            std::swap(expected_results[1][6], expected_results[1][4]);
+            std::swap(expected_results[1][7], expected_results[1][5]);
+
+            std::swap(expected_results[2][1], expected_results[2][0]);
+            std::swap(expected_results[2][3], expected_results[2][2]);
+            std::swap(expected_results[2][5], expected_results[2][4]);
+            std::swap(expected_results[2][7], expected_results[2][6]);
+        }
 
         SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
@@ -192,13 +196,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RY", "[MPSTNCuda_Nonparam]", float,
 
             auto results = mps_state.getDataVector();
 
-            if (inverse) {
-                CHECK(results ==
-                      Pennylane::Util::approx(expected_results_adj[index]));
-            } else {
-                CHECK(results ==
-                      Pennylane::Util::approx(expected_results[index]));
-            }
+            CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
     }
 }
@@ -242,6 +240,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RZ", "[MPSTNCuda_Param]", float, double) {
              {0.12811281, -0.32952558},
              {0.12811281, 0.32952558}}};
 
+        for (auto &vec : expected_results) {
+            for (auto &val : vec) {
+                val = inverse ? std::conj(val) : val;
+            }
+        }
+
         SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
@@ -253,16 +257,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RZ", "[MPSTNCuda_Param]", float, double) {
 
             auto results = mps_state.getDataVector();
 
-            if (inverse) {
-                std::vector<cp_t> expected_results_adj;
-                for (auto &val : expected_results[index]) {
-                    expected_results_adj.push_back(std::conj(val));
-                }
-                CHECK(results == Pennylane::Util::approx(expected_results_adj));
-            } else {
-                CHECK(results ==
-                      Pennylane::Util::approx(expected_results[index]));
-            }
+            CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
     }
 }
@@ -346,20 +341,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
             std::vector<cp_t>(0b1 << num_qubits),
             std::vector<cp_t>(0b1 << num_qubits)};
 
-        std::vector<std::vector<cp_t>> expected_results_adj{
-            std::vector<cp_t>(0b1 << num_qubits),
-            std::vector<cp_t>(0b1 << num_qubits),
-            std::vector<cp_t>(0b1 << num_qubits)};
-
         for (std::size_t i = 0; i < angles.size(); i++) {
             const auto rot_mat =
                 Pennylane::Gates::getRot<std::complex, TestType>(
                     angles[i][0], angles[i][1], angles[i][2]);
-            expected_results[i][0] = rot_mat[0];
-            expected_results[i][0b1 << (num_qubits - i - 1)] = rot_mat[2];
-
-            expected_results_adj[i][0] = std::conj(rot_mat[0]);
-            expected_results_adj[i][0b1 << (num_qubits - i - 1)] = -rot_mat[2];
+            expected_results[i][0] =
+                inverse ? std::conj(rot_mat[0]) : rot_mat[0];
+            expected_results[i][0b1 << (num_qubits - i - 1)] =
+                inverse ? -rot_mat[2] : rot_mat[2];
         }
 
         SECTION("Apply at different wire indices") {
@@ -367,13 +356,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperation("Rot", {index}, inverse, angles[index]);
-            if (inverse) {
-                CHECK(mps_state.getDataVector() ==
-                      Pennylane::Util::approx(expected_results_adj[index]));
-            } else {
-                CHECK(mps_state.getDataVector() ==
-                      Pennylane::Util::approx(expected_results[index]));
-            }
+            CHECK(mps_state.getDataVector() ==
+                  Pennylane::Util::approx(expected_results[index]));
         }
     }
 }
