@@ -208,7 +208,7 @@ class TestExpval:
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
-    def test_hermitian_expectation_qnode2(self, theta, phi, qubit_device):
+    def test_hermitian_expectation_with_basisstate(self, theta, phi, qubit_device):
         """Tests an Hermitian operator."""
         dev = qubit_device(wires=8)
         dev_def = qml.device("default.qubit", wires=8)
@@ -457,86 +457,7 @@ random_unitary = np.array(
 )
 
 
-def circuit_ansatz_2_more_qubit_gates(params, wires):
-    """Circuit ansatz containing all the parametrized gates"""
-    # qml.Identity(wires=wires[0])
-    # qml.CNOT(wires=[wires[1], wires[2]])
-    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
-    qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
-    # qml.DoubleExcitation(params[0], wires=[wires[0], wires[1], wires[2], wires[3]])
-    # qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
-    # qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
-    # qml.OrbitalRotation(params[1], wires=[wires[0], wires[1], wires[5], wires[6]])
-
-
-@pytest.mark.parametrize(
-    "returns",
-    [
-        (qml.PauliX(0),),
-        (qml.PauliY(0),),
-        (qml.PauliZ(0),),
-        (qml.PauliX(1),),
-        (qml.PauliY(1),),
-        (qml.PauliZ(1),),
-        (qml.PauliX(2),),
-        (qml.PauliY(2),),
-        (qml.PauliZ(2),),
-        (qml.PauliX(3),),
-        (qml.PauliY(3),),
-        (qml.PauliZ(3),),
-        (qml.PauliX(0), qml.PauliY(1)),
-        (
-            qml.PauliZ(0),
-            qml.PauliX(1),
-            qml.PauliY(2),
-        ),
-        (
-            qml.PauliY(0),
-            qml.PauliZ(1),
-            qml.PauliY(3),
-        ),
-        (qml.PauliZ(0) @ qml.PauliY(3),),
-        (qml.Hadamard(2),),
-        (qml.Hadamard(3) @ qml.PauliZ(2),),
-        (qml.PauliX(0) @ qml.PauliY(3),),
-        (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
-        (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
-        (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
-        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
-        (qml.ops.prod(qml.X(0), qml.Y(1))),
-    ],
-)
-def test_integration_2_more_qubit_gates(returns):
-    """Integration tests that compare to default.qubit for a large circuit containing parametrized
-    operations"""
-    num_wires = 8
-    dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), maxBondDim=16, c_dtype=np.complex128)
-
-    def circuit(params):
-        qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
-        circuit_ansatz_2_more_qubit_gates(params, wires=range(num_wires))
-        return qml.math.hstack([qml.expval(r) for r in returns])
-
-    n_params = 2
-    np.random.seed(1337)
-    params_init = np.random.rand(n_params)
-
-    params = np.array(params_init, requires_grad=True)
-
-    qnode_ltensor = qml.QNode(circuit, dev_ltensor)
-    qnode_default = qml.QNode(circuit, dev_default)
-
-    # j_ltensor = qml.jacobian(qnode_ltensor)(params)
-    # j_default = qml.jacobian(qnode_default)(params)
-
-    j_ltensor = qnode_ltensor(params)
-    j_default = qnode_default(params)
-
-    assert np.allclose(j_ltensor, j_default, rtol=2e-1)
-
-
-def circuit_ansatz_1_2qubit_gates(params, wires):
+def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.Identity(wires=wires[0])
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
@@ -571,6 +492,12 @@ def circuit_ansatz_1_2qubit_gates(params, wires):
     qml.SingleExcitationPlus(params[16], wires=[wires[3], wires[1]])
     qml.SingleExcitationMinus(params[17], wires=[wires[4], wires[2]])
     qml.QFT(wires=[wires[0]])
+    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
+    qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
+    qml.DoubleExcitation(params[18], wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
+    qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
+    qml.OrbitalRotation(params[19], wires=[wires[0], wires[1], wires[5], wires[6]])
 
 
 @pytest.mark.parametrize(
@@ -610,7 +537,7 @@ def circuit_ansatz_1_2qubit_gates(params, wires):
         (qml.ops.prod(qml.X(0), qml.Y(1))),
     ],
 )
-def test_integration_1_2qubit_gates(returns):
+def test_integration(returns):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = 8
@@ -619,10 +546,10 @@ def test_integration_1_2qubit_gates(returns):
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
-        circuit_ansatz_1_2qubit_gates(params, wires=range(num_wires))
+        circuit_ansatz(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
-    n_params = 18
+    n_params = 20
     np.random.seed(1337)
     params_init = np.random.rand(n_params)
 
@@ -703,7 +630,7 @@ class TestSparseHExpval:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 4, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 10, 2))
     def test_stronglyentanglinglayers(self, n_qubits):
         dev = qml.device("lightning.tensor", wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)

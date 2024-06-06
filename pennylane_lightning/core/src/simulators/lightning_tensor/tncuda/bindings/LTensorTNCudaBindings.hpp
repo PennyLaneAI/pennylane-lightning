@@ -45,7 +45,6 @@ using StateTensorBackends =
 /**
  * @brief Get a gate kernel map for a statetensor.
  */
-
 template <class StateTensorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForStateTensor<StateTensorT>(pyclass);
@@ -121,13 +120,6 @@ void registerBackendSpecificInfo(py::module_ &m) {
                                    static_cast<cudaStream_t>(stream_id));
         }))
         .def(py::init<const DevTag<int> &>())
-        .def("getDeviceID", &DevTag<int>::getDeviceID)
-        .def("getStreamID",
-             [](DevTag<int> &dev_tag) {
-                 // default stream points to nullptr, so just return void* as
-                 // type
-                 return static_cast<void *>(dev_tag.getStreamID());
-             })
         .def("refresh", &DevTag<int>::refresh);
 }
 
