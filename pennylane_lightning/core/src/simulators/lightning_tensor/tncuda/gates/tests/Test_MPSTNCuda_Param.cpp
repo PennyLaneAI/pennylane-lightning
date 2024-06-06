@@ -101,13 +101,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RX", "[MPSTNCuda_Param]", float, double) {
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
-        TestType sign = (inverse) ? -1.0 : 1.0;
-
         // Results from default.qubit
-        std::vector<cp_t> results = {
-            {0.34958337, static_cast<TestType>(-0.05283436 * sign)},
-            {0.32564424, static_cast<TestType>(-0.13768018 * sign)},
-            {0.12811281, static_cast<TestType>(-0.32952558 * sign)}};
+        std::vector<cp_t> results = {{0.34958337, -0.05283436},
+                                     {0.32564424, -0.13768018},
+                                     {0.12811281, -0.32952558}};
+
+        for (auto &val : results) {
+            val = inverse ? std::conj(val) : val;
+        }
 
         std::vector<std::vector<cp_t>> expected_results{
             std::vector<cp_t>(std::size_t{1} << num_qubits, results[0]),
