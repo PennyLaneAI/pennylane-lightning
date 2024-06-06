@@ -73,7 +73,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_name String representing the name of the given gate.
      * @param gate_param Vector of parameter values. `{}` if non-parametric
      * gate.
-     * @param adjoint Boolean value indicating if the gate requires adjoint.
+     * @param adjoint Boolean value indicating whether the adjoint of the gate is to be appended.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
                   [[maybe_unused]] std::vector<PrecisionT> gate_param = {},
@@ -96,7 +96,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * its associated parameter value.
      * @param gate_data_host Vector of complex floating point values
      * representing the gate data on host.
-     * @param adjoint Boolean value indicating if the gate requires adjoint.
+     * @param adjoint Boolean value indicating whether the adjoint of the gate is to be appended.
      */
 
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
