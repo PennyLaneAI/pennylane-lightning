@@ -8,7 +8,7 @@ target_include_directories(${PL_BACKEND}_measurements INTERFACE ${CMAKE_CURRENT_
 
 target_link_libraries(${PL_BACKEND}_measurements INTERFACE  lightning_compile_options
                                                             lightning_external_libs
-                                                            ${PL_TENSOR}
+                                                            ${PL_BACKEND}
                                                             ${PL_BACKEND}_utils
                                                             ${PL_BACKEND}_observables
                                                             )

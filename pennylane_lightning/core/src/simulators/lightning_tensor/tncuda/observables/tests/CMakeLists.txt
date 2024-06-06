@@ -18,7 +18,7 @@ add_library(${PL_BACKEND}_observables_tests INTERFACE)
 target_link_libraries(${PL_BACKEND}_observables_tests INTERFACE     Catch2::Catch2
                                                                 ${PL_BACKEND}_gates
                                                                 ${PL_BACKEND}_observables
-                                                                ${PL_TENSOR}
+                                                                ${PL_BACKEND}
                                                                 )
 
 ProcessTestOptions(${PL_BACKEND}_observables_tests)
