@@ -134,16 +134,17 @@ class LightningStateTensor:
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                raise DeviceError(
-                    "Adjoint operations are not supported."
-                )  # inverse=False is not supported
-            name = operation.name
+                name = operation.base.name
+                invert_param = True
+            else:
+                name = operation.name
+                invert_param = False
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
             if method is not None:  # apply specialized gate
                 param = operation.parameters
-                method(wires, False, param)
+                method(wires, invert_param, param)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form

@@ -269,14 +269,16 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t adjoint */ adjoint,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
+
         if (!gate_matrix.empty()) {
             auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
-                                  matrix_cu);
+                                  matrix_cu, adjoint);
         } else {
-            gate_cache_->add_gate(static_cast<std::size_t>(id), opName, par);
+            gate_cache_->add_gate(static_cast<std::size_t>(id), opName, par,
+                                  adjoint);
         }
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

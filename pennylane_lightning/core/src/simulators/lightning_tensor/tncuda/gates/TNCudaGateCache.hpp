@@ -22,6 +22,7 @@
 
 #include <complex>
 #include <functional>
+#include <numeric>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -29,7 +30,9 @@
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
+#include "NDPermuter.hpp"
 #include "TensorCuda.hpp"
+#include "Util.hpp"
 #include "cuGates_host.hpp"
 
 /// @cond DEV
@@ -75,13 +78,15 @@ template <class PrecisionT> class TNCudaGateCache {
      * gate.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
-                  [[maybe_unused]] std::vector<PrecisionT> gate_param = {}) {
+                  [[maybe_unused]] std::vector<PrecisionT> gate_param = {},
+                  bool adjoint = false) {
         auto gate_key = std::make_pair(gate_name, gate_param);
 
         auto &gateMap =
             cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
 
-        add_gate(gate_id, gate_key, gateMap.getGateData(gate_name, gate_param));
+        add_gate(gate_id, gate_key, gateMap.getGateData(gate_name, gate_param),
+                 adjoint);
     }
     /**
      * @brief Add gate numerical value to the cache, indexed by the id of gate
@@ -96,7 +101,8 @@ template <class PrecisionT> class TNCudaGateCache {
      */
 
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
-                  const std::vector<CFP_t> &gate_data_host) {
+                  const std::vector<CFP_t> &gate_data_host,
+                  bool adjoint = false) {
         const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
         auto extents = std::vector<std::size_t>(rank, 2);
@@ -108,8 +114,25 @@ template <class PrecisionT> class TNCudaGateCache {
             std::piecewise_construct, std::forward_as_tuple(gate_id),
             std::forward_as_tuple(gate_key, std::move(tensor)));
 
-        device_gates_.at(gate_id).second.getDataBuffer().CopyHostDataToGpu(
-            gate_data_host.data(), gate_data_host.size());
+        if (adjoint) {
+            std::vector<CFP_t> data_host_transpose(gate_data_host.size());
+
+            std::size_t col_size = 1 << (rank / 2);
+            std::size_t row_size = 1 << (rank / 2);
+
+            for (std::size_t idx = 0; idx < gate_data_host.size(); idx++) {
+                std::size_t col = idx / row_size;
+                std::size_t row = idx % row_size;
+                data_host_transpose.at(row * col_size + col) =
+                    gate_data_host.at(idx);
+            }
+
+            device_gates_.at(gate_id).second.getDataBuffer().CopyHostDataToGpu(
+                data_host_transpose.data(), data_host_transpose.size());
+        } else {
+            device_gates_.at(gate_id).second.getDataBuffer().CopyHostDataToGpu(
+                gate_data_host.data(), gate_data_host.size());
+        }
 
         total_alloc_bytes_ += (sizeof(CFP_t) * gate_data_host.size());
     }
@@ -135,9 +158,10 @@ template <class PrecisionT> class TNCudaGateCache {
         }
     };
 
-    // device_gates_ is a map of id of gate tensor operator in the graph to the
-    // gate_info and gate_info is a pair of gate_info_key, which contains both
-    // gate name and parameter value, and the tensor data on device.
+    // device_gates_ is a map of id of gate tensor operator in the graph to
+    // the gate_info and gate_info is a pair of gate_info_key, which
+    // contains both gate name and parameter value, and the tensor data on
+    // device.
     std::unordered_map<std::size_t, gate_info, gate_info_hash> device_gates_;
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Gates

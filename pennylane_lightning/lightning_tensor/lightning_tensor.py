@@ -67,7 +67,6 @@ _operations = frozenset(
         "PauliX",
         "PauliY",
         "PauliZ",
-        "GlobalPhase",
         "Hadamard",
         "S",
         "T",
@@ -100,8 +99,6 @@ _operations = frozenset(
         "SingleExcitationPlus",
         "SingleExcitationMinus",
         "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
@@ -249,7 +246,6 @@ class LightningTensor(Device):
 
         # TODO
         # LightningStateTensor is a class that handles the state tensor should accept method and backend
-        self._statetensor = LightningStateTensor(self._num_wires, self._maxBondDim, self._c_dtype)
 
     @property
     def name(self):
@@ -275,6 +271,10 @@ class LightningTensor(Device):
     def c_dtype(self):
         """Tensor complex data type."""
         return self._c_dtype
+
+    def _state_tensor(self):
+        """Return the state tensor object."""
+        return LightningStateTensor(self._num_wires, self._maxBondDim, self._c_dtype)
 
     dtype = c_dtype
 
@@ -351,13 +351,11 @@ class LightningTensor(Device):
         """
 
         results = []
-        if isinstance(circuits, Sequence) and len(circuits) != 1:
-            raise ValueError("lightning.tensor does not support batch processing.")
 
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._statetensor))
+            results.append(simulate(circuit, self._state_tensor()))
 
         return tuple(results)
 
