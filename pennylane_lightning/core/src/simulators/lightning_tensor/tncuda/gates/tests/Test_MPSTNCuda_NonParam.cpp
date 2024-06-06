@@ -193,14 +193,16 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
                cuUtil::INVSQRT2<std::complex<TestType>>());
         cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<std::complex<TestType>>()));
 
-        if (inverse) {
-            i = conj(i);
-        }
-
-        const std::vector<std::vector<cp_t>> expected_results = {
+        std::vector<std::vector<cp_t>> expected_results = {
             {r, r, r, r, i, i, i, i},
             {r, r, i, i, r, r, i, i},
             {r, i, r, i, r, i, r, i}};
+
+        for (auto &vec : expected_results) {
+            for (auto &val : vec) {
+                val = conj(val);
+            }
+        }
 
         SECTION("Apply different wire indices") {
             const std::size_t index = GENERATE(0, 1, 2);

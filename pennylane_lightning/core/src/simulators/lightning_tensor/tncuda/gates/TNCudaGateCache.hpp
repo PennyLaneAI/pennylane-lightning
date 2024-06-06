@@ -30,9 +30,7 @@
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
-#include "NDPermuter.hpp"
 #include "TensorCuda.hpp"
-#include "Util.hpp"
 #include "cuGates_host.hpp"
 
 /// @cond DEV
@@ -76,6 +74,8 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_name String representing the name of the given gate.
      * @param gate_param Vector of parameter values. `{}` if non-parametric
      * gate.
+     * @param adjoint Boolean value indicating whether the adjoint of the gate
+     * is to be appended.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
                   [[maybe_unused]] std::vector<PrecisionT> gate_param = {},
@@ -98,6 +98,8 @@ template <class PrecisionT> class TNCudaGateCache {
      * its associated parameter value.
      * @param gate_data_host Vector of complex floating point values
      * representing the gate data on host.
+     * @param adjoint Boolean value indicating whether the adjoint of the gate
+     * is to be appended.
      */
 
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
@@ -115,16 +117,23 @@ template <class PrecisionT> class TNCudaGateCache {
             std::forward_as_tuple(gate_key, std::move(tensor)));
 
         if (adjoint) {
+            // TODO: This is a temporary solution for gates data transpose.
+            // There should be a better way to handle this, but there is not
+            // a big performance issue for now since the size of gates is small.
+            // TODO: The implementation here can be optimized by generating the
+            // data buffer directly instead of performing the transpose
+            // operation here
             std::vector<CFP_t> data_host_transpose(gate_data_host.size());
 
-            std::size_t col_size = 1 << (rank / 2);
-            std::size_t row_size = 1 << (rank / 2);
+            const std::size_t col_size = 1 << (rank / 2);
+            const std::size_t row_size = 1 << (rank / 2);
 
             for (std::size_t idx = 0; idx < gate_data_host.size(); idx++) {
                 std::size_t col = idx / row_size;
                 std::size_t row = idx % row_size;
-                data_host_transpose.at(row * col_size + col) =
-                    gate_data_host.at(idx);
+
+                data_host_transpose.at(row * col_size + col) = {
+                    gate_data_host.at(idx).x, -gate_data_host.at(idx).y};
             }
 
             device_gates_.at(gate_id).second.getDataBuffer().CopyHostDataToGpu(
