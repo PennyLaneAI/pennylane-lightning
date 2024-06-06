@@ -1,6 +1,9 @@
 # Release 0.37.0-dev
 
 ### New features since last release
+* Add `inverse` suport for gate operations in `lightning.tensor` in the C++ layer.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
+
 * Add `observable` and `expval` support to `cutensornet` backed `lightning.tensor` C++ layer.
   [(#728)](https://github.com/PennyLaneAI/pennylane-lightning/pull/728)
 
@@ -28,6 +31,9 @@
   [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
 
 ### Improvements
+
+* Set `state_tensor` as `const` for the `MeasurementTNCuda` class.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
 * Updated Kokkos version and support to 4.3.01.
   [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
