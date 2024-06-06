@@ -18,7 +18,6 @@
  */
 
 #include "StateVectorKokkos.hpp"
-#include "BitUtil.hpp"
 
 extern template class Pennylane::LightningKokkos::StateVectorKokkos<float>;
 extern template class Pennylane::LightningKokkos::StateVectorKokkos<double>;
