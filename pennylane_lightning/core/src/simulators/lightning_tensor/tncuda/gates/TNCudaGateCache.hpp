@@ -74,7 +74,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_param Vector of parameter values. `{}` if non-parametric
      * gate.
      * @param adjoint Boolean value indicating whether the adjoint of the gate
-     * is to be appended.
+     * is to be appended. The default is false.
      */
     void add_gate(const std::size_t gate_id, const std::string &gate_name,
                   [[maybe_unused]] std::vector<PrecisionT> gate_param = {},
@@ -98,9 +98,8 @@ template <class PrecisionT> class TNCudaGateCache {
      * @param gate_data_host Vector of complex floating point values
      * representing the gate data on host.
      * @param adjoint Boolean value indicating whether the adjoint of the gate
-     * is to be appended.
+     * is to be appended. The default is false.
      */
-
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
                   const std::vector<CFP_t> &gate_data_host,
                   bool adjoint = false) {
@@ -120,12 +119,14 @@ template <class PrecisionT> class TNCudaGateCache {
             // There should be a better way to handle this, but there is not
             // a big performance issue for now since the size of gates is small.
             // TODO: The implementation here can be optimized by generating the
-            // data buffer directly instead of performing the transpose
-            // operation here
+            // data buffer directly on the device instead of performing the
+            // transpose operation here
             std::vector<CFP_t> data_host_transpose(gate_data_host.size());
 
             const std::size_t col_size = 1 << (rank / 2);
-            const std::size_t row_size = 1 << (rank / 2);
+            const std::size_t row_size = col_size;
+
+            PL_ASSERT(col_size * row_size == gate_data_host.size());
 
             for (std::size_t idx = 0; idx < gate_data_host.size(); idx++) {
                 std::size_t col = idx / row_size;
