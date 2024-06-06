@@ -126,8 +126,8 @@ template <class PrecisionT> class TNCudaGateCache {
                 std::size_t col = idx / row_size;
                 std::size_t row = idx % row_size;
 
-                data_host_transpose.at(row * col_size + col) =
-                    gate_data_host.at(idx);
+                data_host_transpose.at(row * col_size + col) = {
+                    gate_data_host.at(idx).x, -gate_data_host.at(idx).y};
             }
 
             device_gates_.at(gate_id).second.getDataBuffer().CopyHostDataToGpu(

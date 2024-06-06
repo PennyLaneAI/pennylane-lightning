@@ -266,7 +266,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* void * */ static_cast<void *>(dummy_device_data.getData()),
             /* const int64_t *tensorModeStrides */ nullptr,
             /* const int32_t immutable */ 1,
-            /* const int32_t adjoint */ adjoint,
+            /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
         if (!gate_matrix.empty()) {
