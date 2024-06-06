@@ -19,10 +19,7 @@
  */
 
 #pragma once
-#include <set>
 #include <string>
-#include <string_view>
-#include <tuple>
 #include <vector>
 
 #include <pybind11/complex.h>
@@ -32,14 +29,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "CPUMemoryModel.hpp" // CPUMemoryModel, getMemoryModel, bestCPUMemoryModel, getAlignment
-#include "Macros.hpp" // CPUArch
-#include "Util.hpp"   // for_each_enum
-
 #include "BindingsBase.hpp"
 #include "LTensorTNCudaBindings.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
+#include "Util.hpp" 
 
 namespace py = pybind11;
 
