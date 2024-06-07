@@ -18,7 +18,7 @@ import math
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
@@ -32,6 +32,8 @@ if not LightningDevice._new_API:
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.qubit tests only", allow_module_level=True)
 
 I, X, Y, Z = (
     np.eye(2),

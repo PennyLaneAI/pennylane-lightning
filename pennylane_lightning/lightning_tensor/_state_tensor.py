@@ -49,9 +49,6 @@ class LightningStateTensor:
         self._maxBondDim = maxBondDim
         self._dtype = dtype
 
-        if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
-            raise TypeError(f"Unsupported complex type: {dtype}")
-
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 

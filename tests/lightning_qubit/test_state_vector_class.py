@@ -20,11 +20,14 @@ import math
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.qubit tests only", allow_module_level=True)
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)

@@ -25,6 +25,9 @@ from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.qubit tests only", allow_module_level=True)
+
 try:
     from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:

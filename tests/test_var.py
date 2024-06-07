@@ -19,9 +19,13 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
+from conftest import device_name
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.tensor dosen't support var.", allow_module_level=True)
 
 np.random.seed(42)
 

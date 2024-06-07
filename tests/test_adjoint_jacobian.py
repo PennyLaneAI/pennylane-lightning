@@ -36,6 +36,9 @@ I, X, Y, Z = (
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.tensor dosen't support adjoint jacobian.", allow_module_level=True)
+
 kokkos_args = [None]
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings

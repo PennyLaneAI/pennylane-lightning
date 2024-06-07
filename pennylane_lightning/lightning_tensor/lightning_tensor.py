@@ -123,7 +123,6 @@ _observables = frozenset(
         "Hadamard",
         "Hermitian",
         "Identity",
-        "Projector",
         "Hamiltonian",
         "LinearCombination",
         "Sum",
@@ -135,7 +134,7 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition_mps(op: Operator) -> bool:
+def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
@@ -207,7 +206,7 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        maxBondDim=10,
+        maxBondDim=128,
         backend="cutensornet",
         method="mps",
         shots=None,
@@ -225,6 +224,9 @@ class LightningTensor(Device):
 
         if shots is not None:
             raise ValueError("lightning.tensor does not support finite shots.")
+
+        if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
 
         if wires is None:
             raise ValueError("The number of wires must be specified.")
@@ -331,7 +333,7 @@ class LightningTensor(Device):
         program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition_mps,
+            stopping_condition=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
         )

@@ -50,6 +50,17 @@ elif device_name == "lightning.gpu":
         TensorProdObsC64,
         TensorProdObsC128,
     )
+elif device_name == "lightning.tensor":
+    from pennylane_lightning.lightning_tensor_ops.observables import (
+        HamiltonianC64,
+        HamiltonianC128,
+        HermitianObsC64,
+        HermitianObsC128,
+        NamedObsC64,
+        NamedObsC128,
+        TensorProdObsC64,
+        TensorProdObsC128,
+    )
 else:
     from pennylane_lightning.lightning_qubit_ops.observables import (
         HamiltonianC64,
@@ -81,7 +92,11 @@ def test_wrong_device_name():
         (qml.Hadamard(0), NamedObsC128),
         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
         (
-            qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
+            (
+                qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))
+                if device_name != "lightning.tensor"
+                else qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliZ(2) @ qml.PauliX(3)
+            ),
             TensorProdObsC128,
         ),
         (
@@ -116,8 +131,14 @@ def test_wrong_device_name():
         (qml.Hamiltonian([1], [qml.PauliZ(0)]), NamedObsC128),
         (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HamiltonianC128),
         (
-            qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]),
-            SparseHamiltonianC128,
+            (
+                qml.SparseHamiltonian(
+                    qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]
+                )
+                if device_name != "lightning.tensor"
+                else 0.5 * qml.PauliX(0)
+            ),
+            SparseHamiltonianC128 if device_name != "lightning.tensor" else HamiltonianC128,
         ),
         (2.5 * qml.PauliZ(0), HamiltonianC128),
     ],
@@ -778,3 +799,20 @@ def test_global_phase():
                     D0 = check_global_phase_diagonal(par, wires, targets, controls, control_values)
                     D1 = global_phase_diagonal(par, wires, controls, control_values)
                     assert np.allclose(D0, D1)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.tensor", reason="lightning.tensor does not support Sparse Hamiltonian"
+)
+@pytest.mark.parametrize(
+    "obs",
+    [qml.SparseHamiltonian(qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0])],
+)
+def test_unsupported_obs_returns_expected_type(obs):
+    """Tests that observables get serialized to the expected type, with and without wires map"""
+    serializer = QuantumScriptSerializer(device_name)
+    with pytest.raises(
+        NotImplementedError,
+        match="SparseHamiltonian is not supported on the lightning.tensor device.",
+    ):
+        serializer._ob(obs, dict(enumerate(obs.wires)))

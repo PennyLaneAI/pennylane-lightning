@@ -19,7 +19,11 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops
 
-if device_name == "lightning_gpu" or not ld._CPP_BINARY_AVAILABLE:
+if (
+    device_name == "lightning_gpu"
+    or device_name == "lightning.tensor"
+    or not ld._CPP_BINARY_AVAILABLE
+):
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 

@@ -19,27 +19,34 @@ This module contains unit tests for new device API Lightning classes.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig  # , MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
-from pennylane_lightning.lightning_qubit.lightning_qubit import (
-    _add_adjoint_transforms,
-    _supports_adjoint,
-    accepted_observables,
-    adjoint_measurements,
-    adjoint_observables,
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    stopping_condition,
-    stopping_condition_shots,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
+if device_name == "lightning.qubit":
+    from pennylane_lightning.lightning_qubit.lightning_qubit import (
+        _add_adjoint_transforms,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
+if device_name == "lightning.tensor":
+    from pennylane_lightning.lightning_tensor.lightning_tensor import (
+        accepted_observables,
+        stopping_condition,
+    )
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
@@ -75,10 +82,16 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-
-        assert accepted_observables(valid_obs) is True
+        if device_name != "lightning.tensor":
+            assert accepted_observables(valid_obs) is True
+        else:
+            assert accepted_observables(valid_obs) is False
         assert accepted_observables(invalid_obs) is False
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="adjoint_observables is not supported by the lightning.tensor device",
+    )
     @pytest.mark.parametrize(
         "obs, expected",
         [
@@ -100,6 +113,10 @@ class TestHelpers:
         a given observable"""
         assert adjoint_observables(obs) == expected
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="adjoint is not supported by the lightning.tensor device",
+    )
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
@@ -126,6 +143,10 @@ class TestHelpers:
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="adjoint is not supported by the lightning.tensor device",
+    )
     @pytest.mark.parametrize(
         "circuit, expected",
         [
@@ -141,9 +162,17 @@ class TestHelpers:
         assert _supports_adjoint(circuit) == expected
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="mcmc is not supported by the lightning.tensor device",
+)
 class TestInitialization:
     """Unit tests for device initialization"""
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="shots is not supported by the lightning.tensor device",
+    )
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
         n_shots = 10
@@ -152,6 +181,10 @@ class TestInitialization:
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
             _ = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="shots and mcmc is not supported by the lightning.tensor device",
+    )
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
@@ -164,6 +197,10 @@ class TestInitialization:
             _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="adjoint_observables is not supported by the lightning.tensor device",
+)
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
@@ -482,6 +519,10 @@ class TestExecution:
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="Derivative is not supported by the lightning.tensor device",
+)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
     """Unit tests for calculating derivatives with a device"""
@@ -818,6 +859,10 @@ class TestDerivatives:
         assert np.allclose(jacs[1], expected_jac[1])
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="vjp is not supported by the lightning.tensor device",
+)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestVJP:
     """Unit tests for VJP computation with the new device API."""
