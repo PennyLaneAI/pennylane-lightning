@@ -30,4 +30,5 @@ build:
     post_install: 
       - rm -rf ./build && export PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/bin${PATH:+:${PATH}} && export LD_LIBRARY_PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} && PL_BACKEND="lightning_gpu" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_gpu" python setup.py bdist_wheel
       - rm -rf ./build && PL_BACKEND="lightning_kokkos" python setup.py bdist_wheel
+      - rm -rf ./build && export PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/bin${PATH:+:${PATH}} && export LD_LIBRARY_PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} && PL_BACKEND="lightning_tensor" python setup.py build_ext --define="PL_DISABLE_CUDA_SAFETY=1" && PL_BACKEND="lightning_tensor" python setup.py bdist_wheel
       - python -m pip install ./dist/*.whl
