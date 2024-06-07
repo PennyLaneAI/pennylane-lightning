@@ -25,9 +25,6 @@ from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-if device_name == "lightning.tensor":
-    pytest.skip("lightning.qubit tests only", allow_module_level=True)
-
 try:
     from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
@@ -36,8 +33,10 @@ except ImportError:
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API or device_name != "lightning.qubit":
+    pytest.skip(
+        "Exclusive tests for new API and lightning.qubit. Skipping.", allow_module_level=True
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

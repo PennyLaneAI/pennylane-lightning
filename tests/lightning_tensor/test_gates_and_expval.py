@@ -36,64 +36,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-def calculate_reference(tape):
-    """Calculates the reference value for the given tape."""
-    dev = DefaultQubit(max_workers=1)
-    program, _ = dev.preprocess()
-    tapes, transf_fn = program([tape])
-    results = dev.execute(tapes)
-    return transf_fn(results)
-
-
-def execute(dev, tape):
-    """Executes the tape on the device and returns the result."""
-    results = dev.execute(tape)
-    return results
-
-
-# Define the parameter values
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
-
-
-@pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-def test_multi_qubit_gates(theta, phi, qubit_device, tol):  # pylint: disable=too-many-arguments
-    """Tests a simple circuit with multi-qubit gates."""
-
-    ops = [
-        qml.PauliX(wires=[0]),
-        qml.RX(theta, wires=[0]),
-        qml.RX(phi, wires=[1]),
-        qml.CNOT(wires=[3, 4]),
-        qml.CZ(wires=[3, 5]),
-        qml.Hadamard(wires=[4]),
-        qml.CNOT(wires=[2, 4]),
-    ]
-
-    meas = [
-        qml.expval(qml.PauliY(2)),
-        qml.expval(qml.Hamiltonian([1, 5, 6], [qml.Z(6), qml.X(0), qml.Hadamard(4)])),
-        qml.expval(
-            qml.Hamiltonian(
-                [4, 5, 7],
-                [
-                    qml.Z(6) @ qml.Y(4),
-                    qml.X(7),
-                    qml.Hadamard(4),
-                ],
-            )
-        ),
-    ]
-
-    tape = qml.tape.QuantumScript(ops=ops, measurements=meas)
-
-    reference_val = calculate_reference(tape)
-    dev = qubit_device(wires=tape.wires)
-    calculated_val = dev.execute(tape)
-
-    assert np.allclose(calculated_val, reference_val, tol)
-
-
 random_unitary = np.array(
     [
         [

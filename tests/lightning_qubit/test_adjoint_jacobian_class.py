@@ -26,14 +26,14 @@ from scipy.stats import unitary_group
 from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+if not LightningDevice._new_API or device_name != "lightning.qubit":
+    pytest.skip(
+        "Exclusive tests for new API and lightning.qubit. Skipping.", allow_module_level=True
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.tensor":
-    pytest.skip("lightning.qubit tests only", allow_module_level=True)
 
 I, X, Y, Z = (
     np.eye(2),
