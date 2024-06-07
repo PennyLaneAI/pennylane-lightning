@@ -16,7 +16,7 @@ target_link_libraries(${PL_BACKEND}_observables PUBLIC  lightning_utils
                                                         lightning_observables
                                                         ${PL_BACKEND}_utils
                                                         ${PL_BACKEND}_gates
-                                                        ${PL_TENSOR}
+                                                        ${PL_BACKEND}
                                                         )
 
 set_property(TARGET ${PL_BACKEND}_observables PROPERTY POSITION_INDEPENDENT_CODE ON)

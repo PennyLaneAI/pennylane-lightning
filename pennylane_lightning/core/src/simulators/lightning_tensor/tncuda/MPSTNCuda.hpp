@@ -82,6 +82,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   public:
     MPSTNCuda() = delete;
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
@@ -90,6 +92,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
     }
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),

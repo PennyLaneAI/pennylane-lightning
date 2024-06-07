@@ -1,6 +1,9 @@
 # Release 0.37.0-dev
 
 ### New features since last release
+* Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
+
 * Add `observable` and `expval` support to `cutensornet` backed `lightning.tensor` C++ layer.
   [(#728)](https://github.com/PennyLaneAI/pennylane-lightning/pull/728)
 
@@ -32,6 +35,12 @@
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file,
   but keeping one that validates multiple mid-circuit measurements with any allowed return.
   [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
+
+* Refactor C++ library names for `lightning.tensor`.
+  [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755) 
+
+* Set `state_tensor` as `const` for the `MeasurementTNCuda` class.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
 * Updated Kokkos version and support to 4.3.01.
   [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
