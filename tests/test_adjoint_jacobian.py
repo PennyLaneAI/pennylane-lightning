@@ -865,6 +865,9 @@ class TestAdjointJacobianQNode:
             def circuit(p):
                 qml.StatePrep(init_state, wires=range(n_qubits))
                 if operation.num_params == 3:
+                    # Check against the first wire in `control_wires` as any
+                    # decomposition to `ctrl_decomp_zyz` works now with only
+                    # one single controlled wire.
                     qml.ctrl(
                         operation(*p, wires=range(n_qubits - num_wires, n_qubits)),
                         control_wires[0],
