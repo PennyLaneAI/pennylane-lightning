@@ -654,7 +654,8 @@ class TestVar:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.tensor", reason="lightning.tensor device does not support qml.samples()"
+    device_name == "lightning.tensor",
+    reason="lightning.tensor device does not support qml.samples()",
 )
 class TestSample:
     """Tests that samples are properly calculated."""
@@ -884,7 +885,8 @@ class TestLightningDeviceIntegration:
 
     # This test is ran against the state |Phi+> with two Z expvals
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support qml.Stateprep()"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support qml.Stateprep()",
     )
     @pytest.mark.parametrize(
         "name,expected_output",
@@ -1254,7 +1256,8 @@ class TestLightningDeviceIntegration:
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support shot measurements"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support shot measurements",
     )
     def test_multi_samples_return_correlated_results(self, qubit_device):
         """Tests if the samples returned by the sample function have
@@ -1278,7 +1281,8 @@ class TestLightningDeviceIntegration:
         assert np.array_equal(outcomes[0], outcomes[1])
 
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support shot measurements."
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support shot measurements.",
     )
     @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
@@ -1306,7 +1310,8 @@ class TestLightningDeviceIntegration:
         assert np.array_equal(outcomes[0], outcomes[1])
 
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support shot measurements"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support shot measurements",
     )
     def test_snapshot_is_ignored_without_shot(self):
         """Tests if the Snapshot operator is ignored correctly"""
@@ -1325,7 +1330,8 @@ class TestLightningDeviceIntegration:
         assert np.allclose(outcomes, [0.0])
 
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support shot measurements"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support shot measurements",
     )
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""

@@ -28,6 +28,7 @@ if not ld._CPP_BINARY_AVAILABLE:
 if device_name == "lightning.tensor":
     pytest.skip("lightning.tensor dosen't support vjp.", allow_module_level=True)
 
+
 def get_vjp(device, tapes, dy):
     """Helper to get VJP for a tape or batch of tapes"""
     if device._new_API:
