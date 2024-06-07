@@ -97,6 +97,12 @@
 * Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
   [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
 
+* Fix the memory segfault with initializing zero-wire LightningKokkos.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
+
+* Remove `pennylane.ops.op_math.controlled_decompositions.ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
