@@ -63,3 +63,15 @@ def test_create_device_with_unsupported_mpi_buf_size():
             dev._mpi_init_helper(1)
     except:
         pass
+
+
+def test_device_init_zero_qubit():
+    """Test the device initialization with zero-qubit."""
+
+    dev = qml.device(device_name, wires=0)
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.state()
+
+    assert np.allclose(circuit(), np.array([1.0]))
