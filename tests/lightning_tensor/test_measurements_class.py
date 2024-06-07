@@ -20,7 +20,9 @@ import pytest
 from conftest import LightningDevice, device_name  # tested device
 
 if device_name != "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True)
+    pytest.skip(
+        "Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True
+    )
 else:
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
     from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
