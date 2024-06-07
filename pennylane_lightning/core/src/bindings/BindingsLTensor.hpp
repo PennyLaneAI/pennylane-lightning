@@ -14,11 +14,12 @@
 
 /**
  * @file BindingsLTensor.hpp
- * Defines device-agnostic operations to export to Python and other utility
- * functions interfacing with Pybind11.
+ * Defines device-agnostic operations of LightningTensor to export to Python
+ * and other utility functions interfacing with Pybind11.
  */
 
 #pragma once
+#include <complex>
 #include <string>
 #include <vector>
 

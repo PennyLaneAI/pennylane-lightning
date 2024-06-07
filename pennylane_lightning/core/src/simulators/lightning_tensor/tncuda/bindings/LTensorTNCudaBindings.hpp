@@ -11,6 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+/**
+ * @file LTensorTNCudaBindings.hpp
+ * Defines LightningTensor-specific operations to export to Python, other
+ * utility functions interfacing with Pybind11 and support to agnostic bindings.
+ */
+
 #pragma once
 #include <vector>
 
@@ -21,8 +28,6 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MPSTNCuda.hpp"
-#include "MeasurementsTNCuda.hpp"
-#include "ObservablesTNCuda.hpp"
 #include "TypeList.hpp"
 #include "cuda_helpers.hpp"
 
@@ -30,8 +35,6 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
-using namespace Pennylane::LightningTensor::TNCuda::Measures;
-using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 } // namespace
 /// @endcond
