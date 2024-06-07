@@ -621,7 +621,7 @@ class TestSparseHExpval:
 
         state_tensor = LightningStateTensor(4, 10)
         tape = qml.tape.QuantumScript(measurements=obs)
-        m = LightningMeasurements(state_tensor)
+        m = LightningTensorMeasurements(state_tensor)
 
         with pytest.raises(NotImplementedError):
             m.expval(tape.measurements[0])

@@ -47,9 +47,9 @@ class TestMeasurementFunction:
     """Tests for the measurement method."""
 
     def test_initialization(self, lightning_st):
-        """Tests for the initialization of the LightningMeasurements class."""
+        """Tests for the initialization of the LightningTensorMeasurements class."""
         statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+        m = LightningTensorMeasurements(statetensor)
 
         assert m.dtype == statetensor.dtype
 
@@ -57,7 +57,7 @@ class TestMeasurementFunction:
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
         statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+        m = LightningTensorMeasurements(statetensor)
 
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
@@ -67,7 +67,7 @@ class TestMeasurementFunction:
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
         statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+        m = LightningTensorMeasurements(statetensor)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(0.1, wires=0), qml.Hadamard(1), qml.PauliZ(1)],
