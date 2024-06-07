@@ -110,19 +110,11 @@ jobs:
           cd main
           python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning unit tests for state vector backends
-        if: ${{ matrix.pl_backend != 'lightning_tensor' }}
+      - name: Run PennyLane-Lightning unit tests for all backends
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-
-      - name: Run PennyLane-Lightning unit tests for state tensor backends
-        if: ${{ matrix.pl_backend == 'lightning_tensor' }}
-        run: |
-          cd main/
-          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_tensor/  $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
