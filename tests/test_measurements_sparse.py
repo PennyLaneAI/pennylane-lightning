@@ -27,7 +27,7 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sparse hamiltonians",
+    reason="lightning.tensor does not support Sparse Hamiltonians",
 )
 class TestSparseExpval:
     """Tests for the expval function"""

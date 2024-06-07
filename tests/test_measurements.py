@@ -52,7 +52,7 @@ def test_no_measure():
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support probs()",
+    reason="lightning.tensor does not support qml.probs()",
 )
 class TestProbs:
     """Test Probs in Lightning devices"""
@@ -341,7 +341,7 @@ class TestExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(ham)
 
-        assert np.allclose(circuit(), res, atol=tol, rtol=0.2)
+        assert np.allclose(circuit(), res, atol=tol, rtol=0 if device_name != "lightning.tensor" else 2e-1)
 
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
@@ -608,7 +608,7 @@ class TestWiresInExpval:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sample()",
+    reason="lightning.tensor does not support qml.sample()",
 )
 class TestSample:
     """Tests that samples are properly calculated."""
@@ -662,7 +662,7 @@ class TestSample:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support var",
+    reason="lightning.tensor does not support qml.var()",
 )
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""

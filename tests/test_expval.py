@@ -137,7 +137,7 @@ class TestExpval:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.Projector",
+        reason="lightning.tensor does not support qml.Projector()",
     )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
@@ -192,11 +192,8 @@ class TestExpval:
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-
-            if device_name != "lightning.tensor":
-                assert np.allclose(circ(), circ_def(), tol)
-            else:
-                assert np.allclose(circ(), circ_def(), rtol=0.25)
+            rel_tol = 0 if device_name != "lightning.tensor" else 0.25
+            assert np.allclose(circ(), circ_def(), rtol=rel_tol)
 
 
 @pytest.mark.parametrize(

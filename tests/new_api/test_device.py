@@ -82,15 +82,13 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-        if device_name != "lightning.tensor":
-            assert accepted_observables(valid_obs) is True
-        else:
-            assert accepted_observables(valid_obs) is False
+        result = True if device_name != "lightning.tensor" else False
+        assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="adjoint_observables is not supported by the lightning.tensor device",
+        reason="lightning.tensor device does not support adjoint_observables",
     )
     @pytest.mark.parametrize(
         "obs, expected",
@@ -115,7 +113,7 @@ class TestHelpers:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="adjoint is not supported by the lightning.tensor device",
+        reason="lightning.tensor device does not support adjoint",
     )
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
@@ -145,7 +143,7 @@ class TestHelpers:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="adjoint is not supported by the lightning.tensor device",
+        reason="lightning.tensor device does not support adjoint",
     )
     @pytest.mark.parametrize(
         "circuit, expected",
@@ -164,15 +162,11 @@ class TestHelpers:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="mcmc is not supported by the lightning.tensor device",
+    reason="lightning.tensor does not support shots or mcmc",
 )
 class TestInitialization:
     """Unit tests for device initialization"""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="shots is not supported by the lightning.tensor device",
-    )
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
         n_shots = 10
@@ -181,10 +175,6 @@ class TestInitialization:
         with pytest.raises(ValueError, match="Shots should be greater than num_burnin."):
             _ = LightningDevice(wires=2, shots=n_shots, mcmc=True, num_burnin=num_burnin)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="shots and mcmc is not supported by the lightning.tensor device",
-    )
     def test_invalid_kernel_name(self):
         """Test that an error is raised when the kernel_name is not "Local" or "NonZeroRandom"."""
 
@@ -199,7 +189,7 @@ class TestInitialization:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="adjoint_observables is not supported by the lightning.tensor device",
+    reason="lightning.tensor does not support adjoint_observables",
 )
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
@@ -521,7 +511,7 @@ class TestExecution:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="Derivative is not supported by the lightning.tensor device",
+    reason="lightning.tensor does not support derivatives",
 )
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
@@ -861,7 +851,7 @@ class TestDerivatives:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="vjp is not supported by the lightning.tensor device",
+    reason="lightning.tensor does not support vjp",
 )
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestVJP:

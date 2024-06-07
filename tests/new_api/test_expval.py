@@ -202,7 +202,7 @@ class TestExpval:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="SparseH is not supported by the lightning.tensor device",
+        reason="lightning.tensor does not support sparse Hamiltonians",
     )
     def test_sparse_hamiltonian_expectation(self, theta, phi, tol, dev):
         """Tests a Hamiltonian."""

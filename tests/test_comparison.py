@@ -61,7 +61,7 @@ def one_qubit_block(wires=None):
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="qml.state() not supported by the lightning.tensor device",
+    reason="lightning.tensor device dose not support state return",
 )
 class TestComparison:
     """A test that compares the output states of the lightning device and ``default.qubit`` for a

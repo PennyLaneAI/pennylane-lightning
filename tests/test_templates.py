@@ -68,7 +68,7 @@ class TestGrover:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not full support of multi-controlled gates.",
+        reason="lightning.tensor does not have full support of multi-controlled gates.",
     )
     @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required.")
     @pytest.mark.parametrize("wires", [5, 10, 13, 15])
@@ -384,7 +384,7 @@ class TestCosineWindow:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support 2+ wires gates that can't be decomposed into 1,2 wires gate.",
+        reason="lightning.tensor does not support 2+ wires gates that can't be decomposed into 1,2 wires gates.",
     )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_cosinewindow(self, n_qubits):

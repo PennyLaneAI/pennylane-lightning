@@ -17,9 +17,8 @@ Unit tests for the var method of the :mod:`pennylane_lightning.LightningQubit` d
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI
+from conftest import PHI, THETA, VARPHI, device_name
 from conftest import LightningDevice as ld
-from conftest import device_name
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
