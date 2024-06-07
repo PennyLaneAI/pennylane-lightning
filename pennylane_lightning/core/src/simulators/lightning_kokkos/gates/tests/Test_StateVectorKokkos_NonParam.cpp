@@ -28,7 +28,6 @@
 #include "TestHelpers.hpp"
 #include "TestHelpersWires.hpp"
 #include "Util.hpp"
-#include "iostream"
 
 /**
  * @file

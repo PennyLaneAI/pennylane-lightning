@@ -180,13 +180,11 @@ static constexpr auto getSWAP() -> std::vector<ComplexT<T>> {
  * of ISWAP gate data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getISWAP() -> std::vector<ComplexT<T>> {
-    return {ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            IMAG<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
-            ONE<ComplexT, T>()};
+static constexpr auto getISWAP(const bool inverse = false) -> std::vector<ComplexT<T>> {
+    return {ONE<ComplexT, T>(),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), 
+            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ((inverse) ? -IMAG<ComplexT, T>() : IMAG<ComplexT, T>()),  ZERO<ComplexT, T>(), 
+            ZERO<ComplexT, T>(), ((inverse) ? -IMAG<ComplexT, T>() : IMAG<ComplexT, T>()),  ZERO<ComplexT, T>(), ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ZERO<ComplexT, T>(), ONE<ComplexT, T>()};
 }
 
 /**
@@ -1258,7 +1256,7 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
     case GateOperation::SWAP:
         return getSWAP<ComplexT, T>();
     case GateOperation::ISWAP:
-        return getISWAP<ComplexT, T>();
+        return getISWAP<ComplexT, T>(inverse);
     case GateOperation::ControlledPhaseShift:
         return getControlledPhaseShift<ComplexT, T>((inverse) ? -params[0]
                                                               : params[0]);
