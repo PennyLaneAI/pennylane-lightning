@@ -60,6 +60,7 @@ _methods = frozenset({"mps"})
 _operations = frozenset(
     {
         "Identity",
+        "BasisState",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -69,12 +70,17 @@ _operations = frozenset(
         "PauliZ",
         "Hadamard",
         "S",
+        "Adjoint(S)",
         "T",
+        "Adjoint(T)",
         "SX",
+        "Adjoint(SX)",
         "CNOT",
         "SWAP",
         "ISWAP",
+        "Adjoint(ISWAP)",
         "PSWAP",
+        "Adjoint(SISWAP)",
         "SISWAP",
         "SQISW",
         "CSWAP",
@@ -105,6 +111,7 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 
@@ -133,7 +140,7 @@ def stopping_condition_mps(op: Operator) -> bool:
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2
+    return op.has_matrix and len(op.wires) <= 2 or isinstance(op, qml.GlobalPhase)
 
 
 def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:

@@ -461,19 +461,31 @@ def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.Identity(wires=wires[0])
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
+    qml.ControlledQubitUnitary(
+        qml.matrix(qml.PauliX([wires[1]])), control_wires=[wires[0]], wires=wires[1]
+    )
+    qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[wires[0], wires[1]]),
     qml.PauliX(wires=wires[1])
     qml.PauliY(wires=wires[2])
     qml.PauliZ(wires=wires[3])
     qml.Hadamard(wires=wires[4])
+    qml.adjoint(qml.S(wires=wires[4]))
     qml.S(wires=wires[5])
+    qml.adjoint(qml.T(wires=wires[1]))
     qml.T(wires=wires[0])
+    qml.adjoint(qml.SX(wires=wires[0]))
     qml.SX(wires=wires[1])
     qml.CNOT(wires=[wires[6], wires[7]])
     qml.SWAP(wires=[wires[2], wires[3]])
+    qml.adjoint(qml.ISWAP(wires=[wires[0], wires[1]]))
     qml.ISWAP(wires=[wires[4], wires[5]])
     qml.PSWAP(params[0], wires=[wires[6], wires[7]])
+    qml.adjoint(qml.SISWAP(wires=[wires[0], wires[1]]))
     qml.SISWAP(wires=[wires[4], wires[5]])
     qml.SQISW(wires=[wires[1], wires[0]])
+    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
+    qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
     qml.CY(wires=[wires[0], wires[2]])
     qml.CZ(wires=[wires[1], wires[3]])
     qml.PhaseShift(params[1], wires=wires[2])
@@ -487,17 +499,19 @@ def circuit_ansatz(params, wires):
     qml.CRZ(params[11], wires=[wires[2], wires[1]])
     qml.IsingXX(params[12], wires=[wires[1], wires[0]])
     qml.IsingYY(params[13], wires=[wires[3], wires[2]])
-    qml.IsingZZ(params[14], wires=[wires[2], wires[1]])
-    qml.SingleExcitation(params[15], wires=[wires[2], wires[0]])
-    qml.SingleExcitationPlus(params[16], wires=[wires[3], wires[1]])
-    qml.SingleExcitationMinus(params[17], wires=[wires[4], wires[2]])
-    qml.QFT(wires=[wires[0]])
-    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
-    qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
-    qml.DoubleExcitation(params[18], wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.IsingXY(params[14], wires=[wires[2], wires[1]])
+    qml.IsingZZ(params[15], wires=[wires[2], wires[1]])
+    qml.SingleExcitation(params[16], wires=[wires[2], wires[0]])
+    qml.SingleExcitationPlus(params[17], wires=[wires[3], wires[1]])
+    qml.SingleExcitationMinus(params[18], wires=[wires[4], wires[2]])
+    qml.DoubleExcitation(params[19], wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
     qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
-    qml.OrbitalRotation(params[19], wires=[wires[0], wires[1], wires[5], wires[6]])
+    qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
+    qml.QFT(wires=[wires[0]])
+    qml.ECR(wires=[wires[1], wires[3]])
+    qml.BlockEncode([[0.1, 0.2], [0.3, 0.4]], wires=[wires[0], wires[3]])
+    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=(wires[1]))
 
 
 @pytest.mark.parametrize(
@@ -549,7 +563,7 @@ def test_integration(returns):
         circuit_ansatz(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
-    n_params = 20
+    n_params = 22
     np.random.seed(1337)
     params_init = np.random.rand(n_params)
 
