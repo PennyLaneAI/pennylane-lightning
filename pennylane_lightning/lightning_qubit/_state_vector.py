@@ -311,7 +311,7 @@ class LightningStateVector:
 
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
-                    self._apply_lightning([operation.then_op])
+                    self._apply_lightning([operation.base])
             elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode

@@ -52,10 +52,10 @@ template <class StateTensorT> class MeasurementsTNCuda {
     using PrecisionT = typename StateTensorT::PrecisionT;
     using ComplexT = typename StateTensorT::ComplexT;
 
-    StateTensorT &state_tensor_;
+    const StateTensorT &state_tensor_;
 
   public:
-    explicit MeasurementsTNCuda(StateTensorT &state_tensor)
+    explicit MeasurementsTNCuda(const StateTensorT &state_tensor)
         : state_tensor_(state_tensor){};
 
     /**
