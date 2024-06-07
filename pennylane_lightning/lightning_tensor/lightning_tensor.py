@@ -34,7 +34,7 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._measurements import LightningMeasurements
+from ._measurements import LightningTensorMeasurements
 from ._state_tensor import LightningStateTensor
 
 try:
@@ -150,7 +150,7 @@ def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:
     """
     state.reset_state()
     state.get_final_state(circuit)
-    return LightningMeasurements(state).measure_final_state(circuit)
+    return LightningTensorMeasurements(state).measure_final_state(circuit)
 
 
 def accepted_observables(obs: Operator) -> bool:

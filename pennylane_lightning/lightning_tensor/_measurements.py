@@ -32,7 +32,7 @@ from pennylane.typing import Result, TensorLike
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
-class LightningMeasurements:
+class LightningTensorMeasurements:
     """Lightning Measurements class
 
     Measures the state provided by the LightningStateTensor class.
