@@ -192,8 +192,10 @@ class TestExpval:
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-            rel_tol = 0 if device_name != "lightning.tensor" else 0.25
-            assert np.allclose(circ(), circ_def(), tol, rtol=rel_tol)
+            if device_name != "lightning.tensor":
+                assert np.allclose(circ(), circ_def(), tol)
+            else:
+                assert np.allclose(circ(), circ_def(), rtol=0.25)
 
 
 @pytest.mark.parametrize(
