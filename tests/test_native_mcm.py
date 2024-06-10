@@ -181,7 +181,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
     [qml.PauliZ(0), qml.PauliY(1), [0], [0, 1], [1, 0], "mcm", "composite_mcm", "mcm_list"],
 )
 def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
-    """Tests that DefaultQubit handles a simple dynamic circuit with the following measurements:
+    """Tests that LightningQubit handles a simple dynamic circuit with the following measurements:
 
         * qml.counts with obs (comp basis or not), single wire, multiple wires (ordered/unordered), MCM, f(MCM), MCM list
         * qml.expval with obs (comp basis or not), MCM, f(MCM), MCM list
