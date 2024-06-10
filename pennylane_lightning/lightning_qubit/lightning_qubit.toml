@@ -27,7 +27,7 @@ PauliX                 = { properties = [ "invertible", "controllable", "differe
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
-QubitUnitary           = { properties = [ "invertible",                                  ] }
+QubitUnitary           = { properties = [ "invertible", "controllable",                  ] }
 Rot                    = { properties = [ "invertible", "controllable",                  ] }
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 RY                     = { properties = [ "invertible", "controllable", "differentiable" ] }
