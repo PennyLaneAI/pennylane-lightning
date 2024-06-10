@@ -100,7 +100,7 @@ void registerBackendSpecificInfo(py::module_ &m) {
     m.def("is_gpu_supported", &isCuQuantumSupported,
           py::arg("device_number") = 0,
           "Checks if the given GPU device meets the minimum architecture "
-          "support for the PennyLane-Lightning-GPU device.");
+          "support for the `lightning.tensor` device.");
 
     m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
           "Returns the given GPU major and minor GPU support.");

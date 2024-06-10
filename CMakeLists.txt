@@ -171,19 +171,14 @@ if(ENABLE_PYTHON)
                                                         lightning_algorithms
                                                         )
 
+    target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
+                                                        "${PL_BACKEND}_observables"
+                                                        "${PL_BACKEND}_bindings"
+                                                        "${PL_BACKEND}_measurements"
+                                                        )
+
     if(NOT DEFINED PL_TENSOR)
-        target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                            "${PL_BACKEND}_algorithms"
-                                                            "${PL_BACKEND}_observables"
-                                                            "${PL_BACKEND}_bindings"
-                                                            "${PL_BACKEND}_measurements"
-                                                            )
-    else()
-        target_link_libraries("${PL_BACKEND}_ops" PRIVATE   ${PL_BACKEND} #simulator
-                                                            "${PL_BACKEND}_observables"
-                                                            "${PL_BACKEND}_bindings"
-                                                            "${PL_BACKEND}_measurements"
-                                                            )
+        target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
 
     set_target_properties("${PL_BACKEND}_ops" PROPERTIES CXX_VISIBILITY_PRESET hidden)
