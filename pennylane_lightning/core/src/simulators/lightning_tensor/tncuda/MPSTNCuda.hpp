@@ -249,7 +249,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                 /* const void * */ &cutoff,
                 /* size_t */ sizeof(cutoff)));
         } else {
-
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
                 /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
                 /* cutensornetState_t */ BaseType::getQuantumState(),

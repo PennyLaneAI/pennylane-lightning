@@ -30,6 +30,7 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
+# pylint: disable=too-many-instance-attributes
 class LightningStateTensor:
     """Lightning state-tensor class.
 
@@ -45,6 +46,7 @@ class LightningStateTensor:
         device_name(string): state tensor device name. Options: ["lightning.tensor"]
     """
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         num_wires,
