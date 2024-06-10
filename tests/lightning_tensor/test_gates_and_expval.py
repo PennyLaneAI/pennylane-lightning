@@ -93,7 +93,7 @@ def circuit_ansatz(params, wires):
     qml.adjoint(qml.SISWAP(wires=[wires[0], wires[1]]))
     qml.SISWAP(wires=[wires[4], wires[5]])
     qml.SQISW(wires=[wires[1], wires[0]])
-    qml.CSWAP(wires=[wires[3], wires[4], wires[5]])
+    qml.CSWAP(wires=[wires[2], wires[4], wires[5]])
     qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
     qml.CY(wires=[wires[0], wires[2]])
     qml.CZ(wires=[wires[1], wires[3]])

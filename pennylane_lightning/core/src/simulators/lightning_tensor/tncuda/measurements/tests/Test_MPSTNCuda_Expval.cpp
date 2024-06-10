@@ -51,7 +51,9 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
         mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
-        mps_state.get_final_state();
+        double cutoff = 1e-16;
+        std::string cutoff_mode = "rel";
+        mps_state.get_final_state(cutoff, cutoff_mode);
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));

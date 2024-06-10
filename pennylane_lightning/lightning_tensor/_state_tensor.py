@@ -38,17 +38,27 @@ class LightningStateTensor:
     Args:
         num_wires(int): the number of wires to initialize the device with
         max_bond_dim(int): maximum bond dimension for the state tensor
+        cutoff(float): threshold for singular value truncation. Default is 0.
+        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         dtype: Datatypes for state-tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state tensor device name. Options: ["lightning.tensor"]
     """
 
     def __init__(
-        self, num_wires, max_bond_dim, dtype=np.complex128, device_name="lightning.tensor"
+        self,
+        num_wires,
+        max_bond_dim,
+        cutoff: float = 1e-16,
+        cutoff_mode: str = "abs",
+        dtype=np.complex128,
+        device_name="lightning.tensor",
     ):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._max_bond_dim = max_bond_dim
+        self._cutoff = cutoff
+        self._cutoff_mode = cutoff_mode
         self._dtype = dtype
 
         if device_name != "lightning.tensor":
@@ -182,6 +192,6 @@ class LightningStateTensor:
 
         """
         self.apply_operations(circuit.operations)
-        self.state_tensor.getFinalState()
+        self.state_tensor.getFinalState(self._cutoff, self._cutoff_mode)
 
         return self

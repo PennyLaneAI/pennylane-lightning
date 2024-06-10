@@ -66,7 +66,10 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "Create Basis State on GPU.")
         .def(
             "getFinalState",
-            [](StateTensorT &state_tensor) { state_tensor.get_final_state(); },
+            [](StateTensorT &state_tensor, double cutoff,
+               std::string cutoff_mode) {
+                state_tensor.get_final_state(cutoff, cutoff_mode);
+            },
             "Get the final state.")
         .def("reset", &StateTensorT::reset, "Reset the statevector.");
 }

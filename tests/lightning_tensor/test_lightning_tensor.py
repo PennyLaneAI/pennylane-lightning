@@ -80,6 +80,12 @@ def test_invalid_shots():
         LightningTensor(shots=5)
 
 
+def test_invalid_cutoff_mode():
+    """Test that an error is raised if an invalid cutoff mode is provided."""
+    with pytest.raises(ValueError):
+        LightningTensor(wires=2, cutoff_mode="invalid_mode")
+
+
 def test_support_derivatives():
     """Test that the device does not support derivatives yet."""
     dev = LightningTensor(wires=2)

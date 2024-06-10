@@ -210,7 +210,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     /**
      * @brief Get final state of the quantum circuit.
      */
-    void get_final_state() {
+    void get_final_state(double cutoff = 0 /*default*/,
+                         std::string cutoff_mode = "abs" /*default*/) {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
             MPSFinalized_ = MPSStatus::MPSFinalizedSet;
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
@@ -234,6 +235,29 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             /* const void * */ &algo,
             /* size_t */ sizeof(algo)));
+
+        PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
+                        "Cutoff should be greater than or equal to "
+                        "zero.");
+
+        if (cutoff_mode == "rel") {
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetStateAttributes_t */
+                CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF,
+                /* const void * */ &cutoff,
+                /* size_t */ sizeof(cutoff)));
+        } else {
+
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetStateAttributes_t */
+                CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF,
+                /* const void * */ &cutoff,
+                /* size_t */ sizeof(cutoff)));
+        }
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),

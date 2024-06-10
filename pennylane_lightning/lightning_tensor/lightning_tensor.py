@@ -191,6 +191,8 @@ class LightningTensor(Device):
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
         max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
+        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -199,12 +201,33 @@ class LightningTensor(Device):
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         **kwargs: keyword arguments.
+
+    **Example**
+
+    .. code-block:: python
+
+        import pennylane as qml
+
+        num_qubits = 100
+
+        dev = qml.device("lightning.tensor", wires=num_qubits)
+
+        @qml.qnode(dev)
+        def circuit(num_qubits):
+            for qubit in range(0, num_qubits - 1):
+                qml.CZ(wires=[qubit, qubit + 1])
+                qml.X(wires=[qubit])
+                qml.Z(wires=[qubit + 1])
+            return qml.expval(qml.Z(0))
+
+    >>> print(circuit(num_qubits))
+    -1.0
     """
 
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "c_dtype")
+    _device_options = ("backend", "c_dtype", "max_bond_dim", "cutoff", "cutoff_mode", "method")
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -214,6 +237,8 @@ class LightningTensor(Device):
         *,
         wires=None,
         max_bond_dim=128,
+        cutoff: float = 0,
+        cutoff_mode: str = "abs",
         backend="cutensornet",
         method="mps",
         shots=None,
@@ -228,6 +253,9 @@ class LightningTensor(Device):
 
         if not accepted_methods(method):
             raise ValueError(f"Unsupported method: {method}")
+
+        if cutoff_mode not in ["rel", "abs"]:
+            raise ValueError(f"Unsupported cutoff mode: {cutoff_mode}")
 
         if shots is not None:
             raise ValueError("lightning.tensor does not support finite shots.")
@@ -256,6 +284,8 @@ class LightningTensor(Device):
 
         self._num_wires = len(self.wires) if self.wires else 0
         self._max_bond_dim = max_bond_dim
+        self._cutoff = cutoff
+        self._cutoff_mode = cutoff_mode
         self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
@@ -287,7 +317,9 @@ class LightningTensor(Device):
 
     def _state_tensor(self):
         """Return the state tensor object."""
-        return LightningStateTensor(self._num_wires, self._max_bond_dim, self._c_dtype)
+        return LightningStateTensor(
+            self._num_wires, self._max_bond_dim, self._cutoff, self._cutoff_mode, self._c_dtype
+        )
 
     dtype = c_dtype
 
@@ -330,7 +362,6 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
 
-        # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
         config = self._setup_execution_config(execution_config)
 
         program = TransformProgram()
