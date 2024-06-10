@@ -29,10 +29,10 @@ using Pennylane::Util::LightningException;
 
 TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
                            (float, double)) {
-    using StateTensorT = TestType;
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
-    using NamedObsT = NamedObsTNCuda<StateTensorT>;
+    using TensorNetT = TestType;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
+    using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
     SECTION("Test get obs name") {
         auto obs = NamedObsT("PauliX", {0});
@@ -80,10 +80,10 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObs", "[Observables]", (MPSTNCuda),
 }
 
 TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
-    using StateTensorT = MPSTNCuda<TestType>;
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
-    using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
+    using TensorNetT = MPSTNCuda<TestType>;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
+    using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
 
     SECTION("HermitianObs only accepts correct arguments") {
         auto ob1 =
@@ -144,12 +144,12 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
 
 TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
     {
-        using StateTensorT = MPSTNCuda<TestType>;
-        using PrecisionT = typename StateTensorT::PrecisionT;
-        using ComplexT = typename StateTensorT::ComplexT;
-        using NamedObsT = NamedObsTNCuda<StateTensorT>;
-        using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
-        using HermitianObsT = HermitianObsTNCuda<StateTensorT>;
+        using TensorNetT = MPSTNCuda<TestType>;
+        using PrecisionT = typename TensorNetT::PrecisionT;
+        using ComplexT = typename TensorNetT::ComplexT;
+        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
+        using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
 
         SECTION("Overlapping wires throw an exception") {
             auto ob1 = std::make_shared<HermitianObsT>(
@@ -249,12 +249,12 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 
 TEMPLATE_TEST_CASE("[Hamiltonian]", "[Observables]", float, double) {
     {
-        using StateTensorT = MPSTNCuda<TestType>;
-        using PrecisionT = typename StateTensorT::PrecisionT;
-        using ComplexT = typename StateTensorT::ComplexT;
-        using NamedObsT = NamedObsTNCuda<StateTensorT>;
-        using TensorProdObsT = TensorProdObsTNCuda<StateTensorT>;
-        using HamiltonianT = HamiltonianTNCuda<StateTensorT>;
+        using TensorNetT = MPSTNCuda<TestType>;
+        using PrecisionT = typename TensorNetT::PrecisionT;
+        using ComplexT = typename TensorNetT::ComplexT;
+        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
+        using HamiltonianT = HamiltonianTNCuda<TensorNetT>;
 
         const auto h = PrecisionT{0.809}; // half of the golden ratio
 
