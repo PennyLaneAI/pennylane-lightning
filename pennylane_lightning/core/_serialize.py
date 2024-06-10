@@ -95,17 +95,13 @@ class QuantumScriptSerializer:
                 ) from exception
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
-
-        self.statevector_c64 = (
-            lightning_ops.StateTensorC64
-            if device_name == "lightning.tensor"
-            else lightning_ops.StateVectorC64
-        )
-        self.statevector_c128 = (
-            lightning_ops.StateTensorC128
-            if device_name == "lightning.tensor"
-            else lightning_ops.StateVectorC128
-        )
+        
+        if device_name == "lightning.tensor":
+            self.statetensor_c64 = lightning_ops.StateTensorC64
+            self.statetensor_c128 = lightning_ops.StateTensorC128
+        else:
+            self.statevector_c64 = StateVectorC64
+            self.statevector_c128 = StateVectorC128
 
         self.named_obs_c64 = lightning_ops.observables.NamedObsC64
         self.named_obs_c128 = lightning_ops.observables.NamedObsC128
@@ -153,6 +149,8 @@ class QuantumScriptSerializer:
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
             return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
+        if self.device_name == "lightning.tensor":
+            return self.statetensor_c64 if self.use_csingle else self.statetensor_c128
         return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
     @property
