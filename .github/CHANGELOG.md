@@ -32,7 +32,7 @@
 
 ### Improvements
 
-* Change the type of `tensor network` objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
+* Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
   [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759) 
 
 * Refactor C++ library names for `lightning.tensor`.
