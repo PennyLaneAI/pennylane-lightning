@@ -219,7 +219,7 @@ def test_simple_dynamic_circuit(shots, measure_f, postselect, meas_obj):
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("reset", [False, True])
 def test_multiple_measurements_and_reset(postselect, reset):
-    """Tests that DefaultQubit handles a circuit with a single mid-circuit measurement with reset
+    """Tests that LightningQubit handles a circuit with a single mid-circuit measurement with reset
     and a conditional gate. Multiple measurements of the mid-circuit measurement value are
     performed. This function also tests `reset` parametrizing over the parameter."""
     shots = 5000
@@ -314,7 +314,7 @@ def test_composite_mcms(mcm_f, measure_f):
     ],
 )
 def test_counts_return_type(mcm_f):
-    """Tests that DefaultQubit returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
+    """Tests that LightningQubit returns the same keys for ``qml.counts`` measurements with ``dynamic_one_shot`` and ``defer_measurements``."""
     shots = 500
 
     dq = qml.device("default.qubit", shots=shots)
