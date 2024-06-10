@@ -262,7 +262,7 @@ def test_multiple_measurements_and_reset(postselect, reset):
 )
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 def test_composite_mcms(mcm_f, measure_f):
-    """Tests that DefaultQubit handles a circuit with a composite mid-circuit measurement and a
+    """Tests that LightningQubit handles a circuit with a composite mid-circuit measurement and a
     conditional gate. A single measurement of a composite mid-circuit measurement is performed
     at the end."""
 
