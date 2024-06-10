@@ -111,10 +111,9 @@ class StateVectorKokkos final
                 Kokkos::initialize(kokkos_args);
             }
         }
-        if (num_qubits > 0) {
-            data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
-            setBasisState(0U);
-        }
+
+        data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
+        setBasisState(0U);
     };
 
     /**
