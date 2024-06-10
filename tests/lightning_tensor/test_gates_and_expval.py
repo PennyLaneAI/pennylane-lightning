@@ -165,7 +165,7 @@ def test_integration_for_all_supported_gates(returns):
     operations"""
     num_wires = 8
     dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), maxBondDim=16, c_dtype=np.complex128)
+    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=16, c_dtype=np.complex128)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))

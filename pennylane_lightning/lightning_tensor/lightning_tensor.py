@@ -206,7 +206,7 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        maxBondDim=128,
+        max_bond_dim=128,
         backend="cutensornet",
         method="mps",
         shots=None,
@@ -231,7 +231,7 @@ class LightningTensor(Device):
         if wires is None:
             raise ValueError("The number of wires must be specified.")
 
-        if not isinstance(maxBondDim, int) or maxBondDim < 1:
+        if not isinstance(max_bond_dim, int) or max_bond_dim < 1:
             raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
         for arg in kwargs:
@@ -248,7 +248,7 @@ class LightningTensor(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._num_wires = len(self.wires) if self.wires else 0
-        self._maxBondDim = maxBondDim
+        self._max_bond_dim = max_bond_dim
         self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
@@ -280,7 +280,7 @@ class LightningTensor(Device):
 
     def _state_tensor(self):
         """Return the state tensor object."""
-        return LightningStateTensor(self._num_wires, self._maxBondDim, self._c_dtype)
+        return LightningStateTensor(self._num_wires, self._max_bond_dim, self._c_dtype)
 
     dtype = c_dtype
 

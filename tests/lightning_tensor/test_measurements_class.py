@@ -40,7 +40,7 @@ PHI = np.linspace(0.32, 1, 3)
 )
 def lightning_st(request):
     """Fixture for creating a LightningStateTensor object."""
-    return LightningStateTensor(num_wires=5, maxBondDim=128, dtype=request.param)
+    return LightningStateTensor(num_wires=5, max_bond_dim=128, dtype=request.param)
 
 
 class TestMeasurementFunction:

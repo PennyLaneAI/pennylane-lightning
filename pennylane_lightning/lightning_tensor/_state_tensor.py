@@ -37,23 +37,25 @@ class LightningStateTensor:
 
     Args:
         num_wires(int): the number of wires to initialize the device with
-        maxBondDim(int): maximum bond dimension for the state tensor
+        max_bond_dim(int): maximum bond dimension for the state tensor
         dtype: Datatypes for state-tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state tensor device name. Options: ["lightning.tensor"]
     """
 
-    def __init__(self, num_wires, maxBondDim, dtype=np.complex128, device_name="lightning.tensor"):
+    def __init__(
+        self, num_wires, max_bond_dim, dtype=np.complex128, device_name="lightning.tensor"
+    ):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
-        self._maxBondDim = maxBondDim
+        self._max_bond_dim = max_bond_dim
         self._dtype = dtype
 
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        self._tensor_state = self._state_dtype()(self._num_wires, self._maxBondDim)
+        self._tensor_state = self._state_dtype()(self._num_wires, self._max_bond_dim)
 
     @property
     def dtype(self):
