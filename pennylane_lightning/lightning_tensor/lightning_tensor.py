@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
-It is a device to perform tensor network simulation of a quantum circuit. 
+It is a device to perform tensor network simulations of quantum circuits using `cutensornet`. 
 """
 from dataclasses import replace
 from numbers import Number
@@ -181,9 +181,16 @@ class LightningTensor(Device):
 
     A device to perform tensor network operations on a quantum circuit.
 
+    This device is designed to simulate large-scale quantum circuits using tensor network methods. For
+    samll circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
+    recommended.
+
+    Currently, only the Matrix Product State (MPS) method is supported, based on ``cutensornet`` backends.
+
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -191,7 +198,7 @@ class LightningTensor(Device):
             statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments. TODO add when cuTensorNet MPS backend is available as a prototype.
+        **kwargs: keyword arguments.
     """
 
     # pylint: disable=too-many-instance-attributes
