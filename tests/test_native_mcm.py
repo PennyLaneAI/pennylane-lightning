@@ -31,7 +31,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 
 def get_device(wires, **kwargs):
     kwargs.setdefault("shots", None)
-    return qml.device("lightning.qubit", wires=wires, **kwargs)
+    return qml.device(device_name, wires=wires, **kwargs)
 
 
 def test_all_invalid_shots_circuit():
