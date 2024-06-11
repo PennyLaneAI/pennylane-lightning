@@ -17,7 +17,7 @@ Class implementation for state-tensor manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import StateTensorC64, StateTensorC128
+    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
 except ImportError:
     pass
 
@@ -99,7 +99,7 @@ class LightningStateTensor:
 
         Returns: the state tensor class
         """
-        return StateTensorC128 if self.dtype == np.complex128 else StateTensorC64
+        return TensorNetC128 if self.dtype == np.complex128 else TensorNetC64
 
     def reset_state(self):
         """Reset the device's state tensor"""
