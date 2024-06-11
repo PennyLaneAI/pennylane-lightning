@@ -19,6 +19,5 @@
 
 #ifndef CONFIG_H
 #define CONFIG_H
-#define SCIPY_LIBS_PATH                                                        \
-    "/home/shuli/env/lib/python3.10/site-packages/scipy.libs"
+#define SCIPY_LIBS_PATH ""
 #endif
