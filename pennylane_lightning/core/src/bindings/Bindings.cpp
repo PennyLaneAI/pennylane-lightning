@@ -97,6 +97,6 @@ PYBIND11_MODULE(
     // Register bindings for backend-specific info:
     registerBackendSpecificInfo(m);
 
-    registerLightningClassBindings<StateTensorBackends>(m);
+    registerLightningClassBindings<TensorNetBackends>(m);
 }
 #endif

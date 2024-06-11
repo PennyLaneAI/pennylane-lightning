@@ -42,15 +42,15 @@ using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 namespace py = pybind11;
 
 namespace Pennylane::LightningTensor::TNCuda {
-using StateTensorBackends =
+using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 
 /**
  * @brief Get a gate kernel map for a statetensor.
  */
-template <class StateTensorT, class PyClass>
+template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerGatesForStateTensor<StateTensorT>(pyclass);
+    registerGatesForTensorNet<TensorNet>(pyclass);
 
     pyclass
         .def(py::init<const std::size_t,
@@ -59,19 +59,19 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "setBasisState",
-            [](StateTensorT &state_tensor,
+            [](TensorNet &tensor_network,
                std::vector<std::size_t> &basisState) {
-                state_tensor.setBasisState(basisState);
+                tensor_network.setBasisState(basisState);
             },
             "Create Basis State on GPU.")
         .def(
             "getFinalState",
-            [](StateTensorT &state_tensor, double cutoff,
+            [](TensorNet &tensor_network, double cutoff,
                std::string cutoff_mode) {
-                state_tensor.get_final_state(cutoff, cutoff_mode);
+                tensor_network.get_final_state(cutoff, cutoff_mode);
             },
             "Get the final state.")
-        .def("reset", &StateTensorT::reset, "Reset the statevector.");
+        .def("reset", &TensorNet::reset, "Reset the statevector.");
 }
 
 /**

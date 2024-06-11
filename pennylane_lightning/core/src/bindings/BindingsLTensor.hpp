@@ -50,16 +50,16 @@ namespace Pennylane {
 /**
  * @brief Register observable classes.
  *
- * @tparam StateTensorT
+ * @tparam TensorNetT
  * @param m Pybind module
  */
-template <class StateTensorT>
+template <class TensorNetT>
 void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
-        typename StateTensorT::PrecisionT; // Statetensor's precision.
+        typename TensorNetT::PrecisionT; // Statetensor's precision.
     using ComplexT =
-        typename StateTensorT::ComplexT; // Statetensor's complex type.
-    using ParamT = PrecisionT;           // Parameter's data precision
+        typename TensorNetT::ComplexT; // Statetensor's complex type.
+    using ParamT = PrecisionT;         // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -69,11 +69,11 @@ void registerBackendAgnosticObservables(py::module_ &m) {
 
     std::string class_name;
 
-    using Observable = ObservableTNCuda<StateTensorT>;
-    using NamedObs = NamedObsTNCuda<StateTensorT>;
-    using HermitianObs = HermitianObsTNCuda<StateTensorT>;
-    using TensorProdObs = TensorProdObsTNCuda<StateTensorT>;
-    using Hamiltonian = HamiltonianTNCuda<StateTensorT>;
+    using Observable = ObservableTNCuda<TensorNetT>;
+    using NamedObs = NamedObsTNCuda<TensorNetT>;
+    using HermitianObs = HermitianObsTNCuda<TensorNetT>;
+    using TensorProdObs = TensorProdObsTNCuda<TensorNetT>;
+    using Hamiltonian = HamiltonianTNCuda<TensorNetT>;
 
     class_name = "ObservableC" + bitsize;
     py::class_<Observable, std::shared_ptr<Observable>>(m, class_name.c_str(),
@@ -189,12 +189,12 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
 /**
  * @brief Templated class to build lightning class bindings.
  *
- * @tparam StateVectorT State vector type
+ * @tparam TensorNetT Tensor network type
  * @param m Pybind11 module.
  */
-template <class StateTensorT> void lightningClassBindings(py::module_ &m) {
+template <class TensorNetT> void lightningClassBindings(py::module_ &m) {
     using PrecisionT =
-        typename StateTensorT::PrecisionT; // StateTensor's precision.
+        typename TensorNetT::PrecisionT; // StateTensor's precision.
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -204,9 +204,9 @@ template <class StateTensorT> void lightningClassBindings(py::module_ &m) {
     //***********************************************************************//
     std::string class_name = "StateTensorC" + bitsize;
     auto pyclass =
-        py::class_<StateTensorT>(m, class_name.c_str(), py::module_local());
+        py::class_<TensorNetT>(m, class_name.c_str(), py::module_local());
 
-    registerBackendClassSpecificBindings<StateTensorT>(pyclass);
+    registerBackendClassSpecificBindings<TensorNetT>(pyclass);
 
     //***********************************************************************//
     //                              Observables
@@ -214,24 +214,24 @@ template <class StateTensorT> void lightningClassBindings(py::module_ &m) {
     /* Observables submodule */
     py::module_ obs_submodule =
         m.def_submodule("observables", "Submodule for observables classes.");
-    registerBackendAgnosticObservables<StateTensorT>(obs_submodule);
+    registerBackendAgnosticObservables<TensorNetT>(obs_submodule);
 
     //***********************************************************************//
     //                             Measurements
     //***********************************************************************//
     class_name = "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<MeasurementsTNCuda<StateTensorT>>(
+    auto pyclass_measurements = py::class_<MeasurementsTNCuda<TensorNetT>>(
         m, class_name.c_str(), py::module_local());
 
-    pyclass_measurements.def(py::init<const StateTensorT &>());
-    registerBackendAgnosticMeasurements<StateTensorT>(pyclass_measurements);
+    pyclass_measurements.def(py::init<const TensorNetT &>());
+    registerBackendAgnosticMeasurements<TensorNetT>(pyclass_measurements);
 }
 
 template <typename TypeList>
 void registerLightningClassBindings(py::module_ &m) {
     if constexpr (!std::is_same_v<TypeList, void>) {
-        using StateTensorT = typename TypeList::Type;
-        lightningClassBindings<StateTensorT>(m);
+        using TensorNetT = typename TypeList::Type;
+        lightningClassBindings<TensorNetT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
         py::register_local_exception<Pennylane::Util::LightningException>(
             m, "LightningException");
