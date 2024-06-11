@@ -192,11 +192,7 @@ class TestExpval:
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-            if device_name != "lightning.tensor":
-                assert np.allclose(circ(), circ_def(), tol)
-            else:
-                assert np.allclose(circ(), circ_def(), rtol=0.25)
-
+            assert np.allclose(circ(), circ_def(), tol)
 
 @pytest.mark.parametrize(
     "diff_method",
