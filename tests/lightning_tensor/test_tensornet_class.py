@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the state tensor functions.
+Unit tests for the tensornet functions.
 """
 
 import math
@@ -25,7 +25,7 @@ from pennylane import DeviceError
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
-    pytest.skip("Skipping tests for the state tensor class.", allow_module_level=True)
+    pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
 else:
     from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
@@ -43,7 +43,6 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name):
     assert tensornet.dtype == dtype
     assert tensornet.device_name == device_name
     assert tensornet.num_wires == num_wires
-    assert tensornet.wires == Wires(range(num_wires))
 
 
 def test_wrong_device_name():

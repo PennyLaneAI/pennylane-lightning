@@ -53,13 +53,12 @@ class LightningTensorNet:
         num_wires,
         max_bond_dim,
         method: str = "mps",
-        cutoff: float = 1e-16,
+        cutoff: float = 0,
         cutoff_mode: str = "abs",
         dtype=np.complex128,
         device_name="lightning.tensor",
     ):
         self._num_wires = num_wires
-        self._wires = Wires(range(num_wires))
         self._max_bond_dim = max_bond_dim
         self._method = method
         self._cutoff = cutoff
@@ -81,11 +80,6 @@ class LightningTensorNet:
     def device_name(self):
         """Returns the tensor network device name."""
         return self._device_name
-
-    @property
-    def wires(self):
-        """All wires that can be addressed on this device"""
-        return self._wires
 
     @property
     def num_wires(self):
