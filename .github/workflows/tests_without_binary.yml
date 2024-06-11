@@ -97,7 +97,6 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning package
-        #if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu' || matrix.pl_backend == 'lightning_tensor'}}
         if: ${{ contains(fromJson('["lightning_kokkos", "lightning_gpu", "lightning_tensor"]'), matrix.pl_backend) }}
         run: |
           cd main
