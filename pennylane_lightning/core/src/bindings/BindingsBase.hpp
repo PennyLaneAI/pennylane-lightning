@@ -77,6 +77,7 @@ void registerGatesForStateVector(PyClass &pyclass) {
     });
 }
 
+// TODO: Unify registerTensor and registerGatesForStateVector
 /**
  * @brief Register matrix.
  */
@@ -97,6 +98,7 @@ void registerTensor(
                                   conv_matrix);
 }
 
+// TODO: Unify registerGatesForTensorNet and registerMatrix
 /**
  * @brief Register TensorNet class to pybind.
  *
