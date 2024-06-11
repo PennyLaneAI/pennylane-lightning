@@ -63,7 +63,7 @@ def test_invalid_method(method):
 
 
 def test_invalid_bonddims():
-    """Test that an error is raised if bonddims are less than 1."""
+    """Test that an error is raised if bond dimensions are less than 1."""
     with pytest.raises(ValueError):
         LightningTensor(wires=5, max_bond_dim=0)
 
