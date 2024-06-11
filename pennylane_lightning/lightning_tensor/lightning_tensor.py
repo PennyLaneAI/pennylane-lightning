@@ -190,7 +190,11 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
-        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation.
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+            Note that 128 is chosen as a default value since MPS gate split performance on GPU with Nvidia
+            A100 80 GB for bond dimension 128 is comparable to NumPy on CPU. Compute speed of MPS gate split
+            with cutensornet on GPU is faster than NumPy on CPU only when the bond dimension is large. For more
+            details, please visit https://developer.nvidia.com/cuquantum-sdk.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
         cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
