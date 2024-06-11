@@ -240,8 +240,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* size_t */ sizeof(algo)));
 
         PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
-                        "Cutoff should be greater than or equal to "
-                        "zero.");
+                        "cutoff_mode should either 'rel' or 'abs'.");
 
         cutensornetStateAttributes_t svd_cutoff_mode =
             CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF;
