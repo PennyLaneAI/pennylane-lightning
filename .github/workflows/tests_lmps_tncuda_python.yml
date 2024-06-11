@@ -18,7 +18,6 @@ on:
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lmps_tncuda_python.yml'
-      - pennylane_lightning/core/src/**
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
