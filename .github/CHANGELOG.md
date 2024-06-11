@@ -32,6 +32,10 @@
 
 ### Improvements
 
+* Rationalize MCM tests, removing most end-to-end tests from the native MCM test file,
+  but keeping one that validates multiple mid-circuit measurements with any allowed return.
+  [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
+
 * Refactor C++ library names for `lightning.tensor`.
   [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755) 
 
