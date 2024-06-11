@@ -88,6 +88,7 @@ auto getBackendInfo() -> py::dict {
  *
  * @param m Pybind11 module.
  */
+// TODO Move this method to a separate module for both LGPU and LTensor usage.
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
     m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");

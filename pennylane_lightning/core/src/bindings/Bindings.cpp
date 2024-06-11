@@ -15,9 +15,7 @@
  * @file Bindings.cpp
  * Export C++ functions to Python using Pybind.
  */
-#ifndef _ENABLE_PLTENSOR
 #include "Bindings.hpp"
-#endif
 
 #ifdef _ENABLE_PLGPU_MPI
 #include "BindingsMPI.hpp"
@@ -31,20 +29,17 @@
 #define LIGHTNING_MODULE_NAME lightning_kokkos_ops
 #elif _ENABLE_PLGPU == 1
 #define LIGHTNING_MODULE_NAME lightning_gpu_ops
-#endif
-
-#ifdef _ENABLE_PLTENSOR
-#include "BindingsLTensor.hpp"
+#elif _ENABLE_PLTENSOR == 1
 #define LIGHTNING_TENSOR_MODULE_NAME lightning_tensor_ops
 #endif
 
-#if defined(LIGHTNING_MODULE_NAME)
 /// @cond DEV
 namespace {
 using namespace Pennylane;
 } // namespace
 /// @endcond
 
+#if defined(LIGHTNING_MODULE_NAME)
 /**
  * @brief Add Lightning State-vector C++ classes, methods and functions to
  * Python module.
@@ -77,12 +72,6 @@ PYBIND11_MODULE(
 #endif
 
 #if defined(LIGHTNING_TENSOR_MODULE_NAME)
-
-/// @cond DEV
-namespace {
-using namespace Pennylane;
-} // namespace
-/// @endcond
 /**
  * @brief Add LightningTensor C++ classes, methods and functions to Python
  * module.
@@ -97,6 +86,6 @@ PYBIND11_MODULE(
     // Register bindings for backend-specific info:
     registerBackendSpecificInfo(m);
 
-    registerLightningClassBindings<TensorNetBackends>(m);
+    registerLightningTensorClassBindings<TensorNetBackends>(m);
 }
 #endif

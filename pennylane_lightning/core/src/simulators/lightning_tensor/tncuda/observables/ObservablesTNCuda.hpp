@@ -264,6 +264,11 @@ class HermitianObsTNCuda : public ObservableTNCuda<TensorNetT> {
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
+
+    /**
+     * @brief Get the matrix of the Hermitian observable.
+     */
+    [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 };
 
 /**
@@ -424,6 +429,14 @@ class TensorProdObsTNCuda : public ObservableTNCuda<TensorNetT> {
         }
         return obs_stream.str();
     }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> {
+        return obs_;
+    };
 };
 
 /**
@@ -534,5 +547,19 @@ class HamiltonianTNCuda : public ObservableTNCuda<TensorNetT> {
         ss << "]}";
         return ss.str();
     }
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> {
+        return obs_;
+    };
+
+    /**
+     * @brief Get the coefficients of the observable.
+     */
+    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
+        return BaseType::getCoeffs();
+    };
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Observables
