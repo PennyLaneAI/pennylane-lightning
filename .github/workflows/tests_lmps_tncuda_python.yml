@@ -125,10 +125,7 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
-          
-          pip_path=$(which python)
-          echo "PIP Path => $pip_path"
-          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+          echo "pip=$py_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
