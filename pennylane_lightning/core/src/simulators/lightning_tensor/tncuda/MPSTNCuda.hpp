@@ -243,23 +243,19 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "Cutoff should be greater than or equal to "
                         "zero.");
 
+        cutensornetStateAttributes_t svd_cutoff_mode =
+            CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF;
+
         if (cutoff_mode == "rel") {
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
-                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-                /* cutensornetState_t */ BaseType::getQuantumState(),
-                /* cutensornetStateAttributes_t */
-                CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF,
-                /* const void * */ &cutoff,
-                /* size_t */ sizeof(cutoff)));
-        } else {
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
-                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-                /* cutensornetState_t */ BaseType::getQuantumState(),
-                /* cutensornetStateAttributes_t */
-                CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF,
-                /* const void * */ &cutoff,
-                /* size_t */ sizeof(cutoff)));
+            svd_cutoff_mode = CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
         }
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
+            /* const void * */ &cutoff,
+            /* size_t */ sizeof(cutoff)));
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
