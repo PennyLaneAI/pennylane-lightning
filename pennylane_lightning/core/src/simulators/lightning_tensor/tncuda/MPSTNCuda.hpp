@@ -209,9 +209,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     /**
      * @brief Set MPS final state of the quantum circuit.
+     *
+     * @param cutoff Cutoff value for SVD decomposition. Default is 0.
+     * @param cutoff_mode Cutoff mode for SVD decomposition. Default is "abs".
      */
-    void set_mps_final_state(double cutoff = 0 /*default*/,
-                             std::string cutoff_mode = "abs" /*default*/) {
+    void set_mps_final_state(double cutoff = 0,
+                             std::string cutoff_mode = "abs") {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
             MPSFinalized_ = MPSStatus::MPSFinalizedSet;
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(

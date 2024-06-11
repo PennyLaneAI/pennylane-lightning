@@ -27,7 +27,6 @@ import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
-from pennylane.wires import Wires
 
 
 # pylint: disable=too-many-instance-attributes
