@@ -200,7 +200,16 @@ class TestExpval:
 
 @pytest.mark.parametrize(
     "diff_method",
-    ("parameter-shift", "adjoint" if device_name != "lightning.tensor" else "parameter-shift"),
+    [
+        "parameter-shift",
+        pytest.param(
+            "adjoint",
+            marks=pytest.mark.skipif(
+                device_name == "lightning.tensor",
+                reason="lightning.tensor does not support the adjoint method",
+            ),
+        ),
+    ],
 )
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""

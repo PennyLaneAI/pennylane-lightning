@@ -163,7 +163,7 @@ class LightningTensorNet:
                     method(operation.matrix, wires, False)
 
     def apply_operations(self, operations):
-        """Append operations to underly graph."""
+        """Append operations to the tensor network graph."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):

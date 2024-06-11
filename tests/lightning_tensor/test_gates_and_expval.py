@@ -17,10 +17,9 @@ Tests for the expectation value calculations on the LightningTensor device.
 
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from conftest import PHI, THETA, LightningDevice, device_name
 from pennylane import DeviceError
 from pennylane import numpy as np
-from pennylane.devices import DefaultQubit
 
 if device_name != "lightning.tensor":
     pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
@@ -74,7 +73,7 @@ def circuit_ansatz(params, wires):
         qml.matrix(qml.PauliX([wires[1]])), control_wires=[wires[0]], wires=wires[1]
     )
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
-    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[wires[0], wires[1]]),
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[wires[0], wires[1]])
     qml.PauliX(wires=wires[1])
     qml.PauliY(wires=wires[2])
     qml.PauliZ(wires=wires[3])
@@ -120,7 +119,7 @@ def circuit_ansatz(params, wires):
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
     qml.BlockEncode([[0.1, 0.2], [0.3, 0.4]], wires=[wires[0], wires[3]])
-    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=(wires[1]))
+    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=wires[1])
 
 
 @pytest.mark.parametrize(
@@ -193,16 +192,20 @@ def test_state_prep_not_support(qubit_device, theta, phi):
     dev = qubit_device(wires=3)
     obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
 
-    @qml.qnode(dev)
-    def circuit_dev():
-        qml.StatePrep(np.array([0, 0, 0, 1, 1, 0, 1, 0]), wires=range(3))
-        qml.RX(theta, wires=[0])
-        qml.RX(phi, wires=[1])
-        qml.RX(theta + phi, wires=[2])
-        return qml.expval(obs)
+    tape = qml.tape.QuantumScript(
+        [
+            qml.StatePrep([1.0, 0, 0, 0, 0, 0, 0, 0], wires=[0, 1, 2]),
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(theta + phi, wires=[2]),
+        ],
+        measurements=[qml.expval(obs)],
+    )
 
-    with pytest.raises(ValueError):
-        circuit_dev()
+    with pytest.raises(
+        DeviceError, match="lightning.tensor does not support initialization with a state vector."
+    ):
+        dev.execute(tape)
 
 
 class TestSparseHExpval:
@@ -251,8 +254,10 @@ class TestSparseHExpval:
 
 
 class QChem:
+    """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
+
     @pytest.mark.parametrize("diff_approach", ["parameter-shift", "finite-diff"])
-    def test_integration_H2_Hamiltonian(self, diff_approach, tol):
+    def test_integration_H2_Hamiltonian(self, diff_approach):
         symbols = ["H", "H"]
 
         geometry = np.array(
@@ -271,7 +276,6 @@ class QChem:
         singles, doubles = qml.qchem.excitations(mol.n_electrons, len(H.wires))
 
         excitations = singles + doubles
-
         num_params = len(singles + doubles)
         params = np.zeros(num_params, requires_grad=True)
 
