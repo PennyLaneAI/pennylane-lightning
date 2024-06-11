@@ -1,7 +1,7 @@
 # Release 0.37.0-dev
 
 ### New features since last release
-* Add both `python` and `pybind` layers to the `lightning.tensor` device.
+* Implement Python interface to the `lightning.tensor` device.
   [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748) 
 
 * Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
