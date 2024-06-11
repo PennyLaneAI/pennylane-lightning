@@ -38,7 +38,7 @@ PHI = np.linspace(0.32, 1, 3)
 @pytest.fixture(
     params=[np.complex64, np.complex128],
 )
-def lightning_st(request):
+def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
     return LightningTensorNet(num_wires=5, max_bond_dim=128, dtype=request.param)
 
@@ -46,27 +46,27 @@ def lightning_st(request):
 class TestMeasurementFunction:
     """Tests for the measurement method."""
 
-    def test_initialization(self, lightning_st):
+    def test_initialization(self, lightning_tn):
         """Tests for the initialization of the LightningTensorMeasurements class."""
-        tensornetwork = lightning_st
+        tensornetwork = lightning_tn
         m = LightningTensorMeasurements(tensornetwork)
 
         assert m.dtype == tensornetwork.dtype
 
-    def test_not_implemented_state_measurements(self, lightning_st):
+    def test_not_implemented_state_measurements(self, lightning_tn):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        tensornetwork = lightning_st
+        tensornetwork = lightning_tn
         m = LightningTensorMeasurements(tensornetwork)
 
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    def test_not_measure_tensor_network(self, lightning_st):
+    def test_not_measure_tensor_network(self, lightning_tn):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        tensornetwork = lightning_st
+        tensornetwork = lightning_tn
         m = LightningTensorMeasurements(tensornetwork)
 
         tape = qml.tape.QuantumScript(
