@@ -162,19 +162,16 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
           rm -rf build
   
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)\
           python -m pip install . -vv
   
       - name: Run PennyLane-Lightning-Tensor unit tests
         if: ${{ matrix.pl_backend != 'all'}}
-        env:
-          OMP_NUM_THREADS: 1
-          OMP_PROC_BIND: false
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
