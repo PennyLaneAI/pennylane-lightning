@@ -166,7 +166,6 @@ if(ENABLE_PYTHON)
                                                         )
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_observables
-                                                        lightning_gates
                                                         lightning_utils
                                                         lightning_algorithms
                                                         )
