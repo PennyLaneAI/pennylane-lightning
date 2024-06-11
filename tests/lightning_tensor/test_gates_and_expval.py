@@ -242,9 +242,9 @@ class TestSparseHExpval:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0)),
         ]
 
-        state_tensor = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, 10)
         tape = qml.tape.QuantumScript(measurements=obs)
-        m = LightningTensorMeasurements(state_tensor)
+        m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(NotImplementedError):
             m.expval(tape.measurements[0])
