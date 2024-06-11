@@ -51,6 +51,7 @@ class LightningTensorNet:
         self,
         num_wires,
         max_bond_dim,
+        method: str = "mps",
         cutoff: float = 1e-16,
         cutoff_mode: str = "abs",
         dtype=np.complex128,
@@ -59,6 +60,7 @@ class LightningTensorNet:
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._max_bond_dim = max_bond_dim
+        self._method = method
         self._cutoff = cutoff
         self._cutoff_mode = cutoff_mode
         self._dtype = dtype
@@ -180,9 +182,9 @@ class LightningTensorNet:
 
         self._apply_lightning(operations)
 
-    def get_final_state(self, circuit: QuantumScript):
+    def get_graph(self, circuit: QuantumScript):
         """
-        Get the final state that results from executing the given quantum script.
+        Get the compute graph that results from executing the given quantum script.
 
         This is an internal function that will be called by the successor to ``lightning.tensor``.
 
@@ -194,6 +196,7 @@ class LightningTensorNet:
 
         """
         self.apply_operations(circuit.operations)
-        self.tensornet.getFinalState(self._cutoff, self._cutoff_mode)
+        if self._method == "mps":
+            self.tensornet.setMPSFinalState(self._cutoff, self._cutoff_mode)
 
         return self

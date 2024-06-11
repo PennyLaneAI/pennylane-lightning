@@ -208,10 +208,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     };
 
     /**
-     * @brief Get final state of the quantum circuit.
+     * @brief Set MPS final state of the quantum circuit.
      */
-    void get_final_state(double cutoff = 0 /*default*/,
-                         std::string cutoff_mode = "abs" /*default*/) {
+    void set_mps_final_state(double cutoff = 0 /*default*/,
+                             std::string cutoff_mode = "abs" /*default*/) {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
             MPSFinalized_ = MPSStatus::MPSFinalizedSet;
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(

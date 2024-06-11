@@ -53,7 +53,7 @@ TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
                                   {{false}, {false}, {false}});
         double cutoff = 1e-16;
         std::string cutoff_mode = "rel";
-        mps_state.get_final_state(cutoff, cutoff_mode);
+        mps_state.set_mps_final_state(cutoff, cutoff_mode);
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
@@ -80,7 +80,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -90,7 +90,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -106,7 +106,7 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -207,7 +207,7 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
         // multiple times with different observables
         SECTION("Using expval") {
             mps_state.applyOperation("PauliX", {0});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
 
             auto ob = NamedObsT("Hadamard", {0});
             auto res = measure.expval(ob);
@@ -236,7 +236,7 @@ TEMPLATE_TEST_CASE("[Parametric_obs]", "[MPSTNCuda_Expval]", float, double) {
 
         SECTION("Using expval") {
             mps_state.applyOperation("PauliX", {0});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
 
             auto ob = NamedObsT("RX", {0}, {0});
             auto res = measure.expval(ob);
@@ -269,7 +269,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = HermitianObsT(mat, std::vector<std::size_t>{0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -279,7 +279,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
             mps_state.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -295,7 +295,7 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            mps_state.get_final_state();
+            mps_state.set_mps_final_state();
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
