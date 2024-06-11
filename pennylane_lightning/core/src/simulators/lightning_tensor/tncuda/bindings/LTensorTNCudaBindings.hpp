@@ -46,7 +46,7 @@ using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 
 /**
- * @brief Get a gate kernel map for a statetensor.
+ * @brief Get a gate kernel map for a tensor network.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {

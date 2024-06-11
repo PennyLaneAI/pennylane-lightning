@@ -56,10 +56,9 @@ namespace Pennylane {
 template <class TensorNetT>
 void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
-        typename TensorNetT::PrecisionT; // Statetensor's precision.
-    using ComplexT =
-        typename TensorNetT::ComplexT; // Statetensor's complex type.
-    using ParamT = PrecisionT;         // Parameter's data precision
+        typename TensorNetT::PrecisionT;            // Tensornet's precision.
+    using ComplexT = typename TensorNetT::ComplexT; // Tensornet's complex type.
+    using ParamT = PrecisionT; // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -170,14 +169,14 @@ void registerBackendAgnosticObservables(py::module_ &m) {
 /**
  * @brief Register agnostic measurements class functionalities.
  *
- * @tparam StateTensorT
+ * @tparam TensorNetT
  * @tparam PyClass
  * @param pyclass Pybind11's measurements class to bind methods.
  */
-template <class StateTensorT, class PyClass>
+template <class TensorNetT, class PyClass>
 void registerBackendAgnosticMeasurements(PyClass &pyclass) {
-    using Measurements = MeasurementsTNCuda<StateTensorT>;
-    using Observable = ObservableTNCuda<StateTensorT>;
+    using Measurements = MeasurementsTNCuda<TensorNetT>;
+    using Observable = ObservableTNCuda<TensorNetT>;
     pyclass.def(
         "expval",
         [](Measurements &M, const std::shared_ptr<Observable> &ob) {
@@ -194,15 +193,15 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
  */
 template <class TensorNetT> void lightningClassBindings(py::module_ &m) {
     using PrecisionT =
-        typename TensorNetT::PrecisionT; // StateTensor's precision.
+        typename TensorNetT::PrecisionT; // TensorNet's precision.
     // Enable module name to be based on size of complex datatype
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 
     //***********************************************************************//
-    //                              StateTensor
+    //                              TensorNet
     //***********************************************************************//
-    std::string class_name = "StateTensorC" + bitsize;
+    std::string class_name = "TensorNetC" + bitsize;
     auto pyclass =
         py::class_<TensorNetT>(m, class_name.c_str(), py::module_local());
 
