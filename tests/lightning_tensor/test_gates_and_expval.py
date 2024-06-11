@@ -27,7 +27,7 @@ if device_name != "lightning.tensor":
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
-    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+    from pennylane_lightning.lightning_tensor._state_tensor import LightningTensorNet
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
@@ -242,7 +242,7 @@ class TestSparseHExpval:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0)),
         ]
 
-        state_tensor = LightningStateTensor(4, 10)
+        state_tensor = LightningTensorNet(4, 10)
         tape = qml.tape.QuantumScript(measurements=obs)
         m = LightningTensorMeasurements(state_tensor)
 

@@ -35,10 +35,10 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 class LightningTensorMeasurements:
     """Lightning Measurements class
 
-    Measures the state provided by the LightningStateTensor class.
+    Measures the state provided by the LightningTensorNet class.
 
     Args:
-        tensor_state(LightningStateTensor): Lightning state-tensor class containing the state tensor to be measured.
+        tensor_state(LightningTensorNet): Lightning state-tensor class containing the state tensor to be measured.
     """
 
     def __init__(

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-tensor manipulation.
+Class implementation for tensornet manipulation.
 """
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
@@ -31,19 +31,19 @@ from pennylane.wires import Wires
 
 
 # pylint: disable=too-many-instance-attributes
-class LightningStateTensor:
-    """Lightning state-tensor class.
+class LightningTensorNet:
+    """Lightning tensornet class.
 
-    Interfaces with C++ python binding methods for state-tensor manipulation.
+    Interfaces with C++ python binding methods for tensornet manipulation.
 
     Args:
         num_wires(int): the number of wires to initialize the device with
-        max_bond_dim(int): maximum bond dimension for the state tensor
+        max_bond_dim(int): maximum bond dimension for the tensor network
         cutoff(float): threshold for singular value truncation. Default is 0.
         cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         dtype: Datatypes for state-tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state tensor device name. Options: ["lightning.tensor"]
+        device_name(string): tensor network device name. Options: ["lightning.tensor"]
     """
 
     # pylint: disable=too-many-arguments
@@ -71,12 +71,12 @@ class LightningStateTensor:
 
     @property
     def dtype(self):
-        """Returns the state tensor data type."""
+        """Returns the tensor network data type."""
         return self._dtype
 
     @property
     def device_name(self):
-        """Returns the state tensor device name."""
+        """Returns the tensor network device name."""
         return self._device_name
 
     @property
@@ -91,23 +91,23 @@ class LightningStateTensor:
 
     @property
     def state_tensor(self):
-        """Returns a handle to the state tensor."""
+        """Returns a handle to the tensor network."""
         return self._tensor_state
 
     def _state_dtype(self):
-        """Binding to Lightning Managed state tensor C++ class.
+        """Binding to Lightning Managed tensor network C++ class.
 
-        Returns: the state tensor class
+        Returns: the tensor network class
         """
         return TensorNetC128 if self.dtype == np.complex128 else TensorNetC64
 
     def reset_state(self):
-        """Reset the device's state tensor"""
-        # init the state tensor to |00..0>
+        """Reset the device's initial quantum state"""
+        # init the quantum state to |00..0>
         self._tensor_state.reset()
 
     def _apply_basis_state(self, state, wires):
-        """Initialize the state tensor in a specified computational basis state.
+        """Initialize the quantum state in a specified computational basis state.
 
         Args:
             state (array[int]): computational basis state of shape ``(wires,)``
@@ -129,7 +129,7 @@ class LightningStateTensor:
         self._tensor_state.setBasisState(state)
 
     def _apply_lightning(self, operations):
-        """Apply a list of operations to the state tensor.
+        """Apply a list of operations to the quantum state.
 
         Args:
             operations (list[~pennylane.operation.Operation]): operations to apply
@@ -190,7 +190,7 @@ class LightningStateTensor:
             circuit (QuantumScript): The single circuit to simulate
 
         Returns:
-            LightningStateTensor: Lightning final state class.
+            LightningTensorNet: Lightning final state class.
 
         """
         self.apply_operations(circuit.operations)

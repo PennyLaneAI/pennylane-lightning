@@ -25,7 +25,7 @@ if device_name != "lightning.tensor":
     )
 else:
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
-    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+    from pennylane_lightning.lightning_tensor._state_tensor import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -34,13 +34,13 @@ THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 
 
-# General LightningStateTensor fixture, for any number of wires.
+# General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
     params=[np.complex64, np.complex128],
 )
 def lightning_st(request):
-    """Fixture for creating a LightningStateTensor object."""
-    return LightningStateTensor(num_wires=5, max_bond_dim=128, dtype=request.param)
+    """Fixture for creating a LightningTensorNet object."""
+    return LightningTensorNet(num_wires=5, max_bond_dim=128, dtype=request.param)
 
 
 class TestMeasurementFunction:
