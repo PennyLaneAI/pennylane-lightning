@@ -155,8 +155,8 @@ def simulate(circuit: QuantumScript, state: LightningTensorNet) -> Result:
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     state.reset_state()
-    state.get_graph(circuit)
-    return LightningTensorMeasurements(state).measure_final_state(circuit)
+    state.set_tensor_network(circuit)
+    return LightningTensorMeasurements(state).measure_tensor_network(circuit)
 
 
 def accepted_observables(obs: Operator) -> bool:

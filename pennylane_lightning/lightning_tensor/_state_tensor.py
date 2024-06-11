@@ -182,9 +182,9 @@ class LightningTensorNet:
 
         self._apply_lightning(operations)
 
-    def get_graph(self, circuit: QuantumScript):
+    def set_tensor_network(self, circuit: QuantumScript):
         """
-        Get the compute graph that results from executing the given quantum script.
+        Set the tensor network that results from executing the given quantum script.
 
         This is an internal function that will be called by the successor to ``lightning.tensor``.
 

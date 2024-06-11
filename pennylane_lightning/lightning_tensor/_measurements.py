@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state tensor measurements.
+Class implementation for tensornet measurements.
 """
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
@@ -35,19 +35,19 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 class LightningTensorMeasurements:
     """Lightning Measurements class
 
-    Measures the state provided by the LightningTensorNet class.
+    Measures the tensor network provided by the LightningTensorNet class.
 
     Args:
-        tensor_state(LightningTensorNet): Lightning state-tensor class containing the state tensor to be measured.
+        tensor_network(LightningTensorNet): Lightning tensornet class containing the tensor network to be measured.
     """
 
     def __init__(
         self,
-        tensor_state,
+        tensor_network,
     ) -> None:
-        self._tensor_state = tensor_state
-        self._dtype = tensor_state.dtype
-        self._measurement_lightning = self._measurement_dtype()(tensor_state.tensornet)
+        self._tensornet = tensor_network
+        self._dtype = tensor_network.dtype
+        self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
 
     @property
     def dtype(self):
@@ -66,7 +66,7 @@ class LightningTensorMeasurements:
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            measurementprocess (StateMeasurement): measurement to apply to the tensor network
 
         Returns:
             Expectation value of the observable
@@ -75,7 +75,7 @@ class LightningTensorMeasurements:
             raise NotImplementedError
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensor_state.device_name, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -85,7 +85,7 @@ class LightningTensorMeasurements:
         """Get the appropriate method for performing a measurement.
 
         Args:
-            measurementprocess (MeasurementProcess): measurement process to apply to the state
+            measurementprocess (MeasurementProcess): measurement process to apply to the graph
 
         Returns:
             Callable: function that returns the measurement result
@@ -97,19 +97,19 @@ class LightningTensorMeasurements:
         raise NotImplementedError
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
-        """Apply a measurement process to a state.
+        """Apply a measurement process to a tensor network.
 
         Args:
-            measurementprocess (MeasurementProcess): measurement process to apply to the state
+            measurementprocess (MeasurementProcess): measurement process to apply to the graph
 
         Returns:
             TensorLike: the result of the measurement
         """
         return self.get_measurement_function(measurementprocess)(measurementprocess)
 
-    def measure_final_state(self, circuit: QuantumScript) -> Result:
+    def measure_tensor_network(self, circuit: QuantumScript) -> Result:
         """
-        Perform the measurements required by the circuit on the provided state.
+        Perform the measurements required by the circuit on the provided tensor network.
 
         This is an internal function that will be called by the successor to ``lightning.tensor``.
 

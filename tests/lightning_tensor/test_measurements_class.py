@@ -63,7 +63,7 @@ class TestMeasurementFunction:
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    def test_not_measure_final_state(self, lightning_st):
+    def test_not_measure_tensor_network(self, lightning_st):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
         statetensor = lightning_st
@@ -76,4 +76,4 @@ class TestMeasurementFunction:
         )
 
         with pytest.raises(NotImplementedError):
-            m.measure_final_state(tape)
+            m.measure_tensor_network(tape)
