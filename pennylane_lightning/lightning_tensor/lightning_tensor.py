@@ -139,7 +139,7 @@ def stopping_condition(op: Operator) -> bool:
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2 or isinstance(op, qml.GlobalPhase)
+    return op.has_matrix and len(op.wires) <= 2 or op.name in _operations
 
 
 def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
@@ -182,19 +182,20 @@ class LightningTensor(Device):
     A device to perform tensor network operations on a quantum circuit.
 
     This device is designed to simulate large-scale quantum circuits using tensor network methods. For
-    samll circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
+    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
     recommended.
 
-    Currently, only the Matrix Product State (MPS) method is supported, based on ``cutensornet`` backends.
+    Currently, only the Matrix Product State (MPS) method as implemented in the ``cutensornet`` backend is supported.
 
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
         max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
-            Note that 128 is chosen as a default value since MPS gate split performance on GPU with Nvidia
-            A100 80 GB for bond dimension 128 is comparable to NumPy on CPU. Compute speed of MPS gate split
-            with cutensornet on GPU is faster than NumPy on CPU only when the bond dimension is large. For more
-            details, please visit https://developer.nvidia.com/cuquantum-sdk.
+            The accuracy of the wavefunction representation comes with a memory tradeoff which can be
+            tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
+            be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
+            competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
+            layers with a single or few gates because the arithmetic intensity is lower.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
         cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
