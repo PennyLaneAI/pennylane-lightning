@@ -194,6 +194,7 @@ class TestExpval:
             circ_def = qml.QNode(circuit, dev_def)
             assert np.allclose(circ(), circ_def(), tol)
 
+
 @pytest.mark.parametrize(
     "diff_method",
     [
