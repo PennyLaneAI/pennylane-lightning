@@ -167,7 +167,7 @@ void registerBackendAgnosticObservables(py::module_ &m) {
 }
 
 /**
- * @brief Register agnostic measurements class functionalities.
+ * @brief Register lightning.tensor measurements class functionalities.
  *
  * @tparam TensorNetT
  * @tparam PyClass

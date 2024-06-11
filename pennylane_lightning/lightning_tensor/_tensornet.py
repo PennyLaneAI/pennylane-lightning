@@ -191,6 +191,6 @@ class LightningTensorNet:
         """
         self.apply_operations(circuit.operations)
         if self._method == "mps":
-            self.tensornet.setMPSFinalState(self._cutoff, self._cutoff_mode)
+            self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)
 
         return self
