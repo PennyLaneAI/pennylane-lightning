@@ -16,7 +16,6 @@
  * Export C++ functions to Python using Pybind.
  */
 #include "Bindings.hpp"
-
 #ifdef _ENABLE_PLGPU_MPI
 #include "BindingsMPI.hpp"
 #endif

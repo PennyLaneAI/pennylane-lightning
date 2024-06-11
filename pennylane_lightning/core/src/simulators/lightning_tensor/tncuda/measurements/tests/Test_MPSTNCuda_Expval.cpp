@@ -183,6 +183,8 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval mps with cutoff") {
+            double cutoff = GENERATE(0, 1e-1, 2e-1, 3e-1, 4e-1);
+            std::string cutoff_mode = GENERATE("rel", "abs");
             mps_state.applyOperations(
                 {{"Hadamard"},
                  {"Hadamard"},
@@ -193,35 +195,19 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
                 {{0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}},
                 {{}, {}, {}, {0.5}, {0.6}, {0.7}});
-            double cutoff = 2e-1;
-            std::string cutoff_mode = "abs";
             mps_state.append_mps_final_state(cutoff, cutoff_mode);
             auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
             auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);
+            // ref is from default.qubit
             PrecisionT ref = -0.2115276040475712;
-            REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  ref, static_cast<PrecisionT>(cutoff)));
-            REQUIRE(res != Approx(ref).margin(1e-6));
-        }
-
-        SECTION("Using expval mps with default cutoff=0") {
-            mps_state.applyOperations(
-                {{"Hadamard"},
-                 {"Hadamard"},
-                 {"Hadamard"},
-                 {"SingleExcitation"},
-                 {"IsingXX"},
-                 {"IsingXY"}},
-                {{0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}},
-                {{false}, {false}, {false}, {false}, {false}, {false}},
-                {{}, {}, {}, {0.5}, {0.6}, {0.7}});
-            mps_state.append_mps_final_state();
-            auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
-            auto ob = NamedObsT("PauliZ", {0});
-            auto res = m.expval(ob);
-            PrecisionT ref = -0.2115276040475712;
-            REQUIRE(res == Approx(ref).margin(1e-6));
+            if (cutoff > 0) {
+                REQUIRE_THAT(res, Catch::Matchers::WithinRel(
+                                      ref, static_cast<PrecisionT>(cutoff)));
+                REQUIRE(res != Approx(ref).margin(1e-6));
+            } else {
+                REQUIRE(res == Approx(ref).margin(1e-6));
+            }
         }
     }
 }
