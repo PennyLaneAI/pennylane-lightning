@@ -27,7 +27,7 @@ from pennylane.wires import Wires
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the state tensor class.", allow_module_level=True)
 else:
-    from pennylane_lightning.lightning_tensor._state_tensor import LightningTensorNet
+    from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

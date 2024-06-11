@@ -35,7 +35,7 @@ from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from ._measurements import LightningTensorMeasurements
-from ._state_tensor import LightningTensorNet
+from ._tensornet import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
@@ -142,21 +142,21 @@ def stopping_condition(op: Operator) -> bool:
     return op.has_matrix and len(op.wires) <= 2 or isinstance(op, qml.GlobalPhase)
 
 
-def simulate(circuit: QuantumScript, state: LightningTensorNet) -> Result:
+def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
     """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningTensorNet): handle to Lightning state tensor
+        tensornet (LightningTensorNet): handle to Lightning tensor network
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    state.reset_state()
-    state.set_tensor_network(circuit)
-    return LightningTensorMeasurements(state).measure_tensor_network(circuit)
+    tensornet.reset_state()
+    tensornet.set_tensor_network(circuit)
+    return LightningTensorMeasurements(tensornet).measure_tensor_network(circuit)
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -236,11 +236,11 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        max_bond_dim=128,
+        max_bond_dim: int = 128,
         cutoff: float = 0,
         cutoff_mode: str = "abs",
-        backend="cutensornet",
-        method="mps",
+        backend: str = "cutensornet",
+        method: str = "mps",
         shots=None,
         c_dtype=np.complex128,
         **kwargs,
@@ -315,10 +315,15 @@ class LightningTensor(Device):
         """Tensor complex data type."""
         return self._c_dtype
 
-    def _state_tensor(self):
-        """Return the state tensor object."""
+    def _tensornet(self):
+        """Return the tensornet object."""
         return LightningTensorNet(
-            self._num_wires, self._max_bond_dim, self._cutoff, self._cutoff_mode, self._c_dtype
+            self._num_wires,
+            self._max_bond_dim,
+            self._method,
+            self._cutoff,
+            self._cutoff_mode,
+            self._c_dtype,
         )
 
     dtype = c_dtype
@@ -398,7 +403,7 @@ class LightningTensor(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._state_tensor()))
+            results.append(simulate(circuit, self._tensornet()))
 
         return tuple(results)
 

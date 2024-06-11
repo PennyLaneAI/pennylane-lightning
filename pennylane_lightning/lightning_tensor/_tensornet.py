@@ -39,6 +39,7 @@ class LightningTensorNet:
     Args:
         num_wires(int): the number of wires to initialize the device with
         max_bond_dim(int): maximum bond dimension for the tensor network
+        method(string): tensor network method. Options: ["mps"].
         cutoff(float): threshold for singular value truncation. Default is 0.
         cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         dtype: Datatypes for tensor network representation. Must be one of
