@@ -41,7 +41,7 @@ class LightningTensorNet:
         max_bond_dim(int): maximum bond dimension for the tensor network
         cutoff(float): threshold for singular value truncation. Default is 0.
         cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
-        dtype: Datatypes for state-tensor representation. Must be one of
+        dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
     """
@@ -67,7 +67,7 @@ class LightningTensorNet:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        self._tensor_state = self._state_dtype()(self._num_wires, self._max_bond_dim)
+        self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
 
     @property
     def dtype(self):
@@ -90,11 +90,11 @@ class LightningTensorNet:
         return self._num_wires
 
     @property
-    def state_tensor(self):
+    def tensornet(self):
         """Returns a handle to the tensor network."""
-        return self._tensor_state
+        return self._tensornet
 
-    def _state_dtype(self):
+    def _tensornet_dtype(self):
         """Binding to Lightning Managed tensor network C++ class.
 
         Returns: the tensor network class
@@ -104,7 +104,7 @@ class LightningTensorNet:
     def reset_state(self):
         """Reset the device's initial quantum state"""
         # init the quantum state to |00..0>
-        self._tensor_state.reset()
+        self._tensornet.reset()
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -126,7 +126,7 @@ class LightningTensorNet:
         if n_basis_state != len(wires):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
-        self._tensor_state.setBasisState(state)
+        self._tensornet.setBasisState(state)
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
@@ -137,7 +137,7 @@ class LightningTensorNet:
         Returns:
             None
         """
-        state = self.state_tensor
+        tensornet = self._tensornet
 
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
@@ -150,7 +150,7 @@ class LightningTensorNet:
             else:
                 name = operation.name
                 invert_param = False
-            method = getattr(state, name, None)
+            method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
             if method is not None:  # apply specialized gate
@@ -159,7 +159,7 @@ class LightningTensorNet:
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form
-                method = getattr(state, "applyMatrix")
+                method = getattr(tensornet, "applyMatrix")
                 try:
                     method(qml.matrix(operation), wires, False)
                 except AttributeError:  # pragma: no cover
@@ -194,6 +194,6 @@ class LightningTensorNet:
 
         """
         self.apply_operations(circuit.operations)
-        self.state_tensor.getFinalState(self._cutoff, self._cutoff_mode)
+        self.tensornet.getFinalState(self._cutoff, self._cutoff_mode)
 
         return self

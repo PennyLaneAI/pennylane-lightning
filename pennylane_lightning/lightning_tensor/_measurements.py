@@ -47,7 +47,7 @@ class LightningTensorMeasurements:
     ) -> None:
         self._tensor_state = tensor_state
         self._dtype = tensor_state.dtype
-        self._measurement_lightning = self._measurement_dtype()(tensor_state.state_tensor)
+        self._measurement_lightning = self._measurement_dtype()(tensor_state.tensornet)
 
     @property
     def dtype(self):
