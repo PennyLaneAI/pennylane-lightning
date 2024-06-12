@@ -9,7 +9,7 @@ A ``lightning.tensor`` device can be loaded using:
 .. code-block:: python
 
     import pennylane as qml
-    dev = qml.device("lightning.tensor", wires=2)
+    dev = qml.device("lightning.tensor", wires=100)
 
 If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. 
 
