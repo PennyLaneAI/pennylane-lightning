@@ -192,7 +192,7 @@ class LightningTensor(Device):
             Defaults to ``None`` if not specified.
         method (str): Supported method. Currently, only ``mps`` is supported.
         c_dtype: Datatypes for the tensor representation. Must be one of
-            ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``.
+            ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
         max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
             The accuracy of the wavefunction representation comes with a memory tradeoff which can be
