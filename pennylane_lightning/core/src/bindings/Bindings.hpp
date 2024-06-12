@@ -305,16 +305,16 @@ void registerInfo(py::module_ &m) {
 /**
  * @brief Register observable classes.
  *
- * @tparam QuantumStateT
+ * @tparam LightningBackendT
  * @param m Pybind module
  */
-template <class QuantumStateT>
+template <class LightningBackendT>
 void registerBackendAgnosticObservables(py::module_ &m) {
-    using PrecisionT =
-        typename QuantumStateT::PrecisionT; // Statevector's precision.
-    using ComplexT =
-        typename QuantumStateT::ComplexT; // Statevector's complex type.
-    using ParamT = PrecisionT;            // Parameter's data precision
+    using PrecisionT = typename LightningBackendT::PrecisionT; // LightningBackendT's's
+                                                               // precision.
+    using ComplexT = typename LightningBackendT::ComplexT; // LightningBackendT's
+                                                           // complex type.
+    using ParamT = PrecisionT; // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -323,17 +323,17 @@ void registerBackendAgnosticObservables(py::module_ &m) {
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
 
 #ifdef _ENABLE_PLTENSOR
-    using Observable = ObservableTNCuda<QuantumStateT>;
-    using NamedObs = NamedObsTNCuda<QuantumStateT>;
-    using HermitianObs = HermitianObsTNCuda<QuantumStateT>;
-    using TensorProdObs = TensorProdObsTNCuda<QuantumStateT>;
-    using Hamiltonian = HamiltonianTNCuda<QuantumStateT>;
+    using Observable = ObservableTNCuda<LightningBackendT>;
+    using NamedObs = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObs = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObs = TensorProdObsTNCuda<LightningBackendT>;
+    using Hamiltonian = HamiltonianTNCuda<LightningBackendT>;
 #else
-    using Observable = Observable<QuantumStateT>;
-    using NamedObs = NamedObs<QuantumStateT>;
-    using HermitianObs = HermitianObs<QuantumStateT>;
-    using TensorProdObs = TensorProdObs<QuantumStateT>;
-    using Hamiltonian = Hamiltonian<QuantumStateT>;
+    using Observable = Observable<LightningBackendT>;
+    using NamedObs = NamedObs<LightningBackendT>;
+    using HermitianObs = HermitianObs<LightningBackendT>;
+    using TensorProdObs = TensorProdObs<LightningBackendT>;
+    using Hamiltonian = Hamiltonian<LightningBackendT>;
 #endif
 
     std::string class_name;
