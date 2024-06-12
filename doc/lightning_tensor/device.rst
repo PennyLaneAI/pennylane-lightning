@@ -9,11 +9,11 @@ A ``lightning.tensor`` device can be loaded using:
 .. code-block:: python
 
     import pennylane as qml
-    dev = qml.device("lightning.tensor", wires=2, maxBondDim=16)
+    dev = qml.device("lightning.tensor", wires=2)
 
 If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. 
 
-The ``lightning.tensor`` device also directly supports quantum circuit gradients using the parameter-shift method. This can be enabled at the PennyLane QNode level with:
+The ``lightning.tensor`` device also directly supports quantum circuit gradients using the ``parameter-shift`` method. This can be enabled at the PennyLane QNode level with:
 
 .. code-block:: python
 
@@ -26,6 +26,8 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The `lightning.tensor` only supports 1,2-wires gates operations and gates operations that can be decomposed into 1,2-wires gates.
+
 **Supported operations:**
 
 .. raw:: html
@@ -36,6 +38,7 @@ Supported operations and observables
     :nosignatures:
 
     ~pennylane.BasisState
+    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -47,6 +50,7 @@ Supported operations and observables
     ~pennylane.CY
     ~pennylane.CZ
     ~pennylane.DiagonalQubitUnitary
+    ~pennylane.DoubleExcitation
     ~pennylane.ECR
     ~pennylane.Hadamard
     ~pennylane.Identity
@@ -86,6 +90,9 @@ Supported operations and observables
 
 **Supported observables:**
 
+The `lightning.tensor` supports all observables supported by lightning state-vector simulators, besides `qml.SparseHamiltonian` and `qml.Projector`.
+
+
 .. raw:: html
 
     <div class="summary-table">
@@ -102,7 +109,6 @@ Supported operations and observables
     ~pennylane.PauliY
     ~pennylane.PauliZ
     ~pennylane.ops.op_math.Prod
-    ~pennylane.Projector
     ~pennylane.ops.op_math.SProd
     ~pennylane.ops.op_math.Sum
 

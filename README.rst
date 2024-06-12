@@ -49,7 +49,7 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.qubit``: is a fast state-vector simulator written in C++.
 * ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
 * ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html>`_ programming models.
-* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
+* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable. The supported method is Matrix Product State (MPS). This device does not currently support finite shots. At present, the supported measurement types are expectation values and the supported differentiation method are ``parameter-shift`` or ``finite-diff``. Note that only 1,2-wires gates and gates that can be decomposed into 1,2-wires gates are supported.
 
 .. header-end-inclusion-marker-do-not-remove
 
@@ -382,7 +382,7 @@ To install Lightning-Tensor from the package sources using the direct SDK path, 
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" pip install -e . -vv
 
-Then the `cutensornet_`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
