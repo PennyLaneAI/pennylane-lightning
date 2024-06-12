@@ -19,27 +19,34 @@ This module contains unit tests for new device API Lightning classes.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.tape import QuantumScript
 
-from pennylane_lightning.lightning_qubit.lightning_qubit import (
-    _add_adjoint_transforms,
-    _supports_adjoint,
-    accepted_observables,
-    adjoint_measurements,
-    adjoint_observables,
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    stopping_condition,
-    stopping_condition_shots,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
+if device_name == "lightning.qubit":
+    from pennylane_lightning.lightning_qubit.lightning_qubit import (
+        _add_adjoint_transforms,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
+if device_name == "lightning.tensor":
+    from pennylane_lightning.lightning_tensor.lightning_tensor import (
+        accepted_observables,
+        stopping_condition,
+    )
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
@@ -75,10 +82,14 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-
-        assert accepted_observables(valid_obs) is True
+        result = True if device_name != "lightning.tensor" else False
+        assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support adjoint_observables",
+    )
     @pytest.mark.parametrize(
         "obs, expected",
         [
@@ -100,6 +111,10 @@ class TestHelpers:
         a given observable"""
         assert adjoint_observables(obs) == expected
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support adjoint",
+    )
     def test_add_adjoint_transforms(self):
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
@@ -126,6 +141,10 @@ class TestHelpers:
         _add_adjoint_transforms(actual_program)
         assert actual_program == expected_program
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support adjoint",
+    )
     @pytest.mark.parametrize(
         "circuit, expected",
         [
@@ -141,6 +160,10 @@ class TestHelpers:
         assert _supports_adjoint(circuit) == expected
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support shots or mcmc",
+)
 class TestInitialization:
     """Unit tests for device initialization"""
 
@@ -164,6 +187,10 @@ class TestInitialization:
             _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support adjoint_observables",
+)
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
@@ -482,6 +509,10 @@ class TestExecution:
         assert qml.math.allclose(res3, np.array([0.5, 0.0, 0.5, 0.0]))
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support derivatives",
+)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestDerivatives:
     """Unit tests for calculating derivatives with a device"""
@@ -818,6 +849,10 @@ class TestDerivatives:
         assert np.allclose(jacs[1], expected_jac[1])
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support vjp",
+)
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestVJP:
     """Unit tests for VJP computation with the new device API."""
