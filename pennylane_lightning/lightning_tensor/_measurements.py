@@ -72,7 +72,7 @@ class LightningTensorMeasurements:
             Expectation value of the observable
         """
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError
+            raise NotImplementedError("Sparse Hamiltonians are not supported.")
 
         ob_serialized = QuantumScriptSerializer(
             self._tensornet.device_name, self.dtype == np.complex64
@@ -94,7 +94,9 @@ class LightningTensorMeasurements:
             if isinstance(measurementprocess, ExpectationMP):
                 return self.expval
 
-        raise NotImplementedError
+        raise NotImplementedError(
+            "Does not support current measurement. Only ExpectationMP measurements are supported."
+        )
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a tensor network.
@@ -121,7 +123,7 @@ class LightningTensorMeasurements:
         """
 
         if circuit.shots:
-            raise NotImplementedError
+            raise NotImplementedError("Shots are not supported for tensor network simulations.")
         # analytic case
         if len(circuit.measurements) == 1:
             return self.measurement(circuit.measurements[0])

@@ -241,16 +241,41 @@ class TestSparseHExpval:
 
     def test_expval_sparseH(self):
         """Test that expval is chosen for a variety of different expectation values."""
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
+
+        tensornet = LightningTensorNet(4, 10)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
+            m.expval(q.queue[0])
+
+    def test_measurement_shot_not_supported(self):
+        """Test shots measurement error for measure_tensor_network."""
         obs = [
-            qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0)),
+            qml.expval(qml.PauliX(0) @ qml.Identity(1)),
         ]
+
+        tensornet = LightningTensorNet(4, 10)
+        tape = qml.tape.QuantumScript(measurements=obs, shots=1000)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(NotImplementedError, match="Shots are not supported for tensor network"):
+            m.measure_tensor_network(tape)
+
+    def test_measurement_not_supported(self):
+        """Test error for measure_tensor_network."""
+        obs = [qml.sample(wires=0)]
 
         tensornet = LightningTensorNet(4, 10)
         tape = qml.tape.QuantumScript(measurements=obs)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError):
-            m.expval(tape.measurements[0])
+        with pytest.raises(
+            NotImplementedError,
+            match="Does not support current measurement. Only ExpectationMP measurements are supported.",
+        ):
+            m.measure_tensor_network(tape)
 
 
 class QChem:
