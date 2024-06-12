@@ -190,6 +190,10 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
+        method (str): Supported method. Currently, only ``mps`` is supported.
+        c_dtype: Datatypes for the tensor representation. Must be one of
+            ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``.
+    Keyword Args:
         max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
             The accuracy of the wavefunction representation comes with a memory tradeoff which can be
             tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
@@ -197,12 +201,9 @@ class LightningTensor(Device):
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
-        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
+        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"]. Default is "abs".
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
-        c_dtype: Datatypes for the tensor representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments.
 
     **Example**
 
@@ -229,7 +230,7 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "c_dtype", "max_bond_dim", "cutoff", "cutoff_mode", "method")
+    _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -238,10 +239,6 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        max_bond_dim: int = 128,
-        cutoff: float = 0,
-        cutoff_mode: str = "abs",
-        backend: str = "cutensornet",
         method: str = "mps",
         c_dtype=np.complex128,
         **kwargs,
@@ -249,29 +246,14 @@ class LightningTensor(Device):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError("Pre-compiled binaries for lightning.tensor are not available. ")
 
-        if not accepted_backends(backend):
-            raise ValueError(f"Unsupported backend: {backend}")
-
         if not accepted_methods(method):
             raise ValueError(f"Unsupported method: {method}")
-
-        if cutoff_mode not in ["rel", "abs"]:
-            raise ValueError(f"Unsupported cutoff mode: {cutoff_mode}")
 
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
 
         if wires is None:
             raise ValueError("The number of wires must be specified.")
-
-        if not isinstance(max_bond_dim, int) or max_bond_dim < 1:
-            raise ValueError("The maximum bond dimension must be an integer greater than 0.")
-
-        for arg in kwargs:
-            if arg not in self._device_options:
-                raise TypeError(
-                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
-                )
 
         super().__init__(wires=wires, shots=None)
 
@@ -281,12 +263,28 @@ class LightningTensor(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._num_wires = len(self.wires) if self.wires else 0
-        self._max_bond_dim = max_bond_dim
-        self._cutoff = cutoff
-        self._cutoff_mode = cutoff_mode
-        self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
+
+        self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+        self._cutoff = kwargs.get("cutoff", 0)
+        self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
+        self._backend = kwargs.get("backend", "cutensornet")
+
+        for arg in kwargs:
+            if arg not in self._device_options:
+                raise TypeError(
+                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
+                )
+
+        if not accepted_backends(self._backend):
+            raise ValueError(f"Unsupported backend: {self._backend}")
+
+        if self._cutoff_mode not in ["rel", "abs"]:
+            raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
+
+        if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
+            raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
     @property
     def name(self):
@@ -317,11 +315,11 @@ class LightningTensor(Device):
         """Return the tensornet object."""
         return LightningTensorNet(
             self._num_wires,
-            self._max_bond_dim,
             self._method,
+            self._c_dtype,
+            self._max_bond_dim,
             self._cutoff,
             self._cutoff_mode,
-            self._c_dtype,
         )
 
     dtype = c_dtype

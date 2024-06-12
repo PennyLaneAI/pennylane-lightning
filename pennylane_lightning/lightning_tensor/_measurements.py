@@ -33,7 +33,7 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
 class LightningTensorMeasurements:
-    """Lightning Measurements class
+    """Lightning Tensor Measurements class
 
     Measures the tensor network provided by the LightningTensorNet class.
 

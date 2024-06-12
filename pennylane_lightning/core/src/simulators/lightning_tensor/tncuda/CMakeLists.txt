@@ -39,7 +39,6 @@ option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
 target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs
-                                            lightning_gates
                                             lightning_utils
                                             ${PL_BACKEND}_gates
                                             ${PL_BACKEND}_tensor

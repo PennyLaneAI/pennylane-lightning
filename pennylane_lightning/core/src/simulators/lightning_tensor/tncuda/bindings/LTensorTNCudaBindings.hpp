@@ -101,7 +101,7 @@ void registerBackendSpecificInfo(py::module_ &m) {
     m.def("is_gpu_supported", &isCuQuantumSupported,
           py::arg("device_number") = 0,
           "Checks if the given GPU device meets the minimum architecture "
-          "support for the `lightning.tensor` device.");
+          "support for the PennyLane-Lightning-Tensor device.");
 
     m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
           "Returns the given GPU major and minor GPU support.");
@@ -127,6 +127,13 @@ void registerBackendSpecificInfo(py::module_ &m) {
                                    static_cast<cudaStream_t>(stream_id));
         }))
         .def(py::init<const DevTag<int> &>())
+        .def("getDeviceID", &DevTag<int>::getDeviceID)
+        .def("getStreamID",
+             [](DevTag<int> &dev_tag) {
+                 // default stream points to nullptr, so just return void* as
+                 // type
+                 return static_cast<void *>(dev_tag.getStreamID());
+             })
         .def("refresh", &DevTag<int>::refresh);
 }
 
