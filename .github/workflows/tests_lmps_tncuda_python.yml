@@ -109,7 +109,7 @@ jobs:
           VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
         run: |
           # Clear any pre-existing venvs
-          #rm -rf venv_*
+          rm -rf venv_*
 
           # Create new venv for this workflow_run
           python --version
