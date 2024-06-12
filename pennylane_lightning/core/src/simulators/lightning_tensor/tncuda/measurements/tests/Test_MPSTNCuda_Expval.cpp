@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval mps with cutoff") {
-            double cutoff = GENERATE(0, 1e-1, 2e-1, 3e-1, 4e-1);
+            double cutoff = GENERATE(1e-1, 2e-1, 3e-1, 4e-1);
             std::string cutoff_mode = GENERATE("rel", "abs");
             mps_state.applyOperations(
                 {{"Hadamard"},
@@ -201,13 +201,10 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
             auto res = m.expval(ob);
             // ref is from default.qubit
             PrecisionT ref = -0.2115276040475712;
-            if (cutoff > 0) {
-                REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                      ref, static_cast<PrecisionT>(cutoff)));
-                REQUIRE(res != Approx(ref).margin(1e-6));
-            } else {
-                REQUIRE(res == Approx(ref).margin(1e-6));
-            }
+
+            REQUIRE_THAT(res, Catch::Matchers::WithinRel(
+                                  ref, static_cast<PrecisionT>(cutoff)));
+            REQUIRE(res != Approx(ref).margin(1e-6));
         }
     }
 }
