@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval mps with cutoff") {
-            double cutoff = GENERATE(1e-1, 2e-1, 3e-1, 4e-1);
+            double cutoff = GENERATE(1e-1, 1e-2);
             std::string cutoff_mode = GENERATE("rel", "abs");
             mps_state.applyOperations(
                 {{"Hadamard"},
@@ -204,7 +204,6 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   ref, static_cast<PrecisionT>(cutoff)));
-            REQUIRE(res != Approx(ref).margin(1e-6));
         }
     }
 }

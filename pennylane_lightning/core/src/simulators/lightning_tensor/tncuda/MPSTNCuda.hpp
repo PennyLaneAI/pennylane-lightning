@@ -243,11 +243,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "cutoff_mode should either 'rel' or 'abs'.");
 
         cutensornetStateAttributes_t svd_cutoff_mode =
-            CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF;
-
-        if (cutoff_mode == "rel") {
-            svd_cutoff_mode = CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
-        }
+            (cutoff_mode == "abs")
+                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
+                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
