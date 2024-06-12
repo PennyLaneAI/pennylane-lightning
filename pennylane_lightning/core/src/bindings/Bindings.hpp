@@ -725,11 +725,11 @@ void registerLightningClassBindings(py::module_ &m) {
  */
 template <class TensorNetT, class PyClass>
 void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
-    using Measurements = MeasurementsTNCuda<TensorNetT>;
-    using Observable = ObservableTNCuda<TensorNetT>;
+    using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
+    using ObservableT = ObservableTNCuda<TensorNetT>;
     pyclass.def(
         "expval",
-        [](Measurements &M, const std::shared_ptr<Observable> &ob) {
+        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
             return M.expval(*ob);
         },
         "Expected value of an observable object.");
