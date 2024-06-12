@@ -310,11 +310,13 @@ void registerInfo(py::module_ &m) {
  */
 template <class LightningBackendT>
 void registerBackendAgnosticObservables(py::module_ &m) {
-    using PrecisionT = typename LightningBackendT::PrecisionT; // LightningBackendT's's
-                                                               // precision.
-    using ComplexT = typename LightningBackendT::ComplexT; // LightningBackendT's
-                                                           // complex type.
-    using ParamT = PrecisionT; // Parameter's data precision
+    using PrecisionT =
+        typename LightningBackendT::PrecisionT; // LightningBackendT's's
+                                                // precision.
+    using ComplexT =
+        typename LightningBackendT::ComplexT; // LightningBackendT's
+                                              // complex type.
+    using ParamT = PrecisionT;                // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);

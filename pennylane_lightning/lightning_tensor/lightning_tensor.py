@@ -197,11 +197,11 @@ class LightningTensor(Device):
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
-        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
+        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"]. Default is "abs".
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
         c_dtype: Datatypes for the tensor representation. Must be one of
-            ``np.complex64`` or ``np.complex128``.
+            ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``.
         **kwargs: keyword arguments.
 
     **Example**
