@@ -8,7 +8,6 @@ target_include_directories(${PL_BACKEND}_bindings INTERFACE ${CMAKE_CURRENT_SOUR
 
 target_link_libraries(${PL_BACKEND}_bindings INTERFACE  lightning_bindings
                                                         lightning_utils
-                                                        lightning_gates
                                                         ${PL_BACKEND}
                                                         ${PL_BACKEND}_gates
                                                         ${PL_BACKEND}_observables
