@@ -47,7 +47,7 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
 class LightningMeasurements:
-    """Lightning Tensor Measurements class
+    """Lightning Measurements class
 
     Measures the state provided by the LightningStateVector class.
 
