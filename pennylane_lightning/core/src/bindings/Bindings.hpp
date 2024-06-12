@@ -325,113 +325,113 @@ void registerBackendAgnosticObservables(py::module_ &m) {
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
 
 #ifdef _ENABLE_PLTENSOR
-    using Observable = ObservableTNCuda<LightningBackendT>;
-    using NamedObs = NamedObsTNCuda<LightningBackendT>;
-    using HermitianObs = HermitianObsTNCuda<LightningBackendT>;
-    using TensorProdObs = TensorProdObsTNCuda<LightningBackendT>;
-    using Hamiltonian = HamiltonianTNCuda<LightningBackendT>;
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
 #else
-    using Observable = Observable<LightningBackendT>;
-    using NamedObs = NamedObs<LightningBackendT>;
-    using HermitianObs = HermitianObs<LightningBackendT>;
-    using TensorProdObs = TensorProdObs<LightningBackendT>;
-    using Hamiltonian = Hamiltonian<LightningBackendT>;
+    using ObservableT = Observable<LightningBackendT>;
+    using NamedObsT = NamedObs<LightningBackendT>;
+    using HermitianObsT = HermitianObs<LightningBackendT>;
+    using TensorProdObsT = TensorProdObs<LightningBackendT>;
+    using HamiltonianT = Hamiltonian<LightningBackendT>;
 #endif
 
     std::string class_name;
 
     class_name = "ObservableC" + bitsize;
-    py::class_<Observable, std::shared_ptr<Observable>>(m, class_name.c_str(),
-                                                        py::module_local());
+    py::class_<ObservableT, std::shared_ptr<ObservableT>>(m, class_name.c_str(),
+                                                          py::module_local());
 
     class_name = "NamedObsC" + bitsize;
-    py::class_<NamedObs, std::shared_ptr<NamedObs>, Observable>(
+    py::class_<NamedObsT, std::shared_ptr<NamedObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init(
             [](const std::string &name, const std::vector<std::size_t> &wires) {
-                return NamedObs(name, wires);
+                return NamedObsT(name, wires);
             }))
-        .def("__repr__", &NamedObs::getObsName)
-        .def("get_wires", &NamedObs::getWires, "Get wires of observables")
+        .def("__repr__", &NamedObsT::getObsName)
+        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
         .def(
             "__eq__",
-            [](const NamedObs &self, py::handle other) -> bool {
-                if (!py::isinstance<NamedObs>(other)) {
+            [](const NamedObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<NamedObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<NamedObs>();
+                auto other_cast = other.cast<NamedObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HermitianObsC" + bitsize;
-    py::class_<HermitianObs, std::shared_ptr<HermitianObs>, Observable>(
+    py::class_<HermitianObsT, std::shared_ptr<HermitianObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init([](const np_arr_c &matrix,
                          const std::vector<std::size_t> &wires) {
             auto buffer = matrix.request();
             const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
-            return HermitianObs(std::vector<ComplexT>(ptr, ptr + buffer.size),
-                                wires);
+            return HermitianObsT(std::vector<ComplexT>(ptr, ptr + buffer.size),
+                                 wires);
         }))
-        .def("__repr__", &HermitianObs::getObsName)
-        .def("get_wires", &HermitianObs::getWires, "Get wires of observables")
-        .def("get_matrix", &HermitianObs::getMatrix,
+        .def("__repr__", &HermitianObsT::getObsName)
+        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
+        .def("get_matrix", &HermitianObsT::getMatrix,
              "Get matrix representation of Hermitian operator")
         .def(
             "__eq__",
-            [](const HermitianObs &self, py::handle other) -> bool {
-                if (!py::isinstance<HermitianObs>(other)) {
+            [](const HermitianObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<HermitianObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HermitianObs>();
+                auto other_cast = other.cast<HermitianObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "TensorProdObsC" + bitsize;
-    py::class_<TensorProdObs, std::shared_ptr<TensorProdObs>, Observable>(
+    py::class_<TensorProdObsT, std::shared_ptr<TensorProdObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
-        .def(py::init([](const std::vector<std::shared_ptr<Observable>> &obs) {
-            return TensorProdObs(obs);
+        .def(py::init([](const std::vector<std::shared_ptr<ObservableT>> &obs) {
+            return TensorProdObsT(obs);
         }))
-        .def("__repr__", &TensorProdObs::getObsName)
-        .def("get_wires", &TensorProdObs::getWires, "Get wires of observables")
-        .def("get_ops", &TensorProdObs::getObs, "Get operations list")
+        .def("__repr__", &TensorProdObsT::getObsName)
+        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
+        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
         .def(
             "__eq__",
-            [](const TensorProdObs &self, py::handle other) -> bool {
-                if (!py::isinstance<TensorProdObs>(other)) {
+            [](const TensorProdObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<TensorProdObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<TensorProdObs>();
+                auto other_cast = other.cast<TensorProdObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HamiltonianC" + bitsize;
-    using ObsPtr = std::shared_ptr<Observable>;
-    py::class_<Hamiltonian, std::shared_ptr<Hamiltonian>, Observable>(
+    using ObsPtr = std::shared_ptr<ObservableT>;
+    py::class_<HamiltonianT, std::shared_ptr<HamiltonianT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
                 auto buffer = coeffs.request();
                 const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return Hamiltonian{std::vector(ptr, ptr + buffer.size), obs};
+                return HamiltonianT{std::vector(ptr, ptr + buffer.size), obs};
             }))
-        .def("__repr__", &Hamiltonian::getObsName)
-        .def("get_wires", &Hamiltonian::getWires, "Get wires of observables")
-        .def("get_ops", &Hamiltonian::getObs,
+        .def("__repr__", &HamiltonianT::getObsName)
+        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
+        .def("get_ops", &HamiltonianT::getObs,
              "Get operations contained by Hamiltonian")
-        .def("get_coeffs", &Hamiltonian::getCoeffs,
+        .def("get_coeffs", &HamiltonianT::getCoeffs,
              "Get Hamiltonian coefficients")
         .def(
             "__eq__",
-            [](const Hamiltonian &self, py::handle other) -> bool {
-                if (!py::isinstance<Hamiltonian>(other)) {
+            [](const HamiltonianT &self, py::handle other) -> bool {
+                if (!py::isinstance<HamiltonianT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<Hamiltonian>();
+                auto other_cast = other.cast<HamiltonianT>();
                 return self == other_cast;
             },
             "Compare two observables");
