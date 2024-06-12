@@ -37,7 +37,7 @@ class LightningTensorNet:
 
     Args:
         num_wires(int): the number of wires to initialize the device with
-        dtype: Datatypes for tensor network representation. Must be one of
+        c_dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         method(string): tensor network method. Options: ["mps"]. Default is "mps".
         max_bond_dim(int): maximum bond dimension for the tensor network
