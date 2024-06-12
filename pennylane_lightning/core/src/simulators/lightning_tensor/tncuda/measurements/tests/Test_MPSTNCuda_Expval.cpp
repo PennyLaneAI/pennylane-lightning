@@ -183,7 +183,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval mps with cutoff") {
-            double cutoff = GENERATE(1e-2, 1e-1);
+            double cutoff = GENERATE(1e-1, 1e-2);
             std::string cutoff_mode = GENERATE("rel", "abs");
             mps_state.applyOperations(
                 {{"Hadamard"},
