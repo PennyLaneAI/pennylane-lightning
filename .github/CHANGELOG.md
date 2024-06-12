@@ -86,6 +86,9 @@
 * `lightning.qubit` and `lightning.kokkos` use `qml.ops.Conditional.base` instead of `qml.ops.Conditional.then_op`.
   [(#752)](https://github.com/PennyLaneAI/pennylane-lightning/pull/752)
 
+* `lightning.qubit`'s preprocessing for mid-circuit measurements correctly uses interface information.
+  [(#760)](https://github.com/PennyLaneAI/pennylane-lightning/pull/760)
+
 * Fix AVX streaming operation support with newer GCC.
   [(#729)](https://github.com/PennyLaneAI/pennylane-lightning/pull/729)
 
