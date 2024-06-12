@@ -74,12 +74,6 @@ def test_invalid_wires_none():
         LightningTensor(wires=None)
 
 
-def test_invalid_shots():
-    """Test that an error is raised if finite number of shots are requestd."""
-    with pytest.raises(ValueError):
-        LightningTensor(shots=5)
-
-
 def test_invalid_cutoff_mode():
     """Test that an error is raised if an invalid cutoff mode is provided."""
     with pytest.raises(ValueError):

@@ -200,9 +200,6 @@ class LightningTensor(Device):
         cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Currently, it can only be ``None``, so that computation of
-            statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         **kwargs: keyword arguments.
@@ -246,7 +243,6 @@ class LightningTensor(Device):
         cutoff_mode: str = "abs",
         backend: str = "cutensornet",
         method: str = "mps",
-        shots=None,
         c_dtype=np.complex128,
         **kwargs,
     ):
@@ -261,9 +257,6 @@ class LightningTensor(Device):
 
         if cutoff_mode not in ["rel", "abs"]:
             raise ValueError(f"Unsupported cutoff mode: {cutoff_mode}")
-
-        if shots is not None:
-            raise ValueError("lightning.tensor does not support finite shots.")
 
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
@@ -280,7 +273,7 @@ class LightningTensor(Device):
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
-        super().__init__(wires=wires, shots=shots)
+        super().__init__(wires=wires, shots=None)
 
         if isinstance(wires, int):
             self._wire_map = None  # should just use wires as is
