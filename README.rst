@@ -478,7 +478,7 @@ License
 
 The Lightning plugins are **free** and **open source**, released under
 the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
-The Lightning-GPU and Lightning-Tensor plugin makes use of the NVIDIA cuQuantum SDK headers to
+The Lightning-GPU and Lightning-Tensor plugins make use of the NVIDIA cuQuantum SDK headers to
 enable the device bindings to PennyLane, which are held to their own respective license.
 
 .. license-end-inclusion-marker-do-not-remove
