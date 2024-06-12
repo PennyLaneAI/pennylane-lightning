@@ -52,7 +52,7 @@ def test_device_available_as_plugin():
 def test_invalid_backend(backend):
     """Test an invalid backend."""
     with pytest.raises(ValueError, match=f"Unsupported backend: {backend}"):
-        LightningTensor(backend=backend)
+        LightningTensor(wires=1, backend=backend)
 
 
 @pytest.mark.parametrize("method", ["fake_method"])

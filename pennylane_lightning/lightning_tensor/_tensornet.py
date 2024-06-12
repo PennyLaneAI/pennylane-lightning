@@ -37,12 +37,12 @@ class LightningTensorNet:
 
     Args:
         num_wires(int): the number of wires to initialize the device with
-        max_bond_dim(int): maximum bond dimension for the tensor network
-        method(string): tensor network method. Options: ["mps"].
-        cutoff(float): threshold for singular value truncation. Default is 0.
-        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
+        method(string): tensor network method. Options: ["mps"]. Default is "mps".
+        max_bond_dim(int): maximum bond dimension for the tensor network
+        cutoff(float): threshold for singular value truncation. Default is 0.
+        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
     """
 
@@ -50,11 +50,11 @@ class LightningTensorNet:
     def __init__(
         self,
         num_wires,
-        max_bond_dim,
         method: str = "mps",
+        dtype=np.complex128,
+        max_bond_dim: int = 128,
         cutoff: float = 0,
         cutoff_mode: str = "abs",
-        dtype=np.complex128,
         device_name="lightning.tensor",
     ):
         self._num_wires = num_wires
