@@ -37,7 +37,7 @@ class LightningTensorNet:
 
     Args:
         num_wires(int): the number of wires to initialize the device with
-        dtype: Datatypes for tensor network representation. Must be one of
+        c_dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         method(string): tensor network method. Options: ["mps"]. Default is "mps".
         max_bond_dim(int): maximum bond dimension for the tensor network
@@ -51,7 +51,7 @@ class LightningTensorNet:
         self,
         num_wires,
         method: str = "mps",
-        dtype=np.complex128,
+        c_dtype=np.complex128,
         max_bond_dim: int = 128,
         cutoff: float = 0,
         cutoff_mode: str = "abs",
@@ -62,7 +62,7 @@ class LightningTensorNet:
         self._method = method
         self._cutoff = cutoff
         self._cutoff_mode = cutoff_mode
-        self._dtype = dtype
+        self._c_dtype = c_dtype
 
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -73,7 +73,7 @@ class LightningTensorNet:
     @property
     def dtype(self):
         """Returns the tensor network data type."""
-        return self._dtype
+        return self._c_dtype
 
     @property
     def device_name(self):
