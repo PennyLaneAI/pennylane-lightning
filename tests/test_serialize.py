@@ -51,6 +51,7 @@ elif device_name == "lightning.gpu":
         TensorProdObsC128,
     )
 elif device_name == "lightning.tensor":
+    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
     from pennylane_lightning.lightning_tensor_ops.observables import (
         HamiltonianC64,
         HamiltonianC128,
@@ -816,3 +817,16 @@ def test_unsupported_obs_returns_expected_type(obs):
         match="SparseHamiltonian is not supported on the lightning.tensor device.",
     ):
         serializer._ob(obs, dict(enumerate(obs.wires)))
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.tensor", reason="Only lightning.tensor requires the dtype check"
+)
+def test_tensornet_dtype():
+    """Tests that the correct TensorNet type is used for the device"""
+
+    serializer_c64 = QuantumScriptSerializer(device_name, use_csingle=True)
+    serializer_c128 = QuantumScriptSerializer(device_name, use_csingle=False)
+
+    assert isinstance(serializer_c64.sv_type(3, 3), TensorNetC64) == True
+    assert isinstance(serializer_c128.sv_type(3, 3), TensorNetC128) == True
