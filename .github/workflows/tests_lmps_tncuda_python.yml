@@ -120,7 +120,6 @@ jobs:
           echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
           
           # Adding venv name as an output for subsequent steps to reference if needed
-          source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
 
       - name: Display Python-Path
@@ -129,6 +128,8 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
+
+          echo "PIP Path => $py_path"
           echo "pip=$py_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
