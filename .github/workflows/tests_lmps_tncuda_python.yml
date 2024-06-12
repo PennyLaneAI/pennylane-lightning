@@ -1,6 +1,5 @@
 name: Testing::Linux::x86_64::MPSTNCuda::Python
 # TODO remove MPS from the workflow name and the workflow filename once exact is in.
-# TODO remove the `PL_TENSOR_METHOD` option once exact TN is added.
 # TODO remove the `pl_tensor_method` once exact TN is added.
 on:
   workflow_call:
@@ -18,7 +17,6 @@ on:
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lmps_tncuda_python.yml'
-      - pennylane_lightning/core/src/**
       - pennylane_lightning/core/src/simulators/lightning_kokkos/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
@@ -119,7 +117,7 @@ jobs:
 
           # Add the venv to PATH for subsequent steps
           echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
-
+          
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
 
@@ -129,10 +127,10 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
-          
+
           pip_path=$(which python)
-          echo "PIP Path => $pip_path"
-          echo "pip=$pip_path" >> $GITHUB_OUTPUT
+          echo "PIP Path => $py_path"
+          echo "pip=$py_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
@@ -162,28 +160,23 @@ jobs:
             python -m pip uninstall -y pennylane && python -m pip install -U pennylane
   
       - name: Build and install package
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
           rm -rf build
   
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
   
       - name: Run PennyLane-Lightning-Tensor unit tests
         if: ${{ matrix.pl_backend != 'all'}}
-        env:
-          OMP_NUM_THREADS: 1
-          OMP_PROC_BIND: false
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/lightning_tensor $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results

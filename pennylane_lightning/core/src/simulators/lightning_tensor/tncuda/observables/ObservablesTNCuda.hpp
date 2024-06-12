@@ -43,12 +43,12 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  * user interface as the observable classes for the statevector backends across
  * the lightning ecosystem.
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT> class ObservableTNCuda {
+template <class TensorNetT> class ObservableTNCuda {
   public:
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
     using MetaDataT = std::tuple<std::string, std::vector<PrecisionT>,
                                  std::vector<ComplexT>>; // name, params, matrix
 
@@ -73,11 +73,11 @@ template <class StateTensorT> class ObservableTNCuda {
      * @brief Polymorphic function comparing this to another Observable
      * object.
      *
-     * @param other Instance of subclass of ObservableTNCuda<StateTensorT> to
+     * @param other Instance of subclass of ObservableTNCuda<TensorNetT> to
      * compare.
      */
     [[nodiscard]] virtual bool
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const = 0;
+    isEqual(const ObservableTNCuda<TensorNetT> &other) const = 0;
 
   public:
     virtual ~ObservableTNCuda() = default;
@@ -133,7 +133,7 @@ template <class StateTensorT> class ObservableTNCuda {
      * @brief Test whether this object is equal to another object
      */
     [[nodiscard]] auto
-    operator==(const ObservableTNCuda<StateTensorT> &other) const -> bool {
+    operator==(const ObservableTNCuda<TensorNetT> &other) const -> bool {
         return typeid(*this) == typeid(other) && isEqual(other);
     }
 
@@ -141,7 +141,7 @@ template <class StateTensorT> class ObservableTNCuda {
      * @brief Test whether this object is different from another object.
      */
     [[nodiscard]] auto
-    operator!=(const ObservableTNCuda<StateTensorT> &other) const -> bool {
+    operator!=(const ObservableTNCuda<TensorNetT> &other) const -> bool {
         return !(*this == other);
     }
 };
@@ -149,25 +149,24 @@ template <class StateTensorT> class ObservableTNCuda {
 /**
  * @brief Named observables (PauliX, PauliY, PauliZ, etc.)
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT>
-class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
+template <class TensorNetT>
+class NamedObsTNCuda : public ObservableTNCuda<TensorNetT> {
   public:
-    using BaseType = ObservableTNCuda<StateTensorT>;
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
+    using BaseType = ObservableTNCuda<TensorNetT>;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
 
   private:
     std::string obs_name_;
     std::vector<std::size_t> wires_;
     std::vector<PrecisionT> params_;
 
-    [[nodiscard]] auto
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+    [[nodiscard]] auto isEqual(const ObservableTNCuda<TensorNetT> &other) const
         -> bool override {
         const auto &other_cast =
-            static_cast<const NamedObsTNCuda<StateTensorT> &>(other);
+            static_cast<const NamedObsTNCuda<TensorNetT> &>(other);
 
         return (obs_name_ == other_cast.obs_name_) &&
                (wires_ == other_cast.wires_) && (params_ == other_cast.params_);
@@ -210,14 +209,14 @@ class NamedObsTNCuda : public ObservableTNCuda<StateTensorT> {
 /**
  * @brief Hermitian observables
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT>
-class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
+template <class TensorNetT>
+class HermitianObsTNCuda : public ObservableTNCuda<TensorNetT> {
   public:
-    using BaseType = ObservableTNCuda<StateTensorT>;
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
+    using BaseType = ObservableTNCuda<TensorNetT>;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
     using MatrixT = std::vector<ComplexT>;
 
   private:
@@ -225,11 +224,10 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     MatrixT matrix_;
     std::vector<std::size_t> wires_;
 
-    [[nodiscard]] auto
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+    [[nodiscard]] auto isEqual(const ObservableTNCuda<TensorNetT> &other) const
         -> bool override {
         const auto &other_cast =
-            static_cast<const HermitianObsTNCuda<StateTensorT> &>(other);
+            static_cast<const HermitianObsTNCuda<TensorNetT> &>(other);
 
         return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
     }
@@ -266,29 +264,33 @@ class HermitianObsTNCuda : public ObservableTNCuda<StateTensorT> {
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }
+
+    /**
+     * @brief Get the matrix of the Hermitian observable.
+     */
+    [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
 };
 
 /**
  * @brief Tensor product of observables.
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT>
-class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
+template <class TensorNetT>
+class TensorProdObsTNCuda : public ObservableTNCuda<TensorNetT> {
   public:
-    using BaseType = ObservableTNCuda<StateTensorT>;
-    using PrecisionT = typename StateTensorT::PrecisionT;
+    using BaseType = ObservableTNCuda<TensorNetT>;
+    using PrecisionT = typename TensorNetT::PrecisionT;
     using MetaDataT = BaseType::MetaDataT;
 
   private:
-    std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
+    std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> obs_;
     std::vector<std::size_t> all_wires_;
 
-    [[nodiscard]] auto
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const
+    [[nodiscard]] auto isEqual(const ObservableTNCuda<TensorNetT> &other) const
         -> bool override {
         const auto &other_cast =
-            static_cast<const TensorProdObsTNCuda<StateTensorT> &>(other);
+            static_cast<const TensorProdObsTNCuda<TensorNetT> &>(other);
 
         if (obs_.size() != other_cast.obs_.size()) {
             return false;
@@ -370,12 +372,12 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
      * brace-enclosed initializer list correctly.
      *
      * @param obs List of observables
-     * @return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>
+     * @return std::shared_ptr<TensorProdObsTNCuda<TensorNetT>>
      */
-    static auto create(
-        std::initializer_list<std::shared_ptr<ObservableTNCuda<StateTensorT>>>
-            obs) -> std::shared_ptr<TensorProdObsTNCuda<StateTensorT>> {
-        return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>{
+    static auto
+    create(std::initializer_list<std::shared_ptr<ObservableTNCuda<TensorNetT>>>
+               obs) -> std::shared_ptr<TensorProdObsTNCuda<TensorNetT>> {
+        return std::shared_ptr<TensorProdObsTNCuda<TensorNetT>>{
             new TensorProdObsTNCuda(std::move(obs))};
     }
 
@@ -387,12 +389,12 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
      * brace-enclosed initializer list correctly.
      *
      * @param obs List of observables
-     * @return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>
+     * @return std::shared_ptr<TensorProdObsTNCuda<TensorNetT>>
      */
     static auto
-    create(std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs)
-        -> std::shared_ptr<TensorProdObsTNCuda<StateTensorT>> {
-        return std::shared_ptr<TensorProdObsTNCuda<StateTensorT>>{
+    create(std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> obs)
+        -> std::shared_ptr<TensorProdObsTNCuda<TensorNetT>> {
+        return std::shared_ptr<TensorProdObsTNCuda<TensorNetT>>{
             new TensorProdObsTNCuda(std::move(obs))};
     }
 
@@ -427,27 +429,35 @@ class TensorProdObsTNCuda : public ObservableTNCuda<StateTensorT> {
         }
         return obs_stream.str();
     }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> {
+        return obs_;
+    };
 };
 
 /**
  * @brief Hamiltonian representation as a sum of observables.
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT>
-class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
+template <class TensorNetT>
+class HamiltonianTNCuda : public ObservableTNCuda<TensorNetT> {
   public:
-    using BaseType = ObservableTNCuda<StateTensorT>;
-    using PrecisionT = typename StateTensorT::PrecisionT;
+    using BaseType = ObservableTNCuda<TensorNetT>;
+    using PrecisionT = typename TensorNetT::PrecisionT;
 
   private:
     std::vector<PrecisionT> coeffs_ham_;
-    std::vector<std::shared_ptr<ObservableTNCuda<StateTensorT>>> obs_;
+    std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> obs_;
 
     [[nodiscard]] bool
-    isEqual(const ObservableTNCuda<StateTensorT> &other) const override {
+    isEqual(const ObservableTNCuda<TensorNetT> &other) const override {
         const auto &other_cast =
-            static_cast<const HamiltonianTNCuda<StateTensorT> &>(other);
+            static_cast<const HamiltonianTNCuda<TensorNetT> &>(other);
 
         if (coeffs_ham_ != other_cast.coeffs_ham_) {
             return false;
@@ -499,15 +509,15 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
      *
      * @param coeffs Arguments to construct coefficients
      * @param obs Arguments to construct observables
-     * @return std::shared_ptr<HamiltonianTNCuda<StateTensorT>>
+     * @return std::shared_ptr<HamiltonianTNCuda<TensorNetT>>
      */
-    static auto create(
-        std::initializer_list<PrecisionT> coeffs,
-        std::initializer_list<std::shared_ptr<ObservableTNCuda<StateTensorT>>>
-            obs) -> std::shared_ptr<HamiltonianTNCuda<StateTensorT>> {
-        return std::shared_ptr<HamiltonianTNCuda<StateTensorT>>(
-            new HamiltonianTNCuda<StateTensorT>{std::move(coeffs),
-                                                std::move(obs)});
+    static auto
+    create(std::initializer_list<PrecisionT> coeffs,
+           std::initializer_list<std::shared_ptr<ObservableTNCuda<TensorNetT>>>
+               obs) -> std::shared_ptr<HamiltonianTNCuda<TensorNetT>> {
+        return std::shared_ptr<HamiltonianTNCuda<TensorNetT>>(
+            new HamiltonianTNCuda<TensorNetT>{std::move(coeffs),
+                                              std::move(obs)});
     }
 
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
@@ -537,5 +547,19 @@ class HamiltonianTNCuda : public ObservableTNCuda<StateTensorT> {
         ss << "]}";
         return ss.str();
     }
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<ObservableTNCuda<TensorNetT>>> {
+        return obs_;
+    };
+
+    /**
+     * @brief Get the coefficients of the observable.
+     */
+    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> {
+        return BaseType::getCoeffs();
+    };
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Observables

@@ -33,8 +33,8 @@ except ImportError:
 from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
+if device_name != "lightning.qubit":
+    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

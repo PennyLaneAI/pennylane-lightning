@@ -35,7 +35,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 def test_device_name_and_init(num_wires, c_dtype):
     """Test the class initialization and returned properties."""
     wires = Wires(range(num_wires)) if num_wires else None
-    dev = LightningTensor(wires=wires, maxBondDim=10, c_dtype=c_dtype)
+    dev = LightningTensor(wires=wires, max_bond_dim=10, c_dtype=c_dtype)
     assert dev.name == "lightning.tensor"
     assert dev.c_dtype == c_dtype
     assert dev.wires == wires
@@ -63,9 +63,9 @@ def test_invalid_method(method):
 
 
 def test_invalid_bonddims():
-    """Test that an error is raised if bonddims are less than 1."""
+    """Test that an error is raised if bond dimensions are less than 1."""
     with pytest.raises(ValueError):
-        LightningTensor(wires=5, maxBondDim=0)
+        LightningTensor(wires=5, max_bond_dim=0)
 
 
 def test_invalid_wires_none():
@@ -74,10 +74,10 @@ def test_invalid_wires_none():
         LightningTensor(wires=None)
 
 
-def test_invalid_shots():
-    """Test that an error is raised if finite number of shots are requestd."""
+def test_invalid_cutoff_mode():
+    """Test that an error is raised if an invalid cutoff mode is provided."""
     with pytest.raises(ValueError):
-        LightningTensor(shots=5)
+        LightningTensor(wires=2, cutoff_mode="invalid_mode")
 
 
 def test_support_derivatives():

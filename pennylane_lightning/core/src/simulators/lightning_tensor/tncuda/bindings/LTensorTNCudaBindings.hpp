@@ -11,6 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+/**
+ * @file LTensorTNCudaBindings.hpp
+ * Defines LightningTensor-specific operations to export to Python, other
+ * utility functions interfacing with Pybind11 and support to agnostic bindings.
+ */
+
 #pragma once
 #include <vector>
 
@@ -21,8 +28,6 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MPSTNCuda.hpp"
-#include "MeasurementsTNCuda.hpp"
-#include "ObservablesTNCuda.hpp"
 #include "TypeList.hpp"
 #include "cuda_helpers.hpp"
 
@@ -30,8 +35,6 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
-using namespace Pennylane::LightningTensor::TNCuda::Measures;
-using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 } // namespace
 /// @endcond
@@ -39,15 +42,15 @@ using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 namespace py = pybind11;
 
 namespace Pennylane::LightningTensor::TNCuda {
-using StateTensorBackends =
+using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 
 /**
- * @brief Get a gate kernel map for a statetensor.
+ * @brief Get a gate kernel map for a tensor network.
  */
-template <class StateTensorT, class PyClass>
+template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerGatesForStateTensor<StateTensorT>(pyclass);
+    registerGatesForTensorNet<TensorNet>(pyclass);
 
     pyclass
         .def(py::init<const std::size_t,
@@ -56,16 +59,19 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "setBasisState",
-            [](StateTensorT &state_tensor,
+            [](TensorNet &tensor_network,
                std::vector<std::size_t> &basisState) {
-                state_tensor.setBasisState(basisState);
+                tensor_network.setBasisState(basisState);
             },
             "Create Basis State on GPU.")
         .def(
-            "getFinalState",
-            [](StateTensorT &state_tensor) { state_tensor.get_final_state(); },
+            "appendMPSFinalState",
+            [](TensorNet &tensor_network, double cutoff,
+               std::string cutoff_mode) {
+                tensor_network.append_mps_final_state(cutoff, cutoff_mode);
+            },
             "Get the final state.")
-        .def("reset", &StateTensorT::reset, "Reset the statevector.");
+        .def("reset", &TensorNet::reset, "Reset the statevector.");
 }
 
 /**
@@ -82,6 +88,7 @@ auto getBackendInfo() -> py::dict {
  *
  * @param m Pybind11 module.
  */
+// TODO Move this method to a separate module for both LGPU and LTensor usage.
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
     m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");
@@ -94,7 +101,7 @@ void registerBackendSpecificInfo(py::module_ &m) {
     m.def("is_gpu_supported", &isCuQuantumSupported,
           py::arg("device_number") = 0,
           "Checks if the given GPU device meets the minimum architecture "
-          "support for the PennyLane-Lightning-GPU device.");
+          "support for the `lightning.tensor` device.");
 
     m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
           "Returns the given GPU major and minor GPU support.");

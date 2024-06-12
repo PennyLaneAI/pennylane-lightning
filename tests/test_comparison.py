@@ -59,6 +59,10 @@ def one_qubit_block(wires=None):
     qml.PauliX(wires=wires)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor device dose not support state return",
+)
 class TestComparison:
     """A test that compares the output states of the lightning device and ``default.qubit`` for a
     variety of different circuits. This uses ``default.qubit`` as a reference."""

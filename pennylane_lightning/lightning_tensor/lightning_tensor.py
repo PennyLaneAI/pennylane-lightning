@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
-It is a device to perform tensor network simulation of a quantum circuit. 
+It is a device to perform tensor network simulations of quantum circuits using `cutensornet`. 
 """
 from dataclasses import replace
 from numbers import Number
@@ -34,8 +34,8 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._measurements import LightningMeasurements
-from ._state_tensor import LightningStateTensor
+from ._measurements import LightningTensorMeasurements
+from ._tensornet import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
@@ -60,6 +60,7 @@ _methods = frozenset({"mps"})
 _operations = frozenset(
     {
         "Identity",
+        "BasisState",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -69,12 +70,17 @@ _operations = frozenset(
         "PauliZ",
         "Hadamard",
         "S",
+        "Adjoint(S)",
         "T",
+        "Adjoint(T)",
         "SX",
+        "Adjoint(SX)",
         "CNOT",
         "SWAP",
         "ISWAP",
+        "Adjoint(ISWAP)",
         "PSWAP",
+        "Adjoint(SISWAP)",
         "SISWAP",
         "SQISW",
         "CSWAP",
@@ -105,6 +111,7 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 
@@ -116,7 +123,6 @@ _observables = frozenset(
         "Hadamard",
         "Hermitian",
         "Identity",
-        "Projector",
         "Hamiltonian",
         "LinearCombination",
         "Sum",
@@ -128,29 +134,29 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition_mps(op: Operator) -> bool:
+def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2
+    return op.has_matrix and len(op.wires) <= 2 and op.name in _operations
 
 
-def simulate(circuit: QuantumScript, state: LightningStateTensor) -> Result:
+def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
     """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateTensor): handle to Lightning state tensor
+        tensornet (LightningTensorNet): handle to Lightning tensor network
 
     Returns:
         Tuple[TensorLike]: The results of the simulation
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    state.reset_state()
-    state.get_final_state(circuit)
-    return LightningMeasurements(state).measure_final_state(circuit)
+    tensornet.reset_state()
+    tensornet.set_tensor_network(circuit)
+    return LightningTensorMeasurements(tensornet).measure_tensor_network(circuit)
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -175,23 +181,55 @@ class LightningTensor(Device):
 
     A device to perform tensor network operations on a quantum circuit.
 
+    This device is designed to simulate large-scale quantum circuits using tensor network methods. For
+    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
+    recommended.
+
+    Currently, only the Matrix Product State (MPS) method as implemented in the ``cutensornet`` backend is supported.
+
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+            The accuracy of the wavefunction representation comes with a memory tradeoff which can be
+            tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
+            be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
+            competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
+            layers with a single or few gates because the arithmetic intensity is lower.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0
+        cutoff_mode (str): Singular value truncation mode. Options: ["rel", "abs"].
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
         method (str): Supported method. Currently, only ``mps`` is supported.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Currently, it can only be ``None``, so that computation of
-            statistics like expectation values and variances is performed analytically.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        **kwargs: keyword arguments. TODO add when cuTensorNet MPS backend is available as a prototype.
+        **kwargs: keyword arguments.
+
+    **Example**
+
+    .. code-block:: python
+
+        import pennylane as qml
+
+        num_qubits = 100
+
+        dev = qml.device("lightning.tensor", wires=num_qubits)
+
+        @qml.qnode(dev)
+        def circuit(num_qubits):
+            for qubit in range(0, num_qubits - 1):
+                qml.CZ(wires=[qubit, qubit + 1])
+                qml.X(wires=[qubit])
+                qml.Z(wires=[qubit + 1])
+            return qml.expval(qml.Z(0))
+
+    >>> print(circuit(num_qubits))
+    -1.0
     """
 
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "c_dtype")
+    _device_options = ("backend", "c_dtype", "max_bond_dim", "cutoff", "cutoff_mode", "method")
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -200,10 +238,11 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
-        maxBondDim=10,
-        backend="cutensornet",
-        method="mps",
-        shots=None,
+        max_bond_dim: int = 128,
+        cutoff: float = 0,
+        cutoff_mode: str = "abs",
+        backend: str = "cutensornet",
+        method: str = "mps",
         c_dtype=np.complex128,
         **kwargs,
     ):
@@ -216,13 +255,16 @@ class LightningTensor(Device):
         if not accepted_methods(method):
             raise ValueError(f"Unsupported method: {method}")
 
-        if shots is not None:
-            raise ValueError("lightning.tensor does not support finite shots.")
+        if cutoff_mode not in ["rel", "abs"]:
+            raise ValueError(f"Unsupported cutoff mode: {cutoff_mode}")
+
+        if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
+            raise TypeError(f"Unsupported complex type: {c_dtype}")
 
         if wires is None:
             raise ValueError("The number of wires must be specified.")
 
-        if not isinstance(maxBondDim, int) or maxBondDim < 1:
+        if not isinstance(max_bond_dim, int) or max_bond_dim < 1:
             raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
         for arg in kwargs:
@@ -231,7 +273,7 @@ class LightningTensor(Device):
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
-        super().__init__(wires=wires, shots=shots)
+        super().__init__(wires=wires, shots=None)
 
         if isinstance(wires, int):
             self._wire_map = None  # should just use wires as is
@@ -239,7 +281,9 @@ class LightningTensor(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._num_wires = len(self.wires) if self.wires else 0
-        self._maxBondDim = maxBondDim
+        self._max_bond_dim = max_bond_dim
+        self._cutoff = cutoff
+        self._cutoff_mode = cutoff_mode
         self._backend = backend
         self._method = method
         self._c_dtype = c_dtype
@@ -269,9 +313,16 @@ class LightningTensor(Device):
         """Tensor complex data type."""
         return self._c_dtype
 
-    def _state_tensor(self):
-        """Return the state tensor object."""
-        return LightningStateTensor(self._num_wires, self._maxBondDim, self._c_dtype)
+    def _tensornet(self):
+        """Return the tensornet object."""
+        return LightningTensorNet(
+            self._num_wires,
+            self._max_bond_dim,
+            self._method,
+            self._cutoff,
+            self._cutoff_mode,
+            self._c_dtype,
+        )
 
     dtype = c_dtype
 
@@ -314,7 +365,6 @@ class LightningTensor(Device):
         * Does not support vector-Jacobian products.
         """
 
-        # TODO: remove comments when cuTensorNet MPS backend is available as a prototype
         config = self._setup_execution_config(execution_config)
 
         program = TransformProgram()
@@ -324,7 +374,7 @@ class LightningTensor(Device):
         program.add_transform(validate_device_wires, self._wires, name=self.name)
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition_mps,
+            stopping_condition=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
         )
@@ -351,7 +401,7 @@ class LightningTensor(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._state_tensor()))
+            results.append(simulate(circuit, self._tensornet()))
 
         return tuple(results)
 

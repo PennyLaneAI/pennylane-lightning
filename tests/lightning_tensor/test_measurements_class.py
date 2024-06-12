@@ -20,10 +20,12 @@ import pytest
 from conftest import LightningDevice, device_name  # tested device
 
 if device_name != "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningMeasurements class.", allow_module_level=True)
-else:
-    from pennylane_lightning.lightning_tensor._measurements import LightningMeasurements
-    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+    pytest.skip(
+        "Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True
+    )
+
+from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
+from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -32,40 +34,40 @@ THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 
 
-# General LightningStateTensor fixture, for any number of wires.
+# General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
     params=[np.complex64, np.complex128],
 )
-def lightning_st(request):
-    """Fixture for creating a LightningStateTensor object."""
-    return LightningStateTensor(num_wires=5, maxBondDim=128, dtype=request.param)
+def lightning_tn(request):
+    """Fixture for creating a LightningTensorNet object."""
+    return LightningTensorNet(num_wires=5, max_bond_dim=128, dtype=request.param)
 
 
 class TestMeasurementFunction:
     """Tests for the measurement method."""
 
-    def test_initialization(self, lightning_st):
-        """Tests for the initialization of the LightningMeasurements class."""
-        statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+    def test_initialization(self, lightning_tn):
+        """Tests for the initialization of the LightningTensorMeasurements class."""
+        tensornetwork = lightning_tn
+        m = LightningTensorMeasurements(tensornetwork)
 
-        assert m.dtype == statetensor.dtype
+        assert m.dtype == tensornetwork.dtype
 
-    def test_not_implemented_state_measurements(self, lightning_st):
+    def test_not_implemented_state_measurements(self, lightning_tn):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+        tensornetwork = lightning_tn
+        m = LightningTensorMeasurements(tensornetwork)
 
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    def test_not_measure_final_state(self, lightning_st):
+    def test_not_measure_tensor_network(self, lightning_tn):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        statetensor = lightning_st
-        m = LightningMeasurements(statetensor)
+        tensornetwork = lightning_tn
+        m = LightningTensorMeasurements(tensornetwork)
 
         tape = qml.tape.QuantumScript(
             [qml.RX(0.1, wires=0), qml.Hadamard(1), qml.PauliZ(1)],
@@ -74,4 +76,4 @@ class TestMeasurementFunction:
         )
 
         with pytest.raises(NotImplementedError):
-            m.measure_final_state(tape)
+            m.measure_tensor_network(tape)

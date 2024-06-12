@@ -1,6 +1,9 @@
 # Release 0.37.0-dev
 
 ### New features since last release
+* Implement Python interface to the `lightning.tensor` device.
+  [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748) 
+
 * Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
   [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
@@ -31,6 +34,13 @@
   [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
 
 ### Improvements
+
+* Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
+  [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759) 
+  
+* Rationalize MCM tests, removing most end-to-end tests from the native MCM test file,
+  but keeping one that validates multiple mid-circuit measurements with any allowed return.
+  [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
 
 * Refactor C++ library names for `lightning.tensor`.
   [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755) 
@@ -96,6 +106,12 @@
 
 * Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
   [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
+
+* Fix the memory segfault with initializing zero-wire LightningKokkos.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
+
+* Remove `pennylane.ops.op_math.controlled_decompositions.ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
 
 ### Contributors
 

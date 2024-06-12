@@ -54,13 +54,13 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
  * object, which ensures its lifetime is aligned with that of data associated to
  * it.
  *
- * @tparam StateTensorT State tensor class.
+ * @tparam TensorNetT tensor network class.
  */
-template <class StateTensorT> class ObservableTNCudaOperator {
+template <class TensorNetT> class ObservableTNCudaOperator {
   public:
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using CFP_t = typename StateTensorT::CFP_t;
-    using ComplexT = typename StateTensorT::ComplexT;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using CFP_t = typename TensorNetT::CFP_t;
+    using ComplexT = typename TensorNetT::ComplexT;
     using obs_key =
         std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
@@ -68,7 +68,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     cutensornetNetworkOperator_t obsOperator_{
         nullptr}; // cutensornetNetworkOperator operator
 
-    const StateTensorT &state_tensor_; // quantum state to be measured
+    const TensorNetT &tensor_network_; // quantum state to be measured
 
     const std::size_t numObsTerms_;    // number of observable terms
     vector1D<cuDoubleComplex> coeffs_; // coefficients for each term
@@ -145,7 +145,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
         auto extents = std::vector<std::size_t>(rank, 2);
 
         auto &&tensor = TensorCuda<PrecisionT>(rank, modes, extents,
-                                               state_tensor_.getDevTag());
+                                               tensor_network_.getDevTag());
 
         device_obs_cache_.emplace(std::piecewise_construct,
                                   std::forward_as_tuple(obsKey),
@@ -167,17 +167,17 @@ template <class StateTensorT> class ObservableTNCudaOperator {
     }
 
   public:
-    ObservableTNCudaOperator(const StateTensorT &state_tensor,
-                             ObservableTNCuda<StateTensorT> &obs)
-        : state_tensor_{state_tensor},
+    ObservableTNCudaOperator(const TensorNetT &tensor_network,
+                             ObservableTNCuda<TensorNetT> &obs)
+        : tensor_network_{tensor_network},
           numObsTerms_(obs.getNumTensors().size()) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ state_tensor.getTNCudaHandle(),
-            /* int32_t */ static_cast<int32_t>(state_tensor.getNumQubits()),
+            /* const cutensornetHandle_t */ tensor_network.getTNCudaHandle(),
+            /* int32_t */ static_cast<int32_t>(tensor_network.getNumQubits()),
             /* const int64_t stateModeExtents */
-            reinterpret_cast<int64_t *>(
-                const_cast<std::size_t *>(state_tensor.getQubitDims().data())),
-            /* cudaDataType_t */ state_tensor.getCudaDataType(),
+            reinterpret_cast<int64_t *>(const_cast<std::size_t *>(
+                tensor_network.getQubitDims().data())),
+            /* cudaDataType_t */ tensor_network.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
 
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
@@ -200,7 +200,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                 modes_per_term.emplace_back(
                     cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                         obs.getStateModes()[term_idx][tensor_idx],
-                        state_tensor.getNumQubits()));
+                        tensor_network.getNumQubits()));
             }
             modes_.emplace_back(modes_per_term);
 
@@ -280,7 +280,7 @@ template <class StateTensorT> class ObservableTNCudaOperator {
                            const void **tensorDataPtr) {
         int64_t id;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetNetworkOperator_t */ getTNOperator(),
             /* cuDoubleComplex coefficient*/ coeff,
             /* int32_t numTensors */ static_cast<int32_t>(numTensors),

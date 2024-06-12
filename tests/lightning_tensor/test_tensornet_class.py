@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Unit tests for the state tensor functions.
+Unit tests for the tensornet functions.
 """
 
 import math
@@ -25,9 +25,9 @@ from pennylane import DeviceError
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
-    pytest.skip("Skipping tests for the state tensor class.", allow_module_level=True)
+    pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
 else:
-    from pennylane_lightning.lightning_tensor._state_tensor import LightningStateTensor
+    from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -39,27 +39,26 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 @pytest.mark.parametrize("device_name", ["lightning.tensor"])
 def test_device_name_and_init(num_wires, bondDims, dtype, device_name):
     """Test the class initialization and returned properties."""
-    state_tensor = LightningStateTensor(num_wires, bondDims, dtype=dtype, device_name=device_name)
-    assert state_tensor.dtype == dtype
-    assert state_tensor.device_name == device_name
-    assert state_tensor.num_wires == num_wires
-    assert state_tensor.wires == Wires(range(num_wires))
+    tensornet = LightningTensorNet(num_wires, bondDims, dtype=dtype, device_name=device_name)
+    assert tensornet.dtype == dtype
+    assert tensornet.device_name == device_name
+    assert tensornet.num_wires == num_wires
 
 
 def test_wrong_device_name():
     """Test an invalid device name"""
     with pytest.raises(qml.DeviceError, match="The device name"):
-        LightningStateTensor(3, 5, device_name="thunder.tensor")
+        LightningTensorNet(3, 5, device_name="thunder.tensor")
 
 
 def test_errors_basis_state():
     """Test that errors are raised when applying a BasisState operation."""
     with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
-        state_tensor = LightningStateTensor(3, 5)
-        state_tensor.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
+        tensornet = LightningTensorNet(3, 5)
+        tensornet.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
     with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
-        state_tensor = LightningStateTensor(3, 5)
-        state_tensor.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
+        tensornet = LightningTensorNet(3, 5)
+        tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
 
 @pytest.mark.parametrize(
@@ -81,9 +80,9 @@ def test_errors_apply_operation_state_preparation(operation, par):
     """Test that errors are raised when applying a StatePreparation operation."""
     wires = 2
     bondDims = 5
-    state_tensor = LightningStateTensor(wires, bondDims)
+    tensornet = LightningTensorNet(wires, bondDims)
 
     with pytest.raises(
         DeviceError, match="lightning.tensor does not support initialization with a state vector."
     ):
-        state_tensor.apply_operations([operation(np.array(par), Wires(range(wires)))])
+        tensornet.apply_operations([operation(np.array(par), Wires(range(wires)))])
