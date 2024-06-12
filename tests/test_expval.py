@@ -21,6 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
+from conftest import device_name
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -134,6 +135,10 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support qml.Projector()",
+    )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
@@ -158,7 +163,7 @@ class TestExpval:
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
-    @pytest.mark.parametrize("n_wires", range(1, 7))
+    @pytest.mark.parametrize("n_wires", range(1, 7 if device_name != "lightning.tensor" else 5))
     def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):
         """Test that Hermitian expectation value is correct"""
         n_qubits = 7
@@ -178,7 +183,8 @@ class TestExpval:
             obs = qml.Hermitian(U, wires=perm)
 
             def circuit():
-                qml.StatePrep(init_state, wires=range(n_qubits))
+                if device_name != "lightning.tensor":
+                    qml.StatePrep(init_state, wires=range(n_qubits))
                 qml.RY(theta, wires=[0])
                 qml.RY(phi, wires=[1])
                 qml.CNOT(wires=[0, 1])
@@ -189,7 +195,19 @@ class TestExpval:
             assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
+@pytest.mark.parametrize(
+    "diff_method",
+    [
+        "parameter-shift",
+        pytest.param(
+            "adjoint",
+            marks=pytest.mark.skipif(
+                device_name == "lightning.tensor",
+                reason="lightning.tensor does not support the adjoint method",
+            ),
+        ),
+    ],
+)
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
 
