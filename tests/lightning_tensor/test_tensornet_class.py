@@ -39,7 +39,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 @pytest.mark.parametrize("device_name", ["lightning.tensor"])
 def test_device_name_and_init(num_wires, bondDims, dtype, device_name):
     """Test the class initialization and returned properties."""
-    tensornet = LightningTensorNet(num_wires, bondDims, dtype=dtype, device_name=device_name)
+    tensornet = LightningTensorNet(num_wires, bondDims, c_dtype=dtype, device_name=device_name)
     assert tensornet.dtype == dtype
     assert tensornet.device_name == device_name
     assert tensornet.num_wires == num_wires

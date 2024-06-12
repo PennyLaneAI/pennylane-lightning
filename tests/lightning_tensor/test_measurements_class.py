@@ -40,7 +40,7 @@ PHI = np.linspace(0.32, 1, 3)
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
-    return LightningTensorNet(num_wires=5, max_bond_dim=128, dtype=request.param)
+    return LightningTensorNet(num_wires=5, max_bond_dim=128, c_dtype=request.param)
 
 
 class TestMeasurementFunction:
