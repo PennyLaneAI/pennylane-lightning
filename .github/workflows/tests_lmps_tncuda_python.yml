@@ -1,6 +1,5 @@
 name: Testing::Linux::x86_64::MPSTNCuda::Python
 # TODO remove MPS from the workflow name and the workflow filename once exact is in.
-# TODO remove the `PL_TENSOR_METHOD` option once exact TN is added.
 # TODO remove the `pl_tensor_method` once exact TN is added.
 on:
   workflow_call:
@@ -129,6 +128,7 @@ jobs:
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
 
+          pip_path=$(which python)
           echo "PIP Path => $py_path"
           echo "pip=$py_path" >> $GITHUB_OUTPUT
 
