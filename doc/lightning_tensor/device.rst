@@ -2,7 +2,7 @@ Lightning Tensor device
 =======================
 
 The ``lightning.tensor`` device is a tensor network based device. It extends Pennylane-Lightning to run tensor network based simulations. 
-The device is built on top of the `cutensornet` from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution.
+The device is built on top of the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`__ from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution.
 
 A ``lightning.tensor`` device can be loaded using:
 
