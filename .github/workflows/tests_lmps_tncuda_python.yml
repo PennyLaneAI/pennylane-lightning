@@ -160,8 +160,6 @@ jobs:
             python -m pip uninstall -y pennylane && python -m pip install -U pennylane
   
       - name: Build and install package
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           cd main
           rm -rf build
