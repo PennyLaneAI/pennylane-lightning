@@ -386,7 +386,7 @@ Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` env
 
 .. code-block:: console
 
-    python -m pip install wheel cutensornet-cu12
+    pip install cutensornet-cu12
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
 
 The Lightning-Tensor can then be installed with ``pip``:
