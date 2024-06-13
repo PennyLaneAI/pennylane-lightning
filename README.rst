@@ -58,7 +58,7 @@ The following table summarizes the supported platforms and the primary installat
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 |           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |    L-Tensor    |
 +===========+=========+========+=============+================+=================+================+================+
-| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     source     | 
+| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     source     |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 | Linux ARM | pip     | source |             | pip            | source          | source         |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
