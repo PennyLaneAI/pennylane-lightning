@@ -119,6 +119,7 @@ jobs:
           echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
           
           # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
 
       - name: Display Python-Path
@@ -128,7 +129,6 @@ jobs:
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
 
-          pip_path=$(which python)
           echo "PIP Path => $py_path"
           echo "pip=$py_path" >> $GITHUB_OUTPUT
 
@@ -157,7 +157,7 @@ jobs:
         if: inputs.pennylane-version == 'stable'
         run: |
           cd main
-            python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
   
       - name: Build and install package
         run: |
