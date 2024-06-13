@@ -130,8 +130,8 @@ jobs:
           echo "python=$py_path" >> $GITHUB_OUTPUT
 
           pip_path=$(which python)
-          echo "PIP Path => $py_path"
-          echo "pip=$py_path" >> $GITHUB_OUTPUT
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
