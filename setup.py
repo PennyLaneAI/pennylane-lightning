@@ -21,7 +21,7 @@ from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 
@@ -177,7 +177,8 @@ requirements = [
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core", "pennylane_lightning.include", "pennylane_lightning.lightning_tensor"]
+    packages_list += ["pennylane_lightning.core", "pennylane_lightning.include"]
+
 else:
     requirements += ["pennylane_lightning==" + version]
 
@@ -187,10 +188,6 @@ if suffix == "gpu":
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
-if suffix == "Qubit":
-    pennylane_plugins.append(
-        "lightning.tensor = pennylane_lightning.lightning_tensor:LightningTensor"
-    )
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
@@ -227,11 +224,7 @@ if backend == "lightning_qubit":
                     os.path.join("src", "*"),
                     os.path.join("src", "**", "*"),
                 ],
-                "pennylane_lightning.include": ["*"],
-                "pennylane_lightning.lightning_tensor": [
-                    os.path.join("backends", "*"),
-                    os.path.join("backends", "**", "*"),
-                ],
+                "pennylane_lightning.include": ["*"]
             },
         }
     )

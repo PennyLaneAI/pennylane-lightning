@@ -76,4 +76,61 @@ void registerGatesForStateVector(PyClass &pyclass) {
         pyclass.def(gate_name.c_str(), func, doc.c_str());
     });
 }
+
+// TODO: Unify registerTensor and registerGatesForStateVector
+/**
+ * @brief Register matrix.
+ */
+template <class TensorNetT>
+void registerTensor(
+    TensorNetT &tensor_network,
+    const py::array_t<std::complex<typename TensorNetT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename TensorNetT::ComplexT;
+    const auto m_buffer = matrix.request();
+    std::vector<ComplexT> conv_matrix;
+    if (m_buffer.size) {
+        const auto m_ptr = static_cast<const ComplexT *>(m_buffer.ptr);
+        conv_matrix = std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
+    }
+    tensor_network.applyOperation("applyMatrix", wires, inverse, {},
+                                  conv_matrix);
+}
+
+// TODO: Unify registerGatesForTensorNet and registerMatrix
+/**
+ * @brief Register TensorNet class to pybind.
+ *
+ * @tparam TensorNetT Tensor network type to register
+ * @tparam Pyclass Pybind11's class object type
+ *
+ * @param pyclass Pybind11's class object to bind tensor network
+ */
+template <class TensorNetT, class PyClass>
+void registerGatesForTensorNet(PyClass &pyclass) {
+    using PrecisionT = typename TensorNetT::PrecisionT; // TensorNet's precision
+    using ParamT = PrecisionT; // Parameter's data precision
+
+    using Pennylane::Gates::GateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    pyclass.def("applyMatrix", &registerTensor<TensorNetT>,
+                "Apply a given matrix to wires.");
+
+    for_each_enum<GateOperation>([&pyclass](GateOperation gate_op) {
+        using Pennylane::Util::lookup;
+        const auto gate_name =
+            std::string(lookup(Constant::gate_names, gate_op));
+        const std::string doc = "Apply the " + gate_name + " gate.";
+        auto func = [gate_name = gate_name](
+                        TensorNetT &tensor_network,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<ParamT> &params) {
+            tensor_network.applyOperation(gate_name, wires, inverse, params);
+        };
+        pyclass.def(gate_name.c_str(), func, doc.c_str());
+    });
+}
 } // namespace Pennylane::Bindings

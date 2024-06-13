@@ -82,6 +82,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   public:
     MPSTNCuda() = delete;
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
@@ -90,6 +92,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
     }
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
@@ -204,9 +208,13 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     };
 
     /**
-     * @brief Get final state of the quantum circuit.
+     * @brief Append MPS final state to the quantum circuit.
+     *
+     * @param cutoff Cutoff value for SVD decomposition. Default is 0.
+     * @param cutoff_mode Cutoff mode for SVD decomposition. Default is "abs".
      */
-    void get_final_state() {
+    void append_mps_final_state(double cutoff = 0,
+                                std::string cutoff_mode = "abs") {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
             MPSFinalized_ = MPSStatus::MPSFinalizedSet;
             PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
@@ -230,6 +238,21 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             /* const void * */ &algo,
             /* size_t */ sizeof(algo)));
+
+        PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
+                        "cutoff_mode should either 'rel' or 'abs'.");
+
+        cutensornetStateAttributes_t svd_cutoff_mode =
+            (cutoff_mode == "abs")
+                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
+                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
+            /* const void * */ &cutoff,
+            /* size_t */ sizeof(cutoff)));
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),

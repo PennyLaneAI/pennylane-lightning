@@ -42,21 +42,21 @@ namespace Pennylane::LightningTensor::TNCuda::Measures {
 /**
  * @brief ObservablesTNCuda's Measurement Class.
  *
- * This class couples with a state tensor to perform measurements.
+ * This class couples with a tensor network to perform measurements.
  * Observables are defined in the observable class.
  *
- * @tparam StateTensorT type of the state tensor to be measured.
+ * @tparam TensorNetT type of the tensor network to be measured.
  */
-template <class StateTensorT> class MeasurementsTNCuda {
+template <class TensorNetT> class MeasurementsTNCuda {
   private:
-    using PrecisionT = typename StateTensorT::PrecisionT;
-    using ComplexT = typename StateTensorT::ComplexT;
+    using PrecisionT = typename TensorNetT::PrecisionT;
+    using ComplexT = typename TensorNetT::ComplexT;
 
-    StateTensorT &state_tensor_;
+    const TensorNetT &tensor_network_;
 
   public:
-    explicit MeasurementsTNCuda(StateTensorT &state_tensor)
-        : state_tensor_(state_tensor){};
+    explicit MeasurementsTNCuda(const TensorNetT &tensor_network)
+        : tensor_network_(tensor_network){};
 
     /**
      * @brief Calculate expectation value for a general Observable.
@@ -67,10 +67,10 @@ template <class StateTensorT> class MeasurementsTNCuda {
      *
      * @return Expectation value with respect to the given observable.
      */
-    auto expval(ObservableTNCuda<StateTensorT> &obs,
+    auto expval(ObservableTNCuda<TensorNetT> &obs,
                 const int32_t numHyperSamples = 1) -> PrecisionT {
         auto tnoperator =
-            ObservableTNCudaOperator<StateTensorT>(state_tensor_, obs);
+            ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs);
 
         ComplexT expectation_val{0.0, 0.0};
         ComplexT state_norm2{0.0, 0.0};
@@ -78,13 +78,13 @@ template <class StateTensorT> class MeasurementsTNCuda {
         cutensornetStateExpectation_t expectation;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
-            /* cutensornetState_t */ state_tensor_.getQuantumState(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetState_t */ tensor_network_.getQuantumState(),
             /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
             /* cutensornetStateExpectation_t * */ &expectation));
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetStateExpectation_t */ expectation,
             /* cutensornetExpectationAttributes_t */
             CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
@@ -93,7 +93,7 @@ template <class StateTensorT> class MeasurementsTNCuda {
 
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
 
         const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
@@ -101,28 +101,28 @@ template <class StateTensorT> class MeasurementsTNCuda {
         // Prepare the specified quantum circuit expectation value for
         // computation
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetStateExpectation_t */ expectation,
             /* size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
 
         std::size_t worksize =
-            getWorkSpaceMemorySize(state_tensor_.getTNCudaHandle(), workDesc);
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
 
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");
 
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
         DataBuffer<size_t, int> d_scratch(d_scratch_length,
-                                          state_tensor_.getDevTag(), true);
+                                          tensor_network_.getDevTag(), true);
 
-        setWorkSpaceMemory(state_tensor_.getTNCudaHandle(), workDesc,
+        setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,
                            reinterpret_cast<void *>(d_scratch.getData()),
                            worksize);
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationCompute(
-            /* const cutensornetHandle_t */ state_tensor_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetStateExpectation_t */ expectation,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* void* */ static_cast<void *>(&expectation_val),

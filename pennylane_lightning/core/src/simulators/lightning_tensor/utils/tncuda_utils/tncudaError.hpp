@@ -44,7 +44,7 @@ using namespace Pennylane::Util;
                         GetCuTensorNetworkErrorString(err)                     \
                             .c_str())
 #else
-#define PL_CUTENSORNET_IS_SUCCESS                                              \
+#define PL_CUTENSORNET_IS_SUCCESS(err)                                         \
     { static_cast<void>(err); }
 #endif
 

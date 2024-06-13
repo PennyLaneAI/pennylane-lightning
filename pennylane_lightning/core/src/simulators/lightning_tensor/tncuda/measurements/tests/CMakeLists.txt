@@ -20,7 +20,7 @@ target_link_libraries(${PL_BACKEND}_measurements_tests INTERFACE     Catch2::Cat
                                                                 ${PL_BACKEND}_utils
                                                                 ${PL_BACKEND}_measurements
                                                                 ${PL_BACKEND}_observables
-                                                                ${PL_TENSOR}
+                                                                ${PL_BACKEND}
                                                                 )
 
 ProcessTestOptions(${PL_BACKEND}_measurements_tests)
