@@ -393,7 +393,7 @@ The Lightning-Tensor can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_tensor" python -m pip install -e .
+    PL_BACKEND="lightning_tensor" pip install -e .
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
