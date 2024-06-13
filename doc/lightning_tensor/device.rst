@@ -1,5 +1,5 @@
 Lightning Tensor device
-====================
+=======================
 
 The ``lightning.tensor`` device is a tensor network based device. It extends Pennylane-Lightning to run tensor network based simulations. 
 The device is built on top of the `cutensornet` from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution.
@@ -26,7 +26,7 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 Supported operations and observables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `lightning.tensor` only supports 1,2-wires gates operations and gates operations that can be decomposed into 1,2-wires gates.
+The ``lightning.tensor`` only supports 1,2-wires gates operations and gates operations that can be decomposed into 1,2-wires gates.
 
 **Supported operations:**
 
@@ -90,7 +90,7 @@ The `lightning.tensor` only supports 1,2-wires gates operations and gates operat
 
 **Supported observables:**
 
-The `lightning.tensor` supports all observables supported by lightning state-vector simulators, besides `qml.SparseHamiltonian` and `qml.Projector`.
+The ``lightning.tensor`` supports all observables supported by lightning state-vector simulators, besides ``qml.SparseHamiltonian`` and ``qml.Projector``.
 
 
 .. raw:: html
