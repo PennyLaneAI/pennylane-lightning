@@ -86,7 +86,7 @@
 
 ### Bug fixes
 
-* Fix random CI failures for `lightning.tensor` python unit tests by add `CUQUANTUM_SDK` env and ignore `lightning_tensor` paths.
+* Fix random CI failures for `lightning.tensor` python unit tests and ignore `lightning_tensor` paths.
   [(#761)](https://github.com/PennyLaneAI/pennylane-lightning/pull/761)
 
 * `lightning.qubit` and `lightning.kokkos` use `qml.ops.Conditional.base` instead of `qml.ops.Conditional.then_op`.
