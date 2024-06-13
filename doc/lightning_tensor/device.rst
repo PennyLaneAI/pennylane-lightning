@@ -50,7 +50,7 @@ The ``lightning.tensor`` device allows users to get quantum circuit gradients us
     def circuit(params):
         ...
 
-Check out the :doc:`./lightning_tensor/installation` guide for more information.
+Check out the :doc:`/lightning_tensor/installation` guide for more information.
 
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,6 +139,7 @@ The ``lightning.tensor`` only supports 1,2-wires gates operations and gates oper
 **Supported observables:**
 
 The ``lightning.tensor`` supports all observables supported by lightning state-vector simulators, besides ``qml.SparseHamiltonian``, ``qml.Projector`` and limited support to ``qml.Hamiltonian``, ``qml.Prod``.
+
 Users can not create a ``Hamiltonian`` or ``Prod`` observable from ``Hamiltonian`` observables.
 
 
