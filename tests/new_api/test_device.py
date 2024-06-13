@@ -287,7 +287,7 @@ class TestExecution:
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
-            mid_circuit_measurements, device=device, mcm_config=MCMConfig()
+            mid_circuit_measurements, device=device, mcm_config=MCMConfig(), interface=None
         )
         expected_program.add_transform(
             decompose,
