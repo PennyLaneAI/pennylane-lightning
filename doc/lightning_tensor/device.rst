@@ -23,7 +23,7 @@ Note: Given the inherent parallelism of GPUs, simulations with intensive paralle
 bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can be benifited from the 
 ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` 
 device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details
-on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum-SDK<https://developer.nvidia.com/cuquantum-sdk>`_.
+on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_.
 
 Users also have the flexibility to customize these parameters according to their specific needs with
 .. code-block:: python
@@ -32,11 +32,13 @@ Users also have the flexibility to customize these parameters according to their
     import numpy as np
     
     num_qubits = 100
+
     device_kwargs_mps = {
         "max_bond_dim": 64,
         "cutoff": 1e-10,
         "cutoff_mode": "abs",
     }
+
     dev = qml.device("lightning.tensor", wires=num_qubits, method="mps", **device_kwargs_mps)
 
 The ``lightning.tensor`` device allows users to get quantum circuit gradients using the ``parameter-shift`` method. This can be enabled at the PennyLane QNode level with:
