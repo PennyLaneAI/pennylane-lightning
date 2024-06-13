@@ -158,7 +158,7 @@ jobs:
         if: inputs.pennylane-version == 'stable'
         run: |
           cd main
-            python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
   
       - name: Build and install package
         env:
