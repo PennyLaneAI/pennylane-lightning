@@ -17,6 +17,8 @@ on:
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/src/simulators/lightning_tensor/**
+      - pennylane_lightning/lightning_tensor/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
   push:
