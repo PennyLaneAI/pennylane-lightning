@@ -167,9 +167,10 @@ template <class PrecisionT> class TNCudaGateCache {
         }
     };
 
-    // device_gates_ is a map of id of gate tensor operator in the graph to the
-    // gate_info and gate_info is a pair of gate_info_key, which contains both
-    // gate name and parameter value, and the tensor data on device.
+    // device_gates_ is a map of id of gate tensor operator in the graph to
+    // the gate_info and gate_info is a pair of gate_info_key, which
+    // contains both gate name and parameter value, and the tensor data on
+    // device.
     std::unordered_map<std::size_t, gate_info, gate_info_hash> device_gates_;
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Gates

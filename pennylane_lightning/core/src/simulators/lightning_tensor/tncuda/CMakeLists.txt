@@ -21,6 +21,8 @@ set(LTENSOR_MPS_FILES  MPSTNCuda.cpp CACHE INTERNAL "" FORCE)
 
 add_library(${PL_BACKEND} STATIC ${LTENSOR_MPS_FILES})
 
+target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLTENSOR=1")
+
 ##########################
 ## Enforce C++ Standard ##
 ##########################
@@ -37,6 +39,7 @@ option(PL_DISABLE_CUDA_SAFETY "Build without CUDA call safety checks" OFF)
 
 target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             lightning_external_libs
+                                            lightning_utils
                                             ${PL_BACKEND}_gates
                                             ${PL_BACKEND}_tensor
                                             ${PL_BACKEND}_tensornetBase
@@ -58,6 +61,7 @@ endif()
 # Include all nested sources directories
 ###############################################################################
 set(COMPONENT_SUBDIRS      base
+                           bindings
                            gates
                            measurements
                            observables

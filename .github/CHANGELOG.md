@@ -1,6 +1,9 @@
 # Release 0.37.0-dev
 
 ### New features since last release
+* Implement Python interface to the `lightning.tensor` device.
+  [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748) 
+
 * Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
   [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
 
@@ -32,6 +35,9 @@
 
 ### Improvements
 
+* Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
+  [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759) 
+  
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file,
   but keeping one that validates multiple mid-circuit measurements with any allowed return.
   [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
@@ -79,6 +85,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix random CI failures for `lightning.tensor` python unit tests and ignore `lightning_tensor` paths.
+  [(#761)](https://github.com/PennyLaneAI/pennylane-lightning/pull/761)
 
 * `lightning.qubit` and `lightning.kokkos` use `qml.ops.Conditional.base` instead of `qml.ops.Conditional.then_op`.
   [(#752)](https://github.com/PennyLaneAI/pennylane-lightning/pull/752)

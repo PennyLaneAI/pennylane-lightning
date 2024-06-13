@@ -20,6 +20,7 @@ on:
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
       - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"

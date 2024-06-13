@@ -65,6 +65,10 @@ def test_create_device_with_unsupported_mpi_buf_size():
         pass
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor doesn't support 0 wires.",
+)
 def test_device_init_zero_qubit():
     """Test the device initialization with zero-qubit."""
 
