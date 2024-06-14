@@ -372,8 +372,6 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Install Lightning-Tensor from source
 ====================================
-Building Lightning-Tensor requires the NVIDIA cuQuantum SDK (currently supported version: cutensornet-cu12). It is recommended to install the NVIDIA cuQuantum SDK (cutensornet-cu12) within pip inside a virtual environment. Please consult the cuQuantum SDK install guide for more information.
-
 Lightning-Qubit should be installed before Lightning-Tensor:
 
 .. code-block:: console
