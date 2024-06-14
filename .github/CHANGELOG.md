@@ -284,6 +284,9 @@ Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Lee James 
 * Remove `ControlledQubitUnitary` in favour of `C(QubitUnitary)` from the list of supported operations and the device toml file. The `stopping_condition` method guarantees the consistency of decompositions.
   [(#758)](https://github.com/PennyLaneAI/pennylane-lightning/pull/758)
 
+* Raise a clear error message with initialization of `lightning.kokkos` with zero-qubit on Windows.
+  [(#758)](https://github.com/PennyLaneAI/pennylane-lightning/pull/758)
+
 
 ### Contributors
 
