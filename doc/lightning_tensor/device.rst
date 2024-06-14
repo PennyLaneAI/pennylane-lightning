@@ -10,7 +10,7 @@ A ``lightning.tensor`` device can be loaded simply using:
     import pennylane as qml
     dev = qml.device("lightning.tensor", wires=100)
 
-By default, the device employs the Matrix Product State (MPS) tensor network approximation to represent the quantum state.
+By default, the device represents the quantum state approximated as a Matrix Product State (MPS).
 The default setup for the MPS tensor network approximation are:
     - ``max_bond_dim``(maximum bond dimension) defaults to ``128``.
     - ``cutoff``(singular value truncation threshold) defaults to ``0``.
