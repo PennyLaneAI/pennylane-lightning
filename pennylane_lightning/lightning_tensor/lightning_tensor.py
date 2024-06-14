@@ -201,7 +201,7 @@ class LightningTensor(Device):
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
-        cutoff_mode (str): Singular value truncation mode. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
+        cutoff_mode (str): Singular value truncation mode. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
 
     **Example**
