@@ -12,9 +12,9 @@ A ``lightning.tensor`` device can be loaded simply using:
 
 By default, the device represents the quantum state approximated as a Matrix Product State (MPS).
 The default setup for the MPS tensor network approximation are:
-    - `max_bond_dim`(maximum bond dimension) defaults to `128`.
-    - `cutoff`(singular value truncation threshold) defaults to `0`.
-    - `cutoff_mode`(singular value truncation mode) defaults to `abs`, considering the absolute values of the singular values; Alternatively, users can opt to set `cutoff_mode` to `rel` to consider the relative values of the singular values. 
+    - ``max_bond_dim`` (maximum bond dimension) defaults to ``128`` .
+    - ``cutoff`` (singular value truncation threshold) defaults to ``0`` .
+    - ``cutoff_mode`` (singular value truncation mode) defaults to ``abs`` , considering the absolute values of the singular values; Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values. 
 
 The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 (Volta)
 and greater.
