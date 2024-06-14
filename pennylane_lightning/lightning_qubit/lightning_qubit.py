@@ -231,13 +231,18 @@ _operations = frozenset(
         "GlobalPhase",
         "Hadamard",
         "S",
+        "Adjoint(S)",
         "T",
+        "Adjoint(T)",
         "SX",
+        "Adjoint(SX)",
         "CNOT",
         "SWAP",
         "ISWAP",
         "PSWAP",
+        "Adjoint(ISWAP)",
         "SISWAP",
+        "Adjoint(SISWAP)",
         "SQISW",
         "CSWAP",
         "Toffoli",
@@ -252,6 +257,31 @@ _operations = frozenset(
         "CRX",
         "CRY",
         "CRZ",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
+        "C(QubitUnitary)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -269,6 +299,7 @@ _operations = frozenset(
         "QFT",
         "ECR",
         "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 # The set of supported operations.
@@ -305,21 +336,11 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
 
-    # Lightning has native support for Controlled and
-    # Adjoint operations, thus these operations should
-    # not be added to `_operations` this also keeps the
-    # consistency with 'lightning_qubit.toml`
-    if hasattr(op, 'base') and op.name[:2] == 'C(':
-        return stopping_condition(op.base)
-    if hasattr(op, 'base') and op.name[:9] == 'Adjoint(':
-        return stopping_condition(op.base)
-
     # As ControlledQubitUnitary == C(QubitUnitrary),
     # it can be removed from `_operations` to keep
     # consistency with `lightning_qubit.toml`
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
-
 
     return op.name in _operations
 

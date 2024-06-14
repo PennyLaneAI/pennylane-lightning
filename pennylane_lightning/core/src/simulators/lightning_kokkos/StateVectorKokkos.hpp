@@ -113,13 +113,10 @@ class StateVectorKokkos final
         }
 
 #ifdef _WIN32
-        constexpr bool no_qubit_init = false;
-#else
-        constexpr bool no_qubit_init = true;
-#endif
-        PL_ABORT_IF_NOT(num_qubits || no_qubit_init,
+        PL_ABORT_IF_NOT(num_qubits,
                         "LightningKokkos zero-qubit device initialization is "
                         "not supported on Windows.");
+#endif
 
         data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
         setBasisState(0U);
