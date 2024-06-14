@@ -380,7 +380,7 @@ To install Lightning-Tensor from the package sources using the direct SDK path, 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" pip install -e .
+    PL_BACKEND="lightning_qubit" pip install .
 
 Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
