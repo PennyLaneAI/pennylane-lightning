@@ -222,7 +222,6 @@ _operations = frozenset(
     {
         "Identity",
         "QubitUnitary",
-        "ControlledQubitUnitary",
         "MultiControlledX",
         "DiagonalQubitUnitary",
         "PauliX",
@@ -282,6 +281,7 @@ _operations = frozenset(
         "C(DoubleExcitationPlus)",
         "C(MultiRZ)",
         "C(GlobalPhase)",
+        "C(QubitUnitary)",
         "CRot",
         "IsingXX",
         "IsingYY",
@@ -335,6 +335,13 @@ def stopping_condition(op: Operator) -> bool:
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
+
+    # As ControlledQubitUnitary == C(QubitUnitrary),
+    # it can be removed from `_operations` to keep
+    # consistency with `lightning_qubit.toml`
+    if isinstance(op, qml.ControlledQubitUnitary):
+        return True
+
     return op.name in _operations
 
 

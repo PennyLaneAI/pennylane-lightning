@@ -112,6 +112,12 @@ class StateVectorKokkos final
             }
         }
 
+#ifdef _WIN32
+        PL_ABORT_IF_NOT(num_qubits,
+                        "LightningKokkos zero-qubit device initialization is "
+                        "not supported on Windows.");
+#endif
+
         data_ = std::make_unique<KokkosVector>("data_", exp2(num_qubits));
         setBasisState(0U);
     };
