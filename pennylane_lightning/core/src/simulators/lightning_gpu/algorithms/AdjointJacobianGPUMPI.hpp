@@ -219,6 +219,10 @@ class AdjointJacobianMPI final
      * OpenMP is used to enable independent operations to be offloaded to
      * threads.
      *
+     * @note Only gates with pre-defined generators can be differentiated.
+     * For example, `QubitUnitary` is not differentiable as there is no generator
+     * defined for this gate.
+     *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
      * @param ref_data Reference to a `%StateVectorT` object.
