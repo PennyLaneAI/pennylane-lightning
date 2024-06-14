@@ -53,7 +53,7 @@ QFT                    = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
-BlockEncode            = {properties = [ "controllable" ]}
+BlockEncode            = {}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
