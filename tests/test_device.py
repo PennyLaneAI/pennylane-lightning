@@ -14,6 +14,8 @@
 """
 Unit tests for Lightning devices creation.
 """
+import sys
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -65,6 +67,14 @@ def test_create_device_with_unsupported_mpi_buf_size():
         pass
 
 
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support 0 wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name == "lightning.gpu",
+    reason="lightning.gpu doesn't support 0 wires.",
+)
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor doesn't support 0 wires.",
