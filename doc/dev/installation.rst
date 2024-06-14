@@ -18,6 +18,11 @@ Each device in the Lightning ecosystem is a separate Python package. Select the 
    :description: Guidelines to installing and testing the Lightning Kokkos device
    :link: ../lightning_kokkos/installation.html
 
+.. title-card::
+   :name: Lightning Tensor
+   :description: Guidelines to installing and testing the Lightning Tensor device
+   :link: ../lightning_tensor/installation.html
+
 .. raw:: html
 
         <div style='clear:both'></div>
@@ -29,3 +34,4 @@ Each device in the Lightning ecosystem is a separate Python package. Select the 
    ../lightning_qubit/installation
    ../lightning_gpu/installation
    ../lightning_kokkos/installation
+   ../lightning_tensor/installation
