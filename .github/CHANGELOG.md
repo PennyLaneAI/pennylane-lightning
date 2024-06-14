@@ -84,7 +84,7 @@
 
 ### Documentation
 
-* Add installation instructions and documentations for `lightning.tensor`.
+* Add installation instructions and documentation for `lightning.tensor`.
   [(#756)](https://github.com/PennyLaneAI/pennylane-lightning/pull/756)
 
 ### Bug fixes
