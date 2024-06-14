@@ -10,16 +10,17 @@ A ``lightning.tensor`` device with the default setup can be simply loaded using:
     import pennylane as qml
     dev = qml.device("lightning.tensor", wires=100)
 
-By default, the device employs the Matrix Product State (MPS) tensor network approximation to represent the quantum state. 
-Within this framework, the maximum bond dimension (``max_bond_dim``) defaults to ``128``. To manage computational complexity, 
-singular value truncation is utilized, with the default threshold for truncation (``cutoff``) set at ``0``. Additionally, the 
-singular value truncation mode (``cutoff_mode``) defaults to ``abs``, considering the absolute values of the singular values.
-Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values.
+By default, the device employs the Matrix Product State (MPS) tensor network approximation to represent the quantum state.
+The default setup for the MPS tensor network approximation are:
+    - ``max_bond_dim``(maximum bond dimension) defaults to ``128``.
+    - ``cutoff``(singular value truncation threshold) defaults to ``0``.
+    - ``cutoff_mode``(singular value truncation mode) defaults to ``abs``, considering the absolute values of the singular values. Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values. 
 
 The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta)
 and greater.
 
-.. note:: Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
+.. note:: 
+    Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
     bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can be benifited from the 
     ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` 
     device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details
