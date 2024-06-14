@@ -72,9 +72,8 @@ def test_create_device_with_unsupported_mpi_buf_size():
     reason="lightning.kokkos doesn't support 0 wires on Windows.",
 )
 @pytest.mark.skipif(
-    device_name in ["lightning.gpu", "lightning.tensor"] ,
-    reason=device_name+" doesn't support 0 wires.",
-)
+    device_name in ["lightning.gpu", "lightning.tensor"],
+    reason=device_name + " doesn't support 0 wires.",
 )
 def test_device_init_zero_qubit():
     """Test the device initialization with zero-qubit."""
