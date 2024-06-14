@@ -52,6 +52,8 @@ The ``lightning.tensor`` device allows users to get quantum circuit gradients us
 
 Check out the :doc:`/lightning_tensor/installation` guide for more information.
 
+.. seealso:: :class:`~DefaultTensor` for a CPU only tensor network simulator device.
+
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
