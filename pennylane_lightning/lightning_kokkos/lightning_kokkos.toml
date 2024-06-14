@@ -58,6 +58,7 @@ StatePrep              = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
+BlockEncode            = {}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}
