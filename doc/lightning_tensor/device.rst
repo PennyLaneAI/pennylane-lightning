@@ -56,7 +56,7 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 .. seealso:: `DefaultTensor <https://docs.pennylane.ai/en/latest/code/api/pennylane.devices.default_tensor.DefaultTensor.html>`__ for a CPU only tensor network simulator device.
 
 Operations and observables support
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The "lightning.tensor" supports 1- and 2-wire gate operations and all other operations that can be decomposed to that by PennyLane.
 
