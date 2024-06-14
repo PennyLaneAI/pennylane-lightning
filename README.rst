@@ -373,7 +373,7 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 Install Lightning-Tensor from source
 ====================================
 
-To install Lightning-Tensor from the package sources using the direct SDK path, Lightning-Qubit should be installed before Lightning-Tensor:
+Lightning-Qubit should be installed before Lightning-Tensor:
 
 .. code-block:: console
 
