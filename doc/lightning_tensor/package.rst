@@ -1,5 +1,5 @@
 lightning_tensor
-=============
+================
 
 .. automodapi:: pennylane_lightning.lightning_tensor
     :no-heading:
