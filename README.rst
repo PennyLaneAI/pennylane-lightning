@@ -372,6 +372,7 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Install Lightning-Tensor from source
 ====================================
+Building Lightning-Tensor requires the NVIDIA cuQuantum SDK (currently supported version: cutensornet-cu12). CUDA-aware MPI allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers. Both the MPICH and OpenMPI libraries are supported, provided they are compiled with CUDA support. The path to libmpi.so should be found in LD_LIBRARY_PATH. It is recommended to install the NVIDIA cuQuantum SDK (cutensornet-cu12) within pip inside a virtual environment. Please consult the cuQuantum SDK install guide for more information.
 
 Lightning-Qubit should be installed before Lightning-Tensor:
 
@@ -382,7 +383,7 @@ Lightning-Qubit should be installed before Lightning-Tensor:
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" pip install .
 
-Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable. 
 
 .. code-block:: console
 
