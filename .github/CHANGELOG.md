@@ -35,6 +35,9 @@
 
 ### Improvements
 
+* LightningKokkos dev wheels are pushed to https://test.pypi.org/project/PennyLane-Lightning-Kokkos/ upon PR merge.
+  [(#763)](https://github.com/PennyLaneAI/pennylane-lightning/pull/763)
+
 * Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
   [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759) 
   
