@@ -200,7 +200,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos"]
     runs-on: ubuntu-latest
 
     if: |
