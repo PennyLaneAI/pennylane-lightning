@@ -42,11 +42,11 @@ jobs:
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
     steps:
-      - name: Skip lightning_kokkos temporarily for PL/Lightning stable/stable
+      - name: Skip lightning_tensor temporarily for PL/Lightning stable/stable
         # FIXME: Remove this condition with v0.37.0 release
-        if: matrix.pl_backend == 'lightning_kokkos' && inputs.pennylane-version != 'stable'
+        if: matrix.pl_backend == 'lightning_tensor' && inputs.pennylane-version != 'stable'
         run: |
-          echo "Temporarily skipping lightning_kokkos build for stable/stable."
+          echo "Temporarily skipping lightning_tensor build for stable/stable."
           exit 0
 
       - name: Checkout PennyLane-Lightning
