@@ -38,12 +38,17 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu", "lightning_tensor"]
-    # FIXME: Remove this condition with v0.37.0 release
-    if: matrix.pl_backend == 'lightning_kokkos' && inputs.pennylane-version != 'stable'
 
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
     steps:
+      - name: Skip lightning_kokkos temporarily for PL/Lightning stable/stable
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend == 'lightning_kokkos' && inputs.pennylane-version != 'stable'
+        run: |
+          echo "Temporarily skipping lightning_kokkos build for stable/stable."
+          exit 0
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
