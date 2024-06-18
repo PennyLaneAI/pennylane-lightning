@@ -44,7 +44,7 @@ jobs:
     steps:
       - name: Skip lightning_tensor temporarily for PL/Lightning stable/stable
         # FIXME: Remove this condition with v0.37.0 release
-        if: matrix.pl_backend == 'lightning_tensor' && inputs.pennylane-version != 'stable'
+        if: matrix.pl_backend == 'lightning_tensor' && inputs.pennylane-version == 'stable' && inputs.lightning-version == 'stable'
         run: |
           echo "Temporarily skipping lightning_tensor build for stable/stable."
           exit 0
