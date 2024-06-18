@@ -33,8 +33,10 @@ jobs:
         if: >-
           ${{
             github.event_name == 'pull_request'
-            && contains(github.event.pull_request.labels.*.name, 'urgent')
             && startsWith(inputs.default_runner, 'ubuntu')
           }}
         id: runner_group
-        run: echo "runner_group=$LARGE_RUNNER_GROUP_NAME" >> $GITHUB_OUTPUT
+        run: |
+          if [[ ${{ contains(github.event.pull_request.labels.*.name, 'urgent') }} == 'true' || "${{ github.ref }}" =~ refs\/heads\/v\d+\.\d+\.\d+-rc\d? ]]; then
+            echo "runner_group=$LARGE_RUNNER_GROUP_NAME" >> $GITHUB_OUTPUT
+          fi
