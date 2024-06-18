@@ -51,24 +51,24 @@ ENDIF()
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLKOKKOS=1")
 
 # Compile the sources files to a target object:
-add_library(obj_file OBJECT ${LKOKKOS_FILES})
-set_property(TARGET obj_file PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(obj_file PUBLIC   lightning_compile_options
-                                        lightning_external_libs
-                                        lightning_base
-                                        lightning_gates
-                                        lightning_utils
-                                        lightning_kokkos_utils
-                                        lightning_kokkos_gates
+add_library(lightning_kokkos_obj OBJECT ${LKOKKOS_FILES})
+set_property(TARGET lightning_kokkos_obj PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_link_libraries(lightning_kokkos_obj PUBLIC   lightning_compile_options
+                                                    lightning_external_libs
+                                                    lightning_base
+                                                    lightning_gates
+                                                    lightning_utils
+                                                    lightning_kokkos_utils
+                                                    lightning_kokkos_gates
 )
 
 if(PLKOKKOS_ENABLE_NATIVE)
-    target_compile_options(obj_file  PRIVATE -march=native)
+    target_compile_options(lightning_kokkos_obj  PRIVATE -march=native)
 endif()
 
 # Build THE SHARED and STATIC libraries from the target object:
-add_library(lightning_kokkos_shared SHARED $<TARGET_OBJECTS:obj_file>)
-add_library(lightning_kokkos STATIC $<TARGET_OBJECTS:obj_file>)
+add_library(lightning_kokkos_shared SHARED $<TARGET_OBJECTS:lightning_kokkos_obj>)
+add_library(lightning_kokkos STATIC $<TARGET_OBJECTS:lightning_kokkos_obj>)
 
 set(LKOKKOS_LIBS    lightning_kokkos
                     lightning_kokkos_shared
