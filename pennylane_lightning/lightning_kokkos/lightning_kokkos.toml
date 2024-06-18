@@ -53,6 +53,7 @@ MultiControlledX       = {}
 QFT                    = {}
 QubitStateVector       = {}
 StatePrep              = {}
+ControlledQubitUnitary = {}
 
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
