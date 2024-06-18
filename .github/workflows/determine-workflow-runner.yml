@@ -37,6 +37,6 @@ jobs:
           }}
         id: runner_group
         run: |
-          if [[ ${{ contains(github.event.pull_request.labels.*.name, 'urgent') }} == 'true' || "${{ github.event.pull_request.head.ref }}" =~ refs\/heads\/v\d+\.\d+\.\d+-rc\d? ]]; then
+          if [[ '${{ contains(github.event.pull_request.labels.*.name, 'urgent') }}' == 'true' || ('${{ github.event.pull_request.head.repo.full_name == 'PennyLaneAI/pennylane-lightning' }}' == 'true' && "${{ github.event.pull_request.head.ref }}" =~ v\d+\.\d+\.\d+-rc\d?) ]]; then
             echo "runner_group=$LARGE_RUNNER_GROUP_NAME" >> $GITHUB_OUTPUT
           fi
