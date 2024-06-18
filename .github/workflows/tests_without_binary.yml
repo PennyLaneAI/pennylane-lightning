@@ -103,6 +103,8 @@ jobs:
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
 
       - name: Install backend device
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
@@ -111,12 +113,16 @@ jobs:
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for all backends
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         uses: codecov/codecov-action@v4
         with:
           files: ./main/coverage.xml
