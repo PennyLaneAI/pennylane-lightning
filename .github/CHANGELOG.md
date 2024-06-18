@@ -35,6 +35,9 @@
 
 ### Improvements
 
+* LightningKokkos dev wheels for MacOS (x86_64, ARM64) and Linux (aarch64) are uploaded to TestPyPI upon PR merge.
+  [(#765)](https://github.com/PennyLaneAI/pennylane-lightning/pull/765)
+
 * LightningKokkos dev wheels are pushed to https://test.pypi.org/project/PennyLane-Lightning-Kokkos/ upon PR merge.
   [(#763)](https://github.com/PennyLaneAI/pennylane-lightning/pull/763)
 
