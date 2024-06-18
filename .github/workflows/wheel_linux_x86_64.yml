@@ -216,5 +216,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ matrix.pl_backend == "lightning_qubit" && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
+          password: ${{ ( matrix.pl_backend == 'lightning_qubit' ) && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
