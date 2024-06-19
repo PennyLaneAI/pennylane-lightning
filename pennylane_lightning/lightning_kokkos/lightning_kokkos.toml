@@ -53,6 +53,7 @@ MultiControlledX       = {}
 QFT                    = {}
 QubitStateVector       = {}
 StatePrep              = {}
+ControlledQubitUnitary = {}
 
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
@@ -106,3 +107,8 @@ mid_circuit_measurement = true
 # This field is currently unchecked but it is reserved for the purpose of
 # determining if the device supports dynamic qubit allocation/deallocation.
 dynamic_qubit_management = false
+
+# whether the device can support non-commuting measurements together 
+# in a single execution
+non_commuting_observables = true
+
