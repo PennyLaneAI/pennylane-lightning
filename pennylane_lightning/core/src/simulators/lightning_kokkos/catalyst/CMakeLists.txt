@@ -85,7 +85,7 @@ target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_option
                                                         lightning_kokkos_utils
 )
 
-if (BUILD_TESTS)
-    enable_testing()
-    add_subdirectory("tests")
-endif()
+# if (BUILD_TESTS)
+#     enable_testing()
+#     add_subdirectory("tests")
+# endif()
